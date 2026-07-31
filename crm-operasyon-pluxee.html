@@ -48,7 +48,10 @@
 /* ============ D19/S12 — Kart Defteri (crm-operasyon-kasa.html #tblDefter kolon
    düzeninin birebir devralımı: df-no/df-date/df-firm/df-desc/df-in/df-out/df-bak,
    df-devir/df-total/df-mevcut satır dili, df-donem rozeti) ============ */
-#tblPluxee{min-width:940px}
+/* [T5A/Dalga5] min-width YALNIZ masaüstünde — ID seçici .gtable-cards{min-width:0}'ı
+   specificity'de ezip 390px'te kart yerine sıkışmış tablo göstermesin (bkz kararlar.md
+   madde 189, crm-personel.html'de yaşanan aynı tuzak). */
+@media(min-width:641px){ #tblPluxee{min-width:940px} }
 #tblPluxee td,#tblPluxee th{font-variant-numeric:tabular-nums}
 #tblPluxee .df-no{width:36px;color:var(--muted);font-size:12px;font-weight:600}
 #tblPluxee .df-date{width:86px;white-space:nowrap;color:var(--ink-2);font-weight:600;font-size:12.5px}
@@ -73,38 +76,37 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
 .donem-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .donem-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 
-/* ============ Y17 MOBİL KART — Kart Defteri #tblPluxee (kasa emsali:
-   ayrı kart DOM'u + data-idx + gvpage senkron, data-label KULLANILMAZ) ============ */
-.df-mobile-list{display:none}
-.df-mrow{padding:13px 18px;border-bottom:1px solid var(--line)}
-.df-mrow:last-child{border-bottom:none}
-.df-mrow-top{display:flex;align-items:baseline;gap:8px;margin-bottom:5px}
-.df-mrow-no{font-size:11px;font-weight:700;color:var(--muted);flex:none}
-.df-mrow-date{font-size:12.5px;color:var(--ink-2);flex:1}
-.df-mrow-bak{font-size:13.5px;font-weight:800;color:var(--ink);flex:none}
-.df-mrow-firm{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px}
-.df-mrow-desc{font-size:12px;color:var(--muted);margin-bottom:7px;line-height:1.4}
-.df-mrow-amt{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
-.df-mrow-amt b{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
-.df-mrow-amt .df-in{color:var(--ok)}
-.df-mrow-amt .df-out{color:var(--danger)}
-.df-mrow.devir,.df-mrow.total{background:var(--bg)}
-.df-mrow-title{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-bottom:9px}
-.df-mrow-line{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);padding:3px 0}
-.df-mrow-line b{font-variant-numeric:tabular-nums;color:var(--ink-2);font-weight:700}
-.df-mrow-line.df-mrow-bal{border-top:1px solid var(--line);margin-top:5px;padding-top:9px}
-.df-mrow-line.df-mrow-bal b{font-size:14.5px;color:var(--ink);font-weight:800}
-.df-mrow.mevcut{background:rgba(var(--acc-rgb),.08)}
-.df-mrow.mevcut .df-mrow-title{color:var(--acc-deep)}
-.df-mrow.mevcut .df-mrow-line b{color:var(--acc-deep);font-size:15px}
-@media(max-width:640px){
-  #tblPluxee{display:none}
-  .df-mobile-list{display:block}
-}
+/* ============ [T5A/Dalga5] Y17 bespoke mobil kart DOM'u KALDIRILDI — ortak
+   gtable-cards deseninе (spec-liste-mimarisi.md §4) geçildi. Gerekçe: gvCols (Kolonlar)
+   bu turda EKLENİYOR; ayrı bir kart DOM'u kolon gizle/sırala değişikliklerini
+   YANSITMAZDI (crm-personel.html'de aynı sebeple yaşanan geçiş — kararlar.md madde 189).
+   #tblPluxee artık HEM masaüstü tablo HEM 640px altı kart görünümü — tek kaynak.
+   devir/toplam/mevcut çerçeve satırlarındaki boş hizalama hücreleri (df-in/df-out'tan
+   yalnız biri dolu olur) kart modunda boş etiketsiz satır bırakmasın. ============ */
+@media(max-width:640px){ .gtable-cards td:empty{display:none} }
+/* [T5A/Dalga5] gtable-cards modunda "Açıklama" kartın tam genişliğini kullanır —
+   masaüstü tablo hücresinin ellipsis/nowrap kısıtlaması burada gerekmiyor, sarmalansın. */
+@media(max-width:640px){ #tblPluxee .df-desc{max-width:none;white-space:normal;overflow:visible;text-overflow:clip} }
 
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+/* [T5A/Dalga5] display:flex;flex-direction:column YERİNE display:block + margin-bottom —
+   sütun-yönlü flex konteynerde iç içe geçmiş .filter-row (satır-yönlü flex + flex-wrap)
+   390px'te KENDİ min-content genişliğine göre büyüyüp konteyneri taşırıyordu (nested flex
+   stretch/shrink algoritması çakışması — min-width:0 TEK BAŞINA yetmedi). Block context'te
+   her çocuk zaten blok-seviye tam genişlik alır, taşma riski YOK; görsel boşluk gap yerine
+   margin-bottom ile korunur. */
+.filter-bar.stack{display:block}
+.filter-bar.stack > *:not(:last-child){margin-bottom:12px}
 .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+/* [T5A/Dalga5] .filter-bar.stack SÜTUN yönlü olduğundan .filter-row bir cross-axis flex
+   item'ı — min-width:0 OLMADAN uzun chip etiketleri satırı 390px konteynerin dışına
+   TAŞIRIR (flex item min-width:auto tuzağının bir üst seviyedeki hali). Tür/Şantiye
+   satırlarındaki gv-chipbar-wrap ise frow-lbl + (Tür satırında) Arşivlenenleri Göster
+   ile AYNI flex satırını paylaşır — o da kendi min-width:auto tuzağına düşmesin diye
+   esner (spec-liste-mimarisi.md §1 notu). */
+.filter-bar.stack .filter-row{min-width:0}
+.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
+@media(max-width:640px){ .filter-row .gv-chipbar-wrap{width:100%} }
 
 /* satır seçimi + detay paneli (Dalga 18 — ?islem= master-detail); yalnız data-id
    taşıyan gerçek işlem satırları tıklanabilir — df-devir/df-total/df-mevcut hariç */
@@ -132,8 +134,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
 .row-chk input:checked + .chk-box{background:var(--acc-ink);border-color:var(--acc-ink);color:#fff}
 .row-chk input:focus-visible + .chk-box{outline:2px solid var(--acc);outline-offset:2px}
 #tblPluxee tbody tr.is-checked td{background:rgba(var(--acc-rgb),.05)}
-.df-mrow .row-chk{margin-right:0}
-.df-mrow.is-checked{background:rgba(var(--acc-rgb),.05)}
 .plx-bulk-bar{display:flex;align-items:center;gap:14px;padding:12px 22px;background:rgba(var(--acc-rgb),.06);border-bottom:1px solid var(--line);flex-wrap:wrap}
 .plx-bulk-bar[hidden]{display:none}
 .plx-bulk-bar .bb-count{font-size:13px;font-weight:700;color:var(--ink)}
@@ -261,24 +261,33 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpPlx">
             <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
           </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtnPlx"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
         </div>
         <div class="filter-row">
           <span class="frow-lbl">Tür</span>
-          <div class="chips" id="plxTurChips">
-            <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">2</span></button>
-            <button class="chip" data-tur="yukleme">Yükleme <span class="ch-cnt">1</span></button>
-            <button class="chip" data-tur="harcama">Harcama <span class="ch-cnt">1</span></button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="plxTurChips">
+              <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">2</span></button>
+              <button class="chip" data-tur="yukleme">Yükleme <span class="ch-cnt">1</span></button>
+              <button class="chip" data-tur="harcama">Harcama <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
           <!-- [§17] Arşivlenen kart varsayılan ızgarada görünmez — bu anahtarla gösterilir -->
           <button type="button" class="chip" id="plxArsivToggle" aria-pressed="false"><i class="fa-solid fa-box-archive"></i> Arşivlenenleri Göster</button>
         </div>
         <div class="filter-row">
           <span class="frow-lbl">Şantiye</span>
-          <div class="chips" id="plxSantiyeChips">
-            <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">2</span></button>
-            <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
-            <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">0</span></button>
-            <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">0</span></button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="plxSantiyeChips">
+              <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">2</span></button>
+              <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
+              <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">0</span></button>
+              <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">0</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
         <div class="filter-row">
@@ -305,17 +314,17 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <button type="button" class="btn btn-acc btn-sm" id="plxBbCikti"><i class="fa-solid fa-print"></i> Seçili Kayıtların Çıktısını Al</button>
         </div>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblPluxee" data-paginate="25">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblPluxee" data-paginate="25">
           <thead>
             <tr>
               <th class="df-no"><label class="row-chk" id="plxChkAllWrap" hidden><input type="checkbox" id="plxChkAll" aria-label="Görünen tüm hareketleri seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>#</th>
-              <th class="df-date">Tarih</th>
-              <th>Kart / Personel</th>
-              <th>Açıklama</th>
-              <th class="num">Yükleme</th>
-              <th class="num">Harcama</th>
-              <th class="num">Bakiye</th>
+              <th class="df-date" data-col="tarih">Tarih</th>
+              <th data-col="kart">Kart / Personel</th>
+              <th data-col="aciklama">Açıklama</th>
+              <th class="num" data-col="yukleme">Yükleme</th>
+              <th class="num" data-col="harcama">Harcama</th>
+              <th class="num" data-col="bakiye">Bakiye</th>
             </tr>
           </thead>
           <!-- statik bake (D18-B2): JS load'da aynı mount'u KARTLAR kanonik verisinden yeniden basar.
@@ -328,9 +337,9 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
                mevcut ₺11.240 (12 aktif kart) — G1-G4 ile birebir. -->
           <tbody id="plxBody"><tr class="df-devir" data-plx="4471"><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="4471" data-id="plx-041" data-tur="yukleme" data-santiye="vadi"><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Ali Vural <span class="plx-no">•4471</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="4471" data-id="plx-042" data-tur="harcama" data-santiye="vadi"><td class="df-no">2</td><td class="df-date">1 Tem</td><td class="df-firm">Ali Vural <span class="plx-no">•4471</span></td><td class="df-desc">Haftalık market alışverişi — PLX-2026-042</td><td class="num"></td><td class="num df-out">₺420</td><td class="num df-bak">₺830</td></tr><tr class="df-total" data-plx="4471"><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺420</td><td class="num df-bak">₺830</td></tr><tr class="df-mevcut" data-plx="4471"><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺830</td></tr><tr class="df-devir" data-plx="4482" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="4482" data-id="plx-041" data-tur="yukleme" data-santiye="vadi" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">İbrahim Sönmez <span class="plx-no">•4482</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="4482" data-id="plx-044" data-tur="harcama" data-santiye="vadi" hidden><td class="df-no">2</td><td class="df-date">1 Tem</td><td class="df-firm">İbrahim Sönmez <span class="plx-no">•4482</span></td><td class="df-desc">Temizlik malzemesi — PLX-2026-044</td><td class="num"></td><td class="num df-out">₺400</td><td class="num df-bak">₺850</td></tr><tr class="df-total" data-plx="4482" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺400</td><td class="num df-bak">₺850</td></tr><tr class="df-mevcut" data-plx="4482" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺850</td></tr><tr class="df-devir" data-plx="4493" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="4493" data-id="plx-041" data-tur="yukleme" data-santiye="vadi" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Ramazan Kılıç <span class="plx-no">•4493</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="4493" data-id="plx-047" data-tur="harcama" data-santiye="vadi" hidden><td class="df-no">2</td><td class="df-date">1 Tem</td><td class="df-firm">Ramazan Kılıç <span class="plx-no">•4493</span></td><td class="df-desc">Sarf malzeme alışverişi — PLX-2026-047</td><td class="num"></td><td class="num df-out">₺370</td><td class="num df-bak">₺880</td></tr><tr class="df-total" data-plx="4493" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺370</td><td class="num df-bak">₺880</td></tr><tr class="df-mevcut" data-plx="4493" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺880</td></tr><tr class="df-devir" data-plx="4504" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="4504" data-id="plx-041" data-tur="yukleme" data-santiye="vadi" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Selim Doğan <span class="plx-no">•4504</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="4504" data-id="plx-048" data-tur="harcama" data-santiye="vadi" hidden><td class="df-no">2</td><td class="df-date">2 Tem</td><td class="df-firm">Selim Doğan <span class="plx-no">•4504</span></td><td class="df-desc">Öğle yemeği — PLX-2026-048</td><td class="num"></td><td class="num df-out">₺360</td><td class="num df-bak">₺890</td></tr><tr class="df-total" data-plx="4504" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺360</td><td class="num df-bak">₺890</td></tr><tr class="df-mevcut" data-plx="4504" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺890</td></tr><tr class="df-devir" data-plx="4515" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="4515" data-id="plx-041" data-tur="yukleme" data-santiye="vadi" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Musa Erdem <span class="plx-no">•4515</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr class="df-total" data-plx="4515" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺0</td><td class="num df-bak">₺1.250</td></tr><tr class="df-mevcut" data-plx="4515" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr class="df-devir" data-plx="4526" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="4526" data-id="plx-041" data-tur="yukleme" data-santiye="vadi" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Veli Şimşek <span class="plx-no">•4526</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="4526" data-id="plx-051" data-tur="harcama" data-santiye="vadi" hidden><td class="df-no">2</td><td class="df-date">2 Tem</td><td class="df-firm">Veli Şimşek <span class="plx-no">•4526</span></td><td class="df-desc">Sarf malzeme — PLX-2026-051</td><td class="num"></td><td class="num df-out">₺340</td><td class="num df-bak">₺910</td></tr><tr class="df-total" data-plx="4526" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺340</td><td class="num df-bak">₺910</td></tr><tr class="df-mevcut" data-plx="4526" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺910</td></tr><tr class="df-devir" data-plx="5871" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="5871" data-id="plx-041" data-tur="yukleme" data-santiye="liman" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Şükrü Aslan <span class="plx-no">•5871</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="5871" data-id="plx-043" data-tur="harcama" data-santiye="liman" hidden><td class="df-no">2</td><td class="df-date">1 Tem</td><td class="df-firm">Şükrü Aslan <span class="plx-no">•5871</span></td><td class="df-desc">Öğle yemeği — PLX-2026-043</td><td class="num"></td><td class="num df-out">₺410</td><td class="num df-bak">₺840</td></tr><tr class="df-total" data-plx="5871" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺410</td><td class="num df-bak">₺840</td></tr><tr class="df-mevcut" data-plx="5871" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺840</td></tr><tr class="df-devir" data-plx="5882" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="5882" data-id="plx-041" data-tur="yukleme" data-santiye="liman" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Halil Güneş <span class="plx-no">•5882</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr class="df-total" data-plx="5882" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺0</td><td class="num df-bak">₺1.250</td></tr><tr class="df-mevcut" data-plx="5882" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr class="df-devir" data-plx="5893" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="5893" data-id="plx-041" data-tur="yukleme" data-santiye="liman" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Metin Çetin <span class="plx-no">•5893</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="5893" data-id="plx-046" data-tur="harcama" data-santiye="liman" hidden><td class="df-no">2</td><td class="df-date">1 Tem</td><td class="df-firm">Metin Çetin <span class="plx-no">•5893</span></td><td class="df-desc">Ekmek/pastane alışverişi — PLX-2026-046</td><td class="num"></td><td class="num df-out">₺380</td><td class="num df-bak">₺870</td></tr><tr class="df-total" data-plx="5893" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺380</td><td class="num df-bak">₺870</td></tr><tr class="df-mevcut" data-plx="5893" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺870</td></tr><tr class="df-devir" data-plx="5904" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="5904" data-id="plx-041" data-tur="yukleme" data-santiye="liman" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Osman Polat <span class="plx-no">•5904</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="5904" data-id="plx-049" data-tur="harcama" data-santiye="liman" hidden><td class="df-no">2</td><td class="df-date">2 Tem</td><td class="df-firm">Osman Polat <span class="plx-no">•5904</span></td><td class="df-desc">Bakkal alışverişi — PLX-2026-049</td><td class="num"></td><td class="num df-out">₺350</td><td class="num df-bak">₺900</td></tr><tr class="df-total" data-plx="5904" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺350</td><td class="num df-bak">₺900</td></tr><tr class="df-mevcut" data-plx="5904" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺900</td></tr><tr class="df-devir" data-plx="6231" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="6231" data-id="plx-041" data-tur="yukleme" data-santiye="merkez" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">Recep Yaman <span class="plx-no">•6231</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="6231" data-id="plx-045" data-tur="harcama" data-santiye="merkez" hidden><td class="df-no">2</td><td class="df-date">1 Tem</td><td class="df-firm">Recep Yaman <span class="plx-no">•6231</span></td><td class="df-desc">Akşam yemeği — PLX-2026-045</td><td class="num"></td><td class="num df-out">₺390</td><td class="num df-bak">₺860</td></tr><tr class="df-total" data-plx="6231" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺390</td><td class="num df-bak">₺860</td></tr><tr class="df-mevcut" data-plx="6231" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺860</td></tr><tr class="df-devir" data-plx="6242" hidden><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺0</td></tr><tr data-plx="6242" data-id="plx-041" data-tur="yukleme" data-santiye="merkez" hidden><td class="df-no">1</td><td class="df-date">1 Tem</td><td class="df-firm">İlyas Kurt <span class="plx-no">•6242</span></td><td class="df-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</td><td class="num df-in">₺1.250</td><td class="num"></td><td class="num df-bak">₺1.250</td></tr><tr data-plx="6242" data-id="plx-050" data-tur="harcama" data-santiye="merkez" hidden><td class="df-no">2</td><td class="df-date">2 Tem</td><td class="df-firm">İlyas Kurt <span class="plx-no">•6242</span></td><td class="df-desc">Ekmek/pastane alışverişi — PLX-2026-050</td><td class="num"></td><td class="num df-out">₺340</td><td class="num df-bak">₺910</td></tr><tr class="df-total" data-plx="6242" hidden><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">₺1.250</td><td class="num df-out">₺340</td><td class="num df-bak">₺910</td></tr><tr class="df-mevcut" data-plx="6242" hidden><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">₺910</td></tr></tbody>
         </table>
-        <!-- statik bake (D18-B2): JS load'da aynı mount'u kanonik veriden yeniden basar (yalnız
-             seçili kart 4471 görünür durumda basılır; diğerleri buildDefterCards() ile üretilir) -->
-        <div class="df-mobile-list" id="tblPluxeeMobile"><div class="df-mrow devir" data-plx="4471" data-idx="0"><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="4471" data-idx="1"><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Ali Vural •4471</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="4471" data-idx="2"><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺830</span></div><div class="df-mrow-firm">Ali Vural •4471</div><div class="df-mrow-desc">Haftalık market alışverişi — PLX-2026-042</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺420</b></div></div><div class="df-mrow total" data-plx="4471" data-idx="3"><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺420</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺830</b></div></div><div class="df-mrow mevcut" data-plx="4471" data-idx="4"><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺830</b></div></div><div class="df-mrow devir" data-plx="4482" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="4482" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">İbrahim Sönmez •4482</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="4482" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺850</span></div><div class="df-mrow-firm">İbrahim Sönmez •4482</div><div class="df-mrow-desc">Temizlik malzemesi — PLX-2026-044</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺400</b></div></div><div class="df-mrow total" data-plx="4482" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺400</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺850</b></div></div><div class="df-mrow mevcut" data-plx="4482" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺850</b></div></div><div class="df-mrow devir" data-plx="4493" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="4493" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Ramazan Kılıç •4493</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="4493" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺880</span></div><div class="df-mrow-firm">Ramazan Kılıç •4493</div><div class="df-mrow-desc">Sarf malzeme alışverişi — PLX-2026-047</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺370</b></div></div><div class="df-mrow total" data-plx="4493" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺370</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺880</b></div></div><div class="df-mrow mevcut" data-plx="4493" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺880</b></div></div><div class="df-mrow devir" data-plx="4504" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="4504" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Selim Doğan •4504</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="4504" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">2 Tem</span><span class="df-mrow-bak num">₺890</span></div><div class="df-mrow-firm">Selim Doğan •4504</div><div class="df-mrow-desc">Öğle yemeği — PLX-2026-048</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺360</b></div></div><div class="df-mrow total" data-plx="4504" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺360</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺890</b></div></div><div class="df-mrow mevcut" data-plx="4504" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺890</b></div></div><div class="df-mrow devir" data-plx="4515" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="4515" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Musa Erdem •4515</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow total" data-plx="4515" data-idx="2" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺0</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺1.250</b></div></div><div class="df-mrow mevcut" data-plx="4515" data-idx="3" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺1.250</b></div></div><div class="df-mrow devir" data-plx="4526" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="4526" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Veli Şimşek •4526</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="4526" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">2 Tem</span><span class="df-mrow-bak num">₺910</span></div><div class="df-mrow-firm">Veli Şimşek •4526</div><div class="df-mrow-desc">Sarf malzeme — PLX-2026-051</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺340</b></div></div><div class="df-mrow total" data-plx="4526" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺340</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺910</b></div></div><div class="df-mrow mevcut" data-plx="4526" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺910</b></div></div><div class="df-mrow devir" data-plx="5871" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="5871" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Şükrü Aslan •5871</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="5871" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺840</span></div><div class="df-mrow-firm">Şükrü Aslan •5871</div><div class="df-mrow-desc">Öğle yemeği — PLX-2026-043</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺410</b></div></div><div class="df-mrow total" data-plx="5871" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺410</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺840</b></div></div><div class="df-mrow mevcut" data-plx="5871" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺840</b></div></div><div class="df-mrow devir" data-plx="5882" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="5882" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Halil Güneş •5882</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow total" data-plx="5882" data-idx="2" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺0</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺1.250</b></div></div><div class="df-mrow mevcut" data-plx="5882" data-idx="3" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺1.250</b></div></div><div class="df-mrow devir" data-plx="5893" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="5893" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Metin Çetin •5893</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="5893" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺870</span></div><div class="df-mrow-firm">Metin Çetin •5893</div><div class="df-mrow-desc">Ekmek/pastane alışverişi — PLX-2026-046</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺380</b></div></div><div class="df-mrow total" data-plx="5893" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺380</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺870</b></div></div><div class="df-mrow mevcut" data-plx="5893" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺870</b></div></div><div class="df-mrow devir" data-plx="5904" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="5904" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Osman Polat •5904</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="5904" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">2 Tem</span><span class="df-mrow-bak num">₺900</span></div><div class="df-mrow-firm">Osman Polat •5904</div><div class="df-mrow-desc">Bakkal alışverişi — PLX-2026-049</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺350</b></div></div><div class="df-mrow total" data-plx="5904" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺350</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺900</b></div></div><div class="df-mrow mevcut" data-plx="5904" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺900</b></div></div><div class="df-mrow devir" data-plx="6231" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="6231" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">Recep Yaman •6231</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="6231" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺860</span></div><div class="df-mrow-firm">Recep Yaman •6231</div><div class="df-mrow-desc">Akşam yemeği — PLX-2026-045</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺390</b></div></div><div class="df-mrow total" data-plx="6231" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺390</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺860</b></div></div><div class="df-mrow mevcut" data-plx="6231" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺860</b></div></div><div class="df-mrow devir" data-plx="6242" data-idx="0" hidden><div class="df-mrow-title">ÖNCEKİ AYDAN DEVİR</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺0</b></div></div><div class="df-mrow" data-plx="6242" data-idx="1" hidden><div class="df-mrow-top"><span class="df-mrow-no">#1</span><span class="df-mrow-date">1 Tem</span><span class="df-mrow-bak num">₺1.250</span></div><div class="df-mrow-firm">İlyas Kurt •6242</div><div class="df-mrow-desc">Aylık toplu yükleme (12 kart × ₺1.250) — PLX-2026-041</div><div class="df-mrow-amt"><span>Yükleme</span><b class="df-in">₺1.250</b></div></div><div class="df-mrow" data-plx="6242" data-idx="2" hidden><div class="df-mrow-top"><span class="df-mrow-no">#2</span><span class="df-mrow-date">2 Tem</span><span class="df-mrow-bak num">₺910</span></div><div class="df-mrow-firm">İlyas Kurt •6242</div><div class="df-mrow-desc">Ekmek/pastane alışverişi — PLX-2026-050</div><div class="df-mrow-amt"><span>Harcama</span><b class="df-out">₺340</b></div></div><div class="df-mrow total" data-plx="6242" data-idx="3" hidden><div class="df-mrow-title">YÜKLEME – HARCAMA</div><div class="df-mrow-line"><span>Yükleme</span><b class="df-in">₺1.250</b></div><div class="df-mrow-line"><span>Harcama</span><b class="df-out">₺340</b></div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺910</b></div></div><div class="df-mrow mevcut" data-plx="6242" data-idx="4" hidden><div class="df-mrow-title">GÜNCEL BAKİYE</div><div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>₺910</b></div></div></div>
+        <!-- [T5A/Dalga5] bespoke #tblPluxeeMobile kart mount'u KALDIRILDI — #tblPluxee
+             artık gtable-cards ile 640px altında doğrudan kart görünümüne dönüşüyor (bkz CSS
+             yorumu). Ayrı bir kart DOM'u tutmak gvCols kolon senkronunu bozardı. -->
         <div class="gv-empty" id="plxEmpty" hidden>
           <div class="ge-ico"><i class="fa-solid fa-credit-card"></i></div>
           <h4>Eşleşen hareket yok</h4>
@@ -569,11 +578,15 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
      bakiyeler bozulmaz) ama SATIR kasa idiyomuyla PARİTE için görünür kalır — kasa'da devir
      satırı hep vardır, burada da öyle; yalnız değeri ₺0. ---- */
   var ISLEM_BY_ID = {};   /* [D18-B1] 'plx-042' → {kart, t}; satır tıklama + ?islem= + detay paylaşır */
+  /* [T5A/Dalga5] her <td> data-col (gvCols eşlemesi) + data-lbl (gtable-cards mobil kart
+     etiketi) taşır. devir/toplam/mevcut çerçeve satırlarının boş yükleme/harcama hücreleri
+     bilinçli olarak data-lbl ALMAZ — sayfanın ".gtable-cards td:empty{display:none}"
+     kuralı bunları kart modunda boş satır bırakmadan gizler (spec-liste-mimarisi.md §4). */
   function buildLedgerRows(){
     var html = '';
     KARTLAR.forEach(function(k){
       var run = 0, toplamIn = 0, toplamOut = 0;
-      html += '<tr class="df-devir" data-plx="'+k.no+'"><td></td><td colspan="3">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak">'+fmtTL(0)+'</td></tr>';
+      html += '<tr class="df-devir" data-plx="'+k.no+'"><td data-lbl=""></td><td colspan="3" data-lbl="">ÖNCEKİ AYDAN DEVİR</td><td class="num"></td><td class="num"></td><td class="num df-bak" data-col="bakiye" data-lbl="Bakiye">'+fmtTL(0)+'</td></tr>';
       k.tx.forEach(function(t, i){
         var inAmt = t.tur === 'yukleme' ? t.tutar : null;
         var outAmt = t.tur === 'harcama' ? t.tutar : null;
@@ -581,87 +594,20 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         toplamIn += inAmt || 0; toplamOut += outAmt || 0;
         var rid = 'plx-' + t.id;
         html += '<tr data-plx="'+k.no+'" data-id="'+rid+'" data-tur="'+t.tur+'" data-santiye="'+k.santiye+'" data-tarih="'+isoFromUzun(t.tarihUzun)+'" data-onay="'+ONAY_LBL[t.tur]+'" data-tip="yemek">'
-          + '<td class="df-no">'+(i + 1)+'</td><td class="df-date">'+t.tarih+'</td>'
-          + '<td class="df-firm">'+k.ad+' <span class="plx-no">•'+k.no+'</span></td>'
-          + '<td class="df-desc">'+t.desc+' — '+t.no+'</td>'
-          + '<td class="num'+(inAmt != null ? ' df-in' : '')+'">'+(inAmt != null ? fmtTL(inAmt) : '')+'</td>'
-          + '<td class="num'+(outAmt != null ? ' df-out' : '')+'">'+(outAmt != null ? fmtTL(outAmt) : '')+'</td>'
-          + '<td class="num df-bak">'+fmtTL(run)+'</td></tr>';
+          + '<td class="df-no" data-lbl="">'+(i + 1)+'</td><td class="df-date" data-col="tarih" data-lbl="Tarih">'+t.tarih+'</td>'
+          + '<td class="df-firm" data-col="kart" data-lbl="Kart / Personel">'+k.ad+' <span class="plx-no">•'+k.no+'</span></td>'
+          + '<td class="df-desc" data-col="aciklama" data-lbl="Açıklama">'+t.desc+' — '+t.no+'</td>'
+          + '<td class="num'+(inAmt != null ? ' df-in' : '')+'" data-col="yukleme" data-lbl="'+(inAmt != null ? 'Yükleme' : '')+'">'+(inAmt != null ? fmtTL(inAmt) : '')+'</td>'
+          + '<td class="num'+(outAmt != null ? ' df-out' : '')+'" data-col="harcama" data-lbl="'+(outAmt != null ? 'Harcama' : '')+'">'+(outAmt != null ? fmtTL(outAmt) : '')+'</td>'
+          + '<td class="num df-bak" data-col="bakiye" data-lbl="Bakiye">'+fmtTL(run)+'</td></tr>';
         ISLEM_BY_ID[rid] = {kart:k, t:t};
       });
-      html += '<tr class="df-total" data-plx="'+k.no+'"><td></td><td colspan="3">YÜKLEME – HARCAMA</td><td class="num df-in">'+fmtTL(toplamIn)+'</td><td class="num df-out">'+fmtTL(toplamOut)+'</td><td class="num df-bak">'+fmtTL(run)+'</td></tr>';
-      html += '<tr class="df-mevcut" data-plx="'+k.no+'"><td></td><td colspan="3">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak">'+fmtTL(run)+'</td></tr>';
+      html += '<tr class="df-total" data-plx="'+k.no+'"><td data-lbl=""></td><td colspan="3" data-lbl="">YÜKLEME – HARCAMA</td><td class="num df-in" data-col="yukleme" data-lbl="Yükleme">'+fmtTL(toplamIn)+'</td><td class="num df-out" data-col="harcama" data-lbl="Harcama">'+fmtTL(toplamOut)+'</td><td class="num df-bak" data-col="bakiye" data-lbl="Bakiye">'+fmtTL(run)+'</td></tr>';
+      html += '<tr class="df-mevcut" data-plx="'+k.no+'"><td data-lbl=""></td><td colspan="3" data-lbl="">GÜNCEL BAKİYE</td><td class="num"></td><td class="num"></td><td class="num df-bak" data-col="bakiye" data-lbl="Bakiye">'+fmtTL(run)+'</td></tr>';
     });
     document.getElementById('plxBody').innerHTML = html;
   }
   buildLedgerRows();
-
-  /* ============ Y17 MOBİL KART — Kart Defteri #tblPluxee (kasa emsali: tablo
-     satırlarıyla AYNI veri kaynağından ayrı kart DOM'u + data-idx + gvpage senkron;
-     data-label KULLANILMAZ). Kart data-idx'i seçili kart İÇİNDEKİ 0-tabanlı sıra. ============ */
-  var dfMobileList = document.getElementById('tblPluxeeMobile');
-  function dfCardBody(tr){
-    if(tr.classList.contains('df-devir') || tr.classList.contains('df-total') || tr.classList.contains('df-mevcut')){
-      var label = tr.children[1].textContent.trim();
-      var bakEl = tr.querySelector('.df-bak');
-      var bak = bakEl ? bakEl.textContent.trim() : '';
-      if(tr.classList.contains('df-total')){
-        var girenEl = tr.querySelector('.df-in'), cikanEl = tr.querySelector('.df-out');
-        return '<div class="df-mrow-title">' + label + '</div>'
-          + '<div class="df-mrow-line"><span>Yükleme</span><b class="df-in">' + (girenEl ? girenEl.textContent.trim() : '₺0') + '</b></div>'
-          + '<div class="df-mrow-line"><span>Harcama</span><b class="df-out">' + (cikanEl ? cikanEl.textContent.trim() : '₺0') + '</b></div>'
-          + '<div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>' + bak + '</b></div>';
-      }
-      return '<div class="df-mrow-title">' + label + '</div>'
-        + '<div class="df-mrow-line df-mrow-bal"><span>Bakiye</span><b>' + bak + '</b></div>';
-    }
-    var no = tr.children[0].textContent.trim();
-    var tarih = tr.children[1].textContent.trim();
-    var firm = tr.children[2].innerHTML;
-    var desc = tr.children[3].textContent.trim();
-    var girenEl = tr.querySelector('.df-in'), cikanEl = tr.querySelector('.df-out');
-    var hasIn = girenEl && girenEl.textContent.trim();
-    var hasOut = cikanEl && cikanEl.textContent.trim();
-    var bak = tr.querySelector('.df-bak').textContent.trim();
-    var amtLbl = hasIn ? 'Yükleme' : (hasOut ? 'Harcama' : '');
-    var amtCls = hasIn ? 'df-in' : (hasOut ? 'df-out' : '');
-    var amtVal = hasIn ? girenEl.textContent.trim() : (hasOut ? cikanEl.textContent.trim() : '—');
-    return '<div class="df-mrow-top"><span class="df-mrow-no">#' + no + '</span><span class="df-mrow-date">' + tarih + '</span><span class="df-mrow-bak num">' + bak + '</span></div>'
-      + '<div class="df-mrow-firm">' + firm + '</div>'
-      + (desc ? '<div class="df-mrow-desc">' + desc + '</div>' : '')
-      + '<div class="df-mrow-amt"><span>' + amtLbl + '</span><b class="' + amtCls + '">' + amtVal + '</b></div>';
-  }
-  function buildLedgerCards(){
-    var tbody = document.getElementById('plxBody');
-    if(!dfMobileList || !tbody) return;
-    dfMobileList.innerHTML = '';
-    var counters = {};
-    Array.prototype.forEach.call(tbody.children, function(tr){
-      var plx = tr.getAttribute('data-plx'); if(!plx) return;
-      var idx = counters[plx] || 0; counters[plx] = idx + 1;
-      var card = document.createElement('div');
-      card.className = 'df-mrow';
-      if(tr.classList.contains('df-devir')) card.classList.add('devir');
-      else if(tr.classList.contains('df-total')) card.classList.add('total');
-      else if(tr.classList.contains('df-mevcut')) card.classList.add('mevcut');
-      card.setAttribute('data-plx', plx);
-      card.setAttribute('data-idx', idx);
-      card.hidden = tr.hidden;
-      card.innerHTML = dfCardBody(tr);
-      dfMobileList.appendChild(card);
-    });
-  }
-  var tblPluxee = document.getElementById('tblPluxee');
-  if(tblPluxee){
-    tblPluxee.addEventListener('gvpage', function(e){
-      var d = e.detail;
-      Array.prototype.forEach.call(dfMobileList.children, function(card){
-        if(card.hidden) return;   /* farklı kart — pager zaten görmüyor */
-        var idx = parseInt(card.getAttribute('data-idx'), 10);
-        card.classList.toggle('gv-pg-hide', idx < (d.page - 1) * d.size || idx >= d.page * d.size);
-      });
-    });
-  }
 
   /* ---- detay paneli (Dalga 18 — ?islem= master-detail) ---- */
   var plxDetailNo = document.getElementById('plxDetailNo');
@@ -782,8 +728,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     });
     document.getElementById('plxEmpty').hidden = shown !== 0;
     document.getElementById('plxFoot').textContent = shown + ' hareket gösteriliyor · toplam ' + total + ' kayıt';
-    buildLedgerCards();
-    injectMobileChecks();
     syncSelectAllState();
     if(typeof syncCiktiHref === 'function') syncCiktiHref();
     gvPagerRefresh('#tblPluxee', true);
@@ -924,6 +868,26 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     });
   }
 
+  /* ============ T5A/Dalga5 — Kolonlar (gvCols), §8.4/§14-9 ============
+     Kolon seti #tblPluxee'nin MEVCUT başlıklarından türetildi (Tarih/Kart-Personel/
+     Açıklama/Yükleme/Harcama/Bakiye) — hepsi varsayılan görünür, bugünkü görünüm korunur.
+     "#" (seçim kutusu + sıra no) kolonu data-col TAŞIMAZ, kolon yönetimine hiç girmez. */
+  if(window.gvCols && document.getElementById('colsBtnPlx')){
+    gvCols.init({
+      mount: '#colsBtnPlx',
+      table: '#tblPluxee',
+      screen: 'pluxee',
+      cols: [
+        {key:'tarih', lbl:'Tarih', def:true},
+        {key:'kart', lbl:'Kart / Personel', def:true},
+        {key:'aciklama', lbl:'Açıklama', def:true},
+        {key:'yukleme', lbl:'Yükleme', def:true},
+        {key:'harcama', lbl:'Harcama', def:true},
+        {key:'bakiye', lbl:'Bakiye', def:true}
+      ]
+    });
+  }
+
   /* ============ §14/T-G — çoklu seçim (row-chk) + "Çıktı Al" seçim çubuğu.
      crm-personel.html Madde 5 çoklu-seçim deseninin bu sayfaya uyarlanması: yeni bir
      ui.js primitifi İCAT EDİLMEZ, sayfa-lokal state (selectedPlx) kalır. Yalnız gerçek
@@ -947,28 +911,12 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     var cell = tr.querySelector('.df-no');
     if(cell) cell.insertBefore(makeChk(key), cell.firstChild);
   });
-  /* mobil kartlar #tblPluxeeMobile'da kendi data-id'sini taşımaz (bkz dfCardBody) — ama
-     buildLedgerCards() tbody satırlarını 1:1 aynı sırada (gizli/görünür ayrımı YAPMADAN)
-     dolaşıp kart üretir (data-plx zaten kopyalanır), bu yüzden index eşleşmesi kesindir. */
-  function injectMobileChecks(){
-    var rows = document.querySelectorAll('#tblPluxee tbody tr');
-    var cards = document.querySelectorAll('#tblPluxeeMobile .df-mrow');
-    rows.forEach(function(tr, i){
-      var rid = tr.getAttribute('data-id');
-      var card = cards[i];
-      if(!rid || !card) return;
-      var key = tr.getAttribute('data-plx') + ':' + rid;
-      card.setAttribute('data-id', rid);
-      if(!card.querySelector('.row-chk')){
-        var top = card.querySelector('.df-mrow-top');
-        if(top) top.insertBefore(makeChk(key), top.firstChild);
-      }
-      card.classList.toggle('is-checked', !!selectedPlx[key]);
-    });
-  }
+  /* [T5A/Dalga5] injectMobileChecks() KALDIRILDI — #tblPluxee artık tek DOM (gtable-cards),
+     checkbox zaten yukarıda gerçek satıra eklendi; ayrı bir mobil kart klonuna
+     kopyalamaya gerek kalmadı. */
   function updateRowHighlight(rid, on){
     document.querySelectorAll('.row-chk[data-rid="' + rid + '"]').forEach(function(chkLbl){
-      var row = chkLbl.closest('tr') || chkLbl.closest('.df-mrow');
+      var row = chkLbl.closest('tr');
       if(row) row.classList.toggle('is-checked', on);
     });
   }
