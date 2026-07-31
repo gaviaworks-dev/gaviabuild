@@ -77,6 +77,9 @@
      crm-finans-kurum.html'deki .kpi-num.compact deseni (bkz. o dosyanın stil bloğu) */
   .kpi-num.compact{font-size:16px !important}
 }
+
+/* T-R3 — seçili aralık KPI + spark grafik başlığı (B §6.2/§7.3) */
+#tblAkis tbody tr.gv-range-off{opacity:.3}
 </style>
 </head>
 <body data-sec="finans" data-screen="nakit">
@@ -111,11 +114,35 @@
           <button data-p="genel" class="is-on">Şirket Geneli</button>
           <button data-p="vk">Vadi Konakları</button>
         </div>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Nakit akışı"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-ghost btn-sm" href="#" id="btnNakitExport" data-gv-export='{"baslik":"Nakit Akışı","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
-    <div class="kpi-grid">
+    <div class="rp-toolbar">
+      <div class="rp-tb-group">
+        <span style="font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase">Hafta aralığı</span>
+        <div data-gvdaterange style="margin-left:4px"></div>
+      </div>
+      <div class="rp-tb-spacer"></div>
+      <div class="rp-tb-acts">
+        <span style="font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-circle-info"></i> Kümülatif net nedir? <span data-help="kumulatif-net-nedir"></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="gv-card" id="rangeKpiCard" hidden style="margin-bottom:20px">
+      <div class="gc-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div class="kpi-ico" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-calendar-check"></i></div>
+        <div style="min-width:0;flex:1">
+          <div class="kpi-num num compact" id="rangeKpiVal" style="font-size:19px">—</div>
+          <div class="kpi-lbl" id="rangeKpiLbl">Seçili aralık net nakit</div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="rangeKpiClear"><i class="fa-solid fa-xmark"></i> Aralığı Temizle</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpiGridDefault">
       <div class="kpi-card kpi-ok">
         <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-arrow-trend-up"></i></div>
         <div><div class="kpi-num num compact">+₺670.000</div><div class="kpi-lbl">7 gün kümülatif net</div>
@@ -158,6 +185,10 @@
 
     <div class="gv-card" style="margin-bottom:20px">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-line"></i> Haftalık Nakit Akışı</div><span class="ph-sub" style="margin:0">13 hafta · 2 Tem – 1 Eki 2026</span></div>
+      <div class="rp-chart" style="box-shadow:none;border:none;border-bottom:1px solid var(--line);border-radius:0;margin-bottom:0">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-wave-square"></i> Kümülatif Nakit Eğrisi</h3></div>
+        <div class="rp-chart-body" id="nakitSpark"></div>
+      </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblAkis">
           <thead>
@@ -170,6 +201,15 @@
       </div>
       <div class="tbl-note"><i class="fa-solid fa-circle-info"></i> Tablo şirket geneli konsolide nakit pozisyonunu gösterir; kümülatif kırmızı hücreler negatif nakit pozisyonunu işaret eder. Proje bazlı haftalık kırılım kapsam dışıdır — proje/şirket geneli görünümü aşağıdaki tahsilat ve ödeme takvimi kartlarında uygulanır.</div>
     </div>
+
+    <div class="gv-empty rp-error" id="nakitError" hidden style="margin-bottom:20px">
+      <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h4>Nakit akışı verisi yüklenemedi</h4>
+      <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
+      <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+    </div>
+
+    <div class="rp-note" id="nakitNote"><i class="fa-solid fa-lightbulb"></i> <strong>60 gün ufkunda −₺2.990.000'a düşen kümülatif nakit</strong> — FTR-2026-09 (₺2.840.000, Marmara Demir Çelik) ve 28 Ağustos bordrosu (₺3.400.000) aynı pencerede çakışıyor. 90 gün ufkunda GE2 lansman kaporası (₺4.200.000) ve gecikmiş Toprak tahsilatının (₺570.000, 12 gün gecikme) tahsil edilmesiyle toparlanma bekleniyor — bu iki kalem gerçekleşmezse açık derinleşir.</div>
 
     <!-- statik bake — DEFAULT görünüm (curProje='genel', tüm kayıtlar) tahsilat/ödeme
          listeleri VERBATIM; JS yüklenince aynı mount innerHTML ile ezilir (renderSched())
@@ -212,10 +252,18 @@
   ];
   var CHK_CLS = {'7g':'', '30g':'', '60g':'danger', '90g':'warn'};
 
+  var AY_MAP = {Oca:0,Şub:1,Mar:2,Nis:3,May:4,Haz:5,Tem:6,Ağu:7,Eyl:8,Eki:9,Kas:10,Ara:11};
+  function haftaBaslangic(s){
+    var m = /(\d{1,2})\s*(Oca|Şub|Mar|Nis|May|Haz|Tem|Ağu|Eyl|Eki|Kas|Ara)/.exec(s);
+    if(!m) return null;
+    return new Date(2026, AY_MAP[m[2]], parseInt(m[1],10));
+  }
+
   var rows = '';
-  AKIS.forEach(function(a){
+  AKIS.forEach(function(a, i){
     var neg = a.kum < 0;
-    rows += '<tr'+(a.chk?' class="is-checkpoint"':'')+'>'
+    var ts = haftaBaslangic(a.tarih);
+    rows += '<tr'+(a.chk?' class="is-checkpoint"':'')+' data-w="'+i+'"'+(ts?' data-ts="'+ts.getTime()+'"':'')+'>'
       + '<td><div class="hafta-cell"><b>'+a.hafta+'</b><span class="muted" style="font-size:11.5px">'+a.tarih+'</span>'+(a.chk?'<span class="chk-badge '+CHK_CLS[a.chk]+'">'+a.chk+'</span>':'')+'</div></td>'
       + '<td class="num">'+tl(a.giren)+'</td>'
       + '<td class="num">'+tl(a.cikan)+'</td>'
@@ -224,6 +272,45 @@
       + '</tr>';
   });
   document.getElementById('tblAkisBody').innerHTML = rows;
+
+  gvSpark('#nakitSpark', AKIS.map(function(a){ return a.kum; }), {tone: 'acc', baslik:'13 haftalık kümülatif nakit pozisyonu'});
+
+  var rangeVal = null;
+  function renderRangeKpi(){
+    var card = document.getElementById('rangeKpiCard');
+    document.querySelectorAll('#tblAkis tbody tr[data-w]').forEach(function(tr){
+      tr.classList.remove('gv-range-off');
+      if(rangeVal){
+        var ts = tr.getAttribute('data-ts');
+        if(!ts || +ts < rangeVal.from.getTime() || +ts > rangeVal.to.getTime()) tr.classList.add('gv-range-off');
+      }
+    });
+    if(!rangeVal){ card.hidden = true; return; }
+    var net = 0, adet = 0;
+    AKIS.forEach(function(a, i){
+      var tr = document.querySelector('#tblAkis tbody tr[data-w="'+i+'"]');
+      if(tr && !tr.classList.contains('gv-range-off')){ net += (a.giren - a.cikan); adet++; }
+    });
+    card.hidden = false;
+    document.getElementById('rangeKpiVal').textContent = (net>=0?'+':'−') + tl(Math.abs(net));
+    document.getElementById('rangeKpiVal').style.color = net < 0 ? 'var(--danger)' : 'var(--ok)';
+    document.getElementById('rangeKpiLbl').textContent = 'Seçili aralık net nakit — ' + adet + ' hafta (' + rangeVal.label + ')';
+  }
+  window.gvDateRange('[data-gvdaterange]', {
+    emptyLabel: 'Tüm haftalar',
+    onChange: function(val){ rangeVal = val; renderRangeKpi(); }
+  });
+  document.getElementById('rangeKpiClear').addEventListener('click', function(){
+    var dr = document.querySelector('[data-gvdaterange]');
+    if(dr && dr._gvDr) dr._gvDr.clear();
+  });
+
+  gvHelp.metinler['kumulatif-net-nedir'] = {
+    baslik: 'Kümülatif Net Nedir?',
+    mesaj: 'Kümülatif net, seçili başlangıç tarihinden itibaren her haftanın (giren − çıkan) farkının üst üste toplanmasıyla bulunan nakit pozisyonudur. Negatife düştüğü hafta, mevcut likidite ile o haftaya kadarki tüm giriş/çıkışlar karşılanamıyor demektir — nakit açığı riskinin en erken göründüğü noktadır.'
+  };
+  gvHelp.init();
+  gvExport.bind();
 
   var TAHSILAT = [
     {proje:'vk', durum:'danger', ic:'fa-triangle-exclamation', baslik:'Toprak — SSZ-2026-004 5. taksit', link:'crm-satis-sozlesme-detay.html?ssz=2026-004', alt:'GECİKMİŞ · vade 20 Haz, 12 gündür · tahsilat girişimi 10 Tem', tutar:570000, badge:{cls:'danger', lbl:'12 gün gecikme'}},

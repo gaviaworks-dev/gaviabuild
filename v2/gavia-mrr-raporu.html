@@ -140,6 +140,19 @@ body{font-family:var(--font);color:var(--on-dark)}
   .pc-card-head{padding:14px 16px}
   .pc-card-foot{padding:12px 16px}
 }
+
+/* ============ B §6.2 eklentileri (T-R4) — tarih aralığı · firma filtresi ·
+   değerlendirme. MEVCUT pc-* dark tokenlarıyla TUTARLI, yeni bir bileşen dili
+   İCAT EDİLMEDİ. gvExport/gvResult modalı LIGHT temalı kalır — bu sayfada
+   `gvToast` zaten aynı şekilde kullanılıyordu (data-contact), emsal var. ============ */
+.filt-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.filt-row .filt-lbl{font-size:12px;font-weight:700;color:var(--on-dark-mut);display:flex;align-items:center;gap:6px;flex:none}
+.filt-chips{display:flex;gap:8px;flex-wrap:wrap}
+.filt-chips button{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--r-pill);font-size:12.5px;font-weight:700;color:var(--on-dark-mut);background:transparent;border:1px solid var(--gv-border-dark);cursor:pointer;font-family:inherit;transition:.18s var(--ease)}
+.filt-chips button:hover{color:#fff;background:rgba(255,255,255,.05)}
+.filt-chips button.is-on{color:var(--gv-deep);background:var(--gv-mint);border-color:transparent}
+.eval-box{font-size:13px;color:var(--on-dark);line-height:1.75}
+.eval-box b{color:#fff}
 </style>
 </head>
 <body>
@@ -169,6 +182,27 @@ body{font-family:var(--font);color:var(--on-dark)}
       <div class="pc-eyebrow"><i class="fa-solid fa-chart-line"></i> Platform Konsolu</div>
       <h1 class="pc-h1">MRR / ARR Detay Raporu</h1>
       <p class="pc-sub">Aylık yinelenen gelir trendi, paket bazlı kırılım ve tenant bazlı katkı — 2 Temmuz 2026 itibarıyla.</p>
+      <div class="ph-actions" style="margin-top:14px"><button type="button" class="btn btn-ghost-dk btn-sm" id="btnMrrCikti"><i class="fa-solid fa-download"></i> Çıktı Al</button></div>
+    </div>
+
+    <div class="filt-row">
+      <span class="filt-lbl"><i class="fa-solid fa-calendar-days"></i> Tarih Aralığı</span>
+      <div class="filt-chips" id="trendRange">
+        <button data-r="3" ><i class="fa-solid fa-calendar-day"></i> Son 3 Ay</button>
+        <button data-r="6"><i class="fa-solid fa-calendar-week"></i> Son 6 Ay</button>
+        <button data-r="7" class="is-on"><i class="fa-solid fa-calendar"></i> Yıl Başından (Oca–Tem)</button>
+      </div>
+    </div>
+    <div class="filt-row">
+      <span class="filt-lbl"><i class="fa-solid fa-building"></i> Firma</span>
+      <div class="filt-chips" id="firmaFilter">
+        <button data-f="tumu" class="is-on"><i class="fa-solid fa-layer-group"></i> Tümü</button>
+        <button data-f="miray">Miray Yapı Group</button>
+        <button data-f="yapitas">Yapıtaş İnşaat</button>
+        <button data-f="ege">Ege Modern İnşaat</button>
+        <button data-f="kuzey">Kuzey Proje Ltd.</button>
+        <button data-f="cinar">Çınar İnşaat</button>
+      </div>
     </div>
 
     <div class="pc-kpis">
@@ -197,17 +231,9 @@ body{font-family:var(--font);color:var(--on-dark)}
     <div class="pc-grid-2">
       <div class="pc-stack">
         <div class="pc-card">
-          <div class="pc-card-head"><div><div class="pc-card-title"><i class="fa-solid fa-chart-column"></i> MRR Trendi</div><div class="pc-card-sub">Ocak – Temmuz 2026 · dönem sonu MRR</div></div></div>
+          <div class="pc-card-head"><div><div class="pc-card-title"><i class="fa-solid fa-chart-column"></i> MRR Trendi</div><div class="pc-card-sub" id="trendSub">Ocak – Temmuz 2026 · dönem sonu MRR</div></div></div>
           <div class="pc-card-body">
-            <div class="growth-chart">
-              <div class="growth-col"><div class="growth-bar-track" style="height:97%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">60.200</div><div class="growth-lbl">Oca</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:97%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">60.200</div><div class="growth-lbl">Şub</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:97%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">60.200</div><div class="growth-lbl">Mar</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:97%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">60.200</div><div class="growth-lbl">Nis</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:97%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">60.200</div><div class="growth-lbl">May</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:100%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">61.700</div><div class="growth-lbl">Haz</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:100%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">61.700</div><div class="growth-lbl">Tem</div></div>
-            </div>
+            <div class="growth-chart" id="trendChart"></div>
           </div>
           <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> Haziran artışı: Yapıtaş İnşaat A.Ş.'nin dönemsel promosyon fiyatı (₺13.400) sözleşme fiyatına (₺14.900) döndü — Miray ve Ege bu dönemde sabit.</div>
         </div>
@@ -217,38 +243,131 @@ body{font-family:var(--font);color:var(--on-dark)}
           <div class="pc-card-body flush">
             <table class="pc-table">
               <thead><tr><th>Firma</th><th>Paket</th><th class="num">Aylık Katkı</th><th class="num">MRR Payı</th></tr></thead>
-              <tbody>
-                <tr><td class="t-strong"><a href="gavia-firma-detay.html?firma=miray">Miray Yapı Group</a></td><td><span class="tier paid"><i class="fa-solid fa-crown"></i> Enterprise</span></td><td class="num">₺26.900</td><td class="num">%44</td></tr>
-                <tr><td class="t-strong"><a href="gavia-firma-detay.html?firma=yapitas">Yapıtaş İnşaat A.Ş.</a></td><td><span class="tier paid"><i class="fa-solid fa-gem"></i> Professional</span></td><td class="num">₺14.900</td><td class="num">%24</td></tr>
-                <tr><td class="t-strong"><a href="gavia-firma-detay.html?firma=ege">Ege Modern İnşaat</a></td><td><span class="tier paid"><i class="fa-solid fa-handshake"></i> CRM + Sales</span></td><td class="num">₺19.900</td><td class="num">%32</td></tr>
-                <tr><td class="t-strong"><a href="gavia-firma-detay.html?firma=kuzey">Kuzey Proje Ltd.</a></td><td><span class="tier"><i class="fa-solid fa-layer-group"></i> Basic · Deneme</span></td><td class="num">₺0</td><td class="num">—</td></tr>
-                <tr><td class="t-strong"><a href="gavia-firma-detay.html?firma=cinar">Çınar İnşaat</a></td><td><span class="tier"><i class="fa-solid fa-seedling"></i> Ücretsiz</span></td><td class="num">₺0</td><td class="num">—</td></tr>
-              </tbody>
-              <tfoot><tr><td colspan="2">Toplam MRR</td><td class="num">₺61.700</td><td class="num">%100</td></tr></tfoot>
+              <tbody id="tenantBody"></tbody>
+              <tfoot><tr id="tenantFoot"><td colspan="2">Toplam MRR</td><td class="num">₺61.700</td><td class="num">%100</td></tr></tfoot>
             </table>
           </div>
         </div>
       </div>
 
-      <div class="pc-card">
-        <div class="pc-card-head"><div><div class="pc-card-title"><i class="fa-solid fa-chart-pie"></i> Paket Bazlı Kırılım</div><div class="pc-card-sub">3 ücretli firma · deneme ve ücretsiz pakette ₺0 katkı</div></div></div>
-        <div class="pc-card-body">
-          <div class="mrr-bar">
-            <div class="mrr-seg" style="width:24%;background:var(--gv-mint-bright)"></div>
-            <div class="mrr-seg" style="width:44%;background:var(--gv-mint)"></div>
-            <div class="mrr-seg" style="width:32%;background:var(--gv-mint);opacity:.5"></div>
+      <div class="pc-stack">
+        <div class="pc-card">
+          <div class="pc-card-head"><div><div class="pc-card-title"><i class="fa-solid fa-chart-pie"></i> Paket Bazlı Kırılım</div><div class="pc-card-sub">3 ücretli firma · deneme ve ücretsiz pakette ₺0 katkı</div></div></div>
+          <div class="pc-card-body">
+            <div class="mrr-bar">
+              <div class="mrr-seg" style="width:24%;background:var(--gv-mint-bright)"></div>
+              <div class="mrr-seg" style="width:44%;background:var(--gv-mint)"></div>
+              <div class="mrr-seg" style="width:32%;background:var(--gv-mint);opacity:.5"></div>
+            </div>
+            <div class="mrr-legend">
+              <div class="mrr-leg-item"><span class="mrr-dot" style="background:var(--gv-mint-bright)"></span><div class="mrr-leg-txt"><b>Professional</b><span>₺14.900 · %24 · 1 firma</span></div></div>
+              <div class="mrr-leg-item"><span class="mrr-dot" style="background:var(--gv-mint)"></span><div class="mrr-leg-txt"><b>Enterprise</b><span>₺26.900 · %44 · 1 firma</span></div></div>
+              <div class="mrr-leg-item"><span class="mrr-dot" style="background:var(--gv-mint);opacity:.5"></span><div class="mrr-leg-txt"><b>CRM + Sales</b><span>₺19.900 · %32 · 1 firma</span></div></div>
+            </div>
           </div>
-          <div class="mrr-legend">
-            <div class="mrr-leg-item"><span class="mrr-dot" style="background:var(--gv-mint-bright)"></span><div class="mrr-leg-txt"><b>Professional</b><span>₺14.900 · %24 · 1 firma</span></div></div>
-            <div class="mrr-leg-item"><span class="mrr-dot" style="background:var(--gv-mint)"></span><div class="mrr-leg-txt"><b>Enterprise</b><span>₺26.900 · %44 · 1 firma</span></div></div>
-            <div class="mrr-leg-item"><span class="mrr-dot" style="background:var(--gv-mint);opacity:.5"></span><div class="mrr-leg-txt"><b>CRM + Sales</b><span>₺19.900 · %32 · 1 firma</span></div></div>
-          </div>
+          <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> ₺14.900 + ₺26.900 + ₺19.900 = ₺61.700 — toplam MRR ile birebir eşleşir.</div>
         </div>
-        <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> ₺14.900 + ₺26.900 + ₺19.900 = ₺61.700 — toplam MRR ile birebir eşleşir.</div>
+
+        <!-- B §6.2 — yorum/değerlendirme alanı -->
+        <div class="pc-card">
+          <div class="pc-card-head"><div class="pc-card-title"><i class="fa-solid fa-lightbulb"></i> Değerlendirme</div></div>
+          <div class="pc-card-body eval-box" id="mrrEval"></div>
+        </div>
       </div>
     </div>
   </main>
 </div>
 <script src="assets/js/ui.js"></script>
+<script>
+/* ---- B §6.2 — tarih aralığı (trend dilimleme) + firma filtresi + değerlendirme
+   + çıktı al (T-R4). Sayılar shell.js DALGA 13/669 kanonik bloğuyla BİREBİR —
+   yeni bir tutar İCAT EDİLMEDİ, yalnız statik HTML'in JS-render karşılığı kuruldu. ---- */
+(function(){
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+
+  var TREND = [
+    {lbl:'Oca', val:60200}, {lbl:'Şub', val:60200}, {lbl:'Mar', val:60200}, {lbl:'Nis', val:60200},
+    {lbl:'May', val:60200}, {lbl:'Haz', val:61700}, {lbl:'Tem', val:61700}
+  ];
+  var TENANTS = [
+    {key:'miray', ad:'Miray Yapı Group', href:'gavia-firma-detay.html?firma=miray', paket:'Enterprise', paketIco:'fa-crown', paid:true, katki:26900},
+    {key:'yapitas', ad:'Yapıtaş İnşaat A.Ş.', href:'gavia-firma-detay.html?firma=yapitas', paket:'Professional', paketIco:'fa-gem', paid:true, katki:14900},
+    {key:'ege', ad:'Ege Modern İnşaat', href:'gavia-firma-detay.html?firma=ege', paket:'CRM + Sales', paketIco:'fa-handshake', paid:true, katki:19900},
+    {key:'kuzey', ad:'Kuzey Proje Ltd.', href:'gavia-firma-detay.html?firma=kuzey', paket:'Basic · Deneme', paketIco:'fa-layer-group', paid:false, katki:0},
+    {key:'cinar', ad:'Çınar İnşaat', href:'gavia-firma-detay.html?firma=cinar', paket:'Ücretsiz', paketIco:'fa-seedling', paid:false, katki:0}
+  ];
+  var MRR_TOPLAM = TENANTS.reduce(function(s,t){ return s + t.katki; }, 0);   /* ₺61.700 — kanonik */
+
+  var trendRange = 7;
+  var firmaFiltre = 'tumu';
+
+  function renderTrend(){
+    var slice = TREND.slice(TREND.length - trendRange);
+    var max = Math.max.apply(null, slice.map(function(t){ return t.val; }));
+    document.getElementById('trendChart').innerHTML = slice.map(function(t){
+      var h = Math.round((t.val / max) * 100);
+      return '<div class="growth-col"><div class="growth-bar-track" style="height:' + h + '%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">' + t.val.toLocaleString('tr-TR') + '</div><div class="growth-lbl">' + t.lbl + '</div></div>';
+    }).join('');
+    document.getElementById('trendSub').textContent = slice[0].lbl + ' – ' + slice[slice.length-1].lbl + ' 2026 · dönem sonu MRR';
+  }
+
+  function renderTenants(){
+    var rows = firmaFiltre === 'tumu' ? TENANTS : TENANTS.filter(function(t){ return t.key === firmaFiltre; });
+    document.getElementById('tenantBody').innerHTML = rows.map(function(t){
+      return '<tr><td class="t-strong"><a href="' + t.href + '">' + t.ad + '</a></td>'
+        + '<td><span class="tier' + (t.paid ? ' paid' : '') + '"><i class="fa-solid ' + t.paketIco + '"></i> ' + t.paket + '</span></td>'
+        + '<td class="num">' + (t.katki ? tl(t.katki) : '₺0') + '</td>'
+        + '<td class="num">' + (t.katki ? '%' + Math.round(t.katki / MRR_TOPLAM * 100) : '—') + '</td></tr>';
+    }).join('');
+    var toplamSecili = rows.reduce(function(s,t){ return s + t.katki; }, 0);
+    var foot = document.getElementById('tenantFoot');
+    foot.innerHTML = firmaFiltre === 'tumu'
+      ? '<td colspan="2">Toplam MRR</td><td class="num">' + tl(MRR_TOPLAM) + '</td><td class="num">%100</td>'
+      : '<td colspan="2">Seçili Firma Katkısı</td><td class="num">' + tl(toplamSecili) + '</td><td class="num">' + (toplamSecili ? '%' + Math.round(toplamSecili / MRR_TOPLAM * 100) : '—') + '</td>';
+  }
+
+  function renderEval(){
+    var enBuyuk = TENANTS.slice().sort(function(a,b){ return b.katki - a.katki; })[0];
+    var deneme = TENANTS.filter(function(t){ return t.paket.indexOf('Deneme') !== -1; });
+    var msgs = [];
+    msgs.push('Platform MRR\'ı <b>' + tl(MRR_TOPLAM) + '</b> — en büyük katkı <b>' + enBuyuk.ad + '</b> (' + tl(enBuyuk.katki) + ', %' + Math.round(enBuyuk.katki/MRR_TOPLAM*100) + ').');
+    msgs.push('Haziran artışı (+₺1.500) Yapıtaş\'ın dönemsel promosyon fiyatının (₺13.400) sözleşme fiyatına (₺14.900) dönmesinden geldi — yeni tenant eklenmedi.');
+    if(deneme.length) msgs.push(deneme.map(function(t){return t.ad;}).join(', ') + ' hâlâ deneme sürecinde — dönüşürse MRR\'a katkısı henüz platform toplamına YANSIMADI.');
+    msgs.push('3 ücretli / 5 firma (%60 dönüşüm oranı) — 2 firma (deneme + ücretsiz) toplamda ₺0 katkı yapıyor.');
+    document.getElementById('mrrEval').innerHTML = '<ul style="margin:0;padding-left:18px"><li style="margin-bottom:6px">' + msgs.join('</li><li style="margin-bottom:6px">') + '</li></ul>';
+  }
+
+  document.getElementById('trendRange').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-r]'); if(!btn) return;
+    trendRange = parseInt(btn.getAttribute('data-r'), 10);
+    this.querySelectorAll('button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
+    renderTrend();
+  });
+  document.getElementById('firmaFilter').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-f]'); if(!btn) return;
+    firmaFiltre = btn.getAttribute('data-f');
+    this.querySelectorAll('button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
+    renderTenants();
+  });
+
+  if(window.gvExport){
+    gvExport.init('#btnMrrCikti', {
+      baslik: 'MRR / ARR Detay Raporu',
+      formatlar: ['pdf','excel','yazdir'],
+      kapsam: ['tumu','filtreli'],
+      filtreOzeti: function(){
+        var parcalar = [];
+        parcalar.push(firmaFiltre === 'tumu' ? 'Tüm firmalar' : 'Firma: ' + (TENANTS.filter(function(t){return t.key===firmaFiltre;})[0]||{}).ad);
+        parcalar.push('Trend aralığı: Son ' + trendRange + ' ay');
+        return parcalar.join(' · ');
+      }
+    });
+  }
+
+  renderTrend();
+  renderTenants();
+  renderEval();
+})();
+</script>
 </body>
 </html>

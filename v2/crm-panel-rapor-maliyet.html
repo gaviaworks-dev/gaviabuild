@@ -66,6 +66,10 @@
 
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
+
+/* T-R3 — şantiye filtresi + tarih aralığı (B §6.2) */
+#tblKalem th.is-off,#tblKalem td.is-off{opacity:.32}
+.att-row.is-off,.cmp-row.is-off{display:none}
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -99,32 +103,59 @@
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
         <a class="btn btn-acc btn-sm" href="crm-finans-maliyet.html"><i class="fa-solid fa-chart-column"></i> Detaylı maliyet ekranı →</a>
-        <button class="btn btn-ghost btn-sm" data-export="Maliyet raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <a class="btn btn-ghost btn-sm" href="#" id="btnMaliyetRpExport" data-gv-export='{"baslik":"Şantiye Maliyet Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
     <!-- ============ YÖNETİM GÖRÜNÜMÜ (superadmin·sahip·yonetim·teknik·muhasebe·ik) ============ -->
     <section data-view="yonetim">
+      <div class="rp-toolbar">
+        <div class="rp-tb-group">
+          <div class="chips" id="mrSantiyeChips">
+            <button class="chip is-on" data-s="tumu">Tümü <span class="ch-cnt">3</span></button>
+            <button class="chip" data-s="vadi">Vadi Konakları</button>
+            <button class="chip" data-s="liman">Liman Lojistik</button>
+            <button class="chip" data-s="merkez">Merkez Şantiye</button>
+            <button class="chip" data-s="diger">Tamamlanan / Planlama</button>
+          </div>
+          <div data-gvdaterange style="margin-left:4px"></div>
+        </div>
+      </div>
+
+      <div id="mrWrap">
+      <div data-gv-state="loading" class="gv-empty" hidden>
+        <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+        <h4>Yükleniyor…</h4>
+      </div>
+      <div data-gv-state="error" class="gv-empty rp-error" hidden>
+        <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h4>Maliyet raporu yüklenemedi</h4>
+        <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
+        <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+      </div>
+      <div data-gv-state="empty" class="gv-empty rp-empty" id="mrEmpty" hidden></div>
+      <div data-gv-state="content" id="mrContent">
+
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-ico"><i class="fa-solid fa-coins"></i></div>
-          <div><div class="kpi-num num compact" style="font-size:19px">₺5.694.680</div><div class="kpi-lbl">Toplam maliyet (3 şantiye)</div>
-          <div class="kpi-delta flat"><i class="fa-solid fa-file-lines"></i> 30 kaynak kalem</div></div>
+          <div><div class="kpi-num num compact" id="mrKpiToplam" style="font-size:19px">₺5.694.680</div><div class="kpi-lbl" id="mrKpiToplamLbl">Toplam maliyet (3 şantiye)</div>
+          <div class="kpi-delta flat" id="mrKpiToplamDelta"><i class="fa-solid fa-file-lines"></i> 30 kaynak kalem</div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-helmet-safety"></i></div>
-          <div><div class="kpi-num num compact" style="font-size:19px">₺3.745.800</div><div class="kpi-lbl">Vadi Konakları payı</div>
-          <div class="kpi-delta flat"><i class="fa-solid fa-percent"></i> Toplamın %66'sı</div></div>
+          <div><div class="kpi-num num compact" id="mrKpiPay" style="font-size:19px">₺3.745.800</div><div class="kpi-lbl" id="mrKpiPayLbl">Vadi Konakları payı</div>
+          <div class="kpi-delta flat" id="mrKpiPayDelta"><i class="fa-solid fa-percent"></i> Toplamın %66'sı</div></div>
         </div>
-        <div class="kpi-card warn">
+        <div class="kpi-card warn" id="mrKpiBekleyenCard">
           <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
-          <div><div class="kpi-num num compact" style="font-size:19px">₺1.928.850</div><div class="kpi-lbl">Onayda / bekleyen toplam</div>
-          <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Tamamı Vadi Konakları'na ait</div></div>
+          <div><div class="kpi-num num compact" id="mrKpiBekleyen" style="font-size:19px">₺1.928.850</div><div class="kpi-lbl">Onayda / bekleyen toplam</div>
+          <div class="kpi-delta down" id="mrKpiBekleyenDelta"><i class="fa-solid fa-triangle-exclamation"></i> Tamamı Vadi Konakları'na ait</div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-ico"><i class="fa-solid fa-file-invoice"></i></div>
-          <div><div class="kpi-num num">30</div><div class="kpi-lbl">Kaynak belge</div>
-          <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 9 kasa · 6 kurum · 6 taşeron · 9 satın alma</div></div>
+          <div><div class="kpi-num num" id="mrKpiBelge">30</div><div class="kpi-lbl">Kaynak belge</div>
+          <div class="kpi-delta flat" id="mrKpiBelgeDelta"><i class="fa-solid fa-layer-group"></i> 9 kasa · 6 kurum · 6 taşeron · 9 satın alma</div></div>
         </div>
       </div>
 
@@ -135,22 +166,22 @@
             <thead>
               <tr>
                 <th>Kalem Türü</th>
-                <th class="num">Vadi Konakları</th>
-                <th class="num">Liman Lojistik</th>
-                <th class="num">Merkez Şantiye</th>
-                <th class="num">Toplam</th>
+                <th class="num" data-s="vadi">Vadi Konakları</th>
+                <th class="num" data-s="liman">Liman Lojistik</th>
+                <th class="num" data-s="merkez">Merkez Şantiye</th>
+                <th class="num" data-s="tumu">Toplam</th>
               </tr>
             </thead>
             <tbody>
               <!-- kaynak: crm-operasyon-kasa.html KSA-2026-013…022 (taslak KSA-2026-022 tutarsız + reddedilen KSA-2026-017 ₺4.500 Liman — ikisi de hariç) -->
-              <tr><td><div class="km-lbl"><span class="km-ico kasa"><i class="fa-solid fa-cash-register"></i></span> Kasa Çıkışı</div></td><td class="num">₺61.450</td><td class="num">₺17.050</td><td class="num">₺8.880</td><td class="num">₺87.380</td></tr>
+              <tr><td><div class="km-lbl"><span class="km-ico kasa"><i class="fa-solid fa-cash-register"></i></span> Kasa Çıkışı</div></td><td class="num" data-s="vadi">₺61.450</td><td class="num" data-s="liman">₺17.050</td><td class="num" data-s="merkez">₺8.880</td><td class="num" data-s="tumu">₺87.380</td></tr>
               <!-- kaynak: crm-finans-kurum.html HKD-2026-001…006 -->
-              <tr><td><div class="km-lbl"><span class="km-ico kurum"><i class="fa-solid fa-building-columns"></i></span> Kurum Hakedişi</div></td><td class="num">₺2.790.000</td><td class="num">₺1.655.000</td><td class="num">₺0</td><td class="num">₺4.445.000</td></tr>
+              <tr><td><div class="km-lbl"><span class="km-ico kurum"><i class="fa-solid fa-building-columns"></i></span> Kurum Hakedişi</div></td><td class="num" data-s="vadi">₺2.790.000</td><td class="num" data-s="liman">₺1.655.000</td><td class="num" data-s="merkez">₺0</td><td class="num" data-s="tumu">₺4.445.000</td></tr>
               <!-- kaynak: crm-finans-taseron.html TH-2026-002/005/008/009/013/014 (net tutar) -->
-              <tr><td><div class="km-lbl"><span class="km-ico taseron"><i class="fa-solid fa-people-arrows"></i></span> Taşeron Hakedişi</div></td><td class="num">₺615.200</td><td class="num">₺128.500</td><td class="num">₺0</td><td class="num">₺743.700</td></tr>
+              <tr><td><div class="km-lbl"><span class="km-ico taseron"><i class="fa-solid fa-people-arrows"></i></span> Taşeron Hakedişi</div></td><td class="num" data-s="vadi">₺615.200</td><td class="num" data-s="liman">₺128.500</td><td class="num" data-s="merkez">₺0</td><td class="num" data-s="tumu">₺743.700</td></tr>
               <!-- kaynak: crm-satinalma-formlar.html SAT-2026-008/009/010/011/012/013/014/016 (SAT-2026-007 ₺15.600 iptal — hariç tutuldu). SAT-2026-013 (₺86.200, Onayda) bu satır toplamına zaten dahildi; "Onayda/bekleyen toplam" KPI kartına da ayrıca eklendi. D18 SAT-2026-010 uzlaştırması: Liman ₺9.400→₺96.400 (Anadolu Hırdavat, ₺96.400). -->
-              <tr><td><div class="km-lbl"><span class="km-ico satinalma"><i class="fa-solid fa-file-invoice"></i></span> Satın Alma</div></td><td class="num">₺279.150</td><td class="num">₺96.400</td><td class="num">₺43.050</td><td class="num">₺418.600</td></tr>
-              <tr class="km-total"><td>Şantiye Toplamı</td><td class="num">₺3.745.800</td><td class="num">₺1.896.950</td><td class="num">₺51.930</td><td class="num">₺5.694.680</td></tr>
+              <tr><td><div class="km-lbl"><span class="km-ico satinalma"><i class="fa-solid fa-file-invoice"></i></span> Satın Alma</div></td><td class="num" data-s="vadi">₺279.150</td><td class="num" data-s="liman">₺96.400</td><td class="num" data-s="merkez">₺43.050</td><td class="num" data-s="tumu">₺418.600</td></tr>
+              <tr class="km-total"><td>Şantiye Toplamı</td><td class="num" data-s="vadi">₺3.745.800</td><td class="num" data-s="liman">₺1.896.950</td><td class="num" data-s="merkez">₺51.930</td><td class="num" data-s="tumu">₺5.694.680</td></tr>
             </tbody>
           </table>
         </div>
@@ -164,9 +195,9 @@
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Toplam Maliyet — Şantiye Payı</div></div>
         <div class="gc-body">
           <div class="att-list">
-            <div class="att-row"><span class="att-name">Vadi Konakları</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div><span class="gbar-val">₺3.745.800</span></div>
-            <div class="att-row"><span class="att-name">Liman Lojistik Merkezi</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:50.6%"></div></div></div><span class="gbar-val">₺1.896.950</span></div>
-            <div class="att-row"><span class="att-name">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:1.4%"></div></div></div><span class="gbar-val">₺51.930</span></div>
+            <div class="att-row" data-s="vadi"><span class="att-name">Vadi Konakları</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div><span class="gbar-val">₺3.745.800</span></div>
+            <div class="att-row" data-s="liman"><span class="att-name">Liman Lojistik Merkezi</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:50.6%"></div></div></div><span class="gbar-val">₺1.896.950</span></div>
+            <div class="att-row" data-s="merkez"><span class="att-name">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:1.4%"></div></div></div><span class="gbar-val">₺51.930</span></div>
           </div>
           <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Bar genişliği en yüksek şantiye (Vadi Konakları) referans alınarak orantılandı.</div>
         </div>
@@ -175,7 +206,7 @@
       <div class="gv-card" style="margin-top:20px">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-layer-group"></i> Maliyet Kompozisyonu — Şantiye Bazında</div></div>
         <div class="gc-body">
-          <div class="cmp-row">
+          <div class="cmp-row" data-s="vadi">
             <div class="cmp-head"><b>Vadi Konakları</b><span>₺3.745.800</span></div>
             <div class="cmp-stack">
               <div class="cmp-seg kasa" style="width:1.6%" data-tip="Kasa ₺61.450"></div>
@@ -184,7 +215,7 @@
               <div class="cmp-seg satinalma" style="width:7.5%" data-tip="Satın Alma ₺279.150"></div>
             </div>
           </div>
-          <div class="cmp-row">
+          <div class="cmp-row" data-s="liman">
             <div class="cmp-head"><b>Liman Lojistik Merkezi</b><span>₺1.896.950</span></div>
             <div class="cmp-stack">
               <div class="cmp-seg kasa" style="width:0.9%" data-tip="Kasa ₺17.050"></div>
@@ -193,7 +224,7 @@
               <div class="cmp-seg satinalma" style="width:5.1%" data-tip="Satın Alma ₺96.400"></div>
             </div>
           </div>
-          <div class="cmp-row">
+          <div class="cmp-row" data-s="merkez">
             <div class="cmp-head"><b>Merkez Şantiye</b><span>₺51.930</span></div>
             <div class="cmp-stack">
               <div class="cmp-seg kasa" style="width:17.1%" data-tip="Kasa ₺8.880"></div>
@@ -209,6 +240,8 @@
         </div>
       </div>
 
+      <div class="rp-note" id="mrNote"></div>
+
       <div class="gv-card" style="margin-top:20px">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
         <div class="gc-body">
@@ -221,6 +254,9 @@
           </div>
         </div>
       </div>
+
+      </div><!-- /mrContent -->
+      </div><!-- /mrWrap -->
     </section>
 
     <!-- ============ ŞEF GÖRÜNÜMÜ (sef — yalnız Vadi Konakları) ============ -->
@@ -310,6 +346,95 @@
   document.querySelectorAll('[data-view]').forEach(function(el){
     el.hidden = el.getAttribute('data-view') !== view;
   });
+  if(view !== 'yonetim') return;
+
+  function num(txt){ return parseInt(String(txt).replace(/[^\d]/g,''), 10) || 0; }
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
+  var GENEL_TOPLAM = 5694680;
+  var KALEM_ROWS = ['Kasa Çıkışı','Kurum Hakedişi','Taşeron Hakedişi','Satın Alma'];
+
+  function renderMaliyet(s){
+    document.querySelectorAll('#mrSantiyeChips .chip').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-s') === s); });
+
+    if(s === 'diger'){
+      gvEmpty.durum('#mrWrap', { sonucSayisi: 0 });
+      gvEmpty.render('#mrEmpty', {
+        ikon:'fa-folder-open',
+        baslik:'Bu kapsamda maliyet kaydı yok',
+        aciklama:'Tamamlanan (Kule Ofis B Blok) ve planlama aşamasındaki (Göl Evleri 2. Etap) projeler için henüz gerçekleşen maliyet takibi açılmadı.',
+        aksiyon:{etiket:'Şantiye Kaydına Git', href:'crm-santiye.html'}
+      });
+      return;
+    }
+    gvEmpty.durum('#mrWrap', { sonucSayisi: 1 });
+
+    document.querySelectorAll('#tblKalem [data-s]').forEach(function(el){
+      var es = el.getAttribute('data-s');
+      el.classList.toggle('is-off', s !== 'tumu' && es !== 'tumu' && es !== s);
+    });
+    document.querySelectorAll('.att-row[data-s]').forEach(function(el){
+      el.classList.toggle('is-off', s !== 'tumu' && el.getAttribute('data-s') !== s);
+    });
+    document.querySelectorAll('.cmp-row[data-s]').forEach(function(el){
+      el.classList.toggle('is-off', s !== 'tumu' && el.getAttribute('data-s') !== s);
+    });
+
+    if(s === 'tumu'){
+      document.getElementById('mrKpiToplam').textContent = tl(GENEL_TOPLAM);
+      document.getElementById('mrKpiToplamLbl').textContent = 'Toplam maliyet (3 şantiye)';
+      document.getElementById('mrKpiToplamDelta').innerHTML = '<i class="fa-solid fa-file-lines"></i> 30 kaynak kalem';
+      document.getElementById('mrKpiPay').textContent = '₺3.745.800';
+      document.getElementById('mrKpiPayLbl').textContent = 'Vadi Konakları payı';
+      document.getElementById('mrKpiPayDelta').innerHTML = "<i class=\"fa-solid fa-percent\"></i> Toplamın %66'sı";
+      document.getElementById('mrKpiBekleyen').textContent = '₺1.928.850';
+      document.getElementById('mrKpiBekleyenCard').className = 'kpi-card warn';
+      document.getElementById('mrKpiBekleyenDelta').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Tamamı Vadi Konakları\'na ait';
+      document.getElementById('mrKpiBelge').textContent = '30';
+      document.getElementById('mrKpiBelgeDelta').innerHTML = '<i class="fa-solid fa-layer-group"></i> 9 kasa · 6 kurum · 6 taşeron · 9 satın alma';
+      document.getElementById('mrNote').innerHTML = '<i class="fa-solid fa-lightbulb"></i> <strong>3 şantiyenin toplam maliyeti ₺5.694.680</strong> — Vadi Konakları tek başına toplamın %66\'sını oluşturuyor (kurum hakedişi ağırlıklı). Merkez Şantiye iç yatırım projesi olduğu için hakediş kalemi taşımıyor, maliyeti neredeyse tamamen satın almadan (%83) geliyor.';
+      return;
+    }
+
+    // seçili şantiye: matris DOM'undan (tek gerçek kaynak) TÜRETİLEN rakamlar
+    var vals = {};
+    KALEM_ROWS.forEach(function(lbl, i){
+      var cell = document.querySelectorAll('#tblKalem tbody tr')[i].querySelector('td[data-s="'+s+'"]');
+      vals[lbl] = num(cell.textContent);
+    });
+    var totalCell = document.querySelector('#tblKalem tr.km-total td[data-s="'+s+'"]');
+    var toplam = num(totalCell.textContent);
+    var maxLbl = KALEM_ROWS.reduce(function(a,b){ return vals[a] > vals[b] ? a : b; });
+    var kalemTuru = KALEM_ROWS.filter(function(l){ return vals[l] > 0; }).length;
+    var pay = Math.round(toplam / GENEL_TOPLAM * 100);
+
+    document.getElementById('mrKpiToplam').textContent = tl(toplam);
+    document.getElementById('mrKpiToplamLbl').textContent = SANTIYE_ADI[s] + ' toplam maliyet';
+    document.getElementById('mrKpiToplamDelta').innerHTML = '<i class="fa-solid fa-percent"></i> Genel toplamın %' + pay + "'i";
+
+    document.getElementById('mrKpiPay').textContent = tl(vals[maxLbl]);
+    document.getElementById('mrKpiPayLbl').textContent = 'En büyük kalem — ' + maxLbl;
+    document.getElementById('mrKpiPayDelta').innerHTML = '<i class="fa-solid fa-percent"></i> Şantiye toplamının %' + Math.round(vals[maxLbl]/toplam*100) + "'i";
+
+    var bekleyen = s === 'vadi' ? 1928850 : 0;
+    document.getElementById('mrKpiBekleyen').textContent = tl(bekleyen);
+    document.getElementById('mrKpiBekleyenCard').className = 'kpi-card' + (bekleyen ? ' warn' : '');
+    document.getElementById('mrKpiBekleyenDelta').innerHTML = bekleyen
+      ? '<i class="fa-solid fa-triangle-exclamation"></i> Kasa + hakediş + taşeron + satın alma'
+      : '<i class="fa-solid fa-check"></i> Bu şantiyede onayda bekleyen kalem yok';
+
+    document.getElementById('mrKpiBelge').textContent = kalemTuru;
+    document.getElementById('mrKpiBelgeDelta').innerHTML = '<i class="fa-solid fa-layer-group"></i> 4 kalem türünden ' + kalemTuru + " tanesi bu şantiyede işlendi";
+
+    document.getElementById('mrNote').innerHTML = '<i class="fa-solid fa-lightbulb"></i> <strong>' + SANTIYE_ADI[s] + ' maliyeti ' + tl(toplam) + '</strong> — genel toplamın %' + pay + "'i. En büyük kalem <b>" + maxLbl + '</b> (' + tl(vals[maxLbl]) + ', şantiye toplamının %' + Math.round(vals[maxLbl]/toplam*100) + "'i)." + (bekleyen ? ' ' + tl(bekleyen) + ' onayda/bekleyen tutar bu şantiyeye ait.' : ' Onayda bekleyen kalem yok.');
+  }
+
+  document.getElementById('mrSantiyeChips').addEventListener('click', function(e){
+    var b = e.target.closest('.chip[data-s]'); if(!b) return;
+    renderMaliyet(b.getAttribute('data-s'));
+  });
+  renderMaliyet('tumu');
+  gvExport.bind();
 })();
 </script>
 </body>

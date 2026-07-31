@@ -58,6 +58,21 @@
 
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
+
+/* ============ B §6.2/§6.3 eklentileri — tarih aralığı/şantiye filtresi toolbar,
+   ek durum kartları (görev/malzeme/kasa/hakediş/sözleşme), risk uyarıları, değerlendirme ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stat-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.stat-grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:640px){.stat-grid.cols-4,.stat-grid.cols-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
+.rp-tb-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+/* [TR1] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md K-2xx) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -90,7 +105,25 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="Şantiye raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-acc btn-sm" type="button" id="btnCiktiSantiye"><i class="fa-solid fa-file-export"></i> Çıktı Al</button>
+      </div>
+    </div>
+
+    <!-- ============ B §6.2 madde 3-4 — tarih aralığı + şantiye filtresi (rp-toolbar, spec-v2-core.md §7) ============ -->
+    <div class="rp-toolbar">
+      <div class="rp-tb-group">
+        <span class="rp-tb-lbl">Dönem</span>
+        <div data-gvdaterange id="srDateRange"></div>
+        <span class="rp-tb-lbl" id="srDonemLbl" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink-2)">29 Haziran – 2 Temmuz 2026 (bu hafta)</span>
+      </div>
+      <div class="rp-tb-group" data-view="yonetim" id="srSantiyeFilterGroup" hidden>
+        <span class="rp-tb-lbl">Şantiye</span>
+        <div class="chips" id="srSantiyeChips">
+          <button class="chip is-on" data-san="hepsi">Tümü</button>
+          <button class="chip" data-san="vadi">Vadi Konakları</button>
+          <button class="chip" data-san="liman">Liman Lojistik</button>
+          <button class="chip" data-san="merkez">Merkez Şantiye</button>
+        </div>
       </div>
     </div>
 
@@ -120,20 +153,61 @@
       </div>
       <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> Ort. ilerleme yalnızca aktif 3 şantiyenin ilerleme yüzdesinin ortalamasıdır; Göl Evleri (planlama, %0) ve Kule Ofis (teslim edildi, %100) bu ortalamaya girmez. Kazasız gün sayacı yalnızca Vadi Konakları için tutulur — diğer şantiyelerin İSG detay verisi kaynak sayfalarda yok.</div>
 
-      <div class="gv-card" style="margin-bottom:20px">
-        <div class="gc-head">
-          <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Şantiye Durum Tablosu</div>
+      <!-- ============ B §6.2 madde 6 — grafik alanı (gvBar/gvDonut, spec-v2-core.md §7) ============ -->
+      <div class="rp-charts-2" style="margin-bottom:20px">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-simple"></i> Şantiye Bazlı İlerleme</h3></div>
+          <div class="rp-chart-body" id="chartSrIlerleme"></div>
         </div>
-        <div class="filter-bar">
-          <div class="chips" data-target="#tblSrDurum">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">5</span></button>
-            <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="planlama">Planlama <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="tamam">Tamamlanan <span class="ch-cnt">1</span></button>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-people-group"></i> Sahada Bugün — Öz Kadro / Taşeron</h3></div>
+          <div class="rp-chart-body" id="chartSrKadro"></div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-bottom:20px">
+        <div class="gc-head rp-gc-head-wrap">
+          <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Şantiye Durum Tablosu</div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnSrHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+        </div>
+        <div class="filter-bar stack">
+          <div class="filter-row">
+            <div class="chips" data-target="#tblSrDurum">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">5</span></button>
+              <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="planlama">Planlama <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="tamam">Tamamlanan <span class="ch-cnt">1</span></button>
+            </div>
+          </div>
+          <div class="filter-row">
+            <span class="frow-lbl">Şantiye</span>
+            <div class="chips" id="srTblSanChips">
+              <button class="chip is-on" data-tblsan="hepsi">Tümü</button>
+              <button class="chip" data-tblsan="vadi">Vadi</button>
+              <button class="chip" data-tblsan="liman">Liman</button>
+              <button class="chip" data-tblsan="merkez">Merkez</button>
+              <button class="chip" data-tblsan="kule">Kule Ofis</button>
+              <button class="chip" data-tblsan="gol">Göl Evleri</button>
+            </div>
           </div>
         </div>
-        <div class="gc-body flush">
-          <table class="gtable" id="tblSrDurum">
+        <div class="gc-body flush" id="srTblStateWrap">
+          <div data-gv-state="loading" class="gv-empty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <h4>Yükleniyor…</h4>
+          </div>
+          <div data-gv-state="error" class="gv-empty rp-error" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>Şantiye verisi yüklenemedi</h4>
+            <p>Bağlantınızı kontrol edip tekrar deneyin. Sorun sürerse sistem yöneticinize bildirin.</p>
+            <button type="button" class="btn btn-acc btn-sm" id="btnSrHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+          </div>
+          <div data-gv-state="empty" class="gv-empty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h4>Bu filtrede şantiye yok</h4>
+            <p>Durum veya şantiye seçimini değiştirin.</p>
+          </div>
+          <table class="gtable" id="tblSrDurum" data-gv-state="content">
             <thead>
               <tr>
                 <th>Şantiye</th>
@@ -146,7 +220,7 @@
             </thead>
             <tbody>
               <!-- kaynak: crm-santiye.html tbody :98-202 (Personel sütunu = saha headcount, taşeron dahil) -->
-              <tr data-f="aktif">
+              <tr data-f="aktif" data-tblsan="vadi">
                 <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">VK</div><div class="gcell-info"><div class="gcell-name">Vadi Konakları</div><div class="gcell-sub">Çekmeköy, İstanbul · Körfez GYO</div></div></div></td>
                 <td><span class="gtag">Konut</span></td>
                 <td class="t-strong">Hasan Demirci</td>
@@ -154,7 +228,7 @@
                 <td class="num t-strong">51</td>
                 <td><span class="gstat ok">Aktif</span></td>
               </tr>
-              <tr data-f="aktif">
+              <tr data-f="aktif" data-tblsan="liman">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">LL</div><div class="gcell-info"><div class="gcell-name">Liman Lojistik Merkezi</div><div class="gcell-sub">Aliağa, İzmir · Aliağa Liman İşletmeleri</div></div></div></td>
                 <td><span class="gtag">Ticari</span></td>
                 <td class="t-strong">Aylin Koç</td>
@@ -162,7 +236,7 @@
                 <td class="num t-strong">30</td>
                 <td><span class="gstat wait">Programın gerisinde</span></td>
               </tr>
-              <tr data-f="aktif">
+              <tr data-f="aktif" data-tblsan="merkez">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">MŞ</div><div class="gcell-info"><div class="gcell-name">Merkez Şantiye</div><div class="gcell-sub">Gebze, Kocaeli · iç yatırım</div></div></div></td>
                 <td><span class="gtag">Depo + Atölye</span></td>
                 <td class="t-strong">Ömer Taşkın</td>
@@ -170,7 +244,7 @@
                 <td class="num t-strong">12</td>
                 <td><span class="gstat ok">Aktif</span></td>
               </tr>
-              <tr data-f="planlama">
+              <tr data-f="planlama" data-tblsan="gol">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--muted)">GE</div><div class="gcell-info"><div class="gcell-name">Göl Evleri 2. Etap</div><div class="gcell-sub">Sapanca, Sakarya · Sapanca Belediyesi</div></div></div></td>
                 <td><span class="gtag">Konut</span></td>
                 <td class="muted">Atanmadı</td>
@@ -178,7 +252,7 @@
                 <td class="num muted">—</td>
                 <td><span class="gstat info">Planlama · Eylül 2026</span></td>
               </tr>
-              <tr data-f="tamam">
+              <tr data-f="tamam" data-tblsan="kule">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--ok-tint);color:var(--ok)">KO</div><div class="gcell-info"><div class="gcell-name">Kule Ofis B Blok</div><div class="gcell-sub">Ataşehir, İstanbul · Körfez GYO</div></div></div></td>
                 <td><span class="gtag">Ofis</span></td>
                 <td class="t-strong">Ömer Taşkın</td>
@@ -207,6 +281,85 @@
           </table>
         </div>
         <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> 3 kişi kayıtsız/izinli — devamsızlık değil, günün puantaj girişine yansımamış.</span></div>
+      </div>
+
+      <!-- ============ B §6.3 "Şantiye Raporu" — açık/geciken görevler, malzeme talepleri
+           (kaynak: crm-gorev.html KPI+chip'leri, crm-panel-rapor-talep.html KPI'ları) ============ -->
+      <div class="dash-cols" style="margin-bottom:20px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> Görevler</div><span class="ph-sub" style="margin:0">crm-gorev.html</span></div>
+          <div class="gc-body">
+            <div class="stat-grid cols-2">
+              <div class="hstat"><span class="hstat-num">26</span><span class="hstat-lbl">Açık görev (Vadi 7 · Liman ve Merkez dahil kalan sahalar)</span></div>
+              <div class="hstat danger"><span class="hstat-num">3</span><span class="hstat-lbl">Geciken görev</span></div>
+            </div>
+            <div class="hl-list" style="margin-top:14px">
+              <div class="hl-row risk"><i class="fa-solid fa-triangle-exclamation"></i><span><a href="crm-gorev-detay.html?gorev=008" style="color:var(--acc-ink);font-weight:700;text-decoration:none">GRV-2026-008</a> · Vadi Konakları — "Perde betonu kür takibini raporla", termini 1 Temmuz'da geçti (Hasan Demirci).</span></div>
+              <div class="hl-row risk"><i class="fa-solid fa-triangle-exclamation"></i><span><a href="crm-gorev-detay.html?gorev=009" style="color:var(--acc-ink);font-weight:700;text-decoration:none">GRV-2026-009</a> · Liman Lojistik — "Kalıp iskelesi söküm onayını al", termini 30 Haziran'da geçti (Aylin Koç).</span></div>
+              <div class="hl-row risk"><i class="fa-solid fa-triangle-exclamation"></i><span><a href="crm-gorev-detay.html?gorev=010" style="color:var(--acc-ink);font-weight:700;text-decoration:none">GRV-2026-010</a> · Merkez Ofis (şantiye bağımsız) — "Haziran kasa mutabakatını tamamla", termini 30 Haziran'da geçti (Nesrin Aydın).</span></div>
+            </div>
+            <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Açık görev = 31 toplam görevden 5 tamamlanmış olan çıkarıldı (crm-gorev.html KPI'ları). <a href="crm-gorev.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Görev Yönetimi</a></div>
+          </div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-boxes-stacked"></i> Malzeme Talepleri</div><span class="ph-sub" style="margin:0">crm-panel-rapor-talep.html</span></div>
+          <div class="gc-body">
+            <div class="stat-grid cols-2">
+              <div class="hstat warn"><span class="hstat-num">7</span><span class="hstat-lbl">Onay bekleyen talep</span></div>
+              <div class="hstat"><span class="hstat-num">13</span><span class="hstat-lbl">Bu ay oluşturulan talep</span></div>
+            </div>
+            <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Onay bekleyen 7 talep şantiyeye göre dağılıyor: Vadi 3 · Liman 3 · Merkez 1; en eskisi 6 gündür açık. <a href="crm-panel-rapor-talep.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Malzeme Talep Raporu</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ Kasa özeti + dönem karşılaştırması (B §6.2 madde 8, kaynak: crm-operasyon-kasa.html) ============ -->
+      <div class="gv-card" style="margin-bottom:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-wallet"></i> Kasa Özeti</div><span class="ph-sub" style="margin:0">crm-operasyon-kasa.html</span></div>
+        <div class="gc-body">
+          <div class="stat-grid cols-4">
+            <div class="hstat"><span class="hstat-num">₺165.130</span><span class="hstat-lbl">Toplam kasa bakiyesi</span></div>
+            <div class="hstat"><span class="hstat-num">₺81.920</span><span class="hstat-lbl">Vadi Konakları</span></div>
+            <div class="hstat"><span class="hstat-num">₺18.520</span><span class="hstat-lbl">Liman Lojistik</span></div>
+            <div class="hstat"><span class="hstat-num">₺64.690</span><span class="hstat-lbl">Merkez Şantiye</span></div>
+          </div>
+          <div class="rp-compare" style="margin-top:16px">
+            <div class="rp-compare-item"><span class="rc-lbl">Vadi — dönem başı devir → mevcut</span><span class="rc-val">₺48.250 → ₺81.920</span><span class="rp-compare-delta up"><i class="fa-solid fa-arrow-trend-up"></i> +%70</span></div>
+            <div class="rp-compare-item"><span class="rc-lbl">Liman — dönem başı devir → mevcut</span><span class="rc-val">₺31.750 → ₺18.520</span><span class="rp-compare-delta down"><i class="fa-solid fa-arrow-trend-down"></i> −%42</span></div>
+            <div class="rp-compare-item"><span class="rc-lbl">Merkez — dönem başı devir → mevcut</span><span class="rc-val">₺12.860 → ₺64.690</span><span class="rp-compare-delta up"><i class="fa-solid fa-arrow-trend-up"></i> +%403</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> 2 kasa hareketi (₺43.300) onay bekliyor, en eskisi 3 gündür. Merkez'in kasası genel merkez beslemesiyle (₺60.000) büyüdü — harcama düşük kaldığı için oranı yüksek görünüyor. <a href="crm-operasyon-kasa.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Kasa Yönetimi</a></div>
+        </div>
+      </div>
+
+      <!-- ============ Hakediş + sözleşme durumu (B §6.3 madde 8-9) ============ -->
+      <div class="dash-cols" style="margin-bottom:20px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Hakediş Durumu <span data-help="hakedis-nedir"></span></div></div>
+          <div class="gc-body">
+            <div class="stat-grid cols-2">
+              <div class="hstat warn"><span class="hstat-num">₺1.630.000</span><span class="hstat-lbl">Kurum hakediş — onay bekleyen</span></div>
+              <div class="hstat"><span class="hstat-num">₺2.815.000</span><span class="hstat-lbl">Kurum hakediş — tahsil edilen</span></div>
+              <div class="hstat warn"><span class="hstat-num">₺166.200</span><span class="hstat-lbl">Taşeron hakediş — onay bekleyen</span></div>
+              <div class="hstat"><span class="hstat-num">₺239.000</span><span class="hstat-lbl">Taşeron hakediş — ödenen</span></div>
+            </div>
+            <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Vadi Konakları'nda 2 hakediş onay bekliyor. <a href="crm-panel-rapor-hakedis.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Hakediş Raporu</a></div>
+          </div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-signature"></i> Sözleşme Durumu <span data-help="sure-uzatim"></span></div></div>
+          <div class="gc-body">
+            <div class="stat-grid cols-2">
+              <div class="hstat"><span class="hstat-num">5</span><span class="hstat-lbl">Yürürlükteki sözleşme</span></div>
+              <div class="hstat warn"><span class="hstat-num">1</span><span class="hstat-lbl">90 gün içinde süresi dolan</span></div>
+            </div>
+            <div class="hl-list" style="margin-top:14px">
+              <div class="hl-row risk"><i class="fa-solid fa-triangle-exclamation"></i><span><b>Liman Lojistik</b> (SZL-2026-K02) sözleşmeye göre bitiş tarihi (30 Haziran 2026) geçti; 60 günlük süre uzatım talebi (SUZ-2026-02) hâlâ onay bekliyor.</span></div>
+              <div class="hl-row"><i class="fa-solid fa-shield-halved"></i><span><b>Vadi Konakları</b> (SZL-2026-K01) süre uzatımı onaylı — güncel hedef 31 Aralık 2026, "Güvende" rozetli (+92 gün).</span></div>
+            </div>
+            <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam bedel: ₺40.500.000 kurum + ₺945.000 taşeron. <a href="crm-finans-sozlesmeler.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Sözleşmeler</a></div>
+          </div>
+        </div>
       </div>
 
       <div class="dash-cols">
@@ -265,6 +418,26 @@
         </div>
       </div>
 
+      <!-- ============ B §6.3 madde 10 — risk uyarıları ============ -->
+      <div class="gv-card" style="margin-bottom:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Risk Uyarıları</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk"><i class="fa-solid fa-file-signature"></i><span><b>Liman Lojistik Merkezi</b> — sözleşme bitiş tarihi geçti, 60 günlük süre uzatım talebi hâlâ onay bekliyor. En yüksek öncelikli risk.</span></div>
+            <div class="hl-row risk"><i class="fa-solid fa-list-check"></i><span>3 görev gecikti (Vadi, Liman, Merkez Ofis) — en eskisi 30 Haziran'dan beri açık.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-gauge-simple-high"></i><span><b>Liman</b>'ın puantaj katılım oranı %65 ile en düşük — şef Aylin Koç'un izinli olması ekip yönetimini zayıflattı.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-file-invoice-dollar"></i><span>1 kurum sözleşmesi 90 gün içinde süresi doluyor — yenileme/uzatım değerlendirilmeli.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ B §6.2 madde 9 — yorum/değerlendirme alanı (B §6.3, rp-note) ============ -->
+      <div class="rp-note">
+        <i class="fa-solid fa-lightbulb"></i><strong>Değerlendirme:</strong>
+        3 aktif şantiyenin ortalama ilerlemesi %65 ile plana yakın seyrediyor; ancak <b>Liman Lojistik Merkezi</b> hem programın 6 gün gerisinde hem de süresi dolmuş sözleşmesiyle bu haftanın en kritik takip noktası — süre uzatım talebi (SUZ-2026-02) onaylanmadan risk devam eder.
+        <b>Vadi Konakları</b> ve <b>Merkez Şantiye</b> beklenen tempoda; şirket genelinde 93 kişilik sahada bugün 90 kişi (%97) çalıştı, 3 görev gecikti ve 7 malzeme talebi onay bekliyor — bunların hiçbiri tek başına acil değil, ama Liman'daki sözleşme riskiyle birlikte değerlendirildiğinde önceliklendirme sırası netleşiyor.
+      </div>
+
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
         <div class="gc-body">
@@ -300,6 +473,37 @@
           <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-shield-halved"></i></div>
           <div><div class="kpi-num num">214</div><div class="kpi-lbl">Kazasız gün</div>
           <div class="kpi-delta flat"><i class="fa-solid fa-check"></i> 0 iş kazası · 2026</div></div>
+        </div>
+      </div>
+
+      <!-- ============ B §6.2 madde 6 — grafik alanı (şef görünümü) ============ -->
+      <div class="rp-chart" style="margin-bottom:20px">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-simple"></i> Kategori İlerlemeleri — Vadi Konakları</h3></div>
+        <div class="rp-chart-body" id="chartSrKategoriSef"></div>
+      </div>
+
+      <div class="dash-cols" style="margin-bottom:20px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> Görevler / Malzeme</div></div>
+          <div class="gc-body">
+            <div class="stat-grid cols-2">
+              <div class="hstat"><span class="hstat-num">7</span><span class="hstat-lbl">Açık görev</span></div>
+              <div class="hstat danger"><span class="hstat-num">1</span><span class="hstat-lbl">Geciken görev</span></div>
+              <div class="hstat warn"><span class="hstat-num">3</span><span class="hstat-lbl">Bekleyen malzeme talebi</span></div>
+              <div class="hstat"><span class="hstat-num">₺81.920</span><span class="hstat-lbl">Kasa mevcudu</span></div>
+            </div>
+            <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Geciken görev: <a href="crm-gorev-detay.html?gorev=008" style="color:var(--acc-ink);font-weight:700;text-decoration:none">GRV-2026-008</a> — "Perde betonu kür takibini raporla", termini 1 Temmuz'da geçti.</div>
+          </div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Hakediş / Sözleşme <span data-help="hakedis-nedir"></span></div></div>
+          <div class="gc-body">
+            <div class="stat-grid cols-2">
+              <div class="hstat warn"><span class="hstat-num">2</span><span class="hstat-lbl">Bekleyen hakediş</span></div>
+              <div class="hstat ok"><span class="hstat-num">Güvende</span><span class="hstat-lbl">Sözleşme durumu (+92 gün)</span></div>
+            </div>
+            <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Sözleşme SZL-2026-K01 — sözleşmeye göre bitiş 30 Eylül 2026, güncel hedef 31 Aralık 2026 (onaylı süre uzatımı). <a href="crm-panel-rapor-hakedis.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Hakediş Raporu</a></div>
+          </div>
         </div>
       </div>
 
@@ -346,6 +550,23 @@
         </div>
       </div>
 
+      <!-- ============ B §6.3 madde 10 — risk uyarıları (şef görünümü) ============ -->
+      <div class="gv-card" style="margin-bottom:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Risk Uyarıları</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-list-check"></i><span>1 geciken görev: <a href="crm-gorev-detay.html?gorev=008" style="color:var(--acc-ink);font-weight:700;text-decoration:none">GRV-2026-008</a>, 1 Temmuz'dan beri açık.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-check"></i><span>Diğer göstergeler yeşil — İSG 214 gün kazasız, sözleşme "Güvende" rozetli, kasa dengeli.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ B §6.2 madde 9 — yorum/değerlendirme alanı (şef görünümü) ============ -->
+      <div class="rp-note">
+        <i class="fa-solid fa-lightbulb"></i><strong>Değerlendirme:</strong>
+        Vadi Konakları programın 2 gün önünde ve genel ilerleme %68 ile plana uygun ilerliyor. Tek dikkat noktası 1 geciken görev (kür takibi raporu) — diğer tüm göstergeler (İSG, kasa, sözleşme) yeşil bölgede.
+      </div>
+
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
         <div class="gc-body">
@@ -371,6 +592,109 @@
   document.querySelectorAll('[data-view]').forEach(function(el){
     el.hidden = el.getAttribute('data-view') !== view;
   });
+  var santiyeFilterGroup = document.getElementById('srSantiyeFilterGroup');
+  if(santiyeFilterGroup) santiyeFilterGroup.hidden = view !== 'yonetim';
+
+  /* ============ Grafik alanı — gvBar/gvDonut (B §6.2 madde 6, spec-v2-core.md §7) ============ */
+  if(window.gvBar){
+    if(view === 'yonetim'){
+      gvBar('#chartSrIlerleme', [
+        {lbl:'Vadi Konakları', val:68, valLbl:'%68'},
+        {lbl:'Liman Lojistik', val:41, valLbl:'%41', tone:'warn'},
+        {lbl:'Merkez Şantiye', val:86, valLbl:'%86'}
+      ], {yon:'yatay', baslik:'Şantiye bazlı ilerleme yüzdesi', labelWidth:120});
+      if(window.gvDonut) gvDonut('#chartSrKadro', [
+        {lbl:'Öz kadro', val:69, tone:'acc'},
+        {lbl:'Taşeron', val:24, tone:'info'}
+      ], {baslik:'Sahada bugün — öz kadro / taşeron', merkezAlt:'sahada'});
+    } else {
+      gvBar('#chartSrKategoriSef', [
+        {lbl:'Kaba inşaat', val:94, valLbl:'%94'},
+        {lbl:'İnce işler', val:58, valLbl:'%58'},
+        {lbl:'Elektrik & tesisat', val:41, valLbl:'%41', tone:'warn'},
+        {lbl:'Çevre düzenleme', val:12, valLbl:'%12', tone:'warn'}
+      ], {yon:'yatay', baslik:'Vadi Konakları kategori ilerlemeleri', labelWidth:130});
+    }
+  }
+
+  /* ============ B §6.2 madde 3 — tarih aralığı (gvDateRange) ============
+     [MOCK-SİM] statik prototipte gerçek bir "önceki dönem" veri kaynağı yok;
+     seçim yalnızca dönem etiketini günceller — kanonik hafta (29 Haz–2 Tem)
+     sayıları sabit kalır (bkz. shell.js "Tarih bağlamı"). */
+  if(window.gvDateRange){
+    var srDr = document.getElementById('srDateRange');
+    var srDonemLbl = document.getElementById('srDonemLbl');
+    gvDateRange(srDr, {
+      emptyLabel: '29 Haziran – 2 Temmuz 2026 (bu hafta)',
+      onChange: function(val){
+        srDonemLbl.textContent = val ? val.label + ' seçildi — gösterilen sayılar kanonik hafta (29 Haz–2 Tem) içindir.' : '29 Haziran – 2 Temmuz 2026 (bu hafta)';
+      }
+    });
+  }
+
+  /* ============ B §6.2 madde 4 — şantiye/proje filtresi: Şantiye Durum Tablosu'nda
+     durum chip'i + şantiye chip'i İKİ boyutlu AND (crm-operasyon-kasa.html Durum+Tür
+     tekniğiyle aynı) — gerçek DOM filtreleme + gvEmpty.durum boş durum ============ */
+  var tblSr = document.getElementById('tblSrDurum');
+  if(tblSr){
+    var durumWrap = document.querySelector('.chips[data-target="#tblSrDurum"]');
+    var tblSanWrap = document.getElementById('srTblSanChips');
+    function applySrTblFilter(){
+      var dOn = durumWrap.querySelector('.chip.is-on[data-filter]');
+      var d = dOn ? dOn.getAttribute('data-filter') : 'hepsi';
+      var sOn = tblSanWrap.querySelector('.chip.is-on[data-tblsan]');
+      var s = sOn ? sOn.getAttribute('data-tblsan') : 'hepsi';
+      var shown = 0;
+      tblSr.querySelectorAll('tbody tr').forEach(function(tr){
+        var okD = (d === 'hepsi') || (tr.getAttribute('data-f') === d);
+        var okS = (s === 'hepsi') || (tr.getAttribute('data-tblsan') === s);
+        var show = okD && okS;
+        tr.hidden = !show;
+        if(show) shown++;
+      });
+      if(window.gvEmpty) gvEmpty.durum('#srTblStateWrap', {yukleniyor:false, hata:srHataOn, sonucSayisi:shown});
+    }
+    durumWrap.querySelectorAll('.chip[data-filter]').forEach(function(ch){
+      ch.addEventListener('click', function(){ setTimeout(applySrTblFilter, 0); });
+    });
+    tblSanWrap.addEventListener('click', function(e){
+      var ch = e.target.closest('.chip[data-tblsan]'); if(!ch) return;
+      tblSanWrap.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+      ch.classList.add('is-on');
+      applySrTblFilter();
+    });
+
+    /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+    var srHataOn = false;
+    var btnHataDemo = document.getElementById('btnSrHataDemo');
+    var btnHataRetry = document.getElementById('btnSrHataRetry');
+    if(btnHataDemo) btnHataDemo.addEventListener('click', function(){
+      srHataOn = true;
+      if(window.gvEmpty) gvEmpty.durum('#srTblStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+    });
+    if(btnHataRetry) btnHataRetry.addEventListener('click', function(){
+      srHataOn = false;
+      applySrTblFilter();
+    });
+
+    applySrTblFilter();
+  }
+
+  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============ */
+  if(window.gvExport){
+    gvExport.init('#btnCiktiSantiye', {
+      baslik: 'Şantiye Raporu',
+      kapsam: ['tumu', 'filtreli'],
+      filtreOzeti: function(){
+        var dOn = document.querySelector('.chips[data-target="#tblSrDurum"] .chip.is-on');
+        var sOn = document.getElementById('srTblSanChips') ? document.getElementById('srTblSanChips').querySelector('.chip.is-on') : null;
+        var parts = [];
+        if(dOn && dOn.getAttribute('data-filter') !== 'hepsi') parts.push('Durum: ' + dOn.textContent.replace(/\s+/g,' ').trim());
+        if(sOn && sOn.getAttribute('data-tblsan') !== 'hepsi') parts.push('Şantiye: ' + sOn.textContent.trim());
+        return parts.length ? parts.join(' · ') : 'Aktif filtre yok — tüm şantiyeler kapsamda.';
+      }
+    });
+  }
 })();
 </script>
 </body>

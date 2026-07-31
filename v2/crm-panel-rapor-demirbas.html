@@ -87,12 +87,25 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="Demirbaş raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-ghost btn-sm" id="btnDmExport" data-gv-export='{"baslik":"Demirbaş Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
     <!-- ============ YÖNETİM GÖRÜNÜMÜ ============ -->
     <section data-view="yonetim">
+      <div class="rp-toolbar">
+        <div class="rp-tb-group">
+          <div class="chips" id="santiyeChips">
+            <button class="chip is-on" data-santiye="tumu">Tüm Şantiyeler <span class="ch-cnt">10</span></button>
+            <button class="chip" data-santiye="vadi">Vadi Konakları <span class="ch-cnt">4</span></button>
+            <button class="chip" data-santiye="liman">Liman Lojistik <span class="ch-cnt">1</span></button>
+            <button class="chip" data-santiye="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
+            <button class="chip" data-santiye="depo">Merkez Depo <span class="ch-cnt">2</span></button>
+          </div>
+          <div data-gvdaterange style="margin-left:4px"></div>
+        </div>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-ico"><i class="fa-solid fa-boxes-stacked"></i></div>
@@ -116,6 +129,17 @@
         </div>
       </div>
       <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> KPI'lar kaynak sayfayla (crm-operasyon-demirbas.html) birebir: 10 kalemin 6'sı zimmetli, 1'i depoda, 1'i serviste; kalan 1 hurda + 1 iade edilmiş kalem yalnız aşağıdaki tabloda görünür. Kayıtlarda parasal değer alanı yok — rapor adet bazlıdır, tutar uydurulmaz.</div>
+
+      <div class="rp-charts-2" style="margin-bottom:20px">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Durum Dağılımı</h3></div>
+          <div class="rp-chart-body" id="dmDonut"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-simple"></i> Şantiye Bazlı Demirbaş Dağılımı</h3></div>
+          <div class="rp-chart-body" id="dmBarSantiye"></div>
+        </div>
+      </div>
 
       <div class="gv-card" style="margin-bottom:20px">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Demirbaş Envanteri</div></div>
@@ -163,7 +187,13 @@
           <div class="gv-empty" id="dmEmpty" hidden>
             <div class="ge-ico"><i class="fa-solid fa-boxes-packing"></i></div>
             <h4>Bu filtrede kalem yok</h4>
-            <p>Kategori veya durum seçimini değiştirin.</p>
+            <p>Kategori, durum, şantiye veya tarih aralığı seçimini değiştirin.</p>
+          </div>
+          <div class="gv-empty rp-error" id="dmError" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>Demirbaş verisi yüklenemedi</h4>
+            <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
+            <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
           </div>
         </div>
         <div class="gc-foot"><span id="dmFoot">10 kalem gösteriliyor</span></div>
@@ -204,6 +234,8 @@
           </div>
         </div>
       </div>
+
+      <div class="rp-note" id="dmNote"><i class="fa-solid fa-lightbulb"></i> <strong>10 demirbaşın 6'sı zimmetli</strong> — hepsi Vadi Konakları şefi Hasan Demirci üzerinde. Merkez depoda zimmetsiz 2 kalem var (1 serviste, 1 kullanıma hazır); Liman ve Merkez şantiyelerinde yalnızca birer kalem işlenmiş — bu iki şantiyede demirbaş kaydı zayıf, envanterin gözden geçirilmesi önerilir.</div>
 
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
@@ -328,12 +360,20 @@
     {no:'ZMT-2025-009', ad:'Jeneratör', alt:'Honda EU22i — hurda kararı 12 May 2026', kat:'makine', kisi:null, santiye:null, tarih:'teslim 8 Nis 2025', durum:'hurda'}
   ];
 
+  var AY_MAP = {Oca:0,Şub:1,Mar:2,Nis:3,May:4,Haz:5,Tem:6,Ağu:7,Eyl:8,Eki:9,Kas:10,Ara:11};
+  function parseTarih(s){
+    var m = /(\d{1,2}) (Oca|Şub|Mar|Nis|May|Haz|Tem|Ağu|Eyl|Eki|Kas|Ara) (\d{4})/.exec(s);
+    if(!m) return null;
+    return new Date(parseInt(m[3],10), AY_MAP[m[2]], parseInt(m[1],10));
+  }
+
   var body = document.getElementById('dmBody');
   var html = '';
   DEMIRBAS.forEach(function(d){
     var K = KATEGORI[d.kat];
     var D = DURUM[d.durum];
-    html += '<tr data-kat="'+d.kat+'" data-durum="'+d.durum+'">';
+    var tDate = parseTarih(d.tarih);
+    html += '<tr data-kat="'+d.kat+'" data-durum="'+d.durum+'" data-santiye="'+(d.santiye||'')+'"'+(tDate?' data-ts="'+tDate.getTime()+'"':'')+'>';
     html += '<td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid '+K.ic+'"></i></div>'
           + '<div class="dm-info"><b>'+d.ad+'</b><span class="dm-no">'+d.no+' — '+d.alt+'</span></div></div></td>';
     html += '<td>'+K.lbl+'</td>';
@@ -345,13 +385,36 @@
   });
   body.innerHTML = html;
 
-  var curKat = 'hepsi', curDurum = 'hepsi';
+  /* rp-charts — durum dağılımı (donut) + şantiye bazlı dağılım (bar), DEMIRBAS[]'ten TÜRETİLDİ */
+  var durumSayim = {}, santiyeSayim = {vadi:0, liman:0, merkez:0, depo:0};
+  DEMIRBAS.forEach(function(d){
+    durumSayim[d.durum] = (durumSayim[d.durum]||0) + 1;
+    if(d.santiye) santiyeSayim[d.santiye]++;
+  });
+  var DONUT_TONE = {zimmetli:'ok', depoda:'info', serviste:'warn', hurda:'muted', iade:'muted'};
+  gvDonut('#dmDonut', Object.keys(DURUM).map(function(k){
+    return {lbl:DURUM[k].lbl, val:durumSayim[k]||0, tone:DONUT_TONE[k]};
+  }), {baslik:'Durum dağılımı', merkezAlt:'kalem'});
+  gvBar('#dmBarSantiye', [
+    {lbl:'Vadi Konakları', val:santiyeSayim.vadi},
+    {lbl:'Liman Lojistik', val:santiyeSayim.liman, tone:'info'},
+    {lbl:'Merkez Şantiye', val:santiyeSayim.merkez, tone:'warn'},
+    {lbl:'Merkez Depo', val:santiyeSayim.depo, tone:'muted'}
+  ], {yon:'yatay', baslik:'Şantiye bazlı demirbaş dağılımı'});
+
+  var curKat = 'hepsi', curDurum = 'hepsi', curSantiye = 'tumu', curRange = null;
   function applyFilter(){
     var shown = 0;
     document.querySelectorAll('#tblDmRapor tbody tr').forEach(function(tr){
       var okKat = curKat === 'hepsi' || tr.getAttribute('data-kat') === curKat;
       var okDurum = curDurum === 'hepsi' || tr.getAttribute('data-durum') === curDurum;
-      var show = okKat && okDurum;
+      var okSantiye = curSantiye === 'tumu' || tr.getAttribute('data-santiye') === curSantiye;
+      var okTarih = true;
+      if(curRange){
+        var ts = tr.getAttribute('data-ts');
+        okTarih = ts && (+ts >= curRange.from.getTime()) && (+ts <= curRange.to.getTime());
+      }
+      var show = okKat && okDurum && okSantiye && okTarih;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -372,7 +435,19 @@
     curDurum = ch.getAttribute('data-durum');
     applyFilter();
   });
+  document.getElementById('santiyeChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
+    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    curSantiye = ch.getAttribute('data-santiye');
+    applyFilter();
+  });
+  window.gvDateRange('[data-gvdaterange]', {
+    emptyLabel: 'Tüm zamanlar',
+    onChange: function(val){ curRange = val; applyFilter(); }
+  });
   applyFilter();
+  gvExport.bind();
 })();
 </script>
 </body>

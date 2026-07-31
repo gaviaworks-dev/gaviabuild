@@ -66,6 +66,11 @@
 
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
+
+/* T-R3 — araç filosu tablosu (B §7.3 Araçlar) */
+#tblArac{min-width:760px}
+#tblArac td.col-plaka{white-space:nowrap;font-variant-numeric:tabular-nums}
+#tblArac td.col-km{white-space:nowrap}
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -98,12 +103,19 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="Makine raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-ghost btn-sm" id="btnMkExport" data-gv-export='{"baslik":"Makine Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
     <!-- ============ YÖNETİM GÖRÜNÜMÜ ============ -->
     <section data-view="yonetim">
+      <div class="rp-toolbar">
+        <div class="rp-tb-group">
+          <span style="font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase">Bakım/muayene dönemi</span>
+          <div data-gvdaterange style="margin-left:4px"></div>
+        </div>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-truck-pickup"></i></div>
@@ -173,6 +185,12 @@
             <h4>Bu filtrede makine yok</h4>
             <p>Şantiye veya durum seçimini değiştirin.</p>
           </div>
+          <div class="gv-empty rp-error" id="mkError" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>Makine verisi yüklenemedi</h4>
+            <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
+            <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+          </div>
         </div>
         <div class="gc-foot"><span id="mkFoot">6 makine gösteriliyor</span></div>
       </div>
@@ -215,9 +233,29 @@
               </tbody>
             </table>
           </div>
-          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> MKN-03 (Beton Pompası, hizmet alımı) bu takvimde yer almaz — bakım kaydı Ege Hazır Beton tarafından tutulur, kaynak sayfada "Hizmette" olarak işaretli.</span></div>
+          <div class="gc-foot"><span id="bakimFoot"><i class="fa-solid fa-circle-info"></i> MKN-03 (Beton Pompası, hizmet alımı) bu takvimde yer almaz — bakım kaydı Ege Hazır Beton tarafından tutulur, kaynak sayfada "Hizmette" olarak işaretli.</span></div>
         </div>
       </div>
+
+      <div class="gv-card" style="margin-bottom:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-car-side"></i> Araç Filosu — Muayene &amp; Bakım Takibi</div><span class="ph-sub" style="margin:0">6 araç · yaklaşan muayene 1 · Temmuz HGS toplam ₺4.190</span></div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblArac">
+            <thead><tr><th>Araç</th><th>Şantiye</th><th>Zilyet</th><th>Muayene</th><th class="col-km">Bakım (km)</th><th>Durum</th></tr></thead>
+            <tbody id="aracBody"></tbody>
+          </table>
+        </div>
+        <div class="gc-body" style="padding-top:0">
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Kaynak: crm-operasyon-arac-dashboard.html ARC-01…06 kanonik filo (shell.js DALGA 9) — bu rapor salt-okunur özet sunar, düzenleme Araçlar modülünden yapılır.</div>
+        </div>
+      </div>
+
+      <div class="rp-chart" style="margin-bottom:20px">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-gas-pump"></i> Araç Aylık İşletme/Yakıt Gideri</h3></div>
+        <div class="rp-chart-body" id="aracYakitBar"></div>
+      </div>
+
+      <div class="rp-note" id="mkNote"></div>
 
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
@@ -439,7 +477,71 @@
     bakimTbody.forEach(function(tr){
       tr.hidden = donem !== 'tumu' && tr.getAttribute('data-donem') !== donem;
     });
+    bakimRangeShown();
   });
+
+  /* ============ T-R3 — Araç Filosu (B §7.3 Araçlar) ============
+     kaynak: shell.js DALGA 9 kanonik ARC-## filo BİREBİR — crm-operasyon-arac-dashboard.html
+     ile aynı rakamlar, yeni sayı UYDURULMADI. */
+  var AY_MAP = {Oca:0,Şub:1,Mar:2,Nis:3,May:4,Haz:5,Tem:6,Ağu:7,Eyl:8,Eki:9,Kas:10,Ara:11};
+  function parseTarih(s){
+    var m = /(\d{1,2})[.\s](Oca|Şub|Mar|Nis|May|Haz|Tem|Ağu|Eyl|Eki|Kas|Ara|\d{2})[.\s](\d{4})/.exec(s.replace(/\./g,' '));
+    if(m && AY_MAP.hasOwnProperty(m[2])) return new Date(parseInt(m[3],10), AY_MAP[m[2]], parseInt(m[1],10));
+    var d2 = /(\d{2})\.(\d{2})\.(\d{4})/.exec(s);
+    if(d2) return new Date(parseInt(d2[3],10), parseInt(d2[2],10)-1, parseInt(d2[1],10));
+    return null;
+  }
+  document.querySelectorAll('#tblBakim tbody tr').forEach(function(tr){
+    var t = parseTarih(tr.children[1].textContent);
+    if(t) tr.setAttribute('data-ts', t.getTime());
+  });
+
+  var ARAC = [
+    {no:'ARC-01', ad:'Ford Ranger 4x4 pikap', santiye:'Vadi Konakları', zilyet:'Hasan Demirci', muayene:'29.07.2026', muayeneGun:18, bakimKm:42300, bakimLimit:50000, durum:'warn', durumLbl:'Muayene yaklaşıyor', aylik:9640},
+    {no:'ARC-02', ad:'Mercedes Sprinter 316 servis', santiye:'Vadi Konakları', zilyet:'İbrahim Sönmez', muayene:'14.02.2027', muayeneGun:227, bakimKm:61200, bakimLimit:70000, durum:'ok', durumLbl:'Aktif', aylik:11280},
+    {no:'ARC-03', ad:'Toyota Hilux pikap', santiye:'Liman Lojistik', zilyet:'Aylin Koç', muayene:'03.11.2026', muayeneGun:124, bakimKm:78450, bakimLimit:80000, durum:'ok', durumLbl:'Aktif', aylik:8120},
+    {no:'ARC-04', ad:'Fiat Doblo Cargo panelvan', santiye:'Merkez Şantiye', zilyet:'Recep Yaman', muayene:'22.09.2026', muayeneGun:82, bakimKm:87400, bakimLimit:85000, durum:'danger', durumLbl:'Serviste · bakım aşıldı', aylik:6940},
+    {no:'ARC-05', ad:'Renault Megane sedan', santiye:'Genel Merkez', zilyet:'Elif Sarıkaya', muayene:'08.04.2027', muayeneGun:280, bakimKm:18900, bakimLimit:30000, durum:'ok', durumLbl:'Aktif', aylik:7310},
+    {no:'ARC-06', ad:'Ford Transit 350L kamyonet', santiye:'Merkez Şantiye', zilyet:'(zimmetsiz — depo havuz aracı)', muayene:'30.08.2026', muayeneGun:59, bakimKm:132600, bakimLimit:135000, durum:'ok', durumLbl:'Aktif', aylik:8860}
+  ];
+  var aracHtml = '';
+  ARAC.forEach(function(a){
+    var kmAsim = a.bakimKm > a.bakimLimit;
+    aracHtml += '<tr><td class="t-strong">'+a.ad+' <span class="mk-no">'+a.no+'</span></td><td>'+a.santiye+'</td><td>'+a.zilyet+'</td>'
+      + '<td>'+a.muayene+(a.muayeneGun<=30?' <span class="gstat warn">'+a.muayeneGun+' gün</span>':'')+'</td>'
+      + '<td class="col-km">'+a.bakimKm.toLocaleString('tr-TR')+' / '+a.bakimLimit.toLocaleString('tr-TR')+(kmAsim?' <span class="gstat danger">aşıldı</span>':'')+'</td>'
+      + '<td><span class="gstat '+a.durum+'">'+a.durumLbl+'</span></td></tr>';
+  });
+  document.getElementById('aracBody').innerHTML = aracHtml;
+
+  gvBar('#aracYakitBar', ARAC.map(function(a){
+    return {lbl:a.no, val:a.aylik, valLbl:'₺'+a.aylik.toLocaleString('tr-TR'), tone: a.durum==='danger'?'danger':(a.durum==='warn'?'warn':'acc')};
+  }), {yon:'yatay', baslik:'Araç başına aylık işletme/yakıt gideri', labelWidth:60});
+
+  var yaklasanMuayene = ARAC.filter(function(a){ return a.muayeneGun<=30; }).length;
+  var bakimAsim = ARAC.filter(function(a){ return a.bakimKm>a.bakimLimit; }).length;
+  document.getElementById('mkNote').innerHTML = '<i class="fa-solid fa-lightbulb"></i> <strong>MKN-06 (Beko Loder) hidrolik arızayla bugün üretim dışı kaldı</strong> — filodaki tek arızalı ekipman. Araç filosunda ' + yaklasanMuayene + ' araç 30 gün içinde muayeneye giriyor (ARC-01, 18 gün) ve ' + bakimAsim + ' araç (ARC-04) bakım kilometresini aştığı için serviste. Yakıt giderinde en yüksek pay ~118 L/gün ile MKN-01\'de; araç filosunda en yüksek aylık işletme gideri ARC-02\'de (₺11.280).';
+
+  function bakimRangeShown(){
+    var vis = 0;
+    document.querySelectorAll('#tblBakim tbody tr').forEach(function(tr){ if(!tr.hidden) vis++; });
+    document.getElementById('bakimFoot').innerHTML = '<i class="fa-solid fa-circle-info"></i> Seçili aralıkta ' + vis + ' bakım kaydı gösteriliyor · MKN-03 (hizmet alımı) bu takvimde yer almaz.';
+  }
+  window.gvDateRange('[data-gvdaterange]', {
+    emptyLabel: 'Tüm zamanlar',
+    onChange: function(val){
+      document.querySelectorAll('#tblBakim tbody tr[data-ts]').forEach(function(tr){
+        if(!val){ tr.hidden = false; return; }
+        var ts = +tr.getAttribute('data-ts');
+        tr.hidden = !(ts >= val.from.getTime() && ts <= val.to.getTime());
+      });
+      document.querySelectorAll('#bakimDonemChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+      bakimRangeShown();
+    }
+  });
+  bakimRangeShown();
+
+  gvExport.bind();
 })();
 </script>
 </body>

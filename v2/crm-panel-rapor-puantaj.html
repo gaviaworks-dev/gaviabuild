@@ -94,32 +94,124 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="Puantaj raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-acc btn-sm" id="btnDisaAktar"><i class="fa-solid fa-download"></i> Çıktı Al / Dışa Aktar</button>
       </div>
     </div>
 
     <!-- ============ YÖNETİM GÖRÜNÜMÜ (superadmin·sahip·yonetim·teknik·muhasebe·ik) ============ -->
     <section data-view="yonetim">
+
+      <!-- ============ TOOLBAR — tarih aralığı + şantiye filtresi (B §6.2 madde 3+4) ============ -->
+      <div class="rp-toolbar">
+        <div class="rp-tb-group">
+          <span class="frow-lbl" style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Dönem</span>
+          <div data-gvdaterange id="ptDateRange"></div>
+        </div>
+        <div class="rp-tb-group">
+          <span class="frow-lbl" style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Şantiye</span>
+          <div class="chips" id="ptSantiyeChips">
+            <button type="button" class="chip is-on" data-santiye="tumu">Tümü</button>
+            <button type="button" class="chip" data-santiye="vadi">Vadi Konakları</button>
+            <button type="button" class="chip" data-santiye="liman">Liman Lojistik</button>
+            <button type="button" class="chip" data-santiye="merkez">Merkez Şantiye</button>
+          </div>
+        </div>
+        <div class="rp-tb-spacer"></div>
+        <div class="rp-tb-acts">
+          <span class="ph-sub" id="ptFiltreOzet" style="margin:0"><i class="fa-solid fa-circle-info"></i> Tüm şantiyeler gösteriliyor</span>
+        </div>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-ico"><i class="fa-solid fa-users"></i></div>
-          <div><div class="kpi-num num">16</div><div class="kpi-lbl">İzlenen personel</div>
-          <div class="kpi-delta flat"><i class="fa-solid fa-helmet-safety"></i> 3 şantiye</div></div>
+          <div><div class="kpi-num num" id="kpiIzlenen">16</div><div class="kpi-lbl">İzlenen personel</div>
+          <div class="kpi-delta flat" id="kpiIzlenenSub"><i class="fa-solid fa-helmet-safety"></i> 3 şantiye</div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-gauge-simple-high"></i></div>
-          <div><div class="kpi-num num">%78</div><div class="kpi-lbl">Katılım oranı</div>
-          <div class="kpi-delta flat"><i class="fa-solid fa-calendar-check"></i> 50 / 64 kişi-gün</div></div>
+          <div><div class="kpi-num num" id="kpiKatilim">%78</div><div class="kpi-lbl">Katılım oranı</div>
+          <div class="kpi-delta flat" id="kpiKatilimSub"><i class="fa-solid fa-calendar-check"></i> 50 / 64 kişi-gün</div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-umbrella-beach"></i></div>
-          <div><div class="kpi-num num">12</div><div class="kpi-lbl">İzinli / Raporlu kayıt</div>
-          <div class="kpi-delta flat"><i class="fa-solid fa-file-medical"></i> 9 izin · 3 rapor</div></div>
+          <div><div class="kpi-num num" id="kpiIzinli">12</div><div class="kpi-lbl">İzinli / Raporlu kayıt</div>
+          <div class="kpi-delta flat" id="kpiIzinliSub"><i class="fa-solid fa-file-medical"></i> 9 izin · 3 rapor</div></div>
         </div>
         <div class="kpi-card warn">
           <div class="kpi-ico"><i class="fa-solid fa-arrow-trend-up"></i></div>
-          <div><div class="kpi-num num">2 FM · 1 EM</div><div class="kpi-lbl">Mesai sapması</div>
-          <div class="kpi-delta down"><i class="fa-solid fa-xmark"></i> 2 devamsız kayıt</div></div>
+          <div><div class="kpi-num num" id="kpiSapma">2 FM · 1 EM</div><div class="kpi-lbl">Mesai sapması</div>
+          <div class="kpi-delta down" id="kpiSapmaSub"><i class="fa-solid fa-xmark"></i> 2 devamsız kayıt</div></div>
+        </div>
+      </div>
+
+      <!-- ============ B §6.3 — "Puantaj Raporu" maddesi BİREBİR: 8 alan, rakamın anlamıyla birlikte ============ -->
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-magnifying-glass-chart"></i> Puantaj Derinlemesine Özet</div><span class="ph-sub" style="margin:0">işlenen 4 gün · 29 Haz – 2 Tem 2026</span></div>
+        <div class="gc-body">
+          <div class="rp-kpis" id="ptDerinlik">
+            <div class="kpi-card">
+              <div class="kpi-ico"><i class="fa-solid fa-users-rectangle"></i></div>
+              <div><div class="kpi-num num">154</div><div class="kpi-lbl">Toplam adam-gün <span data-help="adam-gun-nedir"></span></div>
+              <div class="kpi-delta flat">64 öz kadro + 90 taşeron · 4 gün üzerinden</div></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-people-group"></i></div>
+              <div><div class="kpi-num num">90</div><div class="kpi-lbl">Taşeron adam-gün <span data-help="taseron-puantaji"></span></div>
+              <div class="kpi-delta flat">37 Demir-Beton · 23 ElektroMek · 30 Yalıtım K. — 24 kişi, işlenen 4 gün</div></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-ico" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-helmet-safety"></i></div>
+              <div><div class="kpi-num num">64</div><div class="kpi-lbl">Öz kadro adam-gün</div>
+              <div class="kpi-delta flat">İzlenen 16 kişilik örneklemden — tam kadro (69 kişi) günlük detayı çıktı sayfasında</div></div>
+            </div>
+            <div class="kpi-card warn">
+              <div class="kpi-ico"><i class="fa-solid fa-arrow-trend-down"></i></div>
+              <div><div class="kpi-num num">1</div><div class="kpi-lbl">Eksik mesai (EM) sayısı</div>
+              <div class="kpi-delta flat">Selim Doğan (Vadi, Perşembe) — yalnız öz kadroda izlenir, taşeronda EM kodu yok</div></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-ico" style="background:rgba(var(--acc-rgb),.16);color:var(--acc-ink)"><i class="fa-solid fa-arrow-trend-up"></i></div>
+              <div><div class="kpi-num num">2</div><div class="kpi-lbl">Fazla mesai (FM) toplamı</div>
+              <div class="kpi-delta flat">İbrahim Sönmez (Vadi, +3 sa) · Halil Güneş (Liman, +3 sa) — Merkez'de FM yok</div></div>
+            </div>
+            <div class="kpi-card danger">
+              <div class="kpi-ico"><i class="fa-solid fa-xmark"></i></div>
+              <div><div class="kpi-num num">6</div><div class="kpi-lbl">Devamsız personel</div>
+              <div class="kpi-delta down">2 öz kadro (Selim Doğan, Osman Polat) + 4 taşeron kişi — her biri haftada 1 gün</div></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-utensils"></i></div>
+              <div><div class="kpi-num num">93</div><div class="kpi-lbl">Yemekhane dahil kişi sayısı</div>
+              <div class="kpi-delta flat">2 Tem öğle sayımı — 69 öz (35/22/12) + 24 taşeron (10/6/8), tam kadroyla birebir</div></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-file-signature"></i></div>
+              <div><div class="kpi-num num">3</div><div class="kpi-lbl">Hakedişe dahil puantaj sayısı <span data-help="hakedis-nedir"></span></div>
+              <div class="kpi-delta flat">22–28 Haz dönemi 3 firma haftalık puantajı (136 adam-gün) TH-2026-008/009/014'e aktarıldı; güncel hafta onayda</div></div>
+            </div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Öz kadro rakamları "İzlenen personel" örneklemi (16/69) üzerinden hesaplanır — bkz. şantiye × durum matrisi. Taşeron rakamları 24 kişilik tam taşeron kadrosundan (Demir-Beton 10 · ElektroMek 6 · Yalıtım Kardeşler 8) canlı türetilir ve crm-operasyon-puantaj.html Taşeron sekmesiyle (haftalık 90 adam-gün) birebir aynıdır.</div>
+        </div>
+      </div>
+
+      <!-- ============ GRAFİK ALANI (B §7.3 — günlük dağılım · öz/taşeron ayrımı · FM · devamsızlık) ============ -->
+      <div class="rp-charts-2" style="margin-top:20px">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Günlük Taşeron Saha Dağılımı</h3><span class="ph-sub" style="margin:0">Pzt–Per, 3 firma toplamı</span></div>
+          <div class="rp-chart-body" id="chartGunlukTaseron"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Öz Kadro / Taşeron Adam-Gün Ayrımı</h3></div>
+          <div class="rp-chart-body" id="chartOzTaseron"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-arrow-trend-up"></i> Fazla Mesai — Şantiye Bazlı</h3></div>
+          <div class="rp-chart-body" id="chartFm"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-triangle-exclamation"></i> Devamsızlık Uyarıları</h3></div>
+          <div class="rp-chart-body" id="chartDevamsiz"></div>
         </div>
       </div>
 
@@ -156,6 +248,29 @@
           </div>
       </div>
 
+      <!-- ============ TAŞERON FİRMA ADAM-GÜN ÖZETİ — satır bazlı, şantiye filtresiyle daralır ============ -->
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-people-group"></i> Taşeron Firma Adam-Gün Özeti</div><span class="ph-sub" style="margin:0">işlenen 4 gün · crm-operasyon-puantaj.html Taşeron sekmesi</span></div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblTaseronFirma">
+            <thead><tr><th>Firma</th><th>Şantiye</th><th class="num">Ekip</th><th class="num">Adam-Gün (4 gün)</th></tr></thead>
+            <tbody>
+              <tr data-santiye="vadi"><td>Demir-Beton İnş. Ltd.</td><td>Vadi Konakları</td><td class="num">10 kişi</td><td class="num">37 adam-gün</td></tr>
+              <tr data-santiye="vadi"><td>ElektroMek Taahhüt</td><td>Vadi Konakları</td><td class="num">6 kişi</td><td class="num">23 adam-gün</td></tr>
+              <tr data-santiye="liman"><td>Yalıtım Kardeşler</td><td>Liman Lojistik Merkezi</td><td class="num">8 kişi</td><td class="num">30 adam-gün</td></tr>
+            </tbody>
+          </table>
+          <div class="gv-empty" id="taseronFirmaEmpty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-people-group"></i></div>
+            <h4>Bu şantiyede taşeron ekibi yok</h4>
+            <p>Merkez Şantiye depo+atölye sahası olduğu için taşeron çalıştırmaz — tüm kadro öz personelden oluşur.</p>
+          </div>
+        </div>
+        <div class="gc-body" style="padding-top:0">
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Taşeron hakedişleri (TH-2026-###) bu adam-gün toplamlarına bağlıdır — kişi bazlı grid crm-operasyon-puantaj.html Taşeron sekmesinde.</div>
+        </div>
+      </div>
+
       <div class="gv-card" style="margin-top:20px">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Katılım Oranı — Şantiye</div></div>
         <div class="gc-body">
@@ -165,6 +280,30 @@
             <div class="att-row"><span class="att-name">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:94%"></div></div><span class="gbar-val">%94</span></div></div>
           </div>
           <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Katılım = (tam + yarım + FM + EM) / işlenen kişi-gün. Liman'daki düşüş şef Aylin Koç dahil 4 kişinin hafta boyunca izinli olmasından kaynaklanıyor.</div>
+        </div>
+      </div>
+
+      <!-- ============ KARŞILAŞTIRMA ALANI (B §6.2 madde 8) ============ -->
+      <div class="rp-compare" style="margin-top:20px">
+        <div class="rp-compare-item">
+          <span class="rc-lbl">Tam Gün (Haz 29–30 → Tem 1–2)</span>
+          <span class="rc-val">21</span>
+          <span class="rp-compare-delta down"><i class="fa-solid fa-arrow-down"></i> −2 · önceki 23</span>
+        </div>
+        <div class="rp-compare-item">
+          <span class="rc-lbl">Devamsızlık</span>
+          <span class="rc-val">0</span>
+          <span class="rp-compare-delta up"><i class="fa-solid fa-arrow-up"></i> −2 · önceki 2 (iyileşme)</span>
+        </div>
+        <div class="rp-compare-item">
+          <span class="rc-lbl">Taşeron haftalık projeksiyon (Pzt–Cmt)</span>
+          <span class="rc-val">132</span>
+          <span class="rp-compare-delta down"><i class="fa-solid fa-arrow-down"></i> −4 · arşiv hafta (22–28 Haz) 136 adam-gün</span>
+        </div>
+        <div class="rp-compare-item">
+          <span class="rc-lbl">Eksik Mesai (EM)</span>
+          <span class="rc-val">1</span>
+          <span class="rp-compare-delta down"><i class="fa-solid fa-arrow-up"></i> +1 · önceki 0</span>
         </div>
       </div>
 
@@ -198,6 +337,13 @@
             <div class="hl-row"><i class="fa-solid fa-xmark"></i><span><b>Osman Polat</b> (Düz İşçi, Liman) hafta başında (29 Haz) mazeretsiz devamsız görüldü.</span></div>
           </div>
         </div>
+      </div>
+
+      <!-- ============ YORUM / DEĞERLENDİRME (B §6.2 madde 9) ============ -->
+      <div class="rp-note" style="margin-top:20px">
+        <i class="fa-solid fa-magnifying-glass-chart"></i>
+        <strong>Değerlendirme —</strong>
+        Genel katılım oranı %78 ile kabul edilebilir eşiğin (%80) hafif altında; asıl baskı <b>Liman'ın %65'lik oranı</b> — şef Aylin Koç dahil 4 kişinin aynı hafta izinli olması tek bir haftada nadir rastlanan bir çakışma, tekrarlarsa vardiya planlamasında gözden geçirilmeli. Merkez Şantiye %94 ile en istikrarlı saha. Öz kadro/taşeron dengesi (64/90 adam-gün) taşeron ağırlıklı görünüyor — bu beklenen bir durum, çünkü izlenen öz kadro örneklemi (16 kişi) tam kadronun (69) yalnız bir kesiti; gerçek oran çıktı sayfasındaki tam 69 kişilik veriyle daha dengeli çıkar. Eksik mesai (EM) Haziran'a göre +1 ile hafif kötüleşme gösteriyor ama devamsızlık −2 ile belirgin iyileşme — net tablo olumlu. Taşeron tarafında güncel hafta (132 adam-gün projeksiyon) arşiv haftaya (136) göre −4 ile stabil seyrediyor; hakedişe henüz aktarılmadı, üç firmanın da onay akışı (Şantiye Şefi/Teknik Ofis) sürüyor.
       </div>
     </section>
 
@@ -295,12 +441,145 @@
       [sef ? 'Vadi Konakları — Durum Dökümü (29 Haz – 2 Tem)' : 'Şantiye × Durum Matrisi (29 Haz – 2 Tem)']
     ].concat(tblAoa(document.getElementById(sef ? 'tblDurumSef' : 'tblDurum')));
     if(!sef){
+      aoa.push([], ['Puantaj Derinlemesine Özet (B §6.3)']);
+      aoa.push(['Toplam adam-gün', 154], ['Taşeron adam-gün', 90], ['Öz kadro adam-gün (izlenen 16 kişi)', 64],
+                ['Eksik mesai (EM) sayısı', 1], ['Fazla mesai (FM) toplamı', 2], ['Devamsız personel', 6],
+                ['Yemekhane dahil kişi sayısı', 93], ['Hakedişe dahil puantaj sayısı (firma)', 3]);
       aoa.push([], ['Ay Karşılaştırması — Haziran (29–30) vs. Temmuz (1–2), işlenen 2\'şer gün']);
       aoa = aoa.concat(tblAoa(document.querySelector('.cmp-tbl')));
     }
     return { file:'puantaj-raporu-' + (sef ? 'vadi-' : '') + '29haz-2tem-2026',
              sheet:'Puantaj', cols:[30, 17, 17, 17, 10], aoa:aoa };
   };
+
+  /* ============ gvHelp sözlük genişletmesi — "adam-gün" kavramı bu raporda ilk kez geçiyor ============ */
+  if(window.gvHelp){
+    gvHelp.metinler['adam-gun-nedir'] = {
+      baslik: 'Adam-Gün Nedir?',
+      mesaj: 'Adam-gün, bir dönemde sahada çalışan kişi sayısı ile çalışılan gün sayısının çarpımından oluşan birimdir (ör. 10 kişi × 4 gün = 40 adam-gün). Puantaj ve hakediş hesaplamalarında işçilik yoğunluğunu ve maliyetini karşılaştırılabilir tek bir sayıya indirger; öz kadro ve taşeron için ayrı ayrı izlenir.'
+    };
+  }
+
+  var PT_SANTIYE_LBL = {tumu:'Tüm şantiyeler', vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
+
+  /* ============ ÇIKTI — gvExport (B §6.4). GV_EXPORTERS['Puantaj raporu'] excel dalında
+     otomatik devreye girer (data-gv-export DEĞİL, imperatif init — buton zaten ID taşıyor). */
+  if(window.gvExport){
+    gvExport.init('#btnDisaAktar', {
+      baslik: 'Puantaj raporu',
+      ciktiHref: 'crm-operasyon-puantaj-cikti.html?hafta=2026-06-29',
+      formatlar: ['pdf', 'excel', 'yazdir'],
+      kapsam: ['tumu', 'filtreli'],
+      filtreOzeti: function(){
+        var s = document.querySelector('#ptSantiyeChips .chip.is-on');
+        var k = s ? s.getAttribute('data-santiye') : 'tumu';
+        return k === 'tumu' ? 'Aktif filtre yok — tüm şantiyeler kapsamda.' : 'Şantiye: ' + PT_SANTIYE_LBL[k];
+      }
+    });
+  }
+
+  if(view !== 'yonetim') return;   /* aşağıdaki toolbar/şantiye/derinlik mantığı yalnız yönetim görünümünde çalışır */
+
+  /* ============ ŞANTİYE FİLTRESİ — matrisin kaynak sütunlarından CANLI türetilir, yeni
+     sayı UYDURULMAZ (kaynak: tblDurum sütunları + Taşeron sekmesi 37/23/30 adam-gün). ============ */
+  var PT_DERINLIK = {
+    tumu:  {izlenen:16, izlenenSub:'3 şantiye', katilim:'%78', katilimSub:'50 / 64 kişi-gün', izinli:12, izinliSub:'9 izin · 3 rapor', fm:2, em:1, devamsiz:6, devamsizSub:'2 öz kadro + 4 taşeron kişi', toplamAG:154, ozAG:64, tasAG:90, tasDetay:'37 Demir-Beton · 23 ElektroMek · 30 Yalıtım K.', yemek:93, yemekSub:'69 öz (35/22/12) + 24 taşeron (10/6/8)', hakedis:3, hakedisSub:'3 firma (Demir-Beton, ElektroMek, Yalıtım K.) — 22–28 Haz'},
+    vadi:  {izlenen:7,  izlenenSub:'Vadi Konakları', katilim:'%79', katilimSub:'22 / 28 kişi-gün', izinli:5,  izinliSub:'3 izin · 2 rapor', fm:1, em:1, devamsiz:4, devamsizSub:'1 öz kadro + 3 taşeron kişi', toplamAG:88,  ozAG:28, tasAG:60, tasDetay:'37 Demir-Beton · 23 ElektroMek', yemek:51, yemekSub:'35 öz + Demir-Beton 10 + ElektroMek 6', hakedis:2, hakedisSub:'Demir-Beton + ElektroMek — 22–28 Haz'},
+    liman: {izlenen:5,  izlenenSub:'Liman Lojistik Merkezi', katilim:'%65', katilimSub:'13 / 20 kişi-gün', izinli:6,  izinliSub:'6 izin · 0 rapor', fm:1, em:0, devamsiz:2, devamsizSub:'1 öz kadro + 1 taşeron kişi', toplamAG:50,  ozAG:20, tasAG:30, tasDetay:'30 Yalıtım Kardeşler', yemek:30, yemekSub:'22 öz + Yalıtım Kardeşler 8', hakedis:1, hakedisSub:'Yalıtım Kardeşler — 22–28 Haz'},
+    merkez:{izlenen:4,  izlenenSub:'Merkez Şantiye', katilim:'%94', katilimSub:'15 / 16 kişi-gün', izinli:1,  izinliSub:'0 izin · 1 rapor', fm:0, em:0, devamsiz:0, devamsizSub:'taşeron yok — depo+atölye sahası', toplamAG:16,  ozAG:16, tasAG:0,  tasDetay:'Merkez taşeron çalıştırmaz', yemek:12, yemekSub:'12 öz kadro, taşeron yok', hakedis:0, hakedisSub:'Merkez taşeron çalıştırmadığı için hakediş kalemi yok'}
+  };
+  var ptDerinlikEl = document.getElementById('ptDerinlik');
+  var ptCards = ptDerinlikEl ? ptDerinlikEl.querySelectorAll('.kpi-card') : [];
+
+  function ptFmt(n){ return n.toLocaleString('tr-TR'); }
+
+  function renderSantiye(k){
+    var d = PT_DERINLIK[k];
+    document.getElementById('kpiIzlenen').textContent = d.izlenen;
+    document.getElementById('kpiIzlenenSub').innerHTML = '<i class="fa-solid fa-helmet-safety"></i> ' + d.izlenenSub;
+    document.getElementById('kpiKatilim').textContent = d.katilim;
+    document.getElementById('kpiKatilimSub').innerHTML = '<i class="fa-solid fa-calendar-check"></i> ' + d.katilimSub;
+    document.getElementById('kpiIzinli').textContent = d.izinli;
+    document.getElementById('kpiIzinliSub').innerHTML = '<i class="fa-solid fa-file-medical"></i> ' + d.izinliSub;
+    document.getElementById('kpiSapma').textContent = d.fm + ' FM · ' + d.em + ' EM';
+    document.getElementById('kpiSapmaSub').innerHTML = '<i class="fa-solid fa-xmark"></i> ' + d.devamsiz + ' devamsız kayıt';
+
+    if(ptCards.length >= 8){
+      ptCards[0].querySelector('.kpi-num').textContent = ptFmt(d.toplamAG);
+      ptCards[0].querySelector('.kpi-delta').textContent = ptFmt(d.ozAG) + ' öz kadro + ' + ptFmt(d.tasAG) + ' taşeron · 4 gün üzerinden';
+      ptCards[1].querySelector('.kpi-num').textContent = ptFmt(d.tasAG);
+      ptCards[1].querySelector('.kpi-delta').textContent = d.tasDetay + ' — işlenen 4 gün';
+      ptCards[2].querySelector('.kpi-num').textContent = ptFmt(d.ozAG);
+      ptCards[3].querySelector('.kpi-num').textContent = d.em;
+      ptCards[4].querySelector('.kpi-num').textContent = d.fm;
+      ptCards[5].querySelector('.kpi-num').textContent = d.devamsiz;
+      ptCards[5].querySelector('.kpi-delta').textContent = d.devamsizSub;
+      ptCards[6].querySelector('.kpi-num').textContent = ptFmt(d.yemek);
+      ptCards[6].querySelector('.kpi-delta').textContent = d.yemekSub;
+      ptCards[7].querySelector('.kpi-num').textContent = d.hakedis;
+      ptCards[7].querySelector('.kpi-delta').textContent = d.hakedisSub;
+    }
+
+    var tfRows = document.querySelectorAll('#tblTaseronFirma tbody tr');
+    var visN = 0;
+    tfRows.forEach(function(tr){
+      var show = k === 'tumu' || tr.getAttribute('data-santiye') === k;
+      tr.hidden = !show;
+      if(show) visN++;
+    });
+    document.getElementById('taseronFirmaEmpty').hidden = visN !== 0;
+
+    document.getElementById('ptFiltreOzet').innerHTML = k === 'tumu'
+      ? '<i class="fa-solid fa-circle-info"></i> Tüm şantiyeler gösteriliyor'
+      : '<i class="fa-solid fa-circle-info"></i> <b>' + PT_SANTIYE_LBL[k] + '</b> için daraltıldı — ' + visN + ' taşeron firma kaydı';
+  }
+
+  document.getElementById('ptSantiyeChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
+    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    renderSantiye(ch.getAttribute('data-santiye'));
+  });
+
+  /* ============ TARİH ARALIĞI — gvDateRange gerçek tarih presetleriyle çalışır; bu
+     rapor haftalık sabit bir pencereyi (29 Haz–2 Tem) gösterdiği için seçim, veri
+     kümesini DEĞİŞTİRMEZ ama özet metnini günceller (gerçek DOM etkisi — mock veri
+     tek haftalık olduğundan başka bir sonuç UYDURULMAZ). */
+  if(window.gvDateRange){
+    gvDateRange('#ptDateRange', {
+      emptyLabel: 'İşlenen hafta: 29 Haz – 2 Tem',
+      onChange: function(val){
+        var s = document.querySelector('#ptSantiyeChips .chip.is-on');
+        var k = s ? s.getAttribute('data-santiye') : 'tumu';
+        var lbl = document.getElementById('ptFiltreOzet');
+        if(!val){ renderSantiye(k); return; }
+        lbl.innerHTML = '<i class="fa-solid fa-circle-info"></i> Seçilen aralık: <b>' + val.label + '</b> — bu rapor yalnız işlenen 29 Haz–2 Tem 2026 haftasını içerir, arşiv haftalar (ör. 22–28 Haz) crm-operasyon-taseron-puantaj.html geçmiş kayıtlarında görüntülenebilir.';
+      }
+    });
+  }
+
+  /* ============ GRAFİK ALANI (B §7.3) — bağımlılıksız SVG, kanonik sayılardan ============ */
+  if(window.gvBar){
+    gvBar('#chartGunlukTaseron', [
+      {lbl:'Pzt 29', val:22}, {lbl:'Sal 30', val:23}, {lbl:'Çar 1', val:21}, {lbl:'Per 2', val:24, tone:'acc'}
+    ], {yon:'dikey', baslik:'Günlük taşeron saha dağılımı'});
+  }
+  if(window.gvDonut){
+    gvDonut('#chartOzTaseron', [
+      {lbl:'Öz Kadro', val:64, tone:'acc'}, {lbl:'Taşeron', val:90, tone:'info'}
+    ], {baslik:'Öz kadro / taşeron adam-gün ayrımı', merkezAlt:'adam-gün'});
+  }
+  if(window.gvBar){
+    gvBar('#chartFm', [
+      {lbl:'Vadi Konakları', val:1}, {lbl:'Liman Lojistik', val:1}, {lbl:'Merkez Şantiye', val:0}
+    ], {yon:'yatay', baslik:'Fazla mesai — şantiye bazlı'});
+    gvBar('#chartDevamsiz', [
+      {lbl:'Vadi (öz)', val:1, tone:'danger'}, {lbl:'Liman (öz)', val:1, tone:'danger'},
+      {lbl:'Merkez (öz)', val:0, tone:'danger'}, {lbl:'Taşeron (3 firma)', val:4, tone:'danger'}
+    ], {yon:'yatay', baslik:'Devamsızlık dağılımı'});
+  }
+
+  renderSantiye('tumu');
 })();
 </script>
 </body>

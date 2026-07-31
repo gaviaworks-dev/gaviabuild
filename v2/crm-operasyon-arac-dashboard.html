@@ -67,6 +67,17 @@
 .cross-link a{margin-left:auto;flex:none;font-size:12.5px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
 .cross-link a:hover{color:var(--acc-deep)}
 @media(max-width:640px){.cross-link{padding:14px 16px}.cross-link a{margin-left:0}}
+
+/* ============ B §6.2 eklentileri (T-R4) — şantiye filtresi · karşılaştırma
+   rozeti · değerlendirme kartı · boş durum. MEVCUT donem-switch/rank-row/
+   gv-empty dilinden devralındı, yeni bir bileşen dili İCAT EDİLMEDİ. ============ */
+.filt-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-8px 0 14px}
+.filt-row .filt-lbl{font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px;flex:none}
+.cmp-tag{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--acc-ink);background:rgba(var(--acc-rgb),.1);padding:3px 9px;border-radius:var(--r-pill);margin-left:8px}
+.eval-card{padding:20px 22px;font-size:13px;color:var(--ink-2);line-height:1.75}
+.eval-card b{color:var(--ink)}
+.eval-card ul{margin:8px 0 0;padding-left:18px}
+.eval-card li{margin-bottom:4px}
 </style>
 </head>
 <body data-sec="varlik" data-screen="arac-dashboard">
@@ -105,13 +116,27 @@
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-arac.html"><i class="fa-solid fa-arrow-left"></i> Araçlara Dön</a>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-arac-bildirim.html"><i class="fa-solid fa-bell"></i> Bildirim Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="Araç filosu dashboard"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-ghost btn-sm" id="btnDashCikti"><i class="fa-solid fa-download"></i> Çıktı Al</button>
       </div>
     </div>
 
-    <div class="donem-switch" id="donemSwitch">
-      <button data-d="haziran" class="is-on"><i class="fa-solid fa-calendar-check"></i> Haziran 2026 (tam ay)</button>
-      <button data-d="temmuz"><i class="fa-solid fa-calendar-day"></i> Temmuz 2026 (bugüne kadar)</button>
+    <div class="filt-row">
+      <span class="filt-lbl"><i class="fa-solid fa-location-dot"></i> Şantiye</span>
+      <div class="donem-switch" id="santiyeFilter" style="margin-bottom:0">
+        <button data-s="tumu" class="is-on"><i class="fa-solid fa-layer-group"></i> Tüm Şantiyeler</button>
+        <button data-s="vadi">Vadi Konakları</button>
+        <button data-s="liman">Liman Lojistik</button>
+        <button data-s="merkez">Merkez Şantiye</button>
+        <button data-s="genelmerkez">Genel Merkez</button>
+      </div>
+    </div>
+
+    <div class="filt-row">
+      <span class="filt-lbl"><i class="fa-solid fa-calendar-days"></i> Tarih Aralığı</span>
+      <div class="donem-switch" id="donemSwitch" style="margin-bottom:0">
+        <button data-d="haziran" class="is-on"><i class="fa-solid fa-calendar-check"></i> Haziran 2026 (tam ay)</button>
+        <button data-d="temmuz"><i class="fa-solid fa-calendar-day"></i> Temmuz 2026 (bugüne kadar)</button>
+      </div>
     </div>
     <div class="donem-note" id="donemNote"><i class="fa-solid fa-circle-info"></i> <span>Haziran 2026 tam bir aylık dönemi kapsar; Temmuz yalnız 1-2 Temmuz'a ait kısmi veriyi gösterir (kanonik bugün 2 Temmuz) — iki dönem birbirine oranlanmaz, ayrı ayrı okunur.</span></div>
 
@@ -136,7 +161,7 @@
 
     <div class="dash-cols">
       <div class="gv-card">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-column"></i> Aylık Filo Gideri (Yakıt + Diğer Giderler)</div><span class="ph-sub" style="margin:0">Haziran – Temmuz 2026</span></div>
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-column"></i> Aylık Filo Gideri (Yakıt + Diğer Giderler) <span class="cmp-tag"><i class="fa-solid fa-code-compare"></i> Karşılaştırma</span></div><span class="ph-sub" style="margin:0">Haziran – Temmuz 2026</span></div>
         <div class="gc-body flush" id="aylikWrap"></div>
         <div class="rep-src" style="padding:0 22px 18px"><i class="fa-solid fa-circle-info"></i> <span>Temmuz sütunu yalnız 1-2 Temmuz'a ait kısmi veriyi taşır (kanonik bugün 2 Temmuz) — iki ay birebir ölçekte kıyaslanamaz, ayrı okunmalıdır. Mayıs 2026 filo geneli için crm-operasyon-arac-yakit.html'de araç bazlı karşılaştırma var, ancak tüm filo için yeterli Mayıs kaydı bulunmadığından (bazı araçlarda &lt;2 dolum) fleet-geneli üçüncü ay burada gösterilmez.</span></div>
       </div>
@@ -163,18 +188,24 @@
 
     <div class="gv-card">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Muayene · Kasko · Trafik Sigortası Takvimi</div><span class="ph-sub" style="margin:0">Yaklaşan tarihe göre sıralı — arşivdeki araçlar (satıldı/hurda/kiralama bitti) hariç</span></div>
-      <div class="gc-body flush">
+      <div class="gc-body flush" id="takvimTblWrap">
         <table class="gtable" id="tblTakvim">
           <thead><tr><th>Araç</th><th>Tür</th><th>Tarih</th><th class="num">Durum</th></tr></thead>
           <tbody id="takvimBody"></tbody>
         </table>
       </div>
+      <div class="gv-empty" id="takvimEmpty" hidden></div>
       <div class="rep-src" style="padding:0 22px 18px"><i class="fa-solid fa-circle-info"></i> <span>Eşik: 30 gün (crm-operasyon-arac-bildirim.html'deki varsayılan eşikle aynı) — bu süre içindeki veya süresi geçmiş kayıtlar kırmızı/turuncu rozetle vurgulanır.</span></div>
       <div class="cross-link">
         <i class="fa-solid fa-bell lead"></i>
         <span>Bildirim geçmişi ve eşik ayarları için:</span>
         <a href="crm-operasyon-arac-bildirim.html">Bildirim Merkezi <i class="fa-solid fa-arrow-right"></i></a>
       </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-lightbulb"></i> Değerlendirme</div></div>
+      <div class="eval-card" id="evalCard"></div>
     </div>
 
   </main>
@@ -258,31 +289,43 @@
   }
 
   var donem = 'haziran';
+  var santiyeFiltre = 'tumu';   /* B §6.2 — şantiye/proje filtresi (T-R4) */
 
   function render(){
-    var aktifArac = ARAC.filter(function(a){ return ARCHIVE.indexOf(a.durum) === -1; });
-    var bakimda = aktifArac.filter(function(a){ return a.altDurum === 'bakimda'; }).length;
+    var ARAC_VIEW = santiyeFiltre === 'tumu' ? ARAC : ARAC.filter(function(a){ return a.santiye === santiyeFiltre; });
+    var filtreAktif = santiyeFiltre !== 'tumu';
+    var aktifArac = ARAC_VIEW.filter(function(a){ return ARCHIVE.indexOf(a.durum) === -1; });
+    var bakimliArac = aktifArac.filter(function(a){ return a.altDurum === 'bakimda'; });
+    var bakimda = bakimliArac.length;
     var muayeneYaklasan = aktifArac.filter(function(a){ return a.muayene && gunFarki(a.muayene) <= 30; });
     var kaskoYaklasan = aktifArac.filter(function(a){ return a.kasko && gunFarki(a.kasko) <= 30; });
     var trafikYaklasan = aktifArac.filter(function(a){ return a.sigorta && gunFarki(a.sigorta) <= 30; });
 
-    var yakitToplam = ARAC.reduce(function(s,a){ return s + a.yakit[donem]; }, 0);
-    var giderToplam = ARAC.reduce(function(s,a){ return s + a.gider[donem]; }, 0);
+    var yakitToplam = ARAC_VIEW.reduce(function(s,a){ return s + a.yakit[donem]; }, 0);
+    var giderToplam = ARAC_VIEW.reduce(function(s,a){ return s + a.gider[donem]; }, 0);
     var toplamGider = yakitToplam + giderToplam;
 
-    var topYakit = ARAC.slice().sort(function(x,y){ return y.yakit[donem] - x.yakit[donem]; })[0];
-    var topGiderTZ = ARAC.slice().sort(function(x,y){ return y.gider.tumZaman - x.gider.tumZaman; })[0];
+    var topYakit = ARAC_VIEW.slice().sort(function(x,y){ return y.yakit[donem] - x.yakit[donem]; })[0];
+    var topGiderTZ = ARAC_VIEW.slice().sort(function(x,y){ return y.gider.tumZaman - x.gider.tumZaman; })[0];
 
     /* Km başı ort. maliyet — yakıt bazlı, Mayıs-Temmuz 2026 kayıt aralığında ≥2 dolum kaydı
        olan 7 araç (ARC-01..06,08), arac-yakit.html'in computeDerived() yöntemiyle AYNI mantık,
        fleet seviyesinde ağırlıklı ortalama (₺73.628 toplam yakıt tutarı / 11.650 km) — ARC-07/
-       09/10 tek kayıtlı/arşiv olduğundan km farkı hesaplanamaz, dışarıda bırakılır. */
+       09/10 tek kayıtlı/arşiv olduğundan km farkı hesaplanamaz, dışarıda bırakılır. Bu KPI FİLO
+       GENELİNDE sabit kalır (şantiye filtresine duyarlı değil — 7 aracın km/yakıt geçmişi tek
+       tek şantiyeye ayrıştırılamaz), sub-etiket bunu açıkça yazar. */
     var kmBasiMaliyet = 73628 / 11650;
 
+    var altKirilim = ['Kullanımda','Bakımda','Arızalı','Beklemede'].map(function(lbl, i){
+      var key = [null,'bakimda','arizali','beklemede'][i];
+      var n = aktifArac.filter(function(a){ return (a.altDurum||null) === key; }).length;
+      return n ? n + ' ' + lbl.toLowerCase() : null;
+    }).filter(Boolean).join(' · ') || 'Aktif araç yok';
+
     document.getElementById('kpiGrid').innerHTML =
-        kpiCard('fa-truck-field', '', 'Toplam Araç', '10', '10 kanonik ARC kaydı', 'fa-list')
-      + kpiCard('fa-circle-check', '', 'Aktif Araç', String(aktifArac.length), '4 kullanımda · 1 bakımda · 1 arızalı · 1 beklemede', 'fa-gauge')
-      + kpiCard('fa-screwdriver-wrench', bakimda ? 'warn' : '', 'Bakımdaki Araç', String(bakimda), bakimda ? 'ARC-04 · 30 Haz\'dan beri serviste' : 'Bakımda araç yok', 'fa-wrench')
+        kpiCard('fa-truck-field', '', 'Toplam Araç', String(ARAC_VIEW.length), filtreAktif ? ARAC_VIEW.length + ' kayıt · ' + SANTIYE_ADI[santiyeFiltre] + ' filtreli' : '10 kanonik ARC kaydı', 'fa-list')
+      + kpiCard('fa-circle-check', '', 'Aktif Araç', String(aktifArac.length), altKirilim, 'fa-gauge')
+      + kpiCard('fa-screwdriver-wrench', bakimda ? 'warn' : '', 'Bakımdaki Araç', String(bakimda), bakimda ? bakimliArac.map(function(a){return a.no;}).join(', ') + ' · serviste' : 'Bakımda araç yok', 'fa-wrench')
       + kpiCard('fa-clipboard-check', muayeneYaklasan.length ? 'danger' : '', 'Muayenesi Yaklaşan', String(muayeneYaklasan.length), muayeneYaklasan.length ? muayeneYaklasan.map(function(a){return a.no;}).join(', ') + ' · ≤30 gün' : '30 gün içinde yok', 'fa-triangle-exclamation')
       + kpiCard('fa-file-contract', kaskoYaklasan.length ? 'warn' : '', 'Kaskosu Yaklaşan', String(kaskoYaklasan.length), kaskoYaklasan.length ? kaskoYaklasan.map(function(a){return a.no;}).join(', ') : '30 gün içinde yok', 'fa-check')
       + kpiCard('fa-file-shield', trafikYaklasan.length ? 'danger' : '', 'Trafik Sigortası Yaklaşan', String(trafikYaklasan.length), trafikYaklasan.length ? trafikYaklasan.map(function(a){return a.no;}).join(', ') + ' · ≤30 gün' : '30 gün içinde yok', 'fa-triangle-exclamation')
@@ -300,37 +343,38 @@
       {lbl:'Bakımda', n: aktifArac.filter(function(a){ return a.altDurum==='bakimda'; }).length, cls:'warn'},
       {lbl:'Arızalı', n: aktifArac.filter(function(a){ return a.altDurum==='arizali'; }).length, cls:'danger'},
       {lbl:'Beklemede', n: aktifArac.filter(function(a){ return a.altDurum==='beklemede'; }).length, cls:''},
-      {lbl:'Satıldı', n: ARAC.filter(function(a){ return a.durum==='satildi'; }).length, cls:''},
-      {lbl:'Kiralama Bitti', n: ARAC.filter(function(a){ return a.durum==='kiralamaBitti'; }).length, cls:''},
-      {lbl:'Hurdaya Ayrıldı', n: ARAC.filter(function(a){ return a.durum==='hurda'; }).length, cls:'danger'}
+      {lbl:'Satıldı', n: ARAC_VIEW.filter(function(a){ return a.durum==='satildi'; }).length, cls:''},
+      {lbl:'Kiralama Bitti', n: ARAC_VIEW.filter(function(a){ return a.durum==='kiralamaBitti'; }).length, cls:''},
+      {lbl:'Hurdaya Ayrıldı', n: ARAC_VIEW.filter(function(a){ return a.durum==='hurda'; }).length, cls:'danger'}
     ];
     renderRankList('durumWrap', durumRows.map(function(r){ return {name:r.lbl, sub:null, val:r.n, cls:r.cls}; }), 10, true);
 
     /* ---- Konum Dağılımı ---- */
     var konumCount = {};
-    ARAC.forEach(function(a){ konumCount[a.santiye] = (konumCount[a.santiye]||0) + 1; });
+    ARAC_VIEW.forEach(function(a){ konumCount[a.santiye] = (konumCount[a.santiye]||0) + 1; });
     var konumRows = Object.keys(konumCount).map(function(k){ return {name:SANTIYE_ADI[k], sub:null, val:konumCount[k]}; });
     renderRankList('konumWrap', konumRows, 10, true);
 
     /* ---- Araç Bazında Yakıt Gideri (dönem-bağımlı) ---- */
-    document.getElementById('ykSub').textContent = (donem==='haziran' ? 'Haziran 2026 (tam ay)' : 'Temmuz 2026 (bugüne kadar)') + ' · Filo toplamı ' + tl(yakitToplam);
-    var yakitRows = ARAC.map(function(a){ return {name:a.no, sub:a.plaka, val:a.yakit[donem]}; }).sort(function(x,y){ return y.val-x.val; });
+    document.getElementById('ykSub').textContent = (donem==='haziran' ? 'Haziran 2026 (tam ay)' : 'Temmuz 2026 (bugüne kadar)') + ' · ' + (filtreAktif ? SANTIYE_ADI[santiyeFiltre] + ' toplamı ' : 'Filo toplamı ') + tl(yakitToplam);
+    var yakitRows = ARAC_VIEW.map(function(a){ return {name:a.no, sub:a.plaka, val:a.yakit[donem]}; }).sort(function(x,y){ return y.val-x.val; });
     renderRankList('yakitRankWrap', yakitRows, Math.max.apply(null, yakitRows.map(function(r){return r.val;}).concat([1])), false);
-    document.getElementById('ykFoot').textContent = (donem==='haziran' ? '5 araçta dolum kaydı yok (ARC-03/04/07/09/10 hariç ARC-03/04 Haziran\'da dolum yaptı — kayıtsız olan yalnız ARC-07/09/10)' : 'Yalnız ARC-01 ve ARC-08\'in Temmuz\'da (1 Temmuz) dolum kaydı var — diğerleri henüz Temmuz\'da dolum yapmadı');
+    document.getElementById('ykFoot').textContent = (filtreAktif ? SANTIYE_ADI[santiyeFiltre] + ' filtresi uygulandı — dolum kayıtları yalnız bu şantiyenin araçlarını yansıtır. ' : '') + (donem==='haziran' ? '5 araçta dolum kaydı yok (ARC-03/04/07/09/10 hariç ARC-03/04 Haziran\'da dolum yaptı — kayıtsız olan yalnız ARC-07/09/10)' : 'Yalnız ARC-01 ve ARC-08\'in Temmuz\'da (1 Temmuz) dolum kaydı var — diğerleri henüz Temmuz\'da dolum yapmadı');
 
-    /* ---- Aylık Filo Gideri (Haziran/Temmuz karşılaştırması, yakıt+diğer gider birlikte) ---- */
-    var haziranFiloToplam = ARAC.reduce(function(s,a){ return s + a.yakit.haziran + a.gider.haziran; }, 0);
-    var temmuzFiloToplam = ARAC.reduce(function(s,a){ return s + a.yakit.temmuz + a.gider.temmuz; }, 0);
+    /* ---- Aylık Filo Gideri (Haziran/Temmuz karşılaştırması, yakıt+diğer gider birlikte) — B §6.2 karşılaştırma alanı ---- */
+    var haziranFiloToplam = ARAC_VIEW.reduce(function(s,a){ return s + a.yakit.haziran + a.gider.haziran; }, 0);
+    var temmuzFiloToplam = ARAC_VIEW.reduce(function(s,a){ return s + a.yakit.temmuz + a.gider.temmuz; }, 0);
     renderRankList('aylikWrap', [
       {name:'Haziran 2026', sub:'tam ay', val:haziranFiloToplam},
       {name:'Temmuz 2026', sub:'bugüne kadar (1-2 Tem)', val:temmuzFiloToplam}
     ], Math.max(haziranFiloToplam, temmuzFiloToplam, 1), false);
 
     /* ---- Araç Başına Toplam Maliyet (bakım + diğer gider, tüm zamanlar — yakıt hariç, madde bkz. kart altı not) ---- */
-    var toplamMaliyetRows = ARAC.map(function(a){ return {name:a.no, sub:a.plaka, val:a.gider.tumZaman + a.bakim}; }).sort(function(x,y){ return y.val-x.val; });
+    var toplamMaliyetRows = ARAC_VIEW.map(function(a){ return {name:a.no, sub:a.plaka, val:a.gider.tumZaman + a.bakim}; }).sort(function(x,y){ return y.val-x.val; });
     renderRankList('toplamMaliyetWrap', toplamMaliyetRows, Math.max.apply(null, toplamMaliyetRows.map(function(r){return r.val;}).concat([1])), false);
 
-    /* ---- Diğer Giderler — Kategori Kırılımı (tüm zamanlar) ---- */
+    /* ---- Diğer Giderler — Kategori Kırılımı (tüm zamanlar, FİLO GENELİ — 15 kategori tek
+       tek araca ayrıştırılmadığı için şantiye filtresine duyarlı DEĞİL, not açıkça yazar) ---- */
     var maxKat = Math.max.apply(null, GIDER_KAT.map(function(k){ return k.val; }));
     document.getElementById('giderKatWrap').innerHTML = GIDER_KAT.map(function(k, i){
       var pct = Math.round(k.val/maxKat*100);
@@ -338,15 +382,16 @@
         + '<div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:'+pct+'%"></div></div></div><span class="gbar-val">'+tl(k.val)+'</span></div>';
     }).join('');
     document.getElementById('giderKatChips').innerHTML = '<span class="kat-chip"><i class="fa-solid fa-sack-dollar"></i> Filo Toplamı (tüm zamanlar): <b>' + tl(GIDER_TUM_ZAMAN_TOPLAM) + '</b></span>'
-      + '<span class="kat-chip"><i class="fa-solid fa-list-check"></i> 15 kategori · 36 kayıt</span>';
+      + '<span class="kat-chip"><i class="fa-solid fa-list-check"></i> 15 kategori · 36 kayıt</span>'
+      + (filtreAktif ? '<span class="kat-chip"><i class="fa-solid fa-circle-info"></i> Bu kart filo geneli — şantiye filtresine duyarlı değil</span>' : '');
 
     /* ---- Bakım Maliyetleri — Araç Bazında (tüm zamanlar) ---- */
-    var bakimToplam = ARAC.reduce(function(s,a){ return s+a.bakim; }, 0);
-    var bakimRows = ARAC.map(function(a){ return {name:a.no, sub:a.plaka, val:a.bakim}; }).sort(function(x,y){ return y.val-x.val; });
+    var bakimToplam = ARAC_VIEW.reduce(function(s,a){ return s+a.bakim; }, 0);
+    var bakimRows = ARAC_VIEW.map(function(a){ return {name:a.no, sub:a.plaka, val:a.bakim}; }).sort(function(x,y){ return y.val-x.val; });
     renderRankList('bakimRankWrap', bakimRows, Math.max.apply(null, bakimRows.map(function(r){return r.val;}).concat([1])), false);
-    document.getElementById('bakimFoot').textContent = 'Filo bakım maliyeti toplamı (tüm zamanlar): ' + tl(bakimToplam) + ' · ARC-09 kiralama kapsamında bedelsiz bakım aldığı için ₺0 gösterir';
+    document.getElementById('bakimFoot').textContent = (filtreAktif ? SANTIYE_ADI[santiyeFiltre] + ' bakım maliyeti toplamı: ' : 'Filo bakım maliyeti toplamı (tüm zamanlar): ') + tl(bakimToplam) + ' · ARC-09 kiralama kapsamında bedelsiz bakım aldığı için ₺0 gösterir';
 
-    /* ---- Muayene/Kasko/Trafik Takvimi ---- */
+    /* ---- Muayene/Kasko/Trafik Takvimi (B §6.2 boş durum) ---- */
     var takvim = [];
     aktifArac.forEach(function(a){
       if(a.muayene) takvim.push({no:a.no, plaka:a.plaka, tur:'Muayene', tarih:a.muayene});
@@ -354,11 +399,33 @@
       if(a.sigorta) takvim.push({no:a.no, plaka:a.plaka, tur:'Trafik Sigortası', tarih:a.sigorta});
     });
     takvim.sort(function(x,y){ return gunFarki(x.tarih) - gunFarki(y.tarih); });
-    document.getElementById('takvimBody').innerHTML = takvim.map(function(t){
-      var g = gunFarki(t.tarih);
-      return '<tr><td><div class="tv-arac"><b>'+t.no+'</b><span>'+t.plaka+'</span></div></td><td>'+t.tur+'</td><td>'+ddmmyyyy(t.tarih)+'</td>'
-        + '<td class="num"><span class="gstat '+rozetCls(g)+'">'+durumMetni(g)+'</span></td></tr>';
-    }).join('');
+    if(!takvim.length){
+      document.getElementById('takvimTblWrap').hidden = true;
+      document.getElementById('takvimEmpty').hidden = false;
+      gvEmpty.render(document.getElementById('takvimEmpty'), {
+        ikon:'fa-calendar-check', baslik:'Bu şantiyede yaklaşan tarih yok',
+        aciklama: SANTIYE_ADI[santiyeFiltre] + ' filtresindeki araçların muayene/kasko/trafik sigortası bu görünümde listelenecek bir kaydı yok.',
+        aksiyon: {etiket:'Tüm Şantiyeleri Göster', href:'crm-operasyon-arac-dashboard.html'}
+      });
+    } else {
+      document.getElementById('takvimEmpty').hidden = true;
+      document.getElementById('takvimTblWrap').hidden = false;
+      document.getElementById('takvimBody').innerHTML = takvim.map(function(t){
+        var g = gunFarki(t.tarih);
+        return '<tr><td><div class="tv-arac"><b>'+t.no+'</b><span>'+t.plaka+'</span></div></td><td>'+t.tur+'</td><td>'+ddmmyyyy(t.tarih)+'</td>'
+          + '<td class="num"><span class="gstat '+rozetCls(g)+'">'+durumMetni(g)+'</span></td></tr>';
+      }).join('');
+    }
+
+    /* ---- B §6.2 — yorum/değerlendirme alanı: kısa sentez, çıplak rakam bırakma ---- */
+    var evalMsgs = [];
+    evalMsgs.push((filtreAktif ? SANTIYE_ADI[santiyeFiltre] + ' şantiyesinde' : 'Filo genelinde') + ' <b>' + aktifArac.length + ' aktif araç</b>' + (bakimda ? ', bunlardan <b>' + bakimda + '\'i bakımda</b> (' + bakimliArac.map(function(a){return a.no;}).join(', ') + ')' : '') + '.');
+    if(muayeneYaklasan.length) evalMsgs.push('<b>' + muayeneYaklasan.length + ' araçta</b> muayene 30 gün içinde: ' + muayeneYaklasan.map(function(a){ return a.no + ' (' + durumMetni(gunFarki(a.muayene)) + ')'; }).join(', ') + '.');
+    else evalMsgs.push('Önümüzdeki 30 günde muayenesi dolan araç yok.');
+    if(topGiderTZ) evalMsgs.push('Tüm zamanlar en yüksek gideri oluşturan araç <b>' + topGiderTZ.no + '</b> (' + topGiderTZ.plaka + ') — ₺' + tl(topGiderTZ.gider.tumZaman) + '.');
+    var deltaFilo = temmuzFiloToplam - haziranFiloToplam;
+    evalMsgs.push('Temmuz (bugüne kadar, 1-2 Tem) filo gideri Haziran\'ın günlük ortalamasına göre ' + (deltaFilo >= 0 ? 'yüksek' : 'düşük') + ' seyrediyor — iki dönem tam ay bazında kıyaslanamaz (Temmuz kısmi).');
+    document.getElementById('evalCard').innerHTML = '<ul><li>' + evalMsgs.join('</li><li>') + '</li></ul>';
   }
 
   function renderRankList(id, rows, max, isCount){
@@ -378,6 +445,29 @@
     donem = btn.getAttribute('data-d');
     render();
   });
+
+  /* B §6.2 — şantiye/proje filtresi */
+  document.getElementById('santiyeFilter').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-s]'); if(!btn) return;
+    santiyeFiltre = btn.getAttribute('data-s');
+    this.querySelectorAll('button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
+    render();
+  });
+
+  /* B §6.4 — çıktı al (gvExport: format seçimi + kapsam + filtre özeti tek modalde) */
+  if(window.gvExport){
+    gvExport.init('#btnDashCikti', {
+      baslik: 'Araç filosu dashboard',
+      formatlar: ['pdf','excel','yazdir'],
+      kapsam: ['tumu','filtreli'],
+      filtreOzeti: function(){
+        var parcalar = [];
+        parcalar.push(santiyeFiltre === 'tumu' ? 'Tüm şantiyeler' : 'Şantiye: ' + SANTIYE_ADI[santiyeFiltre]);
+        parcalar.push('Dönem: ' + (donem === 'haziran' ? 'Haziran 2026' : 'Temmuz 2026'));
+        return parcalar.join(' · ');
+      }
+    });
+  }
 
   render();
 

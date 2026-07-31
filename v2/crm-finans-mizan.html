@@ -119,6 +119,21 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
 .mz-field-chips{display:flex;flex-wrap:wrap;gap:7px}
 .mz-field-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 10px}
 .mz-field-chip i{font-size:9px;color:var(--acc-ink)}
+
+/* ============ B §6.2/§6.4 eklentileri (T-R4) — karşılaştırma · şantiye kırılımı ·
+   değerlendirme · çıktı al. Bu sayfa BİLEREK "Hazırlık" (Faz 2) önizlemesidir —
+   ağır bir rapor iskeleti İCAT EDİLMEDİ, mevcut mz-* diliyle hafif genişletildi
+   (bkz. tasks/kararlar.md K-222). ============ */
+.mz-cmp{display:flex;gap:18px;flex-wrap:wrap;padding:14px 0 4px;border-top:1px dashed var(--line);margin-top:6px}
+.mz-cmp-item{flex:1;min-width:140px}
+.mz-cmp-lbl{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.mz-cmp-val{font-size:17px;font-weight:800;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums}
+.mz-cmp-delta{font-size:12px;font-weight:700;margin-top:3px;color:var(--danger)}
+.mz-santiye-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.mz-santiye-row:last-child{border-bottom:none}
+.mz-santiye-row b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.eval-box{font-size:12.5px;color:var(--ink-2);line-height:1.7}
+.eval-box b{color:var(--ink)}
 </style>
 </head>
 <body data-sec="finans" data-screen="mizan">
@@ -150,6 +165,7 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-kasa.html"><i class="fa-solid fa-arrow-left"></i> Finans Yönetimine Dön</a>
+        <button class="btn btn-ghost btn-sm" id="btnMzCikti"><i class="fa-solid fa-download"></i> Çıktı Al</button>
       </div>
     </div>
 
@@ -352,9 +368,23 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
               </tbody>
             </table>
           </div>
-          <div class="gc-foot">
-            <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Bu liste henüz mizan değil — modüllerin ham bakiyeleridir. Sıradaki adım çift kayıt (her hareketin iki hesaba birden işlenmesi) eşleştirmesini kurmak; bu kurulduğunda borç ve alacak toplamları eşitlenip gerçek mizan tablosu buradan üretilecektir.</span>
+          <!-- B §6.2 — karşılaştırma alanı: borç vs alacak toplamı -->
+          <div class="gc-body" style="padding-top:6px">
+            <div class="mz-cmp" id="mzCmp">
+              <div class="mz-cmp-item"><div class="mz-cmp-lbl">Toplam Borç</div><div class="mz-cmp-val" id="mzCmpBorc">₺8.894.870</div></div>
+              <div class="mz-cmp-item"><div class="mz-cmp-lbl">Toplam Alacak</div><div class="mz-cmp-val" id="mzCmpAlacak">₺3.659.050</div></div>
+              <div class="mz-cmp-item"><div class="mz-cmp-lbl">Fark (Borç − Alacak)</div><div class="mz-cmp-val mz-cmp-delta" id="mzCmpFark">₺5.235.820</div></div>
+            </div>
           </div>
+          <div class="gc-foot">
+            <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Bu liste henüz mizan değil — modüllerin ham bakiyeleridir. Sıradaki adım çift kayıt (her hareketin iki hesaba birden işlenmesi) eşleştirmesini kurmak; bu kurulduğunda borç ve alacak toplamları eşitlenip gerçek mizan tablosu buradan üretilecektir. Fark rakamı bir muhasebe dengesizliği DEĞİLDİR — çift kayıt eşleştirmesi kurulana kadar beklenen bir görünümdür.</span>
+          </div>
+        </div>
+
+        <!-- B §6.2 — yorum/değerlendirme alanı -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-lightbulb"></i> Değerlendirme</div></div>
+          <div class="gc-body eval-box" id="mzEval"></div>
         </div>
 
       </div>
@@ -380,6 +410,22 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
           </div>
           <div class="gc-foot">
             <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Hesap bakiyeleri (soldaki tablo) bir anlık görünümdür, dönem seçiminden bağımsızdır — dönem yalnız hareket hacmi özetini değiştirir.</span>
+          </div>
+        </div>
+
+        <!-- B §6.2 — şantiye/proje filtresi önizlemesi: 11 kaynaktan yalnız Kasa şantiye
+             bazlı canlı tutuluyor (crm-operasyon-kasa.html), diğer kaynaklar (banka/cari/
+             hakediş…) firma-seviyesi tek bakiye olarak modellendi — burada ONLARI şantiyeye
+             BÖLÜŞTÜRMEK yeni sayı İCADI olurdu, bu yüzden yalnız gerçekten şantiye bazlı
+             kaynak (kasa) gösterildi. -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-location-dot"></i> Şantiye Kırılımı — Kasa</div><span class="gtag">Planlanan Filtre Önizlemesi</span></div>
+          <div class="gc-body">
+            <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">"Planlanan Rapor Formatı"ndaki şantiye filtresinin nasıl çalışacağının önizlemesi — Kasa Hesapları (₺165.130) tek gerçekten şantiye bazlı kaynak.</p>
+            <div class="mz-santiye-row"><span>Vadi Konakları</span><b>₺81.920</b></div>
+            <div class="mz-santiye-row"><span>Liman Lojistik Merkezi</span><b>₺18.520</b></div>
+            <div class="mz-santiye-row"><span>Merkez Şantiye</span><b>₺64.690</b></div>
+            <div class="mz-santiye-row" style="border-top:1px solid var(--line-2);padding-top:8px;margin-top:2px"><span style="font-weight:700;color:var(--ink)">Toplam</span><b>₺165.130</b></div>
           </div>
         </div>
 
@@ -460,6 +506,39 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
       elHareket.textContent = d.hareket;
     });
   });
+})();
+
+/* ---- B §6.2/§6.4 — karşılaştırma sayısal doğrulama + değerlendirme + çıktı al
+   (T-R4). Borç/alacak toplamları .mz-total satırındaki AYNI statik metinden
+   parse edilir — ikinci bir tutar İCAT EDİLMEZ, tek kaynak DOM'daki tablo. ---- */
+(function(){
+  function parseTl(s){ return parseInt(s.replace(/[^\d]/g, ''), 10) || 0; }
+  var borc = parseTl(document.getElementById('mzToplamBorc').textContent);
+  var alacak = parseTl(document.getElementById('mzToplamAlacak').textContent);
+  var fark = borc - alacak;
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  document.getElementById('mzCmpBorc').textContent = tl(borc);
+  document.getElementById('mzCmpAlacak').textContent = tl(alacak);
+  document.getElementById('mzCmpFark').textContent = tl(fark);
+
+  var enBuyukAlacak = { ad:'Alıcılar (Cari Alacak)', tutar:4560000 };
+  var enBuyukBorc = { ad:'Satıcılar (Tedarikçi Cari Borcu)', tutar:3258200 };
+  document.getElementById('mzEval').innerHTML =
+    '<p>Kaynak toplamı borç <b>' + tl(borc) + '</b>, alacak <b>' + tl(alacak) + '</b> — fark <b>' + tl(fark) + '</b>; '
+    + 'çift kayıt (double-entry) eşleştirmesi kurulana kadar bu fark bir muhasebe dengesizliği olarak YORUMLANMAMALI, '
+    + 'yalnız 11 kaynağın ham bakiyelerinin toplamıdır.</p>'
+    + '<p style="margin-top:8px">En büyük tekil kalem <b>' + enBuyukAlacak.ad + '</b> (' + tl(enBuyukAlacak.tutar) + ') — '
+    + 'kaynak taraftaki en büyük kalem ise <b>' + enBuyukBorc.ad + '</b> (' + tl(enBuyukBorc.tutar) + '). '
+    + 'Kasa (₺165.130), şantiye bazlı kırılımı gerçekten canlı tutulan tek kaynaktır (sağdaki "Şantiye Kırılımı" kartına bakın).</p>';
+
+  if(window.gvExport){
+    gvExport.init('#btnMzCikti', {
+      baslik: 'Mizan hazırlığı — kaynak hesap bakiyeleri',
+      formatlar: ['pdf','excel','yazdir'],
+      kapsam: ['tumu'],
+      filtreOzeti: function(){ return 'Dönem: ' + document.getElementById('mzDonemAralik').textContent + ' · 2 Temmuz 2026 itibarıyla bakiye görünümü'; }
+    });
+  }
 })();
 </script>
 </body>

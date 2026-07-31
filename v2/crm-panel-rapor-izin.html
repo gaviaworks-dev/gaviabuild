@@ -51,6 +51,12 @@
 .filtre-ozet{padding:14px 22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:8px}
 .filtre-ozet i{color:var(--acc-ink)}
 .filtre-ozet b{color:var(--ink)}
+
+/* ============ B §6.2/§6.3 eklentileri ============ */
+.rp-tb-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+/* [TR1] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -83,7 +89,7 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="İzin raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-acc btn-sm" type="button" id="btnCiktiIzin"><i class="fa-solid fa-file-export"></i> Çıktı Al</button>
       </div>
     </div>
 
@@ -97,6 +103,7 @@
             <button class="chip" data-donem="haziran">Haziran</button>
             <button class="chip" data-donem="temmuz">Temmuz</button>
           </div>
+          <div data-gvdaterange id="izinDateRange" style="margin-left:8px"></div>
         </div>
         <div class="filter-row" data-view="yonetim" id="santiyeRow">
           <span class="frow-lbl">Şantiye</span>
@@ -146,10 +153,31 @@
          Şantiye "merkez" etiketi hem Merkez Ofis (izn-028, Nesrin Aydın/Muhasebe) hem Merkez
          Şantiye (izn-027, Ömer Taşkın/Şantiye Şefi) kayıtlarını kapsar — envanterin RAPOR 1
          tablosunda ikisi de "merkez" olarak sadeleştirilmiştir. -->
+    <!-- ============ B §6.2 madde 6 — grafik alanı (gvBar/gvDonut, spec-v2-core.md §7) ============ -->
+    <div class="rp-charts-2" style="margin-bottom:20px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Tür Kırılımı (gün)</h3></div>
+        <div class="rp-chart-body" id="chartIzinTur"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-list-check"></i> Durum Dağılımı (kayıt)</h3></div>
+        <div class="rp-chart-body" id="chartIzinDurum"></div>
+      </div>
+    </div>
+
     <div class="gv-card" style="margin-bottom:20px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-umbrella-beach"></i> Durum Kırılımı</div><span class="ph-sub" style="margin:0">crm-personel-izin.html</span></div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblIzinKirilim">
+      <div class="gc-head rp-gc-head-wrap">
+        <div class="gc-title"><i class="fa-solid fa-umbrella-beach"></i> Durum Kırılımı</div><span class="ph-sub" style="margin:0">crm-personel-izin.html</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnIzinHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <div class="gc-body flush" id="izinStateWrap">
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>İzin verisi yüklenemedi</h4>
+          <p>Bağlantınızı kontrol edip tekrar deneyin.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnIzinHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <table class="gtable" id="tblIzinKirilim" data-gv-state="content">
           <thead>
             <tr>
               <th>İzin No / Personel</th>
@@ -223,6 +251,19 @@
       <div class="gc-body" style="padding-top:0">
         <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Tür kırılımı, yukarıdaki tablonun o an görünür (Dönem/Şantiye ile filtrelenmiş) satırlarından toplanır — ayrı bir sabit set değildir.</div>
       </div>
+    </div>
+
+    <!-- ============ B §6.2 madde 8 — karşılaştırma alanı ============ -->
+    <div class="rp-compare" style="margin-bottom:20px">
+      <div class="rp-compare-item"><span class="rc-lbl">İzin kaydı — Haziran → Temmuz</span><span class="rc-val">3 kayıt → 2 kayıt</span><span class="rp-compare-delta flat"><i class="fa-solid fa-equals"></i> normal seyir</span></div>
+      <div class="rp-compare-item"><span class="rc-lbl">İzin günü — Haziran → Temmuz</span><span class="rc-val">10 gün → 8 gün</span><span class="rp-compare-delta up"><i class="fa-solid fa-arrow-trend-down"></i> −2 gün</span></div>
+      <div class="rp-compare-item"><span class="rc-lbl">Onaylanan gün (bu ay)</span><span class="rc-val">4 gün</span><span class="rp-compare-delta flat"><i class="fa-solid fa-check"></i> İZN-2026-029/030</span></div>
+    </div>
+
+    <!-- ============ B §6.2 madde 9 — yorum/değerlendirme alanı ============ -->
+    <div class="rp-note">
+      <i class="fa-solid fa-lightbulb"></i><strong>Değerlendirme:</strong>
+      5 izin talebinin 2'si hâlâ süreçte (1 bekliyor, 1 revize) — <b>Ali Vural</b>'ın 5 günlük talebi 6 gündür şef onayında bekliyor, öncelikli takip gerekiyor. Reddedilen tek talep (<b>Nesrin Aydın</b>, 4 gün) dönemsel bir çakışmadan kaynaklandı, örüntü değil. Haziran'dan Temmuz'a hem kayıt hem gün sayısı hafif geriledi — riskli bir yığılma yok.
     </div>
 
     <!-- ============ ÖNE ÇIKANLAR — yalnız yönetim (isim bazlı, tüm kayıtlar) ============ -->
@@ -363,6 +404,64 @@
   }
 
   render();
+
+  /* ============ B §6.2 madde 3 — tarih aralığı (gvDateRange) gerçek Dönem chip'ini tetikler ============ */
+  var izinDonemChips = document.getElementById('donemChips');
+  if(window.gvDateRange && izinDonemChips){
+    var izinDr = document.getElementById('izinDateRange');
+    gvDateRange(izinDr, {
+      emptyLabel: 'Tüm dönem',
+      onChange: function(val){
+        var key = 'tumu';
+        if(val){
+          if(val.key === 'bu_ay' || val.key === 'son7') key = 'temmuz';
+          else if(val.key === 'gecen_ay' || val.key === 'son15' || val.key === 'son30') key = 'haziran';
+        }
+        var btn = izinDonemChips.querySelector('[data-donem="' + key + '"]');
+        if(btn) btn.click();
+      }
+    });
+  }
+
+  /* ============ B §6.2 madde 6 — grafik alanı (tüm kayıtlar sabit set, filtre-bağımsız gösterim) ============ */
+  if(window.gvDonut) gvDonut('#chartIzinTur', [
+    {lbl:'Yıllık İzin', val:12, tone:'acc'},
+    {lbl:'Raporlu', val:1, tone:'muted'},
+    {lbl:'Babalık İzni', val:5, tone:'info'}
+  ], {baslik:'Tür kırılımı (gün)', merkezAlt:'gün'});
+  if(window.gvBar) gvBar('#chartIzinDurum', [
+    {lbl:'Bekliyor', val:1, tone:'warn'},
+    {lbl:'Onaylandı', val:2, tone:'ok'},
+    {lbl:'Reddedildi', val:1, tone:'danger'},
+    {lbl:'Revize', val:1, tone:'info'}
+  ], {yon:'yatay', baslik:'Durum dağılımı (kayıt)', labelWidth:90});
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi (kendi render() akışıyla bağımsız) ============ */
+  var izinTbl = document.getElementById('tblIzinKirilim');
+  var izinErrBlok = document.querySelector('#izinStateWrap [data-gv-state="error"]');
+  var btnIzinHataDemo = document.getElementById('btnIzinHataDemo');
+  var btnIzinHataRetry = document.getElementById('btnIzinHataRetry');
+  if(btnIzinHataDemo) btnIzinHataDemo.addEventListener('click', function(){
+    izinTbl.hidden = true;
+    document.getElementById('izinEmpty').hidden = true;
+    izinErrBlok.hidden = false;
+  });
+  if(btnIzinHataRetry) btnIzinHataRetry.addEventListener('click', function(){
+    izinErrBlok.hidden = true;
+    izinTbl.hidden = false;
+    render();
+  });
+
+  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============ */
+  if(window.gvExport){
+    gvExport.init('#btnCiktiIzin', {
+      baslik: 'İzin Raporu',
+      kapsam: ['tumu', 'filtreli'],
+      filtreOzeti: function(){
+        return document.getElementById('filtreOzet').querySelector('span').textContent.trim();
+      }
+    });
+  }
 })();
 </script>
 </body>

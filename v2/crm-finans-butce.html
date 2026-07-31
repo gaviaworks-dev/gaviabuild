@@ -53,6 +53,12 @@
 .cross-link a{margin-left:auto;flex:none;font-size:12.5px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
 .cross-link a i{font-size:11px;transition:.25s var(--ease)}
 .cross-link a:hover i{transform:translateX(3px)}
+
+/* T-R3 — detay tablo + karşılaştırma + yorum (B §6.2) */
+#tblButceDetay{min-width:640px}
+#tblButceDetay td.num,#tblButceDetay th.num{text-align:right}
+#tblButceDetay tr.bd-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--line-2)}
+
 @media(max-width:640px){
   .cross-link{flex-wrap:wrap;padding:14px 16px}
   .cross-link a{margin-left:0}
@@ -89,114 +95,81 @@
         <div class="ph-sub">3 proje · orijinal, revize ve gerçekleşen bütçe karşılaştırması</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Proje bütçesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-ghost btn-sm" href="#" id="btnButceExport" data-gv-export='{"baslik":"Proje Bütçesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+      </div>
+    </div>
+
+    <div class="rp-toolbar">
+      <div class="rp-tb-group">
+        <div class="chips" id="projeChips">
+          <button class="chip is-on" data-proje="tumu">Tümü <span class="ch-cnt">3</span></button>
+          <button class="chip" data-proje="vadi">Vadi Konakları</button>
+          <button class="chip" data-proje="liman">Liman Lojistik</button>
+          <button class="chip" data-proje="merkez">Merkez Şantiye</button>
+          <button class="chip" data-proje="diger">Tamamlanan / Planlama</button>
+        </div>
+        <div data-gvdaterange style="margin-left:4px"></div>
+      </div>
+      <div class="rp-tb-spacer"></div>
+      <div class="rp-tb-acts">
+        <span style="font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px">
+          <i class="fa-solid fa-circle-info"></i> Revize bütçe nedir? <span data-help="butce-revize-nedir"></span>
+        </span>
       </div>
     </div>
 
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div>
-        <div><div class="kpi-num num compact" style="font-size:19px">₺342.000.000</div><div class="kpi-lbl">Toplam revize bütçe</div>
-        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 3 proje</div></div>
+        <div><div class="kpi-num num compact" id="kpiRevize" style="font-size:19px">₺342.000.000</div><div class="kpi-lbl">Toplam revize bütçe</div>
+        <div class="kpi-delta flat" id="kpiRevizeDelta"><i class="fa-solid fa-layer-group"></i> 3 proje</div></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-coins"></i></div>
-        <div><div class="kpi-num num compact" style="font-size:19px">₺221.200.000</div><div class="kpi-lbl">Toplam gerçekleşen</div>
-        <div class="kpi-delta flat"><i class="fa-solid fa-percent"></i> Revizenin %65'i</div></div>
+        <div><div class="kpi-num num compact" id="kpiGercek" style="font-size:19px">₺221.200.000</div><div class="kpi-lbl">Toplam gerçekleşen</div>
+        <div class="kpi-delta flat" id="kpiGercekDelta"><i class="fa-solid fa-percent"></i> Revizenin %65'i</div></div>
       </div>
-      <div class="kpi-card danger">
+      <div class="kpi-card danger" id="kpiAsimCard">
         <div class="kpi-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div><div class="kpi-num num">1</div><div class="kpi-lbl">Aşımdaki kategori</div>
-        <div class="kpi-delta down"><i class="fa-solid fa-trowel-bricks"></i> Betonarme — Vadi Konakları %104</div></div>
+        <div><div class="kpi-num num" id="kpiAsim">1</div><div class="kpi-lbl">Aşımdaki kategori</div>
+        <div class="kpi-delta down" id="kpiAsimDelta"><i class="fa-solid fa-trowel-bricks"></i> Betonarme — Vadi Konakları %104</div></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-ico"><i class="fa-solid fa-file-pen"></i></div>
-        <div><div class="kpi-num num">2</div><div class="kpi-lbl">Bütçe revizyonu</div>
-        <div class="kpi-delta flat"><i class="fa-solid fa-clock-rotate-left"></i> BTC-2026-R1 · BTC-2026-R2</div></div>
+        <div><div class="kpi-num num" id="kpiRevizyon">2</div><div class="kpi-lbl">Bütçe revizyonu</div>
+        <div class="kpi-delta flat" id="kpiRevizyonDelta"><i class="fa-solid fa-clock-rotate-left"></i> BTC-2026-R1 · BTC-2026-R2</div></div>
       </div>
     </div>
 
-    <div class="butce-grid">
-      <div class="gv-card pb-card is-danger">
-        <div class="pb-head">
-          <div class="pb-mark">VK</div>
-          <div class="pb-id">
-            <h3>Vadi Konakları</h3>
-            <div class="pb-tags">
-              <span class="gtag mint">Konut · Çekmeköy</span>
-              <span class="gstat warn">R2 revize</span>
-            </div>
-          </div>
-        </div>
-        <dl class="pb-amounts">
-          <div><dt>Orijinal</dt><dd>₺176.500.000</dd></div>
-          <div><dt>Revize</dt><dd>₺184.000.000</dd></div>
-          <div><dt>Gerçekleşen</dt><dd>₺127.400.000</dd></div>
-          <div><dt>Kalan</dt><dd class="rem">₺56.600.000</dd></div>
-        </dl>
-        <div class="pb-prog">
-          <div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:69%"></div></div></div><span class="gbar-val">%69</span></div>
-          <div class="pb-prog-note">Fiziksel ilerleme %68 ile tutarlı · 1 kategori aşımda (Betonarme %104)</div>
-        </div>
-        <div class="pb-foot">
-          <span><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> Betonarme aşımda</span>
-          <a href="crm-finans-butce-detay.html?proje=vadi">Detaya git <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
-      </div>
+    <div id="butceWrap">
+    <div data-gv-state="loading" class="gv-empty" hidden>
+      <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+      <h4>Yükleniyor…</h4>
+    </div>
+    <div data-gv-state="error" class="gv-empty rp-error" hidden>
+      <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h4>Bütçe verisi yüklenemedi</h4>
+      <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
+      <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+    </div>
+    <div data-gv-state="empty" class="gv-empty rp-empty" id="butceEmpty" hidden></div>
+    <div data-gv-state="content" id="butceContent">
+    <div class="butce-grid" id="butceGrid"></div>
 
-      <div class="gv-card pb-card">
-        <div class="pb-head">
-          <div class="pb-mark">LL</div>
-          <div class="pb-id">
-            <h3>Liman Lojistik Merkezi</h3>
-            <div class="pb-tags">
-              <span class="gtag">Ticari · Aliağa</span>
-              <span class="gstat off">Revizyon yok</span>
-            </div>
-          </div>
-        </div>
-        <dl class="pb-amounts">
-          <div><dt>Orijinal</dt><dd>₺97.000.000</dd></div>
-          <div><dt>Revize</dt><dd>₺97.000.000</dd></div>
-          <div><dt>Gerçekleşen</dt><dd>₺40.700.000</dd></div>
-          <div><dt>Kalan</dt><dd class="rem">₺56.300.000</dd></div>
-        </dl>
-        <div class="pb-prog">
-          <div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:42%"></div></div></div><span class="gbar-val">%42</span></div>
-          <div class="pb-prog-note">Fiziksel ilerleme %41 ile tutarlı</div>
-        </div>
-        <div class="pb-foot">
-          <span></span>
-          <a href="crm-finans-butce-detay.html?proje=liman">Detaya git <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
+    <div class="gv-card" style="margin-top:20px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Proje Bazlı Bütçe Dökümü</div></div>
+      <div class="gc-body flush rp-table-wrap" style="box-shadow:none;border:none;margin-bottom:0">
+        <table class="gtable" id="tblButceDetay">
+          <thead><tr><th>Proje</th><th class="num">Orijinal</th><th class="num">Revize</th><th class="num">Gerçekleşen</th><th class="num">Kalan</th><th class="num">Kullanım</th></tr></thead>
+          <tbody id="tblButceDetayBody"></tbody>
+        </table>
       </div>
+    </div>
 
-      <div class="gv-card pb-card">
-        <div class="pb-head">
-          <div class="pb-mark">MS</div>
-          <div class="pb-id">
-            <h3>Merkez Şantiye</h3>
-            <div class="pb-tags">
-              <span class="gtag">Depo &amp; Atölye · Gebze</span>
-              <span class="gstat off">Revizyon yok</span>
-            </div>
-          </div>
-        </div>
-        <dl class="pb-amounts">
-          <div><dt>Orijinal</dt><dd>₺61.000.000</dd></div>
-          <div><dt>Revize</dt><dd>₺61.000.000</dd></div>
-          <div><dt>Gerçekleşen</dt><dd>₺53.100.000</dd></div>
-          <div><dt>Kalan</dt><dd class="rem">₺7.900.000</dd></div>
-        </dl>
-        <div class="pb-prog">
-          <div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:87%"></div></div></div><span class="gbar-val">%87</span></div>
-          <div class="pb-prog-note">Fiziksel ilerleme %86 ile tutarlı</div>
-        </div>
-        <div class="pb-foot">
-          <span></span>
-          <a href="crm-finans-butce-detay.html?proje=merkez">Detaya git <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
-      </div>
+    <div class="rp-compare" id="butceCompare"></div>
+
+    <div class="rp-note" id="butceNote"></div>
+    </div>
     </div>
 
     <div class="gv-card" style="margin-top:20px">
@@ -214,6 +187,141 @@
 <script>
 (function(){
   if(!window.GV) return;
+
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  function pct(g, r){ return r ? Math.round(g/r*100) : 0; }
+
+  /* kaynak: mevcut pb-card'lardaki (D18) rakamlarla + crm-finans-maliyet.html
+     PROJE nesnesinin revize/gerçekleşen alanlarıyla BİREBİR — tek gerçek kaynak
+     burada TÜRETİLDİ, iki ekran birbirini tutar. */
+  var PROJE = {
+    vadi:  {ad:'Vadi Konakları',          kisa:'VK', tip:'Konut · Çekmeköy',        orij:176500000, rev:184000000, ger:127400000, fizik:68, revizyon:2, asimKat:'Betonarme', asimPct:104, tag:{cls:'warn', lbl:'R2 revize'}, danger:true, href:'crm-finans-butce-detay.html?proje=vadi'},
+    liman: {ad:'Liman Lojistik Merkezi',  kisa:'LL', tip:'Ticari · Aliağa',         orij:97000000,  rev:97000000,  ger:40700000,  fizik:41, revizyon:0, asimKat:null, asimPct:0, tag:{cls:'off', lbl:'Revizyon yok'}, danger:false, href:'crm-finans-butce-detay.html?proje=liman'},
+    merkez:{ad:'Merkez Şantiye',          kisa:'MS', tip:'Depo & Atölye · Gebze',   orij:61000000,  rev:61000000,  ger:53100000,  fizik:86, revizyon:0, asimKat:null, asimPct:0, tag:{cls:'off', lbl:'Revizyon yok'}, danger:false, href:'crm-finans-butce-detay.html?proje=merkez'}
+  };
+  var PROJE_ORDER = ['vadi','liman','merkez'];
+
+  function keysFor(filter){
+    if(filter === 'tumu') return PROJE_ORDER;
+    if(filter === 'diger') return [];
+    return [filter];
+  }
+
+  function gridHtml(keys){
+    return keys.map(function(k){
+      var P = PROJE[k];
+      var u = pct(P.ger, P.rev);
+      return '<div class="gv-card pb-card' + (P.danger ? ' is-danger' : '') + '">'
+        + '<div class="pb-head"><div class="pb-mark">' + P.kisa + '</div><div class="pb-id"><h3>' + P.ad + '</h3>'
+        + '<div class="pb-tags"><span class="gtag' + (k==='vadi'?' mint':'') + '">' + P.tip + '</span><span class="gstat ' + P.tag.cls + '">' + P.tag.lbl + '</span></div></div></div>'
+        + '<dl class="pb-amounts"><div><dt>Orijinal</dt><dd>' + tl(P.orij) + '</dd></div><div><dt>Revize</dt><dd>' + tl(P.rev) + '</dd></div>'
+        + '<div><dt>Gerçekleşen</dt><dd>' + tl(P.ger) + '</dd></div><div><dt>Kalan</dt><dd class="rem">' + tl(P.rev - P.ger) + '</dd></div></dl>'
+        + '<div class="pb-prog"><div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:' + u + '%"></div></div></div><span class="gbar-val">%' + u + '</span></div>'
+        + '<div class="pb-prog-note">Fiziksel ilerleme %' + P.fizik + ' ile tutarlı' + (P.asimKat ? ' · 1 kategori aşımda (' + P.asimKat + ' %' + P.asimPct + ')' : '') + '</div></div>'
+        + '<div class="pb-foot"><span>' + (P.asimKat ? '<i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> ' + P.asimKat + ' aşımda' : '') + '</span>'
+        + '<a href="' + P.href + '">Detaya git <i class="fa-solid fa-arrow-right"></i></a></div></div>';
+    }).join('');
+  }
+
+  function tblHtml(keys){
+    var h = '';
+    var tOrij=0, tRev=0, tGer=0;
+    keys.forEach(function(k){
+      var P = PROJE[k];
+      tOrij += P.orij; tRev += P.rev; tGer += P.ger;
+      h += '<tr><td>' + P.ad + '</td><td class="num">' + tl(P.orij) + '</td><td class="num">' + tl(P.rev) + '</td>'
+        + '<td class="num">' + tl(P.ger) + '</td><td class="num">' + tl(P.rev - P.ger) + '</td><td class="num">%' + pct(P.ger, P.rev) + '</td></tr>';
+    });
+    if(keys.length > 1){
+      h += '<tr class="bd-total"><td>Toplam</td><td class="num">' + tl(tOrij) + '</td><td class="num">' + tl(tRev) + '</td>'
+        + '<td class="num">' + tl(tGer) + '</td><td class="num">' + tl(tRev - tGer) + '</td><td class="num">%' + pct(tGer, tRev) + '</td></tr>';
+    }
+    return h;
+  }
+
+  function compareHtml(keys){
+    if(keys.length < 2) return '';
+    var best = keys.reduce(function(a,b){ return pct(PROJE[a].ger,PROJE[a].rev) > pct(PROJE[b].ger,PROJE[b].rev) ? a : b; });
+    var worst = keys.reduce(function(a,b){ return pct(PROJE[a].ger,PROJE[a].rev) < pct(PROJE[b].ger,PROJE[b].rev) ? a : b; });
+    function item(lbl, k, deltaCls, deltaIco){
+      var P = PROJE[k];
+      return '<div class="rp-compare-item"><span class="rc-lbl">' + lbl + '</span><span class="rc-val">' + P.ad + ' · %' + pct(P.ger,P.rev) + '</span>'
+        + '<span class="rp-compare-delta ' + deltaCls + '"><i class="fa-solid ' + deltaIco + '"></i>' + tl(P.ger) + ' / ' + tl(P.rev) + (P.asimKat ? ' · ' + P.asimKat + ' aşımda' : '') + '</span></div>';
+    }
+    return item('En yüksek kullanım', best, 'up', 'fa-arrow-up')
+      + item('En düşük kullanım', worst, 'down', 'fa-arrow-down')
+      + '<div class="rp-compare-item"><span class="rc-lbl">Önceki rapor dönemine göre</span><span class="rc-val">Toplam kullanım %65 → değişmedi</span>'
+      + '<span class="rp-compare-delta flat"><i class="fa-solid fa-minus"></i> Bu ay ilk çekim, karşılaştırma dönemi yok</span></div>';
+  }
+
+  function noteHtml(keys, filter){
+    if(!keys.length) return '';
+    var tGer=0, tRev=0; keys.forEach(function(k){ tGer+=PROJE[k].ger; tRev+=PROJE[k].rev; });
+    var u = pct(tGer,tRev);
+    var asimVar = keys.some(function(k){ return PROJE[k].asimKat; });
+    var txt = '<i class="fa-solid fa-lightbulb"></i> ';
+    if(filter === 'tumu'){
+      txt += '<strong>3 projenin toplam bütçe kullanımı %' + u + '.</strong> Vadi Konakları fiziksel ilerlemenin (%68) hafif önünde harcıyor ve Betonarme kategorisinde %104 ile bütçeyi aştı — BTC-2026-R2 revizyonuna rağmen demir fiyat artışı etkisini sürdürüyor, izleme önerilir. Merkez Şantiye %87 kullanımla teslime en yakın proje; Liman Lojistik %42 ile erken safhada, aşım riski yok.';
+    } else if(asimVar){
+      txt += '<strong>Seçili projede bütçe kullanımı %' + u + ' ve 1 kategori aşımda.</strong> Fiziksel ilerlemeyle (%' + PROJE[keys[0]].fizik + ') karşılaştırıldığında harcama hafif önde — kalan bütçenin kalan işi karşılayıp karşılamadığı kategori bazında (Gerçekleşen Maliyet ekranından) izlenmeli.';
+    } else {
+      txt += '<strong>Seçili projede bütçe kullanımı %' + u + ', aşımda kategori yok.</strong> Fiziksel ilerleme (%' + PROJE[keys[0]].fizik + ') ile harcama oranı tutarlı seyrediyor.';
+    }
+    return txt;
+  }
+
+  function render(filter){
+    var keys = keysFor(filter);
+    document.querySelectorAll('#projeChips .chip').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-proje') === filter); });
+
+    var sonucSayisi = keys.length;
+    gvEmpty.durum('#butceWrap', { sonucSayisi: sonucSayisi });
+    if(!sonucSayisi){
+      gvEmpty.render('#butceEmpty', {
+        ikon:'fa-folder-open',
+        baslik:'Bu kapsamda bütçe kaydı yok',
+        aciklama:'Tamamlanan (Kule Ofis B Blok) ve planlama aşamasındaki (Göl Evleri 2. Etap) projeler için henüz bütçe takibi açılmadı.',
+        aksiyon:{etiket:'Şantiye Kaydına Git', href:'crm-santiye.html'}
+      });
+      return;
+    }
+
+    document.getElementById('butceGrid').innerHTML = gridHtml(keys);
+    document.getElementById('tblButceDetayBody').innerHTML = tblHtml(keys);
+    document.getElementById('butceCompare').innerHTML = compareHtml(keys);
+    document.getElementById('butceCompare').hidden = keys.length < 2;
+    document.getElementById('butceNote').innerHTML = noteHtml(keys, filter);
+
+    var tRev=0, tGer=0, revizyon=0, asim=0, asimLbl='Aşımda kategori yok';
+    keys.forEach(function(k){
+      var P = PROJE[k];
+      tRev += P.rev; tGer += P.ger; revizyon += P.revizyon;
+      if(P.asimKat){ asim++; asimLbl = P.asimKat + ' — ' + P.ad + ' %' + P.asimPct; }
+    });
+    document.getElementById('kpiRevize').textContent = tl(tRev);
+    document.getElementById('kpiRevizeDelta').innerHTML = '<i class="fa-solid fa-layer-group"></i> ' + keys.length + ' proje';
+    document.getElementById('kpiGercek').textContent = tl(tGer);
+    document.getElementById('kpiGercekDelta').innerHTML = '<i class="fa-solid fa-percent"></i> Revizenin %' + pct(tGer,tRev) + "'i";
+    document.getElementById('kpiAsim').textContent = asim;
+    document.getElementById('kpiAsimCard').className = 'kpi-card' + (asim ? ' danger' : '');
+    document.getElementById('kpiAsimDelta').innerHTML = asim ? '<i class="fa-solid fa-trowel-bricks"></i> ' + asimLbl : '<i class="fa-solid fa-check"></i> ' + asimLbl;
+    document.getElementById('kpiRevizyon').textContent = revizyon;
+    document.getElementById('kpiRevizyonDelta').innerHTML = revizyon ? '<i class="fa-solid fa-clock-rotate-left"></i> BTC-2026-R1 · BTC-2026-R2' : '<i class="fa-solid fa-check"></i> Bu kapsamda revizyon yok';
+  }
+
+  document.getElementById('projeChips').addEventListener('click', function(e){
+    var b = e.target.closest('.chip[data-proje]'); if(!b) return;
+    render(b.getAttribute('data-proje'));
+  });
+
+  gvHelp.metinler['butce-revize-nedir'] = {
+    baslik: 'Revize Bütçe Nedir?',
+    mesaj: 'Revize bütçe, proje başlangıcında onaylanan orijinal bütçenin; malzeme fiyat artışı, kapsam değişikliği veya süre uzatımı gibi gerekçelerle resmi bir revizyon kaydı (BTC-2026-R#) üzerinden güncellenmiş hâlidir. Gerçekleşen harcama her zaman revize bütçeyle karşılaştırılır — orijinal bütçeyle karşılaştırma yalnızca sapma analizinde kullanılır.'
+  };
+  gvHelp.init();
+  gvExport.bind();
+
+  render('tumu');
 })();
 </script>
 </body>

@@ -73,6 +73,10 @@
   /* 2-kolon mobil kpi-grid'de yedi haneli ₺ tutarları kart genişliğini taşırıyor — crm-finans-kurum.html deseni */
   .kpi-num.compact{font-size:16px !important}
 }
+
+/* T-R3 — detay tablo (B §6.2) */
+#tblKatDetay{min-width:640px}
+#tblKatDetay td.num,#tblKatDetay th.num{text-align:right}
 </style>
 </head>
 <body data-sec="finans" data-screen="maliyet">
@@ -104,14 +108,20 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-finans-butce-detay.html?proje=vadi" id="btnButce"><i class="fa-solid fa-file-lines"></i> Bütçe Detayı</a>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Gerçekleşen maliyet"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-ghost btn-sm" href="#" id="btnMaliyetExport" data-gv-export='{"baslik":"Gerçekleşen Maliyet","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
-    <div class="proje-switch" id="projeSwitch">
-      <button data-p="vadi" class="is-on">Vadi Konakları</button>
-      <button data-p="liman">Liman Lojistik Merkezi</button>
-      <button data-p="merkez">Merkez Şantiye</button>
+    <div class="rp-toolbar">
+      <div class="rp-tb-group">
+        <div class="proje-switch" id="projeSwitch">
+          <button data-p="vadi" class="is-on">Vadi Konakları</button>
+          <button data-p="liman">Liman Lojistik Merkezi</button>
+          <button data-p="merkez">Merkez Şantiye</button>
+          <button data-p="diger">Tamamlanan / Planlama</button>
+        </div>
+        <div data-gvdaterange style="margin-left:4px"></div>
+      </div>
     </div>
 
     <div class="kpi-grid">
@@ -142,11 +152,33 @@
       <p><b>Betonarme (Kaba Yapı) kategorisi %104 ile bütçe aşımında</b> — revize ₺41.500.000 bütçeye karşı ₺43.160.000 gerçekleşen. Demir fiyat artışı BTC-2026-R1 revizyonuna rağmen etkisini sürdürüyor.</p>
     </div>
 
+    <div class="rp-compare" id="maliyetCompare" style="margin-bottom:20px"></div>
+
+    <div id="maliyetWrap">
+    <div data-gv-state="loading" class="gv-empty" hidden>
+      <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+      <h4>Yükleniyor…</h4>
+    </div>
+    <div data-gv-state="error" class="gv-empty rp-error" hidden>
+      <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h4>Maliyet verisi yüklenemedi</h4>
+      <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
+      <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+    </div>
+    <div data-gv-state="empty" class="gv-empty rp-empty" id="maliyetEmpty" hidden></div>
+    <div data-gv-state="content" id="maliyetContent">
+
     <!-- statik bake — DEFAULT proje (Vadi Konakları, ?proje= yoksa) 15 kategori
          kırılımı VERBATIM; JS yüklenince aynı mount innerHTML ile ezilir
          (crm-finans-maliyet.html kaynak script'i, render() fonksiyonu, PROJE.vadi) — D18-B2 -->
     <div class="gv-card">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-bar"></i> Kategori Bazlı Bütçe – Gerçekleşen</div><span class="ph-sub" style="margin:0" id="gcSub">Vadi Konakları</span></div>
+      <div class="gc-body flush rp-table-wrap" style="box-shadow:none;border:none;border-bottom:1px solid var(--line);margin-bottom:0">
+        <table class="gtable" id="tblKatDetay">
+          <thead><tr><th>Kategori</th><th class="num">Bütçe</th><th class="num">Gerçekleşen</th><th class="num">Kullanım</th><th>Durum</th></tr></thead>
+          <tbody id="tblKatDetayBody"></tbody>
+        </table>
+      </div>
       <div class="gc-body flush" id="cmpList"><div class="cmp2-row"><div class="cmp2-name"><b>Hafriyat &amp; Zemin İşleri</b><span class="gstat off">%96</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:20%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺8.200.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:19%"></div></div></div><span class="gbar-val">₺7.872.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Betonarme (Kaba Yapı)</b><span class="gstat danger">%104 aşım</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺41.500.000</span></div><div class="cmp2-bar-row ger asim"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div><span class="gbar-val">₺43.160.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Çatı &amp; İzolasyon</b><span class="gstat off">%55</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:24%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺9.800.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:13%"></div></div></div><span class="gbar-val">₺5.390.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Duvar &amp; Sıva</b><span class="gstat off">%78</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:35%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺14.500.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:27%"></div></div></div><span class="gbar-val">₺11.310.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Mekanik Tesisat</b><span class="gstat off">%75</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:39%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺16.200.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:29%"></div></div></div><span class="gbar-val">₺12.150.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Elektrik Tesisatı</b><span class="gstat off">%70</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:30%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺12.400.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:21%"></div></div></div><span class="gbar-val">₺8.680.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>İnce İşler &amp; Boya</b><span class="gstat off">%28</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:38%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺15.800.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:11%"></div></div></div><span class="gbar-val">₺4.424.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Doğrama &amp; Cephe</b><span class="gstat off">%48</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:33%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺13.600.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:16%"></div></div></div><span class="gbar-val">₺6.528.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Zemin Kaplama &amp; Seramik</b><span class="gstat off">%22</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:27%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺11.200.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:6%"></div></div></div><span class="gbar-val">₺2.464.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Peyzaj &amp; Çevre Düzenleme</b><span class="gstat off">%12</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:21%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺8.600.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:2%"></div></div></div><span class="gbar-val">₺1.032.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Şantiye Genel Giderleri</b><span class="gstat off">%71</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:23%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺9.400.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:16%"></div></div></div><span class="gbar-val">₺6.678.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>İşçilik (Puantaj)</b><span class="gstat off">%85</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:31%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺12.800.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:26%"></div></div></div><span class="gbar-val">₺10.880.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Makine &amp; Ekipman</b><span class="gstat off">%68</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:13%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺5.600.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:9%"></div></div></div><span class="gbar-val">₺3.808.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Nakliye &amp; Lojistik</b><span class="gstat off">%60</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:8%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺3.200.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:5%"></div></div></div><span class="gbar-val">₺1.920.000</span></div></div></div><div class="cmp2-row"><div class="cmp2-name"><b>Resmi Giderler &amp; Harçlar</b><span class="gstat off">%92</span></div><div class="cmp2-bars"><div class="cmp2-bar-row bt"><span class="cmp2-bar-lbl">Bütçe</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:3%;background:var(--line-2)"></div></div></div><span class="gbar-val">₺1.200.000</span></div><div class="cmp2-bar-row ger"><span class="cmp2-bar-lbl">Gerçekleşen</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:3%"></div></div></div><span class="gbar-val">₺1.104.000</span></div></div></div></div>
     </div>
 
@@ -165,6 +197,11 @@
         <span>Kategori ve revizyon detayları için:</span>
         <a href="crm-finans-butce.html">Proje Bütçesi <i class="fa-solid fa-arrow-right"></i></a>
       </div>
+    </div>
+
+    <div class="rp-note" id="maliyetNote"></div>
+
+    </div>
     </div>
   </main>
 </div>
@@ -232,13 +269,45 @@
 
   var q = new URLSearchParams(location.search);
   var pKey = q.get('proje');
-  if(!PROJE[pKey]) pKey = 'vadi';
+  if(pKey !== 'diger' && !PROJE[pKey]) pKey = 'vadi';
+
+  /* rp-compare — 3 projenin bütçe kullanım oranı karşılaştırması, seçili
+     projeden bağımsız her zaman görünür (crm-finans-butce.html PROJE
+     verisiyle BİREBİR aynı kaynak rakamlar). */
+  (function renderCompare(){
+    var keys = ['vadi','liman','merkez'];
+    var best = keys.reduce(function(a,b){ return pct(PROJE[a].gerceklesen,PROJE[a].revize) > pct(PROJE[b].gerceklesen,PROJE[b].revize) ? a : b; });
+    var worst = keys.reduce(function(a,b){ return pct(PROJE[a].gerceklesen,PROJE[a].revize) < pct(PROJE[b].gerceklesen,PROJE[b].revize) ? a : b; });
+    function item(lbl, k, cls, ico){
+      var P = PROJE[k];
+      return '<div class="rp-compare-item"><span class="rc-lbl">'+lbl+'</span><span class="rc-val">'+P.ad+' · %'+pct(P.gerceklesen,P.revize)+'</span>'
+        + '<span class="rp-compare-delta '+cls+'"><i class="fa-solid '+ico+'"></i>'+tl(P.gerceklesen)+' / '+tl(P.revize)+'</span></div>';
+    }
+    document.getElementById('maliyetCompare').innerHTML =
+      item('En yüksek bütçe kullanımı', best, 'up', 'fa-arrow-up')
+      + item('En düşük bütçe kullanımı', worst, 'down', 'fa-arrow-down')
+      + '<div class="rp-compare-item"><span class="rc-lbl">3 proje toplamı</span><span class="rc-val">%'+pct(PROJE.vadi.gerceklesen+PROJE.liman.gerceklesen+PROJE.merkez.gerceklesen, PROJE.vadi.revize+PROJE.liman.revize+PROJE.merkez.revize)+'</span>'
+      + '<span class="rp-compare-delta flat"><i class="fa-solid fa-layer-group"></i>'+tl(PROJE.vadi.gerceklesen+PROJE.liman.gerceklesen+PROJE.merkez.gerceklesen)+' toplam gerçekleşen</span></div>';
+  })();
 
   function render(pKey){
+    document.querySelectorAll('#projeSwitch button').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-p') === pKey); });
+
+    if(pKey === 'diger'){
+      gvEmpty.durum('#maliyetWrap', { sonucSayisi: 0 });
+      gvEmpty.render('#maliyetEmpty', {
+        ikon:'fa-folder-open',
+        baslik:'Bu kapsamda maliyet kaydı yok',
+        aciklama:'Tamamlanan (Kule Ofis B Blok) ve planlama aşamasındaki (Göl Evleri 2. Etap) projeler için henüz gerçekleşen maliyet takibi açılmadı.',
+        aksiyon:{etiket:'Şantiye Kaydına Git', href:'crm-santiye.html'}
+      });
+      return;
+    }
+    gvEmpty.durum('#maliyetWrap', { sonucSayisi: 1 });
+
     var P = PROJE[pKey];
     document.getElementById('phSub').textContent = P.ad + ' · kategori bazlı bütçe–gerçekleşen karşılaştırması ve kaynak kırılımı';
     document.getElementById('btnButce').href = 'crm-finans-butce-detay.html?proje=' + PROJE_HREF[pKey];
-    document.querySelectorAll('#projeSwitch button').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-p') === pKey); });
 
     var u = pct(P.gerceklesen, P.revize);
     document.getElementById('kpiToplam').textContent = tl(P.gerceklesen);
@@ -263,6 +332,14 @@
         + '</div>';
     });
     document.getElementById('cmpList').innerHTML = cmpHtml;
+
+    var detayHtml = '';
+    P.kategoriler.forEach(function(k, i){
+      var rev=k[0], ger=k[1], kUse=pct(ger,rev), asim = kUse > 100;
+      detayHtml += '<tr><td>'+KATEGORI_ADI[i]+'</td><td class="num">'+tl(rev)+'</td><td class="num">'+tl(ger)+'</td><td class="num">%'+kUse+'</td>'
+        + '<td>'+(asim ? '<span class="gstat danger">Aşımda</span>' : (kUse>=90 ? '<span class="gstat warn">Sınırda</span>' : '<span class="gstat ok">Normal</span>'))+'</td></tr>';
+    });
+    document.getElementById('tblKatDetayBody').innerHTML = detayHtml;
 
     var hasAsim = asimIdx !== -1;
     document.getElementById('asimBanner').hidden = !hasAsim;
@@ -294,6 +371,15 @@
     } else {
       ornekEl.innerHTML = '';
     }
+
+    var asimKat = hasAsim ? KATEGORI_ADI[asimIdx] : null;
+    var noteHtml = '<i class="fa-solid fa-lightbulb"></i> <strong>' + P.ad + ' bütçenin %' + u + "'ünü kullandı</strong> ("
+      + tl(P.gerceklesen) + ' / ' + tl(P.revize) + '). '
+      + (asimKat
+          ? asimKat + ' kategorisi %' + pct(P.kategoriler[asimIdx][1], P.kategoriler[asimIdx][0]) + ' ile bütçeyi aştı — kaynak kırılımında en büyük payı (%' + KAYNAK_META[0].pct + ', ' + KAYNAK_META[0].lbl.toLocaleLowerCase('tr') + ') alan kalemlerin fiyat artışına karşı izlenmesi önerilir.'
+          : 'Aşımda kategori yok; harcama hızı bütçe planına uygun seyrediyor.')
+      + ' Kaynak kırılımında en büyük payı <b>' + KAYNAK_META[0].lbl + '</b> (%' + KAYNAK_META[0].pct + ') alıyor.';
+    document.getElementById('maliyetNote').innerHTML = noteHtml;
   }
 
   render(pKey);
@@ -306,6 +392,19 @@
       render(pKey);
     });
   });
+
+  gvHelp.metinler['kaynak-kirilimi-nedir'] = {
+    baslik: 'Kaynak Kırılımı Nedir?',
+    mesaj: 'Kaynak kırılımı, gerçekleşen maliyetin hangi işlem türünden (satın alma, taşeron hakedişi, işçilik/puantaj, kasa, stok sarfı, genel giderler) geldiğini gösterir. Aynı kategori (ör. Betonarme) birden fazla kaynaktan beslenebilir — kırılım, hangi kaynağın maliyeti sürüklediğini görmek için kullanılır.'
+  };
+  var kaynakHelpEl = document.getElementById('kaynakSub');
+  if(kaynakHelpEl && kaynakHelpEl.parentElement){
+    var helpBtn = document.createElement('span');
+    helpBtn.setAttribute('data-help', 'kaynak-kirilimi-nedir');
+    kaynakHelpEl.parentElement.appendChild(helpBtn);
+    gvHelp.init();
+  }
+  gvExport.bind();
 
   /* teknik/muhasebe rolleri bu ekranı görebilir; içerik rol bazında değişmez (sef henüz finans'a giremiyor — D12 notu) */
 })();

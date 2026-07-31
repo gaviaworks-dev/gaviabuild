@@ -83,7 +83,7 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="İş programı raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-acc btn-sm" id="btnDisaAktar"><i class="fa-solid fa-download"></i> Çıktı Al / Dışa Aktar</button>
       </div>
     </div>
 
@@ -94,6 +94,10 @@
         <button class="chip" data-santiye="liman">Liman Lojistik Merkezi</button>
         <button class="chip" data-santiye="merkez">Merkez Şantiye</button>
       </div>
+    </div>
+    <div class="santiye-row">
+      <span class="frow-lbl">Tarih Aralığı</span>
+      <div data-gvdaterange id="ipDateRange"></div>
     </div>
 
     <div class="kpi-grid">
@@ -140,6 +144,44 @@
     <div class="gv-card" style="margin-top:20px">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Gecikmeler</div></div>
       <div id="ipCrit"><div class="gv-empty"><div class="ge-ico"><i class="fa-solid fa-circle-check"></i></div><h4>Kritik gecikme yok</h4><p>Vadi Konakları iş programı takviminde şu anda gecikmiş bir kalem bulunmuyor.</p></div></div>
+    </div>
+
+    <!-- ============ GRAFİK ALANI (B §6.2 madde 6) ============ -->
+    <div class="rp-charts-2" style="margin-top:20px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Kalem Durum Dağılımı</h3></div>
+        <div class="rp-chart-body" id="chartIpDurum"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Şantiye Bazlı Genel İlerleme</h3><span class="ph-sub" style="margin:0">3 şantiye karşılaştırması</span></div>
+        <div class="rp-chart-body" id="chartIpKarsi"></div>
+      </div>
+    </div>
+
+    <!-- ============ KARŞILAŞTIRMA ALANI (B §6.2 madde 8) ============ -->
+    <div class="rp-compare" id="ipCompare" style="margin-top:20px">
+      <div class="rp-compare-item">
+        <span class="rc-lbl">Vadi Konakları</span>
+        <span class="rc-val">%68</span>
+        <span class="rp-compare-delta up"><i class="fa-solid fa-arrow-up"></i> kaba inşaat +2 gün önde — programında</span>
+      </div>
+      <div class="rp-compare-item">
+        <span class="rc-lbl">Liman Lojistik Merkezi</span>
+        <span class="rc-val">%41</span>
+        <span class="rp-compare-delta down"><i class="fa-solid fa-arrow-down"></i> kaba yapı 12 gün gecikmede — kritik</span>
+      </div>
+      <div class="rp-compare-item">
+        <span class="rc-lbl">Merkez Şantiye</span>
+        <span class="rc-val">%86</span>
+        <span class="rp-compare-delta up"><i class="fa-solid fa-arrow-up"></i> en ileri saha — programında</span>
+      </div>
+    </div>
+
+    <!-- ============ YORUM / DEĞERLENDİRME (B §6.2 madde 9) ============ -->
+    <div class="rp-note" style="margin-top:20px" id="ipNote">
+      <i class="fa-solid fa-magnifying-glass-chart"></i>
+      <strong>Değerlendirme —</strong>
+      <span id="ipNoteText">Vadi Konakları genel programında ilerliyor; kaba inşaat kalemi 2 gün önde olsa da bu marj küçük — hava koşulları veya tedarik gecikmesi hızla dengeyi bozabilir. 7 kalemden yalnız 2'si henüz başlamadı (Çatı/Cephe, Teslim), kalan 5 kalem paralel yürüyor ki bu normal bir inşaat sıralamasıdır. Kritik gecikme yok, ama "programında" etiketli kalemlerin (İnce İşler, Elektrik, Çevre) sapması %0 civarında — bu marjinal fark küçük gecikmelerin henüz eşiği aşmadığı, yakın takip gerektiği anlamına gelir.</span>
     </div>
 
     <div class="gv-card" style="margin-top:20px">
@@ -205,6 +247,12 @@
     }
   };
 
+  var NOTE = {
+    vadi: 'Vadi Konakları genel programında ilerliyor; kaba inşaat kalemi 2 gün önde olsa da bu marj küçük — hava koşulları veya tedarik gecikmesi hızla dengeyi bozabilir. 7 kalemden yalnız 2\'si henüz başlamadı (Çatı/Cephe, Teslim), kalan 5 kalem paralel yürüyor ki bu normal bir inşaat sıralamasıdır. Kritik gecikme yok, ama "programında" etiketli kalemlerin (İnce İşler, Elektrik, Çevre) sapması %0 civarında — bu marjinal fark küçük gecikmelerin henüz eşiği aşmadığı, yakın takip gerektiği anlamına gelir.',
+    liman: 'Liman Lojistik Merkezi ciddi bir gecikme yaşıyor — kaba yapı kalemi (Çelik Konstrüksiyon + Betonarme) planın 12 gün gerisinde ve bu, tahmini teslim tarihini de (27.03.2027) 12 gün öteliyor; bu, üç şantiyedeki EN kritik risk. Mekanik tesisat +3 gün önde olsa da kaba yapı gecikmesi genel akışı %41\'e düşürüyor — kaba yapının kritik yol (critical path) üzerinde olduğu açık. Elektrik tesisatı da hafif gecikmede (−2 gün); iki gecikme birleşirse teslim riski büyür. Acil aksiyon: kaba yapı ekibi takviyesi veya iş programı revizyonu değerlendirilmeli.',
+    merkez: 'Merkez Şantiye üç sahanın en ileri olanı (%86) — temel ve kaba yapı kalemleri planından bile önde tamamlandı (+1 gün). Kalan iki aktif kalem (Mekanik &amp; Elektrik Tesisat, İç Mekan &amp; Saha Düzenleme) sapmasız programında ilerliyor. Bu sahada risk düşük; teslim/devreye alma (Eylül 2026) için ek önlem gerekmiyor.'
+  };
+
   var q = new URLSearchParams(location.search);
   var key = q.get('santiye');
   if(!RAPOR[key]) key = 'vadi';
@@ -259,6 +307,36 @@
     document.getElementById('ipCrit').innerHTML = crit;
 
     document.getElementById('ipBackWrap').innerHTML = '<a class="gc-link" href="' + R.backHref + '"><i class="fa-solid fa-arrow-right"></i> ' + R.backLbl + '</a>';
+
+    /* ============ YORUM / DEĞERLENDİRME — şantiyeye göre CANLI ============ */
+    document.getElementById('ipNoteText').innerHTML = NOTE[k];
+
+    /* ============ GRAFİK ALANI (B §6.2 madde 6) — kalem durum dağılımı + karşılaştırma ============ */
+    if(window.gvDonut){
+      var durumCounts = {};
+      R.kalemler.forEach(function(x){ durumCounts[x.durum.lbl] = (durumCounts[x.durum.lbl] || 0) + 1; });
+      var toneMap = {ok:'ok', danger:'danger', warn:'warn', info:'info', off:'muted'};
+      var durumVeri = Object.keys(durumCounts).map(function(lbl){
+        var tone = 'muted';
+        R.kalemler.some(function(x){ if(x.durum.lbl === lbl){ tone = toneMap[x.durum.cls] || 'muted'; return true; } return false; });
+        return {lbl:lbl, val:durumCounts[lbl], tone:tone};
+      });
+      gvDonut('#chartIpDurum', durumVeri, {baslik:'Kalem durum dağılımı', merkezAlt:'kalem'});
+    }
+    if(window.gvBar){
+      gvBar('#chartIpKarsi', [
+        {lbl:'Vadi Konakları', val:RAPOR.vadi.genelPct, valLbl:'%' + RAPOR.vadi.genelPct, tone:k === 'vadi' ? 'acc' : undefined},
+        {lbl:'Liman Lojistik', val:RAPOR.liman.genelPct, valLbl:'%' + RAPOR.liman.genelPct, tone:k === 'liman' ? 'acc' : 'danger'},
+        {lbl:'Merkez Şantiye', val:RAPOR.merkez.genelPct, valLbl:'%' + RAPOR.merkez.genelPct, tone:k === 'merkez' ? 'acc' : 'ok'}
+      ], {yon:'yatay', baslik:'Şantiye bazlı genel ilerleme karşılaştırması'});
+    }
+
+    /* ============ KARŞILAŞTIRMA ALANI — seçili şantiye vurgusu ============ */
+    document.querySelectorAll('#ipCompare .rp-compare-item').forEach(function(item, i){
+      var santiyeler = ['vadi', 'liman', 'merkez'];
+      item.style.opacity = santiyeler[i] === k ? '1' : '.55';
+      item.style.fontWeight = santiyeler[i] === k ? '700' : '400';
+    });
   }
 
   render(key);
@@ -270,9 +348,47 @@
   chipsEl.addEventListener('click', function(e){
     var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
     var k = ch.getAttribute('data-santiye');
+    key = k;   /* gvExport/GV_EXPORTERS güncel seçili şantiyeyi okuyabilsin diye */
     history.replaceState(null, '', 'crm-panel-rapor-isprogrami.html?santiye=' + k);
     render(k);
   });
+
+  /* ============ TARİH ARALIĞI — iş programı kalemleri ay/yıl bazlı uzun aralıklar
+     kapsar (ör. 2024-2027); tekil gün filtresi anlamlı olmadığından seçim, seçili
+     şantiyenin programı içinde hangi aralığın kapsandığını gösteren bir bilgi
+     notuna dönüşür (gerçek DOM etkisi — veri UYDURULMAZ). */
+  if(window.gvDateRange){
+    gvDateRange('#ipDateRange', {
+      emptyLabel: 'Tüm program süresi',
+      onChange: function(val){
+        var noteEl = document.getElementById('ipNoteText');
+        if(!val){ noteEl.innerHTML = NOTE[key]; return; }
+        noteEl.innerHTML = 'Seçilen aralık: <b>' + val.label + '</b> — iş programı kalemleri çok-aylık planlar içerdiğinden (ör. 2024–2027) bu rapor tekil tarih aralığına göre filtrelenmez; kalem bazlı plan/gerçek tarihleri yukarıdaki tabloda görüntülenir.';
+      }
+    });
+  }
+
+  /* ============ ÇIKTI — gvExport (B §6.4). ciktiHref VERİLMEDİ — bu rapora karşılık
+     gelen tek-kayıt/liste çıktı sayfası yok (santiye-detay İş Programı sekmesi ayrı
+     bir görünüm, kapsam uyuşmuyor) — kontrol edildi. Excel dalı gerçek .xlsx üretir. */
+  window.GV_EXPORTERS = window.GV_EXPORTERS || {};
+  GV_EXPORTERS['İş programı raporu'] = function(){
+    var R = RAPOR[key];
+    var aoa = [['YAPITAŞ İNŞAAT A.Ş. — İŞ PROGRAMI RAPORU'], [document.getElementById('ipSub').textContent], [],
+      ['Kalem', 'Planlanan', 'Gerçekleşen', 'Plan %', 'Gerçek %', 'Sapma', 'Durum']];
+    R.kalemler.forEach(function(x){
+      aoa.push([x.ad.replace(/&amp;/g, '&'), x.plan, x.gercek, x.planPct, x.gercekPct, x.sapma, x.durum.lbl]);
+    });
+    return { file:'is-programi-raporu-' + key + '-2026', sheet:'İş Programı', cols:[28, 22, 26, 10, 10, 10, 22], aoa:aoa };
+  };
+  if(window.gvExport){
+    gvExport.init('#btnDisaAktar', {
+      baslik: 'İş programı raporu',
+      formatlar: ['pdf', 'excel', 'yazdir'],
+      kapsam: ['tumu', 'filtreli'],
+      filtreOzeti: function(){ return 'Şantiye: ' + SANTIYE_ADI[key]; }
+    });
+  }
 })();
 </script>
 </body>

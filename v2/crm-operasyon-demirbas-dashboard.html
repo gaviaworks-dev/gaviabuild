@@ -65,6 +65,24 @@
 .cross-link a{margin-left:auto;flex:none;font-size:12.5px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
 .cross-link a:hover{color:var(--acc-deep)}
 @media(max-width:640px){.cross-link{padding:14px 16px}.cross-link a{margin-left:0}}
+
+/* ============ B §6.2 eklentileri (T-R4) — şantiye filtresi · tarih aralığı ·
+   karşılaştırma rozeti · değerlendirme kartı · boş durum. MEVCUT rank-row/
+   gv-empty dilinden devralındı, yeni bir bileşen dili İCAT EDİLMEDİ. ============ */
+.filt-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.filt-row .filt-lbl{font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px;flex:none}
+.filt-chips{display:flex;gap:8px;flex-wrap:wrap}
+.filt-chips button{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r-sm);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--ink-2);background:#fff;cursor:pointer;font-family:inherit}
+.filt-chips button:hover{border-color:var(--line-2);color:var(--ink)}
+.filt-chips button.is-on{background:rgba(var(--acc-rgb),.1);border-color:rgba(var(--acc-rgb),.35);color:var(--acc-ink)}
+.cmp-tag{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--acc-ink);background:rgba(var(--acc-rgb),.1);padding:3px 9px;border-radius:var(--r-pill);margin-left:8px}
+.eval-card{padding:20px 22px;font-size:13px;color:var(--ink-2);line-height:1.75}
+.eval-card b{color:var(--ink)}
+.eval-card ul{margin:8px 0 0;padding-left:18px}
+.eval-card li{margin-bottom:4px}
+.dr-inputs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dr-inputs input[type="date"]{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;outline:none}
+.dr-inputs input[type="date"]:focus{border-color:var(--acc)}
 </style>
 </head>
 <body data-sec="varlik" data-screen="demirbas-dashboard">
@@ -103,7 +121,26 @@
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas.html"><i class="fa-solid fa-arrow-left"></i> Demirbaşlara Dön</a>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-bildirim.html"><i class="fa-solid fa-bell"></i> Bildirim Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="Demirbaş envanteri dashboard"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-ghost btn-sm" id="btnDashCikti"><i class="fa-solid fa-download"></i> Çıktı Al</button>
+      </div>
+    </div>
+
+    <div class="filt-row">
+      <span class="filt-lbl"><i class="fa-solid fa-location-dot"></i> Şantiye / Proje</span>
+      <div class="filt-chips" id="santiyeFilter">
+        <button data-s="tumu" class="is-on"><i class="fa-solid fa-layer-group"></i> Tümü</button>
+        <button data-s="vadi">Vadi Konakları</button>
+        <button data-s="liman">Liman Lojistik</button>
+        <button data-s="merkez">Merkez Şantiye</button>
+        <button data-s="depo">Merkez Depo</button>
+        <button data-s="arsiv">Arşiv / Konumsuz</button>
+      </div>
+    </div>
+    <div class="filt-row">
+      <span class="filt-lbl"><i class="fa-solid fa-calendar-days"></i> Garanti/Kalibrasyon Tarih Aralığı</span>
+      <div class="dr-inputs">
+        <input type="date" id="drFrom" aria-label="Başlangıç"><span style="color:var(--muted);font-size:12px">–</span><input type="date" id="drTo" aria-label="Bitiş">
+        <button type="button" class="btn btn-ghost btn-sm" id="drClear"><i class="fa-solid fa-filter-circle-xmark"></i> Temizle</button>
       </div>
     </div>
 
@@ -116,7 +153,7 @@
         <div class="gc-body flush" id="durumWrap"></div>
       </div>
       <div class="gv-card">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-map-location-dot"></i> Firma ve Proje Bazında Dağılım</div><span class="ph-sub" style="margin:0">Şantiye = proje</span></div>
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-map-location-dot"></i> Firma ve Proje Bazında Dağılım <span class="cmp-tag"><i class="fa-solid fa-code-compare"></i> Karşılaştırma</span></div><span class="ph-sub" style="margin:0">Şantiye = proje</span></div>
         <div class="gc-body flush" id="konumWrap"></div>
         <div class="rep-src"><i class="fa-solid fa-circle-info"></i> <span>Bağlı Firma tek-tenant mock'ta sabittir (Yapıtaş İnşaat A.Ş., kararlar madde 114) — bu yüzden ayrı bir firma dağılımı grafiği anlamlı çeşitlilik göstermez; proje kırılımı (şantiye) bu kartta yukarıda gösterilir.</span></div>
       </div>
@@ -155,18 +192,24 @@
 
     <div class="gv-card">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Garanti ve Kalibrasyon Takvimi</div><span class="ph-sub" style="margin:0">Yaklaşan tarihe göre sıralı</span></div>
-      <div class="gc-body flush">
+      <div class="gc-body flush" id="takvimTblWrap">
         <table class="gtable" id="tblTakvim">
           <thead><tr><th>Kalem</th><th>Tür</th><th>Tarih</th><th class="num">Durum</th></tr></thead>
           <tbody id="takvimBody"></tbody>
         </table>
       </div>
-      <div class="rep-src"><i class="fa-solid fa-circle-info"></i> <span>ZMT-2026-046'nın garanti bitiş tarihi (20.01.2027, crm-operasyon-demirbas.html/-detay.html/-form.html'in üçü de birleşiyor — kararlar.md madde 146) kanonik bugüne (2 Temmuz 2026) göre ~202 gün uzakta, dolayısıyla "garanti yaklaşan" listesinde GÖRÜNMEZ; yalnız kalibrasyon kontrolü (20.07.2026, zimmet tarihinden 6 aylık periyot) 30 gün eşiği içindedir.</span></div>
+      <div class="gv-empty" id="takvimEmpty" hidden></div>
+      <div class="rep-src" id="takvimNot"><i class="fa-solid fa-circle-info"></i> <span>ZMT-2026-046'nın garanti bitiş tarihi (20.01.2027, crm-operasyon-demirbas.html/-detay.html/-form.html'in üçü de birleşiyor — kararlar.md madde 146) kanonik bugüne (2 Temmuz 2026) göre ~202 gün uzakta, dolayısıyla "garanti yaklaşan" listesinde GÖRÜNMEZ; yalnız kalibrasyon kontrolü (20.07.2026, zimmet tarihinden 6 aylık periyot) 30 gün eşiği içindedir.</span></div>
       <div class="cross-link">
         <i class="fa-solid fa-bell lead"></i>
         <span>Bildirim geçmişi ve eşik ayarları için:</span>
         <a href="crm-operasyon-demirbas-bildirim.html">Bildirim Merkezi <i class="fa-solid fa-arrow-right"></i></a>
       </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-lightbulb"></i> Değerlendirme</div></div>
+      <div class="eval-card" id="evalCard"></div>
     </div>
 
   </main>
@@ -233,27 +276,39 @@
     }).join('');
   }
 
-  function render(){
-    var toplam = DEMIRBAS.length;
-    var zimmetli = DEMIRBAS.filter(function(d){ return d.durum==='zimmetli'; });
-    var depoda = DEMIRBAS.filter(function(d){ return d.durum==='depoda'; });
-    var serviste = DEMIRBAS.filter(function(d){ return d.durum==='serviste'; });
-    var degerToplam = DEMIRBAS.reduce(function(s,d){ return s + (d.bedel||0); }, 0);
+  var santiyeFiltre = 'tumu';   /* B §6.2 — şantiye/proje filtresi (T-R4) */
+  var takvimFrom = '', takvimTo = '';   /* B §6.2 — tarih aralığı, garanti/kalibrasyon takvimine uygulanır */
 
-    /* Garanti/kalibrasyon "yaklaşan" — DEMIRBAS[] kaydının kendi alanından, ESIK_GUN
+  function demirbasEslesir(d){
+    if(santiyeFiltre === 'tumu') return true;
+    if(santiyeFiltre === 'arsiv') return !d.santiye;
+    return d.santiye === santiyeFiltre;
+  }
+
+  function render(){
+    var DEMIRBAS_VIEW = DEMIRBAS.filter(demirbasEslesir);
+    var filtreAktif = santiyeFiltre !== 'tumu';
+    var toplam = DEMIRBAS_VIEW.length;
+    var zimmetli = DEMIRBAS_VIEW.filter(function(d){ return d.durum==='zimmetli'; });
+    var depoda = DEMIRBAS_VIEW.filter(function(d){ return d.durum==='depoda'; });
+    var serviste = DEMIRBAS_VIEW.filter(function(d){ return d.durum==='serviste'; });
+    var degerToplam = DEMIRBAS_VIEW.reduce(function(s,d){ return s + (d.bedel||0); }, 0);
+    var kisiSayisi = {}; zimmetli.forEach(function(d){ if(d.kisi && d.kisi !== '(kişisiz)') kisiSayisi[d.kisi] = 1; });
+
+    /* Garanti/kalibrasyon "yaklaşan" — DEMIRBAS_VIEW'ın kendi alanından, ESIK_GUN
        (30 gün) içinde veya süresi geçmiş olanlar sayılır. Sabit bir ZMT/tarih YAZILMAZ. */
-    var garantiler = DEMIRBAS.filter(function(d){ return d.garanti; });
+    var garantiler = DEMIRBAS_VIEW.filter(function(d){ return d.garanti; });
     var garantiYaklasan = garantiler.filter(function(d){ return gunFarki(d.garanti) <= ESIK_GUN; });
     var enYakinGaranti = garantiler.slice().sort(function(a,b){ return gunFarki(a.garanti) - gunFarki(b.garanti); })[0];
 
-    var kalibrasyonlar = DEMIRBAS.filter(function(d){ return d.kalibrasyon; });
+    var kalibrasyonlar = DEMIRBAS_VIEW.filter(function(d){ return d.kalibrasyon; });
     var kalibrasyonYaklasan = kalibrasyonlar.filter(function(d){ return gunFarki(d.kalibrasyon) <= ESIK_GUN; });
 
     document.getElementById('kpiGrid').innerHTML =
-        kpiCard('fa-boxes-stacked', '', 'Toplam Demirbaş', String(toplam), '10 kanonik ZMT kaydı', 'fa-list')
+        kpiCard('fa-boxes-stacked', '', 'Toplam Demirbaş', String(toplam), filtreAktif ? toplam + ' kayıt · ' + filtreEtiket() + ' filtreli' : '10 kanonik ZMT kaydı', 'fa-list')
       + kpiCard('fa-user-check', 'info', 'Kullanımdaki', String(zimmetli.length), 'Zimmetli kalemlerle aynı küme', 'fa-id-badge')
-      + kpiCard('fa-warehouse', '', 'Stoktaki', String(depoda.length), depoda.map(function(d){return d.no;}).join(', '), 'fa-box')
-      + kpiCard('fa-id-badge', 'ok', 'Zimmetli', String(zimmetli.length), '6 kişiye tahsisli kalem', 'fa-user')
+      + kpiCard('fa-warehouse', '', 'Stoktaki', String(depoda.length), depoda.length ? depoda.map(function(d){return d.no;}).join(', ') : 'Stokta kalem yok', 'fa-box')
+      + kpiCard('fa-id-badge', 'ok', 'Zimmetli', String(zimmetli.length), Object.keys(kisiSayisi).length + ' kişiye tahsisli kalem', 'fa-user')
       + kpiCard('fa-screwdriver-wrench', serviste.length ? 'warn' : '', 'Bakımdaki', String(serviste.length), serviste.length ? serviste[0].no + ' · gövde çatlağı onarımı' : 'Serviste kalem yok', 'fa-wrench')
       + kpiCard('fa-triangle-exclamation', '', 'Arızalı', '0', 'Bu envaride arızalı işaretli kalem yok', 'fa-check')
       + kpiCard('fa-file-shield', garantiYaklasan.length ? 'danger' : '', 'Garanti Yaklaşan', String(garantiYaklasan.length),
@@ -264,61 +319,128 @@
           kalibrasyonYaklasan.length ? kalibrasyonYaklasan.map(function(d){return d.no + ' · ' + durumMetni(gunFarki(d.kalibrasyon));}).join(', ') : '30 gün içinde yok',
           'fa-triangle-exclamation')
       + kpiCard('fa-magnifying-glass', '', 'Kayıp', '0', 'Bu envaride kayıp işaretli kalem yok', 'fa-check')
-      + kpiCard('fa-sack-dollar', 'info', 'Toplam Demirbaş Değeri', tl(degerToplam), '9 kayıt · araç (ZMT-044) hariç', 'fa-calculator');
+      + kpiCard('fa-sack-dollar', 'info', 'Toplam Demirbaş Değeri', tl(degerToplam), (filtreAktif ? toplam : '9') + ' kayıt · araç (ZMT-044) hariç', 'fa-calculator');
 
     /* ---- Durum Dağılımı ---- */
     var durumRows = Object.keys(DURUM_LBL).map(function(k){
-      var n = DEMIRBAS.filter(function(d){ return d.durum===k; }).length;
+      var n = DEMIRBAS_VIEW.filter(function(d){ return d.durum===k; }).length;
       return {name:DURUM_LBL[k].lbl, val:n};
     });
     renderRankList('durumWrap', durumRows, toplam, ' kalem');
 
-    /* ---- Konum Dağılımı ---- */
+    /* ---- Konum Dağılımı (B §6.2 karşılaştırma alanı — şantiye bazlı adet kıyası) ---- */
     var konumCount = {};
     DEMIRBAS.forEach(function(d){ var k = d.santiye ? SANTIYE_ADI[d.santiye] : 'Arşiv / konum yok'; konumCount[k] = (konumCount[k]||0)+1; });
     var konumRows = Object.keys(konumCount).map(function(k){ return {name:k, val:konumCount[k]}; }).sort(function(a,b){ return b.val-a.val; });
-    renderRankList('konumWrap', konumRows, toplam, ' kalem');
+    renderRankList('konumWrap', konumRows, DEMIRBAS.length, ' kalem');   /* KASITLI: bu kart filtreden bağımsız — 4 şantiyenin/arşivin BİRBİRİYLE kıyasını gösterir */
 
-    /* ---- Kategori Bazında Dağılım (araç hariç, 9 kayıt) ---- */
+    /* ---- Kategori Bazında Dağılım (araç hariç) ---- */
     var katCount = {};
-    var katLi = DEMIRBAS.filter(function(d){ return d.kat; });
+    var katLi = DEMIRBAS_VIEW.filter(function(d){ return d.kat; });
     katLi.forEach(function(d){ katCount[d.kat] = (katCount[d.kat]||0)+1; });
     var katRows = Object.keys(katCount).map(function(k){ return {name:k, val:katCount[k]}; }).sort(function(a,b){ return b.val-a.val; });
-    renderRankList('katWrap', katRows, katLi.length, ' kalem');
+    renderRankList('katWrap', katRows, katLi.length || 1, ' kalem');
 
-    /* ---- Marka Bazında Dağılım — kat'ı olan 9 kayıt (ZMT-2026-044/Ford araç geçiş-kategorisi
+    /* ---- Marka Bazında Dağılım — kat'ı olan kayıtlar (ZMT-2026-044/Ford araç geçiş-kategorisi
        olduğundan ve satın alma bedeli araç modülünde izlendiğinden bu dağılıma da dahil edilmez) ---- */
     var markaCount = {};
     katLi.forEach(function(d){ markaCount[d.marka] = (markaCount[d.marka]||0)+1; });
     var markaRows = Object.keys(markaCount).map(function(k){ return {name:k, val:markaCount[k]}; }).sort(function(a,b){ return b.val-a.val; });
-    renderRankList('markaWrap', markaRows, katLi.length, ' kalem');
+    renderRankList('markaWrap', markaRows, katLi.length || 1, ' kalem');
     document.getElementById('markaChips').innerHTML = '<span class="kat-chip"><i class="fa-solid fa-book"></i> Katalogda tanımlı, 0 kullanımda (10 marka): <b>' + MARKA_KATALOG_SIFIR.join(', ') + '</b></span>';
 
     /* ---- Toplam Demirbaş Değeri — Kategori Bazında ---- */
     var degerKat = {};
     katLi.forEach(function(d){ degerKat[d.kat] = (degerKat[d.kat]||0) + d.bedel; });
     var degerRows = Object.keys(degerKat).map(function(k){ return {ad:k, val:degerKat[k]}; }).sort(function(a,b){ return b.val-a.val; });
-    document.getElementById('degerSub').textContent = tl(degerToplam) + ' · 9 kayıt';
-    document.getElementById('degerBody').innerHTML = degerRows.map(function(r){ return '<tr><td>'+r.ad+'</td><td class="num">'+tl(r.val)+'</td></tr>'; }).join('')
-      + '<tr class="bm-total"><td>Toplam</td><td class="num">'+tl(degerToplam)+'</td></tr>';
+    document.getElementById('degerSub').textContent = tl(degerToplam) + ' · ' + katLi.length + ' kayıt' + (filtreAktif ? ' · ' + filtreEtiket() : '');
+    document.getElementById('degerBody').innerHTML = degerRows.length
+      ? degerRows.map(function(r){ return '<tr><td>'+r.ad+'</td><td class="num">'+tl(r.val)+'</td></tr>'; }).join('') + '<tr class="bm-total"><td>Toplam</td><td class="num">'+tl(degerToplam)+'</td></tr>'
+      : '<tr><td colspan="2" style="text-align:center;color:var(--muted);padding:18px">Bu şantiyede değer taşıyan kayıt yok.</td></tr>';
 
     /* ---- Demirbaş Bakım Maliyetleri ---- */
-    var bakimli = DEMIRBAS.filter(function(d){ return d.bakim; });
+    var bakimli = DEMIRBAS_VIEW.filter(function(d){ return d.bakim; });
     var bakimRows = bakimli.map(function(d){ return {name:d.no, sub:d.ad, val:d.bakim}; }).sort(function(a,b){ return b.val-a.val; });
-    renderRankList('bakimWrap', bakimRows, Math.max.apply(null, bakimRows.map(function(r){return r.val;}).concat([1])), null);
+    if(bakimRows.length){
+      renderRankList('bakimWrap', bakimRows, Math.max.apply(null, bakimRows.map(function(r){return r.val;}).concat([1])), null);
+    } else {
+      document.getElementById('bakimWrap').innerHTML = '<div class="rank-row" style="justify-content:center;color:var(--muted)">Bu görünümde bakım kaydı yok.</div>';
+    }
 
-    /* ---- Garanti ve Kalibrasyon Takvimi ---- */
+    /* ---- Garanti ve Kalibrasyon Takvimi (B §6.2 tarih aralığı + boş durum) ---- */
     var takvim = [];
-    DEMIRBAS.forEach(function(d){
+    DEMIRBAS_VIEW.forEach(function(d){
       if(d.garanti) takvim.push({no:d.no, ad:d.ad, tur:'Garanti Bitiş', tarih:d.garanti});
       if(d.kalibrasyon) takvim.push({no:d.no, ad:d.ad, tur:'Kalibrasyon Kontrolü', tarih:d.kalibrasyon});
     });
+    if(takvimFrom) takvim = takvim.filter(function(t){ return t.tarih >= takvimFrom; });
+    if(takvimTo) takvim = takvim.filter(function(t){ return t.tarih <= takvimTo; });
     takvim.sort(function(x,y){ return gunFarki(x.tarih) - gunFarki(y.tarih); });
-    document.getElementById('takvimBody').innerHTML = takvim.map(function(t){
-      var g = gunFarki(t.tarih);
-      return '<tr><td><div class="tv-item"><b>'+t.no+'</b><span>'+t.ad+'</span></div></td><td>'+t.tur+'</td><td>'+ddmmyyyy(t.tarih)+'</td>'
-        + '<td class="num"><span class="gstat '+rozetCls(g)+'">'+durumMetni(g)+'</span></td></tr>';
-    }).join('');
+    document.getElementById('takvimNot').hidden = !!(takvimFrom || takvimTo);
+    if(!takvim.length){
+      document.getElementById('takvimTblWrap').hidden = true;
+      document.getElementById('takvimEmpty').hidden = false;
+      gvEmpty.render(document.getElementById('takvimEmpty'), {
+        ikon:'fa-calendar-check', baslik:'Seçili aralıkta/şantiyede kayıt yok',
+        aciklama: 'Bu filtre kombinasyonunda garanti veya kalibrasyon tarihi olan bir demirbaş kalemi bulunamadı.',
+        aksiyon: {etiket:'Filtreleri Temizle', href:'crm-operasyon-demirbas-dashboard.html'}
+      });
+    } else {
+      document.getElementById('takvimEmpty').hidden = true;
+      document.getElementById('takvimTblWrap').hidden = false;
+      document.getElementById('takvimBody').innerHTML = takvim.map(function(t){
+        var g = gunFarki(t.tarih);
+        return '<tr><td><div class="tv-item"><b>'+t.no+'</b><span>'+t.ad+'</span></div></td><td>'+t.tur+'</td><td>'+ddmmyyyy(t.tarih)+'</td>'
+          + '<td class="num"><span class="gstat '+rozetCls(g)+'">'+durumMetni(g)+'</span></td></tr>';
+      }).join('');
+    }
+
+    /* ---- B §6.2 — yorum/değerlendirme alanı ---- */
+    var evalMsgs = [];
+    evalMsgs.push((filtreAktif ? filtreEtiket() + ' filtresinde' : 'Envanter genelinde') + ' <b>' + toplam + ' kayıt</b>, toplam değer <b>₺' + tl(degerToplam) + '</b>' + (filtreAktif ? '' : ' (araç ZMT-044 hariç)') + '.');
+    if(garantiYaklasan.length || kalibrasyonYaklasan.length){
+      evalMsgs.push((garantiYaklasan.length ? garantiYaklasan.length + ' kalemde garanti' : '') + (garantiYaklasan.length && kalibrasyonYaklasan.length ? ', ' : '') + (kalibrasyonYaklasan.length ? kalibrasyonYaklasan.length + ' kalemde kalibrasyon kontrolü' : '') + ' 30 gün içinde — bildirim merkezinden takip edin.');
+    } else {
+      evalMsgs.push('Önümüzdeki 30 günde dolan garanti veya kalibrasyon kontrolü yok.');
+    }
+    if(serviste.length) evalMsgs.push('<b>' + serviste[0].no + '</b> serviste (gövde çatlağı onarımı) — envanterden geçici olarak düşük.');
+    var enDegerliKat = degerRows[0];
+    if(enDegerliKat) evalMsgs.push('En yüksek değerli kategori <b>' + enDegerliKat.ad + '</b> — ₺' + tl(enDegerliKat.val) + '.');
+    document.getElementById('evalCard').innerHTML = '<ul><li>' + evalMsgs.join('</li><li>') + '</li></ul>';
+  }
+
+  function filtreEtiket(){
+    if(santiyeFiltre === 'tumu') return 'Tümü';
+    if(santiyeFiltre === 'arsiv') return 'Arşiv / Konumsuz';
+    return SANTIYE_ADI[santiyeFiltre];
+  }
+
+  document.getElementById('santiyeFilter').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-s]'); if(!btn) return;
+    santiyeFiltre = btn.getAttribute('data-s');
+    this.querySelectorAll('button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
+    render();
+  });
+  document.getElementById('drFrom').addEventListener('change', function(){ takvimFrom = this.value; render(); });
+  document.getElementById('drTo').addEventListener('change', function(){ takvimTo = this.value; render(); });
+  document.getElementById('drClear').addEventListener('click', function(){
+    takvimFrom = ''; takvimTo = '';
+    document.getElementById('drFrom').value = ''; document.getElementById('drTo').value = '';
+    render();
+  });
+
+  /* B §6.4 — çıktı al (gvExport) */
+  if(window.gvExport){
+    gvExport.init('#btnDashCikti', {
+      baslik: 'Demirbaş envanteri dashboard',
+      formatlar: ['pdf','excel','yazdir'],
+      kapsam: ['tumu','filtreli'],
+      filtreOzeti: function(){
+        var parcalar = [filtreEtiket() === 'Tümü' ? 'Tüm şantiyeler' : 'Şantiye: ' + filtreEtiket()];
+        if(takvimFrom || takvimTo) parcalar.push('Takvim: ' + (takvimFrom||'…') + ' – ' + (takvimTo||'…'));
+        return parcalar.join(' · ');
+      }
+    });
   }
 
   render();

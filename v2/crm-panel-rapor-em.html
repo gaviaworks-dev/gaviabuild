@@ -37,6 +37,12 @@
 
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
+
+/* ============ B §6.2/§6.3 eklentileri ============ */
+.rp-tb-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+/* [TR1] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -69,7 +75,7 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="EM raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-acc btn-sm" type="button" id="btnCiktiEm"><i class="fa-solid fa-file-export"></i> Çıktı Al</button>
       </div>
     </div>
 
@@ -94,7 +100,10 @@
       </div>
 
       <div class="gv-card">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list"></i> EM Kayıtları</div><span class="ph-sub" style="margin:0">29 Haz – 2 Tem</span></div>
+        <div class="gc-head rp-gc-head-wrap">
+          <div class="gc-title"><i class="fa-solid fa-list"></i> EM Kayıtları</div><span class="ph-sub" style="margin:0">29 Haz – 2 Tem</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnEmHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+        </div>
         <div class="filter-bar stack">
           <div class="filter-row">
             <span class="frow-lbl">Şantiye</span>
@@ -112,9 +121,16 @@
               <button class="chip" data-donem="haziran">Haziran <span class="ch-cnt">0</span></button>
               <button class="chip" data-donem="temmuz">Temmuz <span class="ch-cnt">1</span></button>
             </div>
+            <div data-gvdaterange id="emDateRange" style="margin-left:8px"></div>
           </div>
         </div>
-        <div class="gc-body flush">
+        <div class="gc-body flush" id="emTblWrap">
+          <div class="gv-empty rp-error" id="emHataBlok" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>EM verisi yüklenemedi</h4>
+            <p>Bağlantınızı kontrol edip tekrar deneyin.</p>
+            <button type="button" class="btn btn-acc btn-sm" id="btnEmHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+          </div>
           <!-- kaynak: crm-operasyon-puantaj.html PERSONEL[].gunler — em hücreleri, indeks 0-3 -->
           <table class="gtable" id="tblEm">
             <thead><tr><th>Personel</th><th>Rol</th><th>Şantiye</th><th>Tarih</th><th class="num">Hafta Toplamı</th></tr></thead>
@@ -145,6 +161,30 @@
           </div>
           <div class="rep-src"><i class="fa-solid fa-circle-info"></i> weeklyTotal kuralı: tam + fm = 1.0 · yarım + em = 0.5 · izin / rapor / yok = 0 (crm-panel-rapor-puantaj.html ile birebir).</div>
         </div>
+      </div>
+
+      <!-- ============ B §6.2 madde 6 — grafik alanı ============ -->
+      <div class="rp-charts-2" style="margin-top:20px">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-helmet-safety"></i> Şantiye Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartEmSantiye"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-calendar-days"></i> Ay Karşılaştırması</h3></div>
+          <div class="rp-chart-body" id="chartEmAy"></div>
+        </div>
+      </div>
+
+      <!-- ============ B §6.2 madde 8 — karşılaştırma alanı ============ -->
+      <div class="rp-compare" style="margin-top:20px">
+        <div class="rp-compare-item"><span class="rc-lbl">EM kaydı — Haziran → Temmuz</span><span class="rc-val">0 → 1</span><span class="rp-compare-delta down"><i class="fa-solid fa-arrow-trend-up"></i> Fark +1</span></div>
+        <div class="rp-compare-item"><span class="rc-lbl">Şantiye — Vadi / Liman / Merkez</span><span class="rc-val">1 / 0 / 0</span><span class="rp-compare-delta flat"><i class="fa-solid fa-map-pin"></i> tek şantiyede</span></div>
+      </div>
+
+      <!-- ============ B §6.2 madde 9 — yorum/değerlendirme alanı ============ -->
+      <div class="rp-note" style="margin-top:20px">
+        <i class="fa-solid fa-lightbulb"></i><strong>Değerlendirme:</strong>
+        Bu hafta 1 EM kaydı var, geçen aya göre +1 artış (Haziran 0 → Temmuz 1) — tek kayıt olduğu için henüz bir eğilim sayılmaz, ancak aynı kişinin (<b>Selim Doğan</b>) aynı hafta 1 gün devamsızlık kaydı da olması birlikte izlenmeli.
       </div>
     </section>
 
@@ -231,6 +271,66 @@
       applyEmCombined();
     });
     applyEmCombined();
+
+    /* ============ B §6.2 madde 3 — tarih aralığı (gvDateRange) gerçek Dönem chip'ini tetikler ============ */
+    if(window.gvDateRange){
+      var emDr = document.getElementById('emDateRange');
+      gvDateRange(emDr, {
+        emptyLabel: 'Tüm dönem',
+        onChange: function(val){
+          var key = 'tumu';
+          if(val){
+            if(val.key === 'bu_ay' || val.key === 'son7') key = 'temmuz';
+            else if(val.key === 'gecen_ay' || val.key === 'son15' || val.key === 'son30') key = 'haziran';
+          }
+          var btn = donemWrap.querySelector('[data-donem="' + key + '"]');
+          if(btn) btn.click();
+        }
+      });
+    }
+
+    /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+    var emHataBlok = document.getElementById('emHataBlok');
+    var btnEmHataDemo = document.getElementById('btnEmHataDemo');
+    var btnEmHataRetry = document.getElementById('btnEmHataRetry');
+    if(btnEmHataDemo) btnEmHataDemo.addEventListener('click', function(){
+      tblEm.hidden = true;
+      var empty = document.getElementById('emEmpty'); if(empty) empty.hidden = true;
+      emHataBlok.hidden = false;
+    });
+    if(btnEmHataRetry) btnEmHataRetry.addEventListener('click', function(){
+      emHataBlok.hidden = true;
+      tblEm.hidden = false;
+      applyEmCombined();
+    });
+  }
+
+  /* ============ B §6.2 madde 6 — grafik alanı ============ */
+  if(window.gvBar){
+    gvBar('#chartEmSantiye', [
+      {lbl:'Vadi', val:1}, {lbl:'Liman', val:0, tone:'muted'}, {lbl:'Merkez', val:0, tone:'muted'}
+    ], {yon:'yatay', baslik:'EM kaydı — şantiye dağılımı', labelWidth:70});
+    gvBar('#chartEmAy', [
+      {lbl:'Haziran', val:0, tone:'muted'}, {lbl:'Temmuz', val:1, tone:'warn'}
+    ], {yon:'yatay', baslik:'EM kaydı — ay karşılaştırması', labelWidth:70});
+  }
+
+  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============ */
+  if(window.gvExport){
+    gvExport.init('#btnCiktiEm', {
+      baslik: 'Eksik Mesai (EM) Raporu',
+      kapsam: ['tumu', 'filtreli'],
+      filtreOzeti: function(){
+        var santiyeWrap2 = document.querySelector('.chips[data-target="#tblEm"]');
+        var donemWrap2 = document.getElementById('emDonemChips');
+        var sOn = santiyeWrap2 ? santiyeWrap2.querySelector('.chip.is-on[data-filter]') : null;
+        var dOn = donemWrap2 ? donemWrap2.querySelector('.chip.is-on[data-donem]') : null;
+        var parts = [];
+        if(sOn && sOn.getAttribute('data-filter') !== 'hepsi') parts.push('Şantiye: ' + sOn.textContent.replace(/\s+/g,' ').trim());
+        if(dOn && dOn.getAttribute('data-donem') !== 'tumu') parts.push('Dönem: ' + dOn.textContent.replace(/\s+/g,' ').trim());
+        return parts.length ? parts.join(' · ') : 'Aktif filtre yok — tüm kayıtlar kapsamda.';
+      }
+    });
   }
 })();
 </script>

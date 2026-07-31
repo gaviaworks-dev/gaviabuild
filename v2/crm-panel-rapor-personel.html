@@ -49,6 +49,12 @@
 
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
+
+/* ============ B §6.2/§6.3 eklentileri — toolbar, hata durumu demo ============ */
+.rp-tb-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+/* [TR1] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -81,7 +87,26 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" data-export="Personel raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+        <button class="btn btn-acc btn-sm" type="button" id="btnCiktiPersonel"><i class="fa-solid fa-file-export"></i> Çıktı Al</button>
+      </div>
+    </div>
+
+    <!-- ============ B §6.2 madde 3-4 — tarih aralığı + şantiye/departman filtresi ============ -->
+    <div class="rp-toolbar">
+      <div class="rp-tb-group">
+        <span class="rp-tb-lbl">Dönem</span>
+        <div data-gvdaterange id="pzDateRange"></div>
+        <span class="rp-tb-lbl" id="pzDonemLbl" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink-2)">29 Haziran – 2 Temmuz 2026 (bu hafta)</span>
+      </div>
+      <div class="rp-tb-group" data-view="yonetim" id="pzSantiyeFilterGroup" hidden>
+        <span class="rp-tb-lbl">Şantiye / Departman</span>
+        <div class="chips" id="pzSanChips">
+          <button class="chip is-on" data-pzsan="hepsi">Tümü</button>
+          <button class="chip" data-pzsan="vadi">Vadi Konakları</button>
+          <button class="chip" data-pzsan="liman">Liman Lojistik</button>
+          <button class="chip" data-pzsan="merkez">Merkez Şantiye</button>
+          <button class="chip" data-pzsan="ofis">Merkez Ofis</button>
+        </div>
       </div>
     </div>
 
@@ -110,10 +135,36 @@
         </div>
       </div>
 
+      <!-- ============ B §6.2 madde 6 — grafik alanı (gvDonut/gvBar, spec-v2-core.md §7) ============ -->
+      <div class="rp-charts-2" style="margin-bottom:20px">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-sitemap"></i> Birim Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartPzBirim"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-map-location-dot"></i> Şantiye / Konum Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartPzSantiye"></div>
+        </div>
+      </div>
+
       <div class="gv-card">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-sitemap"></i> Kadro Dağılımı — Birim</div><span class="ph-sub" style="margin:0">crm-personel.html</span></div>
-        <div class="gc-body flush">
-          <table class="gtable" id="tblBirim">
+        <div class="gc-head rp-gc-head-wrap">
+          <div class="gc-title"><i class="fa-solid fa-sitemap"></i> Kadro Dağılımı — Birim</div>
+          <span class="ph-sub" style="margin:0">crm-personel.html</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnPzHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+        </div>
+        <div class="gc-body flush" id="pzBirimStateWrap">
+          <div data-gv-state="loading" class="gv-empty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <h4>Yükleniyor…</h4>
+          </div>
+          <div data-gv-state="error" class="gv-empty rp-error" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>Kadro verisi yüklenemedi</h4>
+            <p>Bağlantınızı kontrol edip tekrar deneyin.</p>
+            <button type="button" class="btn btn-acc btn-sm" id="btnPzHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+          </div>
+          <table class="gtable" id="tblBirim" data-gv-state="content">
             <thead><tr><th>Birim</th><th class="num">Kişi</th><th>Konum</th></tr></thead>
             <tbody>
               <tr><td><div class="bm-lbl"><span class="bm-ico yonetim"><i class="fa-solid fa-user-tie"></i></span> Yönetim</div></td><td class="num">3</td><td>Merkez Ofis</td></tr>
@@ -126,18 +177,27 @@
         </div>
       </div>
 
+      <!-- ============ B §6.2 madde 4 — şantiye/departman filtresi (gerçek DOM filtreleme) ============ -->
       <div class="gv-card" style="margin-top:20px">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Şantiye / Konum Dağılımı</div></div>
         <div class="gc-body">
-          <div class="att-list">
-            <div class="att-row"><span class="att-name">Vadi Konakları</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div><span class="gbar-val">7 kişi</span></div>
-            <div class="att-row"><span class="att-name">Merkez Ofis</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:85.7%"></div></div></div><span class="gbar-val">6 kişi</span></div>
-            <div class="att-row"><span class="att-name">Liman Lojistik Merkezi</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:71.4%"></div></div></div><span class="gbar-val">5 kişi</span></div>
-            <div class="att-row"><span class="att-name">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:57.1%"></div></div></div><span class="gbar-val">4 kişi</span></div>
+          <div class="att-list" id="pzSantiyeList">
+            <div class="att-row" data-pzsan="vadi"><span class="att-name">Vadi Konakları</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div><span class="gbar-val">7 kişi</span></div>
+            <div class="att-row" data-pzsan="ofis"><span class="att-name">Merkez Ofis</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:85.7%"></div></div></div><span class="gbar-val">6 kişi</span></div>
+            <div class="att-row" data-pzsan="liman"><span class="att-name">Liman Lojistik Merkezi</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:71.4%"></div></div></div><span class="gbar-val">5 kişi</span></div>
+            <div class="att-row" data-pzsan="merkez"><span class="att-name">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:57.1%"></div></div></div><span class="gbar-val">4 kişi</span></div>
           </div>
           <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Bar genişliği en yüksek kadro (Vadi Konakları, 7 kişi) referans alınarak orantılandı. Kaynak: crm-personel.html satır bazında sayıldı.</div>
         </div>
       </div>
+
+      <!-- ============ B §6.2 madde 8 — karşılaştırma alanı ============ -->
+      <div class="rp-compare" style="margin-top:20px">
+        <div class="rp-compare-item"><span class="rc-lbl">Katılım oranı — Haziran → Temmuz</span><span class="rc-val">%81 → %75</span><span class="rp-compare-delta down"><i class="fa-solid fa-arrow-trend-down"></i> −6 puan</span></div>
+        <div class="rp-compare-item"><span class="rc-lbl">İzin talebi (gün) — Haziran → Temmuz</span><span class="rc-val">10 gün → 8 gün</span><span class="rp-compare-delta down"><i class="fa-solid fa-arrow-trend-down"></i> −2 gün</span></div>
+        <div class="rp-compare-item"><span class="rc-lbl">İzin talebi (kayıt) — Haziran → Temmuz</span><span class="rc-val">3 kayıt → 2 kayıt</span><span class="rp-compare-delta flat"><i class="fa-solid fa-equals"></i> normal seyir</span></div>
+      </div>
+      <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> Katılım karşılaştırması crm-panel-rapor-puantaj.html "Ay Karşılaştırması" tablosundan; izin dağılımı crm-personel-izin.html kayıtlarının tarih aralığına göre (Haziran: İZN-027/028/029 · Temmuz: İZN-030/031) toplanmasından türetildi.</div>
 
       <div class="gv-card" style="margin-top:20px">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-umbrella-beach"></i> İzin Durumu</div><span class="ph-sub" style="margin:0">crm-personel-izin.html — 5 kayıt</span></div>
@@ -185,15 +245,26 @@
       </div>
 
       <div class="gv-card" style="margin-top:20px">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-arrow-trend-up"></i> Fazla Mesai (FM) / Eksik Mesai (EM) Dağılımı</div><span class="ph-sub" style="margin:0">29 Haz – 2 Tem, işlenen 4 gün</span></div>
-        <div class="gc-body">
-          <div class="hl-list">
-            <div class="hl-row"><i class="fa-solid fa-arrow-trend-up"></i><span><b>İbrahim Sönmez</b> (Formen, Vadi Konakları) — 1 gün FM.</span></div>
-            <div class="hl-row"><i class="fa-solid fa-arrow-trend-up"></i><span><b>Halil Güneş</b> (Operatör, Liman Lojistik Merkezi) — 1 gün FM.</span></div>
-            <div class="hl-row"><i class="fa-solid fa-arrow-trend-down"></i><span><b>Selim Doğan</b> (Demir Ustası, Vadi Konakları) — 1 gün EM.</span></div>
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-arrow-trend-up"></i> Fazla Mesai (FM) / Eksik Mesai (EM) Dağılımı <span data-help="taseron-puantaji"></span></div><span class="ph-sub" style="margin:0">29 Haz – 2 Tem, işlenen 4 gün</span></div>
+        <div class="gc-body" id="pzFmEmWrap">
+          <div class="hl-list" id="pzFmEmList">
+            <div class="hl-row" data-pzsan="vadi"><i class="fa-solid fa-arrow-trend-up"></i><span><b>İbrahim Sönmez</b> (Formen, Vadi Konakları) — 1 gün FM.</span></div>
+            <div class="hl-row" data-pzsan="liman"><i class="fa-solid fa-arrow-trend-up"></i><span><b>Halil Güneş</b> (Operatör, Liman Lojistik Merkezi) — 1 gün FM.</span></div>
+            <div class="hl-row" data-pzsan="vadi"><i class="fa-solid fa-arrow-trend-down"></i><span><b>Selim Doğan</b> (Demir Ustası, Vadi Konakları) — 1 gün EM.</span></div>
+          </div>
+          <div class="gv-empty" id="pzFmEmEmpty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            <h4>Bu şantiye/departmanda FM-EM kaydı yok</h4>
+            <p>Seçili dönemde (29 Haz – 2 Tem) farklı bir şantiye seçin.</p>
           </div>
           <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Kaynak: crm-operasyon-puantaj.html PERSONEL[].gunler, işlenen 4 gün (indeks 0-3) — puantaj raporundaki matris ile aynı derleme.</div>
         </div>
+      </div>
+
+      <!-- ============ B §6.2 madde 9 — yorum/değerlendirme alanı ============ -->
+      <div class="rp-note">
+        <i class="fa-solid fa-lightbulb"></i><strong>Değerlendirme:</strong>
+        22 kişilik kadronun eksik evrak oranı (4/22 · %18) takip gerektiriyor — özellikle Halil Güneş'in İSG sertifikası 18 gün içinde dolacağından bu sayı büyüyebilir. İzin ve avans taleplerinde onay bekleyen tutar (₺7.500) düşük risk taşıyor; asıl dikkat noktası katılım oranının Haziran'dan Temmuz'a 6 puan gerilemesi — <b>Aylin Koç</b>'un (Liman şefi) hafta boyunca izinli olması bu düşüşün büyük kısmını açıklıyor.
       </div>
 
       <div class="gv-card" style="margin-top:20px">
@@ -284,6 +355,89 @@
   document.querySelectorAll('[data-view]').forEach(function(el){
     el.hidden = el.getAttribute('data-view') !== view;
   });
+  var pzSanGroup = document.getElementById('pzSantiyeFilterGroup');
+  if(pzSanGroup) pzSanGroup.hidden = view !== 'yonetim';
+
+  /* ============ B §6.2 madde 6 — grafik alanı (yalnız yönetim görünümünde mount noktaları var) ============ */
+  if(view === 'yonetim' && window.gvDonut) gvDonut('#chartPzBirim', [
+    {lbl:'Yönetim', val:3, tone:'acc'},
+    {lbl:'Şantiye Şefi', val:3, tone:'info'},
+    {lbl:'Ofis', val:3, tone:'warn'},
+    {lbl:'Saha Personeli', val:13, tone:'ok'}
+  ], {baslik:'Birim dağılımı', merkezAlt:'personel'});
+  if(view === 'yonetim' && window.gvBar) gvBar('#chartPzSantiye', [
+    {lbl:'Vadi Konakları', val:7},
+    {lbl:'Merkez Ofis', val:6, tone:'warn'},
+    {lbl:'Liman Lojistik', val:5},
+    {lbl:'Merkez Şantiye', val:4}
+  ], {yon:'yatay', baslik:'Şantiye/konum dağılımı', labelWidth:110});
+
+  /* ============ B §6.2 madde 3 — tarih aralığı (gvDateRange, [MOCK-SİM] etiket) ============ */
+  if(window.gvDateRange){
+    var pzDr = document.getElementById('pzDateRange');
+    var pzDonemLbl = document.getElementById('pzDonemLbl');
+    gvDateRange(pzDr, {
+      emptyLabel: '29 Haziran – 2 Temmuz 2026 (bu hafta)',
+      onChange: function(val){
+        pzDonemLbl.textContent = val ? val.label + ' seçildi — gösterilen sayılar kanonik hafta (29 Haz–2 Tem) içindir.' : '29 Haziran – 2 Temmuz 2026 (bu hafta)';
+      }
+    });
+  }
+
+  /* ============ B §6.2 madde 4 — şantiye/departman filtresi — gerçek DOM güncellemesi ============ */
+  var pzSanChips = document.getElementById('pzSanChips');
+  var pzSantiyeList = document.getElementById('pzSantiyeList');
+  var pzFmEmList = document.getElementById('pzFmEmList');
+  var pzFmEmEmpty = document.getElementById('pzFmEmEmpty');
+  function applyPzSanFilter(){
+    var on = pzSanChips.querySelector('.chip.is-on[data-pzsan]');
+    var s = on ? on.getAttribute('data-pzsan') : 'hepsi';
+    if(pzSantiyeList) pzSantiyeList.querySelectorAll('.att-row').forEach(function(row){
+      row.hidden = (s !== 'hepsi') && (row.getAttribute('data-pzsan') !== s);
+    });
+    if(pzFmEmList){
+      var shown = 0;
+      pzFmEmList.querySelectorAll('.hl-row').forEach(function(row){
+        var ok = (s === 'hepsi') || (row.getAttribute('data-pzsan') === s);
+        row.hidden = !ok;
+        if(ok) shown++;
+      });
+      pzFmEmList.hidden = shown === 0;
+      if(pzFmEmEmpty) pzFmEmEmpty.hidden = shown !== 0;
+    }
+  }
+  if(pzSanChips){
+    pzSanChips.addEventListener('click', function(e){
+      var ch = e.target.closest('.chip[data-pzsan]'); if(!ch) return;
+      pzSanChips.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+      ch.classList.add('is-on');
+      applyPzSanFilter();
+    });
+    applyPzSanFilter();
+  }
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+  var btnPzHataDemo = document.getElementById('btnPzHataDemo');
+  var btnPzHataRetry = document.getElementById('btnPzHataRetry');
+  if(btnPzHataDemo) btnPzHataDemo.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#pzBirimStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+  });
+  if(btnPzHataRetry) btnPzHataRetry.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#pzBirimStateWrap', {yukleniyor:false, hata:false, sonucSayisi:1});
+  });
+
+  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============ */
+  if(window.gvExport){
+    gvExport.init('#btnCiktiPersonel', {
+      baslik: 'Personel Raporu',
+      kapsam: ['tumu', 'filtreli'],
+      filtreOzeti: function(){
+        var on = pzSanChips ? pzSanChips.querySelector('.chip.is-on[data-pzsan]') : null;
+        if(!on || on.getAttribute('data-pzsan') === 'hepsi') return 'Aktif filtre yok — tüm personel kapsamda.';
+        return 'Şantiye/Departman: ' + on.textContent.trim();
+      }
+    });
+  }
 })();
 </script>
 </body>
