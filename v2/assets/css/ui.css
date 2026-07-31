@@ -4,6 +4,10 @@
    ilerleme/limit çubuğu · toggle · form · modal · toast · dropdown ·
    boş durum · aktivite listesi · onay zinciri (gvChain) ·
    sayfalandırma (gv-pager) · kayıt-bulunamadı kartı (gv-notfound) — D17.
+   V2 REVİZYON — T-CORE: gvExport/gvResult/gvHelp modal varyantları · gv-count ·
+   gv-bulk-bar + row-chk · .rp-* rapor iskeleti + SVG grafik kabı ·
+   .pr-* çıktı başlık bloğu (@media print) · .gv-desktop-only/.gv-mobile-only ·
+   .gv-ellip/.gv-ellip-2. Spec: tasks/spec-v2-core.md.
    Semantik renkler accent'ten BAĞIMSIZ.
    Ortak çekirdek dosya — değişiklikler tek elden yapılır.
    ===================================================================== */
@@ -625,3 +629,206 @@ html.gv-scroll-locked{overflow:hidden}
   .gtable-cards td:not([data-lbl]),.gtable-cards td[data-lbl=""]{justify-content:flex-end}
   .gc-body.flush.gv-cards-pad{padding:14px 16px}
 }
+
+/* =====================================================================
+   V2 REVİZYON — T-CORE (§6/§8/§9 primitifleri)
+   gvExport/gvResult/gvHelp modal varyantları · gv-count · gv-bulk-bar +
+   row-chk · .rp-* rapor iskeleti + grafik kabı · .pr-* çıktı başlık bloğu ·
+   .gv-desktop-only/.gv-mobile-only · .gv-ellip/.gv-ellip-2.
+   API + kullanım örnekleri: tasks/spec-v2-core.md.
+   ===================================================================== */
+
+/* ---- .gv-modal ortak genişletme — gvResult ok/info tonları (danger/warn
+   zaten yukarıda tanımlıydı; gvConfirm/gvChainAction'a DOKUNULMADI, yalnız
+   yeni modifier sınıflar EKLENDİ) ---- */
+.gv-modal.ok .gv-modal-ico{background:var(--ok-tint);color:var(--ok)}
+.gv-modal.info .gv-modal-ico{background:var(--info-tint);color:var(--info)}
+
+/* ============ gvResult — işlem sonuç modalı (B §9.4) ============ */
+.gv-result-modal{text-align:center}
+.gv-result-modal .gv-modal-ico{margin:0 auto 15px}
+.gv-result-modal h3{margin-bottom:8px}
+.gv-result-modal p{margin-bottom:22px}
+.gv-result-modal .gv-modal-acts{justify-content:center;flex-wrap:wrap}
+
+/* ============ gvHelp — yardım tetikleyicisi + açıklama modalı (B §9.2) ============ */
+.gv-help-ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;margin-left:7px;border-radius:var(--r-circle);flex:none;
+  border:1px solid var(--line-2);background:var(--bg);color:var(--muted);
+  font-size:10px;cursor:pointer;vertical-align:middle;transition:.15s var(--ease);
+}
+.gv-help-ico:hover{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+.gv-help-modal p{white-space:pre-line}
+
+/* ============ gvExport — çıktı akışı modalı (B §6.4) ============ */
+.gv-export-modal{width:min(440px,100%)}
+.gvx-section{margin-bottom:16px}
+.gvx-lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.gvx-chips{display:flex;flex-wrap:wrap;gap:8px}
+.gvx-chips .chip[disabled]{opacity:.5;cursor:not-allowed;pointer-events:none}
+.gvx-summary{
+  display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--ink-2);line-height:1.5;
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:18px;
+}
+.gvx-summary i{color:var(--muted);font-size:12px;margin-top:2px;flex:none}
+
+/* ============ gvCount — kayıt sayısı özeti (A §3'ün 6 ekseni) ============ */
+.gv-count{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.gv-count-base{font-weight:700;color:var(--ink-2)}
+.gv-count-sub{color:var(--muted);display:inline-flex;align-items:center;gap:8px}
+.gv-count-sub::before{content:"·";color:var(--line-2);font-weight:700}
+.gv-count-secili{
+  display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--acc-ink);
+  background:rgba(var(--acc-rgb),.09);padding:3px 10px;border-radius:var(--r-pill);font-size:11.5px;
+}
+.gv-count-secili i{font-size:10px}
+
+/* ============ gvBulk — seçili kayıt işlemleri barı (B §2.1) ============
+   `.row-chk`/`.chk-box` — kredikarti/pluxee/kasa sayfalarının sayfa-lokal
+   seçim kutusu deseninin ORTAK, tek gerçek uygulaması (bkz tasks/kararlar.md);
+   sayfa-lokal kopyaları AYNI class adını kullandığı için değerleri eşit,
+   çakışma YOK — bu dosyadaki tanım artık kaynak, sayfa-lokal tekrar ihtiyacı
+   ORTADAN KALKAR (yeni sayfalar kendi CSS'ini yazmaz). */
+.row-chk{position:relative;display:inline-flex;width:16px;height:16px;flex:none;cursor:pointer;margin-right:8px;vertical-align:middle}
+.row-chk input{position:absolute;opacity:0;pointer-events:none;width:100%;height:100%;margin:0}
+.row-chk .chk-box{width:16px;height:16px;border-radius:4px;border:2px solid var(--line-2);display:flex;align-items:center;justify-content:center;color:transparent;font-size:9px;transition:.15s var(--ease);background:var(--paper);flex:none}
+.row-chk input:checked + .chk-box{background:var(--acc-ink);border-color:var(--acc-ink);color:#fff}
+.row-chk input:indeterminate + .chk-box{background:var(--acc-ink);border-color:var(--acc-ink);color:#fff}
+.row-chk input:focus-visible + .chk-box{outline:2px solid var(--acc);outline-offset:2px}
+
+.gv-bulk-th,.gv-bulk-td{width:38px}
+tr.is-checked td{background:rgba(var(--acc-rgb),.05)}
+.gv-bulk-bar{display:flex;align-items:center;gap:14px;padding:12px 22px;background:rgba(var(--acc-rgb),.06);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.gv-bulk-bar[hidden]{display:none}
+.gv-bulk-bar .gvb-count{font-size:13px;font-weight:700;color:var(--ink)}
+.gv-bulk-bar .gvb-acts{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+@media(max-width:640px){
+  .gv-bulk-bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;padding:12px 16px;
+    background:var(--paper);border-top:1px solid var(--line);border-bottom:none;
+    box-shadow:0 -6px 20px rgba(17,21,40,.14);
+  }
+  .gv-bulk-bar .gvb-count{width:100%}
+  .gv-bulk-bar .gvb-acts{width:100%;margin-left:0}
+  .gv-bulk-bar .gvb-acts .btn{flex:1}
+  /* gtable-cards modunda enjekte edilen seçim kutusu kartın sağ-üst köşesine
+     demirlenir — data-lbl'siz td varsayılanı (justify-content:flex-end tek
+     başına) her kartın ilk "satırı" gibi görünüp normal alan/değer akışını
+     bozardı; mutlak konumla akıştan tamamen çıkarılır (A §4/§8). */
+  .gtable-cards tr{position:relative}
+  .gtable-cards .gv-bulk-td{position:absolute;top:10px;right:10px;padding:0;border-bottom:none;width:auto;background:transparent}
+}
+
+/* ============ .rp-* — RAPOR SAYFASI İSKELETİ (B §6.2) ============
+   .rp-head/.rp-toolbar/.rp-kpis/.rp-chart/.rp-table-wrap/.rp-compare/.rp-note/
+   .rp-empty/.rp-error. Diğer rapor bölümleri mevcut primitiflerden gelir
+   (KPI kartları .kpi-grid, detay tablo .gtable, filtre .filter-bar, sayfalama
+   gv-pager) — burada YENİDEN YAZILMADI. */
+.rp-head{margin-bottom:22px}
+.rp-head h1{font-size:22px}
+.rp-head p{margin-top:6px;font-size:13.5px;color:var(--muted);max-width:640px;line-height:1.6}
+
+.rp-toolbar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:14px 18px;background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--r-lg);box-shadow:var(--sh-sm);margin-bottom:20px;
+}
+.rp-toolbar .rp-tb-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rp-toolbar .rp-tb-spacer{flex:1;min-width:12px}
+.rp-toolbar .rp-tb-acts{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:640px){
+  .rp-toolbar{flex-direction:column;align-items:stretch}
+  .rp-toolbar .rp-tb-group{width:100%}
+  .rp-toolbar .rp-tb-acts{width:100%}
+  .rp-toolbar .rp-tb-acts .btn{flex:1}
+}
+
+.rp-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
+@media(max-width:980px){.rp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.rp-kpis{grid-template-columns:minmax(0,1fr)}}
+
+.rp-chart{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);padding:20px 22px;margin-bottom:20px}
+.rp-chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.rp-chart-head h3{font-size:14.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:9px}
+.rp-chart-head h3 i{color:var(--acc-ink);font-size:13px}
+.rp-chart-body{width:100%}
+.rp-chart-body svg{display:block;width:100%;height:auto}
+.rp-chart-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:12px;color:var(--ink-2)}
+.rp-chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.rp-chart-legend i{width:9px;height:9px;border-radius:3px;flex:none}
+.rp-charts-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media(max-width:980px){.rp-charts-2{grid-template-columns:minmax(0,1fr)}}
+
+.rp-table-wrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:20px}
+
+.rp-compare{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:16px 20px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:20px}
+.rp-compare-item{display:flex;flex-direction:column;gap:4px}
+.rp-compare-item .rc-lbl{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.rp-compare-item .rc-val{font-size:18px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.rp-compare-delta{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700}
+.rp-compare-delta i{font-size:10px}
+.rp-compare-delta.up{color:var(--ok)}
+.rp-compare-delta.down{color:var(--danger)}
+.rp-compare-delta.flat{color:var(--muted)}
+
+.rp-note{padding:16px 20px;background:var(--info-tint);border:1px solid color-mix(in srgb,var(--info) 22%,var(--paper));border-radius:var(--r-lg);font-size:13px;color:var(--ink-2);line-height:1.65;margin-bottom:20px}
+.rp-note strong{color:var(--ink)}
+.rp-note i{color:var(--info);margin-right:8px}
+
+.rp-empty,.rp-error{padding:54px 24px;text-align:center}
+.rp-error .ge-ico{background:var(--danger-tint);color:var(--danger)}
+
+/* ============ .pr-* — ÇIKTI/YAZDIRMA BAŞLIK BLOĞU (B §6.4) ============
+   Yazdırma sayfasının önizleme+baskı düzeni. Shell'i gizleyen @media print
+   deseni `crm-operasyon-demirbas-etiket-yazdir.html`'deki gerçek uygulamayla
+   TUTARLIDIR (kaynak-transferi, aynı seçici ailesi genişletildi). Sayfa
+   numarası @page margin-box + CSS counter ile — Chrome/Blink şu an @page
+   margin-box İÇERİĞİNİ RENDER ETMİYOR (motor kısıtı, kuralımız spec-uyumlu ve
+   destekleyen motorlarda çalışır); bkz tasks/spec-v2-core.md notu. */
+.pr-doc{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);padding:28px 30px;max-width:900px;margin:0 auto}
+.pr-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:18px;border-bottom:2px solid var(--ink);margin-bottom:20px}
+.pr-brand{display:flex;align-items:center;gap:12px}
+.pr-logo{width:38px;height:38px;border-radius:10px;background:var(--gv-deep);color:var(--gv-mint);display:grid;place-items:center;font-size:16px;font-weight:800;flex:none}
+.pr-brand-txt b{display:block;font-size:14.5px;font-weight:800;color:var(--ink)}
+.pr-brand-txt span{display:block;font-size:11px;color:var(--muted)}
+.pr-meta{text-align:right}
+.pr-meta h2{font-size:16.5px;margin-bottom:4px}
+.pr-meta-line{font-size:11.5px;color:var(--muted);line-height:1.6}
+.pr-meta-line b{color:var(--ink-2);font-weight:700}
+.pr-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.pr-fchip{font-size:11px;font-weight:700;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);padding:4px 10px;border-radius:var(--r-pill)}
+.pr-body{margin-bottom:24px}
+.pr-sign{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:32px;padding-top:6px}
+.pr-sign-box{text-align:center}
+.pr-sign-line{height:52px;border-bottom:1px solid var(--ink-2);margin-bottom:8px}
+.pr-sign-box b{display:block;font-size:12px;color:var(--ink)}
+.pr-sign-box span{display:block;font-size:10.5px;color:var(--muted)}
+.pr-notes{margin-top:22px;font-size:11px;color:var(--muted);line-height:1.65;border-top:1px dashed var(--line);padding-top:12px}
+.pr-foot{display:flex;justify-content:space-between;gap:12px;margin-top:20px;font-size:10.5px;color:var(--muted)}
+@media(max-width:640px){
+  .pr-doc{padding:20px 18px}
+  .pr-head{flex-direction:column;gap:14px}
+  .pr-meta{text-align:left}
+  .pr-sign{grid-template-columns:minmax(0,1fr)}
+}
+@media print{
+  .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.gv-crumb,.gv-crumbs,.gv-page-head,
+  .rp-toolbar,.filter-bar,.gv-pager,.gc-head,.gc-foot,.ph-actions,.gv-bulk-bar{display:none !important}
+  .gv-app{display:block !important}
+  .gv-main{margin:0 !important;padding:0 !important}
+  .pr-doc{border:none !important;box-shadow:none !important;border-radius:0 !important;max-width:none;padding:0}
+  @page{margin:14mm 12mm 18mm}
+  @page{@bottom-center{content:"Sayfa " counter(page) " / " counter(pages);font-family:var(--font),sans-serif;font-size:9px;color:#666}}
+}
+
+/* ============ A §4/§8 — .gv-desktop-only/.gv-mobile-only (tek breakpoint, 640px) ============
+   Görünürlük CSS'te değişir; `aria-hidden` senkronu ui.js `gvViewSync()`'in işi
+   (ekran okuyucuya da kapatma garantisi — salt CSS `display:none` yeterli
+   DEĞİLDİR, bazı AT'ler gizli-ama-DOM'da-var öğeleri yine de duyurabilir). */
+@media(max-width:640px){ .gv-desktop-only{display:none !important} }
+@media(min-width:641px){ .gv-mobile-only{display:none !important} }
+
+/* ============ .gv-ellip/.gv-ellip-2 — uzun metin taşırma önleyici (A §8) ============ */
+.gv-ellip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.gv-ellip-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}

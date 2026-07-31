@@ -9,6 +9,12 @@
    gv-pager sayfalandırma (data-paginate, D17; data-paginate-key namespace, D18) ·
    gv-empty "Filtreleri temizle" (D17) · gvApplyFilters + tbl._gvApply bileşik-motor
    delegasyonu (D18 — çifte-listener bulgusunun kalıcı çözümü).
+   V2 REVİZYON — T-CORE: gvExport (çıktı akışı modalı) · gvResult (9 durumlu işlem
+   sonuç modalı) · gvHelp (yardım/açıklama modalı) · gvEmpty (yönlendiren boş durum +
+   yükleniyor/hata/boş/kayıt durum makinesi) · gvCount (kayıt sayısı özeti, 6 eksen) ·
+   gvBulk (seçili kayıt işlemleri barı) · gvBar/gvDonut/gvSpark (bağımlılıksız SVG
+   rapor grafikleri) · gvViewSync (gv-desktop-only/gv-mobile-only aria-hidden senkronu).
+   Spec: tasks/spec-v2-core.md.
    Ortak çekirdek dosya — değişiklikler tek elden yapılır.
    ===================================================================== */
 (function(){
@@ -1626,4 +1632,626 @@
   function wireChipBars(){ window.gvChipBar.init(); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireChipBars);
   else wireChipBars();
+
+  /* =====================================================================
+     V2 REVİZYON — T-CORE (§6/§8/§9 primitifleri)
+     gvExport · gvResult · gvHelp · gvEmpty · gvCount · gvBulk ·
+     gvBar/gvDonut/gvSpark · gvViewSync/gvEllipSync.
+     API dokümanı + kullanım örnekleri: tasks/spec-v2-core.md — sonraki dalgalar
+     BU dosyayı okuyup tüketir.
+     ===================================================================== */
+
+  /* ---- ortak küçük yardımcılar ---- */
+  function gvEscHtml(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function gvFmtNum(n){ var v = Number(n); return isNaN(v) ? String(n) : v.toLocaleString('tr-TR'); }
+
+  /* ============================================================================
+     gvResult — 9 kanonik durumlu İŞLEM SONUÇ modalı (B §9.4). Kullanıcıyı bir
+     sonraki adıma yönlendirmek için `aksiyonlar` alır; verilmezse tek "Tamam"
+     butonu ile kapanır. gvConfirm ile AYNI `.gv-modal-ov`/`.gv-modal` ailesini
+     kullanır — yeni bir modal sistemi İCAT EDİLMEDİ. ============================ */
+  var GV_RESULT_META = {
+    'basarili':         {ico:'fa-circle-check',       cls:'ok',     baslik:'İşlem başarılı',    mesaj:'İşlem başarıyla tamamlandı.'},
+    'onaya-gonderildi': {ico:'fa-paper-plane',         cls:'info',   baslik:'Onaya gönderildi',  mesaj:'Kayıt onay sürecine gönderildi; ilgili onaycıya bildirim iletildi.'},
+    'revize-istendi':   {ico:'fa-rotate-left',         cls:'warn',   baslik:'Revize istendi',    mesaj:'Kayıt, açıklamayla birlikte talep sahibine revize için geri gönderildi.'},
+    'reddedildi':       {ico:'fa-circle-xmark',        cls:'danger', baslik:'Reddedildi',        mesaj:'Kayıt reddedildi; gerekçe ilgili kişiye iletildi.'},
+    'kaydedildi':       {ico:'fa-floppy-disk',         cls:'ok',     baslik:'Kaydedildi',        mesaj:'Değişiklikleriniz kaydedildi.'},
+    'cikti-hazir':      {ico:'fa-file-circle-check',   cls:'info',   baslik:'Çıktı hazırlandı',  mesaj:'Çıktınız hazırlandı.'},
+    'dosya-yuklendi':   {ico:'fa-cloud-arrow-up',      cls:'ok',     baslik:'Dosya yüklendi',    mesaj:'Dosyanız başarıyla yüklendi.'},
+    'yetkisiz':         {ico:'fa-lock',                cls:'danger', baslik:'Yetkiniz yok',      mesaj:'Bu işlem için yetkiniz bulunmuyor — erişim için yöneticinizle iletişime geçin.'},
+    'eksik-bilgi':      {ico:'fa-triangle-exclamation', cls:'warn',   baslik:'Eksik bilgi',       mesaj:'Devam etmeden önce zorunlu alanları tamamlayın.'}
+  };
+  window.gvResult = function(durum, opts){
+    opts = opts || {};
+    var K = GV_RESULT_META[durum] || GV_RESULT_META.basarili;
+    if(!GV_RESULT_META[durum]) console.warn('gvResult: tanımsız durum "' + durum + '" — basarili varsayıldı', durum);
+    if(document.querySelector('.gv-modal-ov[data-gv-result]')) return null;
+    var ov = document.createElement('div'); ov.className = 'gv-modal-ov'; ov.setAttribute('data-gv-result', '');
+    var m = document.createElement('div'); m.className = 'gv-modal gv-result-modal ' + K.cls;
+    m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    var aksiyonlar = (opts.aksiyonlar && opts.aksiyonlar.length) ? opts.aksiyonlar : [{etiket:'Tamam', birincil:true}];
+    var actsHtml = aksiyonlar.map(function(a, i){
+      var cls = a.birincil ? 'btn-acc' : 'btn-ghost';
+      var tag = a.href ? 'a' : 'button';
+      var hrefAttr = a.href ? (' href="' + gvEscHtml(a.href) + '"') : '';
+      var typeAttr = a.href ? '' : ' type="button"';
+      return '<' + tag + typeAttr + hrefAttr + ' class="btn btn-sm ' + cls + '" data-gvr-act="' + i + '">' + gvEscHtml(a.etiket) + '</' + tag + '>';
+    }).join('');
+    m.innerHTML = '<div class="gv-modal-ico"><i class="fa-solid ' + K.ico + '"></i></div>'
+      + '<h3></h3><p></p>'
+      + '<div class="gv-modal-acts">' + actsHtml + '</div>';
+    m.querySelector('h3').textContent = opts.baslik || K.baslik;
+    m.querySelector('p').textContent = opts.mesaj || K.mesaj;
+    ov.appendChild(m); document.body.appendChild(ov);
+    gvScrollLock(true);
+    requestAnimationFrame(function(){ ov.classList.add('open'); });
+    function close(){
+      ov.classList.remove('open'); gvScrollLock(false);
+      setTimeout(function(){ ov.remove(); }, 220);
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e){ if(e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+    aksiyonlar.forEach(function(a, i){
+      var btn = m.querySelector('[data-gvr-act="' + i + '"]');
+      if(!btn) return;
+      btn.addEventListener('click', function(){ if(!a.href) { /* navigasyon yok */ } close(); if(a.onClick) a.onClick(); });
+    });
+    var firstBtn = m.querySelector('.gv-modal-acts .btn'); if(firstBtn) firstBtn.focus();
+    return { close: close };
+  };
+
+  /* ============================================================================
+     gvHelp — [data-help="anahtar"] öğelerine küçük soru-işareti tetikleyicisi
+     bağlar, tıklanınca `metinler` sözlüğünden açıklama modalı açar (B §9.2).
+     Sözlük dışarıdan genişletilebilir: sayfa scripti
+     `gvHelp.metinler['yeni-anahtar'] = {baslik, mesaj}` ekleyip `gvHelp.init()`
+     tekrar çağırabilir (idempotent — zaten bağlı öğeler atlanır). ============ */
+  window.gvHelp = {
+    metinler: {
+      'hakedis-nedir': {
+        baslik: 'Hakediş Nedir?',
+        mesaj: 'Hakediş, taşeron veya ana yüklenicinin belirli bir dönemde tamamladığı iş miktarına karşılık talep ettiği ödeme tutarının hesaplandığı belgedir. Saha ilerlemesi (metraj) ile sözleşme birim fiyatları çarpılarak brüt tutar bulunur; kesintiler (avans mahsubu, teminat, ceza vb.) düşülerek net ödenecek tutara ulaşılır. Onay zincirinden geçtikten sonra kasa/banka hareketine dönüşür.'
+      },
+      'taseron-puantaji': {
+        baslik: 'Taşeron Puantajı',
+        mesaj: 'Taşeron puantajı, bir taşeron firmaya bağlı çalışan işçilerin şantiyedeki günlük devam durumunun (tam gün / yarım gün / gelmedi / izinli vb.) kaydıdır. Bu kayıtlar taşeron hakediş hesaplamasında işçilik gün sayısını doğrulamak ve saha yoğunluğunu takip etmek için kullanılır; öz personel puantajından ayrı tutulur.'
+      },
+      'banka-hareketi-raporlar': {
+        baslik: 'Banka Hareketleri Raporlara Nasıl Yansır?',
+        mesaj: 'Banka hesabına giren/çıkan her hareket ilgili şantiye ve gider kalemiyle eşleştirilir. Onaylanan/mutabık banka hareketleri otomatik olarak kasa özeti, maliyet raporu ve mizan gibi finansal raporların girdisi olur — mutabakatı yapılmamış hareketler bu raporlarda "beklemede" gösterilir ve toplamlara dahil edilmez.'
+      },
+      'sure-uzatim': {
+        baslik: 'Süre Uzatımı Nedir?',
+        mesaj: 'Süre uzatımı, hava koşulları, iş değişikliği veya mücbir sebep gibi yüklenicinin kontrolü dışındaki gerekçelerle proje teslim tarihinin sözleşmeye uygun biçimde ertelenmesi talebidir. Gerekçe ve ek süre miktarıyla birlikte onaya sunulur; onaylanırsa şantiye teslim tarihi ve buna bağlı hakediş/gecikme cezası hesapları güncellenir.'
+      },
+      'mizan-nedir': {
+        baslik: 'Mizan Nedir?',
+        mesaj: 'Mizan, belirli bir dönemde tüm hesap kalemlerinin (kasa, banka, cari, gider) borç ve alacak toplamlarını tek tabloda özetleyen finansal rapordur. Borç ve alacak toplamlarının eşitliği kayıtların dengede olduğunu gösterir; şantiye veya firma bazında maliyet/gelir dengesini hızlıca görmek için kullanılır.'
+      }
+    },
+    init: function(sel){
+      var els = document.querySelectorAll(sel || '[data-help]');
+      Array.prototype.forEach.call(els, function(el){
+        if(el._gvHelpWired) return;
+        el._gvHelpWired = true;
+        var trigger = el;
+        if(!el.classList.contains('gv-help-ico')){
+          var btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'gv-help-ico'; btn.setAttribute('aria-label', 'Yardım — açıklama göster');
+          btn.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+          el.appendChild(btn);
+          trigger = btn;
+        }
+        trigger.addEventListener('click', function(e){
+          e.preventDefault(); e.stopPropagation();
+          window.gvHelp.show(el.getAttribute('data-help'));
+        });
+      });
+    },
+    show: function(key){
+      var d = this.metinler[key];
+      if(!d){ console.warn('gvHelp: tanımsız anahtar "' + key + '"', key); d = {baslik:'Yardım', mesaj:'Bu konu için henüz açıklama eklenmedi.'}; }
+      if(document.querySelector('.gv-modal-ov[data-gv-help]')) return;
+      var ov = document.createElement('div'); ov.className = 'gv-modal-ov'; ov.setAttribute('data-gv-help', '');
+      var m = document.createElement('div'); m.className = 'gv-modal gv-help-modal info';
+      m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+      m.innerHTML = '<div class="gv-modal-ico"><i class="fa-solid fa-circle-question"></i></div><h3></h3><p></p>'
+        + '<div class="gv-modal-acts"><button type="button" class="btn btn-acc btn-sm gv-m-ok">Anladım</button></div>';
+      m.querySelector('h3').textContent = d.baslik || 'Yardım';
+      m.querySelector('p').textContent = d.mesaj || '';
+      ov.appendChild(m); document.body.appendChild(ov);
+      gvScrollLock(true);
+      requestAnimationFrame(function(){ ov.classList.add('open'); });
+      function close(){ ov.classList.remove('open'); gvScrollLock(false); setTimeout(function(){ ov.remove(); }, 220); document.removeEventListener('keydown', onKey); }
+      function onKey(e){ if(e.key === 'Escape') close(); }
+      document.addEventListener('keydown', onKey);
+      ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+      m.querySelector('.gv-m-ok').addEventListener('click', close);
+      m.querySelector('.gv-m-ok').focus();
+    }
+  };
+  function wireHelp(){ gvHelp.init(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireHelp);
+  else wireHelp();
+
+  /* ============================================================================
+     gvExport — 34 statik "Dışa Aktar" tetikleyicisinin ORTAK çözümü (B §6.4).
+     ÖNEMLİ AYRIM: mevcut `[data-export]` (yukarıda, satır ~145) sayfa-lokal
+     GV_EXPORTERS varsa GERÇEK .xlsx/.csv indiren, yoksa demo toast basan
+     KÜÇÜK format-menüsüdür — 34 buton HÂLİHAZIRDA bunu kullanıyor ve ÇALIŞIYOR;
+     `tasks/kararlar.md` K-200'de gerekçelendirildiği gibi bu davranışa
+     DOKUNULMADI (regresyon riski). `gvExport`, B §6.4'ün istediği DAHA ZENGİN
+     akışı (format + kapsam + filtre özeti içeren modal) ayrı bir `data-gv-export`
+     özniteliğiyle sunan YENİ/opsiyonel bir primitiftir — sayfa sahibi ajanlar
+     ileride bir butonu `data-export`'tan `data-gv-export`'a TAŞIMAYI seçebilir
+     (bu taşıma T-CORE'un işi değil, sayfa dosyasına dokunmaz). ============ */
+  var GVX_FMT_META = {
+    pdf:    {ico:'fa-file-pdf',   lbl:'PDF'},
+    excel:  {ico:'fa-file-excel', lbl:'Excel (.xlsx)'},
+    yazdir: {ico:'fa-print',      lbl:'Yazdır'}
+  };
+  var GVX_SCOPE_META = {
+    tumu:     {ico:'fa-layer-group',   lbl:'Tümü'},
+    filtreli: {ico:'fa-filter',        lbl:'Filtrelenmiş liste'},
+    secili:   {ico:'fa-square-check',  lbl:'Seçili kayıtlar'}
+  };
+  function gvxFormatChip(f){
+    var v = GVX_FMT_META[f] || {ico:'fa-file', lbl:f};
+    return '<button type="button" class="chip" data-fmt="' + f + '"><i class="fa-solid ' + v.ico + '"></i> ' + v.lbl + '</button>';
+  }
+  function gvxFormatLabel(f){ return (GVX_FMT_META[f] || {lbl:f}).lbl; }
+  function gvxScopeChip(k, secimSayisi){
+    var v = GVX_SCOPE_META[k] || {ico:'fa-list', lbl:k};
+    var n = (k === 'secili' && typeof secimSayisi === 'function') ? secimSayisi() : null;
+    var locked = k === 'secili' && !n;
+    return '<button type="button" class="chip' + (locked ? ' is-locked' : '') + '" data-scope="' + k + '"' + (locked ? ' disabled title="Önce en az bir kayıt seçin"' : '') + '>'
+      + '<i class="fa-solid ' + v.ico + '"></i> ' + v.lbl + (n ? ' (' + gvFmtNum(n) + ')' : '') + '</button>';
+  }
+  function gvxScopeLabel(k, secimSayisi){
+    var v = GVX_SCOPE_META[k] || {lbl:k};
+    if(k === 'secili' && typeof secimSayisi === 'function') return gvFmtNum(secimSayisi()) + ' seçili kayıt';
+    return v.lbl.toLocaleLowerCase('tr');
+  }
+  function gvxDefaultFilterSummary(){
+    var chips = document.querySelectorAll('.gv-achips .gv-achip');
+    if(!chips.length) return 'Aktif filtre yok — tüm kayıtlar kapsamda.';
+    return Array.prototype.map.call(chips, function(c){ return c.textContent.replace(/\s+/g, ' ').trim(); }).join(' · ');
+  }
+  window.gvExport = {
+    init: function(triggerSelector, opts){
+      var trigger = typeof triggerSelector === 'string' ? document.querySelector(triggerSelector) : triggerSelector;
+      if(!trigger){ console.warn('gvExport: tetikleyici bulunamadı', triggerSelector); return null; }
+      if(trigger._gvExport) return trigger._gvExport;
+      opts = opts || {};
+      var baslik = opts.baslik || 'Kayıtlar';
+      var ciktiHref = opts.ciktiHref || null;
+      var formatlar = (opts.formatlar && opts.formatlar.length) ? opts.formatlar : ['pdf', 'excel', 'yazdir'];
+      var kapsamList = (opts.kapsam && opts.kapsam.length) ? opts.kapsam : ['tumu', 'filtreli'];
+      var filtreOzeti = typeof opts.filtreOzeti === 'function' ? opts.filtreOzeti : gvxDefaultFilterSummary;
+      var secimSayisi = typeof opts.secimSayisi === 'function' ? opts.secimSayisi : null;
+
+      function runGvExport(fmt, kapsam){
+        if(ciktiHref && (fmt === 'pdf' || fmt === 'yazdir')){
+          var qs = ciktiHref.indexOf('?') === -1 ? '?' : '&';
+          location.href = ciktiHref + qs + 'kapsam=' + encodeURIComponent(kapsam) + '&format=' + encodeURIComponent(fmt);
+          return;
+        }
+        if(fmt === 'excel'){
+          var exporter = window.GV_EXPORTERS && window.GV_EXPORTERS[baslik];
+          if(exporter){ runExport(exporter, 'Excel'); return; }   /* mevcut gerçek indirme motoru — bkz. yukarı [data-export] bloğu */
+        }
+        gvResult('cikti-hazir', {
+          baslik: 'Çıktı hazırlandı',
+          mesaj: baslik + ' — ' + gvxFormatLabel(fmt) + ' formatında, ' + gvxScopeLabel(kapsam, secimSayisi) + ' kapsamıyla hazırlandı. (statik prototip — gerçek dosya üretilmez)',
+          aksiyonlar: [{etiket:'Kapat', birincil:true}]
+        });
+      }
+
+      function openModal(){
+        if(document.querySelector('.gv-modal-ov[data-gv-export]')) return;
+        var ov = document.createElement('div'); ov.className = 'gv-modal-ov'; ov.setAttribute('data-gv-export', '');
+        var m = document.createElement('div'); m.className = 'gv-modal gv-export-modal';
+        m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+        var fmtHtml = formatlar.map(gvxFormatChip).join('');
+        var kapsamHtml = kapsamList.map(function(k){ return gvxScopeChip(k, secimSayisi); }).join('');
+        m.innerHTML = '<div class="gv-modal-ico"><i class="fa-solid fa-file-export"></i></div>'
+          + '<h3>Dışa Aktar</h3><p></p>'
+          + '<div class="gvx-section"><span class="gvx-lbl">Format</span><div class="gvx-chips gvx-fmt" role="radiogroup" aria-label="Format">' + fmtHtml + '</div></div>'
+          + '<div class="gvx-section"><span class="gvx-lbl">Kapsam</span><div class="gvx-chips gvx-scope" role="radiogroup" aria-label="Kapsam">' + kapsamHtml + '</div></div>'
+          + '<div class="gvx-summary"><i class="fa-solid fa-filter"></i><span></span></div>'
+          + '<div class="gv-modal-acts">'
+          +   '<button type="button" class="btn btn-ghost btn-sm gv-m-cancel">Vazgeç</button>'
+          +   '<button type="button" class="btn btn-acc btn-sm gvx-go"><i class="fa-solid fa-download"></i> Çıktıyı Hazırla</button>'
+          + '</div>';
+        m.querySelector('p').textContent = baslik + ' için çıktı biçimini ve kapsamını seçin.';
+        m.querySelector('.gvx-summary span').textContent = filtreOzeti();
+        ov.appendChild(m); document.body.appendChild(ov);
+        gvScrollLock(true);
+        requestAnimationFrame(function(){ ov.classList.add('open'); });
+
+        var fmtChips = m.querySelectorAll('.gvx-fmt .chip');
+        var scopeChips = m.querySelectorAll('.gvx-scope .chip:not(.is-locked)');
+        if(fmtChips.length) fmtChips[0].classList.add('is-on');
+        if(scopeChips.length) scopeChips[0].classList.add('is-on');
+        m.querySelector('.gvx-fmt').addEventListener('click', function(e){
+          var c = e.target.closest('.chip'); if(!c) return;
+          Array.prototype.forEach.call(fmtChips, function(x){ x.classList.remove('is-on'); });
+          c.classList.add('is-on');
+        });
+        m.querySelector('.gvx-scope').addEventListener('click', function(e){
+          var c = e.target.closest('.chip'); if(!c || c.hasAttribute('disabled')) return;
+          Array.prototype.forEach.call(m.querySelectorAll('.gvx-scope .chip'), function(x){ x.classList.remove('is-on'); });
+          c.classList.add('is-on');
+        });
+
+        function close(){ ov.classList.remove('open'); gvScrollLock(false); setTimeout(function(){ ov.remove(); }, 220); document.removeEventListener('keydown', onKey); }
+        function onKey(e){ if(e.key === 'Escape') close(); }
+        document.addEventListener('keydown', onKey);
+        ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+        m.querySelector('.gv-m-cancel').addEventListener('click', close);
+        m.querySelector('.gvx-go').addEventListener('click', function(){
+          var fmtEl = m.querySelector('.gvx-fmt .chip.is-on');
+          var scopeEl = m.querySelector('.gvx-scope .chip.is-on');
+          var fmt = fmtEl ? fmtEl.getAttribute('data-fmt') : formatlar[0];
+          var kapsam = scopeEl ? scopeEl.getAttribute('data-scope') : kapsamList[0];
+          close();
+          runGvExport(fmt, kapsam);
+        });
+      }
+
+      trigger.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+      var handle = { open: openModal };
+      trigger._gvExport = handle;
+      return handle;
+    },
+    bind: function(sel){
+      var els = document.querySelectorAll(sel || '[data-gv-export]');
+      Array.prototype.forEach.call(els, function(el){
+        if(el._gvExport) return;
+        var cfg = {};
+        var raw = el.getAttribute('data-gv-export');
+        if(raw && raw.trim() && raw.trim() !== '1'){
+          try{ cfg = JSON.parse(raw); }catch(err){ console.warn('gvExport.bind: data-gv-export JSON hatalı', el, err); }
+        }
+        if(!cfg.baslik) cfg.baslik = el.getAttribute('data-gv-export-baslik') || el.textContent.replace(/\s+/g, ' ').trim() || 'Kayıtlar';
+        window.gvExport.init(el, cfg);
+      });
+    }
+  };
+
+  /* ============================================================================
+     gvEmpty — YÖNLENDİREN boş durum (B §9.1) + yükleniyor/hata/boş/kayıt durum
+     makinesi (A §3 kritik kural: yukleniyor → hata → sonucSayisi===0 → kayıtlar,
+     ikisi ASLA aynı anda görünmez). `render` mevcut `.gv-empty` sınıf ailesini
+     (ge-ico/h4/p) doldurur — yeni bir görsel dil İCAT EDİLMEDİ. `durum`,
+     `[data-gv-state="loading|error|empty|content"]` sözleşmesiyle işaretlenmiş
+     kardeş elemanlar arasında `hidden` özniteliğiyle geçiş yapar — `[hidden]{
+     display:none !important}` kuralı zaten shell.css'te (satır 29) global
+     olarak tanımlı, ayrı bir CSS kuralı GEREKMEZ (görünürlük garantisi DOM'da). */
+  window.gvEmpty = {
+    render: function(el, opts){
+      if(typeof el === 'string') el = document.querySelector(el);
+      if(!el) return;
+      opts = opts || {};
+      el.classList.add('gv-empty');
+      el.innerHTML = '<div class="ge-ico"><i class="fa-solid ' + (opts.ikon || 'fa-inbox') + '"></i></div>'
+        + '<h4></h4><p></p>';
+      el.querySelector('h4').textContent = opts.baslik || 'Kayıt bulunamadı';
+      var p = el.querySelector('p');
+      if(opts.aciklama) p.textContent = opts.aciklama; else p.remove();
+      if(opts.aksiyon && opts.aksiyon.etiket){
+        var a = document.createElement('a');
+        a.className = 'btn btn-acc btn-sm ge-cta';
+        a.href = opts.aksiyon.href || '#';
+        a.innerHTML = '<i class="fa-solid fa-arrow-right"></i> ';
+        a.appendChild(document.createTextNode(opts.aksiyon.etiket));
+        el.appendChild(a);
+      }
+    },
+    durum: function(el, opts){
+      if(typeof el === 'string') el = document.querySelector(el);
+      if(!el) return null;
+      opts = opts || {};
+      var nodes = {
+        loading: el.querySelector('[data-gv-state="loading"]'),
+        error:   el.querySelector('[data-gv-state="error"]'),
+        empty:   el.querySelector('[data-gv-state="empty"]'),
+        content: el.querySelector('[data-gv-state="content"]')
+      };
+      var active = opts.yukleniyor ? 'loading' : opts.hata ? 'error' : (opts.sonucSayisi === 0 ? 'empty' : 'content');
+      Object.keys(nodes).forEach(function(k){
+        var node = nodes[k]; if(!node) return;
+        node.hidden = (k !== active);
+      });
+      return active;
+    }
+  };
+
+  /* ============================================================================
+     gvCount — kayıt sayısı özeti (A §3'ün 6 ekseni: toplam · aktif · pasif ·
+     arşiv · filtre sonucu · seçili). Filtre uygulanmışken "N kayıttan M tanesi",
+     filtre yokken sade "N kayıt". `gorunen` verilirse (arama/filtre DEĞİL, bir
+     switch/toggle ile daralan görünürlük ekseni — örn. "Pasif Şantiyeleri Göster"
+     kapalıyken 9 kayıttan 5'i görünür) "Toplam N · görünen M" biçimi kullanılır
+     (şantiye sayfasının kanonik ihtiyacı, bkz shell.js "V2 SAYIM KANONİĞİ").
+     Verilmeyen eksen render EDİLMEZ. ============================================ */
+  window.gvCount = {
+    render: function(el, opts){
+      if(typeof el === 'string') el = document.querySelector(el);
+      if(!el) return;
+      opts = opts || {};
+      var base;
+      if(opts.filtreSonucu != null){
+        base = gvFmtNum(opts.toplam) + ' kayıttan ' + gvFmtNum(opts.filtreSonucu) + ' tanesi';
+      } else if(opts.gorunen != null){
+        base = 'Toplam ' + gvFmtNum(opts.toplam) + ' · görünen ' + gvFmtNum(opts.gorunen);
+      } else {
+        base = gvFmtNum(opts.toplam) + ' kayıt';
+      }
+      var subParts = [];
+      if(opts.aktif != null) subParts.push(gvFmtNum(opts.aktif) + ' aktif');
+      if(opts.pasif != null) subParts.push(gvFmtNum(opts.pasif) + ' pasif');
+      if(opts.arsiv != null) subParts.push(gvFmtNum(opts.arsiv) + ' arşiv');
+      el.classList.add('gv-count');
+      var html = '<span class="gv-count-base">' + gvEscHtml(base) + '</span>';
+      if(subParts.length) html += '<span class="gv-count-sub">' + gvEscHtml(subParts.join(' · ')) + '</span>';
+      if(opts.secili){
+        html += '<span class="gv-count-secili"><i class="fa-solid fa-square-check"></i> ' + gvFmtNum(opts.secili) + ' seçili</span>';
+      }
+      el.innerHTML = html;
+    }
+  };
+
+  /* ============================================================================
+     gvBulk — seçili kayıt işlemleri barı (B §2.1). Tabloya çalışma-zamanında
+     seçim kutusu kolonu ENJEKTE eder (sayfa dosyasına dokunmadan — sayfa yalnız
+     `gvBulk.init('#tblX', {...})` çağırır), en az 1 satır seçilince kart başında
+     sticky bir aksiyon barı belirir. Tehlikeli aksiyon gvConfirm'den geçer.
+     `cfg.skipRowSelector` verilirse eşleşen satırlara (ör. ara toplam/devir
+     satırları) checkbox EKLENMEZ — bkz tasks/spec-v2-core.md örneği. ============ */
+  function gvBulkRowVisible(tr){
+    return !tr.hidden && !tr.classList.contains('gv-pg-hide') && !tr.classList.contains('gv-fp-hide') && tr.offsetParent !== null;
+  }
+  window.gvBulk = {
+    init: function(tableSel, cfg){
+      var table = typeof tableSel === 'string' ? document.querySelector(tableSel) : tableSel;
+      if(!table){ console.warn('gvBulk: tablo bulunamadı', tableSel); return null; }
+      if(table._gvBulk) return table._gvBulk;
+      cfg = cfg || {};
+      var actions = cfg.aksiyonlar || [];
+      var skipSel = cfg.skipRowSelector || null;
+
+      var headRow = table.tHead && table.tHead.rows[0];
+      var chkAllInput = null;
+      if(headRow && !headRow.querySelector('.gv-bulk-th')){
+        var th = document.createElement('th'); th.className = 'gv-bulk-th';
+        th.innerHTML = '<label class="row-chk" aria-label="Görünen tüm kayıtları seç"><input type="checkbox" class="gv-bulk-all"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>';
+        headRow.insertBefore(th, headRow.firstChild);
+        chkAllInput = th.querySelector('.gv-bulk-all');
+      }
+      function wireRow(tr){
+        if(tr.querySelector('.gv-bulk-td')) return;
+        if(skipSel && tr.matches(skipSel)) return;
+        var td = document.createElement('td'); td.className = 'gv-bulk-td';
+        td.innerHTML = '<label class="row-chk" aria-label="Kaydı seç"><input type="checkbox" class="gv-bulk-chk"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>';
+        tr.insertBefore(td, tr.firstChild);
+      }
+      function wireAllRows(){
+        if(table.tBodies[0]) Array.prototype.forEach.call(table.tBodies[0].rows, wireRow);
+      }
+      wireAllRows();
+
+      var bar = document.createElement('div'); bar.className = 'gv-bulk-bar'; bar.hidden = true;
+      bar.innerHTML = '<span class="gvb-count"></span><div class="gvb-acts"></div>'
+        + '<button type="button" class="btn btn-ghost btn-sm gvb-clear"><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>';
+      var actsWrap = bar.querySelector('.gvb-acts');
+      function selectedRows(){
+        return Array.prototype.map.call(table.querySelectorAll('.gv-bulk-chk:checked'), function(c){ return c.closest('tr'); });
+      }
+      actions.forEach(function(a){
+        var b = document.createElement('button'); b.type = 'button';
+        b.className = 'btn btn-sm ' + (a.tehlikeli ? 'btn-danger' : 'btn-ghost');
+        b.innerHTML = (a.ikon ? '<i class="fa-solid ' + a.ikon + '"></i> ' : '') + gvEscHtml(a.etiket || '');
+        /* `data-no-confirm` ŞART: aksiyon etiketi "Sil"/"Reddet"/"Kaldır"/"Arşivle" gibi
+           yukarıdaki GENEL yıkıcı-aksiyon interceptor'ının (satır ~91, DESTR) desenleriyle
+           eşleşirse, o interceptor CAPTURE fazında bu tıklamayı BURADAKİ bubble-phase
+           dinleyicisinden ÖNCE yakalar ve KENDİ (jenerik metinli) gvConfirm'ini açar; onay
+           sonrası native replay tetiklendiğinde BU dinleyici çalışır ama önceki modal henüz
+           DOM'dan kalkmamış olur (close() 220ms gecikmeli remove) → gvConfirm'in "aynı anda
+           tek modal" guard'ı YENİ (doğru "N kayıt…" mesajlı) onayı SESSİZCE no-op eder ve
+           `onClick` HİÇ ÇALIŞMAZ — kullanıcı jenerik "silindi" toast'ı görür ama gerçek
+           aksiyon çalışmamış olur. `data-no-confirm` bu butonu genel interceptor'ın kapsamı
+           dışına alır; gvBulk KENDİ (kayıt sayısını içeren) onayını her zaman güvenilir
+           şekilde gösterir. */
+        b.setAttribute('data-no-confirm', '');
+        b.addEventListener('click', function(){
+          var sel = selectedRows(); if(!sel.length) return;
+          if(a.tehlikeli){
+            gvConfirm({
+              danger:true, icon:'fa-triangle-exclamation', title:(a.etiket || 'Uygula') + '?',
+              message: sel.length + ' kayıt için bu işlem uygulanacak. Bu işlem geri alınamaz.',
+              ok:a.etiket || 'Uygula', cancel:'Vazgeç',
+              onConfirm:function(){ if(a.onClick) a.onClick(sel); }
+            });
+          } else if(a.onClick) a.onClick(sel);
+        });
+        actsWrap.appendChild(b);
+      });
+      var gcBody = table.closest('.gc-body') || table;
+      gcBody.parentNode.insertBefore(bar, gcBody);
+
+      function refresh(){
+        var sel = selectedRows();
+        bar.hidden = sel.length === 0;
+        bar.querySelector('.gvb-count').textContent = gvFmtNum(sel.length) + ' kayıt seçildi';
+        Array.prototype.forEach.call(table.querySelectorAll('.gv-bulk-chk'), function(c){
+          var tr = c.closest('tr'); if(tr) tr.classList.toggle('is-checked', c.checked);
+        });
+        if(chkAllInput){
+          var visBoxes = Array.prototype.filter.call(table.querySelectorAll('.gv-bulk-chk'), function(c){ return gvBulkRowVisible(c.closest('tr')); });
+          var allOn = visBoxes.length > 0 && visBoxes.every(function(c){ return c.checked; });
+          chkAllInput.checked = allOn;
+          chkAllInput.indeterminate = !allOn && visBoxes.some(function(c){ return c.checked; });
+        }
+      }
+      table.addEventListener('change', function(e){ if(e.target.classList.contains('gv-bulk-chk')) refresh(); });
+      if(chkAllInput){
+        chkAllInput.addEventListener('change', function(e){
+          var checked = e.target.checked;
+          Array.prototype.forEach.call(table.querySelectorAll('.gv-bulk-chk'), function(c){
+            if(gvBulkRowVisible(c.closest('tr'))) c.checked = checked;
+          });
+          refresh();
+        });
+      }
+      bar.querySelector('.gvb-clear').addEventListener('click', function(){
+        Array.prototype.forEach.call(table.querySelectorAll('.gv-bulk-chk'), function(c){ c.checked = false; });
+        refresh();
+      });
+
+      var handle = {
+        refresh: function(){ wireAllRows(); refresh(); },
+        clear: function(){ Array.prototype.forEach.call(table.querySelectorAll('.gv-bulk-chk'), function(c){ c.checked = false; }); refresh(); },
+        selected: selectedRows
+      };
+      table._gvBulk = handle;
+      return handle;
+    }
+  };
+
+  /* ============================================================================
+     gvBar/gvDonut/gvSpark — bağımlılıksız, token-uyumlu inline SVG rapor
+     grafikleri (.rp-chart içine mount edilir, bkz tasks/spec-v2-core.md).
+     Hepsi responsive (viewBox+preserveAspectRatio) ve erişilebilir
+     (role="img" + <title>). Grafik kütüphanesi EKLENMEDİ — CDN yok. ============ */
+  var GV_CHART_TONE = {
+    acc:'var(--acc-ink)', ok:'var(--ok)', warn:'var(--warn)', danger:'var(--danger)', info:'var(--info)', muted:'var(--muted)'
+  };
+  function gvChartColor(tone){ return GV_CHART_TONE[tone] || GV_CHART_TONE.acc; }
+  function gvSvgEsc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function gvChartVal(d){ return d.val != null ? d.val : d.deger; }
+  function gvChartLbl(d){ return d.lbl != null ? d.lbl : d.etiket; }
+  function gvChartValLbl(d){ return d.valLbl != null ? d.valLbl : gvFmtNum(gvChartVal(d)); }
+
+  window.gvBar = function(el, veri, opts){
+    if(typeof el === 'string') el = document.querySelector(el);
+    if(!el) return;
+    veri = veri || []; opts = opts || {};
+    if(!veri.length){ el.innerHTML = ''; return; }
+    var yon = opts.yon || 'yatay';
+    var max = Math.max.apply(null, veri.map(function(d){ return Math.abs(gvChartVal(d)) || 0; })) || 1;
+    var titleTxt = opts.baslik || 'Grafik';
+    var svg;
+    if(yon === 'dikey'){
+      var W = 480, H = 220, pad = 30, gap = 14;
+      var bw = (W - pad * 2 - gap * (veri.length - 1)) / veri.length;
+      var body = veri.map(function(d, i){
+        var v = gvChartVal(d);
+        var bh = (Math.abs(v) / max) * (H - pad * 2 - 22);
+        var x = pad + i * (bw + gap);
+        var y = H - pad - bh;
+        return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(bh, 1).toFixed(1) + '" rx="4" style="fill:' + gvChartColor(d.tone) + '"><title>' + gvSvgEsc(gvChartLbl(d)) + ': ' + gvSvgEsc(gvChartValLbl(d)) + '</title></rect>'
+          + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + Math.max(y - 6, 12).toFixed(1) + '" text-anchor="middle" style="font:700 9px var(--font);fill:var(--ink)">' + gvSvgEsc(gvChartValLbl(d)) + '</text>'
+          + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - pad + 15) + '" text-anchor="middle" style="font:600 9px var(--font);fill:var(--muted)">' + gvSvgEsc(gvChartLbl(d)) + '</text>';
+      }).join('');
+      svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" role="img"><title>' + gvSvgEsc(titleTxt) + '</title>' + body + '</svg>';
+    } else {
+      var W2 = 480, rowH = 30, pad2 = 3;
+      var H2 = veri.length * rowH + pad2 * 2;
+      var labelW = opts.labelWidth || 100;
+      var barMaxW = W2 - labelW - 58;
+      var rows = veri.map(function(d, i){
+        var v = gvChartVal(d);
+        var bw2 = (Math.abs(v) / max) * barMaxW;
+        var y = pad2 + i * rowH;
+        return '<text x="2" y="' + (y + rowH / 2 + 3.5) + '" style="font:600 10.5px var(--font);fill:var(--ink-2)">' + gvSvgEsc(gvChartLbl(d)) + '</text>'
+          + '<rect x="' + labelW + '" y="' + (y + 6) + '" width="' + Math.max(bw2, 2).toFixed(1) + '" height="' + (rowH - 12) + '" rx="4" style="fill:' + gvChartColor(d.tone) + '"><title>' + gvSvgEsc(gvChartLbl(d)) + ': ' + gvSvgEsc(gvChartValLbl(d)) + '</title></rect>'
+          + '<text x="' + (labelW + bw2 + 8) + '" y="' + (y + rowH / 2 + 3.5) + '" style="font:700 10.5px var(--font);fill:var(--ink)">' + gvSvgEsc(gvChartValLbl(d)) + '</text>';
+      }).join('');
+      svg = '<svg viewBox="0 0 ' + W2 + ' ' + H2 + '" preserveAspectRatio="xMidYMid meet" role="img"><title>' + gvSvgEsc(titleTxt) + '</title>' + rows + '</svg>';
+    }
+    el.innerHTML = svg;
+  };
+
+  window.gvDonut = function(el, veri, opts){
+    if(typeof el === 'string') el = document.querySelector(el);
+    if(!el) return;
+    veri = veri || []; opts = opts || {};
+    var total = veri.reduce(function(s, d){ return s + (Number(gvChartVal(d)) || 0); }, 0);
+    if(!veri.length || !total){ el.innerHTML = ''; return; }
+    var r = 54, cx = 64, cy = 64, sw = 20, circ = 2 * Math.PI * r, offset = 0;
+    var arcs = veri.map(function(d){
+      var v = Number(gvChartVal(d)) || 0;
+      var frac = v / total;
+      var dash = frac * circ;
+      var seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" style="stroke:' + gvChartColor(d.tone) + '" stroke-width="' + sw + '" stroke-dasharray="' + dash.toFixed(2) + ' ' + (circ - dash).toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"><title>' + gvSvgEsc(gvChartLbl(d)) + ': ' + gvSvgEsc(gvChartValLbl(d)) + ' (%' + Math.round(frac * 100) + ')</title></circle>';
+      offset += dash;
+      return seg;
+    }).join('');
+    var svg = '<svg viewBox="0 0 128 128" preserveAspectRatio="xMidYMid meet" role="img" style="max-width:200px;margin:0 auto;display:block"><title>' + gvSvgEsc(opts.baslik || 'Dağılım') + '</title>' + arcs
+      + '<text x="64" y="60" text-anchor="middle" style="font:800 18px var(--font);fill:var(--ink)">' + gvSvgEsc(opts.merkezEtiket != null ? opts.merkezEtiket : gvFmtNum(total)) + '</text>'
+      + '<text x="64" y="76" text-anchor="middle" style="font:600 8.5px var(--font);fill:var(--muted)">' + gvSvgEsc(opts.merkezAlt || 'toplam') + '</text>'
+      + '</svg>';
+    var legend = '<div class="rp-chart-legend">' + veri.map(function(d){
+      var v = Number(gvChartVal(d)) || 0;
+      return '<span><i style="background:' + gvChartColor(d.tone) + '"></i>' + gvSvgEsc(gvChartLbl(d)) + ' — ' + gvSvgEsc(gvChartValLbl(d)) + ' (%' + Math.round(v / total * 100) + ')</span>';
+    }).join('') + '</div>';
+    el.innerHTML = svg + legend;
+  };
+
+  window.gvSpark = function(el, veri, opts){
+    if(typeof el === 'string') el = document.querySelector(el);
+    if(!el) return;
+    opts = opts || {};
+    var nums = (veri || []).map(function(d){ return typeof d === 'number' ? d : gvChartVal(d); });
+    if(!nums.length){ el.innerHTML = ''; return; }
+    var W = 320, H = 72, pad = 6;
+    var min = Math.min.apply(null, nums), max = Math.max.apply(null, nums);
+    var range = (max - min) || 1;
+    var stepX = (W - pad * 2) / (nums.length - 1 || 1);
+    var pts = nums.map(function(v, i){
+      var x = pad + i * stepX;
+      var y = H - pad - ((v - min) / range) * (H - pad * 2);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+    var line = 'M' + pts.join(' L');
+    var area = line + ' L' + (pad + (nums.length - 1) * stepX).toFixed(1) + ',' + (H - pad) + ' L' + pad + ',' + (H - pad) + ' Z';
+    var tone = gvChartColor(opts.tone);
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img"><title>' + gvSvgEsc(opts.baslik || 'Zaman serisi') + '</title>'
+      + '<path d="' + area + '" style="fill:' + tone + ';fill-opacity:.12;stroke:none"></path>'
+      + '<path d="' + line + '" style="fill:none;stroke:' + tone + ';stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"></path>'
+      + '</svg>';
+    el.innerHTML = svg;
+  };
+
+  /* ============================================================================
+     gvViewSync (A §4/§8) — `.gv-desktop-only`/`.gv-mobile-only` (tek breakpoint,
+     640px) çiftinin `aria-hidden` senkronu: CSS `display:none` görsel olarak
+     gizler ama ekran okuyucuya kapatmaz — bu fonksiyon matchMedia ile gerçek
+     görünürlüğü izleyip görünmeyen tarafa `aria-hidden="true"` yazar. Sayfa
+     dinamik içerik eklediyse tekrar `gvViewSync()` çağırabilir (idempotent). */
+  var gvViewMQ = window.matchMedia('(max-width:640px)');
+  function gvViewSync(){
+    var mobile = gvViewMQ.matches;
+    document.querySelectorAll('.gv-desktop-only').forEach(function(el){ el.setAttribute('aria-hidden', mobile ? 'true' : 'false'); });
+    document.querySelectorAll('.gv-mobile-only').forEach(function(el){ el.setAttribute('aria-hidden', mobile ? 'false' : 'true'); });
+  }
+  window.gvViewSync = gvViewSync;
+  if(gvViewMQ.addEventListener) gvViewMQ.addEventListener('change', gvViewSync); else if(gvViewMQ.addListener) gvViewMQ.addListener(gvViewSync);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', gvViewSync); else gvViewSync();
+
+  /* ---- gvEllipSync — .gv-ellip/.gv-ellip-2 taşıyan elemanlara `title` yoksa
+     tam metni otomatik yazar (A §8 "uzun metin ellipsis, tam metin title'a düşer"). */
+  function gvEllipSync(){
+    document.querySelectorAll('.gv-ellip,.gv-ellip-2').forEach(function(el){
+      if(!el.hasAttribute('title')){
+        var t = el.textContent.replace(/\s+/g, ' ').trim();
+        if(t) el.setAttribute('title', t);
+      }
+    });
+  }
+  window.gvEllipSync = gvEllipSync;
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', gvEllipSync); else gvEllipSync();
 })();
