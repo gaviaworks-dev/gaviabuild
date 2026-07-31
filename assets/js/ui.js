@@ -727,7 +727,7 @@
      olduğu HİÇ görünmez) ve .gc-body.flush (geniş .gtable sarmalayıcısı) için gerçek
      scrollWidth/scrollLeft ölçümüne göre kenar ipucu (ui.css .gv-scroll-l/-r). ---- */
   function wireScrollHints(){
-    var sel = '.gv-tabs,.pf-tabs,.gc-body.flush';
+    var sel = '.gv-tabs,.pf-tabs,.gc-body.flush,.gv-chipbar';
     function update(el){
       var canL = el.scrollLeft > 3;
       var canR = el.scrollLeft < (el.scrollWidth - el.clientWidth - 3);
@@ -765,7 +765,7 @@
      iki-parmak yatay hareketi (deltaX baskın) DOKUNULMADAN kendi işini görür. ---- */
   document.addEventListener('wheel', function(e){
     if(e.ctrlKey) return;   /* pinch-zoom — müdahale etme */
-    var el = e.target.closest('.gv-tabs,.pf-tabs,.gc-body.flush');
+    var el = e.target.closest('.gv-tabs,.pf-tabs,.gc-body.flush,.gv-chipbar');
     if(!el) return;
     if(el.scrollWidth <= el.clientWidth + 1) return;   /* taşma yoksa yönlendirilecek bir şey yok */
     if(Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;   /* kullanıcı zaten bilerek yatay kaydırıyor */
@@ -921,8 +921,235 @@
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireDateRanges);
   else wireDateRanges();
 
-  /* ============ D1-T-CSS — GELİŞMİŞ FİLTRE PANELİ (gvFilterPanel, §9) ============
-     HTML iskeleti + sınıf sözleşmesi: tasks/spec-filtre-tarih.md.
+  /* ============================================================================
+     PAYLAŞILAN FİLTRE MOTORU (gvFpMakeEngine) — gvFilterPanel (§9, önceki tur,
+     markup-tabanlı) VE gvFilterDrawer'ın (§8.3, bu tur, config-driven) ORTAK
+     çekirdeğidir. Karar K-167 (tasks/kararlar.md): iki API yüzeyi KALICI olarak
+     korunur (27 sayfa `gvFilterPanel.init(panelSel, opts)` ile hand-authored
+     markup kullanıyor, migrasyon riskli/gereksiz) ama ARKADA TEK GERÇEK
+     UYGULAMA çalışır — doküman §8.1 "tüm liste sayfaları aynı kullanım
+     mantığına sahip olmalıdır" hükmü böylece korunur. `gvFilterPanel` MEVCUT
+     DOM'u okur/bağlar (`gvFdBindField`), `gvFilterDrawer` kendi DOM'unu `fields`
+     config'inden üretir (`gvFdBuildField`, aşağıda) — ikisi de aynı
+     `{get,clear,serialize,restore}` sözleşmesini üretip motoru besler. ============ */
+  function gvFpFieldLabel(field){
+    var lbl = field.getAttribute('data-fp-label');
+    if(lbl) return lbl;
+    var wrap = field.closest('.gfield');
+    var l = wrap && wrap.querySelector('label');
+    return l ? l.textContent.trim() : field.getAttribute('data-fp-key');
+  }
+  function gvFpFieldValueLabel(field){
+    if(field.tagName === 'SELECT'){
+      var opt = field.options[field.selectedIndex];
+      return opt ? opt.textContent.trim() : field.value;
+    }
+    return field.value;
+  }
+  /* ---- gvFdBindField — MEVCUT (hand-authored) [data-fp-key] elemanına bağlanır.
+     gvFilterPanel'in ESKİ readFilters/resetFields mantığıyla BİREBİR aynı biçim/
+     etiket sözleşmesini üretir — 27 sayfanın görünür davranışı DEĞİŞMEZ. ---- */
+  function gvFdBindField(el){
+    if(el.hasAttribute('data-gvdaterange')){
+      return {type:'daterange', api:{
+        get: function(){ var v = el._gvValue; if(!v) return null; return {value:v.key, label:gvFpFieldLabel(el) + ': ' + v.label, raw:v}; },
+        clear: function(){ if(el._gvDr) el._gvDr.clear(); },
+        serialize: function(){
+          var v = el._gvValue; if(!v) return null;
+          return {key:v.key, from: v.from ? v.from.toISOString() : null, to: v.to ? v.to.toISOString() : null};
+        },
+        restore: function(v){
+          if(!v || !v.key) return;
+          if(v.key === 'ozel'){
+            var s = el.querySelector('.dr-start'), e = el.querySelector('.dr-end');
+            if(s && e && v.from && v.to){
+              s.value = v.from.slice(0, 10); e.value = v.to.slice(0, 10);
+              var ob = el.querySelector('[data-dr="ozel"]'); if(ob) ob.click();
+              var ap = el.querySelector('.dr-apply'); if(ap) ap.click();
+            }
+          } else {
+            var pb = el.querySelector('[data-dr="' + v.key + '"]');
+            if(pb){ pb.click(); var ap2 = el.querySelector('.dr-apply'); if(ap2) ap2.click(); }
+          }
+        }
+      }};
+    }
+    if(el.tagName === 'SELECT'){
+      return {type:'select', api:{
+        get: function(){ if(!el.value) return null; return {value:el.value, label:gvFpFieldLabel(el) + ': ' + gvFpFieldValueLabel(el), raw:el.value}; },
+        clear: function(){ el.value = ''; },
+        serialize: function(){ return el.value; },
+        restore: function(v){ el.value = v || ''; }
+      }};
+    }
+    if(el.type === 'checkbox'){
+      return {type:'toggle', api:{
+        get: function(){ return el.checked ? {value:'1', label:gvFpFieldLabel(el)} : null; },
+        clear: function(){ el.checked = false; },
+        serialize: function(){ return el.checked; },
+        restore: function(v){ el.checked = !!v; }
+      }};
+    }
+    return {type:'text', api:{   /* metin/sayı — LEGACY biçim: "Etiket: değer" (tırnak YOK, orijinaliyle birebir) */
+      get: function(){ if(!el.value) return null; return {value:el.value, label:gvFpFieldLabel(el) + ': ' + gvFpFieldValueLabel(el), raw:el.value}; },
+      clear: function(){ el.value = ''; },
+      serialize: function(){ return el.value; },
+      restore: function(v){ el.value = v || ''; }
+    }};
+  }
+  /* ---- gvFpMakeEngine — açma/kapama (scroll kilidi + odak tuzağı + ESC/overlay,
+     §13.3), Uygula/Temizle/tekil-kaldır, aktif çip render, opsiyonel data-<key>
+     tablo süzgeci (daterange sabit `data-tarih` ISO okur — HER İKİ çağıran da
+     aynı sözleşmeyi kullanır — 26/27 legacy sayfa zaten `data-fp-key="tarih"`
+     kullanıyor; tip-bazlı algılama tek istisnayı da (`fptarih`) doğru sınıflar),
+     opsiyonel localStorage kalıcılığı (storeKey verilmezse KAPALI — legacy 27
+     sayfanın davranışı DEĞİŞMEZ). setOpen zaten-o-durumdaysa NO-OP (kapalıyken
+     "Temizle"ye basmak eski odağı çalıp geri getirmesin). ---- */
+  function gvFpMakeEngine(cfg){
+    var ov = cfg.ov, panel = cfg.panel, triggers = cfg.triggers || [];
+    var fields = cfg.fields || [];   /* [{key,type,api:{get,clear,serialize,restore}}] */
+    var chipsRow = cfg.chipsRow, chipsList = cfg.chipsList, clearAllBtn = cfg.clearAllBtn, closeBtn = cfg.closeBtn;
+    var table = cfg.table || null, storeKey = cfg.storeKey || null;
+    var state = {}, lastFocus = null;
+
+    function onKey(e){
+      if(!ov.classList.contains('open')) return;
+      if(e.key === 'Escape'){ setOpen(false); return; }
+      if(e.key === 'Tab') gvTrapTab(e, panel);
+    }
+    document.addEventListener('keydown', onKey);
+    function setOpen(o){
+      var was = ov.classList.contains('open');
+      if(o === was) return;   /* idempotent — kapalıyken doClear'ın "yine de kapat" çağrısı odak/scroll-lock yan etkisi ÜRETMEZ */
+      ov.classList.toggle('open', o);
+      if(o){
+        lastFocus = document.activeElement;
+        gvScrollLock(true);
+        var f0 = panel.querySelector('input,select,button,textarea');
+        if(f0) f0.focus();
+      } else {
+        gvScrollLock(false);
+        if(lastFocus && lastFocus.focus) lastFocus.focus();
+      }
+    }
+    triggers.forEach(function(t){ t.addEventListener('click', function(e){ e.preventDefault(); setOpen(true); }); });
+    if(closeBtn) closeBtn.addEventListener('click', function(){ setOpen(false); });
+    ov.addEventListener('click', function(e){ if(e.target === ov) setOpen(false); });
+
+    function fieldByKey(k){ return fields.filter(function(x){ return x.key === k; })[0]; }
+    function readValues(){
+      var out = {};
+      fields.forEach(function(f){ var v = f.api.get(); if(v != null) out[f.key] = v; });
+      return out;
+    }
+    function applyToTable(){
+      if(!table) return;
+      var keys = Object.keys(state);
+      table.querySelectorAll('tbody tr').forEach(function(row){
+        var ok = true;
+        keys.forEach(function(k){
+          if(!ok) return;
+          var f = fieldByKey(k);
+          var raw = state[k].raw;
+          if(f && f.type === 'daterange'){
+            var ds = row.getAttribute('data-tarih');
+            if(ds && raw && raw.from){ var d = new Date(ds + 'T00:00:00'); if(d < raw.from || d > raw.to) ok = false; }
+            return;
+          }
+          if(f && f.type === 'numrange'){
+            var nv = parseFloat(row.getAttribute('data-' + k));
+            if(!isNaN(nv)){
+              if(raw.min != null && nv < raw.min) ok = false;
+              if(raw.max != null && nv > raw.max) ok = false;
+            }
+            return;
+          }
+          if(f && f.type === 'multiselect'){
+            var av = row.getAttribute('data-' + k);
+            if(av !== null && raw.indexOf(av) === -1) ok = false;
+            return;
+          }
+          var attr = row.getAttribute('data-' + k);   /* select/text/toggle — legacy ile BİREBİR aynı genel eşleşme */
+          if(attr !== null && attr !== state[k].value) ok = false;
+        });
+        if(row.hidden) ok = false;   /* mevcut arama/hızlı-çip filtresiyle AND (D18 delegasyonu olmayan basit tablo) */
+        row.classList.toggle('gv-fp-hide', !ok);
+      });
+      if(window.gvPagerRefresh) window.gvPagerRefresh(table, true);
+    }
+    function renderChips(){
+      var keys = Object.keys(state);
+      triggers.forEach(function(t){
+        var badge = t.querySelector('.fp-count');
+        if(!badge){ badge = document.createElement('span'); badge.className = 'fp-count'; t.appendChild(badge); }
+        badge.textContent = keys.length; badge.hidden = !keys.length;
+      });
+      if(chipsRow) chipsRow.hidden = !keys.length;
+      if(!chipsList) return;
+      chipsList.innerHTML = '';
+      keys.forEach(function(k){
+        var chip = document.createElement('span'); chip.className = 'gv-achip';
+        var txt = document.createElement('span'); txt.textContent = state[k].label;
+        var x = document.createElement('button'); x.type = 'button'; x.className = 'ac-x'; x.setAttribute('data-k', k); x.setAttribute('aria-label', 'Filtreyi kaldır');
+        x.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        x.addEventListener('click', function(){ removeOne(k); });
+        chip.appendChild(txt); chip.appendChild(x); chipsList.appendChild(chip);
+      });
+    }
+    function persist(){
+      if(!storeKey) return;
+      try{
+        var raw = {};
+        Object.keys(state).forEach(function(k){ var f = fieldByKey(k); if(f) raw[k] = f.api.serialize(); });
+        localStorage.setItem(storeKey, JSON.stringify(raw));
+      }catch(e){}
+    }
+    function restoreFromStore(){
+      if(!storeKey) return;
+      var raw; try{ raw = JSON.parse(localStorage.getItem(storeKey) || 'null'); }catch(e){ raw = null; }
+      if(!raw) return;
+      fields.forEach(function(f){ if(raw[f.key] !== undefined && f.api.restore) f.api.restore(raw[f.key]); });
+    }
+    function removeOne(k){
+      delete state[k];
+      var f = fieldByKey(k); if(f) f.api.clear();
+      applyToTable(); renderChips(); persist();
+      if(cfg.onApply) cfg.onApply(state);
+    }
+    function doApply(){
+      state = readValues();
+      applyToTable(); renderChips(); persist();
+      setOpen(false);
+      if(cfg.onApply) cfg.onApply(state);
+    }
+    function doClear(){
+      fields.forEach(function(f){ f.api.clear(); });
+      state = {};
+      applyToTable(); renderChips(); persist();
+      setOpen(false);
+      if(cfg.onClear) cfg.onClear();
+      if(cfg.onApply) cfg.onApply(state);
+    }
+    if(cfg.applyBtn) cfg.applyBtn.addEventListener('click', doApply);
+    if(cfg.clearBtn) cfg.clearBtn.addEventListener('click', doClear);
+    if(clearAllBtn) clearAllBtn.addEventListener('click', doClear);
+
+    if(storeKey){
+      restoreFromStore();
+      state = readValues();
+      if(Object.keys(state).length){ applyToTable(); renderChips(); }
+    }
+
+    return {
+      setOpen: setOpen, doApply: doApply, doClear: doClear, removeOne: removeOne,
+      state: function(){ return state; },
+      refresh: function(){ applyToTable(); renderChips(); }
+    };
+  }
+
+  /* ============ gvFilterPanel (§9, önceki tur) — MARKUP-TABANLI ============
+     HTML iskeleti + sınıf sözleşmesi: tasks/spec-filtre-tarih.md. API DEĞİŞMEDİ
+     (27 sayfa çağırıyor) — gövde artık gvFpMakeEngine'e delege eder (K-167).
      gvFilterPanel.init(panelSel, opts):
        opts.table       — '#tblId' (opsiyonel; verilirse satırlar data-<key>="<değer>"
                            ile eşleştirilir; tarih alanı data-tarih="YYYY-MM-DD" ISO okur)
@@ -941,142 +1168,432 @@
       var ov = panel.closest('.gv-fpanel-ov');
       if(!ov){ console.warn('gvFilterPanel: .gv-fpanel-ov sarmalayıcısı bulunamadı', panel); return null; }
       var panelId = panel.id ? '#' + panel.id : null;
-      var triggers = document.querySelectorAll(opts.trigger || (panelId ? '[data-fpanel="' + panelId + '"]' : '[data-fpanel]'));
+      var triggers = Array.prototype.slice.call(document.querySelectorAll(opts.trigger || (panelId ? '[data-fpanel="' + panelId + '"]' : '[data-fpanel]')));
       var activeRow = opts.activeRow ? document.querySelector(opts.activeRow) : document.querySelector('.gv-achips-row');
       var activeList = activeRow ? activeRow.querySelector('.gv-achips') : null;
       var table = opts.table ? document.querySelector(opts.table) : null;
       var closeBtn = panel.querySelector('.gv-fpanel-close');
-      var state = {};
-
-      function setOpen(o){ ov.classList.toggle('open', o); }
-      triggers.forEach(function(t){ t.addEventListener('click', function(e){ e.preventDefault(); setOpen(true); }); });
-      if(closeBtn) closeBtn.addEventListener('click', function(){ setOpen(false); });
-      ov.addEventListener('click', function(e){ if(e.target === ov) setOpen(false); });
-      document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && ov.classList.contains('open')) setOpen(false); });
-
-      function fieldLabel(field){
-        var lbl = field.getAttribute('data-fp-label');
-        if(lbl) return lbl;
-        var wrap = field.closest('.gfield');
-        var l = wrap && wrap.querySelector('label');
-        return l ? l.textContent.trim() : field.getAttribute('data-fp-key');
-      }
-      function fieldValueLabel(field){
-        if(field.tagName === 'SELECT'){
-          var opt = field.options[field.selectedIndex];
-          return opt ? opt.textContent.trim() : field.value;
-        }
-        return field.value;
-      }
-      function readFilters(){
-        var out = {};
-        panel.querySelectorAll('[data-fp-key]').forEach(function(field){
-          var key = field.getAttribute('data-fp-key');
-          if(field.hasAttribute('data-gvdaterange')){
-            var v = field._gvValue;
-            if(v) out[key] = {value:v, label:fieldLabel(field) + ': ' + v.label, raw:v};
-            return;
-          }
-          if(field.type === 'checkbox'){
-            if(field.checked) out[key] = {value:'1', label:fieldLabel(field)};
-            return;
-          }
-          if(!field.value) return;
-          out[key] = {value:field.value, label:fieldLabel(field) + ': ' + fieldValueLabel(field)};
-        });
-        return out;
-      }
-      function applyToTable(){
-        if(!table) return;
-        var keys = Object.keys(state);
-        table.querySelectorAll('tbody tr').forEach(function(row){
-          var ok = true;
-          keys.forEach(function(k){
-            if(!ok) return;
-            if(k === 'tarih'){
-              var ds = row.getAttribute('data-tarih');
-              var rg = state[k].raw;
-              if(ds && rg && rg.from){
-                var d = new Date(ds + 'T00:00:00');
-                if(d < rg.from || d > rg.to) ok = false;
-              }
-              return;
-            }
-            var attr = row.getAttribute('data-' + k);
-            if(attr !== null && attr !== state[k].value) ok = false;
-          });
-          if(row.hidden) ok = false;   /* mevcut arama/hızlı-çip filtresiyle AND (D18 delegasyonu olmayan basit tablo) */
-          row.classList.toggle('gv-fp-hide', !ok);
-        });
-        if(window.gvPagerRefresh) window.gvPagerRefresh(table, true);
-      }
-      function renderChips(){
-        var keys = Object.keys(state);
-        var count = keys.length;
-        triggers.forEach(function(t){
-          var badge = t.querySelector('.fp-count');
-          if(!badge){ badge = document.createElement('span'); badge.className = 'fp-count'; t.appendChild(badge); }
-          badge.textContent = count; badge.hidden = !count;
-        });
-        if(!activeRow) return;
-        activeRow.hidden = !count;
-        if(!activeList) return;
-        activeList.innerHTML = '';
-        keys.forEach(function(k){
-          var chip = document.createElement('span');
-          chip.className = 'gv-achip';
-          var txt = document.createElement('span'); txt.textContent = state[k].label;
-          var x = document.createElement('button');
-          x.type = 'button'; x.className = 'ac-x'; x.setAttribute('data-k', k); x.setAttribute('aria-label', 'Filtreyi kaldır');
-          x.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-          x.addEventListener('click', function(){ removeOne(k); });
-          chip.appendChild(txt); chip.appendChild(x);
-          activeList.appendChild(chip);
-        });
-      }
-      function resetFields(){
-        panel.querySelectorAll('[data-fp-key]').forEach(function(field){
-          if(field.hasAttribute('data-gvdaterange')){ if(field._gvDr) field._gvDr.clear(); }
-          else if(field.type === 'checkbox') field.checked = false;
-          else field.value = '';
-        });
-      }
-      function removeOne(key){
-        delete state[key];
-        var field = panel.querySelector('[data-fp-key="' + key + '"]');
-        if(field){
-          if(field.hasAttribute('data-gvdaterange')){ if(field._gvDr) field._gvDr.clear(); }
-          else if(field.type === 'checkbox') field.checked = false;
-          else field.value = '';
-        }
-        applyToTable(); renderChips();
-        if(opts.onApply) opts.onApply(state);
-      }
-      function doApply(){
-        state = readFilters();
-        applyToTable(); renderChips();
-        setOpen(false);
-        if(opts.onApply) opts.onApply(state);
-      }
-      function doClear(){
-        resetFields();
-        state = {};
-        applyToTable(); renderChips();
-        setOpen(false);
-        if(opts.onClear) opts.onClear();
-        if(opts.onApply) opts.onApply(state);
-      }
       var applyBtn = panel.querySelector('[data-fp-apply]');
       var clearBtn = panel.querySelector('[data-fp-clear]');
-      if(applyBtn) applyBtn.addEventListener('click', doApply);
-      if(clearBtn) clearBtn.addEventListener('click', doClear);
-      if(activeRow){
-        var clearAllBtn = activeRow.querySelector('[data-fp-clear-all]');
-        if(clearAllBtn) clearAllBtn.addEventListener('click', doClear);
-      }
+      var clearAllBtn = activeRow ? activeRow.querySelector('[data-fp-clear-all]') : null;
 
-      panel._gvFp = { apply:doApply, clear:doClear, state:function(){ return state; }, refresh:function(){ applyToTable(); renderChips(); } };
+      var fields = [];
+      panel.querySelectorAll('[data-fp-key]').forEach(function(el){
+        var bound = gvFdBindField(el);
+        fields.push({key: el.getAttribute('data-fp-key'), type: bound.type, api: bound.api});
+      });
+
+      var engine = gvFpMakeEngine({
+        ov:ov, panel:panel, triggers:triggers, fields:fields,
+        chipsRow:activeRow, chipsList:activeList, clearAllBtn:clearAllBtn,
+        closeBtn:closeBtn, applyBtn:applyBtn, clearBtn:clearBtn,
+        table:table, storeKey:null,   /* legacy: kalıcılık YOK — 27 sayfanın davranışı korunur */
+        onApply:opts.onApply, onClear:opts.onClear
+      });
+
+      panel._gvFp = { apply:engine.doApply, clear:engine.doClear, state:engine.state, refresh:engine.refresh };
       return panel._gvFp;
     }
   };
+
+  /* ============================================================================
+     V3 REVİZYON DALGA 1 (TC) — STANDART LİSTE MİMARİSİ ORTAK BİLEŞENLERİ (§8)
+     gvFilterDrawer (§8.3) · gvCols (§8.4) · gvChipBar (§5.3/§13.3, .gv-chipbar
+     seçicisi yukarıdaki paylaşılan edge-fade/wheel-redirect altyapısına ZATEN
+     eklendi). Sayfalandırma (gvPager) ve boş durum (.gv-empty) ÖNCEKİ turdan
+     (D17) hazır — burada tekrar YAZILMADI, doğrudan kullanılır.
+     Spec + örnek çağrılar: tasks/spec-liste-mimarisi.md.
+     ============================================================================ */
+
+  /* ---- gvScrollLock — sayaçlı body/​html scroll kilidi (§13.3 "modal açıldığında
+     body scroll kilidi"). Referans sayacı: iç içe açılan birden çok overlay
+     (drawer + confirm modal gibi) erken kilit açmasın. ---- */
+  var gvScrollLockCount = 0;
+  window.gvScrollLock = function(on){
+    if(on){
+      gvScrollLockCount++;
+      if(gvScrollLockCount === 1) document.documentElement.classList.add('gv-scroll-locked');
+    } else {
+      gvScrollLockCount = Math.max(0, gvScrollLockCount - 1);
+      if(gvScrollLockCount === 0) document.documentElement.classList.remove('gv-scroll-locked');
+    }
+  };
+
+  /* ---- gvTrapTab — basit odak tuzağı (a11y). Görünür (offsetParent) odaklanabilir
+     elemanlar arasında Tab/Shift+Tab döngüsü. ---- */
+  function gvTrapTab(e, container){
+    var list = container.querySelectorAll('input,select,button,textarea,a[href],[tabindex]:not([tabindex="-1"])');
+    list = Array.prototype.filter.call(list, function(el){ return !el.disabled && el.offsetParent !== null; });
+    if(!list.length) return;
+    var first = list[0], last = list[list.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
+
+  /* ============ gvFilterDrawer (§8.3, §14-11) ============
+     Config-driven sağ overlay drawer. gvFilterPanel (§9, önceki tur) markup-tabanlıydı;
+     bu bileşen HTML iskeletini `fields` konfigürasyonundan KENDİSİ üretir — Dalga 4
+     track'leri (şantiye/personel/ajanda) yalnız bir tetikleyici buton + fields dizisi
+     yazar. İki bileşen de aynı görsel dili (.gv-fpanel-ov/.gv-fpanel ailesi) paylaşır;
+     var olan gvFilterPanel kullanan sayfalar DOKUNULMAZ, taşınmak ZORUNDA değil.
+     API + alan tipleri: tasks/spec-liste-mimarisi.md. */
+  function gvFdOptions(list){
+    return (list || []).map(function(o){ return (typeof o === 'string') ? {v:o, l:o} : o; });
+  }
+  function gvFdBuildField(f){
+    var api;
+    var wrap = document.createElement('div');
+    if(f.type === 'toggle'){
+      wrap.className = 'gv-fd-field gv-fd-toggle-row';
+      var lbl = document.createElement('label'); lbl.className = 'gv-toggle';
+      var inp = document.createElement('input'); inp.type = 'checkbox';
+      var track = document.createElement('span'); track.className = 'tg-track';
+      lbl.appendChild(inp); lbl.appendChild(track);
+      var txt = document.createElement('span'); txt.className = 'gv-fd-toggle-lbl'; txt.textContent = f.label || '';
+      wrap.appendChild(txt); wrap.appendChild(lbl);
+      api = {
+        get: function(){ return inp.checked ? {value:'1', label:f.label || 'Aktif', raw:true} : null; },
+        clear: function(){ inp.checked = false; },
+        serialize: function(){ return inp.checked; },
+        restore: function(v){ inp.checked = !!v; }
+      };
+    } else {
+      wrap.className = 'gfield full gv-fd-field';
+      if(f.label){ var l = document.createElement('label'); l.textContent = f.label; wrap.appendChild(l); }
+      if(f.type === 'select'){
+        var sel = document.createElement('select');
+        var optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = f.allLabel || 'Tümü'; sel.appendChild(optAll);
+        gvFdOptions(f.options).forEach(function(o){ var op = document.createElement('option'); op.value = o.v; op.textContent = o.l; sel.appendChild(op); });
+        wrap.appendChild(sel);
+        api = {
+          get: function(){ if(!sel.value) return null; return {value:sel.value, label:f.label + ': ' + sel.options[sel.selectedIndex].textContent, raw:sel.value}; },
+          clear: function(){ sel.value = ''; },
+          serialize: function(){ return sel.value; },
+          restore: function(v){ sel.value = v || ''; }
+        };
+      } else if(f.type === 'multiselect'){
+        var box = document.createElement('div'); box.className = 'gv-fd-chips';
+        var opts = gvFdOptions(f.options), btns = {};
+        opts.forEach(function(o){
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = o.l;
+          b.addEventListener('click', function(){ b.classList.toggle('is-on'); });
+          box.appendChild(b); btns[o.v] = b;
+        });
+        wrap.appendChild(box);
+        api = {
+          get: function(){
+            var vals = opts.filter(function(o){ return btns[o.v].classList.contains('is-on'); }).map(function(o){ return o.v; });
+            if(!vals.length) return null;
+            var lbls = opts.filter(function(o){ return vals.indexOf(o.v) !== -1; }).map(function(o){ return o.l; });
+            return {value:vals, label:f.label + ': ' + lbls.join(', '), raw:vals};
+          },
+          clear: function(){ opts.forEach(function(o){ btns[o.v].classList.remove('is-on'); }); },
+          serialize: function(){ return opts.filter(function(o){ return btns[o.v].classList.contains('is-on'); }).map(function(o){ return o.v; }); },
+          restore: function(v){ (v || []).forEach(function(vv){ if(btns[vv]) btns[vv].classList.add('is-on'); }); }
+        };
+      } else if(f.type === 'daterange'){
+        var dr = document.createElement('div'); dr.setAttribute('data-gvdaterange', '');
+        wrap.appendChild(dr);
+        window.gvDateRange(dr, {emptyLabel: f.emptyLabel || 'Tüm zamanlar'});
+        api = {
+          get: function(){ var v = dr._gvValue; if(!v) return null; return {value:v.key, label:(f.label ? f.label + ': ' : '') + v.label, raw:v}; },
+          clear: function(){ if(dr._gvDr) dr._gvDr.clear(); },
+          serialize: function(){
+            var v = dr._gvValue; if(!v) return null;
+            return {key:v.key, from: v.from ? v.from.toISOString() : null, to: v.to ? v.to.toISOString() : null};
+          },
+          restore: function(v){
+            if(!v || !v.key) return;
+            if(v.key === 'ozel'){
+              var s = dr.querySelector('.dr-start'), e = dr.querySelector('.dr-end');
+              if(s && e && v.from && v.to){
+                s.value = v.from.slice(0, 10); e.value = v.to.slice(0, 10);
+                var ob = dr.querySelector('[data-dr="ozel"]'); if(ob) ob.click();
+                var ap = dr.querySelector('.dr-apply'); if(ap) ap.click();
+              }
+            } else {
+              var pb = dr.querySelector('[data-dr="' + v.key + '"]');
+              if(pb){ pb.click(); var ap2 = dr.querySelector('.dr-apply'); if(ap2) ap2.click(); }
+            }
+          }
+        };
+      } else if(f.type === 'numrange'){
+        var row = document.createElement('div'); row.className = 'gv-fd-numrange';
+        var mn = document.createElement('input'); mn.type = 'number'; mn.placeholder = 'Min';
+        var mx = document.createElement('input'); mx.type = 'number'; mx.placeholder = 'Maks';
+        var dash = document.createElement('span'); dash.className = 'gv-fd-dash'; dash.textContent = '–';
+        row.appendChild(mn); row.appendChild(dash); row.appendChild(mx);
+        wrap.appendChild(row);
+        function gvFdFmtN(n){ var s = Number(n).toLocaleString('tr-TR'); return f.prefix ? f.prefix + s : (f.suffix ? s + f.suffix : s); }
+        api = {
+          get: function(){
+            var a = mn.value !== '' ? parseFloat(mn.value) : null, b = mx.value !== '' ? parseFloat(mx.value) : null;
+            if(a == null && b == null) return null;
+            var lbl = f.label + ': ' + (a != null ? gvFdFmtN(a) : '…') + ' – ' + (b != null ? gvFdFmtN(b) : '…');
+            return {value:{min:a, max:b}, label:lbl, raw:{min:a, max:b}};
+          },
+          clear: function(){ mn.value = ''; mx.value = ''; },
+          serialize: function(){ return {min: mn.value === '' ? null : mn.value, max: mx.value === '' ? null : mx.value}; },
+          restore: function(v){ if(!v) return; mn.value = v.min != null ? v.min : ''; mx.value = v.max != null ? v.max : ''; }
+        };
+      } else { /* 'text' — varsayılan */
+        var ti = document.createElement('input'); ti.type = 'text'; if(f.placeholder) ti.placeholder = f.placeholder;
+        wrap.appendChild(ti);
+        api = {
+          get: function(){ var v = ti.value.trim(); if(!v) return null; return {value:v, label:f.label + ': “' + v + '”', raw:v}; },
+          clear: function(){ ti.value = ''; },
+          serialize: function(){ return ti.value; },
+          restore: function(v){ ti.value = v || ''; }
+        };
+      }
+    }
+    api.el = wrap;
+    return api;
+  }
+  var GV_FD_REG = {}, GV_FD_ALL = [];
+  window.gvFilterDrawer = {
+    init: function(cfg){
+      cfg = cfg || {};
+      var trigger = typeof cfg.mount === 'string' ? document.querySelector(cfg.mount) : cfg.mount;
+      if(!trigger){ console.warn('gvFilterDrawer: mount bulunamadı', cfg.mount); return null; }
+      if(trigger._gvFd) return trigger._gvFd;
+      var fieldsCfg = cfg.fields || [];
+      var storeKey = cfg.screen ? 'gv_filters_' + cfg.screen : null;
+      var table = cfg.table ? document.querySelector(cfg.table) : null;
+
+      var ov = document.createElement('div'); ov.className = 'gv-fpanel-ov gv-fdrawer-ov';
+      var panel = document.createElement('aside'); panel.className = 'gv-fpanel gv-fdrawer';
+      panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true');
+      panel.setAttribute('aria-label', cfg.title || 'Gelişmiş Filtre');
+      panel.innerHTML =
+          '<div class="gv-fpanel-head"><h3><i class="fa-solid fa-sliders"></i> ' + (cfg.title || 'Gelişmiş Filtre') + '</h3>'
+        + '<button type="button" class="gv-fpanel-close" aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button></div>'
+        + '<div class="gv-fpanel-body"></div>'
+        + '<div class="gv-fpanel-foot">'
+        +   '<button type="button" class="btn btn-ghost btn-sm gv-fd-clear">Filtreleri Temizle</button>'
+        +   '<button type="button" class="btn btn-acc btn-sm gv-fd-apply">Uygula</button>'
+        + '</div>';
+      ov.appendChild(panel); document.body.appendChild(ov);
+      var body = panel.querySelector('.gv-fpanel-body');
+      var fields = fieldsCfg.map(function(f){
+        var w = gvFdBuildField(f);   /* w = {get,clear,serialize,restore,el} — aynı zamanda "api" sözleşmesi */
+        body.appendChild(w.el);
+        return {key:f.key, type:f.type, api:w};
+      });
+
+      var chipsRow = cfg.chipsMount ? document.querySelector(cfg.chipsMount) : null;
+      if(!chipsRow){
+        chipsRow = document.createElement('div'); chipsRow.className = 'gv-achips-row'; chipsRow.hidden = true;
+        chipsRow.innerHTML = '<div class="gv-achips"></div><div class="gv-achips-acts">'
+          + '<button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button></div>';
+        var bar = trigger.closest('.filter-bar');
+        if(bar && bar.parentNode) bar.parentNode.insertBefore(chipsRow, bar.nextSibling);
+        else trigger.parentNode.insertBefore(chipsRow, trigger.nextSibling);
+      } else {
+        chipsRow.classList.add('gv-achips-row');
+        if(!chipsRow.querySelector('.gv-achips')){ var d0 = document.createElement('div'); d0.className = 'gv-achips'; chipsRow.appendChild(d0); }
+      }
+      var chipsList = chipsRow.querySelector('.gv-achips');
+      var clearAllBtn = chipsRow.querySelector('.gv-fd-clear-all');
+
+      var engine = gvFpMakeEngine({
+        ov:ov, panel:panel, triggers:[trigger], fields:fields,
+        chipsRow:chipsRow, chipsList:chipsList, clearAllBtn:clearAllBtn,
+        closeBtn: panel.querySelector('.gv-fpanel-close'),
+        applyBtn: panel.querySelector('.gv-fd-apply'), clearBtn: panel.querySelector('.gv-fd-clear'),
+        table:table, storeKey:storeKey,
+        onApply:cfg.onApply, onClear:null
+      });
+
+      var handle = {
+        open: function(){ engine.setOpen(true); }, close: function(){ engine.setOpen(false); }, clear: engine.doClear,
+        values: engine.state, el: panel
+      };
+      trigger._gvFd = handle;
+      if(cfg.screen) GV_FD_REG[cfg.screen] = handle;
+      if(typeof cfg.mount === 'string') GV_FD_REG[cfg.mount] = handle;
+      GV_FD_ALL.push(handle);
+      return handle;
+    },
+    open: function(key){
+      var h = key ? GV_FD_REG[key] : null;
+      if(!h && GV_FD_ALL.length) h = GV_FD_ALL[GV_FD_ALL.length - 1];
+      if(h) h.open(); else console.warn('gvFilterDrawer.open: örnek bulunamadı', key);
+    }
+  };
+
+  /* ============ gvCols (§8.4, §14-9) ============
+     Kolon göster/gizle + sıra + "Varsayılana dön", kullanıcı tercihi localStorage'da.
+     roleHidden'daki kolonlar aktif rolde HİÇ görünmez (seçicide de yer almaz).
+     Tablo <th>/<td> `data-col="<key>"` ile eşleşir; data-col TAŞIMAYAN hücreler
+     (ör. sondaki işlem sütunu) sıra/gizlemeye dahil edilmez, yerinde sabit kalır. */
+  window.gvCols = {
+    init: function(cfg){
+      cfg = cfg || {};
+      var trigger = typeof cfg.mount === 'string' ? document.querySelector(cfg.mount) : cfg.mount;
+      var table = typeof cfg.table === 'string' ? document.querySelector(cfg.table) : cfg.table;
+      if(!trigger || !table){ console.warn('gvCols: mount/table bulunamadı', cfg); return null; }
+      if(trigger._gvCols) return trigger._gvCols;
+      var defs = cfg.cols || [];
+      var storeKey = cfg.screen ? 'gv_cols_' + cfg.screen : null;
+      var role = null; try{ role = localStorage.getItem('gv_crm_role'); }catch(e){}
+      var visibleDefs = defs.filter(function(c){ return !c.roleHidden || c.roleHidden.indexOf(role) === -1; });
+      var defOrder = visibleDefs.map(function(c){ return c.key; });
+      var defHidden = visibleDefs.filter(function(c){ return c.def === false; }).map(function(c){ return c.key; });
+      var forcedHidden = defs.filter(function(c){ return c.roleHidden && c.roleHidden.indexOf(role) !== -1; }).map(function(c){ return c.key; });
+
+      function load(){
+        var base = {order:defOrder.slice(), hidden:defHidden.slice()};
+        if(!storeKey) return base;
+        var raw; try{ raw = JSON.parse(localStorage.getItem(storeKey) || 'null'); }catch(e){ raw = null; }
+        if(!raw) return base;
+        var order = (raw.order || []).filter(function(k){ return defOrder.indexOf(k) !== -1; });
+        defOrder.forEach(function(k){ if(order.indexOf(k) === -1) order.push(k); });
+        var hidden = (raw.hidden || []).filter(function(k){ return defOrder.indexOf(k) !== -1; });
+        return {order:order, hidden:hidden};
+      }
+      function save(){ if(storeKey){ try{ localStorage.setItem(storeKey, JSON.stringify(state)); }catch(e){} } }
+      var state = load();
+
+      function cellsFor(key){ return table.querySelectorAll('[data-col="' + key + '"]'); }
+      function reorderRows(){
+        var rows = table.querySelectorAll('tr');
+        rows.forEach(function(row){
+          var cells = Array.prototype.slice.call(row.children);
+          var map = {}, firstIdx = -1;
+          cells.forEach(function(c, i){ var k = c.getAttribute('data-col'); if(k){ map[k] = c; if(firstIdx === -1) firstIdx = i; } });
+          if(firstIdx === -1) return;
+          var ref = cells[firstIdx].previousElementSibling;
+          state.order.forEach(function(k){
+            var cell = map[k]; if(!cell) return;
+            row.insertBefore(cell, ref ? ref.nextSibling : row.firstChild);
+            ref = cell;
+          });
+        });
+      }
+      function applyVisibility(){
+        defs.forEach(function(c){
+          var hide = forcedHidden.indexOf(c.key) !== -1 || state.hidden.indexOf(c.key) !== -1;
+          cellsFor(c.key).forEach(function(cell){ cell.style.display = hide ? 'none' : ''; });
+        });
+      }
+      function apply(){ reorderRows(); applyVisibility(); save(); }
+
+      var menu = null;
+      function onDoc(e){ if(menu && !e.target.closest('.gv-colpop') && e.target !== trigger && !trigger.contains(e.target)) closeMenu(); }
+      function closeMenu(){
+        if(!menu) return; var m = menu; menu = null;
+        m.classList.remove('open'); setTimeout(function(){ m.remove(); }, 160);
+        document.removeEventListener('click', onDoc);
+      }
+      function openMenu(){
+        if(menu) return;
+        menu = document.createElement('div'); menu.className = 'gv-pop gv-colpop';
+        menu.innerHTML = '<div class="gp-head"><b>Kolonlar</b><span>Göster / sırala</span></div>'
+          + '<div class="gcol-list"></div>'
+          + '<div class="gcol-foot"><button type="button" class="btn btn-ghost btn-sm gcol-reset">Varsayılana Dön</button></div>';
+        document.body.appendChild(menu);
+        var list = menu.querySelector('.gcol-list');
+        function draw(){
+          list.innerHTML = '';
+          state.order.forEach(function(k, i){
+            var c = visibleDefs.filter(function(x){ return x.key === k; })[0]; if(!c) return;
+            var hidden = state.hidden.indexOf(k) !== -1;
+            var row = document.createElement('div'); row.className = 'gcol-row';
+            row.innerHTML =
+                '<button type="button" class="gcol-mv" data-dir="up" aria-label="Yukarı taşı"' + (i === 0 ? ' disabled' : '') + '><i class="fa-solid fa-chevron-up"></i></button>'
+              + '<button type="button" class="gcol-mv" data-dir="down" aria-label="Aşağı taşı"' + (i === state.order.length - 1 ? ' disabled' : '') + '><i class="fa-solid fa-chevron-down"></i></button>'
+              + '<label class="gcol-chk"><input type="checkbox"' + (hidden ? '' : ' checked') + '><span>' + c.lbl + '</span></label>';
+            row.querySelector('[data-dir="up"]').addEventListener('click', function(){
+              if(i > 0){ var t = state.order[i - 1]; state.order[i - 1] = state.order[i]; state.order[i] = t; apply(); draw(); }
+            });
+            row.querySelector('[data-dir="down"]').addEventListener('click', function(){
+              if(i < state.order.length - 1){ var t = state.order[i + 1]; state.order[i + 1] = state.order[i]; state.order[i] = t; apply(); draw(); }
+            });
+            row.querySelector('input').addEventListener('change', function(e){
+              var idx = state.hidden.indexOf(k);
+              if(e.target.checked){ if(idx !== -1) state.hidden.splice(idx, 1); }
+              else if(idx === -1) state.hidden.push(k);
+              apply();
+            });
+            list.appendChild(row);
+          });
+        }
+        draw();
+        menu.querySelector('.gcol-reset').addEventListener('click', function(){
+          state = {order:defOrder.slice(), hidden:defHidden.slice()};
+          apply(); draw();
+        });
+        var r = trigger.getBoundingClientRect();
+        menu.style.position = 'fixed'; menu.style.minWidth = '240px';
+        menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+        menu.style.top = (r.bottom + 8) + 'px';
+        requestAnimationFrame(function(){ menu.classList.add('open'); });
+        document.addEventListener('click', onDoc);
+        document.addEventListener('keydown', function esc(e){ if(e.key === 'Escape'){ closeMenu(); document.removeEventListener('keydown', esc); } });
+      }
+      trigger.addEventListener('click', function(e){ e.preventDefault(); if(menu) closeMenu(); else openMenu(); });
+
+      apply();
+      var handle = {
+        apply: apply,
+        reset: function(){ state = {order:defOrder.slice(), hidden:defHidden.slice()}; apply(); },
+        state: function(){ return state; }
+      };
+      trigger._gvCols = handle;
+      return handle;
+    }
+  };
+
+  /* ============ gvChipBar (§5.3, §6.2, §7.2, §13.3) ============
+     `.gv-chipbar` zaten yukarıdaki paylaşılan edge-fade + dikey-tekerlek-yönlendirme
+     seçicilerine eklendi (bkz. `sel`/wheel listener) — burada YALNIZ ok butonları +
+     klavye gezinme + aktif chip'e otomatik kaydırma eklenir. Chip tıklama/filtre
+     davranışı zaten wireTables()'ın `.chip[data-filter]`+`.chips` delegasyonundan
+     GELİR (`.gv-chipbar` aynı zamanda `.chips` taşır) — tekrar YAZILMAZ. */
+  window.gvChipBar = {
+    init: function(sel){
+      var wraps = typeof sel === 'string' ? document.querySelectorAll(sel)
+        : (sel ? [sel] : document.querySelectorAll('[data-chipbar]'));
+      Array.prototype.forEach.call(wraps, function(wrap){
+        if(wrap._gvCb) return;
+        var track = wrap.classList && wrap.classList.contains('gv-chipbar') ? wrap : wrap.querySelector('.gv-chipbar');
+        if(!track) return;
+        var prev = wrap.querySelector('.cb-prev'), next = wrap.querySelector('.cb-next');
+        track._gvScrollHintWired = true;   /* wireScrollHints ile çifte 'scroll' bağlama olmasın */
+        function update(){
+          var canL = track.scrollLeft > 3;
+          var canR = track.scrollLeft < (track.scrollWidth - track.clientWidth - 3);
+          track.classList.toggle('gv-scroll-l', canL);
+          track.classList.toggle('gv-scroll-r', canR);
+          var can = track.scrollWidth > track.clientWidth + 3;
+          if(prev) prev.hidden = !(can && canL);
+          if(next) next.hidden = !(can && canR);
+        }
+        track.addEventListener('scroll', update, {passive:true});
+        window.addEventListener('resize', update);
+        setTimeout(update, 300);
+        update();
+        if(prev) prev.addEventListener('click', function(){ track.scrollBy({left:-track.clientWidth * .7, behavior:'smooth'}); });
+        if(next) next.addEventListener('click', function(){ track.scrollBy({left:track.clientWidth * .7, behavior:'smooth'}); });
+        track.addEventListener('keydown', function(e){
+          var chips = Array.prototype.slice.call(track.querySelectorAll('.chip'));
+          var i = chips.indexOf(document.activeElement);
+          if(i === -1) return;
+          if(e.key === 'ArrowRight' && chips[i + 1]){ e.preventDefault(); chips[i + 1].focus(); }
+          else if(e.key === 'ArrowLeft' && chips[i - 1]){ e.preventDefault(); chips[i - 1].focus(); }
+          else if(e.key === 'Home'){ e.preventDefault(); chips[0].focus(); }
+          else if(e.key === 'End'){ e.preventDefault(); chips[chips.length - 1].focus(); }
+        });
+        track.addEventListener('click', function(e){
+          var chip = e.target.closest('.chip'); if(!chip) return;
+          chip.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
+        });
+        wrap._gvCb = {update:update, el:wrap};
+      });
+    }
+  };
+  function wireChipBars(){ window.gvChipBar.init(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireChipBars);
+  else wireChipBars();
 })();
