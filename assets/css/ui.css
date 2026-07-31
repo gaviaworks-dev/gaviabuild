@@ -415,16 +415,16 @@ a.kpi-card{color:inherit;text-decoration:none;cursor:pointer}
    mutlak konumlu — scroll container'ın KENDİSİ position:relative host'u olduğundan
    içerikle birlikte kaymaz, kabın kendi kutusuna sabit kalır. Sınıf ui.js ile
    (gv-scroll-l/gv-scroll-r) gerçek scrollWidth/scrollLeft ölçümüne göre açılır. */
-.gv-tabs,.pf-tabs,.gc-body.flush{position:relative}
+.gv-tabs,.pf-tabs,.gc-body.flush,.gv-chipbar{position:relative}
 .gv-tabs::before,.gv-tabs::after,.pf-tabs::before,.pf-tabs::after,
-.gc-body.flush::before,.gc-body.flush::after{
+.gc-body.flush::before,.gc-body.flush::after,.gv-chipbar::before,.gv-chipbar::after{
   content:"";position:absolute;top:0;bottom:0;width:32px;pointer-events:none;
   opacity:0;transition:opacity .18s var(--ease);z-index:2;
 }
-.gv-tabs::after,.pf-tabs::after,.gc-body.flush::after{right:0;background:linear-gradient(to right,transparent,var(--paper))}
-.gv-tabs::before,.pf-tabs::before,.gc-body.flush::before{left:0;background:linear-gradient(to left,transparent,var(--paper))}
-.gv-tabs.gv-scroll-r::after,.pf-tabs.gv-scroll-r::after,.gc-body.flush.gv-scroll-r::after{opacity:1}
-.gv-tabs.gv-scroll-l::before,.pf-tabs.gv-scroll-l::before,.gc-body.flush.gv-scroll-l::before{opacity:1}
+.gv-tabs::after,.pf-tabs::after,.gc-body.flush::after,.gv-chipbar::after{right:0;background:linear-gradient(to right,transparent,var(--paper))}
+.gv-tabs::before,.pf-tabs::before,.gc-body.flush::before,.gv-chipbar::before{left:0;background:linear-gradient(to left,transparent,var(--paper))}
+.gv-tabs.gv-scroll-r::after,.pf-tabs.gv-scroll-r::after,.gc-body.flush.gv-scroll-r::after,.gv-chipbar.gv-scroll-r::after{opacity:1}
+.gv-tabs.gv-scroll-l::before,.pf-tabs.gv-scroll-l::before,.gc-body.flush.gv-scroll-l::before,.gv-chipbar.gv-scroll-l::before{opacity:1}
 
 /* ============ D1-T-CSS — GELİŞMİŞ FİLTRE PANELİ (§9, gvFilterPanel) ============
    Ortak liste süzgeci: filter-bar (arama+hızlı çip) yanına "Gelişmiş Filtre" butonu →
@@ -436,6 +436,11 @@ a.kpi-card{color:inherit;text-decoration:none;cursor:pointer}
   background:var(--acc-ink);color:#fff;min-width:17px;height:17px;border-radius:var(--r-pill);
   display:inline-flex;align-items:center;justify-content:center;padding:0 5px;
 }
+/* D1-T-CSS/TC düzeltmesi: `[hidden]` özniteliği ile eşit özgüllükteki class kuralı
+   çakışınca author-class kazanır (UA [hidden] varsayılanını ezer) — badge.hidden=true
+   iken görünür kalıyordu (gvFilterDrawer testinde yakalandı; gvFilterPanel de aynı
+   riski taşıyordu). Aşağıdaki override HER İKİ bileşen için de geçerlidir. */
+.gv-fp-open .fp-count[hidden]{display:none}
 .gv-fpanel-ov{
   position:fixed;inset:0;z-index:150;display:flex;justify-content:flex-end;
   background:rgba(2,8,55,.42);opacity:0;pointer-events:none;transition:opacity .22s var(--ease);
@@ -471,6 +476,7 @@ a.kpi-card{color:inherit;text-decoration:none;cursor:pointer}
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
   padding:12px 22px;border-bottom:1px solid var(--line);background:var(--bg);
 }
+.gv-achips-row[hidden]{display:none}   /* bkz. yukarıdaki .fp-count[hidden] notu — aynı düzeltme */
 .gv-achips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .gv-achip{
   display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
@@ -524,4 +530,98 @@ a.kpi-card{color:inherit;text-decoration:none;cursor:pointer}
 .dr-foot .btn{flex:1;justify-content:center}
 @media(max-width:480px){
   .gv-drange-pop{width:min(300px,88vw);right:0}
+}
+
+/* =====================================================================
+   V3 REVİZYON DALGA 1 (TC) — STANDART LİSTE MİMARİSİ ORTAK BİLEŞENLERİ (§8)
+   gvFilterDrawer · gvCols · gvChipBar · gtable-cards (mobil kart görünümü).
+   Spec: tasks/spec-liste-mimarisi.md.
+   ===================================================================== */
+
+/* ---- gvScrollLock (§13.3 body scroll kilidi) ---- */
+html.gv-scroll-locked{overflow:hidden}
+
+/* ============ gvFilterDrawer alan tipleri (§8.3) ============
+   gv-fpanel-ov/.gv-fpanel ailesi (yukarıda tanımlı) AYNEN kullanılır — burada
+   YALNIZ yeni alan tiplerinin (çoklu-seçim/sayı aralığı/toggle) iç düzeni + tarih
+   aralığı tetikleyicisinin drawer içinde tam genişlik görünmesi eklenir. */
+.gv-fd-field + .gv-fd-field{margin-top:0}
+.gv-fd-chips{display:flex;flex-wrap:wrap;gap:8px}
+.gv-fd-numrange{display:flex;align-items:center;gap:10px}
+.gv-fd-numrange input{
+  flex:1;min-width:0;font-family:inherit;font-size:13.5px;font-weight:500;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:10px 12px;outline:none;transition:.2s var(--ease);
+}
+.gv-fd-numrange input:focus{border-color:var(--acc);background:var(--paper);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+.gv-fd-dash{color:var(--muted);font-weight:700;flex:none}
+.gv-fd-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.gv-fd-toggle-lbl{font-size:13px;font-weight:600;color:var(--ink-2)}
+.gv-fd-field .gv-drange{display:flex;width:100%}
+.gv-fd-field .gv-drange-trigger{width:100%;justify-content:space-between}
+.gv-fd-hide{display:none !important}
+
+/* ============ gvCols — kolon yönetimi popover (§8.4) ============
+   .gv-pop idiyomunun türevi (export/hesap menüsüyle AYNI konumlandırma mantığı). */
+.gv-colpop{width:268px;padding:7px}
+.gcol-list{max-height:320px;overflow-y:auto;padding:2px}
+.gcol-row{display:flex;align-items:center;gap:6px;padding:5px 6px}
+.gcol-mv{
+  width:24px;height:24px;flex:none;border-radius:7px;border:1px solid var(--line);
+  background:var(--paper);color:var(--muted);font-size:10px;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s var(--ease);
+}
+.gcol-mv:hover:not(:disabled){border-color:var(--acc-ink);color:var(--acc-ink)}
+.gcol-mv:disabled{opacity:.35;cursor:default}
+.gcol-chk{display:flex;align-items:center;gap:9px;flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;padding:2px 4px;border-radius:6px;transition:.15s var(--ease)}
+.gcol-chk:hover{background:var(--bg)}
+.gcol-chk input{accent-color:var(--acc-ink);width:15px;height:15px;flex:none;cursor:pointer}
+.gcol-chk span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gcol-foot{padding:8px 6px 4px;border-top:1px solid var(--line);margin-top:4px}
+.gcol-foot .btn{width:100%;justify-content:center}
+
+/* ============ gvChipBar — kategori chip slider (§5.3/§6.2/§7.2/§13.3) ============
+   `.gv-chipbar` edge-fade + dikey-tekerlek-yönlendirme kurallarına YUKARIDA
+   (D1-T-CSS bloğu) zaten eklendi; burada yalnız yatay düzen + ok butonları. */
+.gv-chipbar-wrap{display:flex;align-items:center;gap:6px;min-width:0}
+.gv-chipbar{
+  display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;
+  scrollbar-width:none;-ms-overflow-style:none;padding:2px 1px;
+  flex:1 1 0;min-width:0;   /* flex item min-width:auto tuzağı — bu OLMADAN chipbar kendi
+                                içerik genişliğine göre üst düzeni yatay taşırır (§5.3/§13.3) */
+}
+.gv-chipbar::-webkit-scrollbar{display:none}
+.gv-chipbar .chip{scroll-snap-align:start;flex:none}
+.cb-arrow{
+  flex:none;width:30px;height:30px;border-radius:var(--r-circle);border:1px solid var(--line);
+  background:var(--paper);color:var(--ink-2);font-size:11px;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s var(--ease);
+}
+.cb-arrow:hover{border-color:var(--acc-ink);color:var(--acc-ink);transform:translateY(-1px)}
+
+/* ============ gtable-cards — mobil kart görünümü (§5.3/§8.2) ============
+   Opt-in: <table class="gtable gtable-cards"> + her <td data-lbl="Kolon adı">.
+   Sarmalayıcı .gc-body.flush'a `gv-cards-pad` sınıfı eklenirse 640px altında
+   düz kart dolgusu alır (flush'un 0 padding'i yalnız TABLO modunda istenir). */
+@media(max-width:640px){
+  .gtable-cards{min-width:0;display:block}
+  .gtable-cards thead{display:none}
+  .gtable-cards tbody,.gtable-cards tr{display:block;width:100%}
+  .gtable-cards tr{
+    margin:0 0 12px;border:1px solid var(--line);border-radius:var(--r-md);
+    padding:4px 14px;background:var(--paper);
+  }
+  .gtable-cards tr:last-child{margin-bottom:0}
+  .gtable-cards td{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:10px 0;border-bottom:1px solid var(--line);text-align:right;white-space:normal;
+  }
+  .gtable-cards td:first-child{padding-left:0}
+  .gtable-cards td:last-child{padding-right:0;border-bottom:none}
+  .gtable-cards td[data-lbl]::before{
+    content:attr(data-lbl);font-size:11px;font-weight:700;letter-spacing:.03em;
+    color:var(--muted);text-align:left;flex:none;text-transform:uppercase;
+  }
+  .gtable-cards td:not([data-lbl]),.gtable-cards td[data-lbl=""]{justify-content:flex-end}
+  .gc-body.flush.gv-cards-pad{padding:14px 16px}
 }
