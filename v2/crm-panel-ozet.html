@@ -33,7 +33,10 @@
 .rep-mast-eyebrow{position:relative; font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--gv-mint);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .rep-mast-eyebrow i{font-size:11px}
 .rep-mast h1{position:relative; font-size:23px;font-weight:800;color:#fff;letter-spacing:-.01em;margin-bottom:8px}
-.rep-mast p{position:relative; font-size:13.5px;line-height:1.6;color:var(--on-dark);max-width:52ch}
+.rep-mast p{position:relative; font-size:13.5px;line-height:1.6;color:var(--on-dark);max-width:56ch}
+/* B§8.2 "Kişisel Karşılama": ad soyad · rol · tarih · şantiye/departman — .rep-mstat
+   ile AYNI görsel dili paylaşır (yeni bileşen İCAT EDİLMEDİ), yalnız üst satırda durur */
+.rep-mast-who{position:relative;display:flex;flex-wrap:wrap;gap:16px;margin:2px 0 14px}
 .rep-mast-foot{position:relative;margin-top:16px;padding-top:14px;border-top:1px solid var(--hair);display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .rep-mstat{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--on-dark)}
 .rep-mstat b{color:#fff;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
@@ -83,12 +86,15 @@
    numaralandırma için tek dış sarmalayıcı (.rep-cols) + iki dikey kolon (.rep-col,
    her biri 3 kart) kullanılır: DOM sırası sol kolonun tamamı, sonra sağ kolonun
    tamamıdır — böylece <980px'te doğal akış 01→06 sırasını korur, ≥980px'te grid
-   kolonları aynı DOM bloklarını yan yana taşır. personel rol guard'ı (aşağıdaki JS)
-   bu DOM sırasına dayanır: kasa kartı çıkınca kalan altı öğe yine 01'den ardışık
-   numaralanır. Hiyerarşi kart var/yok ile DEĞİL, kartın İÇİNDE kurulur: aksiyon
-   gerektiren iki kart (.rep-card--action, her kolonun İLK öğesi) accent şerit +
-   dolgulu numara çipi + "Öncelik" rozeti alır; kalan dört blok aynı kabuğu düz
-   numara + sakin başlıkla kullanır — ek renk/dil icat edilmez. */
+   kolonları aynı DOM bloklarını yan yana taşır. [T-S1] her rol GÖRÜNÜMÜ (yonetim ·
+   sef · muhasebe · ik · satinalma · personel) SABİT 6 kart taşır — dinamik
+   yeniden-numaralama script'i artık GEREKMEZ (B§8.2'nin 6 alanı: karşılama — .rep-mast;
+   onaylar 01 · durum özeti 02 · bildirimler 03 · görevler 04 · rapor özeti 05 ·
+   ajanda 06 — tüm rollerde AYNI pozisyon anlamı, A§7/B§8.3 madde metni İÇERİKTE değişir).
+   Hiyerarşi kart var/yok ile DEĞİL, kartın İÇİNDE kurulur: aksiyon gerektiren iki kart
+   (.rep-card--action, her kolonun İLK öğesi) accent şerit + dolgulu numara çipi +
+   "Öncelik" rozeti alır; kalan dört blok aynı kabuğu düz numara + sakin başlıkla kullanır
+   — ek renk/dil icat edilmez. */
 .rep-cols{display:flex;flex-direction:column;gap:14px}
 .rep-col{display:flex;flex-direction:column;gap:14px}
 .rep-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);padding:18px 20px 16px;display:flex;gap:14px}
@@ -104,6 +110,12 @@
    (sıra tek başına yeterli değil: <980px'te ikinci aksiyon kartı görsel olarak
    üstte durmaz, dördüncü sırada akar). Aynı accent tint + .rr-tag pill idiomu. */
 .rep-flag{flex:none;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--acc-ink);background:rgba(var(--acc-rgb),.1);padding:3px 9px;border-radius:var(--r-pill)}
+
+/* [T-S1] rapor özeti kartlarındaki mini alt-başlık — B§8.2 "Kişisel Rapor Özeti"nin
+   birden çok facet'i tek kartta toplandığında (ör. yönetici: kritik uyarı+finans+
+   hakediş+not) her facet'i etiketlemek için; .rep-row idiyomunun küçük varyantı */
+.rep-sub{font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.rep-sub:first-child{margin-top:0}
 
 @media(max-width:640px){
   .rep-mast{padding:20px 18px}
@@ -148,18 +160,28 @@
       <div>
         <div class="ph-eyebrow">Gündem</div>
         <h1>Günlük Özet</h1>
-        <div class="ph-sub">2 Temmuz 2026, Perşembe — gün sonu rapor taslağı</div>
+        <div class="ph-sub">2 Temmuz 2026, Perşembe — kişiye özel gün sonu rapor taslağı</div>
       </div>
       <div class="ph-actions">
         <button class="btn btn-ghost btn-sm" data-export="Günlük özet"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
-    <!-- ============ YÖNETİM RAPORU (superadmin·sahip·yonetim·teknik·muhasebe·satinalma·ik·personel) ============ -->
+    <!-- ============ YÖNETİCİ RAPORU (superadmin·sahip·yonetim·teknik) ============
+         B§8.3 Firma Sahibi/Yönetici 8 madde: kritik uyarılar(05) · bugünkü bekleyen
+         onaylar(01) · şantiye durum özeti(02) · finans özeti(05) · hakediş durumu(05) ·
+         kasa/banka hareketi özeti(05) · geciken işler(04) · yönetim notları(05).
+         Tüm sayılar crm-panel.html/crm-panel-yonetici.html kanoniğiyle BİREBİR. -->
     <section data-view="yonetim">
       <div class="rep-mast">
         <div class="rep-mast-eyebrow"><i class="fa-solid fa-sun"></i> Gün Raporu</div>
-        <h1>3 şantiyede sahada 93 kişi, 12 onay sırada.</h1>
+        <h1 data-greet-tpl="Günaydın, {ad} {hon} — bugün şirket genelinde 3 göreviniz, 12 bekleyen onayınız ve 2 saha bildiriminiz bulunuyor.">Günaydın —</h1>
+        <div class="rep-mast-who">
+          <span class="rep-mstat"><i class="fa-solid fa-user"></i> <b class="rmm-who">—</b></span>
+          <span class="rep-mstat"><i class="fa-solid fa-id-badge"></i> <span class="rmm-role">—</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-calendar-day"></i> <span class="rmm-date">2 Temmuz 2026, Perşembe</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-location-dot"></i> <span class="rmm-site">Yapıtaş İnşaat A.Ş. — tüm şantiyeler</span></span>
+        </div>
         <p>Liman Lojistik Merkezi'nde iş programı 6 gün geride; bunun dışında gün akışında kritik bir sapma yok. Vadi Konakları bugün de programın önünde.</p>
         <div class="rep-mast-foot">
           <div class="rep-mstat"><i class="fa-solid fa-users"></i> <b>93</b> sahada</div>
@@ -168,18 +190,14 @@
         </div>
       </div>
 
-      <!-- [D17 v4 gate] Sütun-ardışık numaralandırma: sol kolon 01-03, sağ kolon 04-06.
-           Her kolonun İLK öğesi aksiyon kartı (rep-card--action + "Öncelik" rozeti).
-           Mobilde (<980) iki .rep-col art arda akar → 01→06 doğal sıra.
-           personel rol guard'ı .rep-item DOM sırasına dayanır (sayfa altındaki JS). -->
       <div class="rep-cols">
       <div class="rep-col">
       <div class="rep-item rep-card rep-card--action">
         <div class="rep-num">01</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Bekleyen Onaylar</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-panel-onaylar.html">Tümü (12) <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Kişisel Onaylar</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-panel-onaylar.html">Tümü (12) <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-stats">
-            <div class="rep-stat"><b>12</b><span>onay sırada</span></div>
+            <div class="rep-stat"><b>12</b><span>bugünkü bekleyen onay</span></div>
             <div class="rep-stat" style="color:var(--warn)"><b style="color:var(--warn)">4</b><span>iki günden eski</span></div>
             <div class="rep-stat"><b>5</b><span>talep türü</span></div>
           </div>
@@ -190,28 +208,30 @@
       <div class="rep-item rep-card">
         <div class="rep-num">02</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-user-clock"></i><h2>Sahada Bugün</h2></div>
+          <div class="rep-head"><i class="fa-solid fa-helmet-safety"></i><h2>Şantiye Durum Özeti</h2><a class="gc-link" href="crm-santiye.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-stats">
             <div class="rep-stat"><b>90<span style="font-size:13px;color:var(--muted);font-weight:700">/93</span></b><span>puantaj girişi</span></div>
             <div class="rep-stat"><b>%97</b><span>giriş oranı</span></div>
             <div class="rep-stat"><b>3</b><span>kayıtsız / izinli</span></div>
           </div>
           <div class="rep-tbl">
-            <div class="rep-trow"><span class="rt-site">Vadi Konakları</span><span class="rt-val">49 / 51</span><span class="rt-pct">%96</span></div>
-            <div class="rep-trow"><span class="rt-site">Liman Lojistik Merkezi</span><span class="rt-val">29 / 30</span><span class="rt-pct">%97</span></div>
-            <div class="rep-trow"><span class="rt-site">Merkez Şantiye</span><span class="rt-val">12 / 12</span><span class="rt-pct">%100</span></div>
+            <div class="rep-trow"><span class="rt-site">Vadi Konakları</span><span class="rt-val">49 / 51</span><span class="rt-pct">%68</span></div>
+            <div class="rep-trow"><span class="rt-site">Liman Lojistik Merkezi</span><span class="rt-val">29 / 30</span><span class="rt-pct">%41</span></div>
+            <div class="rep-trow"><span class="rt-site">Merkez Şantiye</span><span class="rt-val">12 / 12</span><span class="rt-pct">%86</span></div>
           </div>
+          <div class="rep-note"><i class="fa-solid fa-circle-info"></i> Sağdaki yüzde şantiye fiziksel ilerlemesi; sol sütun bugünkü puantaj girişidir.</div>
         </div>
       </div>
 
       <div class="rep-item rep-card">
         <div class="rep-num">03</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-camera"></i><h2>Saha Bildirimleri</h2><a class="gc-link" href="crm-santiye-bildirimler.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
-          <p class="rep-lede">Bugün 2 yeni saha bildirimi paylaşıldı.</p>
+          <div class="rep-head"><i class="fa-solid fa-bell"></i><h2>Kişisel Bildirimler</h2><a class="gc-link" href="crm-santiye-bildirimler.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+          <p class="rep-lede">Bugün 2 yeni saha bildirimi + 1 sistem hatırlatması paylaşıldı.</p>
           <div class="rep-list">
             <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">09:40</span><span style="color:var(--ink);font-weight:700">Hasan Demirci</span><span class="rr-meta">Vadi Konakları · B Blok temel betonu tamamlandı</span></div>
             <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">08:15</span><span style="color:var(--ink);font-weight:700">İbrahim Sönmez</span><span class="rr-meta">Vadi Konakları · zemin kat elektrik tesisatı</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">Sistem</span><span style="color:var(--ink);font-weight:700">Hatırlatma</span><span class="rr-meta">Temmuz hakediş taslağı incelemesi bekliyor</span></div>
           </div>
         </div>
       </div>
@@ -221,11 +241,11 @@
       <div class="rep-item rep-card rep-card--action">
         <div class="rep-num">04</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Görevler</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevler <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Kişisel Görevler</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevlerim <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-stats">
             <div class="rep-stat"><b>3</b><span>bugün açılan</span></div>
             <div class="rep-stat"><b>2</b><span>bugün kapanan</span></div>
-            <div class="rep-stat" style="color:var(--danger)"><b style="color:var(--danger)">3</b><span>geciken</span></div>
+            <div class="rep-stat" style="color:var(--danger)"><b style="color:var(--danger)">3</b><span>geciken iş</span></div>
           </div>
           <div class="rep-list">
             <div class="rep-row"><span class="rr-tag" style="background:var(--danger-tint);color:var(--danger)">Gecikti</span><a href="crm-gorev-detay.html?gorev=008">Perde betonu kür takibini raporla</a><span class="rr-meta">Vadi Konakları · Hasan Demirci</span></div>
@@ -234,46 +254,60 @@
         </div>
       </div>
 
-      <!-- [D8 1.2] Bugünkü Kasa Hareketi — defter kanonikleri (shell.js DALGA 8);
-           saha personeli rolünde bu blok kaldırılır (aşağıdaki JS guard) -->
+      <!-- B§8.2 "Kişisel Rapor Özeti" — yönetici için doküman örneği (§8.2 son satır):
+           "Kritik uyarılar, finans, şantiye, personel ve hakediş özeti". Sayılar
+           crm-panel-yonetici.html'in Risk/Finans/Hakediş panelleriyle BİREBİR. -->
       <div class="rep-item rep-card" id="repKasa">
         <div class="rep-num">05</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-cash-register"></i><h2>Bugünkü Kasa Hareketi</h2><a class="gc-link" href="crm-operasyon-kasa.html">Kasa Yönetimi <i class="fa-solid fa-arrow-right"></i></a></div>
-          <p class="rep-lede">Bugün 3 kasada 9 hareket işlendi; 1 rapor onayda, 1 taslak bekliyor.</p>
-          <div class="rep-stats">
-            <div class="rep-stat" style="color:var(--ok)"><b style="color:var(--ok)">+₺66.400</b><span>bugünkü giriş · 1 kayıt</span></div>
-            <div class="rep-stat"><b>−₺48.620</b><span>bugünkü çıkış · 8 kayıt</span></div>
-            <div class="rep-stat"><b>₺165.130</b><span>toplam kasa bakiyesi</span></div>
-          </div>
+          <div class="rep-head"><i class="fa-solid fa-chart-line"></i><h2>Kişisel Rapor Özeti</h2></div>
+          <div class="rep-sub">Kritik Uyarılar (3)</div>
           <div class="rep-list">
-            <div class="rep-row"><span class="rr-tag" style="background:var(--ok-tint);color:var(--ok)">Tahsilat</span><span class="rr-code" style="color:var(--ink);font-weight:700">KSG-2026-008</span><span class="rr-meta">Vadi Konakları · Körfez GYO ek iş bedeli · ₺66.400</span></div>
-            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Onayda</span><a class="rr-code" href="crm-operasyon-kasa-detay.html?ks=ksa-021">KSA-2026-021</a><span class="rr-meta">Vadi Konakları · Hasan Demirci gönderdi · ₺18.400</span></div>
-            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">Taslak</span><a class="rr-code" href="crm-operasyon-kasa-form.html" style="color:var(--ink);font-weight:700">KSA-2026-022</a><span class="rr-meta">henüz onaya gönderilmedi</span></div>
+            <div class="rep-row"><a href="crm-finans-maliyet.html">Betonarme bütçe aşımı</a><span class="rr-meta">Vadi Konakları · %104</span></div>
+            <div class="rep-row"><a href="crm-finans-kurum.html">Tahsilat gecikmesi — Derya Toprak</a><span class="rr-meta">12 gün · ₺570.000</span></div>
           </div>
+          <div class="rep-sub">Finans &amp; Kasa/Banka Özeti</div>
+          <div class="rep-stats">
+            <div class="rep-stat"><b>₺5,43M</b><span>bugünkü likidite</span></div>
+            <div class="rep-stat"><b>₺165.130</b><span>şantiye kasaları</span></div>
+          </div>
+          <div class="rep-sub">Hakediş Durumu</div>
+          <div class="rep-list">
+            <div class="rep-row"><a class="rr-code" href="crm-finans-kurum.html">HKD-2026-006</a><span class="rr-meta">Körfez GYO · işveren onayında</span><span style="margin-left:auto;font-weight:800;color:var(--ink)">₺1,63M</span></div>
+          </div>
+          <div class="rep-note"><i class="fa-solid fa-note-sticky"></i><span>Yönetim notu: Liman Lojistik'te iş programı takip altında; haftalık koordinasyon toplantısında görüşülecek.</span></div>
         </div>
       </div>
 
       <div class="rep-item rep-card">
         <div class="rep-num">06</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-forward"></i><h2>Yarına Bakış — 3 Temmuz</h2></div>
+          <div class="rep-head"><i class="fa-solid fa-calendar-day"></i><h2>Kişisel Ajanda</h2><a class="gc-link" href="crm-panel-ajanda.html">Ajandayı aç <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-list">
-            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">Termin</span><a href="crm-gorev-detay.html?gorev=002">A Blok elektrik şaft kontrolü — ElektroMek ile</a><span class="rr-meta">Vadi Konakları · Hasan Demirci</span></div>
-            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">Termin</span><a href="crm-gorev-detay.html?gorev=007">Puantaj defterini güncelle</a><span class="rr-meta">Vadi Konakları · Ali Vural</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">09:00</span><a href="crm-santiye-bildirimler.html">SAT-2026-016 kalıp kerestesi teslimi</a><span class="rr-meta">Vadi Konakları</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">16:00</span><a href="crm-santiye-ajanda.html">Haftalık saha koordinasyon toplantısı</a><span class="rr-meta">Liman Lojistik Merkezi</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">Yarın</span><a href="crm-gorev-detay.html?gorev=002">A Blok elektrik şaft kontrolü</a><span class="rr-meta">termin denetimi</span></div>
           </div>
-          <div class="rep-note"><i class="fa-solid fa-circle-info"></i> Liman Lojistik Merkezi iş programı izlemede kalmalı — 6 gün gecikme sürüyor.</div>
         </div>
       </div>
       </div><!-- /rep-col (sağ) -->
       </div><!-- /rep-cols (yonetim) -->
     </section>
 
-    <!-- ============ ŞEF RAPORU (sef — yalnız Vadi Konakları) ============ -->
+    <!-- ============ ŞANTİYE ŞEFİ RAPORU (sef — yalnız Vadi Konakları) ============
+         B§8.3 Şantiye Şefi 8 madde: bugünkü şantiye görevleri(04) · puantaj girişi(02) ·
+         saha bildirimleri(03) · malzeme talepleri(05) · taşeron ekipleri(05) ·
+         İSG uyarıları(05) · kasa hareketleri(05) · iş programı(06). -->
     <section data-view="sef" hidden>
       <div class="rep-mast">
         <div class="rep-mast-eyebrow"><i class="fa-solid fa-sun"></i> Gün Raporu — Vadi Konakları</div>
-        <h1>Bugün 49/51 kişi sahada, program %68'de.</h1>
+        <h1 data-greet-tpl="Günaydın, {ad} {hon} — bugün Vadi Konakları şantiyesinde 3 göreviniz, 2 bekleyen onayınız ve 1 saha bildiriminiz bulunuyor.">Günaydın —</h1>
+        <div class="rep-mast-who">
+          <span class="rep-mstat"><i class="fa-solid fa-user"></i> <b class="rmm-who">—</b></span>
+          <span class="rep-mstat"><i class="fa-solid fa-id-badge"></i> <span class="rmm-role">—</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-calendar-day"></i> <span class="rmm-date">2 Temmuz 2026, Perşembe</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-location-dot"></i> <span class="rmm-site">Vadi Konakları</span></span>
+        </div>
         <p>Ekip programın 2 gün önünde. Sizin onayınızda bekleyen 2 kayıt var; bugün 1 yeni saha bildirimi paylaştınız.</p>
         <div class="rep-mast-foot">
           <div class="rep-mstat"><i class="fa-solid fa-users"></i> <b>49</b> sahada</div>
@@ -282,14 +316,12 @@
         </div>
       </div>
 
-      <!-- [D17 v4 gate] Sütun-ardışık numaralandırma — yonetim görünümüyle aynı
-           iki-kolon sistemi: sol 01-03, sağ 04-06. Mobilde 01→06 tek akış. -->
       <div class="rep-cols">
       <div class="rep-col">
       <div class="rep-item rep-card rep-card--action">
         <div class="rep-num">01</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Onayınızı Bekleyenler</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-panel-onaylar.html">Onay Kuyruğu <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Kişisel Onaylar</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-panel-onaylar.html">Onay Kuyruğu <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-list">
             <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Bekliyor</span><a class="rr-code" href="crm-personel-avans-detay.html?avn=015">AVN-2026-015</a><span class="rr-meta">Musa Erdem · ₺3.500 avans talebi</span></div>
             <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Bekliyor</span><a class="rr-code" href="crm-personel-izin-detay.html?izn=031">İZN-2026-031</a><span class="rr-meta">Ali Vural · 6–10 Temmuz yıllık izin</span></div>
@@ -300,7 +332,7 @@
       <div class="rep-item rep-card">
         <div class="rep-num">02</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-user-clock"></i><h2>Sahada Bugün</h2></div>
+          <div class="rep-head"><i class="fa-solid fa-user-clock"></i><h2>Puantaj Girişi</h2><a class="gc-link" href="crm-operasyon-puantaj.html">Puantaj <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-stats">
             <div class="rep-stat"><b>49<span style="font-size:13px;color:var(--muted);font-weight:700">/51</span></b><span>puantaj girişi</span></div>
             <div class="rep-stat"><b>%96</b><span>giriş oranı</span></div>
@@ -312,7 +344,7 @@
       <div class="rep-item rep-card">
         <div class="rep-num">03</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-camera"></i><h2>Şantiyenizden Bildirimler</h2><a class="gc-link" href="crm-santiye-bildirimler.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-head"><i class="fa-solid fa-camera"></i><h2>Saha Bildirimleri</h2><a class="gc-link" href="crm-santiye-bildirimler.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-list">
             <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">08:15</span><span style="color:var(--ink);font-weight:700">İbrahim Sönmez</span><span class="rr-meta">zemin kat elektrik tesisatı döşemesi başladı</span></div>
           </div>
@@ -325,23 +357,38 @@
       <div class="rep-item rep-card rep-card--action">
         <div class="rep-num">04</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Görevleriniz</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevlerim <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Bugünkü Şantiye Görevleri</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevlerim <i class="fa-solid fa-arrow-right"></i></a></div>
           <div class="rep-stats">
             <div class="rep-stat"><b>7</b><span>açık görev</span></div>
             <div class="rep-stat" style="color:var(--danger)"><b style="color:var(--danger)">2</b><span>gecikmede</span></div>
           </div>
           <div class="rep-list">
             <div class="rep-row"><span class="rr-tag" style="background:var(--danger-tint);color:var(--danger)">Gecikti</span><a href="crm-gorev-detay.html?gorev=008">Perde betonu kür takibini raporla</a><span class="rr-meta">Murat Denizli verdi</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">Bugün</span><a href="crm-gorev-detay.html?gorev=007">Puantaj defterini güncelle</a><span class="rr-meta">Ali Vural'a verdiniz</span></div>
           </div>
         </div>
       </div>
 
+      <!-- B§8.2 örneği: "Şantiye şefi için: Bugünkü personel, puantaj, malzeme ve saha
+           bildirimi özeti" + B§8.3'ün taşeron/İSG/kasa maddeleri aynı kartta toplanır. -->
       <div class="rep-item rep-card">
         <div class="rep-num">05</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-cash-register"></i><h2>Kasa Hareketleri</h2><a class="gc-link" href="crm-operasyon-kasa.html">Kasa Yönetimi <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-head"><i class="fa-solid fa-chart-line"></i><h2>Kişisel Rapor Özeti</h2></div>
+          <div class="rep-sub">Malzeme Talepleri</div>
+          <div class="rep-stats">
+            <div class="rep-stat"><b>3</b><span>bekleyen talep</span></div>
+            <div class="rep-stat"><b>1</b><span>onayda</span></div>
+          </div>
+          <div class="rep-sub">Taşeron Ekipleri</div>
           <div class="rep-list">
-            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Onayda</span><a class="rr-code" href="crm-operasyon-kasa-detay.html?ks=ksa-021">KSA-2026-021</a><span class="rr-meta">bugün oluşturdunuz, Teknik Müdür onayında</span></div>
+            <div class="rep-row"><a href="crm-finans-taseronlar.html">Demir-Beton İnş. Ltd.</a><span class="rr-meta">10 personel</span><span class="rr-tag" style="margin-left:auto;background:var(--warn-tint);color:var(--warn)">2 uyarı</span></div>
+            <div class="rep-row"><a href="crm-finans-taseronlar.html">ElektroMek Taahhüt</a><span class="rr-meta">6 personel</span><span class="rr-tag" style="margin-left:auto;background:var(--ok-tint);color:var(--ok)">Temiz</span></div>
+          </div>
+          <div class="rep-sub">İSG &amp; Kasa</div>
+          <div class="rep-list">
+            <div class="rep-row"><a href="crm-santiye-isg-detay.html?isg=008">ISG-2026-008 iskele korkuluk eksikliği</a><span class="rr-meta">B Blok · aksiyon bekliyor</span></div>
+            <div class="rep-row"><a class="rr-code" href="crm-operasyon-kasa-detay.html?ks=ksa-021">KSA-2026-021</a><span class="rr-meta">₺18.400 · Teknik Müdür onayında</span></div>
           </div>
         </div>
       </div>
@@ -349,15 +396,446 @@
       <div class="rep-item rep-card">
         <div class="rep-num">06</div>
         <div class="rep-body">
-          <div class="rep-head"><i class="fa-solid fa-forward"></i><h2>Yarına Bakış — 3 Temmuz</h2></div>
+          <div class="rep-head"><i class="fa-solid fa-calendar-day"></i><h2>İş Programı &amp; Ajanda</h2></div>
           <div class="rep-list">
             <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">Termin</span><a href="crm-gorev-detay.html?gorev=002">A Blok elektrik şaft kontrolü — ElektroMek ile</a><span class="rr-meta">size atandı</span></div>
-            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">Termin</span><a href="crm-gorev-detay.html?gorev=007">Puantaj defterini güncelle</a><span class="rr-meta">Ali Vural'a verdiniz</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">Yarın 11:00</span><a href="crm-santiye-ajanda.html">İç İSG denetimi — iskele kontrolü</a><span class="rr-meta">Vadi Konakları</span></div>
           </div>
         </div>
       </div>
       </div><!-- /rep-col (sağ, sef) -->
       </div><!-- /rep-cols (sef) -->
+    </section>
+
+    <!-- ============ MUHASEBE RAPORU (muhasebe — kanonik: Nesrin Aydın) ============
+         B§8.3 Muhasebe 7 madde: kasa onayları(01) · banka hareketleri(02) · avans
+         ödemeleri(01) · hakediş ödemeleri(05) · cari hareketler(05) · kredi kartı/
+         Pluxee(05) · eksik belge uyarıları(03). Sayılar crm-panel.html muhasebe
+         görünümü + shell.js NAKİT AKIŞI/KREDİ KARTI kanoniğiyle BİREBİR. -->
+    <section data-view="muhasebe" hidden>
+      <div class="rep-mast">
+        <div class="rep-mast-eyebrow"><i class="fa-solid fa-sun"></i> Gün Raporu — Muhasebe</div>
+        <h1 data-greet-tpl="Günaydın, {ad} {hon} — bugün muhasebe biriminde 2 göreviniz, 3 bekleyen onayınız ve 1 eksik belge uyarınız bulunuyor.">Günaydın —</h1>
+        <div class="rep-mast-who">
+          <span class="rep-mstat"><i class="fa-solid fa-user"></i> <b class="rmm-who">—</b></span>
+          <span class="rep-mstat"><i class="fa-solid fa-id-badge"></i> <span class="rmm-role">—</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-calendar-day"></i> <span class="rmm-date">2 Temmuz 2026, Perşembe</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-location-dot"></i> <span class="rmm-site">Muhasebe Departmanı</span></span>
+        </div>
+        <p>Onayınızda 3 işlem var, toplam ₺170.200. TH-2026-014 metraj itirazı nedeniyle ödeme bloke.</p>
+        <div class="rep-mast-foot">
+          <div class="rep-mstat"><i class="fa-solid fa-stamp"></i> <b>3</b> onayınızda</div>
+          <div class="rep-mstat"><i class="fa-solid fa-cash-register"></i> <b>₺28.150</b> Temmuz kasa çıkışı</div>
+          <div class="rep-mstat"><i class="fa-solid fa-scale-balanced"></i> <b>2</b> vadesi geçen cari</div>
+        </div>
+      </div>
+
+      <div class="rep-cols">
+      <div class="rep-col">
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">01</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Kişisel Onaylar</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-panel-onaylar.html">Onay kuyruğu <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-lede">Kasa onayları ve avans ödemeleri sizin adımınızda.</div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Kasa</span><a class="rr-code" href="crm-operasyon-kasa-detay.html?ks=ksa-018">KSA-2026-018</a><span class="rr-meta">₺24.900 · GM onayında, sıradaki adım Muhasebe</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--ok-tint);color:var(--ok)">Avans</span><a class="rr-code" href="crm-personel-avans-detay.html?avn=014">AVN-2026-014</a><span class="rr-meta">Ali Vural · ₺4.000</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">02</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-building-columns"></i><h2>Banka &amp; Kasa Durumu</h2><a class="gc-link" href="crm-finans-banka-hareket.html">Banka hareketleri <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-stats">
+            <div class="rep-stat"><b>₺5,27M</b><span>toplam banka bakiyesi</span></div>
+            <div class="rep-stat"><b>₺165.130</b><span>şantiye kasaları</span></div>
+          </div>
+          <div class="rep-tbl">
+            <div class="rep-trow"><span class="rt-site">Garanti BBVA</span><span class="rt-val">₺2.980.000</span></div>
+            <div class="rep-trow"><span class="rt-site">Akbank</span><span class="rt-val">₺1.640.000</span></div>
+            <div class="rep-trow"><span class="rt-site">Ziraat Bankası</span><span class="rt-val">₺645.000</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">03</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-bell"></i><h2>Kişisel Bildirimler</h2></div>
+          <p class="rep-lede">Eksik belge uyarıları ve sistem hatırlatmaları.</p>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Eksik belge</span><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014 metraj tutanağı</a><span class="rr-meta">itiraz nedeniyle ödeme bloke</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">Sistem</span><span style="color:var(--ink);font-weight:700">Hatırlatma</span><span class="rr-meta">FTR-2026-09 vadesi 27 Ağustos'ta</span></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sol, muhasebe) -->
+
+      <div class="rep-col">
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">04</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Kişisel Görevler</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevlerim <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-stats">
+            <div class="rep-stat" style="color:var(--danger)"><b style="color:var(--danger)">1</b><span>geciken</span></div>
+            <div class="rep-stat"><b>1</b><span>devam eden</span></div>
+          </div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--danger-tint);color:var(--danger)">Gecikti</span><a href="crm-gorev-detay.html?gorev=010">Haziran kasa mutabakatını tamamla</a><span class="rr-meta">Murat Denizli verdi</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">15 Tem</span><a href="crm-gorev-detay.html?gorev=014">Temmuz hakediş taslağını gözden geçir</a><span class="rr-meta">devam ediyor</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B§8.2 örneği: "Muhasebe için: Bekleyen kasa, avans, banka hareketi ve hakediş
+           özetleri" + B§8.3'ün hakediş ödemeleri/cari hareketler/kredi kartı-Pluxee. -->
+      <div class="rep-item rep-card">
+        <div class="rep-num">05</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-chart-line"></i><h2>Kişisel Rapor Özeti</h2></div>
+          <div class="rep-sub">Hakediş Ödemeleri</div>
+          <div class="rep-list">
+            <div class="rep-row"><a class="rr-code" href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a><span class="rr-meta">Demir-Beton · Haziran dönemi</span><span style="margin-left:auto;font-weight:800;color:var(--ink)">₺90.000</span></div>
+            <div class="rep-row"><a class="rr-code" href="crm-finans-hakedis-detay.html?th=009">TH-2026-009</a><span class="rr-meta">ElektroMek · Haziran dönemi</span><span style="margin-left:auto;font-weight:800;color:var(--ink)">₺76.200</span></div>
+          </div>
+          <div class="rep-sub">Cari Hareketler</div>
+          <div class="rep-stats">
+            <div class="rep-stat"><b>₺2,83M</b><span>cari alacak toplamı</span></div>
+            <div class="rep-stat" style="color:var(--danger)"><b style="color:var(--danger)">2</b><span>vadesi geçen · ₺553.000</span></div>
+          </div>
+          <div class="rep-sub">Kredi Kartı &amp; Pluxee</div>
+          <div class="rep-list">
+            <div class="rep-row"><a href="crm-operasyon-kredikarti.html">4 kart dönem borcu</a><span class="rr-meta">KKR-2026-014 onayda</span><span style="margin-left:auto;font-weight:800;color:var(--ink)">₺234.650</span></div>
+            <div class="rep-row"><a href="crm-operasyon-pluxee.html">Pluxee — 12 kart</a><span class="rr-meta">Temmuz harcama</span><span style="margin-left:auto;font-weight:800;color:var(--ink)">₺3.760</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">06</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-calendar-day"></i><h2>Kişisel Ajanda</h2></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">14:00</span><a href="crm-finans-hakedis-detay.html?hkd=006">HKD-2026-006 işveren onay takibi</a><span class="rr-meta">Körfez GYO</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">27 Ağu</span><span style="color:var(--ink);font-weight:700">FTR-2026-09 vadesi</span><span class="rr-meta">₺2.840.000</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">Ekstre</span><span style="color:var(--ink);font-weight:700">Kesim takvimi</span><span class="rr-meta">Garanti 8'i · Akbank 15'i · İş 20'si · YKB 25'i</span></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sağ, muhasebe) -->
+      </div><!-- /rep-cols (muhasebe) -->
+    </section>
+
+    <!-- ============ İK RAPORU (ik — kanonik: Seda Karaca) ============
+         B§8.3 İK 7 madde: izin talepleri(01) · sağlık raporları(05) · personel
+         evrakları(05) · eksik belge uyarıları(03) · yeni personel kayıtları(05) ·
+         zimmet işlemleri(05) · personel şantiye atamaları(05). Sayılar
+         shell.js "PERSONEL SAYIMI" (25/22/3, izinli 1, eksik evrak 4) + "ZİMMET
+         GEÇMİŞİ" kanoniğiyle BİREBİR. -->
+    <section data-view="ik" hidden>
+      <div class="rep-mast">
+        <div class="rep-mast-eyebrow"><i class="fa-solid fa-sun"></i> Gün Raporu — İK</div>
+        <h1 data-greet-tpl="Günaydın, {ad} {hon} — bugün İK biriminde 2 göreviniz, 3 bekleyen onayınız ve 4 eksik evrak uyarınız bulunuyor.">Günaydın —</h1>
+        <div class="rep-mast-who">
+          <span class="rep-mstat"><i class="fa-solid fa-user"></i> <b class="rmm-who">—</b></span>
+          <span class="rep-mstat"><i class="fa-solid fa-id-badge"></i> <span class="rmm-role">—</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-calendar-day"></i> <span class="rmm-date">2 Temmuz 2026, Perşembe</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-location-dot"></i> <span class="rmm-site">İnsan Kaynakları Departmanı</span></span>
+        </div>
+        <p>Günlük puantaj onayınızı bekliyor, 1 izin talebi sırada. 22 aktif personelden 4'ünün evrakı eksik.</p>
+        <div class="rep-mast-foot">
+          <div class="rep-mstat"><i class="fa-solid fa-users"></i> <b>22</b> aktif personel</div>
+          <div class="rep-mstat"><i class="fa-solid fa-umbrella-beach"></i> <b>1</b> bugün izinli</div>
+          <div class="rep-mstat"><i class="fa-solid fa-folder-open"></i> <b>4</b> eksik evrak</div>
+        </div>
+      </div>
+
+      <div class="rep-cols">
+      <div class="rep-col">
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">01</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Kişisel Onaylar</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-panel-onaylar.html">Onay kuyruğu <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-lede">İzin talepleri ve günlük puantaj onayı sizin adımınızda.</div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">İzin</span><a class="rr-code" href="crm-personel-izin-detay.html?izn=031">İZN-2026-031</a><span class="rr-meta">Ali Vural · 6–10 Temmuz · şef onayı sonrası sırada</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Puantaj</span><span style="color:var(--ink);font-weight:700">Günlük puantaj onayı</span><span class="rr-meta">3 şantiye girişi · 2 Temmuz · Taslak</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">02</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-users"></i><h2>Personel Durumu</h2><a class="gc-link" href="crm-personel.html">Personel listesi <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-stats">
+            <div class="rep-stat"><b>25</b><span>toplam kadro</span></div>
+            <div class="rep-stat"><b>22</b><span>aktif</span></div>
+            <div class="rep-stat"><b>3</b><span>pasif / ayrılan</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">03</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-bell"></i><h2>Kişisel Bildirimler</h2><a class="gc-link" href="crm-personel-ozluk.html">Özlük &amp; doküman <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--danger-tint);color:var(--danger)">Eksik belge</span><span style="color:var(--ink);font-weight:700">İşe giriş evrakı eksik personel</span><span class="rr-meta">4 kayıt</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Süre yaklaşıyor</span><span style="color:var(--ink);font-weight:700">Sertifika / sağlık raporu yenilemesi</span><span class="rr-meta">6 kayıt</span></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sol, ik) -->
+
+      <div class="rep-col">
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">04</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Kişisel Görevler</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevlerim <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">Havuz</span><a href="crm-gorev-detay.html?gorev=030">Merkez Şantiye personel özlük evrak eksik kontrolü</a><span class="rr-meta">1 gündür havuzda</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">12 Tem</span><a href="crm-gorev-detay.html?gorev=013">Yeni personel oryantasyon planı hazırla</a><span class="rr-meta">başlamadı</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B§8.2 örneği: "İK için: İzin, rapor, eksik evrak ve personel işlemleri
+           özeti" + B§8.3'ün sağlık raporu/zimmet/atama/yeni kayıt maddeleri. -->
+      <div class="rep-item rep-card">
+        <div class="rep-num">05</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-chart-line"></i><h2>Kişisel Rapor Özeti</h2></div>
+          <div class="rep-sub">Sağlık Raporları &amp; Personel Evrakları</div>
+          <div class="rep-list">
+            <div class="rep-row"><a href="crm-personel-rapor.html">4 rapor kaydı bu ay</a><span class="rr-meta">1 SGK bildirimi bekliyor</span></div>
+            <div class="rep-row"><a href="crm-personel-ozluk.html">Dosyası tam personel</a><span class="rr-meta">13 kayıt tam</span></div>
+          </div>
+          <div class="rep-sub">Zimmet İşlemleri</div>
+          <div class="rep-list">
+            <div class="rep-row"><a href="crm-operasyon-demirbas-detay.html?zmt=047">ZMT-2026-047 Hilti TE 60-A36</a><span class="rr-meta">Ali Vural iade etti · serviste · ₺650 borç kaydı</span></div>
+          </div>
+          <div class="rep-sub">Personel Şantiye Atamaları</div>
+          <div class="rep-list">
+            <div class="rep-row"><span style="color:var(--ink);font-weight:700">Hasan Demirci</span><span class="rr-meta">Şantiye Şefi · Vadi Konakları</span></div>
+            <div class="rep-row"><span style="color:var(--ink);font-weight:700">Aylin Koç</span><span class="rr-meta">Şantiye Şefi · Liman Lojistik Merkezi</span></div>
+          </div>
+          <div class="rep-note"><i class="fa-solid fa-circle-info"></i> Son 30 günde yeni personel kaydı girilmedi — kadro 25'te sabit.</div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">06</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-calendar-day"></i><h2>Kişisel Ajanda</h2></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Yarın</span><a href="crm-personel-izin-detay.html?izn=030">İZN-2026-030 son gün</a><span class="rr-meta">Aylin Koç yıllık izni</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">12 Tem</span><span style="color:var(--ink);font-weight:700">Oryantasyon planı teslim</span><span class="rr-meta">görev 013</span></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sağ, ik) -->
+      </div><!-- /rep-cols (ik) -->
+    </section>
+
+    <!-- ============ SATIN ALMA RAPORU (satinalma — kanonik: Baran Yıldız) ============
+         B§8.3 Satın Alma 6 madde: yeni malzeme talepleri(03) · bekleyen teklifler(05) ·
+         termin gecikmeleri(02) · tedarikçi hareketleri(05) · satın alma onayları(01) ·
+         kısmi teslimatlar(02). Sayılar shell.js "TAM ZİNCİR"/"TEDARİKÇİLER" kanoniğiyle
+         BİREBİR. -->
+    <section data-view="satinalma" hidden>
+      <div class="rep-mast">
+        <div class="rep-mast-eyebrow"><i class="fa-solid fa-sun"></i> Gün Raporu — Satın Alma</div>
+        <h1 data-greet-tpl="Günaydın, {ad} {hon} — bugün satın alma biriminde 2 göreviniz, 1 onayınızda bekleyen talebiniz ve 1 termin uyarınız bulunuyor.">Günaydın —</h1>
+        <div class="rep-mast-who">
+          <span class="rep-mstat"><i class="fa-solid fa-user"></i> <b class="rmm-who">—</b></span>
+          <span class="rep-mstat"><i class="fa-solid fa-id-badge"></i> <span class="rmm-role">—</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-calendar-day"></i> <span class="rmm-date">2 Temmuz 2026, Perşembe</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-location-dot"></i> <span class="rmm-site">Satın Alma Departmanı</span></span>
+        </div>
+        <p>1 talep onayınızda, 1 sipariş gecikmede. Marmara Demir Çelik teslimatı kısmi devam ediyor.</p>
+        <div class="rep-mast-foot">
+          <div class="rep-mstat"><i class="fa-solid fa-boxes-stacked"></i> <b>7</b> onay sürecinde talep</div>
+          <div class="rep-mstat"><i class="fa-solid fa-truck"></i> <b>3</b> yolda sipariş</div>
+          <div class="rep-mstat"><i class="fa-solid fa-triangle-exclamation"></i> <b>1</b> geciken sipariş</div>
+        </div>
+      </div>
+
+      <div class="rep-cols">
+      <div class="rep-col">
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">01</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Kişisel Onaylar</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-satinalma-talepler.html">Talepler <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">Onayımda</span><a href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a><span class="rr-meta">Hazır beton C30 + Ø12 demir · acil talep</span></div>
+          </div>
+          <div class="rep-note"><i class="fa-solid fa-circle-info"></i> Diğer 6 talep şef / teknik müdür adımında.</div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">02</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-truck-ramp-box"></i><h2>Sipariş &amp; Teslimat Durumu</h2><a class="gc-link" href="crm-satinalma-termin.html">Termin takibi <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--danger-tint);color:var(--danger)">2 gün</span><span style="color:var(--ink);font-weight:700">SAT-2026-011 XPS yalıtım gecikti</span><span class="rr-meta">Merkez Şantiye</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Kısmi</span><a href="crm-satinalma-siparisler.html">SIP-2026-05 Marmara Demir Çelik</a><span class="rr-meta">Ø16 −0,4t uyuşmazlık</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">03</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-bell"></i><h2>Kişisel Bildirimler</h2><a class="gc-link" href="crm-satinalma-talepler.html">Yeni talepler <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-lede">Bugün gelen yeni malzeme talepleri.</div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">Yeni</span><a href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a><span class="rr-meta">Hasan Demirci gönderdi · acil</span></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sol, satinalma) -->
+
+      <div class="rep-col">
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">04</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Kişisel Görevler</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevlerim <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">Havuz</span><a href="crm-gorev-detay.html?gorev=021">Liman Lojistik çevre aydınlatma keşfi</a><span class="rr-meta">2 gündür havuzda</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">6 Tem</span><a href="crm-gorev-detay.html?gorev=012">Malzeme talep onay sürecini hızlandır</a><span class="rr-meta">devam ediyor</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B§8.2 örneği: "Satın alma için: Talep, termin, tedarikçi ve sipariş
+           özetleri" + B§8.3'ün bekleyen teklifler/tedarikçi hareketleri maddeleri. -->
+      <div class="rep-item rep-card">
+        <div class="rep-num">05</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-chart-line"></i><h2>Kişisel Rapor Özeti</h2></div>
+          <div class="rep-sub">Bekleyen Teklifler</div>
+          <div class="rep-list">
+            <div class="rep-row"><a href="crm-satinalma-siparisler.html">SAT-2026-018 icmali</a><span class="rr-meta">Marmara SEÇİLDİ</span><span style="margin-left:auto;font-weight:800;color:var(--ink)">₺2,84M</span></div>
+            <div class="rep-row"><span style="color:var(--ink-2)">Deta Demir Çelik</span><span class="rr-meta">30 gün vade, seçilmedi</span><span style="margin-left:auto;font-weight:700;color:var(--ink-2)">₺2,81M</span></div>
+          </div>
+          <div class="rep-sub">Tedarikçi Hareketleri</div>
+          <div class="rep-list">
+            <div class="rep-row"><a href="crm-satinalma-tedarikciler.html">Ege Hazır Beton</a><span class="rr-meta">%96 performans · cari ₺54.900 alacaklı</span></div>
+            <div class="rep-row"><a href="crm-satinalma-tedarikciler.html">Delta Elektrik</a><span class="rr-meta">%71 performans · termin gecikmesi</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">06</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-calendar-day"></i><h2>Kişisel Ajanda</h2></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">09:00</span><a href="crm-satinalma-form-detay.html?form=016">SAT-2026-016 kalıp kerestesi teslimi</a><span class="rr-meta">Vadi Konakları</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">9 Tem</span><span style="color:var(--ink);font-weight:700">SIP-2026-07 şap betonu termini</span><span class="rr-meta">Vadi Konakları</span></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sağ, satinalma) -->
+      </div><!-- /rep-cols (satinalma) -->
+    </section>
+
+    <!-- ============ SAHA PERSONELİ RAPORU (personel — kanonik: Ali Vural) ============
+         B§8.3 Saha Personeli 6 madde: bana verilen görevler(01) · saha bildirimi
+         gönder(04) · bugünkü iş programı(02) · yorumlar(03) · revize istenen
+         işler(03) · dosya/görsel yükleme(05). personel.secs=['panel','gorev']
+         SINIRLIDIR — tüm linkler bu 2 bölümle SINIRLI tutuldu (santiye/personel
+         bölümlerine link YOK, aksi 403'e düşer). -->
+    <section data-view="personel" hidden>
+      <div class="rep-mast">
+        <div class="rep-mast-eyebrow"><i class="fa-solid fa-sun"></i> Gün Raporu — Vadi Konakları</div>
+        <h1 data-greet-tpl="Günaydın, {ad} {hon} — bugün Vadi Konakları'nda 2 göreviniz, 1 bekleyen onayınız (izin talebiniz) ve göreviniz üzerinde yeni bir yorum bulunuyor.">Günaydın —</h1>
+        <div class="rep-mast-who">
+          <span class="rep-mstat"><i class="fa-solid fa-user"></i> <b class="rmm-who">—</b></span>
+          <span class="rep-mstat"><i class="fa-solid fa-id-badge"></i> <span class="rmm-role">—</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-calendar-day"></i> <span class="rmm-date">2 Temmuz 2026, Perşembe</span></span>
+          <span class="rep-mstat"><i class="fa-solid fa-location-dot"></i> <span class="rmm-site">Vadi Konakları — saha kadrosu</span></span>
+        </div>
+        <p>İzin talebiniz (İZN-2026-031) şef onayında, avans talebiniz (AVN-2026-014) muhasebe onayında.</p>
+        <div class="rep-mast-foot">
+          <div class="rep-mstat"><i class="fa-solid fa-list-check"></i> <b>2</b> açık göreviniz</div>
+          <div class="rep-mstat"><i class="fa-solid fa-umbrella-beach"></i> <b>14 gün</b> izin bakiyeniz</div>
+        </div>
+      </div>
+
+      <div class="rep-cols">
+      <div class="rep-col">
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">01</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-list-check"></i><h2>Bana Verilen Görevler</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev.html?f=bana">Görevlerim <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">3 Tem</span><a href="crm-gorev-detay.html?gorev=007">Puantaj defterini güncelle</a><span class="rr-meta">Hasan Demirci verdi</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--bg);color:var(--muted)">8 Tem</span><a href="crm-gorev-detay.html?gorev=006">Kalıp kereste stok sayımı</a><span class="rr-meta">Hasan Demirci verdi</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">02</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-calendar-day"></i><h2>Bugünkü İş Programı</h2></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--ok-tint);color:var(--ok)">Devam</span><span style="color:var(--ink);font-weight:700">Perde betonu kür takibi</span><span class="rr-meta">kalıp söküm tamamlandı, kür örtüsü seriliyor</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">Bugün</span><span style="color:var(--ink);font-weight:700">Zemin kat elektrik tesisatı</span><span class="rr-meta">İbrahim Sönmez ile birlikte</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">03</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-comments"></i><h2>Yorumlar &amp; Revize İstenen İşler</h2><a class="gc-link" href="crm-gorev-detay.html?gorev=008">Görev kaydı <i class="fa-solid fa-arrow-right"></i></a></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--info-tint);color:var(--info)">Yorum</span><span style="color:var(--ink);font-weight:700">Murat Denizli</span><span class="rr-meta">"Kür sürecini takip edip fotoğraflı rapor bekliyorum."</span></div>
+          </div>
+          <div class="rep-note"><i class="fa-solid fa-circle-info"></i> Şantiyenizde revize istenen 1 iş var: Elektrik pano yerleşim çizimi (ElektroMek) — size ait değil, bilgi amaçlı.</div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sol, personel) -->
+
+      <div class="rep-col">
+      <!-- personel.secs santiye bölümünü İÇERMEZ — saha bildirimi burada görev kaydına
+           yorum + fotoğraf eki olarak gönderilir (crm-gorev-detay.html Yorumlar/Ekler
+           sekmeleri, gerçek çalışan input[type=file] ile), santiye bölümüne link
+           VERİLMEDİ (403'e düşer). -->
+      <div class="rep-item rep-card rep-card--action">
+        <div class="rep-num">04</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-camera"></i><h2>Saha Bildirimi Gönder</h2><span class="rep-flag">Öncelik</span><a class="gc-link" href="crm-gorev-detay.html?gorev=007">Görevimi aç <i class="fa-solid fa-arrow-right"></i></a></div>
+          <p class="rep-lede">Sahadan fotoğraflı bir bildirim paylaşmak için görev kaydınızın "Yorumlar" sekmesine yazın ve fotoğraf ekleyin — ekip anında görür.</p>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">05</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-paperclip"></i><h2>Dosya / Görsel Yükleme</h2><a class="gc-link" href="crm-gorev-detay.html?gorev=006">Görev Ekleri <i class="fa-solid fa-arrow-right"></i></a></div>
+          <p class="rep-lede">"Görev Ekleri" sekmesinden görsel, PDF, Word veya Excel dosyası ekleyebilirsiniz (en fazla 10 dosya).</p>
+        </div>
+      </div>
+
+      <div class="rep-item rep-card">
+        <div class="rep-num">06</div>
+        <div class="rep-body">
+          <div class="rep-head"><i class="fa-solid fa-stamp"></i><h2>Onaylarımın Durumu</h2></div>
+          <div class="rep-list">
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Onayda</span><span style="color:var(--ink);font-weight:700">İZN-2026-031 · yıllık izin</span><span class="rr-meta">6–10 Temmuz · şef onayında</span></div>
+            <div class="rep-row"><span class="rr-tag" style="background:var(--warn-tint);color:var(--warn)">Onayda</span><span style="color:var(--ink);font-weight:700">AVN-2026-014 · ₺4.000 avans</span><span class="rr-meta">muhasebe onayında</span></div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /rep-col (sağ, personel) -->
+      </div><!-- /rep-cols (personel) -->
     </section>
 
   </main>
@@ -366,23 +844,37 @@
 <script src="assets/js/shell.js"></script>
 <script src="assets/js/ui.js"></script>
 <script>
+/* B§8.1 "Günlük özet sayfası tamamen kişiye özel çalışmalıdır" — 6 rol için 6 AYRI
+   section (yonetim·sef·muhasebe·ik·satinalma·personel); yalnız giriş yapılan rolün
+   section'ı görünür kalır (diğerleri [hidden], offsetParent === null ile doğrulanır).
+   Karşılama (.rep-mast h1 + .rep-mast-who) ad/rol/tarih/şantiye-departman bilgisini
+   shell.js GV.R (tek kaynak — kanonik isim/rol burada KOPYALANMADI) üzerinden YALNIZ
+   aktif section içinde doldurur; gizli section'lara dokunulmaz (gereksiz DOM işi yok). */
 (function(){
   if(!window.GV) return;
-  var view = GV.role === 'sef' ? 'sef' : 'yonetim';
+  var MAP = { sef:'sef', muhasebe:'muhasebe', ik:'ik', satinalma:'satinalma', personel:'personel' };
+  var view = MAP[GV.role] || 'yonetim';
   document.querySelectorAll('[data-view]').forEach(function(el){
     el.hidden = el.getAttribute('data-view') !== view;
   });
 
-  /* D8 (1.2): saha personeli hiçbir kasa görünümü almaz — kasa bloğu kaldırılır,
-     kalan rapor maddeleri yeniden numaralanır */
-  if(GV.role === 'personel'){
-    var rk = document.getElementById('repKasa');
-    if(rk) rk.remove();
-    var n = 0;
-    document.querySelectorAll('[data-view="yonetim"] .rep-item .rep-num').forEach(function(el){
-      n++; el.textContent = (n < 10 ? '0' : '') + n;
-    });
+  /* Bey/Hanım yalnız bu sayfaya özel sunum bilgisi (shell.js'e KOPYALANMADI — rol
+     matrisi/isim orada tek kaynak kalır, burada yalnız hitap eki tutulur). */
+  var HON = { superadmin:'Bey', sahip:'Bey', yonetim:'Bey', teknik:'Hanım',
+              sef:'Bey', muhasebe:'Hanım', ik:'Hanım', satinalma:'Bey', personel:'Bey' };
+  var sec = document.querySelector('section[data-view="' + view + '"]');
+  if(!sec) return;
+  var h1 = sec.querySelector('.rep-mast h1[data-greet-tpl]');
+  if(h1){
+    var ad = GV.R.name.split(' ')[0];
+    var hon = HON[GV.role] || '';
+    h1.textContent = h1.getAttribute('data-greet-tpl').replace('{ad}', ad).replace('{hon}', hon);
   }
+  var who = sec.querySelector('.rmm-who'); if(who) who.textContent = GV.R.name;
+  var rl = sec.querySelector('.rmm-role'); if(rl) rl.textContent = GV.R.role;
+  var dt = sec.querySelector('.rmm-date'); if(dt) dt.textContent = GV.STR.greetDate;
+  /* rmm-site zaten statik-bake doğru değeri taşıyor (rol↔şantiye/departman 1:1,
+     shell.js'in kendi yorum bloğundaki eşlemeyle BİREBİR) — üzerine YAZILMAZ. */
 })();
 </script>
 </body>
