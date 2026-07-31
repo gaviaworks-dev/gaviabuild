@@ -1322,6 +1322,15 @@
       {ic:'fa-money-bill-transfer', lbl:'Banka Hareketleri', href:'crm-finans-banka-hareket.html', screen:'banka-hareket'},
       {ic:'fa-money-check-dollar', lbl:'Kredi Kartları',    href:'crm-operasyon-kredikarti.html', screen:'kredikarti'},
       {ic:'fa-credit-card',        lbl:'Pluxee Kartlar',    href:'crm-operasyon-pluxee.html',     screen:'pluxee'},
+      /* [v2-Dalga2/LEAD] A dokümanı §6 "Menü Konumu" Finans sırasını AÇIKÇA sayıyor:
+         Kasa · Banka Hesapları · Banka Hareketleri · Kredi Kartları · Pluxee Kartlar ·
+         AVANSLAR · Cari Hareketler · Hakedişler · Sözleşmeler · MİZAN.
+         Avanslar finans menüsünde YOKTU (yalnız personel altındaydı) → §6 sırasındaki
+         yerine eklendi. Personel menüsünden KALDIRILMADI: İK akışı orada başlıyor,
+         kaldırmak çalışan bir yolu koparırdı. Aynı dosyaya iki menü yolundan erişim
+         zaten kabul görmüş desen (cari↔tedarikçiler, finans↔taşeronlar emsali).
+         Rol kapısı reqSec ile personel bölümüne devredildi — ROLES matrisine DOKUNULMADI. */
+      {ic:'fa-hand-holding-dollar', lbl:'Avanslar',         href:'crm-personel-avans.html', reqSec:'personel', reqScreen:'avans'},
       {ic:'fa-right-left',         lbl:'Cari Hareketler',   href:'crm-cari-durum.html', reqSec:'cari', reqScreen:'durum'},
       {seclbl:'Hakedişler'},
       {ic:'fa-building-columns',lbl:'Kurum Hakedişleri',   href:'crm-finans-kurum.html',       screen:'kurum'},
@@ -1338,11 +1347,16 @@
          finanstır, yalnız scr.finans kısıtı OLMAYAN roller görür (superadmin/sahip/
          yonetim/muhasebe) — teknik/sef/ik'nin scr.finans listesine EKLENMEDİ, KASITLI,
          ROLES'a dokunulmadı. */
-      {ic:'fa-scale-balanced',  lbl:'Mizan',                href:'crm-finans-mizan.html',       screen:'mizan', tag:'Hazırlık'},
       {seclbl:'Bütçe & Nakit', tag:'Faz 2'},
       {ic:'fa-coins',          lbl:'Proje Bütçesi',        href:'crm-finans-butce.html',       screen:'butce'},
       {ic:'fa-chart-pie',      lbl:'Gerçekleşen Maliyet',  href:'crm-finans-maliyet.html',     screen:'maliyet', cnt:'1'},
-      {ic:'fa-money-bill-trend-up', lbl:'Nakit Akışı',     href:'crm-finans-nakit.html',       screen:'nakit'}
+      {ic:'fa-money-bill-trend-up', lbl:'Nakit Akışı',     href:'crm-finans-nakit.html',       screen:'nakit'},
+      /* [v2-Dalga2/LEAD] Mizan "Sözleşmeler" grubunun ALTINDAN çıkarıldı ve listenin
+         SONUNA alındı — A §6 sırasında Mizan bağımsız son kalemdir, sözleşme alt kalemi
+         DEĞİLDİR. §6 ayrıca mizanın 11 kaynak modülden beslendiğini söylüyor; sözleşme
+         grubunun altında durması bu bağımsızlığı yanlış anlatıyordu. href/screen/tag ve
+         rol kapısı AYNEN korundu — yalnız sıra ve grup katmanı değişti. */
+      {ic:'fa-scale-balanced',  lbl:'Mizan',               href:'crm-finans-mizan.html',       screen:'mizan', tag:'Hazırlık'}
     ]},
     ayarlar:{ ic:'fa-sliders', eyebrow:'Yönetim', title:'Ayarlar', menu:[
       {ic:'fa-building-user',  lbl:'Firma',            href:'crm-ayarlar-firma.html', screen:'firma'},
