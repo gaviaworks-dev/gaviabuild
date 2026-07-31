@@ -1136,16 +1136,18 @@
       {ic:'fa-bullhorn',       lbl:'Duyurular',        href:'crm-panel-duyurular.html',   screen:'duyurular'},
       {seclbl:'Analiz'},
       /* [D13] yönetici paneli — scr ile yalnız superadmin+sahip+yonetim (2.15) */
-      {ic:'fa-table-cells-large', lbl:'Yönetici Paneli', href:'crm-panel-yonetici.html',  screen:'yonetici'},
-      {ic:'fa-chart-column',   lbl:'Raporlar',         href:'crm-panel-raporlar.html',    screen:'raporlar'}
+      {ic:'fa-table-cells-large', lbl:'Yönetici Paneli', href:'crm-panel-yonetici.html',  screen:'yonetici'}
+      /* [v3-Dalga2] "Raporlar" kalemi buradan ÇIKTI — spec-menu-mimarisi.md §1/§4.1:
+         Raporlar artık kendi rail bölümü (bkz. aşağıda SECTIONS.raporlar). Hedef dosya
+         (crm-panel-raporlar.html) DEĞİŞMEDİ, yalnız data-sec="raporlar" oldu. */
     ]},
-    santiye:{ ic:'fa-helmet-safety', eyebrow:'Saha', title:'Şantiyeler', menu:[
+    santiye:{ ic:'fa-helmet-safety', eyebrow:'Saha', title:'Şantiye Yönetimi', menu:[
       {ic:'fa-helmet-safety',  lbl:'Şantiye Listesi',    href:'crm-santiye.html', screen:'liste'},
       {ic:'fa-camera',         lbl:'Saha Bildirimleri',  href:'crm-santiye-bildirimler.html', screen:'bildirimler', cnt:'4'},
       {ic:'fa-calendar-days',  lbl:'İş Programı',        href:'crm-santiye-ajanda.html', screen:'ajanda'},
       {ic:'fa-shield-halved',  lbl:'İSG Tutanakları',    href:'crm-santiye-isg.html',    screen:'isg'}
     ]},
-    gorev:{ ic:'fa-list-check', eyebrow:'İş Takibi', title:'Görevler', menu:[
+    gorev:{ ic:'fa-list-check', eyebrow:'İş Takibi', title:'Görev ve İş Takibi', menu:[
       /* tek liste + görünüm: sayfa ?f= paramını shell.js'ten ÖNCE body[data-screen]'e yazar */
       /* [T-GOREV-01] cnt:'8' yalnız BEYAN edilen varsayılan (dizin/kod-okuma amaçlı) —
          gerçek değer rol çözüldükten SONRA gorevPoolVisibleCount()−claim formülüyle
@@ -1156,41 +1158,51 @@
       {ic:'fa-triangle-exclamation', lbl:'Gecikenler', href:'crm-gorev.html?f=geciken',  screen:'geciken', cnt:'3'},
       {ic:'fa-circle-check',   lbl:'Tamamlananlar',    href:'crm-gorev.html?f=tamam',    screen:'tamam'}
     ]},
-    personel:{ ic:'fa-users', eyebrow:'İnsan Kaynağı', title:'Personel & İK', menu:[
+    /* [v3-Dalga2] spec-menu-mimarisi.md §4.4 — Puantaj/Taşeron Puantajı/Yemekhane
+       operasyon'dan taşındı (dosya adları DEĞİŞMEDİ, K-162). Sıra + "Sağlık Raporları"
+       adlandırması §4.4'ün birebir listesi (yeni rail-seviyesi "Raporlar" bölümüyle
+       isim çakışmasını önlemek için 'Raporlar' → 'Sağlık Raporları', screen='rapor'
+       AYNI kaldı — bkz tasks/kararlar.md). */
+    personel:{ ic:'fa-users', eyebrow:'İnsan Kaynağı', title:'Personel Yönetimi', menu:[
       {ic:'fa-users',          lbl:'Personel Listesi', href:'crm-personel.html',       screen:'liste'},
+      {ic:'fa-folder-open',    lbl:'Özlük & Evrak',    href:'crm-personel-ozluk.html', screen:'ozluk'},
       {ic:'fa-umbrella-beach', lbl:'İzinler',          href:'crm-personel-izin.html',  screen:'izin', cnt:'5'},
-      {ic:'fa-file-medical',   lbl:'Raporlar',         href:'crm-personel-rapor.html', screen:'rapor'},
+      {ic:'fa-file-medical',   lbl:'Sağlık Raporları', href:'crm-personel-rapor.html', screen:'rapor'},
       {ic:'fa-hand-holding-dollar', lbl:'Avanslar',    href:'crm-personel-avans.html', screen:'avans'},
-      {ic:'fa-folder-open',    lbl:'Özlük & Evrak',    href:'crm-personel-ozluk.html', screen:'ozluk'}
-    ]},
-    operasyon:{ ic:'fa-clipboard-list', eyebrow:'Günlük Kayıt', title:'Saha Kayıtları', menu:[
-      {ic:'fa-cash-register',  lbl:'Kasa Yönetimi',    href:'crm-operasyon-kasa.html',    screen:'kasa'},
-      {ic:'fa-credit-card',    lbl:'Pluxee Kart',      href:'crm-operasyon-pluxee.html',  screen:'pluxee'},
-      {ic:'fa-building-columns',lbl:'Kredi Kartı',     href:'crm-operasyon-kredikarti.html', screen:'kredikarti'},
       {ic:'fa-user-clock',     lbl:'Puantaj',          href:'crm-operasyon-puantaj.html', screen:'puantaj'},
-      /* [Dalga 20 / D revizyonu madde 8] §7 "ayrı ve net bir alan" hükmü — Puantaj'ın
-         hemen altına gerçek menü satırı. -detay ekranı (?tp=) izin-detay/avans-detay
-         emsaliyle menüsüz kalır, yalnız data-screen ile rol matrisinde tanınır (bkz G). */
       {ic:'fa-people-arrows',  lbl:'Taşeron Puantajı', href:'crm-operasyon-taseron-puantaj.html', screen:'taseron-puantaj'},
-      {ic:'fa-truck-pickup',   lbl:'Makine Puantajı',  href:'crm-operasyon-makine.html',    screen:'makine'},
-      {ic:'fa-utensils',       lbl:'Yemekhane',        href:'crm-operasyon-yemekhane.html', screen:'yemekhane'},
-      {ic:'fa-toolbox',        lbl:'Demirbaş',         href:'crm-operasyon-demirbas.html',  screen:'demirbas'},
+      {ic:'fa-utensils',       lbl:'Yemekhane',        href:'crm-operasyon-yemekhane.html', screen:'yemekhane'}
+    ]},
+    /* [v3-Dalga2] "operasyon" bölümü DAĞITILDI (spec-menu-mimarisi.md §1/§2, K-162)
+       — kasa/kredikarti/pluxee → finans, puantaj/taşeron-puantaj/yemekhane → personel,
+       arac/demirbas/makine ailesi → aşağıdaki YENİ "varlik" bölümü. Dosya adları DEĞİŞMEDİ,
+       yalnız <body data-sec> değerleri güncellendi. Eski yorum bloklarının (Dalga 4/
+       Dalga 20) muhtevası aşağıya, ilgili kalemlerin yanına taşındı. */
+    varlik:{ ic:'fa-cubes', eyebrow:'Varlık', title:'Varlık ve Araç Yönetimi', menu:[
+      {ic:'fa-toolbox',        lbl:'Demirbaşlar',         href:'crm-operasyon-demirbas.html',  screen:'demirbas'},
       /* [Dalga 4 / Araç-Demirbaş] Demirbaş Etiketleri (barkod/QR yazdırma) — disk taraması
          `crm-operasyon-demirbas.html`/`-demirbas-detay.html`'de hiçbir gerçek href linki
          bulunmadığını gösterdi (yalnız düz metin "Demirbaş Etiketleri ekranı kullanılır"
          notu + `crm-ayarlar-log.html`'in 2 geçmiş-kayıt linki — bunlar tasarlanmış
          navigasyon değil, arşiv-kaydı tesadüfü). Madde 83'ün (`crm-ayarlar-arsiv.html`)
          AYNI kriteri: "hiçbir sayfadan link verilmiyor" → kendi menü satırı gerekir.
-         Diğer 8 yeni ekran (arac-bildirim/arac-yakit/arac-gider/arac-dashboard,
+         Diğer 8 ekran (arac-bildirim/arac-yakit/arac-gider/arac-dashboard,
          demirbas-kategori/demirbas-marka/demirbas-bildirim/demirbas-dashboard) zaten
          arac.html/arac-detay.html/arac-form.html/demirbas.html üzerinde GERÇEK üst-aksiyon
          veya sekme linkine sahip — bu yüzden alt-akış olarak menüsüz KALDI (bkz.
          tasks/kararlar.md madde 149). */
       {ic:'fa-tags',           lbl:'Demirbaş Etiketleri', href:'crm-operasyon-demirbas-etiket.html', screen:'demirbas-etiket'},
-      {ic:'fa-car-side',       lbl:'Araçlar',          href:'crm-operasyon-arac.html',      screen:'arac'}
+      {ic:'fa-car-side',       lbl:'Araçlar',             href:'crm-operasyon-arac.html',      screen:'arac'},
+      /* [v3-Dalga2] spec §4.7 — Araç Evrakları / Bakım-Muayene Takibi bu tura kadar yalnız
+         arac.html içi sekme/aksiyon olarak erişilebiliyordu (alt-akış); doküman §10.2
+         Varlık bölümünde bunları AÇIKÇA birer üst-seviye menü kalemi olarak adlandırıyor
+         — bu yüzden burada gerçek menü satırı olarak eklendi (alt-akış erişimi de kalır). */
+      {ic:'fa-clipboard-check',lbl:'Araç Evrakları',      href:'crm-operasyon-arac-evrak.html', screen:'arac-evrak'},
+      {ic:'fa-screwdriver-wrench', lbl:'Bakım / Muayene Takibi', href:'crm-operasyon-arac-bakim.html', screen:'arac-bakim'},
+      {ic:'fa-truck-pickup',   lbl:'Makine Puantajı',     href:'crm-operasyon-makine.html',    screen:'makine'}
     ]},
     /* [D12] sipariş zinciri + stok & depo + tedarikçi — 8 dosya diskte, unlock dalga sonunda */
-    satinalma:{ ic:'fa-cart-flatbed', eyebrow:'Tedarik', title:'Satın Alma', menu:[
+    satinalma:{ ic:'fa-cart-flatbed', eyebrow:'Tedarik', title:'Satın Alma Yönetimi', menu:[
       {ic:'fa-boxes-stacked',  lbl:'Malzeme Talepleri',   href:'crm-satinalma-talepler.html', screen:'talepler', cnt:'9'},
       {ic:'fa-file-invoice',   lbl:'Satın Alma Formları', href:'crm-satinalma-formlar.html',  screen:'formlar'},
       {ic:'fa-cart-shopping',  lbl:'Siparişler',          href:'crm-satinalma-siparisler.html', screen:'siparisler', cnt:'5'},
@@ -1200,7 +1212,7 @@
       {ic:'fa-warehouse',      lbl:'Stok & Depo',         href:'crm-satinalma-stok.html',     screen:'stok', cnt:'3'},
       {ic:'fa-industry',       lbl:'Tedarikçiler',        href:'crm-satinalma-tedarikciler.html', screen:'tedarikciler'}
     ]},
-    cari:{ ic:'fa-address-book', eyebrow:'Rehber & Hesap', title:'Cariler', menu:[
+    cari:{ ic:'fa-address-book', eyebrow:'Rehber & Hesap', title:'Cari ve Firma Yönetimi', menu:[
       {ic:'fa-building',       lbl:'Firma Rehberi',   href:'crm-cari.html',       screen:'rehber'},
       {ic:'fa-id-card',        lbl:'Kişiler',         href:'crm-cari-kisiler.html', screen:'kisiler'},
       {ic:'fa-scale-balanced', lbl:'Cari Durum',      href:'crm-cari-durum.html', screen:'durum'},
@@ -1211,12 +1223,57 @@
       {ic:'fa-people-arrows', lbl:'Taşeronlar',    href:'crm-finans-taseronlar.html',    reqSec:'finans',    reqScreen:'taseronlar'},
       {ic:'fa-industry',      lbl:'Tedarikçiler',  href:'crm-satinalma-tedarikciler.html', reqSec:'satinalma', reqScreen:'tedarikciler'}
     ]},
+    /* [v3-Dalga2] YENİ bölüm — spec-menu-mimarisi.md §1/§4.9 (K-166). panel'in eski
+       "Raporlar" kalemi (crm-panel-raporlar.html) artık kendi bölümü; 15 rapor dosyası
+       (crm-panel-rapor-*.html) data-sec="raporlar" oldu ama data-screen="raporlar"
+       KİMLİĞİNİ KORUR (16 dosya aynı screen'i paylaşır — K-166). Rapor Merkezi dışındaki
+       15 kalem BİLİNÇLİ screen'siz bırakıldı (budamadan muaf çapraz link, spec §3 gerekçesi:
+       16 benzersiz screen dağıtmak 11 rolün scr matrisini yeniden yazmayı gerektirirdi).
+       Etiket/ikon çifti crm-panel-raporlar.html'in KENDİ kart etiketlerinden birebir alındı
+       (kanonik kaynak orası); doküman §10.2-9'un adlandırdığı 4 kalem (Şantiye/Personel/
+       Puantaj/Hakediş Raporları) doküman adını taşır. */
+    raporlar:{ ic:'fa-chart-column', eyebrow:'Analiz', title:'Raporlar', menu:[
+      {ic:'fa-chart-column',        lbl:'Rapor Merkezi',            href:'crm-panel-raporlar.html',      screen:'raporlar'},
+      {ic:'fa-users',               lbl:'Personel Raporları',       href:'crm-panel-rapor-personel.html'},
+      {ic:'fa-helmet-safety',       lbl:'Şantiye Raporları',        href:'crm-panel-rapor-santiye.html'},
+      {ic:'fa-user-clock',          lbl:'Puantaj Raporları',        href:'crm-panel-rapor-puantaj.html'},
+      {ic:'fa-umbrella-beach',      lbl:'İzin Raporu',              href:'crm-panel-rapor-izin.html'},
+      {ic:'fa-hand-holding-dollar', lbl:'Avans Raporu',             href:'crm-panel-rapor-avans.html'},
+      {ic:'fa-toolbox',             lbl:'Demirbaş Raporu',          href:'crm-panel-rapor-demirbas.html'},
+      {ic:'fa-truck-pickup',        lbl:'Makine Raporu',            href:'crm-panel-rapor-makine.html'},
+      {ic:'fa-file-signature',      lbl:'Hakediş Raporları',        href:'crm-panel-rapor-hakedis.html'},
+      {ic:'fa-address-book',        lbl:'Cari Raporu',              href:'crm-panel-rapor-cari.html'},
+      {ic:'fa-boxes-stacked',       lbl:'Talep Raporu',             href:'crm-panel-rapor-talep.html'},
+      {ic:'fa-coins',               lbl:'Şantiye Maliyet Raporu',   href:'crm-panel-rapor-maliyet.html'},
+      {ic:'fa-business-time',       lbl:'Personel Çalışma Raporu',  href:'crm-panel-rapor-calisma.html'},
+      {ic:'fa-arrow-trend-up',      lbl:'Fazla Mesai (FM) Raporu',  href:'crm-panel-rapor-fm.html'},
+      {ic:'fa-arrow-trend-down',    lbl:'Eksik Mesai (EM) Raporu',  href:'crm-panel-rapor-em.html'},
+      {ic:'fa-chart-gantt',         lbl:'İş Programı Raporu',       href:'crm-panel-rapor-isprogrami.html'}
+    ]},
     /* [D12] bütçe + maliyet + nakit + taşeron kartları — 6 dosya diskte, unlock dalga sonunda.
        Taşeron Kartları = KİMLİK/performans; Taşeron Hakedişleri İŞLEM listesi olarak kalır (K9) */
-    finans:{ ic:'fa-file-signature', eyebrow:'Finans', title:'Hakediş & Sözleşme', menu:[
+    /* [v3-Dalga2] spec-menu-mimarisi.md §4.5 — Kasa/Kredi Kartı/Pluxee operasyon'dan
+       taşındı (K-162, dosya adları DEĞİŞMEDİ), Cari Hareketler çapraz-link olarak eklendi.
+       Banka Hesapları/Hareketleri ve Mizan kalemleri BİLİNÇLİ EKLENMEDİ — dosyalar henüz
+       yok (Dalga 3 sahibi TB/TZ ekleyecek, bkz spec §4.5 "Dalga 2 sınırı" notu). */
+    finans:{ ic:'fa-file-signature', eyebrow:'Finans', title:'Finans Yönetimi', menu:[
+      {ic:'fa-cash-register',      lbl:'Kasa',              href:'crm-operasyon-kasa.html',       screen:'kasa'},
+      /* [v3-Dalga2] yörüngesiz-ekran taramasında bulundu: crm-operasyon-kasa-belgesiz-
+         harcama-form.html (data-screen="kasa" — kasa-detay/arac-detay emsaliyle temel
+         ekranı miraslıyor) hiçbir sayfadan (kasa.html/kasa-form.html içeriğinde "belgesiz
+         harcama" YALNIZ kasa-form.html'in kendi inline toggle'ı, bu ayrı tam-sayfa
+         varyantına link YOK) gerçek href ile erişilemiyordu — TM bu iki dosyanın İÇERİĞİNE
+         dokunma yetkisine sahip değil (domain separation, yalnız shell.js+data-sec+dizin),
+         bu yüzden erişim shell.js menüsünden sağlandı. */
+      {ic:'fa-receipt',            lbl:'Belgesiz Harcama Formu', href:'crm-operasyon-kasa-belgesiz-harcama-form.html', screen:'kasa'},
+      {ic:'fa-money-check-dollar', lbl:'Kredi Kartları',    href:'crm-operasyon-kredikarti.html', screen:'kredikarti'},
+      {ic:'fa-credit-card',        lbl:'Pluxee Kartlar',    href:'crm-operasyon-pluxee.html',     screen:'pluxee'},
+      {ic:'fa-right-left',         lbl:'Cari Hareketler',   href:'crm-cari-durum.html', reqSec:'cari', reqScreen:'durum'},
+      {seclbl:'Hakedişler'},
       {ic:'fa-building-columns',lbl:'Kurum Hakedişleri',   href:'crm-finans-kurum.html',       screen:'kurum'},
       {ic:'fa-people-arrows',  lbl:'Taşeron Hakedişleri',  href:'crm-finans-taseron.html',     screen:'taseron', cnt:'2'},
       {ic:'fa-id-card-clip',   lbl:'Taşeron Kartları',     href:'crm-finans-taseronlar.html',  screen:'taseronlar'},
+      {seclbl:'Sözleşmeler'},
       {ic:'fa-file-contract',  lbl:'Sözleşme Arşivi',      href:'crm-finans-sozlesmeler.html', screen:'sozlesmeler'},
       {seclbl:'Bütçe & Nakit', tag:'Faz 2'},
       {ic:'fa-coins',          lbl:'Proje Bütçesi',        href:'crm-finans-butce.html',       screen:'butce'},
@@ -1261,10 +1318,14 @@
       {ic:'fa-headset',               lbl:'Satış Sonrası',       href:'crm-satis-talepler.html',    screen:'talepler', cnt:'6'}
     ]}
   };
-  var RAIL_ORDER = ['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis','ayarlar'];
+  /* [v3-Dalga2] spec-menu-mimarisi.md §1 — 11 bölüm birebir sıra; operasyon çıktı,
+     varlik + raporlar YENİ. */
+  var RAIL_ORDER = ['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis','ayarlar'];
 
   /* ---- ROL config (patron cevabı #5: superadmin + sahip demo öncelikli) ---- */
-  var ALL = ['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis'];
+  /* [v3-Dalga2] spec §5 — ALL yeniden tanımlandı (operasyon çıktı, varlik+raporlar eklendi).
+     superadmin/sahip/yonetim bu sabiti kullandığı için KOD DEĞİŞİKLİĞİ GEREKMEDİ. */
+  var ALL = ['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis'];
   var ROLES = {
     superadmin:{ name:'Deniz Aksoy',      role:'Gavia Platform Yöneticisi', ini:'DA',
                  secs:ALL.concat(['ayarlar']), land:'crm-panel.html', tenantChip:true },
@@ -1278,33 +1339,51 @@
        4 yeni ekran (sipariş/irsaliye/stok/tedarikçi) */
     /* [D13] teknik/sef/muhasebe/ik panel scr'si: Yönetici Paneli (yonetici) yalnız
        superadmin+sahip+yonetim'de — bu 4 rolün görünen panel seti DEĞİŞMEDİ */
+    /* [v3-Dalga2] spec §5 telafi tablosu — operasyon dağıldığı için teknik/sef/muhasebe/ik
+       "hiçbir ekran kaybetmez" koşulunu korumak üzere secs/scr güncellendi (K-162 devamı). */
     teknik:    { name:'Elif Sarıkaya',    role:'Teknik Müdür',              ini:'ES',
-                 secs:['panel','santiye','gorev','operasyon','satinalma','finans','satis'], land:'crm-panel.html',
-                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','raporlar','duyurular','operasyon-kiosk'],
+                 secs:['panel','santiye','gorev','personel','satinalma','finans','varlik','raporlar','satis'], land:'crm-panel.html',
+                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'],
+                       /* [v3-Dalga2] teknik önceden 'personel' bölümünü HİÇ görmüyordu; artık
+                          yalnız operasyon'dan taşınan 3 ekran (puantaj/taşeron-puantaj/
+                          yemekhane) görünür — liste/izin/ozluk/avans/rapor KAPALI kalır. */
+                       personel:['puantaj','puantaj-form','taseron-puantaj','taseron-puantaj-detay','yemekhane'],
                        satis:['talepler'], satinalma:['stok'],
-                       finans:['kurum','taseron','sozlesmeler','butce','maliyet','taseronlar','sozlesme-revizyon','hakedis-onay-gecmisi'] } },
+                       /* kasa/kredikarti/pluxee EKLENDİ — teknik operasyon'da bunlara zaten sahipti */
+                       finans:['kurum','taseron','sozlesmeler','butce','maliyet','taseronlar','sozlesme-revizyon','hakedis-onay-gecmisi','kasa','kredikarti','pluxee'] } },
     sef:       { name:'Hasan Demirci',    role:'Şantiye Şefi — Vadi Konakları', ini:'HD',
-                 secs:['panel','santiye','gorev','personel','operasyon','satinalma','finans'], land:'crm-panel.html',
-                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','raporlar','duyurular','operasyon-kiosk'],
+                 secs:['panel','santiye','gorev','personel','satinalma','finans','varlik','raporlar'], land:'crm-panel.html',
+                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'],
                        satinalma:['talepler','formlar','siparisler','termin','irsaliye','stok'],
                        /* [Dalga 6A] 'taseron' EKLENDİ — crm-finans-hakedis-detay.html'in kendi
                           VADI_TH/VADI_HKD budama mantığı sef için zaten yazılmıştı ama
                           data-screen="taseron" (Taşeron Hakedişleri, TEKİL) burada yalnız
                           "taseronlar" (Taşeron Kartları, ÇOĞUL) tanımlıydı — isim uyuşmazlığı
-                          sef'i kendi şantiyesinin TH kaydına bile sokmuyordu (bkz. karar dosyası) */
-                       finans:['taseron','taseronlar'] } },
+                          sef'i kendi şantiyesinin TH kaydına bile sokmuyordu (bkz. karar dosyası)
+                          [v3-Dalga2] kasa/kredikarti/pluxee EKLENDİ (operasyon'dan telafi). */
+                       finans:['taseron','taseronlar','kasa','kredikarti','pluxee'] } },
     muhasebe:  { name:'Nesrin Aydın',     role:'Muhasebe',                  ini:'NA',
                  /* [Dalga 20 / H2a] 'gorev' EKLENDİ — §11.1 Muhasebe Departmanı görev havuzu
                     + §11.2 "yalnız o departman görür" hükmü, muhasebe gorev bölümünü hiç
                     göremeden uygulanamazdı. scr.gorev TANIMLANMADI (kısıt yok, tüm liste görünür). */
-                 secs:['panel','gorev','operasyon','satinalma','cari','finans','personel'], land:'crm-panel.html',
-                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','raporlar','duyurular','operasyon-kiosk'],
+                 secs:['panel','gorev','satinalma','cari','finans','personel','varlik','raporlar'], land:'crm-panel.html',
+                 /* [v3-Dalga2] finans zaten scr.finans TANIMSIZ (full) → kasa/kredikarti/pluxee
+                    otomatik dahil oldu, kod değişikliği gerekmedi. personel de zaten full →
+                    puantaj/taşeron-puantaj/yemekhane otomatik. varlik YENİ, scr.varlik
+                    TANIMLANMADI (full — muhasebe operasyon'da arac/demirbas/makine'yi zaten
+                    tam görüyordu). */
+                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'],
                        satinalma:['siparisler','irsaliye','stok','tedarikciler'] } },
     satinalma: { name:'Baran Yıldız',     role:'Satın Alma Sorumlusu',      ini:'BY',
                  secs:['panel','satinalma','cari','gorev'], land:'crm-panel.html',
                  scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'] } },
     ik:        { name:'Seda Karaca',      role:'İK Uzmanı',                 ini:'SK',
-                 secs:['panel','personel','gorev','operasyon'], land:'crm-panel.html',
+                 /* [v3-Dalga2] operasyon çıktı; varlik + finans(kısıtlı) + raporlar EKLENDİ
+                    (spec §5 ik satırı). personel ARTIK scr İLE BUDANIYOR — önceden operasyon
+                    scr'sinde yemekhane/taşeron-puantaj/makine YOKTU, personel full olsaydı
+                    ik bunları YENİ KAZANMIŞ olurdu (kabul kriteri ihlali) — bu yüzden
+                    scr.personel açıkça sınırlandı. */
+                 secs:['panel','personel','gorev','varlik','finans','raporlar'], land:'crm-panel.html',
                  /* [Dalga 5] araç/puantaj alt-akışları (form/arşiv/bakım/evrak/kullanım)
                     'arac'/'puantaj' temel ekranlarının aksine KENDİ benzersiz data-screen
                     kimliğini kullanıyor (demirbaş-form/detay gibi ana ekranı MİRASLAMIYOR) —
@@ -1315,11 +1394,14 @@
                     demirbas-marka/demirbas-etiket/demirbas-bildirim/demirbas-dashboard hepsi
                     KENDİ benzersiz data-screen kimliğini taşıyor (ana ekranı miraslamıyor),
                     ik zaten operasyon bölümünde araç/demirbaş görüyor — eklenmezse bu 9
-                    ekranın hepsinde 403'e düşerdi. */
-                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','raporlar','duyurular','operasyon-kiosk'],
-                       operasyon:['kasa','pluxee','puantaj','puantaj-form','demirbas','arac','arac-form','arac-arsiv','arac-bakim','arac-evrak','arac-kullanim',
+                    ekranın hepsinde 403'e düşerdi. [v3-Dalga2] 'makine' BİLİNÇLİ EKLENMEDİ
+                    — ik bunu operasyon'da da hiç görmüyordu (spec §5 notu). */
+                 scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'],
+                       varlik:['demirbas','arac','arac-form','arac-arsiv','arac-bakim','arac-evrak','arac-kullanim',
                                   'arac-bildirim','arac-yakit','arac-gider','arac-dashboard',
-                                  'demirbas-kategori','demirbas-marka','demirbas-etiket','demirbas-bildirim','demirbas-dashboard'] } },
+                                  'demirbas-kategori','demirbas-marka','demirbas-etiket','demirbas-bildirim','demirbas-dashboard'],
+                       finans:['kasa','pluxee'],
+                       personel:['liste','izin','rapor','avans','ozluk','puantaj','puantaj-form'] } },
     personel:  { name:'Ali Vural',        role:'Saha Personeli',            ini:'AV',
                  secs:['panel','gorev'], land:'crm-panel.html',
                  scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'] } },
