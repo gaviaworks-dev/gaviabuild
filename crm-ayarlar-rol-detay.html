@@ -192,15 +192,19 @@
 (function(){
   if(!window.GV) return;
 
+  /* [TRol/Dalga 6] operasyon KALDIRILDI (Dalga 2'de dağıtıldı); varlik + raporlar
+     EKLENDİ — crm-ayarlar-roller.html'deki tasks/rol-matris-bolum.cjs kaynaklı
+     11 rol × 11 bölüm matrisiyle BİREBİR. */
   var SECS = [
     {k:'panel',     ic:'fa-gauge-high',     lbl:'Panel'},
     {k:'santiye',   ic:'fa-helmet-safety',  lbl:'Şantiye'},
     {k:'gorev',     ic:'fa-list-check',     lbl:'Görev'},
     {k:'personel',  ic:'fa-users',          lbl:'Personel'},
-    {k:'operasyon', ic:'fa-clipboard-list', lbl:'Operasyon'},
-    {k:'satinalma', ic:'fa-cart-flatbed',   lbl:'Satın Alma'},
-    {k:'cari',      ic:'fa-address-book',   lbl:'Cari'},
     {k:'finans',    ic:'fa-file-signature', lbl:'Finans'},
+    {k:'satinalma', ic:'fa-cart-flatbed',   lbl:'Satın Alma'},
+    {k:'varlik',    ic:'fa-cubes',          lbl:'Varlık'},
+    {k:'cari',      ic:'fa-address-book',   lbl:'Cari'},
+    {k:'raporlar',  ic:'fa-chart-column',   lbl:'Raporlar'},
     {k:'satis',     ic:'fa-chart-line',     lbl:'Satış'},
     {k:'ayarlar',   ic:'fa-sliders',        lbl:'Ayarlar'}
   ];
@@ -231,35 +235,35 @@
 
   var ROLE_FULL = {
     superadmin:{ad:'Gavia Platform Yöneticisi', aciklama:'Gavia platformunun tüm tenant\'larını ve sistem ayarlarını yönetir.', dept:'Platform', varsayilan:true, santiye:false, firma:true, aktif:true, protected:true, olusturan:'Sistem', tarih:'15.01.2026', cls:'is-plat',
-      secs:['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis','ayarlar'], part:{}, users:[U.dz]},
+      secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis','ayarlar'], part:{}, users:[U.dz]},
     sahip:{ad:'Firma Sahibi', aciklama:'Firmanın tüm modüllerine tam erişimi olan en üst yetkili.', dept:'Yönetim', varsayilan:true, santiye:false, firma:true, aktif:true, protected:true, olusturan:'Sistem', tarih:'15.01.2026', cls:'is-owner',
-      secs:['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis','ayarlar'], part:{}, users:[U.ky]},
+      secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis','ayarlar'], part:{}, users:[U.ky]},
     yonetim:{ad:'Genel Müdür', aciklama:'Genel müdür düzeyinde, ayarlar hariç tüm bölümlere erişir.', dept:'Yönetim', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis'], part:{}, users:[U.md]},
-    teknik:{ad:'Teknik Müdür', aciklama:'Teknik müdür; şantiye, operasyon ve finansın teknik yönünü yönetir.', dept:'Teknik', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','santiye','gorev','operasyon','satinalma','finans','satis'], part:{panel:'Yönetici Paneli hariç', satinalma:'yalnız Stok & Depo', finans:'Nakit Akışı hariç', satis:'yalnız Satış Sonrası talepleri'}, users:[U.es]},
-    sef:{ad:'Şantiye Şefi', aciklama:'Şantiye şefi; kendi şantiyesinin saha, personel ve operasyon kayıtlarını yönetir.', dept:'Saha Operasyon', varsayilan:true, santiye:true, firma:false, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','santiye','gorev','personel','operasyon','satinalma','finans'], part:{panel:'Yönetici Paneli hariç', satinalma:'Tedarikçiler hariç; sipariş/irsaliye kendi şantiyesi', finans:'yalnız Taşeron Kartları (kendi şantiyesi)'}, users:[U.hd,U.ak,U.ot]},
+      secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis'], part:{}, users:[U.md]},
+    teknik:{ad:'Teknik Müdür', aciklama:'Teknik müdür; şantiye, varlık ve finansın teknik yönünü yönetir.', dept:'Teknik', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
+      secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','raporlar','satis'], part:{panel:'Yönetici Paneli hariç', personel:'yalnız Puantaj, Taşeron Puantajı ve Yemekhane', satinalma:'yalnız Stok & Depo', finans:'Banka Hesapları/Hareketleri, Mizan ve Nakit Akışı hariç', satis:'yalnız Satış Sonrası talepleri'}, users:[U.es]},
+    sef:{ad:'Şantiye Şefi', aciklama:'Şantiye şefi; kendi şantiyesinin saha, personel ve varlık kayıtlarını yönetir.', dept:'Saha Operasyon', varsayilan:true, santiye:true, firma:false, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
+      secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','raporlar'], part:{panel:'Yönetici Paneli hariç', satinalma:'Tedarikçiler hariç', finans:'yalnız Taşeron Hakedişleri, Taşeron Kartları, Kasa, Kredi Kartları ve Pluxee'}, users:[U.hd,U.ak,U.ot]},
     muhasebe:{ad:'Muhasebe', aciklama:'Muhasebe; kasa, cari ve finans kayıtlarını işler.', dept:'Muhasebe & Finans', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','personel','operasyon','satinalma','cari','finans'], part:{panel:'Yönetici Paneli hariç', satinalma:'yalnız Siparişler + İrsaliye & Fatura + Stok (okuma) + Tedarikçiler'}, users:[U.na]},
+      secs:['panel','gorev','personel','finans','satinalma','varlik','cari','raporlar'], part:{panel:'Yönetici Paneli hariç', satinalma:'yalnız Siparişler, İrsaliye & Fatura, Stok ve Tedarikçiler'}, users:[U.na]},
     satinalma:{ad:'Satın Alma Sorumlusu', aciklama:'Satın alma sorumlusu; malzeme talebi ve tedarik sürecini yürütür.', dept:'Satın Alma', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','gorev','satinalma','cari'], part:{panel:'Raporlar ve Yönetici Paneli hariç'}, users:[U.by]},
+      secs:['panel','gorev','satinalma','cari'], part:{panel:'Yönetici Paneli hariç'}, users:[U.by]},
     ik:{ad:'İK Uzmanı', aciklama:'İK uzmanı; personel, izin ve puantaj süreçlerini yönetir.', dept:'İnsan Kaynakları', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','gorev','personel','operasyon'], part:{panel:'Yönetici Paneli hariç', operasyon:'yalnız Kasa (okuma) + Pluxee + Puantaj + Demirbaş'}, users:[U.sk]},
+      secs:['panel','gorev','personel','finans','varlik','raporlar'], part:{panel:'Yönetici Paneli hariç', personel:'Taşeron Puantajı ve Yemekhane hariç', varlik:'Makine Puantajı hariç', finans:'yalnız Kasa ve Pluxee'}, users:[U.sk]},
     personel:{ad:'Saha Personeli', aciklama:'Saha personeli; kendi görev ve bildirimlerini görüntüler.', dept:'Saha Operasyon', varsayilan:true, santiye:true, firma:false, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','gorev'], part:{panel:'Raporlar ve Yönetici Paneli hariç'}, users:[U.is,U.sa2,U.ry,U.av,U.hg,U.rk,U.sd,U.me,U.vs]},
+      secs:['panel','gorev'], part:{panel:'Yönetici Paneli hariç'}, users:[U.is,U.sa2,U.ry,U.av,U.hg,U.rk,U.sd,U.me,U.vs]},
     satismudur:{ad:'Satış Müdürü', aciklama:'Satış müdürü; pipeline ve teklif onay sürecini yönetir.', dept:'Satış', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','gorev','satis','cari'], part:{panel:'Raporlar ve Yönetici Paneli hariç'}, users:[U.oe]},
+      secs:['panel','gorev','cari','satis'], part:{panel:'Yönetici Paneli hariç'}, users:[U.oe]},
     satistemsilci:{ad:'Satış Temsilcisi', aciklama:'Satış temsilcisi; kendi müşteri ve fırsatlarını yönetir.', dept:'Satış', varsayilan:true, santiye:false, firma:true, aktif:true, protected:false, olusturan:'Sistem', tarih:'15.01.2026',
-      secs:['panel','gorev','satis'], part:{panel:'Raporlar ve Yönetici Paneli hariç', satis:'yalnız kendi müşteri, fırsat ve teklifleri'}, users:[U.sa]},
+      secs:['panel','gorev','satis'], part:{panel:'Yönetici Paneli hariç'}, users:[U.sa]},
     'ozel-santiye-muhasebe':{ad:'Şantiye Muhasebe Sorumlusu', aciklama:'Özel rol (demo) — tek şantiyenin kasa ve puantaj kayıtlarını muhasebeye ön-hazırlar.', dept:'Muhasebe & Finans', varsayilan:false, santiye:true, firma:false, aktif:false, protected:false, olusturan:'Kemal Yapıcıoğlu', tarih:'28.06.2026', demo:true,
-      secs:['panel','operasyon'], part:{panel:'Raporlar ve Yönetici Paneli hariç'}, users:[]}
+      secs:['panel','finans'], part:{panel:'Yönetici Paneli hariç'}, users:[]}
   };
 
   var LOGS = {
     superadmin:[{ico:'fa-right-to-bracket', txt:'<b>Deniz Aksoy</b> platform yöneticisi oturumu açtı', log:'0821'}],
     sahip:[{ico:'fa-sliders', txt:'<b>Kemal Yapıcıoğlu</b> kasa onay eşiğini <b>₺25.000 → ₺40.000</b> olarak değiştirdi', log:'0833'}],
-    ik:[{ico:'fa-user-shield', txt:'<b>Kemal Yapıcıoğlu</b> Seda Karaca\'nın rol tanımını güncelledi — operasyon ekran kapsamı genişletildi (kasa okuma + Pluxee)', log:'0808'}],
+    ik:[{ico:'fa-user-shield', txt:'<b>Kemal Yapıcıoğlu</b> Seda Karaca\'nın rol tanımını güncelledi — finans ekran kapsamı genişletildi (Kasa + Pluxee)', log:'0808'}],
     muhasebe:[{ico:'fa-user-shield', txt:'Rol kapsamı son 90 günde değişmedi', log:null}],
     'ozel-santiye-muhasebe':[{ico:'fa-flask', txt:'<b>Kemal Yapıcıoğlu</b> "Şantiye Muhasebe Sorumlusu" özel rolünü demo olarak oluşturdu', log:null}]
   };

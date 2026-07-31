@@ -132,33 +132,37 @@ tr.pm-no-access td:not(.pm-modcell){background:var(--bg)}
 (function(){
   if(!window.GV) return;
 
+  /* [TRol/Dalga 6] operasyon KALDIRILDI (Dalga 2'de dağıtıldı); varlik + raporlar
+     EKLENDİ — tasks/rol-matris-bolum.cjs ile shell.js'ten programatik türetildi
+     (bkz. crm-ayarlar-roller.html üstündeki BİREBİR kaynak, aynı 11 rol × 11 bölüm). */
   var SECS = [
     {k:'panel',     ic:'fa-gauge-high',     lbl:'Panel'},
     {k:'santiye',   ic:'fa-helmet-safety',  lbl:'Şantiye'},
     {k:'gorev',     ic:'fa-list-check',     lbl:'Görev'},
     {k:'personel',  ic:'fa-users',          lbl:'Personel'},
-    {k:'operasyon', ic:'fa-clipboard-list', lbl:'Operasyon'},
-    {k:'satinalma', ic:'fa-cart-flatbed',   lbl:'Satın Alma'},
-    {k:'cari',      ic:'fa-address-book',   lbl:'Cari'},
     {k:'finans',    ic:'fa-file-signature', lbl:'Finans'},
+    {k:'satinalma', ic:'fa-cart-flatbed',   lbl:'Satın Alma'},
+    {k:'varlik',    ic:'fa-cubes',          lbl:'Varlık'},
+    {k:'cari',      ic:'fa-address-book',   lbl:'Cari'},
+    {k:'raporlar',  ic:'fa-chart-column',   lbl:'Raporlar'},
     {k:'satis',     ic:'fa-chart-line',     lbl:'Satış'},
     {k:'ayarlar',   ic:'fa-sliders',        lbl:'Ayarlar'}
   ];
   var PERMS = ['goruntule','ekle','duzenle','sil','onayla','raporla','disaAktar','dosyaYukle','dosyaIndir','gizliBelge','finansalVeri','yonetimVerisi'];
 
   var ROLES = {
-    superadmin:{ad:'Gavia Platform Yöneticisi', secs:['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis','ayarlar'], part:{}},
-    sahip:{ad:'Firma Sahibi', secs:['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis','ayarlar'], part:{}},
-    yonetim:{ad:'Genel Müdür', secs:['panel','santiye','gorev','personel','operasyon','satinalma','cari','finans','satis'], part:{}},
-    teknik:{ad:'Teknik Müdür', secs:['panel','santiye','gorev','operasyon','satinalma','finans','satis'], part:{panel:1,satinalma:1,finans:1,satis:1}},
-    sef:{ad:'Şantiye Şefi', secs:['panel','santiye','gorev','personel','operasyon','satinalma','finans'], part:{panel:1,satinalma:1,finans:1}},
-    muhasebe:{ad:'Muhasebe', secs:['panel','personel','operasyon','satinalma','cari','finans'], part:{panel:1,satinalma:1}},
+    superadmin:{ad:'Gavia Platform Yöneticisi', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis','ayarlar'], part:{}},
+    sahip:{ad:'Firma Sahibi', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis','ayarlar'], part:{}},
+    yonetim:{ad:'Genel Müdür', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis'], part:{}},
+    teknik:{ad:'Teknik Müdür', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','raporlar','satis'], part:{panel:1,personel:1,finans:1,satinalma:1,satis:1}},
+    sef:{ad:'Şantiye Şefi', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','raporlar'], part:{panel:1,finans:1,satinalma:1}},
+    muhasebe:{ad:'Muhasebe', secs:['panel','gorev','personel','finans','satinalma','varlik','cari','raporlar'], part:{panel:1,satinalma:1}},
     satinalma:{ad:'Satın Alma Sorumlusu', secs:['panel','gorev','satinalma','cari'], part:{panel:1}},
-    ik:{ad:'İK Uzmanı', secs:['panel','gorev','personel','operasyon'], part:{panel:1,operasyon:1}},
+    ik:{ad:'İK Uzmanı', secs:['panel','gorev','personel','finans','varlik','raporlar'], part:{panel:1,personel:1,finans:1,varlik:1}},
     personel:{ad:'Saha Personeli', secs:['panel','gorev'], part:{panel:1}},
-    satismudur:{ad:'Satış Müdürü', secs:['panel','gorev','satis','cari'], part:{panel:1}},
-    satistemsilci:{ad:'Satış Temsilcisi', secs:['panel','gorev','satis'], part:{panel:1,satis:1}},
-    'ozel-santiye-muhasebe':{ad:'Şantiye Muhasebe Sorumlusu', secs:['panel','operasyon'], part:{panel:1}}
+    satismudur:{ad:'Satış Müdürü', secs:['panel','gorev','cari','satis'], part:{panel:1}},
+    satistemsilci:{ad:'Satış Temsilcisi', secs:['panel','gorev','satis'], part:{panel:1}},
+    'ozel-santiye-muhasebe':{ad:'Şantiye Muhasebe Sorumlusu', secs:['panel','finans'], part:{panel:1}}
   };
 
   var q = new URLSearchParams(location.search);
@@ -185,8 +189,9 @@ tr.pm-no-access td:not(.pm-modcell){background:var(--bg)}
      goruntule    : modül erişimi varsa her zaman açık
      ekle/duzenle : yönetim rolleri VEYA modül "tam" ise açık; "kısmi" ise kapalı
      sil          : yalnız yönetim rolleri (superadmin/sahip/yonetim) — §17 arşivleme ilkesiyle uyumlu
-     onayla       : yönetim rolleri HER ZAMAN; diğerlerinde yalnız operasyon/satinalma/finans/personel/santiye
-                    modüllerinde VE modül "tam" ise (onay akışı olan modüller)
+     onayla       : yönetim rolleri HER ZAMAN; diğerlerinde yalnız varlik/satinalma/finans/personel/santiye
+                    modüllerinde VE modül "tam" ise (onay akışı olan modüller — operasyon'un yerini
+                    Dalga 2'de dağıldığı 3 bölümden onay-akışlı olanı, varlik, aldı)
      raporla/disaAktar : ayarlar modülü hariç açık (ayarlar'da yalnız yönetim)
      dosyaYukle/dosyaIndir : panel/gorev hariç açık (bu ikisi belge barındırmaz)
      gizliBelge   : yalnız yönetim rolleri + teknik müdürün finans kısmi erişimi
@@ -196,7 +201,7 @@ tr.pm-no-access td:not(.pm-modcell){background:var(--bg)}
     if(!has) return null;
     var kismi = !!role.part[sec];
     var tam = !kismi;
-    var onayModul = ['operasyon','satinalma','finans','personel','santiye'].indexOf(sec) !== -1;
+    var onayModul = ['varlik','satinalma','finans','personel','santiye'].indexOf(sec) !== -1;
     return {
       goruntule:true,
       ekle: mgmt || tam,
