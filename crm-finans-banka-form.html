@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Banka Hesabı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: yeni banka hesabı formu — kasa-form.html frm-grid iskeletinin devralınmış hâli */
+.frm-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+@media(max-width:980px){.frm-grid{grid-template-columns:minmax(0,1fr)}}
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.gform-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+@media(max-width:560px){.gform-2col{grid-template-columns:1fr}}
+
+/* IBAN alanı — doğrulama rozeti */
+.iban-wrap{position:relative}
+.iban-wrap input{font-variant-numeric:tabular-nums;letter-spacing:.03em;padding-right:118px !important}
+.iban-badge{position:absolute;right:9px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;padding:4px 9px;border-radius:var(--r-pill);white-space:nowrap;pointer-events:none}
+.iban-badge.ok{background:var(--ok-tint);color:var(--ok)}
+.iban-badge.bad{background:var(--danger-tint);color:var(--danger)}
+.iban-badge.idle{background:var(--bg);color:var(--muted)}
+.iban-hint{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+.iban-hint.bad{color:var(--danger)}
+
+/* varsayılan / aktif toggle - chip primitifi */
+.tgl-row{display:flex;flex-wrap:wrap;gap:18px;margin-top:2px}
+.tgl-field{display:flex;flex-direction:column;gap:8px}
+.tgl-field label{font-size:12px;font-weight:700;color:var(--ink-2)}
+
+.attach-zone{border:1.5px dashed var(--line-2);border-radius:var(--r-md);padding:18px;text-align:center;cursor:pointer;transition:.18s var(--ease);color:var(--muted)}
+.attach-zone:hover{border-color:var(--acc);color:var(--acc-ink);background:rgba(var(--acc-rgb),.04)}
+.attach-zone i{font-size:18px;margin-bottom:6px;display:block}
+.attach-zone b{color:var(--ink-2);font-weight:700;font-size:12.5px}
+.attach-zone span{display:block;font-size:11.5px;margin-top:3px}
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.attach-row{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:var(--r-sm);padding:9px 11px;font-size:12.5px;color:var(--ink-2)}
+.attach-row i{color:var(--acc-ink)}
+
+.frm-acts{display:flex;flex-direction:column;gap:10px}
+.frm-acts .btn{width:100%;justify-content:center}
+.side-tip{display:flex;gap:8px;font-size:12px;color:var(--muted);line-height:1.55;padding-top:2px}
+.side-tip i{color:var(--acc-ink);flex:none;margin-top:1px}
+</style>
+</head>
+<body data-sec="finans" data-screen="banka">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb"></div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Finans</div>
+        <h1 id="pageTitle">Yeni Banka Hesabı</h1>
+        <div class="ph-sub" id="pageSub">Firma banka hesabı bilgilerini girin — IBAN otomatik doğrulanır.</div>
+      </div>
+    </div>
+
+    <div class="gv-card" id="modBanner" hidden style="margin-bottom:18px;border-color:rgba(var(--acc-rgb),.35);background:rgba(var(--acc-rgb),.05)">
+      <div class="gc-body" style="display:flex;align-items:center;gap:12px;padding:16px 20px">
+        <i class="fa-solid fa-circle-info" style="color:var(--acc-ink);font-size:16px"></i>
+        <span id="modBannerTxt" style="font-size:12.5px;color:var(--ink-2);line-height:1.6"></span>
+      </div>
+    </div>
+
+    <div class="frm-grid">
+      <!-- ============ SOL: form ============ -->
+      <div class="gv-card">
+        <div class="gd-block">
+          <div class="gd-label">Banka Bilgileri</div>
+          <form class="gform" id="bankaForm" onsubmit="return false">
+            <div class="gform-2col">
+              <div class="gfield">
+                <label for="fBanka">Banka adı <span class="gf-req">*</span></label>
+                <input id="fBanka" type="text" placeholder="ör. İş Bankası" list="bankaList">
+                <datalist id="bankaList">
+                  <option value="İş Bankası"><option value="Garanti BBVA"><option value="Akbank">
+                  <option value="Yapı Kredi"><option value="QNB Finansbank"><option value="TEB">
+                  <option value="Ziraat Bankası"><option value="HSBC"><option value="Denizbank">
+                  <option value="VakıfBank"><option value="Halkbank">
+                </datalist>
+              </div>
+              <div class="gfield">
+                <label for="fSube">Şube adı</label>
+                <input id="fSube" type="text" placeholder="ör. Merkez Şube">
+              </div>
+              <div class="gfield">
+                <label for="fSubeKod">Şube kodu</label>
+                <input id="fSubeKod" type="text" placeholder="ör. 4058">
+              </div>
+              <div class="gfield">
+                <label for="fHesapNo">Hesap no</label>
+                <input id="fHesapNo" type="text" placeholder="ör. 0011234567890">
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="gd-block">
+          <div class="gd-label">IBAN <span class="gf-req">*</span></div>
+          <div class="gfield full iban-wrap">
+            <input id="fIban" type="text" placeholder="TR__ ____ ____ ____ ____ ____ __" maxlength="32" autocomplete="off">
+            <span class="iban-badge idle" id="ibanBadge"><i class="fa-solid fa-circle-question"></i> Bekleniyor</span>
+          </div>
+          <div class="iban-hint" id="ibanHint">TR ile başlar, ülke kodu dahil 26 karakter (TR + 24 hane) olmalı; mod-97 kontrol basamağı otomatik doğrulanır.</div>
+        </div>
+
+        <div class="gd-block">
+          <div class="gd-label">Hesap Bilgileri</div>
+          <div class="gform-2col">
+            <div class="gfield">
+              <label for="fAd">Hesap adı <span class="gf-req">*</span></label>
+              <input id="fAd" type="text" placeholder="ör. Merkez Ana İşletme Hesabı">
+            </div>
+            <div class="gfield">
+              <label for="fSahip">Hesap sahibi <span class="gf-req">*</span></label>
+              <input id="fSahip" type="text" value="Yapıtaş İnşaat A.Ş.">
+            </div>
+            <div class="gfield">
+              <label for="fPb">Para birimi</label>
+              <select id="fPb"><option>TRY</option><option>USD</option><option>EUR</option></select>
+            </div>
+            <div class="gfield">
+              <label for="fTur">Hesap türü <span class="gf-req">*</span></label>
+              <select id="fTur">
+                <option value="vadesiz">Vadesiz Hesap</option>
+                <option value="vadeli">Vadeli Hesap</option>
+                <option value="hakedis">Hakediş Tahsilat Hesabı</option>
+                <option value="maas">Maaş Ödeme Hesabı</option>
+                <option value="kredi">Kredi Hesabı</option>
+                <option value="teminat">Teminat Hesabı</option>
+                <option value="proje">Proje Özel Hesabı</option>
+                <option value="diger">Diğer</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fYetkili">Yetkili kişi</label>
+              <input id="fYetkili" type="text" placeholder="ör. Nesrin Aydın">
+            </div>
+            <div class="gfield">
+              <label for="fSantiye">Bağlı proje / şantiye <span class="gf-hint">(opsiyonel)</span></label>
+              <select id="fSantiye">
+                <option value="">— Genel / bağlı değil —</option>
+                <option>Vadi Konakları</option>
+                <option>Liman Lojistik Merkezi</option>
+                <option>Merkez Şantiye</option>
+                <option>Kule Ofis B Blok</option>
+                <option>Göl Evleri 2. Etap</option>
+              </select>
+            </div>
+          </div>
+          <div class="tgl-row">
+            <div class="tgl-field">
+              <label>Varsayılan hesap mı?</label>
+              <div class="chips" id="varsayilanSecim">
+                <button type="button" class="chip" data-v="evet">Evet</button>
+                <button type="button" class="chip is-on" data-v="hayir">Hayır</button>
+              </div>
+            </div>
+            <div class="tgl-field">
+              <label>Durum</label>
+              <div class="chips" id="durumSecim">
+                <button type="button" class="chip is-on" data-v="aktif">Aktif</button>
+                <button type="button" class="chip" data-v="pasif">Pasif</button>
+              </div>
+            </div>
+          </div>
+          <div class="gfield full" style="margin-top:14px">
+            <label for="fAciklama">Açıklama</label>
+            <textarea id="fAciklama" rows="2" placeholder="ör. Hakediş tahsilatlarının yatırıldığı hesap"></textarea>
+          </div>
+        </div>
+
+        <div class="gd-block">
+          <div class="gd-label">Doküman Eki <span class="gf-hint">(banka yazısı / hesap teyit belgesi)</span></div>
+          <div class="attach-zone" id="attachZone" tabindex="0" role="button" aria-label="Belge ekle">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <b>Banka yazısı veya hesap teyit belgesi eklemek için tıklayın</b>
+            <span>PDF veya JPG — bu prototipte simülasyondur</span>
+          </div>
+          <div class="attach-list" id="attachList"></div>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: özet + gönder ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gd-block frm-acts">
+            <button type="button" class="btn btn-acc btn-sm" id="btnSave"><i class="fa-solid fa-floppy-disk"></i> <span id="btnSaveLbl">Hesabı Kaydet</span></button>
+            <a class="btn btn-ghost btn-sm" href="crm-finans-banka.html" data-no-confirm>Vazgeç</a>
+            <div class="side-tip"><i class="fa-solid fa-circle-info"></i><span>Hesap kaydedildikten sonra silinemez — yalnız pasife alınabilir veya arşivlenebilir. Tüm değişiklikler işlem kayıtlarına yazılır.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ============ §3.4 kabul kriteri — IBAN mod-97 doğrulaması (GERÇEK algoritma) ============
+     TR + 24 hane (toplam 26 karakter). ISO 7064 MOD97-10: ülke kodu + kontrol basamakları
+     hesap numarasının SONUNA taşınır, harfler A=10..Z=35 sayısal karşılığına çevrilir,
+     kalan sayı 97'ye bölümünden kalan 1 olmalıdır. */
+  function ibanClean(v){ return (v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+  function ibanFormat(v){
+    var c = ibanClean(v);
+    return c.replace(/(.{4})/g, '$1 ').trim();
+  }
+  function mod97Ok(iban){
+    if(!/^[A-Z]{2}[0-9A-Z]+$/.test(iban)) return false;
+    var rearr = iban.slice(4) + iban.slice(0, 4);
+    var numeric = rearr.replace(/[A-Z]/g, function(ch){ return (ch.charCodeAt(0) - 55).toString(); });
+    /* 97'ye bölme — BigInt varsa tam hassasiyetle, yoksa parça parça (10 haneli chunk) */
+    if(window.BigInt){
+      try{ return (BigInt(numeric) % 97n) === 1n; }catch(e){ /* düş aşağıya */ }
+    }
+    var rem = 0;
+    for(var i = 0; i < numeric.length; i += 7){
+      rem = parseInt(String(rem) + numeric.slice(i, i + 7), 10) % 97;
+    }
+    return rem === 1;
+  }
+  function ibanValidate(raw){
+    var c = ibanClean(raw);
+    if(!c) return {state:'idle', msg:'TR ile başlar, ülke kodu dahil 26 karakter (TR + 24 hane) olmalı; mod-97 kontrol basamağı otomatik doğrulanır.'};
+    if(c.slice(0,2) !== 'TR') return {state:'bad', msg:'IBAN "TR" ülke koduyla başlamalıdır.'};
+    if(!/^TR[0-9]*$/.test(c)) return {state:'bad', msg:'TR sonrası yalnız rakam içermelidir.'};
+    if(c.length < 26) return {state:'bad', msg:'IBAN eksik — ' + c.length + '/26 karakter girildi (TR + 24 hane gerekir).'};
+    if(c.length > 26) return {state:'bad', msg:'IBAN çok uzun — 26 karakteri (TR + 24 hane) aşıyor.'};
+    if(!mod97Ok(c)) return {state:'bad', msg:'Kontrol basamağı (mod-97) hatalı — IBAN geçersiz. Numarayı kontrol edin.'};
+    return {state:'ok', msg:'IBAN doğrulandı (mod-97 kontrolü geçti).'};
+  }
+
+  var fIban = document.getElementById('fIban');
+  var ibanBadge = document.getElementById('ibanBadge');
+  var ibanHint = document.getElementById('ibanHint');
+  var ibanState = 'idle';
+  function refreshIban(){
+    var caretEnd = (fIban.selectionStart === fIban.value.length);
+    var formatted = ibanFormat(fIban.value);
+    if(formatted !== fIban.value){ fIban.value = formatted; if(caretEnd) fIban.setSelectionRange(formatted.length, formatted.length); }
+    var r = ibanValidate(fIban.value);
+    ibanState = r.state;
+    ibanHint.textContent = r.msg;
+    ibanHint.classList.toggle('bad', r.state === 'bad');
+    if(r.state === 'ok'){ ibanBadge.className = 'iban-badge ok'; ibanBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Geçerli'; }
+    else if(r.state === 'bad'){ ibanBadge.className = 'iban-badge bad'; ibanBadge.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Geçersiz'; }
+    else { ibanBadge.className = 'iban-badge idle'; ibanBadge.innerHTML = '<i class="fa-solid fa-circle-question"></i> Bekleniyor'; }
+  }
+  fIban.addEventListener('input', refreshIban);
+  refreshIban();
+
+  /* ---- kanonik 8 örnek IBAN (mod-97 doğrulanmış, crm-finans-banka.html ile BİREBİR) —
+     kullanıcı kendi hesabını eklerken yanlışlıkla mevcut bir IBAN'ı tekrar girerse uyarılır. */
+  var MEVCUT_IBAN = [
+    'TR330006400000011234567890','TR700006200001245980012345','TR130004600000987654321098',
+    'TR330006700006677889900112','TR690011100003344556677889','TR490003200009988776655443',
+    'TR310000100005566778899001','TR630012300001122334455667'
+  ];
+
+  /* ---- Varsayılan / Durum chip toggle ---- */
+  var curVars = 'hayir', curDurum = 'aktif';
+  document.getElementById('varsayilanSecim').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip'); if(!ch) return;
+    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on'); curVars = ch.getAttribute('data-v');
+  });
+  document.getElementById('durumSecim').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip'); if(!ch) return;
+    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on'); curDurum = ch.getAttribute('data-v');
+  });
+
+  /* ---- belge ekleme [MOCK-SİM] ---- */
+  var attachList = document.getElementById('attachList');
+  var MOCK_FILES = ['hesap-teyit-belgesi.pdf'];
+  document.getElementById('attachZone').addEventListener('click', function(){
+    if(!MOCK_FILES.length){ gvToast('Belge zaten eklendi.', {type:'info'}); return; }
+    var name = MOCK_FILES.shift();
+    var row = document.createElement('div');
+    row.className = 'attach-row';
+    row.innerHTML = '<i class="fa-solid fa-file-pdf"></i><b>' + name + '</b><span>Eklendi</span>';
+    attachList.appendChild(row);
+    gvToast('Belge eklendi (mock).', {type:'ok'});
+  });
+
+  /* ============ §17 emsali — Düzenle modu prefill (crm-finans-banka.html liste ile AYNI 8 kanonik hesap) ============ */
+  var HESAP_PREFILL = {
+    'is-bankasi-ana':{banka:'İş Bankası', sube:'Merkez Şube', subeKod:'4058', ad:'Merkez Ana İşletme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR330006400000011234567890', pb:'TRY', tur:'vadesiz', varsayilan:true, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'Firma genel işletme hesabı — kasa beslemeleri, kredi kartı ve Pluxee ekstre ödemeleri bu hesaptan yapılır.'},
+    'garanti-hakedis':{banka:'Garanti BBVA', sube:'Etiler Şube', subeKod:'313', ad:'Hakediş Tahsilat Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR700006200001245980012345', pb:'TRY', tur:'hakedis', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', santiye:'Liman Lojistik Merkezi', aciklama:'Aliağa Liman İşletmeleri hakediş tahsilatları bu hesaba yatırılır.'},
+    'akbank-maas':{banka:'Akbank', sube:'Levent Kurumsal Şube', subeKod:'0129', ad:'Maaş Ödeme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR130004600000987654321098', pb:'TRY', tur:'maas', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'Aylık personel maaş ödemeleri bordro sistemine bağlı toplu talimatla bu hesaptan yapılır.'},
+    'yapikredi-teminat':{banka:'Yapı Kredi', sube:'Bahçelievler Şube', subeKod:'0844', ad:'Vadi Konakları Teminat Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR330006700006677889900112', pb:'TRY', tur:'teminat', varsayilan:false, durum:'aktif', yetkili:'Elif Sarıkaya', santiye:'Vadi Konakları', aciklama:'Vadi Konakları projesi kesin teminat mektubu karşılığı bloke hesap.'},
+    'qnb-proje':{banka:'QNB Finansbank', sube:'Kartal Şube', subeKod:'0921', ad:'Vadi Konakları Proje Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR690011100003344556677889', pb:'TRY', tur:'proje', varsayilan:false, durum:'aktif', yetkili:'Hasan Demirci', santiye:'Vadi Konakları', aciklama:'Vadi Konakları projesine özel tahsis edilmiş, yalnız bu proje harcamalarında kullanılan hesap.'},
+    'teb-vadeli':{banka:'TEB', sube:'Maslak Şube', subeKod:'0057', ad:'Kısa Vadeli Mevduat', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR490003200009988776655443', pb:'TRY', tur:'vadeli', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'3 aylık vadeli mevduat, vade sonu 15 Eylül 2026.'},
+    'ziraat-eski-kredi':{banka:'Ziraat Bankası', sube:'Ticari Şube', subeKod:'1200', ad:'Ekipman Kredisi Ödeme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR310000100005566778899001', pb:'TRY', tur:'kredi', varsayilan:false, durum:'pasif', yetkili:'Nesrin Aydın', aciklama:'Ekskavatör/vinç ekipman kredisi Mart 2026\'da kapatıldı, hesap pasife alındı.'},
+    'hsbc-eski-proje':{banka:'HSBC', sube:'Kurumsal Şube', subeKod:'0311', ad:'Kule Ofis B Blok Proje Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR630012300001122334455667', pb:'TRY', tur:'diger', varsayilan:false, durum:'arsiv', yetkili:'Nesrin Aydın', santiye:'Kule Ofis B Blok', aciklama:'Proje Mart 2026\'da tesliminin ardından kapatıldı, hesap arşive kaldırıldı.'}
+  };
+
+  var editSlug = null;
+  function wireModBanner(){
+    var q = new URLSearchParams(location.search);
+    var mod = q.get('mod');
+    var hesap = q.get('hesap');
+    if(mod !== 'duzenle' || !hesap) return;
+    var rec = HESAP_PREFILL[hesap];
+    var banner = document.getElementById('modBanner');
+    var bannerTxt = document.getElementById('modBannerTxt');
+    banner.hidden = false;
+    if(!rec){
+      bannerTxt.textContent = 'Hesap bulunamadı — boş bir form açıldı, dilerseniz yeni hesap olarak doldurup kaydedebilirsiniz.';
+      return;
+    }
+    editSlug = hesap;
+    document.getElementById('pageTitle').textContent = rec.ad + ' — Düzenle';
+    document.getElementById('pageSub').textContent = 'Bu banka hesabını düzenliyorsunuz. Hesap silinemez; yalnız bilgileri güncellenir.';
+    document.getElementById('btnSaveLbl').textContent = 'Değişiklikleri Kaydet';
+    bannerTxt.innerHTML = '<b>Düzenleme modu</b> — "' + rec.ad + '" hesabı üzerinde çalışıyorsunuz.';
+    document.getElementById('fBanka').value = rec.banka;
+    document.getElementById('fSube').value = rec.sube;
+    document.getElementById('fSubeKod').value = rec.subeKod;
+    document.getElementById('fAd').value = rec.ad;
+    document.getElementById('fSahip').value = rec.sahip;
+    fIban.value = ibanFormat(rec.iban); refreshIban();
+    document.getElementById('fPb').value = rec.pb;
+    document.getElementById('fTur').value = rec.tur;
+    document.getElementById('fYetkili').value = rec.yetkili;
+    document.getElementById('fSantiye').value = rec.santiye || '';
+    document.getElementById('fAciklama').value = rec.aciklama || '';
+    document.querySelector('#varsayilanSecim .chip[data-v="' + (rec.varsayilan ? 'evet' : 'hayir') + '"]').click();
+    document.querySelector('#durumSecim .chip[data-v="' + (rec.durum === 'pasif' ? 'pasif' : 'aktif') + '"]').click();
+  }
+
+  /* ============ Kaydet — gerçekten localStorage'a yazar, banka.html'de GERÇEK satır olarak görünür ============ */
+  var EXTRA_KEY = 'gv_banka_hesap_extra';
+  function loadExtra(){ try{ return JSON.parse(localStorage.getItem(EXTRA_KEY)) || []; }catch(e){ return []; } }
+  function saveExtra(arr){ try{ localStorage.setItem(EXTRA_KEY, JSON.stringify(arr)); }catch(e){} }
+  function slugify(s){ return 'h-' + s.toLowerCase().replace(/[^a-z0-9ığüşöç]/gi,'').replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ö/g,'o').replace(/ç/g,'c').replace(/ı/g,'i') + '-' + Date.now().toString(36).slice(-5); }
+
+  document.getElementById('btnSave').addEventListener('click', function(){
+    var banka = document.getElementById('fBanka').value.trim();
+    var ad = document.getElementById('fAd').value.trim();
+    var sahip = document.getElementById('fSahip').value.trim();
+    if(!banka){ gvToast('Banka adı girin.', {type:'danger'}); document.getElementById('fBanka').focus(); return; }
+    if(!ad){ gvToast('Hesap adı girin.', {type:'danger'}); document.getElementById('fAd').focus(); return; }
+    if(!sahip){ gvToast('Hesap sahibi girin.', {type:'danger'}); document.getElementById('fSahip').focus(); return; }
+    if(ibanState !== 'ok'){
+      gvToast(ibanState === 'idle' ? 'IBAN girin.' : 'IBAN geçersiz — mod-97 kontrolünü geçmiyor, numarayı kontrol edin.', {type:'danger'});
+      fIban.focus();
+      return;
+    }
+    var cleanIban = ibanClean(fIban.value);
+    if(!editSlug && MEVCUT_IBAN.indexOf(cleanIban) !== -1){
+      gvToast('Bu IBAN zaten kayıtlı bir banka hesabına ait.', {type:'danger'});
+      return;
+    }
+
+    if(editSlug){
+      gvToast('"' + ad + '" hesabı güncellendi.');
+      setTimeout(function(){ location.href = 'crm-finans-banka-detay.html?hesap=' + editSlug; }, 900);
+      return;
+    }
+
+    var extra = loadExtra();
+    var slug = slugify(banka + '-' + ad);
+    extra.push({
+      slug:slug, banka:banka, sube:document.getElementById('fSube').value.trim(),
+      subeKod:document.getElementById('fSubeKod').value.trim(), ad:ad, sahip:sahip,
+      iban:cleanIban, ibanFmt:ibanFormat(cleanIban), pb:document.getElementById('fPb').value,
+      tur:document.getElementById('fTur').value, yetkili:document.getElementById('fYetkili').value.trim(),
+      santiye:document.getElementById('fSantiye').value, aciklama:document.getElementById('fAciklama').value.trim(),
+      varsayilan:curVars === 'evet', durum:curDurum
+    });
+    saveExtra(extra);
+    if(curVars === 'evet'){ try{ localStorage.setItem('gv_banka_hesap_varsayilan', slug); }catch(e){} }
+    gvToast('"' + ad + '" banka hesabı eklendi.');
+    setTimeout(function(){ location.href = 'crm-finans-banka.html'; }, 900);
+  });
+
+  wireModBanner();
+})();
+</script>
+</body>
+</html>
