@@ -17,16 +17,30 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Sağlık Raporu Listesi ============ */
-#tblRapor{min-width:800px}
-#tblRapor td:nth-child(2),#tblRapor td:nth-child(3),#tblRapor td:nth-child(4){white-space:nowrap}
+/* min-width YALNIZ tablo modunda (>640px) — ID seçici sınıf seçicisinden (.gtable-cards)
+   specificity'de HER ZAMAN kazanır, media query İÇİNE alınmazsa kart dönüşümünü bozar
+   (Dalga 5, spec-liste-mimarisi.md §4 bilinen tuzak). */
+@media(min-width:641px){
+  #tblRapor{min-width:800px}
+}
+/* nth-child DEĞİL data-col — gvCols kolon sırasını DOM'da fiziksel taşır (insertBefore),
+   pozisyonel seçici reorder sonrası yanlış hücreye uygulanır (Dalga 5 bulgusu) */
+#tblRapor td[data-col="tur"],#tblRapor td[data-col="tarih"],#tblRapor td[data-col="gun"]{white-space:nowrap}
 .col-tarih{width:190px}
 .col-gun{width:70px}
 .col-durum{width:180px}
 .rapor-kurum{font-size:12px;color:var(--muted)}
 
-/* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme ---- */
+/* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme.
+   display:table-row YALNIZ >640px — kart modunda (.gtable-cards tr{display:block})
+   ID-specificity bunu ezerdi (Dalga 5 bilinen tuzak), o yüzden genişliğe göre ayrıldı. ---- */
 #tblRapor tbody tr[data-arsiv="1"]{display:none}
-#tblRapor.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+@media(min-width:641px){
+  #tblRapor.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+}
+@media(max-width:640px){
+  #tblRapor.gv-show-arsiv tbody tr[data-arsiv="1"]{display:block}
+}
 </style>
 </head>
 <body data-sec="personel" data-screen="rapor">
@@ -85,20 +99,31 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Personel veya kurum ara" data-table-search="#tblRapor">
+      <div class="filter-bar stack">
+        <div class="filter-row top">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Personel veya kurum ara" data-table-search="#tblRapor">
+          </div>
         </div>
-        <div class="chips" data-target="#tblRapor">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">4</span></button>
-          <button class="chip" data-filter="bekliyor">SGK Bildirimi Bekliyor <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="bildirildi">Bildirildi <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="tamam">Tamamlandı <span class="ch-cnt">2</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblRapor">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">4</span></button>
+            <button class="chip" data-filter="bekliyor">SGK Bildirimi Bekliyor <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="bildirildi">Bildirildi <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="tamam">Tamamlandı <span class="ch-cnt">2</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpRapor">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
+        <div class="filter-row">
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpRapor">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtnRapor">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
+        </div>
       </div>
 
       <div class="gv-achips-row" id="achipsRapor" hidden>
@@ -113,75 +138,75 @@
         </div>
       </div>
 
-      <div class="gc-body flush">
-        <table class="gtable" id="tblRapor">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblRapor">
           <thead>
             <tr>
               <th>Personel</th>
-              <th>Rapor Türü</th>
-              <th class="col-tarih">Tarih Aralığı</th>
-              <th class="col-gun num">Gün</th>
-              <th>Kurum</th>
-              <th class="col-durum">Durum</th>
+              <th data-col="tur">Rapor Türü</th>
+              <th class="col-tarih" data-col="tarih">Tarih Aralığı</th>
+              <th class="col-gun num" data-col="gun">Gün</th>
+              <th data-col="kurum">Kurum</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="bildirildi" data-santiye="vadi-konaklari" data-tur="istirahat" data-tarih="2026-06-28">
-              <td>
+              <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">AV</div>
                   <div class="gcell-info"><div class="gcell-name">Ali Vural</div><span class="gcell-sub">Saha Personeli</span></div>
                 </div>
               </td>
-              <td>İstirahat Raporu</td>
-              <td>28 Haziran – 1 Temmuz 2026</td>
-              <td class="num">4</td>
-              <td class="rapor-kurum">Kartal Devlet Hastanesi</td>
-              <td><span class="gstat info">SGK'ya bildirildi</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=001" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="tur" data-lbl="Rapor Türü">İstirahat Raporu</td>
+              <td data-col="tarih" data-lbl="Tarih Aralığı">28 Haziran – 1 Temmuz 2026</td>
+              <td class="num" data-col="gun" data-lbl="Gün">4</td>
+              <td class="rapor-kurum" data-col="kurum" data-lbl="Kurum">Kartal Devlet Hastanesi</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat info">SGK'ya bildirildi</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=001" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamam" data-santiye="vadi-konaklari" data-tur="istirahat" data-tarih="2026-06-10">
-              <td>
+              <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SD</div>
                   <div class="gcell-info"><div class="gcell-name">Selim Doğan</div><span class="gcell-sub">Demir Ustası</span></div>
                 </div>
               </td>
-              <td>İstirahat Raporu</td>
-              <td>10 – 11 Haziran 2026</td>
-              <td class="num">2</td>
-              <td class="rapor-kurum">Kartal Devlet Hastanesi</td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=002" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="tur" data-lbl="Rapor Türü">İstirahat Raporu</td>
+              <td data-col="tarih" data-lbl="Tarih Aralığı">10 – 11 Haziran 2026</td>
+              <td class="num" data-col="gun" data-lbl="Gün">2</td>
+              <td class="rapor-kurum" data-col="kurum" data-lbl="Kurum">Kartal Devlet Hastanesi</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Tamamlandı</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=002" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamam" data-santiye="merkez-santiye" data-tur="kurul" data-tarih="2026-06-15">
-              <td>
+              <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">ÖT</div>
                   <div class="gcell-info"><div class="gcell-name">Ömer Taşkın</div><span class="gcell-sub">Şantiye Şefi</span></div>
                 </div>
               </td>
-              <td>Sağlık Kurulu Raporu</td>
-              <td>15 – 16 Haziran 2026</td>
-              <td class="num">2</td>
-              <td class="rapor-kurum">Gebze Devlet Hastanesi</td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=003" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="tur" data-lbl="Rapor Türü">Sağlık Kurulu Raporu</td>
+              <td data-col="tarih" data-lbl="Tarih Aralığı">15 – 16 Haziran 2026</td>
+              <td class="num" data-col="gun" data-lbl="Gün">2</td>
+              <td class="rapor-kurum" data-col="kurum" data-lbl="Kurum">Gebze Devlet Hastanesi</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Tamamlandı</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=003" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-santiye="merkez-ofis" data-tur="istirahat" data-tarih="2026-06-22">
-              <td>
+              <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">NA</div>
                   <div class="gcell-info"><div class="gcell-name">Nesrin Aydın</div><span class="gcell-sub">Muhasebe</span></div>
                 </div>
               </td>
-              <td>İstirahat Raporu</td>
-              <td>22 – 23 Haziran 2026</td>
-              <td class="num">2</td>
-              <td class="rapor-kurum">Özel İzmir Hastanesi</td>
-              <td><span class="gstat warn">SGK bildirimi bekliyor</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=004" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="tur" data-lbl="Rapor Türü">İstirahat Raporu</td>
+              <td data-col="tarih" data-lbl="Tarih Aralığı">22 – 23 Haziran 2026</td>
+              <td class="num" data-col="gun" data-lbl="Gün">2</td>
+              <td class="rapor-kurum" data-col="kurum" data-lbl="Kurum">Özel İzmir Hastanesi</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat warn">SGK bildirimi bekliyor</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=004" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
         </table>
@@ -299,6 +324,26 @@
         var tbl = document.getElementById('tblRapor');
         if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
       }
+    });
+  }
+
+  /* gvCols — Kolonlar (Dalga 5, spec-liste-mimarisi.md §3). Kolon seti mevcut #tblRapor
+     başlıklarından türetildi; varsayılan görünürlük bugünkü hâliyle AYNI (hepsi açık).
+     Satırlar sayfa-lokal statik HTML'dir (JS ile yeniden basılmaz) — 'sef' rolündeki
+     tr.remove() budaması yalnız FAZLA satırı siler, kalan satırların uygulanmış
+     görünürlük durumunu bozmaz; ayrı bir yeniden-uygulama kancası GEREKMEZ. */
+  if(window.gvCols && document.getElementById('colsBtnRapor')){
+    gvCols.init({
+      mount: '#colsBtnRapor',
+      table: '#tblRapor',
+      screen: 'rapor',
+      cols: [
+        {key:'tur', lbl:'Rapor Türü', def:true},
+        {key:'tarih', lbl:'Tarih Aralığı', def:true},
+        {key:'gun', lbl:'Gün', def:true},
+        {key:'kurum', lbl:'Kurum', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
     });
   }
 

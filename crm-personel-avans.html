@@ -17,8 +17,15 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Avans Listesi ============ */
-#tblAvans{min-width:760px}
-#tblAvans td:nth-child(2),#tblAvans td:nth-child(3){white-space:nowrap}
+/* min-width YALNIZ tablo modunda (>640px) — ID seçici sınıf seçicisinden (.gtable-cards)
+   specificity'de HER ZAMAN kazanır, media query İÇİNE alınmazsa kart dönüşümünü bozar
+   (Dalga 5, spec-liste-mimarisi.md §4 bilinen tuzak). */
+@media(min-width:641px){
+  #tblAvans{min-width:760px}
+}
+/* nth-child DEĞİL data-col — gvCols kolon sırasını DOM'da fiziksel taşır (insertBefore),
+   pozisyonel seçici reorder sonrası yanlış hücreye uygulanır (Dalga 5 bulgusu) */
+#tblAvans td[data-col="tutar"],#tblAvans td[data-col="tarih"]{white-space:nowrap}
 .col-tutar{width:140px}
 .col-tarih{width:150px}
 .col-durum{width:150px}
@@ -146,21 +153,32 @@ a.gcell-sub:hover{color:var(--acc-ink)}
     </div>
 
     <div class="gv-card" style="margin-bottom:16px">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Personel adı ara" data-table-search="#tblAvans">
+      <div class="filter-bar stack">
+        <div class="filter-row top">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Personel adı ara" data-table-search="#tblAvans">
+          </div>
         </div>
-        <div class="chips" data-target="#tblAvans">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">5</span></button>
-          <button class="chip" data-filter="bekliyor">Bekliyor <span class="ch-cnt">2</span></button>
-          <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="revize">Revize <span class="ch-cnt">1</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblAvans">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">5</span></button>
+            <button class="chip" data-filter="bekliyor">Bekliyor <span class="ch-cnt">2</span></button>
+            <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="revize">Revize <span class="ch-cnt">1</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpAvans">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
+        <div class="filter-row">
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpAvans">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtnAvans">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
+        </div>
       </div>
 
       <div class="gv-achips-row" id="achipsAvans" hidden>
@@ -183,98 +201,98 @@ a.gcell-sub:hover{color:var(--acc-ink)}
         </div>
       </div>
 
-      <div class="gc-body flush">
-        <table class="gtable" id="tblAvans">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblAvans">
           <thead>
             <tr>
               <th class="df-no"><label class="row-chk" id="avChkAllWrap" hidden><input type="checkbox" id="avChkAll" aria-label="Görünen tüm talepleri seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>Avans No / Personel</th>
-              <th class="col-tutar num">Tutar</th>
-              <th class="col-tarih">Talep Tarihi</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-tutar num" data-col="tutar">Tutar</th>
+              <th class="col-tarih" data-col="tarih">Talep Tarihi</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="bekliyor" data-avans="avn-015" data-santiye="vadi-konaklari" data-durum="aktif" data-departman="saha" data-personel="musa-erdem" data-tarih="2026-07-01">
-              <td>
+              <td data-lbl="Avans No / Personel">
                 <div class="gcell">
                   <label class="row-chk" data-rid="avn-015" onclick="event.stopPropagation()"><input type="checkbox" class="av-chk" aria-label="AVN-2026-015 seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
                   <div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ME</div>
                   <div class="gcell-info"><div class="gcell-name">Musa Erdem</div><a class="gcell-sub" href="crm-personel-avans-detay.html?avn=015" onclick="event.stopPropagation()">AVN-2026-015</a></div>
                 </div>
               </td>
-              <td class="num t-strong">₺3.500</td>
-              <td>1 Temmuz 2026</td>
-              <td id="badge-avn-015"></td>
-              <td><div class="row-acts">
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺3.500</td>
+              <td data-col="tarih" data-lbl="Talep Tarihi">1 Temmuz 2026</td>
+              <td id="badge-avn-015" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts">
                 <button class="ia-btn" data-avans-select="avn-015" data-no-confirm aria-label="Onay akışını gör" data-tip="Onay Akışı"><i class="fa-solid fa-stamp"></i></button>
                 <a class="ia-btn" href="crm-personel-avans-cikti.html?avn=015" data-no-confirm aria-label="Çıktı al" data-tip="Çıktı Al" onclick="event.stopPropagation()"><i class="fa-solid fa-print"></i></a>
                 <button type="button" class="ia-btn" data-av-kebab="avn-015" data-no-confirm aria-label="Diğer işlemler" data-tip="Diğer İşlemler"><i class="fa-solid fa-ellipsis-vertical"></i></button>
               </div></td>
             </tr>
             <tr data-f="bekliyor" data-avans="avn-014" data-santiye="vadi-konaklari" data-durum="aktif" data-departman="saha" data-personel="ali-vural" data-tarih="2026-06-29">
-              <td>
+              <td data-lbl="Avans No / Personel">
                 <div class="gcell">
                   <label class="row-chk" data-rid="avn-014" onclick="event.stopPropagation()"><input type="checkbox" class="av-chk" aria-label="AVN-2026-014 seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
                   <div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">AV</div>
                   <div class="gcell-info"><div class="gcell-name">Ali Vural</div><a class="gcell-sub" href="crm-personel-avans-detay.html?avn=014" onclick="event.stopPropagation()">AVN-2026-014</a></div>
                 </div>
               </td>
-              <td class="num t-strong">₺4.000</td>
-              <td>29 Haziran 2026</td>
-              <td id="badge-avn-014"></td>
-              <td><div class="row-acts">
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺4.000</td>
+              <td data-col="tarih" data-lbl="Talep Tarihi">29 Haziran 2026</td>
+              <td id="badge-avn-014" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts">
                 <button class="ia-btn" data-avans-select="avn-014" data-no-confirm aria-label="Onay akışını gör" data-tip="Onay Akışı"><i class="fa-solid fa-stamp"></i></button>
                 <a class="ia-btn" href="crm-personel-avans-cikti.html?avn=014" data-no-confirm aria-label="Çıktı al" data-tip="Çıktı Al" onclick="event.stopPropagation()"><i class="fa-solid fa-print"></i></a>
                 <button type="button" class="ia-btn" data-av-kebab="avn-014" data-no-confirm aria-label="Diğer işlemler" data-tip="Diğer İşlemler"><i class="fa-solid fa-ellipsis-vertical"></i></button>
               </div></td>
             </tr>
             <tr data-f="onaylandi" data-avans="avn-013" data-santiye="vadi-konaklari" data-durum="aktif" data-departman="sefligi" data-personel="hasan-demirci" data-tarih="2026-06-18">
-              <td>
+              <td data-lbl="Avans No / Personel">
                 <div class="gcell">
                   <label class="row-chk" data-rid="avn-013" onclick="event.stopPropagation()"><input type="checkbox" class="av-chk" aria-label="AVN-2026-013 seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">HD</div>
                   <div class="gcell-info"><div class="gcell-name">Hasan Demirci</div><a class="gcell-sub" href="crm-personel-avans-detay.html?avn=013" onclick="event.stopPropagation()">AVN-2026-013</a></div>
                 </div>
               </td>
-              <td class="num t-strong">₺8.000</td>
-              <td>18 Haziran 2026</td>
-              <td id="badge-avn-013"></td>
-              <td><div class="row-acts">
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺8.000</td>
+              <td data-col="tarih" data-lbl="Talep Tarihi">18 Haziran 2026</td>
+              <td id="badge-avn-013" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts">
                 <button class="ia-btn" data-avans-select="avn-013" data-no-confirm aria-label="Onay akışını gör" data-tip="Onay Akışı"><i class="fa-solid fa-stamp"></i></button>
                 <a class="ia-btn" href="crm-personel-avans-cikti.html?avn=013" data-no-confirm aria-label="Çıktı al" data-tip="Çıktı Al" onclick="event.stopPropagation()"><i class="fa-solid fa-print"></i></a>
                 <button type="button" class="ia-btn" data-av-kebab="avn-013" data-no-confirm aria-label="Diğer işlemler" data-tip="Diğer İşlemler"><i class="fa-solid fa-ellipsis-vertical"></i></button>
               </div></td>
             </tr>
             <tr data-f="reddedildi" data-avans="avn-012" data-santiye="merkez-ofis" data-durum="aktif" data-departman="satinalma" data-personel="baran-yildiz" data-tarih="2026-06-10">
-              <td>
+              <td data-lbl="Avans No / Personel">
                 <div class="gcell">
                   <label class="row-chk" data-rid="avn-012" onclick="event.stopPropagation()"><input type="checkbox" class="av-chk" aria-label="AVN-2026-012 seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div>
                   <div class="gcell-info"><div class="gcell-name">Baran Yıldız</div><a class="gcell-sub" href="crm-personel-avans-detay.html?avn=012" onclick="event.stopPropagation()">AVN-2026-012</a></div>
                 </div>
               </td>
-              <td class="num t-strong">₺6.500</td>
-              <td>10 Haziran 2026</td>
-              <td id="badge-avn-012"></td>
-              <td><div class="row-acts">
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺6.500</td>
+              <td data-col="tarih" data-lbl="Talep Tarihi">10 Haziran 2026</td>
+              <td id="badge-avn-012" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts">
                 <button class="ia-btn" data-avans-select="avn-012" data-no-confirm aria-label="Onay akışını gör" data-tip="Onay Akışı"><i class="fa-solid fa-stamp"></i></button>
                 <a class="ia-btn" href="crm-personel-avans-cikti.html?avn=012" data-no-confirm aria-label="Çıktı al" data-tip="Çıktı Al" onclick="event.stopPropagation()"><i class="fa-solid fa-print"></i></a>
                 <button type="button" class="ia-btn" data-av-kebab="avn-012" data-no-confirm aria-label="Diğer işlemler" data-tip="Diğer İşlemler"><i class="fa-solid fa-ellipsis-vertical"></i></button>
               </div></td>
             </tr>
             <tr data-f="revize" data-avans="avn-011" data-santiye="liman-lojistik" data-durum="aktif" data-departman="sefligi" data-personel="aylin-koc" data-tarih="2026-06-03">
-              <td>
+              <td data-lbl="Avans No / Personel">
                 <div class="gcell">
                   <label class="row-chk" data-rid="avn-011" onclick="event.stopPropagation()"><input type="checkbox" class="av-chk" aria-label="AVN-2026-011 seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">AK</div>
                   <div class="gcell-info"><div class="gcell-name">Aylin Koç</div><a class="gcell-sub" href="crm-personel-avans-detay.html?avn=011" onclick="event.stopPropagation()">AVN-2026-011</a></div>
                 </div>
               </td>
-              <td class="num t-strong">₺10.000</td>
-              <td>3 Haziran 2026</td>
-              <td id="badge-avn-011"></td>
-              <td><div class="row-acts">
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺10.000</td>
+              <td data-col="tarih" data-lbl="Talep Tarihi">3 Haziran 2026</td>
+              <td id="badge-avn-011" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts">
                 <button class="ia-btn" data-avans-select="avn-011" data-no-confirm aria-label="Onay akışını gör" data-tip="Onay Akışı"><i class="fa-solid fa-stamp"></i></button>
                 <a class="ia-btn" href="crm-personel-avans-cikti.html?avn=011" data-no-confirm aria-label="Çıktı al" data-tip="Çıktı Al" onclick="event.stopPropagation()"><i class="fa-solid fa-print"></i></a>
                 <button type="button" class="ia-btn" data-av-kebab="avn-011" data-no-confirm aria-label="Diğer işlemler" data-tip="Diğer İşlemler"><i class="fa-solid fa-ellipsis-vertical"></i></button>
@@ -607,6 +625,25 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       }
     });
   }
+
+  /* gvCols — Kolonlar (Dalga 5, spec-liste-mimarisi.md §3). Kolon seti mevcut #tblAvans
+     başlıklarından türetildi; varsayılan görünürlük bugünkü hâliyle AYNI (hepsi açık).
+     Satırlar sayfa-lokal statik HTML'dir (JS ile yeniden basılmaz) — 'sef' rolündeki
+     tr.remove() budaması yalnız FAZLA satırı siler, kalanların uygulanmış görünürlük
+     durumunu bozmaz; bu yüzden ayrı bir yeniden-uygulama kancası GEREKMEZ. */
+  if(window.gvCols && document.getElementById('colsBtnAvans')){
+    gvCols.init({
+      mount: '#colsBtnAvans',
+      table: '#tblAvans',
+      screen: 'avans',
+      cols: [
+        {key:'tutar', lbl:'Tutar', def:true},
+        {key:'tarih', lbl:'Talep Tarihi', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
   /* quick-chip/arama tetiklendiğinde de arşiv görünürlüğü + sayaç yeniden
      hesaplanır (generic ui.js motoru YALNIZ data-f/arama bilir, arşiv sınıfından
      habersizdir — bu ek dinleyiciler generic motorun ARDINDAN çalışır). */
