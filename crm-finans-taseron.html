@@ -17,11 +17,20 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Taşeron Hakedişleri listesi ============ */
-#tblTaseron{min-width:920px}
+/* masaüstü-yalnız sabit genişlik — 640px altında gtable-cards kart moduna ID-specificity
+   ile galip gelmesin diye min-width media sorgusuna alındı (bilinen tuzak,
+   tasks/spec-dalga5.md "Her sayfada yapılacak" §2, crm-finans-kurum.html emsali) */
+@media(min-width:641px){ #tblTaseron{min-width:920px} }
 .col-donem{width:130px}
 .col-tutar{width:150px}
 .col-tarih{width:150px}
 .col-durum{width:150px}
+/* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
+   (2) kategori chip slider KENDİ satırında (gv-chipbar-wrap block-level —
+   spec-liste-mimarisi.md §1 notu, crm-finans-kurum.html emsali BİREBİR). */
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar.stack .gv-chipbar-wrap{width:100%}
 
 .hk-cell{display:flex;align-items:center;gap:12px;min-width:0}
 .hk-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--info-tint);color:var(--info)}
@@ -130,20 +139,29 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Hakediş no, taşeron veya şantiye ara" data-table-search="#tblTaseron">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Hakediş no, taşeron veya şantiye ara" data-table-search="#tblTaseron">
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTaseron">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
         </div>
-        <div class="chips" data-target="#tblTaseron">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt">2</span></button>
-          <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">2</span></button>
-          <button class="chip" data-filter="odendi">Ödendi <span class="ch-cnt">2</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblTaseron">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
+            <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt">2</span></button>
+            <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">2</span></button>
+            <button class="chip" data-filter="odendi">Ödendi <span class="ch-cnt">2</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTaseron">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
       </div>
       <div class="gv-achips-row" id="achipsTaseron" hidden>
         <div class="gv-achips"></div>
@@ -167,80 +185,80 @@
           <option value="kule-ofis">Kule Ofis B Blok</option>
         </select>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblTaseron">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblTaseron">
           <thead>
             <tr>
               <th>Hakediş</th>
-              <th>Taşeron</th>
-              <th>Şantiye</th>
-              <th class="col-donem">Dönem</th>
-              <th class="num col-tutar">Net Tutar</th>
-              <th class="col-tarih">Tarih</th>
-              <th class="col-durum">Durum</th>
+              <th data-col="taseron">Taşeron</th>
+              <th data-col="santiye">Şantiye</th>
+              <th class="col-donem" data-col="donem">Dönem</th>
+              <th class="num col-tutar" data-col="tutar">Net Tutar</th>
+              <th class="col-tarih" data-col="tarih">Tarih</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="bekliyor" data-taseron="demir-beton" data-santiye="vadi" data-tarih="2026-06-28">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-014</b><span>Gönderildi · 28 Haz 2026</span></div></div></td>
-              <td class="t-strong">Demir-Beton İnş. Ltd.</td>
-              <td>Vadi Konakları</td>
-              <td>Haziran 2026</td>
-              <td class="num"><div class="net-cell"><b>₺90.000</b><span>Kesinti sonrası</span></div></td>
-              <td class="muted">28 Haz 2026</td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=014" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-014</b><span>Gönderildi · 28 Haz 2026</span></div></div></td>
+              <td data-col="taseron" data-lbl="Taşeron" class="t-strong">Demir-Beton İnş. Ltd.</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Haziran 2026</td>
+              <td data-col="tutar" data-lbl="Net Tutar" class="num"><div class="net-cell"><b>₺90.000</b><span>Kesinti sonrası</span></div></td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">28 Haz 2026</td>
+              <td data-col="durum" data-lbl="Durum" data-badge="bekliyor"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=014" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-taseron="elektromek" data-santiye="vadi" data-tarih="2026-07-01">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-009</b><span>Gönderildi · 1 Tem 2026</span></div></div></td>
-              <td class="t-strong">ElektroMek Taahhüt</td>
-              <td>Vadi Konakları</td>
-              <td>Haziran 2026</td>
-              <td class="num"><div class="net-cell"><b>₺76.200</b><span>Kesinti sonrası</span></div></td>
-              <td class="muted">1 Tem 2026</td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=009" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-009</b><span>Gönderildi · 1 Tem 2026</span></div></div></td>
+              <td data-col="taseron" data-lbl="Taşeron" class="t-strong">ElektroMek Taahhüt</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Haziran 2026</td>
+              <td data-col="tutar" data-lbl="Net Tutar" class="num"><div class="net-cell"><b>₺76.200</b><span>Kesinti sonrası</span></div></td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">1 Tem 2026</td>
+              <td data-col="durum" data-lbl="Durum" data-badge="bekliyor"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=009" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="onaylandi" data-taseron="demir-beton" data-santiye="vadi" data-tarih="2026-06-02">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-013</b><span>Ödeme sırada</span></div></div></td>
-              <td class="t-strong">Demir-Beton İnş. Ltd.</td>
-              <td>Vadi Konakları</td>
-              <td>Mayıs 2026</td>
-              <td class="num"><div class="net-cell"><b>₺210.000</b><span>Kesinti sonrası</span></div></td>
-              <td class="muted">2 Haz 2026</td>
-              <td data-badge="onaylandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=013" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-013</b><span>Ödeme sırada</span></div></div></td>
+              <td data-col="taseron" data-lbl="Taşeron" class="t-strong">Demir-Beton İnş. Ltd.</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Mayıs 2026</td>
+              <td data-col="tutar" data-lbl="Net Tutar" class="num"><div class="net-cell"><b>₺210.000</b><span>Kesinti sonrası</span></div></td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">2 Haz 2026</td>
+              <td data-col="durum" data-lbl="Durum" data-badge="onaylandi"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=013" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="onaylandi" data-taseron="yalitim-kardesler" data-santiye="liman" data-tarih="2026-06-30">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-008</b><span>Malzeme mahsuplu</span></div></div></td>
-              <td class="t-strong">Yalıtım Kardeşler</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td>Haziran 2026</td>
-              <td class="num"><div class="net-cell"><b>₺128.500</b><span>Kesinti sonrası</span></div></td>
-              <td class="muted">30 Haz 2026</td>
-              <td data-badge="onaylandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=008" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-008</b><span>Malzeme mahsuplu</span></div></div></td>
+              <td data-col="taseron" data-lbl="Taşeron" class="t-strong">Yalıtım Kardeşler</td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="donem" data-lbl="Dönem">Haziran 2026</td>
+              <td data-col="tutar" data-lbl="Net Tutar" class="num"><div class="net-cell"><b>₺128.500</b><span>Kesinti sonrası</span></div></td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">30 Haz 2026</td>
+              <td data-col="durum" data-lbl="Durum" data-badge="onaylandi"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=008" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="odendi" data-taseron="demir-beton" data-santiye="vadi" data-tarih="2026-05-10">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-005</b><span>Dönem: Nisan 2026</span></div></div></td>
-              <td class="t-strong">Demir-Beton İnş. Ltd.</td>
-              <td>Vadi Konakları</td>
-              <td>Nisan 2026</td>
-              <td class="num"><div class="net-cell"><b>₺185.000</b><span>Kesinti sonrası</span></div></td>
-              <td class="muted">10 May 2026</td>
-              <td><span class="gstat ok">Ödendi</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=005" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-005</b><span>Dönem: Nisan 2026</span></div></div></td>
+              <td data-col="taseron" data-lbl="Taşeron" class="t-strong">Demir-Beton İnş. Ltd.</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Nisan 2026</td>
+              <td data-col="tutar" data-lbl="Net Tutar" class="num"><div class="net-cell"><b>₺185.000</b><span>Kesinti sonrası</span></div></td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">10 May 2026</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Ödendi</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=005" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="odendi" data-taseron="elektromek" data-santiye="vadi" data-tarih="2026-04-15">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-002</b><span>Dönem: Mart 2026</span></div></div></td>
-              <td class="t-strong">ElektroMek Taahhüt</td>
-              <td>Vadi Konakları</td>
-              <td>Mart 2026</td>
-              <td class="num"><div class="net-cell"><b>₺54.000</b><span>Kesinti sonrası</span></div></td>
-              <td class="muted">15 Nis 2026</td>
-              <td><span class="gstat ok">Ödendi</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=002" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="hk-info"><b>TH-2026-002</b><span>Dönem: Mart 2026</span></div></div></td>
+              <td data-col="taseron" data-lbl="Taşeron" class="t-strong">ElektroMek Taahhüt</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Mart 2026</td>
+              <td data-col="tutar" data-lbl="Net Tutar" class="num"><div class="net-cell"><b>₺54.000</b><span>Kesinti sonrası</span></div></td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">15 Nis 2026</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Ödendi</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?th=002" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
         </table>
@@ -385,6 +403,24 @@
         activeRow: '#achipsTaseron',
         onApply: function(state){ fpState = state; gvApplyFilters(tblTaseron, true); },
         onClear: function(){ fpState = {}; gvApplyFilters(tblTaseron, true); }
+      });
+    }
+
+    /* ============ §8.4 — gvCols (Kolonlar). Kolon seti mevcut tablo başlıklarından
+       türetildi; "Hakediş" (kimlik hücresi) ve işlem hücresi data-col TAŞIMAZ
+       (crm-finans-kurum.html emsali BİREBİR — tutar için roleHidden emsali YOK, kardeş
+       sayfayla tutarlı bırakıldı). ============ */
+    if(window.gvCols){
+      gvCols.init({
+        mount: '#colsBtn', table: '#tblTaseron', screen: 'finans-taseron',
+        cols: [
+          {key:'taseron', lbl:'Taşeron', def:true},
+          {key:'santiye', lbl:'Şantiye', def:true},
+          {key:'donem', lbl:'Dönem', def:true},
+          {key:'tutar', lbl:'Net Tutar', def:true},
+          {key:'tarih', lbl:'Tarih', def:true},
+          {key:'durum', lbl:'Durum', def:true}
+        ]
       });
     }
 
