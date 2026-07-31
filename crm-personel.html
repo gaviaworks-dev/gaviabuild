@@ -930,9 +930,96 @@
     });
   });
 
-  gvCols.init({
-    mount: '#colsBtn', table: '#tblPersonel', screen: 'personel',
-    cols: [
+  /* ============ §7.5 — Özel Alan Yönetimi köprüsü (Dalga 7 denetim eksiği kapatma) ============
+     Tanım kaynağı OKUNUR — crm-personel-ozel-alan.html'in KULLANDIĞI localStorage anahtarı
+     (gv_crm_personel_ozel_alan), İKİNCİ bir state kopyası YOK (yalnız aynı SEED fallback,
+     o dosyayla BİREBİR). "Liste kolonuna eklensin" işaretli (col:true) alanlar için yeni
+     <th>/<td> İşlem kolonundan ÖNCE eklenir (data-col taşımayan hücreler sıra/gizlemeye
+     hiç girmez — spec-liste-mimarisi.md §3 sözleşmesi, mevcut COL_ORDER deseniyle AYNI).
+     Kanonik 25/22/3 satırları BURADA OKUNMAZ/DEĞİŞTİRİLMEZ — her satır için özel alan
+     DEĞERİ, kanonik veride hiç var olmadığından, per+field kombinasyonundan deterministik
+     üretilir (hash tabanlı — sayfa her yüklendiğinde AYNI değer, rastgele DEĞİL). Değer
+     tr'ye data-oa-<id> olarak yazılır; §7.3 filtre bloğu bunu KENDİ IIFE'sinde ayrıca okur
+     (iki IIFE arası paylaşım DOM özniteliği üzerinden — yeni global değişken İCAT EDİLMEZ). */
+  var OA_KEY = 'gv_crm_personel_ozel_alan';
+  var OA_SEED = [
+    {id:'oa1', ad:'Bot Numarası', tip:'sayi', opt:'', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa2', ad:'Beden Ölçüsü', tip:'secim', opt:'S,M,L,XL,XXL', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa3', ad:'Usta Seviyesi', tip:'secim', opt:'Çırak,Kalfa,Usta,Formen', form:true, col:true, filter:true, hidden:[]},
+    {id:'oa4', ad:'Turnike Kart No', tip:'kisa-metin', opt:'', form:true, col:false, filter:false, hidden:['personel']},
+    {id:'oa5', ad:'Personel Özel Notu', tip:'uzun-metin', opt:'', form:true, col:false, filter:false, hidden:['personel','sef','teknik']}
+  ];
+  function loadOaFields(){
+    try{
+      var raw = localStorage.getItem(OA_KEY);
+      if(!raw) return OA_SEED.slice();
+      var p = JSON.parse(raw);
+      return Array.isArray(p) && p.length ? p : OA_SEED.slice();
+    }catch(e){ return OA_SEED.slice(); }
+  }
+  function oaOpts(f){ return (f.opt || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+  function oaHash(str){
+    var h = 0;
+    for(var i = 0; i < str.length; i++){ h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  }
+  function oaMockValue(per, f){
+    var seed = oaHash(per + '_' + f.id);
+    switch(f.tip){
+      case 'sayi': return String(38 + (seed % 9));
+      case 'tarih': { var d = new Date(2024, 0, 1); d.setDate(d.getDate() + (seed % 700)); return d.toISOString().slice(0, 10); }
+      case 'secim': { var o = oaOpts(f); return o.length ? o[seed % o.length] : ''; }
+      case 'coklu-secim': {
+        var mo = oaOpts(f); if(!mo.length) return [];
+        var n = 1 + (seed % Math.min(2, mo.length));
+        var picked = [];
+        for(var i = 0; i < n; i++) picked.push(mo[(seed + i * 3) % mo.length]);
+        return picked.filter(function(v, i, arr){ return arr.indexOf(v) === i; });
+      }
+      case 'evet-hayir': return (seed % 2) === 0;
+      case 'dosya': return (seed % 3) === 0 ? '' : 'yuklendi';
+      case 'kisa-metin': return 'TRN-' + (1000 + (seed % 9000));
+      case 'uzun-metin': return 'Saha ekibinin özel notu (demo).';
+      case 'etiket': return ['vardiya-gündüz', 'sürücü-belgeli', 'forklift-sertifikalı'][seed % 3];
+      case 'para-birimi': return String(500 + (seed % 20) * 250);
+      default: return '';
+    }
+  }
+  function oaCellHtml(f, val){
+    switch(f.tip){
+      case 'evet-hayir': return val ? '<span class="gstat ok">Evet</span>' : '<span class="gstat off">Hayır</span>';
+      case 'dosya': return val === 'yuklendi' ? '<span class="gstat ok">Yüklendi</span>' : '<span class="gstat off">Yüklenmedi</span>';
+      case 'tarih': return val ? isoToTR(val) : '—';
+      case 'coklu-secim': return (val && val.length) ? val.join(', ') : '—';
+      case 'para-birimi': return val ? ('₺' + Number(val).toLocaleString('tr-TR')) : '—';
+      default: return (val || val === 0) ? String(val) : '—';
+    }
+  }
+  var oaFields = loadOaFields();
+  var oaColFields = oaFields.filter(function(f){ return f.col; });
+  if(oaColFields.length){
+    oaColFields.forEach(function(f){
+      var th = document.createElement('th');
+      th.setAttribute('data-col', 'oa_' + f.id);
+      th.textContent = f.ad;
+      headRow.insertBefore(th, lastTh);
+    });
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var per = perOf(tr) || String(tr.rowIndex);
+      var actsTd = tr.lastElementChild;
+      oaColFields.forEach(function(f){
+        var val = oaMockValue(per, f);
+        tr.setAttribute('data-oa-' + f.id, Array.isArray(val) ? val.join('|') : String(val));
+        var td = document.createElement('td');
+        td.setAttribute('data-col', 'oa_' + f.id);
+        td.setAttribute('data-lbl', f.ad);
+        td.innerHTML = oaCellHtml(f, val);
+        tr.insertBefore(td, actsTd);
+      });
+    });
+  }
+
+  var personelCols = [
       {key:'ad', lbl:'Personel', def:true},
       {key:'santiye', lbl:'Şantiye / Birim', def:true},
       {key:'telefon', lbl:'Telefon', def:true},
@@ -961,7 +1048,17 @@
       {key:'atamatarihi', lbl:'Şantiye Atama Tarihi', def:false},
       {key:'cikistarihi', lbl:'İşten Çıkış Tarihi', def:false},
       {key:'cikisnedeni', lbl:'Çıkış Nedeni', def:false}
-    ]
+  ];
+  /* §7.5 — col:true işaretli özel alanlar Kolonlar popover'ına eklenir; rol kısıtı
+     (f.hidden) varsa gvCols'un roleHidden mekanizmasıyla o rolde HİÇ görünmez/seçilmez
+     (kabul kriteri 4 — ui.js gvCols.init zaten localStorage.gv_crm_role okuyup filtreliyor). */
+  oaColFields.forEach(function(f){
+    personelCols.push({key:'oa_' + f.id, lbl:f.ad + ' (Özel Alan)', def:false, roleHidden:(f.hidden && f.hidden.length) ? f.hidden.slice() : undefined});
+  });
+
+  gvCols.init({
+    mount: '#colsBtn', table: '#tblPersonel', screen: 'personel',
+    cols: personelCols
   });
 
   /* §7.5 — Kolonlar panelinden "Özel Alan Yönetimi" alt akışına giriş noktası
@@ -1035,6 +1132,44 @@
       var cd = new Date(ci + 'T00:00:00');
       if(cd < s.cikis.raw.from || cd > s.cikis.raw.to) return false;
     }
+    /* §7.5 — özel alan filtreleri (oa_<id> anahtarlı state); data-oa-<id> §7.4 bloğunda
+       her satıra zaten yazılmıştı, tip'e göre applyToTable (ui.js) ile AYNI eksen mantığı
+       elle uygulanır (opts.table verilmediği için — spec-liste-mimarisi.md §2 notu). */
+    for(var oaKey in s){
+      if(oaKey.indexOf('oa_') !== 0 || !s[oaKey]) continue;
+      var of = oaFilterFieldsByKey[oaKey];
+      if(!of) continue;
+      var osv = s[oaKey];
+      var oattr = tr.getAttribute('data-' + oaKey.replace('_', '-'));
+      if(of.tip === 'coklu-secim'){
+        var oav = oattr ? oattr.split('|') : [];
+        var selRaw = osv.raw || [];
+        var hit = false;
+        for(var oi = 0; oi < selRaw.length; oi++){ if(oav.indexOf(selRaw[oi]) !== -1){ hit = true; break; } }
+        if(!hit) return false;
+      } else if(of.tip === 'sayi' || of.tip === 'para-birimi'){
+        var onum = oattr !== null ? parseFloat(oattr) : NaN;
+        if(isNaN(onum)) return false;
+        var oraw = osv.raw || {};
+        if(oraw.min != null && onum < oraw.min) return false;
+        if(oraw.max != null && onum > oraw.max) return false;
+      } else if(of.tip === 'tarih'){
+        if(!oattr) return false;
+        var odate = new Date(oattr + 'T00:00:00');
+        if(osv.raw && osv.raw.from && (odate < osv.raw.from || odate > osv.raw.to)) return false;
+      } else if(of.tip === 'evet-hayir'){
+        if(oattr !== 'true') return false;
+      } else if(of.tip === 'dosya'){
+        var wantYuklendi = osv.value === 'yuklendi';
+        if(wantYuklendi !== (oattr === 'yuklendi')) return false;
+      } else if(of.tip === 'kisa-metin' || of.tip === 'uzun-metin' || of.tip === 'etiket'){
+        var otxt = (oattr || '').toLocaleLowerCase('tr');
+        var oquery = String(osv.value || '').toLocaleLowerCase('tr');
+        if(oquery && otxt.indexOf(oquery) === -1) return false;
+      } else if(oattr !== osv.value){
+        return false;
+      }
+    }
     return true;
   }
 
@@ -1066,10 +1201,52 @@
     {v:'elektrik-ustasi', l:'Elektrik Ustası'}, {v:'operator', l:'Operatör'}, {v:'kaynakci', l:'Kaynakçı'}, {v:'marangoz', l:'Marangoz'}
   ];
 
-  var fdHandle = gvFilterDrawer.init({
-    mount: '#advFilterBtn', screen: 'personel', chipsMount: '#achipsPersonel',
-    title: 'Gelişmiş Filtre',
-    fields: [
+  /* ============ §7.5 — Özel Alan Yönetimi köprüsü (gelişmiş filtre yarısı) ============
+     Tanım kaynağı OKUNUR — crm-personel-ozel-alan.html'in KULLANDIĞI localStorage anahtarı
+     (gv_crm_personel_ozel_alan), İKİNCİ bir state kopyası YOK (SEED fallback §7.4 bloğuyla
+     BİREBİR — bu IIFE ayrı kapsam olduğundan aynı sabitler burada da tutulur, mevcut sayfa
+     içi çift-IIFE tekrar deseniyle AYNI — bkz perOf/nameOf'un iki IIFE'de de ayrı ayrı
+     tanımlı olması). "Gelişmiş filtrede kullanılabilsin" işaretli (filter:true) alanlar,
+     rol kısıtı (f.hidden) varsa GV.role için hiç EKLENMEZ (kabul kriteri 4). opts.table
+     VERİLMEDİĞİNDEN (bu sayfanın kendi fpMatch motoru var) eşleşme fpMatch() içinde elle
+     yapılır — data-oa-<id> özniteliği §7.4 bloğunda zaten her satıra yazılmıştı. */
+  var OA_KEY = 'gv_crm_personel_ozel_alan';
+  var OA_SEED = [
+    {id:'oa1', ad:'Bot Numarası', tip:'sayi', opt:'', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa2', ad:'Beden Ölçüsü', tip:'secim', opt:'S,M,L,XL,XXL', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa3', ad:'Usta Seviyesi', tip:'secim', opt:'Çırak,Kalfa,Usta,Formen', form:true, col:true, filter:true, hidden:[]},
+    {id:'oa4', ad:'Turnike Kart No', tip:'kisa-metin', opt:'', form:true, col:false, filter:false, hidden:['personel']},
+    {id:'oa5', ad:'Personel Özel Notu', tip:'uzun-metin', opt:'', form:true, col:false, filter:false, hidden:['personel','sef','teknik']}
+  ];
+  function loadOaFields(){
+    try{
+      var raw = localStorage.getItem(OA_KEY);
+      if(!raw) return OA_SEED.slice();
+      var p = JSON.parse(raw);
+      return Array.isArray(p) && p.length ? p : OA_SEED.slice();
+    }catch(e){ return OA_SEED.slice(); }
+  }
+  function oaOpts(f){ return (f.opt || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+  var oaRole = (window.GV && GV.role) || null;
+  var oaFilterFields = loadOaFields().filter(function(f){
+    return f.filter && !(f.hidden && f.hidden.indexOf(oaRole) !== -1);
+  });
+  var oaFilterFieldsByKey = {};
+  oaFilterFields.forEach(function(f){ oaFilterFieldsByKey['oa_' + f.id] = f; });
+  function oaFilterFieldConfig(f){
+    switch(f.tip){
+      case 'secim': return {key:'oa_' + f.id, type:'select', label:f.ad, options:oaOpts(f)};
+      case 'coklu-secim': return {key:'oa_' + f.id, type:'multiselect', label:f.ad, options:oaOpts(f)};
+      case 'evet-hayir': return {key:'oa_' + f.id, type:'toggle', label:f.ad};
+      case 'sayi': return {key:'oa_' + f.id, type:'numrange', label:f.ad};
+      case 'para-birimi': return {key:'oa_' + f.id, type:'numrange', label:f.ad, prefix:'₺'};
+      case 'tarih': return {key:'oa_' + f.id, type:'daterange', label:f.ad};
+      case 'dosya': return {key:'oa_' + f.id, type:'select', label:f.ad, options:[{v:'yuklendi', l:'Yüklendi'}, {v:'bos', l:'Yüklenmedi'}]};
+      default: return {key:'oa_' + f.id, type:'text', label:f.ad};
+    }
+  }
+
+  var personelFilterFields = [
       {key:'durum', type:'select', label:'Durum', options:[
         {v:'aktif', l:'Aktif'}, {v:'izinli', l:'İzinli'}, {v:'raporlu', l:'Raporlu'}, {v:'ayrildi', l:'Ayrıldı'}
       ]},
@@ -1115,7 +1292,13 @@
         {v:'var', l:'Sertifikaları Güncel'}, {v:'yaklasiyor', l:'Süresi Yaklaşan Sertifika Var'}, {v:'eksik', l:'Eksik / Süresi Dolmuş Sertifika Var'}
       ]},
       {key:'taseronayrimi', type:'toggle', label:'Yalnız taşeron personeli göster'}
-    ],
+  ];
+  personelFilterFields = personelFilterFields.concat(oaFilterFields.map(oaFilterFieldConfig));
+
+  var fdHandle = gvFilterDrawer.init({
+    mount: '#advFilterBtn', screen: 'personel', chipsMount: '#achipsPersonel',
+    title: 'Gelişmiş Filtre',
+    fields: personelFilterFields,
     onApply: function(state){
       fpState = state;
       gvApplyFilters(tblPersonel, true);

@@ -119,6 +119,11 @@
 .side-tip:last-child{border-bottom:none}
 .side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
 .side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* §7.5 — Özel Alanlar (kabul kriteri 2): çoklu seçim tipi için ozel-alan.html rol-chip
+   dilinden ödünç alınmış chip-toggle grid (yeni component İCAT EDİLMEDİ, .chip zaten
+   ortak ui.css'te tanımlı — burada yalnız sarmalayıcı düzen eklendi). */
+.oaf-chip-select{display:flex;flex-wrap:wrap;gap:8px}
 </style>
 </head>
 <body data-sec="personel" data-screen="liste">
@@ -245,6 +250,15 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- §7.5 — Özel Alan Yönetimi köprüsü (denetim eksiği kapatma): tanımlar
+               crm-personel-ozel-alan.html'in localStorage'ından (gv_crm_personel_ozel_alan)
+               OKUNUR, JS ile burada render edilir. Statik olarak boş/hidden başlar — JS
+               tanım varsa açar (kabul kriteri "özel alan personel formunda görünmelidir"). -->
+          <div class="fg-section" id="fgOzelAlan" hidden>
+            <div class="fg-section-head"><i class="fa-solid fa-sliders"></i><h3>Özel Alanlar</h3><span>Firma yöneticisinin tanımladığı ek personel bilgileri</span></div>
+            <div class="gform" id="ozelAlanForm"></div>
           </div>
         </section>
 
@@ -713,6 +727,137 @@
         gvToast('Personel kaydı oluşturuldu.');
       }
       setTimeout(function(){ location.href = 'crm-personel.html'; }, 900);
+    });
+  }
+})();
+</script>
+<script>
+/* =====================================================================
+   §7.5 — Özel Alan Yönetimi köprüsü / kabul kriteri 2+4 (crm-personel-ozel-alan.html'in
+   4 eksik kabul kriterinden ilki, Dalga 7 denetim bulgusu). Tanım kaynağı OKUNUR —
+   crm-personel-ozel-alan.html'in KULLANDIĞI localStorage anahtarı (gv_crm_personel_ozel_alan),
+   İKİNCİ bir state kopyası YOK, yalnız SEED fallback (o dosyayla BİREBİR aynı) burada da
+   tutulur — localStorage boşsa (ilk ziyaret) aynı 5 varsayılan alan görünür. 10 alan
+   tipinin her biri kendi doğru input'unu üretir; "Personel formunda göster" kabul kriteri
+   HER ZAMAN true olduğundan (oaUseForm disabled+checked) form:true filtresi teknik
+   olarak fazladan güvenlik, hepsi zaten true. Rol kısıtı (f.hidden) varsa alan formda
+   HİÇ render EDİLMEZ (kabul kriteri 4). Girilen değerler kayıt anında (mevcut
+   personelSubmit akışı — 2. script bloğu, DOKUNULMADI) localStorage'a AYRI bir demo
+   anahtarda (gv_crm_personel_ozel_deger) yazılır: bu form zaten gerçek bir personel
+   kaydı OLUŞTURMUYOR (mock — toast + yönlendirme), dolayısıyla "kaydedilen son özel alan
+   değer seti" doğrulama amaçlı persist edilir; kanonik personel satırları BU BLOKTA
+   OKUNMAZ/DEĞİŞTİRİLMEZ. ===================================================================== */
+(function(){
+  if(!window.GV) return;
+  var OA_KEY = 'gv_crm_personel_ozel_alan';
+  var OA_VAL_KEY = 'gv_crm_personel_ozel_deger';
+  var OA_SEED = [
+    {id:'oa1', ad:'Bot Numarası', tip:'sayi', opt:'', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa2', ad:'Beden Ölçüsü', tip:'secim', opt:'S,M,L,XL,XXL', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa3', ad:'Usta Seviyesi', tip:'secim', opt:'Çırak,Kalfa,Usta,Formen', form:true, col:true, filter:true, hidden:[]},
+    {id:'oa4', ad:'Turnike Kart No', tip:'kisa-metin', opt:'', form:true, col:false, filter:false, hidden:['personel']},
+    {id:'oa5', ad:'Personel Özel Notu', tip:'uzun-metin', opt:'', form:true, col:false, filter:false, hidden:['personel','sef','teknik']}
+  ];
+  function loadOaFields(){
+    try{
+      var raw = localStorage.getItem(OA_KEY);
+      if(!raw) return OA_SEED.slice();
+      var p = JSON.parse(raw);
+      return Array.isArray(p) && p.length ? p : OA_SEED.slice();
+    }catch(e){ return OA_SEED.slice(); }
+  }
+  function oaOpts(f){ return (f.opt || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+  function escAttr(s){ return String(s).replace(/"/g, '&quot;'); }
+
+  var oaFields = loadOaFields().filter(function(f){ return f.form; });
+  var visibleOaFields = oaFields.filter(function(f){ return !(f.hidden && f.hidden.indexOf(GV.role) !== -1); });
+
+  var oaWrap = document.getElementById('fgOzelAlan');
+  var oaMount = document.getElementById('ozelAlanForm');
+
+  function renderOaField(f){
+    var id = 'oaf_' + f.id;
+    var full = (f.tip === 'uzun-metin' || f.tip === 'dosya') ? ' full' : '';
+    var label = '<label for="' + id + '">' + f.ad + '</label>';
+    var input;
+    switch(f.tip){
+      case 'kisa-metin':
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '" placeholder="' + escAttr(f.ad) + '">';
+        break;
+      case 'uzun-metin':
+        input = '<textarea id="' + id + '" data-oaf="' + f.id + '" rows="2" placeholder="' + escAttr(f.ad) + '"></textarea>';
+        break;
+      case 'sayi':
+        input = '<input type="number" id="' + id + '" data-oaf="' + f.id + '" placeholder="Örn. 42">';
+        break;
+      case 'tarih':
+        input = '<input type="date" id="' + id + '" data-oaf="' + f.id + '">';
+        break;
+      case 'secim':
+        input = '<select id="' + id + '" data-oaf="' + f.id + '"><option value="">— Seçiniz —</option>'
+          + oaOpts(f).map(function(o){ return '<option value="' + escAttr(o) + '">' + o + '</option>'; }).join('') + '</select>';
+        break;
+      case 'coklu-secim':
+        input = '<div class="oaf-chip-select" id="' + id + '" data-oaf="' + f.id + '">'
+          + oaOpts(f).map(function(o){ return '<button type="button" class="chip" data-v="' + escAttr(o) + '">' + o + '</button>'; }).join('') + '</div>';
+        break;
+      case 'evet-hayir':
+        input = '<label class="gv-toggle"><input type="checkbox" id="' + id + '" data-oaf="' + f.id + '"><span class="tg-track"></span></label>';
+        break;
+      case 'dosya':
+        input = '<div class="zmt-attach" id="' + id + '" data-oaf="' + f.id + '"><i class="fa-solid fa-paperclip"></i><b>' + f.ad + '</b>'
+          + '<span class="oaf-file-stat">Yüklenmedi</span><button type="button" class="btn btn-ghost btn-sm oaf-file-yukle" data-no-confirm>Yükle</button></div>';
+        break;
+      case 'etiket':
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '" placeholder="Etiketleri virgülle ayırın — örn. vardiya-gündüz, forklift-sertifikalı">';
+        break;
+      case 'para-birimi':
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '" inputmode="decimal" placeholder="₺0">';
+        break;
+      default:
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '">';
+    }
+    return '<div class="gfield' + full + '">' + label + input + '</div>';
+  }
+
+  if(oaWrap && oaMount && visibleOaFields.length){
+    oaWrap.hidden = false;
+    oaMount.innerHTML = visibleOaFields.map(renderOaField).join('');
+
+    oaMount.addEventListener('click', function(e){
+      var chip = e.target.closest('.oaf-chip-select .chip');
+      if(chip){ chip.classList.toggle('is-on'); return; }
+      var fileBtn = e.target.closest('.oaf-file-yukle');
+      if(fileBtn){
+        var box = fileBtn.closest('[data-oaf]');
+        box.querySelector('.oaf-file-stat').textContent = 'Yüklendi';
+        gvToast(box.querySelector('b').textContent + ' yüklendi (mock).');
+      }
+    });
+  }
+
+  function collectOaValues(){
+    var out = {};
+    if(!oaMount) return out;
+    visibleOaFields.forEach(function(f){
+      var el = oaMount.querySelector('[data-oaf="' + f.id + '"]');
+      if(!el) return;
+      var val;
+      if(f.tip === 'evet-hayir') val = el.checked;
+      else if(f.tip === 'coklu-secim') val = Array.prototype.slice.call(el.querySelectorAll('.chip.is-on')).map(function(c){ return c.getAttribute('data-v'); });
+      else if(f.tip === 'dosya') val = el.querySelector('.oaf-file-stat').textContent === 'Yüklendi';
+      else val = el.value;
+      out[f.id] = {ad: f.ad, tip: f.tip, deger: val};
+    });
+    return out;
+  }
+
+  var oaSubmitBtn = document.getElementById('personelSubmit');
+  if(oaSubmitBtn && visibleOaFields.length){
+    oaSubmitBtn.addEventListener('click', function(){
+      try{
+        localStorage.setItem(OA_VAL_KEY, JSON.stringify({savedAt: Date.now(), role: GV.role, values: collectOaValues()}));
+      }catch(e){ /* localStorage kapalıysa sessizce yut — mevcut save() deseniyle aynı */ }
     });
   }
 })();
