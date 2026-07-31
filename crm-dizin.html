@@ -285,7 +285,7 @@
     <div class="meta4-body">
       <p>Doküman §4, 8 kart alanının (§5) ötesinde 6 alan daha istiyor: <b>Sayfa tipi</b> ·
       <b>Veri kaynağı</b> · <b>Backend ihtiyacı</b> · <b>API ihtiyacı</b> · <b>Eksik durum</b> ·
-      <b>Faz 1 aktif mi / Faz 2 kilitli mi / Faz 3 planlı mı</b>. Bunları 199 karta tek tek
+      <b>Faz 1 aktif mi / Faz 2 kilitli mi / Faz 3 planlı mı</b>. Bunları <span id="metaCntKart">242</span> karta tek tek
       basmak okunabilirliği bitirir; bu yüzden dördü zaten kartta karşılığı olan alanlarla
       örtüşüyor, ikisi tek bir doğru cümleyle TÜM envanter için aynı:</p>
       <ul>
@@ -293,12 +293,12 @@
         <li><b>Faz 1 aktif / Faz 2 kilitli / Faz 3 planlı mı</b> — kartın Faz + Durum rozeti BİRLİKTE cevaplıyor
         (ör. "Faz 2" + "Hazır" = hazırlık, açık; "Faz 2" + "Faz 2 Kilitli" = gerçekten kilitli önizleme;
         "Faz 3" + "Faz 3 Planlı" = henüz inşa edilmedi, ortak vitrin ekranı üzerinden temsil).</li>
-        <li><b>Eksik durum</b> — kartın Durum rozetinde ("Eksik" etiketi taşıyan satır bu envanterde YOK — 0/190).</li>
+        <li><b>Eksik durum</b> — kartın Durum rozetinde ("Eksik" etiketi taşıyan satır bu envanterde YOK — <span id="metaCntEksik">0</span>/<span id="metaCntEksikTotal">242</span>).</li>
         <li><b>Veri kaynağı</b> — Panel &amp; Kontrol'ün 7 ekranı için modül eşlemesi zaten
         <code>tasks/spec/panel-veri-kaynagi.md</code>'de var (burada TEKRAR ÜRETİLMEDİ — o dosyaya bakın).
-        Diğer 183 ekranda veri kaynağı kendi modülünün mock verisidir (kartın Modül rozeti = kaynak modül);
+        Diğer <span id="metaCntDiger">235</span> ekranda veri kaynağı kendi modülünün mock verisidir (kartın Modül rozeti = kaynak modül);
         üretimde ilgili modülün backend servisinden gelecektir.</li>
-        <li><b>Backend ihtiyacı / API ihtiyacı</b> — TÜM 190 ekran için AYNI, tek doğru cümle: bu prototip
+        <li><b>Backend ihtiyacı / API ihtiyacı</b> — TÜM <span id="metaCntTumEkran">242</span> ekran için AYNI, tek doğru cümle: bu prototip
         backend'siz statik HTML/JS/CSS'tir (CLAUDE.md, "Backend YOK, veritabanı YOK"); üretim sürümünde
         HER modül kendi REST/GraphQL servisini gerektirecektir. Ekrana özel bir API şeması bu turda
         tanımlanmadı — icat edilecek bir bilgi olduğu için uydurulmadı.</li>
@@ -422,6 +422,22 @@
     });
   }
   initChipCounts();
+
+  /* ---- §4 meta açıklama paneli — statik toplamlar yerine gerçek satır sayımı
+     (initChipCounts ile aynı desen: kaynak her zaman .row'ların kendisi, elle
+     bakım gerekmez) ---- */
+  function updateMetaStats(){
+    var total = rows.length;
+    var eksik = rows.filter(function(r){ return r.getAttribute('data-durum') === 'eksik'; }).length;
+    var panelKontrol = rows.filter(function(r){ return r.getAttribute('data-modul') === 'Panel & Kontrol'; }).length;
+    var diger = total - panelKontrol;
+    ['metaCntKart', 'metaCntEksikTotal', 'metaCntTumEkran'].forEach(function(id){
+      var el = document.getElementById(id); if(el) el.textContent = total;
+    });
+    var eEl = document.getElementById('metaCntEksik'); if(eEl) eEl.textContent = eksik;
+    var dEl = document.getElementById('metaCntDiger'); if(dEl) dEl.textContent = diger;
+  }
+  updateMetaStats();
 
   searchInp.addEventListener('input', apply);
   fazChipsWrap.addEventListener('click', function(e){
