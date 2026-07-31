@@ -1480,7 +1480,21 @@
       function apply(){ reorderRows(); applyVisibility(); save(); }
 
       var menu = null;
-      function onDoc(e){ if(menu && !e.target.closest('.gv-colpop') && e.target !== trigger && !trigger.contains(e.target)) closeMenu(); }
+      function onDoc(e){
+        if(!menu) return;
+        /* Not: e.target canlı DOM'da kontrol edilmez — sıra değiştir sonrası liste
+           yeniden çizilirken (draw()) tıklanan buton DOM'dan sökülüyor; sökülmüş
+           düğümde closest()/contains() canlı ağaç bağını kaybettiği için "dışarı
+           tıklama" sanılıp popover yanlışlıkla kapanıyordu. composedPath() dispatch
+           anında sabitlendiğinden sonraki DOM mutasyonundan etkilenmez. */
+        if(typeof e.composedPath === 'function'){
+          var path = e.composedPath();
+          if(path.indexOf(menu) !== -1 || path.indexOf(trigger) !== -1) return;
+        } else if(e.target.closest('.gv-colpop') || e.target === trigger || trigger.contains(e.target)){
+          return;
+        }
+        closeMenu();
+      }
       function closeMenu(){
         if(!menu) return; var m = menu; menu = null;
         m.classList.remove('open'); setTimeout(function(){ m.remove(); }, 160);
@@ -1494,6 +1508,22 @@
           + '<div class="gcol-foot"><button type="button" class="btn btn-ghost btn-sm gcol-reset">Varsayılana Dön</button></div>';
         document.body.appendChild(menu);
         var list = menu.querySelector('.gcol-list');
+        /* Sıra değiştirme sonrası draw() tüm satırları yeniden yaratır (innerHTML=''),
+           bu yüzden odak taşınan kolonun yeni konumundaki eş butona (mümkünse aynı
+           yön) elle geri verilir — klavyeyle art arda Yukarı/Aşağı basılabilsin. */
+        function focusMove(key, dir){
+          var idx = state.order.indexOf(key);
+          var rowEl = list.children[idx];
+          if(!rowEl) return;
+          var btn = rowEl.querySelector('[data-dir="' + dir + '"]');
+          if(!btn || btn.disabled){
+            var alt = rowEl.querySelector('[data-dir="' + (dir === 'up' ? 'down' : 'up') + '"]');
+            btn = (alt && !alt.disabled) ? alt : null;
+          }
+          if(!btn) btn = rowEl.querySelector('input');
+          if(btn) btn.focus();
+          if(rowEl.scrollIntoView) rowEl.scrollIntoView({block: 'nearest'});
+        }
         function draw(){
           list.innerHTML = '';
           state.order.forEach(function(k, i){
@@ -1505,10 +1535,10 @@
               + '<button type="button" class="gcol-mv" data-dir="down" aria-label="Aşağı taşı"' + (i === state.order.length - 1 ? ' disabled' : '') + '><i class="fa-solid fa-chevron-down"></i></button>'
               + '<label class="gcol-chk"><input type="checkbox"' + (hidden ? '' : ' checked') + '><span>' + c.lbl + '</span></label>';
             row.querySelector('[data-dir="up"]').addEventListener('click', function(){
-              if(i > 0){ var t = state.order[i - 1]; state.order[i - 1] = state.order[i]; state.order[i] = t; apply(); draw(); }
+              if(i > 0){ var t = state.order[i - 1]; state.order[i - 1] = state.order[i]; state.order[i] = t; apply(); draw(); focusMove(k, 'up'); }
             });
             row.querySelector('[data-dir="down"]').addEventListener('click', function(){
-              if(i < state.order.length - 1){ var t = state.order[i + 1]; state.order[i + 1] = state.order[i]; state.order[i] = t; apply(); draw(); }
+              if(i < state.order.length - 1){ var t = state.order[i + 1]; state.order[i + 1] = state.order[i]; state.order[i] = t; apply(); draw(); focusMove(k, 'down'); }
             });
             row.querySelector('input').addEventListener('change', function(e){
               var idx = state.hidden.indexOf(k);
