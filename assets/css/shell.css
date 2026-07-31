@@ -243,6 +243,23 @@ img{display:block;max-width:100%}
 
 .gv-overlay{position:fixed;inset:0;background:rgba(2,8,55,.5);z-index:79;opacity:0;pointer-events:none;transition:.25s}
 
+/* ============ §13.3 — MODAL/PANEL AÇIKKEN ARKA SAYFA SCROLL KİLİDİ ============
+   Doküman kabulü: "Modal açıldığında arka sayfanın scroll davranışı kilitlenmeli."
+   Denetim (tasks/v3-sample-check.cjs) kod-seviyesinde ui.js/shell.js'te hiçbir
+   body-overflow-lock mekanizması bulmadı VE ampirik olarak (scrollTo + gerçek
+   scrollY okuması, scroll-behavior:smooth'un maskelemesine karşı 'auto' zorlanarak
+   ölçüldü) modal/filtre-paneli açıkken arka sayfanın hâlâ kayabildiğini doğruladı
+   — 8/8 örneklem sayfasında scrollWasBlockedByCssLock:false. Kök neden: `body`nin
+   `overflow-x:clip` (satır 24) ATANMASI, `html`in ise varsayılan `overflow:visible`
+   bırakılması — UA bu durumda viewport'un scroll kutusunu `<html>` değil `<body>`den
+   okur (CSS overflow-propagation kuralı). Bu yüzden `body{overflow:hidden}` burada
+   viewport'u GERÇEKTEN kilitler. ui.js'e DOKUNMADAN (sahiplik dışı) salt CSS ile
+   çözüm: [class*="modal-ov"]/[class*="fpanel-ov"] ailesi (gv-modal-ov, gv-fpanel-ov,
+   ata-/av-/avd-/ck-/suz-modal-ov — hepsi aynı `.open` toggle idiyomunu paylaşıyor,
+   bkz. ui.css .gv-modal-ov.open) `:has()` ile yakalanır; sayfa-lokal varyantlar da
+   aynı isimlendirme kalıbını izlediği için otomatik kapsanır. */
+body:has([class*="modal-ov"].open, [class*="fpanel-ov"].open){overflow:hidden}
+
 /* ============ MOBİL (≤980 drawer, ≤640 yoğunluk) ============ */
 @media(max-width:980px){
   .gv-rail{transform:translateX(-100%);transition:transform .28s var(--ease)}
