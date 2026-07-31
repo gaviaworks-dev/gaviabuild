@@ -17,11 +17,20 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Tedarikçiler listesi ============ */
-#tblTedarikci{min-width:1080px}
+/* min-width YALNIZ tablo modunda (>640px) — ID seçici .gtable-cards sınıf seçicisinden
+   specificity'de her zaman kazanır, media query İÇİNE alınarak 640px altında hiç
+   uygulanmaz (crm-personel.html emsali, tasks/kararlar.md 189). */
+@media(min-width:641px){ #tblTedarikci{min-width:1080px} }
 .col-kategori{width:150px}
 .col-skor{width:170px}
 .col-siparis{width:150px}
 .col-cari{width:150px}
+/* Dalga T-L3 — chip slider KENDİ satırında (spec-liste-mimarisi.md §1 notu, crm-cari.html
+   emsali BİREBİR): filter-bar iki satır — (1) arama + gelişmiş filtre + kolonlar,
+   (2) durum chip slider. */
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar.stack .gv-chipbar-wrap{width:100%}
 
 .tdr-cell{display:flex;align-items:center;gap:12px;min-width:0}
 .tdr-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
@@ -105,19 +114,28 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Tedarikçi adı veya kategori ara" data-table-search="#tblTedarikci">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Tedarikçi adı veya kategori ara" data-table-search="#tblTedarikci">
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTedarikci">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
         </div>
-        <div class="chips" data-target="#tblTedarikci">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="aktif">Aktif Siparişi Olan <span class="ch-cnt">4</span></button>
-          <button class="chip" data-filter="gecikme">Gecikme Kaydı Olan <span class="ch-cnt">2</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblTedarikci">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
+            <button class="chip" data-filter="aktif">Aktif Siparişi Olan <span class="ch-cnt">4</span></button>
+            <button class="chip" data-filter="gecikme">Gecikme Kaydı Olan <span class="ch-cnt">2</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTedarikci">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
       </div>
 
       <div class="gv-achips-row" id="achipsTedarikci" hidden>
@@ -132,15 +150,15 @@
         </div>
       </div>
 
-      <div class="gc-body flush">
-        <table class="gtable" id="tblTedarikci">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblTedarikci" data-paginate="4">
           <thead>
             <tr>
               <th>Tedarikçi</th>
-              <th class="col-kategori">Kategori</th>
-              <th class="col-skor">Performans</th>
-              <th class="col-siparis">Aktif Sipariş</th>
-              <th class="col-cari">Cari Bakiye</th>
+              <th class="col-kategori" data-col="kategori">Kategori</th>
+              <th class="col-skor" data-col="skor">Performans</th>
+              <th class="col-siparis" data-col="siparis">Aktif Sipariş</th>
+              <th class="col-cari" data-col="cari">Cari Bakiye</th>
               <th></th>
             </tr>
           </thead>
@@ -153,6 +171,8 @@
           <p>Aramayı temizleyin veya farklı bir filtre seçin.</p>
         </div>
       </div>
+      <!-- §15 — kayıt sayısı özeti (gvCount) -->
+      <div class="gc-foot"><span id="tdrFoot">—</span></div>
     </div>
   </main>
 </div>
@@ -170,6 +190,17 @@
           <option value="">Tümü</option>
           <option value="aktif">Aktif Siparişi Olan</option>
           <option value="gecikme">Gecikme Kaydı Olan</option>
+        </select>
+      </div>
+      <div class="gfield">
+        <label>Kategori</label>
+        <select data-fp-key="kategori" data-fp-label="Kategori">
+          <option value="">Tümü</option>
+          <option value="Beton">Beton</option>
+          <option value="Demir &amp; Çelik">Demir &amp; Çelik</option>
+          <option value="Yapı Market &amp; Doğrama">Yapı Market &amp; Doğrama</option>
+          <option value="Elektrik">Elektrik</option>
+          <option value="Hırdavat &amp; Sarf">Hırdavat &amp; Sarf</option>
         </select>
       </div>
       <div class="gfield">
@@ -230,15 +261,15 @@
        sabit "hepsi" olduğu için (her tedarikçi "hepsi" kümesinde) o token'ı aynen almak
        filtreyi işlevsiz bırakırdı; bu yüzden en spesifik durumu mirror'luyoruz. */
     var durumVal = t.gecikme ? 'gecikme' : (t.aktifSip ? 'aktif' : 'hepsi');
-    html += '<tr data-f="' + fArr.join(' ') + '" data-durum="' + durumVal + '">';
-    html += '<td><div class="tdr-cell"><div class="tdr-mark">' + initials(t.ad) + '</div>'
+    html += '<tr data-f="' + fArr.join(' ') + '" data-durum="' + durumVal + '" data-kategori="' + t.kat + '">';
+    html += '<td data-lbl="Tedarikçi"><div class="tdr-cell"><div class="tdr-mark">' + initials(t.ad) + '</div>'
       + '<div class="tdr-info"><b>' + t.ad + '</b><span>' + t.no + ' · ' + t.kisi + ' · ' + t.tel + '</span></div></div></td>';
-    html += '<td>' + t.kat + '</td>';
-    html += '<td><div class="gbar"><div class="gbar-track"><div class="gbar-fill ' + barCls + '" style="width:' + t.skor + '%"></div></div><span class="gbar-val">%' + t.skor + '</span></div>'
+    html += '<td data-col="kategori" data-lbl="Kategori">' + t.kat + '</td>';
+    html += '<td data-col="skor" data-lbl="Performans"><div class="gbar"><div class="gbar-track"><div class="gbar-fill ' + barCls + '" style="width:' + t.skor + '%"></div></div><span class="gbar-val">%' + t.skor + '</span></div>'
       + (t.warn ? '<span class="gstat warn" style="margin-top:6px;display:inline-block">Gecikme Riski</span>' : '') + '</td>';
-    html += '<td>' + (t.aktifSip ? '<a href="crm-satinalma-siparis-detay.html?sip=' + t.aktifSip + '" style="color:var(--acc-ink);font-weight:700">' + t.aktifSip + '</a>' : '<span class="muted">—</span>') + '</td>';
-    html += '<td>' + (t.cari === null ? '<span class="tdr-cari muted">—</span>' : (t.cari === 0 ? '<span class="tdr-cari muted">' + t.cariYon + '</span>' : '<span class="tdr-cari">' + tl(t.cari) + '</span>')) + '</td>';
-    html += '<td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-tedarikci-detay.html?tdr=' + t.no + '" data-no-confirm aria-label="Tedarikçi detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>';
+    html += '<td data-col="siparis" data-lbl="Aktif Sipariş">' + (t.aktifSip ? '<a href="crm-satinalma-siparis-detay.html?sip=' + t.aktifSip + '" style="color:var(--acc-ink);font-weight:700">' + t.aktifSip + '</a>' : '<span class="muted">—</span>') + '</td>';
+    html += '<td data-col="cari" data-lbl="Cari Bakiye">' + (t.cari === null ? '<span class="tdr-cari muted">—</span>' : (t.cari === 0 ? '<span class="tdr-cari muted">' + t.cariYon + '</span>' : '<span class="tdr-cari">' + tl(t.cari) + '</span>')) + '</td>';
+    html += '<td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-tedarikci-detay.html?tdr=' + t.no + '" data-no-confirm aria-label="Tedarikçi detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>';
     html += '</tr>';
   });
   body.innerHTML = html;
@@ -270,6 +301,57 @@
     });
   }
   gvWireRowArchive('#tblTedarikci tbody tr');
+
+  /* ============ B §4 — Kolonlar (gvCols, spec-v2-core.md) ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtn', table: '#tblTedarikci', screen: 'tedarikciler',
+      cols: [
+        {key:'kategori', lbl:'Kategori', def:true},
+        {key:'skor', lbl:'Performans', def:true},
+        {key:'siparis', lbl:'Aktif Sipariş', def:true},
+        {key:'cari', lbl:'Cari Bakiye', def:true}
+      ]
+    });
+  }
+
+  /* ============ B §2.1 madde 10 — Seçili kayıt işlemleri (gvBulk, spec-v2-core.md §6) ============ */
+  if(window.gvBulk){
+    gvBulk.init('#tblTedarikci', {
+      aksiyonlar: [
+        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
+          gvToast(rows.length + ' tedarikçinin çıktısı hazırlandı.', {type:'info'});
+        }},
+        {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
+          rows.forEach(function(row){ row.setAttribute('data-arsiv', '1'); });
+          if(window.gvPagerRefresh) window.gvPagerRefresh('#tblTedarikci', true);
+          gvToast(rows.length + ' tedarikçi arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+        }}
+      ]
+    });
+  }
+
+  /* ============ §15 — kayıt sayısı özeti (gvCount) ============ */
+  var tdrTotal = TDR.length;
+  function syncTdrCount(){
+    var tbl = document.getElementById('tblTedarikci');
+    if(!tbl || !window.gvCount) return;
+    var showArsiv = tbl.classList.contains('gv-show-arsiv');
+    var arsivCount = tbl.querySelectorAll('tbody tr[data-arsiv="1"]').length;
+    var visible = 0;
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var isArsiv = tr.getAttribute('data-arsiv') === '1';
+      var archOk = !isArsiv || showArsiv;
+      if(archOk && !tr.hidden && !tr.classList.contains('gv-fp-hide')) visible++;
+    });
+    var baseline = showArsiv ? tdrTotal : (tdrTotal - arsivCount);
+    var opts = { toplam: tdrTotal, aktif: tdrTotal - arsivCount, arsiv: arsivCount };
+    if(visible !== baseline) opts.filtreSonucu = visible;
+    gvCount.render('#tdrFoot', opts);
+  }
+  document.getElementById('tblTedarikci').addEventListener('gvpage', syncTdrCount);
+  syncTdrCount();
+
   document.addEventListener('click', function(e){
     var btn = e.target.closest('[data-arsiv-btn]'); if(!btn) return;
     var row = btn.closest('tr'); if(!row) return;
@@ -282,6 +364,7 @@
       message: 'Kayıt kalıcı olarak silinmez; arşive alınır ve varsayılan listede görünmez olur. İşlem kaydına yazılır (İşlem Kayıtları\'ndan izlenebilir) ve "Arşivlenenleri Göster" filtresiyle ya da Ayarlar > Arşiv Merkezi\'nden tekrar görüntülenebilir.',
       onConfirm:function(){
         row.setAttribute('data-arsiv','1');
+        if(window.gvPagerRefresh) window.gvPagerRefresh('#tblTedarikci', true);
         gvToast(label + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
       }
     });

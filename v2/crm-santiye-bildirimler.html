@@ -16,17 +16,42 @@
 <link rel="stylesheet" href="assets/css/shell.css">
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
-/* ============ SAYFAYA ÖZEL — Saha Bildirimleri (foto+not akışı) ============ */
-.feed-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
-@media(max-width:980px){.feed-layout{grid-template-columns:minmax(0,1fr)}}
+/* ============ SAYFAYA ÖZEL — Saha Bildirimleri liste ============
+   [Dalga T-L1d] Bu sayfa foto/kart akışı (feed) mimarisinden standart liste mimarisine
+   (kasa/pluxee ile AYNI DOM/sınıf iskeleti) taşındı — parity bozukluğu nedeniyle B§2.1'in
+   15 bölümünü karşılamayan eski .post kart yapısı KALDIRILDI (linkler/hreflar korunarak,
+   yalnız markup table'a taşındı). Kimlik ve Gönderen hücreleri ui.css'in PAYLAŞILAN
+   .gcell/.gcell-mark/.gcell-info/.gcell-name/.gcell-sub sınıflarını kullanır — sayfaya
+   özel yeni bir "kart" bileşeni İCAT EDİLMEDİ. */
+.col-santiye{width:170px}
+.col-gonderen{width:170px}
+.col-tarih{width:160px}
+.col-tur{width:200px}
+.col-durum{width:150px}
+.col-blacts{width:118px}
 
-.feed-col{display:flex;flex-direction:column;gap:16px}
+/* iki boyutlu filtre — şantiye chip grubu + kategori select, durum ekseni ui.js'in
+   native .chip[data-filter] delegasyonuna bırakıldı (İSG/kasa deseni). */
+/* [T-L1 lead düzeltmesi] KÖK NEDEN — ui.css'in temel .filter-bar{flex-wrap:wrap}
+   kuralı buradan resetlenmiyordu; flex-direction:column + sızan flex-wrap:wrap
+   kombinasyonu 390px'te satırları YANYANA İKİNCİ SÜTUNA sarıyordu (window.innerWidth
+   496'ya şişiyordu — CDP ile ölçüldü, kanıtlandı). crm-santiye.html'nin ÇALIŞAN
+   `.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;...}` kuralıyla TUTARLI. */
+.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
+.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+.filter-row.top{justify-content:space-between;width:100%}
+/* [T-L1 lead düzeltmesi] TUZAK #2 — düz .filter-row içindeki Şantiye chip grubu
+   (.gv-chipbar-wrap) flex-item min-width:auto tuzağına düşüyordu (390px'te gerçek
+   doc-level taşma — window.innerWidth 496'ya şişiyordu, ölçüldü ve doğrulandı).
+   crm-santiye.html'deki genel `.filter-row .gv-chipbar-wrap` kuralıyla TUTARLI. */
+.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
 
-/* şantiye filtre çipleri — feed'e özel, tabloya bağlı değil */
-.feed-filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 16px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm)}
-.feed-filter .chip{white-space:nowrap}
-
-/* tür filtresi — şantiye chip'leriyle bileşik (AND); D-Dalga20 §9.4, 14+ tür */
+/* Kategori satırı — select + sağda Gelişmiş Filtre/Kolonlar aksiyon grubu (kasa'daki
+   .tur-row deseninin devralımı; burada chip yerine <select> olduğundan flex:1 1 0 yerine
+   sabit max-width kullanılır, taşma riski YOK). */
+.filter-row.tur-row{justify-content:space-between}
+.tur-row-acts{display:flex;align-items:center;gap:8px;flex:none}
 .tur-select{
   font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);
   background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);
@@ -34,75 +59,27 @@
   min-width:220px;max-width:280px;
 }
 .tur-select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
-@media(max-width:640px){.tur-select{flex:1;min-width:0;max-width:none}}
 
-/* bildirim kartı */
-.post{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow:hidden}
-.post-head{display:flex;align-items:center;gap:12px;padding:16px 18px 14px}
-.post-ava{width:42px;height:42px;flex:none;border-radius:var(--r-circle);display:grid;place-items:center;font-size:13.5px;font-weight:800}
-.post-who{flex:1;min-width:0}
-.post-who b{display:block;font-size:13.5px;font-weight:700;color:var(--ink)}
-.post-who span{font-size:12px;color:var(--muted)}
-.post-who a{color:var(--acc-ink);font-weight:700}
-.post-who a:hover{color:var(--acc-deep)}
-.post-new{flex:none}
-
-/* fotoğraf alanı — <img> DEĞİL, div + background-image (cover/center); gerçek foto yok,
-   token-türevi gradyan + tip ikonu ile temsili "saha kaydı" görseli */
-.post-photo{aspect-ratio:16/9;background-size:cover;background-position:center;position:relative;display:flex;align-items:center;justify-content:center}
-.post-photo i{font-size:34px;color:rgba(255,255,255,.9)}
-.post-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,8,55,0) 55%,rgba(2,8,55,.34) 100%)}
-.post-tag{position:absolute;left:14px;bottom:12px;z-index:1;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:var(--r-pill);background:rgba(255,255,255,.92);color:var(--ink);backdrop-filter:blur(2px)}
-.post-tag i{font-size:10.5px;color:inherit}
-
-.photo-vadi{background-image:linear-gradient(135deg, color-mix(in srgb, var(--acc) 55%, var(--gv-deep)) 0%, color-mix(in srgb, var(--acc) 18%, var(--gv-deep)) 100%)}
-.photo-liman{background-image:linear-gradient(135deg, color-mix(in srgb, var(--info) 60%, var(--gv-deep)) 0%, color-mix(in srgb, var(--info) 18%, var(--gv-deep)) 100%)}
-.photo-merkez{background-image:linear-gradient(135deg, color-mix(in srgb, var(--warn) 55%, var(--gv-deep)) 0%, color-mix(in srgb, var(--warn) 16%, var(--gv-deep)) 100%)}
-
-.post-body{padding:16px 18px 6px}
-.post-body p{font-size:13.5px;line-height:1.65;color:var(--ink-2)}
-
-.post-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px 16px;flex-wrap:wrap}
-.post-meta-l{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--muted)}
-.post-meta-l span{display:inline-flex;align-items:center;gap:6px}
-.post-ack{font-size:12.5px;font-weight:700;color:var(--acc-ink);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:4px 2px}
-.post-ack:hover{color:var(--acc-deep)}
-.post-ack.is-acked{color:var(--ok)}
-.post-ack.is-acked i{color:var(--ok)}
-
-/* kart → detay köprüsü — D18-T1 (SBL-2026-0## serisi). Kartın tamamı tıklanabilir
-   yapılmadı (post-ack butonuyla çakışmaması için); post-meta-l'e eklenen ayrı,
-   ince bir bağlantı satırı ile detay sayfasına gidilir. */
-.post-detail{font-size:12px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
-.post-detail:hover{color:var(--acc-deep)}
-.post-detail i{font-size:10px}
-
-/* §17 — kayıt aksiyonları (Düzenle/Arşivle), "Gördüm" ile aynı sırada */
-.post-acts{display:flex;align-items:center;gap:6px}
-.post.is-arsiv{opacity:.6}
+@media(max-width:640px){
+  .filter-row.tur-row{align-items:stretch}
+  .filter-row.tur-row .tur-select{width:100%;max-width:none}
+  .tur-row-acts{width:100%}
+  .filter-row .frow-lbl{min-width:0;width:100%}
+  .filter-row .gv-chipbar-wrap{width:100%}
+}
 
 /* Arşivlenenleri Göster — switch, crm-santiye.html'deki "Pasif Şantiyeleri Göster" ile
    BİREBİR aynı sayfa-lokal bileşen (ui.js'e yeni primitif eklenmez) */
 /* ui.css'te .gv-toggle ZATEN farklı bir bileşen (checkbox+.tg-track, width:42px sabit) —
-   width'i BURADA açıkça override etmek ŞART, aksi halde ui.css'in width:42px'i (property-
-   bazlı cascade, sonradan gelen ruleset width belirtmezse ÖNCEKİ değer geçerli kalır)
-   metni kutunun dışına taşırır (crm-santiye.html'deki T-H switch'i width:100% ile bu
-   çakışmayı zaten örtük olarak çözmüştü). */
-.gv-toggle{display:flex;flex:none;width:auto;height:auto;position:static;align-items:center;gap:10px;font-family:inherit;background:none;border:none;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;margin-left:auto}
+   width'i BURADA açıkça override etmek ŞART (crm-santiye-isg.html'deki AYNI override). */
+.gv-toggle{display:flex;flex:none;width:auto;height:auto;position:static;align-items:center;gap:10px;font-family:inherit;background:none;border:none;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent}
 .gv-toggle-track{width:38px;height:22px;border-radius:var(--r-pill);background:var(--line-2);position:relative;flex:none;transition:background .18s var(--ease)}
 .gv-toggle-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--sh-sm);transition:transform .18s var(--ease)}
 .gv-toggle[aria-checked="true"] .gv-toggle-track{background:var(--acc)}
 .gv-toggle[aria-checked="true"] .gv-toggle-thumb{transform:translateX(16px)}
-.gv-toggle-lbl{font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
-@media(max-width:640px){.gv-toggle{margin-left:0;width:100%;justify-content:space-between}}
+.gv-toggle-lbl{font-size:12.5px;font-weight:700;color:var(--ink-2)}
 
-/* sağ sütun: özet + şantiye lejantı */
-.leg-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:12.5px;color:var(--ink-2)}
-.leg-dot{width:11px;height:11px;border-radius:4px;flex:none}
-.leg-dot.vadi{background:linear-gradient(135deg, var(--acc), color-mix(in srgb, var(--acc) 40%, var(--gv-deep)))}
-.leg-dot.liman{background:linear-gradient(135deg, var(--info), color-mix(in srgb, var(--info) 40%, var(--gv-deep)))}
-.leg-dot.merkez{background:linear-gradient(135deg, var(--warn), color-mix(in srgb, var(--warn) 40%, var(--gv-deep)))}
-.leg-item b{color:var(--ink);font-weight:700}
+tr.is-arsiv{opacity:.62}
 </style>
 </head>
 <body data-sec="santiye" data-screen="bildirimler">
@@ -130,30 +107,80 @@
       <div>
         <div class="ph-eyebrow">Saha</div>
         <h1>Saha Bildirimleri</h1>
-        <div class="ph-sub"><span id="feedCount">22</span> bildirim · <span id="feedYeni">4</span>'ü yeni — şantiyelerden foto ve not paylaşımı</div>
+        <div class="ph-sub" id="blSub"><span id="blCount">22 kayıt</span> — şantiyelerden foto ve not paylaşımı</div>
       </div>
       <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="#" id="btnBilCikti"><i class="fa-solid fa-print"></i> Çıktı Al</a>
         <a class="btn btn-acc btn-sm" href="crm-santiye-bildirim-form.html" data-view="paylasabilir" hidden><i class="fa-solid fa-camera"></i> Bildirim Paylaş</a>
       </div>
     </div>
 
-    <div class="feed-layout">
-      <div class="feed-col">
-        <div class="feed-filter chips" data-target="#feedList" id="feedChips">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">22</span></button>
-          <button class="chip" data-filter="vadi">Vadi Konakları <span class="ch-cnt">9</span></button>
-          <button class="chip" data-filter="liman">Liman Lojistik <span class="ch-cnt">8</span></button>
-          <button class="chip" data-filter="merkez">Merkez Şantiye <span class="ch-cnt">5</span></button>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-camera"></i></div>
+        <div><div class="kpi-num num" id="kpiToplam">—</div><div class="kpi-lbl">Toplam bildirim</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar"></i> Haziran–Temmuz 2026</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div><div class="kpi-num num" id="kpiBekleyen">—</div><div class="kpi-lbl">Bekleyen / incelenmemiş</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-eye"></i> İnceleme bekliyor</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-calendar-week"></i></div>
+        <div><div class="kpi-num num" id="kpiHafta">—</div><div class="kpi-lbl">Bu hafta</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-clock"></i> Son 7 gün</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--bg);color:var(--muted)"><i class="fa-solid fa-box-archive"></i></div>
+        <div><div class="kpi-num num" id="kpiArsiv">—</div><div class="kpi-lbl">Arşivlenen</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-clock-rotate-left"></i> Kalıcı silinmez</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="filter-bar stack">
+        <div class="filter-row top">
+          <div class="fb-search" style="max-width:360px">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="blSearch" data-table-search="#tblBildirim" placeholder="Bildirim no, gönderen veya şantiye ara">
+          </div>
           <button type="button" class="gv-toggle" id="swArsivBil" role="switch" aria-checked="false">
             <span class="gv-toggle-track"><span class="gv-toggle-thumb"></span></span>
             <span class="gv-toggle-lbl">Arşivlenenleri Göster</span>
           </button>
         </div>
 
-        <div class="feed-filter" id="turBar">
-          <label for="turSelect" style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--muted);flex:none"><i class="fa-solid fa-tags"></i> Tür</label>
+        <!-- ============ B §2.1 madde 6 — Durum chip slider (kasa'daki .gv-chipbar-wrap
+             + cb-prev/cb-next + .gv-chipbar.chips[data-target] deseninin birebir devralımı). ============ -->
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblBildirim" id="blDurumChips">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">22</span></button>
+            <button class="chip" data-filter="bekliyor">Bekleyen <span class="ch-cnt">4</span></button>
+            <button class="chip" data-filter="incelendi">İncelendi <span class="ch-cnt">18</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+
+        <div class="filter-row">
+          <span class="frow-lbl">Şantiye</span>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="blSanChips">
+              <button class="chip is-on" data-san="hepsi">Tümü <span class="ch-cnt">22</span></button>
+              <button class="chip" data-san="vadi">Vadi Konakları <span class="ch-cnt">9</span></button>
+              <button class="chip" data-san="liman">Liman Lojistik <span class="ch-cnt">8</span></button>
+              <button class="chip" data-san="merkez">Merkez Şantiye <span class="ch-cnt">5</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <div class="filter-row tur-row">
+          <span class="frow-lbl">Kategori</span>
           <select id="turSelect" class="tur-select" aria-label="Bildirim türüne göre filtrele">
-            <option value="hepsi">Tüm Türler</option>
+            <option value="hepsi">Tüm Kategoriler</option>
             <option value="yapi">Yapı İlerlemesi</option>
             <option value="ilerleme-kaydi">Şantiye İlerleme Kaydı</option>
             <option value="beton">Beton Dökümü</option>
@@ -175,320 +202,57 @@
             <option value="hakedis-kanit">Hakediş Kanıt Fotoğrafı</option>
             <option value="oncesi-sonrasi">Öncesi/Sonrası Kaydı</option>
           </select>
-        </div>
-
-        <div id="feedList" class="feed-col">
-          <article class="post" data-santiye="vadi" data-sbl="001" data-tur="yapi" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div>
-              <div class="post-who"><b>Hasan Demirci</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 2 Temmuz 2026, 09:40</span></div>
-              <span class="post-new"><span class="gstat info">Yeni</span></span>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-helmet-safety"></i><span class="post-tag"><i class="fa-solid fa-helmet-safety"></i> Yapı İlerlemesi</span></div>
-            <div class="post-body"><p>B Blok temel betonu bugün tamamlandı, ekip 3. kat kalıp işine geçiyor. Döküm sırasında hava koşulları uygundu, numune küpleri laboratuvara gönderildi.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 6 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=001">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=001" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="001" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="vadi" data-sbl="002" data-tur="elektrik" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div>
-              <div class="post-who"><b>İbrahim Sönmez</b><span>Formen · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 2 Temmuz 2026, 08:15</span></div>
-              <span class="post-new"><span class="gstat info">Yeni</span></span>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-bolt"></i><span class="post-tag"><i class="fa-solid fa-bolt"></i> Elektrik/Mekanik</span></div>
-            <div class="post-body"><p>Zemin kat elektrik tesisatı döşemesi başladı, kablo kanalları B ve C aksında tamamlandı.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 3 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=002">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=002" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="002" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="003" data-tur="yapi" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--info-tint);color:var(--info)">AK</div>
-              <div class="post-who"><b>Aylin Koç</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 1 Temmuz 2026, 16:20</span></div>
-              <span class="post-new"><span class="gstat info">Yeni</span></span>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-helmet-safety"></i><span class="post-tag"><i class="fa-solid fa-helmet-safety"></i> Yapı İlerlemesi</span></div>
-            <div class="post-body"><p>Çelik konstrüksiyon montajı 3. modülde tamamlandı; vinç operasyonu güvenlik çemberi kapatılarak yürütüldü, kaza/ramak kala kaydı yok.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 9 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=003">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=003" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="003" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="004" data-tur="isg" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div>
-              <div class="post-who"><b>Şükrü Aslan</b><span>Formen · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 1 Temmuz 2026, 11:05</span></div>
-              <span class="post-new"><span class="gstat info">Yeni</span></span>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-shield-halved"></i><span class="post-tag"><i class="fa-solid fa-shield-halved"></i> İSG</span></div>
-            <div class="post-body"><p>Haftalık İSG toplantısı yapıldı; baret, emniyet kemeri ve iş ayakkabısı kontrolü tüm ekipte tamamlandı, eksik ekipman yok.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 5 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=004">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=004" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="004" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="merkez" data-sbl="005" data-tur="atolye" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--warn-tint);color:var(--warn)">ÖT</div>
-              <div class="post-who"><b>Ömer Taşkın</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Merkez Şantiye</a> · 30 Haziran 2026, 14:50</span></div>
-            </div>
-            <div class="post-photo photo-merkez"><i class="fa-solid fa-warehouse"></i><span class="post-tag"><i class="fa-solid fa-warehouse"></i> Atölye/Depo</span></div>
-            <div class="post-body"><p>Atölye çatı kaplama işi yaklaşık %80 seviyesinde; kalan panel siparişi bu hafta içinde tamamlanacak.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 4 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=005">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=005" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="005" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="merkez" data-sbl="006" data-tur="malzeme" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RY</div>
-              <div class="post-who"><b>Recep Yaman</b><span>Formen · <a href="crm-santiye-detay.html">Merkez Şantiye</a> · 30 Haziran 2026, 10:30</span></div>
-            </div>
-            <div class="post-photo photo-merkez"><i class="fa-solid fa-truck-pickup"></i><span class="post-tag"><i class="fa-solid fa-truck-pickup"></i> Malzeme Teslimatı</span></div>
-            <div class="post-body"><p>Yeni gelen kalıp kerestesi sahaya indirildi ve depo alanında istiflendi; irsaliye Satın Alma'ya iletildi.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 2 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=006">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=006" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="006" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="007" data-tur="kalite" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">MÇ</div>
-              <div class="post-who"><b>Metin Çetin</b><span>Kaynakçı · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 29 Haziran 2026, 09:00</span></div>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-magnifying-glass"></i><span class="post-tag"><i class="fa-solid fa-magnifying-glass"></i> Kalite Kontrol</span></div>
-            <div class="post-body"><p>Kaynak noktalarının kalite kontrolü tamamlandı; tutanak ve fotoğraflar ekte, revize gereken nokta çıkmadı.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 3 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=007">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=007" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="007" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="vadi" data-sbl="008" data-tur="yapi" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RK</div>
-              <div class="post-who"><b>Ramazan Kılıç</b><span>Kalıpçı · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 28 Haziran 2026, 15:40</span></div>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-helmet-safety"></i><span class="post-tag"><i class="fa-solid fa-helmet-safety"></i> Yapı İlerlemesi</span></div>
-            <div class="post-body"><p>3. kat perde kalıbı kuruldu, demir donatı kontrolü için Teknik Müdür'ün onayı bekleniyor.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 4 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=008">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=008" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="008" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <!-- ---- D-Dalga20 §9.4 — 009-022, 14 tür genişlemesi için eklenen kayıtlar
-               (mevcut 8 kişi/şantiyeden türetildi, kanonik kadroya yeni isim eklenmedi) ---- -->
-          <article class="post" data-santiye="vadi" data-sbl="009" data-tur="beton" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div>
-              <div class="post-who"><b>Hasan Demirci</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 27 Haziran 2026, 14:20</span></div>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-trowel"></i><span class="post-tag"><i class="fa-solid fa-trowel"></i> Beton Dökümü</span></div>
-            <div class="post-body"><p>C Blok perde betonu bugün döküldü, numune küpleri laboratuvara gönderildi.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 5 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=009">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=009" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="009" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="010" data-tur="hasar" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div>
-              <div class="post-who"><b>Şükrü Aslan</b><span>Formen · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 26 Haziran 2026, 10:10</span></div>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-house-crack"></i><span class="post-tag"><i class="fa-solid fa-house-crack"></i> Hasar/Arıza</span></div>
-            <div class="post-body"><p>Forklift hidrolik hortumunda sızıntı tespit edildi, ekipman geçici olarak devre dışı bırakıldı.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 6 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=010">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=010" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="010" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="vadi" data-sbl="011" data-tur="isg-uygunsuzluk" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div>
-              <div class="post-who"><b>İbrahim Sönmez</b><span>Formen · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 25 Haziran 2026, 09:00</span></div>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-triangle-exclamation"></i><span class="post-tag"><i class="fa-solid fa-triangle-exclamation"></i> İSG Uygunsuzluğu</span></div>
-            <div class="post-body"><p>3. kat kalıp iskelesinde iki işçinin emniyet kemeri takmadığı tespit edildi, uyarı yapıldı ve İSG sorumlusuna bildirildi.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 8 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=011">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=011" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="011" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="merkez" data-sbl="012" data-tur="makine-ariza" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--warn-tint);color:var(--warn)">ÖT</div>
-              <div class="post-who"><b>Ömer Taşkın</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Merkez Şantiye</a> · 24 Haziran 2026, 16:45</span></div>
-            </div>
-            <div class="post-photo photo-merkez"><i class="fa-solid fa-gears"></i><span class="post-tag"><i class="fa-solid fa-gears"></i> Makine Arızası</span></div>
-            <div class="post-body"><p>Atölyedeki kompresörde arıza oluştu, yedek parça siparişi Satın Alma'ya iletildi; iş bu süreçte mobil kompresörle sürdürülüyor.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 4 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=012">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=012" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="012" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="vadi" data-sbl="013" data-tur="taseron-sahada" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div>
-              <div class="post-who"><b>Hasan Demirci</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 23 Haziran 2026, 11:30</span></div>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-people-group"></i><span class="post-tag"><i class="fa-solid fa-people-group"></i> Taşeron Sahada</span></div>
-            <div class="post-body"><p>Demir-Beton İnş. Ltd. ekibi bugün 10 kişilik kadrosundan 8'iyle sahada, B Blok demir donatı işine devam ediyor.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 3 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=013">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=013" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="013" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="014" data-tur="is-tamamlandi" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--info-tint);color:var(--info)">AK</div>
-              <div class="post-who"><b>Aylin Koç</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 22 Haziran 2026, 17:00</span></div>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-circle-check"></i><span class="post-tag"><i class="fa-solid fa-circle-check"></i> İş Tamamlandı</span></div>
-            <div class="post-body"><p>3. modül çelik konstrüksiyon montajı tamamlandı, teslim tutanağı hazırlandı.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 6 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=014">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=014" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="014" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="vadi" data-sbl="015" data-tur="revize-gerekiyor" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div>
-              <div class="post-who"><b>Hasan Demirci</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 21 Haziran 2026, 10:15</span></div>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-rotate-left"></i><span class="post-tag"><i class="fa-solid fa-rotate-left"></i> Revize Gerekiyor</span></div>
-            <div class="post-body"><p>B Blok 3. kat perde kalıbı ölçüsünde sapma tespit edildi, teknik ofisten revize onayı bekleniyor.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 5 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=015">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=015" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="015" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="016" data-tur="acil" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--info-tint);color:var(--info)">AK</div>
-              <div class="post-who"><b>Aylin Koç</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 20 Haziran 2026, 15:20</span></div>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-siren"></i><span class="post-tag"><i class="fa-solid fa-siren"></i> Acil Durum</span></div>
-            <div class="post-body"><p>Vinç operasyonu sırasında ani rüzgar nedeniyle çalışma durduruldu, ekip güvenli alana çekildi; acil durum protokolü uygulandı.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 10 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=016">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=016" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="016" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="merkez" data-sbl="017" data-tur="hava" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RY</div>
-              <div class="post-who"><b>Recep Yaman</b><span>Formen · <a href="crm-santiye-detay.html">Merkez Şantiye</a> · 19 Haziran 2026, 08:10</span></div>
-            </div>
-            <div class="post-photo photo-merkez"><i class="fa-solid fa-cloud-rain"></i><span class="post-tag"><i class="fa-solid fa-cloud-rain"></i> Hava Koşulu Etkisi</span></div>
-            <div class="post-body"><p>Beklenmeyen sağanak nedeniyle atölye çatı işi bugün durduruldu, program bir gün ötelendi.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 4 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=017">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=017" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="017" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="018" data-tur="denetim" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--info-tint);color:var(--info)">AK</div>
-              <div class="post-who"><b>Aylin Koç</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 18 Haziran 2026, 13:40</span></div>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-clipboard-check"></i><span class="post-tag"><i class="fa-solid fa-clipboard-check"></i> Denetim Notu</span></div>
-            <div class="post-body"><p>Haftalık kalite denetiminde temel kalıp toleransları kontrol edildi, iki noktada küçük sapma raporlandı.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 5 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=018">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=018" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="018" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="vadi" data-sbl="019" data-tur="hakedis-kanit" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div>
-              <div class="post-who"><b>Hasan Demirci</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 17 Haziran 2026, 11:00</span></div>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-file-invoice-dollar"></i><span class="post-tag"><i class="fa-solid fa-file-invoice-dollar"></i> Hakediş Kanıt Fotoğrafı</span></div>
-            <div class="post-body"><p>Haziran dönemi hakediş kanıtı için B Blok temel imalatının fotoğrafları çekildi, muhasebeye iletildi.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 3 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=019">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=019" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="019" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="merkez" data-sbl="020" data-tur="oncesi-sonrasi" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--warn-tint);color:var(--warn)">ÖT</div>
-              <div class="post-who"><b>Ömer Taşkın</b><span>Şantiye Şefi · <a href="crm-santiye-detay.html">Merkez Şantiye</a> · 16 Haziran 2026, 09:30</span></div>
-            </div>
-            <div class="post-photo photo-merkez"><i class="fa-solid fa-images"></i><span class="post-tag"><i class="fa-solid fa-images"></i> Öncesi/Sonrası Kaydı</span></div>
-            <div class="post-body"><p>Atölye çatı kaplaması öncesi/sonrası karşılaştırma kaydı alındı, %80 tamamlanma net görülüyor.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 4 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=020">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=020" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="020" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="liman" data-sbl="021" data-tur="cevre" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div>
-              <div class="post-who"><b>Şükrü Aslan</b><span>Formen · <a href="crm-santiye-detay.html">Liman Lojistik Merkezi</a> · 15 Haziran 2026, 14:50</span></div>
-            </div>
-            <div class="post-photo photo-liman"><i class="fa-solid fa-leaf"></i><span class="post-tag"><i class="fa-solid fa-leaf"></i> Çevre</span></div>
-            <div class="post-body"><p>Şantiye çevresine yağmur suyu drenaj hattı için geçici toprak set çekildi, çevre etkisi azaltıldı.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 3 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=021">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=021" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="021" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-
-          <article class="post" data-santiye="vadi" data-sbl="022" data-tur="ilerleme-kaydi" data-arsiv="0">
-            <div class="post-head">
-              <div class="post-ava" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div>
-              <div class="post-who"><b>İbrahim Sönmez</b><span>Formen · <a href="crm-santiye-detay.html">Vadi Konakları</a> · 14 Haziran 2026, 16:10</span></div>
-            </div>
-            <div class="post-photo photo-vadi"><i class="fa-solid fa-chart-line"></i><span class="post-tag"><i class="fa-solid fa-chart-line"></i> Şantiye İlerleme Kaydı</span></div>
-            <div class="post-body"><p>Haftalık şantiye ilerleme kaydı: 3. kat kalıp %60 tamamlandı, malzeme akışı planlandığı gibi.</p></div>
-            <div class="post-meta">
-              <div class="post-meta-l"><span><i class="fa-solid fa-eye"></i> 4 kişi gördü</span><a class="post-detail" href="crm-santiye-bildirim-detay.html?bil=022">Detayı gör <i class="fa-solid fa-arrow-right"></i></a></div>
-              <button class="post-ack" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>
-            <div class="post-acts"><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=022" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-bil-arsiv="022" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></div>
-          </article>
-        </div>
-
-        <div class="gv-empty" data-table-empty hidden>
-          <div class="ge-ico"><i class="fa-solid fa-camera"></i></div>
-          <h4>Eşleşen bildirim yok</h4>
-          <p>Farklı bir şantiye veya tür filtresi seçin.</p>
+          <div class="tur-row-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtnBil"><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnBil"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
+          </div>
         </div>
       </div>
 
-      <!-- ============ SAĞ: şantiye lejantı ============ -->
-      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
-        <div class="gv-card">
-          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-palette"></i> Şantiye Renkleri</div></div>
-          <div class="gc-body" style="padding:6px 18px 18px">
-            <div class="leg-item"><span class="leg-dot vadi"></span> <b>Vadi Konakları</b></div>
-            <div class="leg-item"><span class="leg-dot liman"></span> <b>Liman Lojistik Merkezi</b></div>
-            <div class="leg-item"><span class="leg-dot merkez"></span> <b>Merkez Şantiye</b></div>
-          </div>
-          <div class="gc-foot"><span>Kule Ofis B Blok ve Göl Evleri'nde aktif saha kadrosu bulunmuyor.</span></div>
+      <div class="gv-achips-row" id="achipsBil" hidden>
+        <div class="gv-achips"></div>
+        <div class="gv-achips-acts">
+          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor."><i class="fa-solid fa-lock"></i> Filtreleri Kaydet</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
         </div>
+      </div>
+
+      <!-- ============ B §2.1 madde 13 — boş durum, spec-v2-core.md §4 gvEmpty.durum()
+           [data-gv-state] sözleşmesi (loading/error/empty/content dört kardeş, TAM biri
+           görünür). Statik bake: kayıtlar dolu OLDUĞUNDAN varsayılan durum "content"
+           (tablo hidden'sız), diğer üçü hidden — A §3 kritik kuralı: kayıt varken boş
+           durum ASLA render edilmez. ============ -->
+      <div class="gc-body flush" id="blStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Bir şeyler ters gitti</h4>
+          <p>Sayfayı yenileyip tekrar deneyin.</p>
+        </div>
+        <div data-gv-state="empty" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-camera"></i></div>
+          <h4>Eşleşen bildirim yok</h4>
+          <p>Aramayı temizleyin veya farklı bir şantiye/kategori/durum filtresi seçin.</p>
+        </div>
+        <table class="gtable gtable-cards" id="tblBildirim" data-paginate="10" data-gv-state="content">
+          <thead>
+            <tr>
+              <th>Bildirim</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th class="col-gonderen" data-col="gonderen">Gönderen</th>
+              <th class="col-tarih" data-col="tarih">Tarih</th>
+              <th class="col-tur" data-col="tur">Kategori/Tür</th>
+              <th class="col-durum" data-col="durum">Durum</th>
+              <th class="col-blacts"></th>
+            </tr>
+          </thead>
+          <!-- statik bake — 22 kanonik saha bildirimi (KAYITLAR dizisi VERBATIM, tarih-desc
+               sıralı); JS yüklenince aynı mount innerHTML ile ezer — D18-B2 -->
+        <tbody id="blBody"><tr data-san="vadi" data-tur="yapi" data-no="001" data-f="bekliyor" data-durum="bekliyor" data-gonderen="hasan-demirci" data-tarih="2026-07-02" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-helmet-safety"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=001">SBL-2026-001</a></div><div class="gcell-sub">2 Tem 2026 · 6 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div><div class="gcell-info"><div class="gcell-name">Hasan Demirci</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">2 Temmuz 2026, 09:40</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-helmet-safety"></i>Yapı İlerlemesi</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat info">Bekleyen</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=001" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=001" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="001" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="elektrik" data-no="002" data-f="bekliyor" data-durum="bekliyor" data-gonderen="ibrahim-sonmez" data-tarih="2026-07-02" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-bolt"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=002">SBL-2026-002</a></div><div class="gcell-sub">2 Tem 2026 · 3 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div><div class="gcell-info"><div class="gcell-name">İbrahim Sönmez</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">2 Temmuz 2026, 08:15</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-bolt"></i>Elektrik/Mekanik</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat info">Bekleyen</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=002" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=002" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="002" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="yapi" data-no="003" data-f="bekliyor" data-durum="bekliyor" data-gonderen="aylin-koc" data-tarih="2026-07-01" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-helmet-safety"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=003">SBL-2026-003</a></div><div class="gcell-sub">1 Tem 2026 · 9 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--info-tint);color:var(--info)">AK</div><div class="gcell-info"><div class="gcell-name">Aylin Koç</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">1 Temmuz 2026, 16:20</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-helmet-safety"></i>Yapı İlerlemesi</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat info">Bekleyen</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=003" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=003" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="003" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="isg" data-no="004" data-f="bekliyor" data-durum="bekliyor" data-gonderen="sukru-aslan" data-tarih="2026-07-01" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-shield-halved"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=004">SBL-2026-004</a></div><div class="gcell-sub">1 Tem 2026 · 5 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div><div class="gcell-info"><div class="gcell-name">Şükrü Aslan</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">1 Temmuz 2026, 11:05</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-shield-halved"></i>İSG</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat info">Bekleyen</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=004" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=004" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="004" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="merkez" data-tur="atolye" data-no="005" data-f="incelendi" data-durum="incelendi" data-gonderen="omer-taskin" data-tarih="2026-06-30" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-warehouse"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=005">SBL-2026-005</a></div><div class="gcell-sub">30 Haz 2026 · 4 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--warn-tint);color:var(--warn)">ÖT</div><div class="gcell-info"><div class="gcell-name">Ömer Taşkın</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">30 Haziran 2026, 14:50</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-warehouse"></i>Atölye/Depo</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=005" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=005" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="005" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="merkez" data-tur="malzeme" data-no="006" data-f="incelendi" data-durum="incelendi" data-gonderen="recep-yaman" data-tarih="2026-06-30" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-truck-pickup"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=006">SBL-2026-006</a></div><div class="gcell-sub">30 Haz 2026 · 2 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RY</div><div class="gcell-info"><div class="gcell-name">Recep Yaman</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">30 Haziran 2026, 10:30</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-truck-pickup"></i>Malzeme Teslimatı</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=006" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=006" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="006" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="kalite" data-no="007" data-f="incelendi" data-durum="incelendi" data-gonderen="metin-cetin" data-tarih="2026-06-29" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-magnifying-glass"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=007">SBL-2026-007</a></div><div class="gcell-sub">29 Haz 2026 · 3 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">MÇ</div><div class="gcell-info"><div class="gcell-name">Metin Çetin</div><div class="gcell-sub">Kaynakçı</div></div></div></td><td data-col="tarih" data-lbl="Tarih">29 Haziran 2026, 09:00</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-magnifying-glass"></i>Kalite Kontrol</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=007" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=007" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="007" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="yapi" data-no="008" data-f="incelendi" data-durum="incelendi" data-gonderen="ramazan-kilic" data-tarih="2026-06-28" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-helmet-safety"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=008">SBL-2026-008</a></div><div class="gcell-sub">28 Haz 2026 · 4 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RK</div><div class="gcell-info"><div class="gcell-name">Ramazan Kılıç</div><div class="gcell-sub">Kalıpçı</div></div></div></td><td data-col="tarih" data-lbl="Tarih">28 Haziran 2026, 15:40</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-helmet-safety"></i>Yapı İlerlemesi</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=008" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=008" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="008" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="beton" data-no="009" data-f="incelendi" data-durum="incelendi" data-gonderen="hasan-demirci" data-tarih="2026-06-27" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-trowel"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=009">SBL-2026-009</a></div><div class="gcell-sub">27 Haz 2026 · 5 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div><div class="gcell-info"><div class="gcell-name">Hasan Demirci</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">27 Haziran 2026, 14:20</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-trowel"></i>Beton Dökümü</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=009" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=009" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="009" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="hasar" data-no="010" data-f="incelendi" data-durum="incelendi" data-gonderen="sukru-aslan" data-tarih="2026-06-26" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-house-crack"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=010">SBL-2026-010</a></div><div class="gcell-sub">26 Haz 2026 · 6 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div><div class="gcell-info"><div class="gcell-name">Şükrü Aslan</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">26 Haziran 2026, 10:10</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-house-crack"></i>Hasar/Arıza</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=010" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=010" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="010" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="isg-uygunsuzluk" data-no="011" data-f="incelendi" data-durum="incelendi" data-gonderen="ibrahim-sonmez" data-tarih="2026-06-25" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=011">SBL-2026-011</a></div><div class="gcell-sub">25 Haz 2026 · 8 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div><div class="gcell-info"><div class="gcell-name">İbrahim Sönmez</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">25 Haziran 2026, 09:00</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-triangle-exclamation"></i>İSG Uygunsuzluğu</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=011" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=011" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="011" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="merkez" data-tur="makine-ariza" data-no="012" data-f="incelendi" data-durum="incelendi" data-gonderen="omer-taskin" data-tarih="2026-06-24" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-gears"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=012">SBL-2026-012</a></div><div class="gcell-sub">24 Haz 2026 · 4 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--warn-tint);color:var(--warn)">ÖT</div><div class="gcell-info"><div class="gcell-name">Ömer Taşkın</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">24 Haziran 2026, 16:45</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-gears"></i>Makine Arızası</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=012" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=012" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="012" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="taseron-sahada" data-no="013" data-f="incelendi" data-durum="incelendi" data-gonderen="hasan-demirci" data-tarih="2026-06-23" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-people-group"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=013">SBL-2026-013</a></div><div class="gcell-sub">23 Haz 2026 · 3 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div><div class="gcell-info"><div class="gcell-name">Hasan Demirci</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">23 Haziran 2026, 11:30</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-people-group"></i>Taşeron Sahada</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=013" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=013" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="013" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="is-tamamlandi" data-no="014" data-f="incelendi" data-durum="incelendi" data-gonderen="aylin-koc" data-tarih="2026-06-22" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-circle-check"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=014">SBL-2026-014</a></div><div class="gcell-sub">22 Haz 2026 · 6 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--info-tint);color:var(--info)">AK</div><div class="gcell-info"><div class="gcell-name">Aylin Koç</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">22 Haziran 2026, 17:00</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-circle-check"></i>İş Tamamlandı</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=014" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=014" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="014" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="revize-gerekiyor" data-no="015" data-f="incelendi" data-durum="incelendi" data-gonderen="hasan-demirci" data-tarih="2026-06-21" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-rotate-left"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=015">SBL-2026-015</a></div><div class="gcell-sub">21 Haz 2026 · 5 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div><div class="gcell-info"><div class="gcell-name">Hasan Demirci</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">21 Haziran 2026, 10:15</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-rotate-left"></i>Revize Gerekiyor</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=015" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=015" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="015" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="acil" data-no="016" data-f="incelendi" data-durum="incelendi" data-gonderen="aylin-koc" data-tarih="2026-06-20" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-siren"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=016">SBL-2026-016</a></div><div class="gcell-sub">20 Haz 2026 · 10 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--info-tint);color:var(--info)">AK</div><div class="gcell-info"><div class="gcell-name">Aylin Koç</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">20 Haziran 2026, 15:20</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-siren"></i>Acil Durum</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=016" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=016" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="016" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="merkez" data-tur="hava" data-no="017" data-f="incelendi" data-durum="incelendi" data-gonderen="recep-yaman" data-tarih="2026-06-19" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-cloud-rain"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=017">SBL-2026-017</a></div><div class="gcell-sub">19 Haz 2026 · 4 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RY</div><div class="gcell-info"><div class="gcell-name">Recep Yaman</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">19 Haziran 2026, 08:10</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-cloud-rain"></i>Hava Koşulu Etkisi</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=017" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=017" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="017" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="denetim" data-no="018" data-f="incelendi" data-durum="incelendi" data-gonderen="aylin-koc" data-tarih="2026-06-18" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-clipboard-check"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=018">SBL-2026-018</a></div><div class="gcell-sub">18 Haz 2026 · 5 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--info-tint);color:var(--info)">AK</div><div class="gcell-info"><div class="gcell-name">Aylin Koç</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">18 Haziran 2026, 13:40</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-clipboard-check"></i>Denetim Notu</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=018" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=018" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="018" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="hakedis-kanit" data-no="019" data-f="incelendi" data-durum="incelendi" data-gonderen="hasan-demirci" data-tarih="2026-06-17" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-file-invoice-dollar"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=019">SBL-2026-019</a></div><div class="gcell-sub">17 Haz 2026 · 3 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div><div class="gcell-info"><div class="gcell-name">Hasan Demirci</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">17 Haziran 2026, 11:00</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-file-invoice-dollar"></i>Hakediş Kanıt Fotoğrafı</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=019" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=019" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="019" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="merkez" data-tur="oncesi-sonrasi" data-no="020" data-f="incelendi" data-durum="incelendi" data-gonderen="omer-taskin" data-tarih="2026-06-16" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-images"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=020">SBL-2026-020</a></div><div class="gcell-sub">16 Haz 2026 · 4 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--warn-tint);color:var(--warn)">ÖT</div><div class="gcell-info"><div class="gcell-name">Ömer Taşkın</div><div class="gcell-sub">Şantiye Şefi</div></div></div></td><td data-col="tarih" data-lbl="Tarih">16 Haziran 2026, 09:30</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-images"></i>Öncesi/Sonrası Kaydı</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=020" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=020" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="020" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="liman" data-tur="cevre" data-no="021" data-f="incelendi" data-durum="incelendi" data-gonderen="sukru-aslan" data-tarih="2026-06-15" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-leaf"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=021">SBL-2026-021</a></div><div class="gcell-sub">15 Haz 2026 · 3 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div><div class="gcell-info"><div class="gcell-name">Şükrü Aslan</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">15 Haziran 2026, 14:50</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-leaf"></i>Çevre</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=021" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=021" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="021" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr><tr data-san="vadi" data-tur="ilerleme-kaydi" data-no="022" data-f="incelendi" data-durum="incelendi" data-gonderen="ibrahim-sonmez" data-tarih="2026-06-14" data-arsiv="0"><td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid fa-chart-line"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil=022">SBL-2026-022</a></div><div class="gcell-sub">14 Haz 2026 · 4 kişi gördü</div></div></div></td><td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td><td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div><div class="gcell-info"><div class="gcell-name">İbrahim Sönmez</div><div class="gcell-sub">Formen</div></div></div></td><td data-col="tarih" data-lbl="Tarih">14 Haziran 2026, 16:10</td><td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid fa-chart-line"></i>Şantiye İlerleme Kaydı</span></td><td data-col="durum" data-lbl="Durum"><span class="gstat ok">İncelendi</span></td><td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil=022" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a><a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&amp;bil=022" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn danger" data-no-confirm data-bil-arsiv="022" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td></tr></tbody>
+        </table>
       </div>
     </div>
   </main>
@@ -500,109 +264,352 @@
 (function(){
   if(!window.GV) return;
 
+  /* ---- mock saha bildirimi verisi — SBL-2026-0## serisi (D18-T1 kanonik). Şantiye/kişi
+     adları kanonik listeden (8 kişi). Üç boyutlu (şantiye+tür+durum) filtre + arama +
+     arşiv görünürlüğü + gelişmiş filtre AND'lenir — durum ekseni ui.js'in native
+     .chip[data-filter] delegasyonuna bırakıldı (İSG/kasa deseni), şantiye chip'i +
+     kategori select sayfa-lokal JS ile bağlı. ---- */
   var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
+  var TUR = {
+    yapi:              {ic:'fa-helmet-safety',        lbl:'Yapı İlerlemesi'},
+    'ilerleme-kaydi':  {ic:'fa-chart-line',            lbl:'Şantiye İlerleme Kaydı'},
+    beton:             {ic:'fa-trowel',                lbl:'Beton Dökümü'},
+    elektrik:          {ic:'fa-bolt',                  lbl:'Elektrik/Mekanik'},
+    malzeme:           {ic:'fa-truck-pickup',          lbl:'Malzeme Teslimatı'},
+    atolye:            {ic:'fa-warehouse',             lbl:'Atölye/Depo'},
+    'makine-ariza':    {ic:'fa-gears',                 lbl:'Makine Arızası'},
+    hasar:             {ic:'fa-house-crack',           lbl:'Hasar/Arıza'},
+    'taseron-sahada':  {ic:'fa-people-group',          lbl:'Taşeron Sahada'},
+    'is-tamamlandi':   {ic:'fa-circle-check',          lbl:'İş Tamamlandı'},
+    'revize-gerekiyor':{ic:'fa-rotate-left',           lbl:'Revize Gerekiyor'},
+    kalite:            {ic:'fa-magnifying-glass',      lbl:'Kalite Kontrol'},
+    denetim:           {ic:'fa-clipboard-check',       lbl:'Denetim Notu'},
+    isg:               {ic:'fa-shield-halved',         lbl:'İSG'},
+    'isg-uygunsuzluk': {ic:'fa-triangle-exclamation',  lbl:'İSG Uygunsuzluğu'},
+    acil:              {ic:'fa-siren',                 lbl:'Acil Durum'},
+    hava:              {ic:'fa-cloud-rain',            lbl:'Hava Koşulu Etkisi'},
+    cevre:             {ic:'fa-leaf',                  lbl:'Çevre'},
+    'hakedis-kanit':   {ic:'fa-file-invoice-dollar',   lbl:'Hakediş Kanıt Fotoğrafı'},
+    'oncesi-sonrasi':  {ic:'fa-images',                lbl:'Öncesi/Sonrası Kaydı'}
+  };
+  var AVA = {
+    'Hasan Demirci':  {init:'HD', style:'background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)'},
+    'İbrahim Sönmez': {init:'İS', style:'background:var(--bg);color:var(--ink-2);border:1px solid var(--line)'},
+    'Aylin Koç':      {init:'AK', style:'background:var(--info-tint);color:var(--info)'},
+    'Şükrü Aslan':    {init:'ŞA', style:'background:var(--bg);color:var(--ink-2);border:1px solid var(--line)'},
+    'Ömer Taşkın':    {init:'ÖT', style:'background:var(--warn-tint);color:var(--warn)'},
+    'Recep Yaman':    {init:'RY', style:'background:var(--bg);color:var(--ink-2);border:1px solid var(--line)'},
+    'Metin Çetin':    {init:'MÇ', style:'background:var(--bg);color:var(--ink-2);border:1px solid var(--line)'},
+    'Ramazan Kılıç':  {init:'RK', style:'background:var(--bg);color:var(--ink-2);border:1px solid var(--line)'}
+  };
+  var UNVAN = {
+    'Hasan Demirci':'Şantiye Şefi', 'İbrahim Sönmez':'Formen', 'Aylin Koç':'Şantiye Şefi',
+    'Şükrü Aslan':'Formen', 'Ömer Taşkın':'Şantiye Şefi', 'Recep Yaman':'Formen',
+    'Metin Çetin':'Kaynakçı', 'Ramazan Kılıç':'Kalıpçı'
+  };
+  var GONDEREN_SLUG = {
+    'Hasan Demirci':'hasan-demirci', 'İbrahim Sönmez':'ibrahim-sonmez', 'Aylin Koç':'aylin-koc',
+    'Şükrü Aslan':'sukru-aslan', 'Ömer Taşkın':'omer-taskin', 'Recep Yaman':'recep-yaman',
+    'Metin Çetin':'metin-cetin', 'Ramazan Kılıç':'ramazan-kilic'
+  };
+  var KAYITLAR = [
+    {no:'001', santiye:'vadi',   tur:'yapi',              gonderen:'Hasan Demirci',  iso:'2026-07-02', kisa:'2 Tem 2026',  uzun:'2 Temmuz 2026, 09:40',  views:6,  durumf:'bekliyor',  arsiv:false},
+    {no:'002', santiye:'vadi',   tur:'elektrik',           gonderen:'İbrahim Sönmez', iso:'2026-07-02', kisa:'2 Tem 2026',  uzun:'2 Temmuz 2026, 08:15',  views:3,  durumf:'bekliyor',  arsiv:false},
+    {no:'003', santiye:'liman',  tur:'yapi',              gonderen:'Aylin Koç',      iso:'2026-07-01', kisa:'1 Tem 2026',  uzun:'1 Temmuz 2026, 16:20',  views:9,  durumf:'bekliyor',  arsiv:false},
+    {no:'004', santiye:'liman',  tur:'isg',               gonderen:'Şükrü Aslan',    iso:'2026-07-01', kisa:'1 Tem 2026',  uzun:'1 Temmuz 2026, 11:05',  views:5,  durumf:'bekliyor',  arsiv:false},
+    {no:'005', santiye:'merkez', tur:'atolye',            gonderen:'Ömer Taşkın',    iso:'2026-06-30', kisa:'30 Haz 2026', uzun:'30 Haziran 2026, 14:50', views:4,  durumf:'incelendi', arsiv:false},
+    {no:'006', santiye:'merkez', tur:'malzeme',           gonderen:'Recep Yaman',    iso:'2026-06-30', kisa:'30 Haz 2026', uzun:'30 Haziran 2026, 10:30', views:2,  durumf:'incelendi', arsiv:false},
+    {no:'007', santiye:'liman',  tur:'kalite',            gonderen:'Metin Çetin',    iso:'2026-06-29', kisa:'29 Haz 2026', uzun:'29 Haziran 2026, 09:00', views:3,  durumf:'incelendi', arsiv:false},
+    {no:'008', santiye:'vadi',   tur:'yapi',              gonderen:'Ramazan Kılıç',  iso:'2026-06-28', kisa:'28 Haz 2026', uzun:'28 Haziran 2026, 15:40', views:4,  durumf:'incelendi', arsiv:false},
+    {no:'009', santiye:'vadi',   tur:'beton',             gonderen:'Hasan Demirci',  iso:'2026-06-27', kisa:'27 Haz 2026', uzun:'27 Haziran 2026, 14:20', views:5,  durumf:'incelendi', arsiv:false},
+    {no:'010', santiye:'liman',  tur:'hasar',             gonderen:'Şükrü Aslan',    iso:'2026-06-26', kisa:'26 Haz 2026', uzun:'26 Haziran 2026, 10:10', views:6,  durumf:'incelendi', arsiv:false},
+    {no:'011', santiye:'vadi',   tur:'isg-uygunsuzluk',   gonderen:'İbrahim Sönmez', iso:'2026-06-25', kisa:'25 Haz 2026', uzun:'25 Haziran 2026, 09:00', views:8,  durumf:'incelendi', arsiv:false},
+    {no:'012', santiye:'merkez', tur:'makine-ariza',      gonderen:'Ömer Taşkın',    iso:'2026-06-24', kisa:'24 Haz 2026', uzun:'24 Haziran 2026, 16:45', views:4,  durumf:'incelendi', arsiv:false},
+    {no:'013', santiye:'vadi',   tur:'taseron-sahada',    gonderen:'Hasan Demirci',  iso:'2026-06-23', kisa:'23 Haz 2026', uzun:'23 Haziran 2026, 11:30', views:3,  durumf:'incelendi', arsiv:false},
+    {no:'014', santiye:'liman',  tur:'is-tamamlandi',     gonderen:'Aylin Koç',      iso:'2026-06-22', kisa:'22 Haz 2026', uzun:'22 Haziran 2026, 17:00', views:6,  durumf:'incelendi', arsiv:false},
+    {no:'015', santiye:'vadi',   tur:'revize-gerekiyor',  gonderen:'Hasan Demirci',  iso:'2026-06-21', kisa:'21 Haz 2026', uzun:'21 Haziran 2026, 10:15', views:5,  durumf:'incelendi', arsiv:false},
+    {no:'016', santiye:'liman',  tur:'acil',              gonderen:'Aylin Koç',      iso:'2026-06-20', kisa:'20 Haz 2026', uzun:'20 Haziran 2026, 15:20', views:10, durumf:'incelendi', arsiv:false},
+    {no:'017', santiye:'merkez', tur:'hava',              gonderen:'Recep Yaman',    iso:'2026-06-19', kisa:'19 Haz 2026', uzun:'19 Haziran 2026, 08:10', views:4,  durumf:'incelendi', arsiv:false},
+    {no:'018', santiye:'liman',  tur:'denetim',           gonderen:'Aylin Koç',      iso:'2026-06-18', kisa:'18 Haz 2026', uzun:'18 Haziran 2026, 13:40', views:5,  durumf:'incelendi', arsiv:false},
+    {no:'019', santiye:'vadi',   tur:'hakedis-kanit',     gonderen:'Hasan Demirci',  iso:'2026-06-17', kisa:'17 Haz 2026', uzun:'17 Haziran 2026, 11:00', views:3,  durumf:'incelendi', arsiv:false},
+    {no:'020', santiye:'merkez', tur:'oncesi-sonrasi',    gonderen:'Ömer Taşkın',    iso:'2026-06-16', kisa:'16 Haz 2026', uzun:'16 Haziran 2026, 09:30', views:4,  durumf:'incelendi', arsiv:false},
+    {no:'021', santiye:'liman',  tur:'cevre',             gonderen:'Şükrü Aslan',    iso:'2026-06-15', kisa:'15 Haz 2026', uzun:'15 Haziran 2026, 14:50', views:3,  durumf:'incelendi', arsiv:false},
+    {no:'022', santiye:'vadi',   tur:'ilerleme-kaydi',    gonderen:'İbrahim Sönmez', iso:'2026-06-14', kisa:'14 Haz 2026', uzun:'14 Haziran 2026, 16:10', views:4,  durumf:'incelendi', arsiv:false}
+  ];
+  var BY_NO = {}; KAYITLAR.forEach(function(k){ BY_NO[k.no] = k; });
 
-  /* şantiye + tür filtresi — feed kartlarında applyFilters yerine kendi basit filtresi
-     (tablo değil kart listesi olduğu için ui.js'in data-table-search'üne bağlı değil).
-     İki eksen AND ile birleşir: şantiye chip'i + tür select'i — D-Dalga20 §9.4. */
-  var chips = document.querySelectorAll('#feedChips .chip[data-filter]');
-  var turSelect = document.getElementById('turSelect');
-  var empty = document.querySelector('[data-table-empty]');
-  var swArsivBil = document.getElementById('swArsivBil');
-  function activeSantiye(){
-    var on = document.querySelector('#feedChips .chip.is-on');
-    return on ? on.getAttribute('data-filter') : 'hepsi';
+  var body = document.getElementById('blBody');
+  function rowHTML(k){
+    var T = TUR[k.tur];
+    var ava = AVA[k.gonderen] || {init:'—', style:''};
+    var durumLbl = k.durumf === 'bekliyor' ? 'Bekleyen' : 'İncelendi';
+    var durumTone = k.durumf === 'bekliyor' ? 'info' : 'ok';
+    var durumCell = '<span class="gstat '+durumTone+'">'+durumLbl+'</span>' + (k.arsiv ? ' <span class="gstat off" style="margin-left:5px">Arşivlendi</span>' : '');
+    return '<tr data-san="'+k.santiye+'" data-tur="'+k.tur+'" data-no="'+k.no+'" data-f="'+k.durumf+'" data-durum="'+k.durumf+'" data-gonderen="'+(GONDEREN_SLUG[k.gonderen]||'')+'" data-tarih="'+k.iso+'" data-arsiv="'+(k.arsiv?'1':'0')+'"'+(k.arsiv?' class="is-arsiv"':'')+'>'
+      + '<td data-lbl="Bildirim"><div class="gcell"><div class="gcell-mark"><i class="fa-solid '+T.ic+'"></i></div><div class="gcell-info"><div class="gcell-name"><a href="crm-santiye-bildirim-detay.html?bil='+k.no+'">SBL-2026-'+k.no+'</a></div><div class="gcell-sub">'+k.kisa+' · '+k.views+' kişi gördü</div></div></div></td>'
+      + '<td data-col="santiye" data-lbl="Şantiye">'+SANTIYE_ADI[k.santiye]+'</td>'
+      + '<td data-col="gonderen" data-lbl="Gönderen"><div class="gcell"><div class="gcell-mark" style="width:28px;height:28px;font-size:11px;'+ava.style+'">'+ava.init+'</div><div class="gcell-info"><div class="gcell-name">'+k.gonderen+'</div><div class="gcell-sub">'+(UNVAN[k.gonderen]||'')+'</div></div></div></td>'
+      + '<td data-col="tarih" data-lbl="Tarih">'+k.uzun+'</td>'
+      + '<td data-col="tur" data-lbl="Kategori/Tür"><span class="gtag"><i class="fa-solid '+T.ic+'"></i>'+T.lbl+'</span></td>'
+      + '<td data-col="durum" data-lbl="Durum">'+durumCell+'</td>'
+      + '<td data-lbl=""><div class="row-acts">'
+      +   '<a class="ia-btn" href="crm-santiye-bildirim-detay.html?bil='+k.no+'" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a>'
+      +   '<a class="ia-btn" href="crm-santiye-bildirim-form.html?mod=duzenle&bil='+k.no+'" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a>'
+      +   '<button type="button" class="ia-btn'+(k.arsiv?'':' danger')+'" data-no-confirm data-bil-arsiv="'+k.no+'" aria-label="'+(k.arsiv?'Aktife Al':'Arşivle')+'" data-tip="'+(k.arsiv?'Aktife Al':'Arşivle')+'"><i class="fa-solid '+(k.arsiv?'fa-rotate-left':'fa-box-archive')+'"></i></button>'
+      + '</div></td></tr>';
   }
-  function applyFeedFilter(){
-    var f = activeSantiye();
-    var t = turSelect ? turSelect.value : 'hepsi';
+  function renderBody(){ body.innerHTML = KAYITLAR.map(rowHTML).join(''); }
+  renderBody();
+
+  /* şef tek şantiye görür — diğer satırlar kalıcı kaldırılır, şantiye chip grubu tekile iner */
+  if(GV.role === 'sef'){
+    document.querySelectorAll('#tblBildirim tbody tr').forEach(function(tr){
+      if(tr.getAttribute('data-san') !== 'vadi') tr.remove();
+    });
+    document.querySelectorAll('#blSanChips .chip').forEach(function(ch){
+      var v = ch.getAttribute('data-san');
+      if(v !== 'hepsi' && v !== 'vadi') ch.remove();
+    });
+  }
+
+  function refreshChipCounts(){
+    var rows = document.querySelectorAll('#tblBildirim tbody tr');
+    var bySan = {hepsi:0}, byDurum = {hepsi:0};
+    rows.forEach(function(tr){
+      bySan.hepsi++; byDurum.hepsi++;
+      var s = tr.getAttribute('data-san'); bySan[s] = (bySan[s]||0) + 1;
+      var d = tr.getAttribute('data-f');   byDurum[d] = (byDurum[d]||0) + 1;
+    });
+    document.querySelectorAll('#blSanChips .chip').forEach(function(ch){
+      var c = ch.querySelector('.ch-cnt');
+      if(c) c.textContent = bySan[ch.getAttribute('data-san')] || 0;
+    });
+    document.querySelectorAll('#blDurumChips .chip').forEach(function(ch){
+      var c = ch.querySelector('.ch-cnt');
+      if(c) c.textContent = byDurum[ch.getAttribute('data-filter')] || 0;
+    });
+    return {bySan:bySan, byDurum:byDurum, toplam:rows.length};
+  }
+
+  /* KPI'lar DOM satırlarından (rol budaması SONRASI taban) hesaplanır — A §3 kuralı:
+     "Toplam" rolün gördüğü evreni yansıtır, KAYITLAR.length DEĞİL. "Bu Hafta" referans
+     tarihi shell.js'in kanonik "bugün"ü (2 Temmuz 2026) — son 7 gün penceresi. */
+  function computeKpis(){
+    var rows = document.querySelectorAll('#tblBildirim tbody tr');
+    var toplam = 0, bekleyen = 0, arsivN = 0, hafta = 0;
+    var today = new Date(2026, 6, 2);
+    var cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - 6);
+    rows.forEach(function(tr){
+      toplam++;
+      if(tr.getAttribute('data-f') === 'bekliyor') bekleyen++;
+      if(tr.getAttribute('data-arsiv') === '1') arsivN++;
+      var iso = tr.getAttribute('data-tarih');
+      if(iso){
+        var d = new Date(iso + 'T00:00:00');
+        if(d >= cutoff && d <= today) hafta++;
+      }
+    });
+    document.getElementById('kpiToplam').textContent = toplam;
+    document.getElementById('kpiBekleyen').textContent = bekleyen;
+    document.getElementById('kpiHafta').textContent = hafta;
+    document.getElementById('kpiArsiv').textContent = arsivN;
+  }
+
+  /* ============ B §2.1 madde 4 — Kolonlar (gvCols) ============ */
+  var gcHandle = null;
+  if(window.gvCols){
+    gcHandle = gvCols.init({
+      mount: '#colsBtnBil', table: '#tblBildirim', screen: 'bildirimler',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'gonderen', lbl:'Gönderen', def:true},
+        {key:'tarih', lbl:'Tarih', def:true},
+        {key:'tur', lbl:'Kategori/Tür', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
+  /* ============ B §2.1 madde 6 — Seçili kayıt işlemleri (gvBulk) ============
+     "Kapat" karşılığı bu modülde "İncelendi Olarak İşaretle" — bildirim akışında gerçek
+     bir "kapatma" kavramı yok, karşılığı incelemenin tamamlanmasıdır (Bekleyen → İncelendi). */
+  var gvBulkHandle = null;
+  if(window.gvBulk){
+    gvBulkHandle = gvBulk.init('#tblBildirim', {
+      aksiyonlar: [
+        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
+          gvToast(rows.length + ' bildirimin çıktısı hazırlandı.', {type:'info'});
+        }},
+        {etiket:'İncelendi İşaretle', ikon:'fa-check-double', tehlikeli:false, onClick:function(rows){
+          var n = 0;
+          rows.forEach(function(tr){
+            var k = BY_NO[tr.getAttribute('data-no')];
+            if(k && k.durumf !== 'incelendi'){ k.durumf = 'incelendi'; n++; }
+          });
+          afterDataChange();
+          gvToast(n ? (n + ' bildirim incelendi olarak işaretlendi.') : 'Seçili bildirimler zaten incelenmişti.', {type: n ? 'ok' : 'info'});
+        }}
+      ]
+    });
+  }
+
+  /* verilerde bir değişiklik olduğunda (arşivle/incelendi işaretle) yeniden basar + tüm
+     bileşenleri senkron eder — DOM'un ezilmesi gvCols/gvBulk'un enjekte ettiği hücreleri
+     de siler, bu yüzden ikisi de renderBody() SONRASI yeniden çalıştırılır. */
+  function afterDataChange(){
+    renderBody();
+    refreshChipCounts();
+    computeKpis();
+    if(gcHandle) gcHandle.apply();
+    if(gvBulkHandle) gvBulkHandle.refresh();
+    if(window.gvPagerRefresh) gvPagerRefresh('#tblBildirim', true);
+    if(window.gvApplyFilters) gvApplyFilters(tblBildirim, true); else applyBlFilter();
+  }
+
+  refreshChipCounts();
+  computeKpis();
+
+  /* ============ B §2.1 madde 5 — Çıktı Al (gvExport, spec-v2-core.md §1) ============ */
+  if(window.gvExport){
+    gvExport.init('#btnBilCikti', {baslik:'Saha Bildirimleri', kapsam:['tumu','filtreli']});
+  }
+
+  /* ============ B §2.1 madde 3 — Gelişmiş Filtre (gvFilterDrawer) ============
+     Şantiye/Durum/Kategori/Gönderen alanları quick-chip/select eksenleriyle AYNI data-*
+     özniteliklerini okur (data-san/data-durum/data-tur/data-gonderen) — çift veri kaynağı
+     İCAT EDİLMEDİ. */
+  var advState = {};
+  var ADV_DATE_KEYS = ['tarih'];
+  function advMatch(el){
+    var keys = Object.keys(advState);
+    for(var i = 0; i < keys.length; i++){
+      var k = keys[i], v = advState[k];
+      if(ADV_DATE_KEYS.indexOf(k) !== -1){
+        var iso = el.getAttribute('data-' + k);
+        if(!iso) return false;
+        var d = new Date(iso + 'T00:00:00');
+        if(v.raw.from && d < v.raw.from) return false;
+        if(v.raw.to && d > v.raw.to) return false;
+      } else if(el.getAttribute('data-' + k) !== v.value){
+        return false;
+      }
+    }
+    return true;
+  }
+  if(window.gvFilterDrawer && document.getElementById('advFilterBtnBil')){
+    gvFilterDrawer.init({
+      mount: '#advFilterBtnBil',
+      screen: 'bildirimler',
+      chipsMount: '#achipsBil',
+      fields: [
+        {key:'san', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'}, {v:'merkez', l:'Merkez Şantiye'}
+        ]},
+        {key:'durum', type:'select', label:'Durum', options:[
+          {v:'bekliyor', l:'Bekleyen'}, {v:'incelendi', l:'İncelendi'}
+        ]},
+        {key:'tarih', type:'daterange', label:'Tarih Aralığı'},
+        {key:'tur', type:'select', label:'Kategori / Tür', options:Object.keys(TUR).map(function(k){ return {v:k, l:TUR[k].lbl}; })},
+        {key:'gonderen', type:'select', label:'Gönderen', options:[
+          {v:'hasan-demirci', l:'Hasan Demirci'}, {v:'ibrahim-sonmez', l:'İbrahim Sönmez'}, {v:'aylin-koc', l:'Aylin Koç'},
+          {v:'sukru-aslan', l:'Şükrü Aslan'}, {v:'omer-taskin', l:'Ömer Taşkın'}, {v:'recep-yaman', l:'Recep Yaman'},
+          {v:'metin-cetin', l:'Metin Çetin'}, {v:'ramazan-kilic', l:'Ramazan Kılıç'}
+        ]}
+      ],
+      onApply: function(state){
+        advState = state || {};
+        if(window.gvApplyFilters) gvApplyFilters(tblBildirim, true); else applyBlFilter();
+      }
+    });
+  }
+
+  /* ---- özel çok boyutlu filtre — şantiye chip + kategori select + durum chip(native) +
+     serbest metin + arşiv switch + gelişmiş filtre hepsi AND'lenir; D18 delegasyon deseni:
+     tblBildirim._gvApply ile ui.js'e kayıtlı (durum chip'i + arama kutusu native ui.js
+     delegasyonundan buraya akar). Boş durum spec-v2-core.md §4 gvEmpty.durum()
+     [data-gv-state] sözleşmesiyle yönetilir — kayıt varken boş durum ASLA görünmez. ---- */
+  var curSan = 'hepsi';
+  var swArsivBil = document.getElementById('swArsivBil');
+  var turSelect = document.getElementById('turSelect');
+  var tblBildirim = document.getElementById('tblBildirim');
+  function renderBlCount(shown){
+    if(!window.gvCount) return;
+    var total = KAYITLAR.length;
+    var arsivN = KAYITLAR.filter(function(k){ return k.arsiv; }).length;
+    var opts = {toplam: total, aktif: total - arsivN, arsiv: arsivN};
+    if(shown !== total) opts.filtreSonucu = shown;
+    gvCount.render('#blCount', opts);
+  }
+  function applyBlFilter(){
+    var term = document.getElementById('blSearch').value.trim().toLocaleLowerCase('tr');
     var showArsiv = swArsivBil && swArsivBil.getAttribute('aria-checked') === 'true';
+    var durumOn = document.querySelector('#blDurumChips .chip.is-on');
+    var curDurum = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
+    var curTur = turSelect ? turSelect.value : 'hepsi';
     var shown = 0;
-    document.querySelectorAll('#feedList .post').forEach(function(p){
-      var show = ((f === 'hepsi') || (p.getAttribute('data-santiye') === f))
-        && ((t === 'hepsi') || (p.getAttribute('data-tur') === t))
-        && (showArsiv || p.getAttribute('data-arsiv') !== '1');
-      p.hidden = !show;
+    document.querySelectorAll('#tblBildirim tbody tr').forEach(function(tr){
+      var okSan = curSan === 'hepsi' || tr.getAttribute('data-san') === curSan;
+      var okTur = curTur === 'hepsi' || tr.getAttribute('data-tur') === curTur;
+      var okDurum = curDurum === 'hepsi' || tr.getAttribute('data-f') === curDurum;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okArsiv = showArsiv || tr.getAttribute('data-arsiv') !== '1';
+      var okAdv = advMatch(tr);
+      var show = okSan && okTur && okDurum && okTerm && okArsiv && okAdv;
+      tr.hidden = !show;
       if(show) shown++;
     });
-    empty.hidden = shown !== 0;
+    renderBlCount(shown);
+    if(window.gvEmpty) gvEmpty.durum('#blStateWrap', {yukleniyor:false, hata:false, sonucSayisi:shown});
+    return shown;
   }
-  chips.forEach(function(ch){
-    ch.addEventListener('click', function(){
-      chips.forEach(function(x){ x.classList.remove('is-on'); });
-      ch.classList.add('is-on');
-      applyFeedFilter();
-    });
+  tblBildirim._gvApply = applyBlFilter;
+
+  document.getElementById('blSanChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-san]'); if(!ch) return;
+    document.querySelectorAll('#blSanChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    curSan = ch.getAttribute('data-san');
+    if(window.gvApplyFilters) gvApplyFilters(tblBildirim, true); else applyBlFilter();
   });
-  if(turSelect) turSelect.addEventListener('change', applyFeedFilter);
+  if(turSelect) turSelect.addEventListener('change', function(){
+    if(window.gvApplyFilters) gvApplyFilters(tblBildirim, true); else applyBlFilter();
+  });
   if(swArsivBil){
     swArsivBil.addEventListener('click', function(){
       var on = swArsivBil.getAttribute('aria-checked') !== 'true';
       swArsivBil.setAttribute('aria-checked', on ? 'true' : 'false');
-      applyFeedFilter();
+      if(window.gvApplyFilters) gvApplyFilters(tblBildirim, true); else applyBlFilter();
     });
   }
 
-  /* §17 — Arşivle / Aktife Al. Saha bildirimi resmi bir kayıt değildir ama sistem
-     genelindeki §17 prensibi gereği kalıcı silinmez; arşivleme akışın örneği burada
-     kanıtlanır. Bu sayfada statik kalıcı .gv-modal-ov yok, gvConfirm doğrudan kullanılabilir. */
-  document.getElementById('feedList').addEventListener('click', function(e){
+  /* ---- Arşivle / Aktife Al (§17) — saha bildirimi resmi bir kayıt değildir ama sistem
+     genelindeki §17 prensibi gereği kalıcı silinmez. ---- */
+  document.getElementById('blBody').addEventListener('click', function(e){
     var btn = e.target.closest('[data-bil-arsiv]'); if(!btn) return;
-    var article = btn.closest('.post');
-    var no = btn.getAttribute('data-bil-arsiv');
-    var willArchive = article.getAttribute('data-arsiv') !== '1';
-    var baslik = article.querySelector('.post-body p');
-    var ozet = baslik ? baslik.textContent.trim().slice(0, 60) : ('SBL-2026-' + no);
+    var k = BY_NO[btn.getAttribute('data-bil-arsiv')]; if(!k) return;
+    var willArchive = !k.arsiv;
     gvConfirm({
       danger: willArchive, icon: willArchive ? 'fa-box-archive' : 'fa-rotate-left',
-      title: 'SBL-2026-' + no + (willArchive ? ' arşivlensin mi?' : ' yeniden aktif edilsin mi?'),
+      title: 'SBL-2026-' + k.no + (willArchive ? ' arşivlensin mi?' : ' yeniden aktif edilsin mi?'),
       message: willArchive
-        ? ('"' + ozet + '…" bildirimi arşivlenecek; akışta varsayılan görünümde görünmeyecek, kayıt SİLİNMEZ. "Arşivlenenleri Göster" ile her zaman erişilebilir kalır.')
-        : ('"' + ozet + '…" bildirimi yeniden aktif hale getirilecek ve akışta varsayılan görünüme dönecek.'),
+        ? ('Bu bildirim arşivlenecek; akışta varsayılan görünümde görünmeyecek, kayıt SİLİNMEZ. "Arşivlenenleri Göster" ile her zaman erişilebilir kalır.')
+        : ('Bu bildirim yeniden aktif hale getirilecek ve akışta varsayılan görünüme dönecek.'),
       ok: willArchive ? 'Arşivle' : 'Aktife Al', cancel:'Vazgeç',
       onConfirm:function(){
-        article.setAttribute('data-arsiv', willArchive ? '1' : '0');
-        article.classList.toggle('is-arsiv', willArchive);
-        btn.setAttribute('aria-label', willArchive ? 'Aktife Al' : 'Arşivle');
-        btn.setAttribute('data-tip', willArchive ? 'Aktife Al' : 'Arşivle');
-        btn.innerHTML = '<i class="fa-solid ' + (willArchive ? 'fa-rotate-left' : 'fa-box-archive') + '"></i>';
-        gvToast('SBL-2026-' + no + (willArchive ? ' arşivlendi — işlem kaydına eklendi.' : ' yeniden aktif.'), {type: willArchive ? 'danger' : 'ok'});
-        applyFeedFilter();
+        k.arsiv = willArchive;
+        afterDataChange();
+        gvToast('SBL-2026-' + k.no + (willArchive ? ' arşivlendi — işlem kaydına eklendi.' : ' yeniden aktif.'), {type: willArchive ? 'danger' : 'ok'});
       }
     });
   });
-
-  /* gördüm aksiyonu — okundu işaretler, sayaç artırır */
-  document.querySelectorAll('.post-ack').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      if(btn.classList.contains('is-acked')) return;
-      btn.classList.add('is-acked');
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Gördün';
-      var eye = btn.closest('.post-meta').querySelector('.post-meta-l span');
-      var n = parseInt(eye.textContent, 10) || 0;
-      eye.innerHTML = '<i class="fa-solid fa-eye"></i> ' + (n + 1) + ' kişi gördü';
-    });
-  });
-
-  /* sef tek şantiye görür — diğer kartlar kalıcı kaldırılır */
-  if(GV.role === 'sef'){
-    document.querySelectorAll('#feedList .post').forEach(function(p){
-      if(p.getAttribute('data-santiye') !== 'vadi') p.remove();
-    });
-    document.querySelectorAll('#feedChips .chip').forEach(function(ch){
-      if(ch.getAttribute('data-filter') !== 'hepsi' && ch.getAttribute('data-filter') !== 'vadi') ch.remove();
-    });
-    var remain = document.querySelectorAll('#feedList .post').length;
-    document.querySelector('#feedChips .chip[data-filter="hepsi"] .ch-cnt').textContent = remain;
-    document.getElementById('feedCount').textContent = remain;
-    document.getElementById('feedYeni').textContent = document.querySelectorAll('#feedList .post .gstat').length;
-  }
 
   /* Bildirim Paylaş — saha rolleri + üst yönetim */
   var PAYLASABILIR = ['superadmin','sahip','sef','personel'];
   document.querySelectorAll('[data-view="paylasabilir"]').forEach(function(el){
     el.hidden = PAYLASABILIR.indexOf(GV.role) === -1;
   });
+
+  if(window.gvApplyFilters) gvApplyFilters(tblBildirim); else applyBlFilter();
 })();
 </script>
 </body>

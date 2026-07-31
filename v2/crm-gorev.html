@@ -62,9 +62,12 @@
   min-width:210px;max-width:260px;
 }
 .gv-site-bar select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+/* kasa'nın .tur-row-acts deseninin devralımı — burada tek "Kolonlar" butonu için */
+.gr-site-acts{display:flex;align-items:center;gap:8px;flex:none}
 @media(max-width:640px){
   .gv-site-bar{padding:10px 16px}
   .gv-site-bar select{flex:1;min-width:0;max-width:none}
+  .gr-site-acts{width:100%}
 }
 
 /* §17 — "Arşivlenenleri Göster" filtresi (spec-filtre-tarih.md ruhu; görev bu sayfada
@@ -134,8 +137,27 @@
         <div class="ph-sub">7 görev · Bana Verilenler</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Görev listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Görev listesi","kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-gorev-form.html" data-assign-only="1"><i class="fa-solid fa-plus"></i> Görev Ver</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-list-check"></i></div>
+        <div><div class="kpi-num num" id="kpiToplamGorev">31</div><div class="kpi-lbl">Toplam görev</div></div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div><div class="kpi-num num" id="kpiGeciken">3</div><div class="kpi-lbl">Geciken</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+        <div><div class="kpi-num num" id="kpiTamam">5</div><div class="kpi-lbl">Tamamlanan</div></div>
+      </div>
+      <div class="kpi-card info">
+        <div class="kpi-ico"><i class="fa-solid fa-layer-group"></i></div>
+        <div><div class="kpi-num num" id="kpiHavuz">8</div><div class="kpi-lbl">Havuzda bekleyen</div></div>
       </div>
     </div>
 
@@ -145,12 +167,16 @@
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" placeholder="Görev, şantiye veya kişi ara" data-table-search="#tblGorev">
         </div>
-        <div class="chips" data-target="#tblGorev">
-          <button class="chip" data-filter="havuz"><i class="fa-solid fa-layer-group"></i> Havuz <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="bana"><i class="fa-solid fa-inbox"></i> Bana Verilenler <span class="ch-cnt">7</span></button>
-          <button class="chip" data-filter="verdigim"><i class="fa-solid fa-paper-plane"></i> Verdiklerim <span class="ch-cnt">8</span></button>
-          <button class="chip" data-filter="geciken"><i class="fa-solid fa-triangle-exclamation"></i> Gecikenler <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="tamam"><i class="fa-solid fa-circle-check"></i> Tamamlananlar <span class="ch-cnt">5</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblGorev">
+            <button class="chip" data-filter="havuz"><i class="fa-solid fa-layer-group"></i> Havuz <span class="ch-cnt">6</span></button>
+            <button class="chip" data-filter="bana"><i class="fa-solid fa-inbox"></i> Bana Verilenler <span class="ch-cnt">7</span></button>
+            <button class="chip" data-filter="verdigim"><i class="fa-solid fa-paper-plane"></i> Verdiklerim <span class="ch-cnt">8</span></button>
+            <button class="chip" data-filter="geciken"><i class="fa-solid fa-triangle-exclamation"></i> Gecikenler <span class="ch-cnt">3</span></button>
+            <button class="chip" data-filter="tamam"><i class="fa-solid fa-circle-check"></i> Tamamlananlar <span class="ch-cnt">5</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
       </div>
       <div class="gv-site-bar">
@@ -161,21 +187,24 @@
           <option value="liman">Liman Lojistik Merkezi</option>
           <option value="merkez">Merkez Şantiye</option>
         </select>
+        <div class="gr-site-acts">
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtnGorev"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
+        </div>
         <label class="gv-arsiv-toggle" for="fltArsivGoster">
           <input type="checkbox" id="fltArsivGoster">
           <i class="fa-solid fa-box-archive"></i> Arşivlenenleri Göster
         </label>
       </div>
       <div class="gc-body flush">
-        <table class="gtable" id="tblGorev">
+        <table class="gtable" id="tblGorev" data-paginate="10">
           <thead>
             <tr>
               <th>Görev</th>
-              <th>Şantiye</th>
-              <th class="col-assign">Atayan → Atanan</th>
-              <th class="col-due">Termin</th>
-              <th class="col-pri">Öncelik</th>
-              <th>Durum</th>
+              <th data-col="santiye">Şantiye</th>
+              <th class="col-assign" data-col="atama">Atayan → Atanan</th>
+              <th class="col-due" data-col="termin">Termin</th>
+              <th class="col-pri" data-col="oncelik">Öncelik</th>
+              <th data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
@@ -183,141 +212,141 @@
             <!-- ===== BANA VERİLENLER (7) ===== -->
             <tr data-f="bana" data-actor="all" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=001">Ø12 demir talebinin teslim tarihini teyit et</a><span class="gcell-sub">GRV-2026-001</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 10 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 10 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=001" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bana" data-actor="all" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=002">A Blok elektrik şaft kontrolü — ElektroMek ile</a><span class="gcell-sub">GRV-2026-002</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 3 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 3 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=002" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bana" data-actor="all" data-santiye="liman">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=003">Vinç bakım planını revize et</a><span class="gcell-sub">GRV-2026-003</span></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Aylin Koç</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 5 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Aylin Koç</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 5 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=003" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bana" data-actor="all" data-santiye="merkez">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=004">Çatı paneli montaj ekibini planla</a><span class="gcell-sub">GRV-2026-004</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Elif Sarıkaya</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 6 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Elif Sarıkaya</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 6 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=004" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bana" data-actor="all" data-santiye="merkez">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=005">Haftalık İSG turu</a><span class="gcell-sub">GRV-2026-005</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 4 Tem</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat off">Başlamadı</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 4 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat off">Başlamadı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=005" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bana" data-actor="personel" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=006">Kalıp kereste stok sayımı</a><span class="gcell-sub">GRV-2026-006</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ali Vural</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 8 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ali Vural</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 8 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=006" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bana" data-actor="personel" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=007">Puantaj defterini güncelle</a><span class="gcell-sub">GRV-2026-007</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ali Vural</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 3 Tem</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ali Vural</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 3 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=007" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
 
             <!-- ===== GECİKENLER (3) ===== -->
             <tr data-f="geciken" data-actor="all" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=008">Perde betonu kür takibini raporla</a><span class="gcell-sub">GRV-2026-008</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
-              <td><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 1 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat danger">Gecikti</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
+              <td data-col="termin"><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 1 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat danger">Gecikti</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=008" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="geciken" data-actor="all" data-santiye="liman">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=009">Kalıp iskelesi söküm onayını al</a><span class="gcell-sub">GRV-2026-009</span></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Aylin Koç</span></div></td>
-              <td><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 30 Haz</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat danger">Gecikti</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Aylin Koç</span></div></td>
+              <td data-col="termin"><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 30 Haz</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat danger">Gecikti</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=009" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="geciken" data-actor="all">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=010">Haziran kasa mutabakatını tamamla</a><span class="gcell-sub">GRV-2026-010</span></td>
-              <td class="muted">—</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Nesrin Aydın</span></div></td>
-              <td><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 30 Haz</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat danger">Gecikti</span></td>
+              <td data-col="santiye" class="muted">—</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Nesrin Aydın</span></div></td>
+              <td data-col="termin"><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 30 Haz</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat danger">Gecikti</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=010" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
 
             <!-- ===== VERDİKLERİM (5) ===== -->
             <tr data-f="verdigim" data-actor="all" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=011">Aylık ilerleme raporunu hazırla</a><span class="gcell-sub">GRV-2026-011</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 9 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 9 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=011" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="verdigim" data-actor="all" data-santiye="liman">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=012">Malzeme talep onay sürecini hızlandır</a><span class="gcell-sub">GRV-2026-012</span></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Baran Yıldız</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 6 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Baran Yıldız</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 6 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=012" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="verdigim" data-actor="all" data-santiye="merkez">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=013">Yeni personel oryantasyon planı hazırla</a><span class="gcell-sub">GRV-2026-013</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Seda Karaca</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 12 Tem</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat off">Başlamadı</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Seda Karaca</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 12 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat off">Başlamadı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=013" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="verdigim" data-actor="all">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=014">Temmuz hakediş taslağını gözden geçir</a><span class="gcell-sub">GRV-2026-014</span></td>
-              <td class="muted">—</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Nesrin Aydın</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 15 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye" class="muted">—</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Nesrin Aydın</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 15 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=014" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="verdigim" data-actor="all" data-santiye="liman">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=015">Vinç kiralama sözleşmesini incele</a><span class="gcell-sub">GRV-2026-015</span></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Aylin Koç</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 7 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Devam Ediyor</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Aylin Koç</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 7 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Devam Ediyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=015" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <!-- ===== D-Dalga4 EK1: 3 yeni durum temsili (Onay Bekliyor/Revize İstendi/İptal
@@ -325,78 +354,78 @@
                  öncelik/durum aynı kaynak) ===== -->
             <tr data-f="verdigim" data-actor="all" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=027">Haziran metraj tutanağının teknik onayı</a><span class="gcell-sub">GRV-2026-027</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Elif Sarıkaya</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 12 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Elif Sarıkaya</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 12 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=027" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="verdigim" data-actor="all" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=028">Elektrik pano yerleşim çizimi revizyonu</a><span class="gcell-sub">GRV-2026-028</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Elif Sarıkaya</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">İbrahim Sönmez</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 8 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat warn">Revize İstendi</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Elif Sarıkaya</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">İbrahim Sönmez</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 8 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat warn">Revize İstendi</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=028" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <!-- §17 — iptal edilen kayıt arşivlendi (kanonik iptal durumu ile arşiv ekseni
                  birleşik gösterim: iptal edilmiş bir görev doğal arşiv adayıdır). -->
             <tr data-f="verdigim" data-actor="all" data-santiye="vadi" data-recstat="arsiv">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=029">Numune daire boya rengi için ayrı teklif toplama</a><span class="gcell-sub">GRV-2026-029</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 5 Tem</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat off">İptal Edildi</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 5 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat off">İptal Edildi</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=029" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
 
             <!-- ===== TAMAMLANANLAR (5) ===== -->
             <tr data-f="tamam" data-actor="all" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=016">Haftalık İSG turu</a><span class="gcell-sub">GRV-2026-016</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
-              <td><span class="due-cell done"><i class="fa-solid fa-check"></i> 1 Tem</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Hasan Demirci</span></div></td>
+              <td data-col="termin"><span class="due-cell done"><i class="fa-solid fa-check"></i> 1 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=016" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamam" data-actor="all">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=017">Avans ödemelerini banka listesine aktar</a><span class="gcell-sub">GRV-2026-017</span></td>
-              <td class="muted">—</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Nesrin Aydın</span></div></td>
-              <td><span class="due-cell done"><i class="fa-solid fa-check"></i> 1 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="santiye" class="muted">—</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Nesrin Aydın</span></div></td>
+              <td data-col="termin"><span class="due-cell done"><i class="fa-solid fa-check"></i> 1 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=017" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamam" data-actor="all" data-santiye="merkez">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=018">Çatı paneli sevkiyatı teslim alma kaydı</a><span class="gcell-sub">GRV-2026-018</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Elif Sarıkaya</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
-              <td><span class="due-cell done"><i class="fa-solid fa-check"></i> 30 Haz</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Elif Sarıkaya</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
+              <td data-col="termin"><span class="due-cell done"><i class="fa-solid fa-check"></i> 30 Haz</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=018" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamam" data-actor="all" data-santiye="merkez">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=019">Haftalık İSG turu</a><span class="gcell-sub">GRV-2026-019</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
-              <td><span class="due-cell done"><i class="fa-solid fa-check"></i> 28 Haz</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Murat Denizli</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ömer Taşkın</span></div></td>
+              <td data-col="termin"><span class="due-cell done"><i class="fa-solid fa-check"></i> 28 Haz</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=019" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamam" data-actor="personel" data-santiye="vadi">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=020">Kalıp kereste stok sayımı ön kontrolü</a><span class="gcell-sub">GRV-2026-020</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ali Vural</span></div></td>
-              <td><span class="due-cell done"><i class="fa-solid fa-check"></i> 29 Haz</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Hasan Demirci</span><i class="fa-solid fa-arrow-right-long"></i><span class="ac-to">Ali Vural</span></div></td>
+              <td data-col="termin"><span class="due-cell done"><i class="fa-solid fa-check"></i> 29 Haz</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-gorev-detay.html?gorev=020" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
 
@@ -408,75 +437,75 @@
                  havuzunda görev yok" boş-durumunu da doğal gösterir. -->
             <tr data-f="havuz" data-actor="all" data-santiye="liman" data-departman="satinalma">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=021">Liman Lojistik çevre aydınlatma keşfi</a><span class="gcell-sub">GRV-2026-021 · Satın Alma havuzu</span></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 8 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Havuzda</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 8 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Havuzda</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="liman-cevre-aydinlatma-kesfi"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=021" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="havuz" data-actor="all" data-departman="muhasebe">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=022">Kule Ofis kesin hesap dosyası kontrolü</a><span class="gcell-sub">GRV-2026-022 · Muhasebe havuzu</span></td>
-              <td>Kule Ofis B Blok</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 6 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat info">Havuzda</span></td>
+              <td data-col="santiye">Kule Ofis B Blok</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 6 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat info">Havuzda</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="kule-kesin-hesap-kontrolu"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=022" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="havuz" data-actor="personel" data-santiye="vadi" data-departman="satis">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=023">Vadi Konakları numune daire fotoğraf çekimi</a><span class="gcell-sub">GRV-2026-023 · Satış Ekibi havuzu</span></td>
-              <td>Vadi Konakları</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 10 Tem</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat info">Havuzda</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 10 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat info">Havuzda</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="vadi-numune-daire-fotograf"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=023" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="havuz" data-actor="all" data-santiye="merkez" data-departman="depo">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=024">Merkez depo yıl ortası sayım planı</a><span class="gcell-sub">GRV-2026-024 · Depo / Lojistik havuzu</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 9 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Havuzda</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 9 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Havuzda</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="merkez-yil-ortasi-sayim"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=024" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="havuz" data-actor="all" data-departman="teknik">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=025">Göl Evleri 2. Etap ruhsat evrak listesi</a><span class="gcell-sub">GRV-2026-025 · Teknik Ofis havuzu</span></td>
-              <td>Göl Evleri 2. Etap</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 1 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat danger">Gecikti</span></td>
+              <td data-col="santiye">Göl Evleri 2. Etap</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell late"><i class="fa-solid fa-triangle-exclamation"></i> 1 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat danger">Gecikti</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="gol-evleri-ruhsat-evrak"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=025" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="havuz" data-actor="all" data-santiye="merkez" data-departman="sef">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=026">Şantiye araç takip çizelgesi güncelleme</a><span class="gcell-sub">GRV-2026-026 · Şantiye Ekibi havuzu</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 12 Tem</span></td>
-              <td><span class="gpri low">Düşük</span></td>
-              <td><span class="gstat info">Havuzda</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 12 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri low">Düşük</span></td>
+              <td data-col="durum"><span class="gstat info">Havuzda</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="arac-takip-cizelgesi"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=026" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <!-- [Dalga 20 / T-GOREV-02] ik ve yonetim havuzları için eklenen 2 kanonik görev -->
             <tr data-f="havuz" data-actor="all" data-santiye="merkez" data-departman="ik">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=030">Merkez Şantiye personel özlük evrak eksik kontrolü</a><span class="gcell-sub">GRV-2026-030 · İK Departmanı havuzu</span></td>
-              <td>Merkez Şantiye</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 11 Tem</span></td>
-              <td><span class="gpri med">Orta</span></td>
-              <td><span class="gstat info">Havuzda</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 11 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri med">Orta</span></td>
+              <td data-col="durum"><span class="gstat info">Havuzda</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="merkez-ozluk-evrak-kontrolu"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=030" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="havuz" data-actor="all" data-santiye="gol" data-departman="yonetim">
               <td class="gv-title-cell"><a class="task-link" href="crm-gorev-detay.html?gorev=031">Göl Evleri 2. Etap yatırım komitesi sunum hazırlığı</a><span class="gcell-sub">GRV-2026-031 · Yönetim havuzu</span></td>
-              <td>Göl Evleri 2. Etap</td>
-              <td><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
-              <td><span class="due-cell"><i class="fa-regular fa-calendar"></i> 7 Tem</span></td>
-              <td><span class="gpri high">Yüksek</span></td>
-              <td><span class="gstat info">Havuzda</span></td>
+              <td data-col="santiye">Göl Evleri 2. Etap</td>
+              <td data-col="atama"><div class="assign-chain"><span class="ac-from">Kemal Yapıcıoğlu</span><i class="fa-solid fa-arrow-right-long"></i><span class="gstat info">Havuzda</span></div></td>
+              <td data-col="termin"><span class="due-cell"><i class="fa-regular fa-calendar"></i> 7 Tem</span></td>
+              <td data-col="oncelik"><span class="gpri high">Yüksek</span></td>
+              <td data-col="durum"><span class="gstat info">Havuzda</span></td>
               <td><div class="row-acts"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-claim="gol-evleri-yatirim-komitesi-sunumu"><i class="fa-solid fa-hand"></i> Üzerime Al</button><a class="ia-btn" href="crm-gorev-detay.html?gorev=031" data-no-confirm aria-label="Görev detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
@@ -553,6 +582,16 @@
       var c = ch.querySelector('.ch-cnt');
       if(c) c.textContent = counts[ch.getAttribute('data-filter')] || 0;
     });
+    /* özet bilgi kartları — chip rozetleriyle AYNI counts kaynağından beslenir, böylece
+       rol daraltması/şantiye filtresi/arşiv toggle değiştiğinde ikisi de senkron kalır */
+    var kpiToplam = document.getElementById('kpiToplamGorev');
+    var kpiGeciken = document.getElementById('kpiGeciken');
+    var kpiTamam = document.getElementById('kpiTamam');
+    var kpiHavuz = document.getElementById('kpiHavuz');
+    if(kpiToplam) kpiToplam.textContent = counts.bana + counts.verdigim + counts.geciken + counts.tamam + counts.havuz;
+    if(kpiGeciken) kpiGeciken.textContent = counts.geciken;
+    if(kpiTamam) kpiTamam.textContent = counts.tamam;
+    if(kpiHavuz) kpiHavuz.textContent = counts.havuz;
   }
   /* dört boyutlu bileşik filtre (durum + şantiye + arama + arşiv) — ui.js'in applyFilters'ı
      yalnız tek chip grubu + arama bilir; şantiye/arşiv ayrı bağımsız boyutlar olduğundan
@@ -580,6 +619,8 @@
     var empty = card && card.querySelector('[data-table-empty]');
     if(empty) empty.hidden = shown !== 0;
     syncCardVisibility();
+    /* bileşik filtrenin (durum+şantiye+arama+arşiv) SONUCUNA göre pager senkron kalır */
+    if(tbl._gvPager) tbl._gvPager.refresh(true);
   }
 
   /* ---- mobil kart listesi (D18 Y17): masaüstü #tblGorev ile aynı tr kümesinden
@@ -621,7 +662,8 @@
       var meta = document.createElement('div'); meta.className = 'gr-mrow-meta';
       var site = document.createElement('span'); site.className = 'gr-mrow-site';
       site.innerHTML = '<i class="fa-solid fa-helmet-safety"></i>';
-      site.appendChild(document.createTextNode(' ' + (tr.children[1] ? tr.children[1].textContent.trim() : '—')));
+      var siteCell = tr.querySelector('[data-col="santiye"]');
+      site.appendChild(document.createTextNode(' ' + (siteCell ? siteCell.textContent.trim() : '—')));
       meta.appendChild(site);
       var chain = tr.querySelector('.assign-chain');
       if(chain) meta.appendChild(chain.cloneNode(true));
@@ -631,7 +673,7 @@
       var status = document.createElement('div'); status.className = 'gr-mrow-status';
       var due = tr.querySelector('.due-cell');
       if(due) status.appendChild(due.cloneNode(true));
-      var statTd = tr.children[5];
+      var statTd = tr.querySelector('[data-col="durum"]');
       var stat = statTd ? statTd.querySelector('.gstat') : null;
       if(stat) status.appendChild(stat.cloneNode(true));
       bottom.appendChild(status);
@@ -708,7 +750,8 @@
       span.textContent = GV.R.name;
       toBadge.replaceWith(span);
     }
-    var durum = tr.children[5] && tr.children[5].querySelector('.gstat');
+    var durumTd = tr.querySelector('[data-col="durum"]');
+    var durum = durumTd && durumTd.querySelector('.gstat');
     if(durum){ durum.className = 'gstat info'; durum.textContent = 'Devam Ediyor'; }
     var claimBtn = tr.querySelector('[data-claim]');
     if(claimBtn) claimBtn.remove();
@@ -759,7 +802,7 @@
   }
   function buildRowEditUrl(tr, code){
     var titleEl = tr.querySelector('.task-link');
-    var siteTd = tr.children[1];
+    var siteTd = tr.querySelector('[data-col="santiye"]');
     var priEl = tr.querySelector('.gpri');
     var params = new URLSearchParams();
     params.set('mod', 'duzenle'); params.set('gorev', code);
@@ -938,6 +981,74 @@
     syncEmptyText(f);
     var chip = document.querySelector('.chips .chip[data-filter="'+f+'"]');
     if(chip) chip.click();
+
+    if(window.gvExport) gvExport.bind();
+
+    /* ============ Kolonlar (gvCols) — §2.1 madde 8 ============
+       "Görev" (kimlik) ve son "İşlemler" kolonu data-col TAŞIMAZ (santiye/kasa deseniyle
+       aynı — kimlik + aksiyon kolonları kolon yönetimine hiç girmez). */
+    if(window.gvCols && document.getElementById('colsBtnGorev')){
+      gvCols.init({
+        mount: '#colsBtnGorev',
+        table: '#tblGorev',
+        screen: 'gorev',
+        cols: [
+          {key:'santiye', lbl:'Şantiye', def:true},
+          {key:'atama', lbl:'Atayan → Atanan', def:true},
+          {key:'termin', lbl:'Termin', def:true},
+          {key:'oncelik', lbl:'Öncelik', def:true},
+          {key:'durum', lbl:'Durum', def:true}
+        ]
+      });
+    }
+
+    /* ============ Seçili Kayıt İşlemleri (gvBulk) — §2.1 madde 10 ============
+       NOT: gvBulk yalnız GERÇEK <table>'a checkbox enjekte eder; görev'in mobil görünümü
+       ayrı bir el-yapımı DOM (.gr-mobile-list/.gr-mrow, buildCards() ile üretilir),
+       gtable-cards deseni DEĞİL — bu yüzden toplu seçim bu dalgada yalnız ≥641px masaüstü
+       tabloda çalışır, mobil kartlarda seçim kutusu YOKTUR (bilinçli, kapsam-dışı bırakılan
+       karar — bespoke mobil kart üretecini gtable-cards'a taşımak bu dalganın kapsamı dışında). */
+    if(window.gvBulk){
+      gvBulk.init('#tblGorev', {
+        aksiyonlar: [
+          {
+            etiket:'Tamamlandı Olarak İşaretle', ikon:'fa-circle-check',
+            onClick:function(rows){
+              rows.forEach(function(tr){
+                var durumTd = tr.querySelector('[data-col="durum"]');
+                var durum = durumTd && durumTd.querySelector('.gstat');
+                if(durum){ durum.className = 'gstat ok'; durum.textContent = 'Tamamlandı'; }
+              });
+              gvToast(rows.length + ' görev tamamlandı olarak işaretlendi');
+              recomputeCounts();
+              updateSub(document.body.dataset.screen || 'bana');
+              applyCompound();
+              buildCards();
+            }
+          },
+          {
+            etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true,
+            onClick:function(rows){
+              var overrides = loadArsivOverrides();
+              rows.forEach(function(tr){
+                var code = rowCode(tr);
+                if(!code) return;
+                tr.setAttribute('data-recstat', 'arsiv');
+                overrides[code] = 'arsiv';
+                var arcBtn = tr.querySelector('[data-row-arsiv]');
+                if(arcBtn) updateArchiveBtn(arcBtn, true);
+              });
+              saveArsivOverrides(overrides);
+              gvToast(rows.length + ' görev arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+              recomputeCounts();
+              updateSub(document.body.dataset.screen || 'bana');
+              applyCompound();
+              buildCards();
+            }
+          }
+        ]
+      });
+    }
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

@@ -144,7 +144,7 @@
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblSozlesme">
+        <table class="gtable gtable-cards" id="tblSozlesme" data-paginate="25">
           <thead>
             <tr>
               <th>Sözleşme / Taraf</th>
@@ -405,6 +405,37 @@
         {key:'bedel', lbl:'Bedel', def:true},
         {key:'sure', lbl:'Süre', def:true},
         {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
+  /* ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri (gvBulk). "Pasife Al"
+     B §9.3'ün "sözleşme pasife alma" kritik aksiyonu — tehlikeli:true ile gvConfirm'den
+     geçer (gvBulk kendi toplu onay metnini gösterir). "Çıktı Al" statik prototip
+     bilgilendirmesi (gvResult) — sayfanın üst Dışa Aktar butonuyla AYNI dille. ============ */
+  if(window.gvBulk && tblSozlesme){
+    gvBulk.init('#tblSozlesme', {
+      aksiyonlar: [
+        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
+          gvResult('cikti-hazir', {
+            mesaj: rows.length + ' sözleşme için çıktı hazırlandı. (statik prototip — gerçek dosya üretilmez)',
+            aksiyonlar: [{etiket:'Kapat', birincil:true}]
+          });
+        }},
+        {etiket:'Pasife Al', ikon:'fa-power-off', tehlikeli:true, onClick:function(rows){
+          var n = 0;
+          rows.forEach(function(tr){
+            var sid = tr.getAttribute('data-sozlesme'); if(!sid) return;
+            var cur = tr.getAttribute('data-arsiv') || 'aktif';
+            if(cur !== 'aktif') return;
+            tr.setAttribute('data-arsiv', 'pasif');
+            szlArsivSet(sid, 'pasif');
+            n++;
+          });
+          renderSzlBadges();
+          gvApplyFilters(tblSozlesme, true);
+          gvToast(n + ' sözleşme pasife alındı.', {type:'danger'});
+        }}
       ]
     });
   }

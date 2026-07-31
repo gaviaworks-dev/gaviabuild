@@ -16,51 +16,39 @@
 <link rel="stylesheet" href="assets/css/shell.css">
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
-/* ============ SAYFAYA ÖZEL — Rapor Merkezi (kart ızgarası) ============ */
-.rpc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-@media(max-width:980px){.rpc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.rpc-grid{grid-template-columns:minmax(0,1fr)}}
+/* ============ SAYFAYA ÖZEL — Rapor Merkezi (T-L3, standart liste şablonuna geçiş) ============
+   Önceki sürüm bespoke kart-ızgarası (.rpc-grid/.rpc-card/.rr-mast) idi — B §2.1'in 15
+   bölümlü standardına UYMUYORDU (arama/gelişmiş filtre/kolonlar/seçili kayıt/sayfalama/
+   kayıt sayısı özeti/boş durum YOKTU). crm-operasyon-kasa.html/crm-finans-taseron.html
+   iskeleti BİREBİR devralınarak "her satır bir rapor" liste mimarisine taşındı. */
+@media(min-width:641px){ #tblRapor{min-width:960px} }
+.col-modul{width:130px}
+.col-kapsam{width:170px}
+.col-rol{width:190px}
+.col-calisma{width:150px}
 
-.rpc-card{
-  position:relative;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);
-  box-shadow:var(--sh-sm);padding:20px;display:flex;flex-direction:column;gap:14px;
-  transition:transform .2s var(--ease),box-shadow .2s var(--ease);
-}
-.rpc-card:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
-.rpc-top{display:flex;align-items:flex-start;gap:13px}
-.rpc-ico{width:44px;height:44px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:17px;background:rgba(var(--acc-rgb),.1);color:var(--acc-ink)}
-.rpc-hd{flex:1;min-width:0}
-.rpc-hd b{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;display:block}
-.rpc-hd p{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:5px}
-.rpc-scope{font-size:11px;font-weight:700;color:var(--acc-ink);letter-spacing:.01em;margin-top:2px}
-.rpc-foot{margin-top:auto;padding-top:13px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
-.rpc-btn{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--ink-2);text-decoration:none;padding:6px 4px;border-radius:var(--r-sm);transition:color .15s var(--ease)}
-.rpc-btn:hover{color:var(--acc-ink)}
-.rpc-btn i{font-size:11px}
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar.stack .gv-chipbar-wrap{width:100%}
 
-.rr-mast{
-  background:linear-gradient(155deg, var(--gv-deep) 0%, var(--gv-night) 100%);
-  border-radius:var(--r-lg); padding:24px 28px; margin-bottom:24px; position:relative; overflow:hidden;
-  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
-}
-.rr-mast::after{
-  content:""; position:absolute; inset:0;
-  background:radial-gradient(420px 180px at 90% -10%, var(--gv-mint-glow), transparent 70%);
-  pointer-events:none;
-}
-.rr-mast-l{position:relative;min-width:0}
-.rr-mast-eyebrow{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--gv-mint);margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.rr-mast h2{font-size:18.5px;font-weight:800;color:#fff;letter-spacing:-.01em;margin-bottom:6px}
-.rr-mast p{font-size:13px;line-height:1.6;color:var(--on-dark);max-width:48ch}
-.rr-mast-r{position:relative;display:flex;gap:22px;flex-wrap:wrap}
-.rr-mstat{display:flex;flex-direction:column;gap:2px}
-.rr-mstat b{font-size:21px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
-.rr-mstat span{font-size:11px;color:var(--on-dark-mut)}
+.rp2-cell{display:flex;align-items:center;gap:12px;min-width:0}
+.rp2-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:14px;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.rp2-info{min-width:0;line-height:1.4}
+.rp2-info b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap}
+.rp2-info span{font-size:11.5px;color:var(--muted);display:block;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.rp2-calisma{white-space:nowrap;color:var(--ink-2);font-size:12.5px}
+.rp2-calisma i{font-size:10px;color:var(--muted);margin-right:5px}
+.rp2-calisma.is-fresh{color:var(--ok)}
 
 @media(max-width:640px){
-  .rr-mast{padding:20px}
-  .rr-mast-r{gap:16px}
+  .rp2-info span{max-width:none;white-space:normal}
 }
+
+/* §17 arşiv görünürlüğü (gelecekte rapor "gizlenmesi" ihtiyacı için hazır tutulur —
+   şu an hiçbir satır varsayılan arşivli değil) */
+#tblRapor tbody tr[data-arsiv="1"]{display:none}
+#tblRapor.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -88,160 +76,438 @@
       <div>
         <div class="ph-eyebrow">Analiz</div>
         <h1>Raporlar</h1>
-        <div class="ph-sub">Şantiye, personel ve finans verilerini tek ekrandan derli toplu görüntüleyin</div>
+        <div class="ph-sub">Şantiye, personel ve finans verilerini tek merkezden derli toplu görüntüleyin — her satır ilgili rapor ekranına gider.</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="#" data-export="Rapor kataloğu"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <button type="button" class="btn btn-acc btn-sm" id="btnYenileTumu"><i class="fa-solid fa-arrows-rotate"></i> Tümünü Yenile</button>
       </div>
     </div>
 
-    <div class="rr-mast">
-      <div class="rr-mast-l">
-        <div class="rr-mast-eyebrow"><i class="fa-solid fa-chart-column"></i> Rapor Merkezi</div>
-        <h2>15 rapor tanımlı, tamamı bu sürümde canlı.</h2>
-        <p>Canlı raporlar mevcut kayıtlardan derlenir; şantiye, demirbaş, makine, hakediş, talep, cari ve iş programı raporlarıyla set tamamlandı.</p>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-chart-column"></i></div>
+        <div><div class="kpi-num num">15</div><div class="kpi-lbl">Toplam rapor</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 5 modülde tanımlı</div></div>
       </div>
-      <div class="rr-mast-r">
-        <div class="rr-mstat"><b>15</b><span>canlı rapor</span></div>
-        <div class="rr-mstat"><b>0</b><span>planlanan rapor</span></div>
-        <div class="rr-mstat"><b>3</b><span>şantiye kapsamı</span></div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-eye"></i></div>
+        <div><div class="kpi-num num">128</div><div class="kpi-lbl">Bu hafta görüntülenen</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar"></i> Son 7 gün toplamı</div></div>
+      </div>
+      <div class="kpi-card" style="--kpi-ok:1">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-user-check"></i></div>
+        <div><div class="kpi-num num" id="kpiErisim">15</div><div class="kpi-lbl">Erişebildiğiniz rapor</div>
+        <div class="kpi-delta flat" id="kpiErisimSub"><i class="fa-solid fa-id-badge"></i> Rolünüze göre</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <div><div class="kpi-num num">0</div><div class="kpi-lbl">Planlanan (henüz canlı değil)</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-check"></i> Set tamamlandı — 15/15 canlı</div></div>
       </div>
     </div>
 
-    <div class="rpc-grid">
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-users"></i></div>
-          <div class="rpc-hd"><b>Personel Raporu</b><p>Kadro dağılımı, izin durumu ve fazla mesai özetini şantiye bazında gösterir.</p></div>
+    <div class="gv-card">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Rapor adı veya açıklama ara" data-table-search="#tblRapor">
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpRapor">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
         </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-personel.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-helmet-safety"></i></div>
-          <div class="rpc-hd"><b>Şantiye Raporu</b><p>Şantiye bazında ilerleme yüzdesi, personel sayısı ve program durumu.</p></div>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" id="moduleChips">
+            <button class="chip is-on" data-modul="hepsi">Tümü <span class="ch-cnt">15</span></button>
+            <button class="chip" data-modul="personel">Personel <span class="ch-cnt">6</span></button>
+            <button class="chip" data-modul="santiye">Şantiye <span class="ch-cnt">2</span></button>
+            <button class="chip" data-modul="finans">Finans <span class="ch-cnt">4</span></button>
+            <button class="chip" data-modul="operasyon">Operasyon <span class="ch-cnt">2</span></button>
+            <button class="chip" data-modul="satinalma">Satın Alma <span class="ch-cnt">1</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-santiye.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
       </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-user-clock"></i></div>
-          <div class="rpc-hd"><b>Puantaj Raporu</b><p>Aylık devam, izin ve mesai sapması dökümü — şantiye × durum matrisi.</p></div>
+      <div class="gv-achips-row" id="achipsRapor" hidden>
+        <div class="gv-achips"></div>
+        <div class="gv-achips-acts">
+          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+          </button>
         </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-puantaj.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
       </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-umbrella-beach"></i></div>
-          <div class="rpc-hd"><b>İzin Raporu</b><p>Tür ve durum bazında izin taleplerinin dökümü.</p></div>
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblRapor" data-paginate="8">
+          <thead>
+            <tr>
+              <th>Rapor</th>
+              <th class="col-modul" data-col="modul">Modül</th>
+              <th class="col-kapsam" data-col="kapsam">Kapsam</th>
+              <th class="col-rol" data-col="rol">Erişim Rolü</th>
+              <th class="col-calisma" data-col="calisma">Son Çalıştırma</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="raporBody"></tbody>
+        </table>
+        <div class="gv-empty" data-table-empty hidden>
+          <div class="ge-ico"><i class="fa-solid fa-chart-column"></i></div>
+          <h4>Eşleşen rapor yok</h4>
+          <p>Aramayı temizleyin veya farklı bir modül/rol/kapsam filtresi seçin.</p>
+          <button type="button" class="btn btn-ghost btn-sm ge-clear-all" style="margin-top:10px">
+            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+          </button>
         </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-izin.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
       </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-          <div class="rpc-hd"><b>Avans Raporu</b><p>Personel avans taleplerinin tutar ve durum özeti.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-avans.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-toolbox"></i></div>
-          <div class="rpc-hd"><b>Demirbaş Raporu</b><p>Zimmetli, depoda ve serviste demirbaş envanterinin dökümü.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-demirbas.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-truck-pickup"></i></div>
-          <div class="rpc-hd"><b>Makine Raporu</b><p>Makine parkının çalışma saati, yakıt ve bakım durumu özeti.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-makine.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card" data-sef-hidden="1">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-file-signature"></i></div>
-          <div class="rpc-hd"><b>Hakediş Raporu</b><p>Kurum ve taşeron hakedişlerinin ödeme durumu özeti.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-hakedis.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card" data-sef-hidden="1">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-address-book"></i></div>
-          <div class="rpc-hd"><b>Cari Raporu</b><p>Firma bazında bakiye, tahsilat ve ödeme durumu.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-cari.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-boxes-stacked"></i></div>
-          <div class="rpc-hd"><b>Talep Raporu</b><p>Malzeme taleplerinin süreç ve tedarik durumu özeti.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-talep.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-coins"></i></div>
-          <div class="rpc-hd"><b>Şantiye Maliyet Raporu</b><p>Kasa, hakediş ve satın alma kalemlerinden derlenmiş şantiye maliyeti.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-maliyet.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-business-time"></i></div>
-          <div class="rpc-hd"><b>Personel Çalışma Raporu</b><p>Kişi bazında aylık çalışma gün/saat dökümü.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-calisma.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-arrow-trend-up"></i></div>
-          <div class="rpc-hd"><b>Fazla Mesai (FM) Raporu</b><p>FM kayıtlarının kişi ve şantiye bazında dökümü.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-fm.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-arrow-trend-down"></i></div>
-          <div class="rpc-hd"><b>Eksik Mesai (EM) Raporu</b><p>EM kayıtlarının kişi ve şantiye bazında dökümü.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-em.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
-
-      <div class="rpc-card">
-        <div class="rpc-top">
-          <div class="rpc-ico"><i class="fa-solid fa-chart-gantt"></i></div>
-          <div class="rpc-hd"><b>İş Programı Raporu</b><p>Şantiye bazında planlanan/gerçekleşen kıyası ve kritik gecikmeler.</p></div>
-        </div>
-        <div class="rpc-foot"><a class="rpc-btn" href="crm-panel-rapor-isprogrami.html">Görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
-      </div>
+      <!-- §15 — kayıt sayısı özeti (gvCount) -->
+      <div class="gc-foot"><span id="raporFoot">—</span></div>
     </div>
   </main>
+
+  <!-- ============ §9 — sağ off-canvas gelişmiş filtre paneli ============ -->
+  <div class="gv-fpanel-ov" id="fpRaporOv">
+    <aside class="gv-fpanel" id="fpRapor" role="dialog" aria-modal="true" aria-label="Gelişmiş Filtre">
+      <div class="gv-fpanel-head">
+        <h3><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</h3>
+        <button type="button" class="gv-fpanel-close" aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="gv-fpanel-body">
+        <div class="gfield">
+          <label>Modül</label>
+          <select id="fpModul">
+            <option value="">Tümü</option>
+            <option value="personel">Personel</option>
+            <option value="santiye">Şantiye</option>
+            <option value="finans">Finans</option>
+            <option value="operasyon">Operasyon</option>
+            <option value="satinalma">Satın Alma</option>
+          </select>
+        </div>
+        <div class="gfield">
+          <label>Erişim Rolü</label>
+          <select id="fpRol">
+            <option value="">Tümü</option>
+            <option value="yonetim">Yönetim</option>
+            <option value="sef">Şantiye Şefi</option>
+            <option value="muhasebe">Muhasebe</option>
+            <option value="ik">İK</option>
+            <option value="teknik">Teknik Müdür</option>
+          </select>
+        </div>
+        <div class="gfield">
+          <label>Kapsam (Şantiye)</label>
+          <select id="fpKapsam">
+            <option value="">Tümü</option>
+            <option value="tumu">Tüm Şantiyeler</option>
+            <option value="vadi">Vadi Konakları</option>
+            <option value="liman">Liman Lojistik Merkezi</option>
+            <option value="merkez">Merkez Şantiye</option>
+          </select>
+        </div>
+        <div class="gfield">
+          <label>Son Çalıştırma Tarih Aralığı</label>
+          <div data-gvdaterange data-fp-key="tarih" data-fp-label="Son Çalıştırma"></div>
+        </div>
+      </div>
+      <div class="gv-fpanel-foot">
+        <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
+        <button type="button" class="btn btn-acc" data-fp-apply>Uygula</button>
+      </div>
+    </aside>
+  </div>
 </div>
 
 <script src="assets/js/shell.js"></script>
 <script src="assets/js/ui.js"></script>
 <script>
-/* RBAC (6C2 K-kararı): Hakediş + Cari raporları şefe kapalı — kaynak finans/cari
-   bölümleri sef rolünde yok (shell.js ROLES); kartlar DOM'dan kaldırılır ve
-   mast sayıları şef için yeniden yazılır. Sayfa guard'ları rapor dosyalarında ayrıca var. */
 (function(){
-  if(GV.role!=='sef') return;
-  document.querySelectorAll('.rpc-card[data-sef-hidden]').forEach(function(c){ c.remove(); });
-  var h2=document.querySelector('.rr-mast-l h2');
-  if(h2) h2.textContent='13 rapor tanımlı, tamamı bu sürümde canlı.';
-  var st=document.querySelector('.rr-mast-r .rr-mstat b');
-  if(st) st.textContent='13';
+  if(!window.GV) return;
+
+  /* ---- 15 kanonik rapor kaydı — dosya adları `ls v2/crm-panel-rapor-*.html` ile
+     doğrulandı (15/15 diskte var, 404 YOK). "Rol" listesi shell.js ROLES.*.secs'te
+     GERÇEKTEN 'raporlar' bölümüne erişimi olan rollerle sınırlı (superadmin/sahip/
+     yonetim/teknik/sef/muhasebe/ik — satinalma ve saha personeli bu bölümü hiç
+     görmez, o yüzden "rol" sütununda YOKLAR). ---- */
+  var RAPORLAR = [
+    {no:'personel', href:'crm-panel-rapor-personel.html', ikon:'fa-users', modul:'personel',
+      ad:'Personel Raporu', aciklama:'Kadro dağılımı, izin durumu ve fazla mesai özetini şantiye bazında gösterir.',
+      kapsamTxt:'Tüm personel (69 öz kadro)', kapsam:'tumu', rolTxt:'İK, Yönetim', rol:'ik yonetim', tarih:'2026-07-02T08:15:00', tarihLbl:'2 Tem 2026, 08:15'},
+    {no:'santiye', href:'crm-panel-rapor-santiye.html', ikon:'fa-helmet-safety', modul:'santiye',
+      ad:'Şantiye Raporu', aciklama:'Şantiye bazında ilerleme yüzdesi, personel sayısı ve program durumu.',
+      kapsamTxt:'3 aktif şantiye', kapsam:'tumu', rolTxt:'Yönetim, Şantiye Şefi, Teknik Müdür', rol:'yonetim sef teknik', tarih:'2026-07-02T07:40:00', tarihLbl:'2 Tem 2026, 07:40'},
+    {no:'puantaj', href:'crm-panel-rapor-puantaj.html', ikon:'fa-user-clock', modul:'personel',
+      ad:'Puantaj Raporu', aciklama:'Aylık devam, izin ve mesai sapması dökümü — şantiye × durum matrisi.',
+      kapsamTxt:'Tüm şantiyeler', kapsam:'tumu', rolTxt:'İK, Muhasebe, Şantiye Şefi', rol:'ik muhasebe sef', tarih:'2026-07-02T06:50:00', tarihLbl:'2 Tem 2026, 06:50'},
+    {no:'izin', href:'crm-panel-rapor-izin.html', ikon:'fa-umbrella-beach', modul:'personel',
+      ad:'İzin Raporu', aciklama:'Tür ve durum bazında izin taleplerinin dökümü.',
+      kapsamTxt:'Tüm personel', kapsam:'tumu', rolTxt:'İK', rol:'ik', tarih:'2026-07-01T18:20:00', tarihLbl:'1 Tem 2026, 18:20'},
+    {no:'avans', href:'crm-panel-rapor-avans.html', ikon:'fa-hand-holding-dollar', modul:'finans',
+      ad:'Avans Raporu', aciklama:'Personel avans taleplerinin tutar ve durum özeti.',
+      kapsamTxt:'Tüm şantiyeler', kapsam:'tumu', rolTxt:'Muhasebe', rol:'muhasebe', tarih:'2026-07-01T17:05:00', tarihLbl:'1 Tem 2026, 17:05'},
+    {no:'demirbas', href:'crm-panel-rapor-demirbas.html', ikon:'fa-toolbox', modul:'operasyon',
+      ad:'Demirbaş Raporu', aciklama:'Zimmetli, depoda ve serviste demirbaş envanterinin dökümü.',
+      kapsamTxt:'Tüm şantiyeler', kapsam:'tumu', rolTxt:'Yönetim, İK', rol:'yonetim ik', tarih:'2026-06-30T16:40:00', tarihLbl:'30 Haz 2026, 16:40'},
+    {no:'makine', href:'crm-panel-rapor-makine.html', ikon:'fa-truck-pickup', modul:'operasyon',
+      ad:'Makine Raporu', aciklama:'Makine parkının çalışma saati, yakıt ve bakım durumu özeti.',
+      kapsamTxt:'Vadi, Liman, Merkez', kapsam:'tumu', rolTxt:'Şantiye Şefi, Yönetim, Teknik Müdür', rol:'sef yonetim teknik', tarih:'2026-06-30T15:10:00', tarihLbl:'30 Haz 2026, 15:10'},
+    {no:'hakedis', href:'crm-panel-rapor-hakedis.html', ikon:'fa-file-signature', modul:'finans', sefGizli:true,
+      ad:'Hakediş Raporu', aciklama:'Kurum ve taşeron hakedişlerinin ödeme durumu özeti.',
+      kapsamTxt:'Tüm şantiyeler', kapsam:'tumu', rolTxt:'Yönetim, Muhasebe', rol:'yonetim muhasebe', tarih:'2026-06-29T14:30:00', tarihLbl:'29 Haz 2026, 14:30'},
+    {no:'cari', href:'crm-panel-rapor-cari.html', ikon:'fa-address-book', modul:'finans', sefGizli:true,
+      ad:'Cari Raporu', aciklama:'Firma bazında bakiye, tahsilat ve ödeme durumu.',
+      kapsamTxt:'Tüm cari kayıtları', kapsam:'tumu', rolTxt:'Yönetim, Muhasebe', rol:'yonetim muhasebe', tarih:'2026-06-29T11:20:00', tarihLbl:'29 Haz 2026, 11:20'},
+    {no:'talep', href:'crm-panel-rapor-talep.html', ikon:'fa-boxes-stacked', modul:'satinalma',
+      ad:'Talep Raporu', aciklama:'Malzeme taleplerinin süreç ve tedarik durumu özeti.',
+      kapsamTxt:'Tüm şantiyeler', kapsam:'tumu', rolTxt:'Yönetim, Teknik Müdür', rol:'yonetim teknik', tarih:'2026-07-02T09:05:00', tarihLbl:'2 Tem 2026, 09:05'},
+    {no:'maliyet', href:'crm-panel-rapor-maliyet.html', ikon:'fa-coins', modul:'finans',
+      ad:'Şantiye Maliyet Raporu', aciklama:'Kasa, hakediş ve satın alma kalemlerinden derlenmiş şantiye maliyeti.',
+      kapsamTxt:'Vadi Konakları (varsayılan)', kapsam:'vadi', rolTxt:'Yönetim', rol:'yonetim', tarih:'2026-06-28T10:00:00', tarihLbl:'28 Haz 2026, 10:00'},
+    {no:'calisma', href:'crm-panel-rapor-calisma.html', ikon:'fa-business-time', modul:'personel',
+      ad:'Personel Çalışma Raporu', aciklama:'Kişi bazında aylık çalışma gün/saat dökümü.',
+      kapsamTxt:'Tüm personel', kapsam:'tumu', rolTxt:'İK, Muhasebe', rol:'ik muhasebe', tarih:'2026-07-01T19:00:00', tarihLbl:'1 Tem 2026, 19:00'},
+    {no:'fm', href:'crm-panel-rapor-fm.html', ikon:'fa-arrow-trend-up', modul:'personel',
+      ad:'Fazla Mesai (FM) Raporu', aciklama:'FM kayıtlarının kişi ve şantiye bazında dökümü.',
+      kapsamTxt:'Tüm şantiyeler', kapsam:'tumu', rolTxt:'İK, Şantiye Şefi', rol:'ik sef', tarih:'2026-07-01T19:10:00', tarihLbl:'1 Tem 2026, 19:10'},
+    {no:'em', href:'crm-panel-rapor-em.html', ikon:'fa-arrow-trend-down', modul:'personel',
+      ad:'Eksik Mesai (EM) Raporu', aciklama:'EM kayıtlarının kişi ve şantiye bazında dökümü.',
+      kapsamTxt:'Tüm şantiyeler', kapsam:'tumu', rolTxt:'İK, Şantiye Şefi', rol:'ik sef', tarih:'2026-07-01T19:15:00', tarihLbl:'1 Tem 2026, 19:15'},
+    {no:'isprogrami', href:'crm-panel-rapor-isprogrami.html', ikon:'fa-chart-gantt', modul:'santiye',
+      ad:'İş Programı Raporu', aciklama:'Şantiye bazında planlanan/gerçekleşen kıyası ve kritik gecikmeler.',
+      kapsamTxt:'Vadi, Liman, Merkez', kapsam:'tumu', rolTxt:'Yönetim, Şantiye Şefi, Teknik Müdür', rol:'yonetim sef teknik', tarih:'2026-06-27T12:00:00', tarihLbl:'27 Haz 2026, 12:00'}
+  ];
+  var MODUL_LBL = {personel:'Personel', santiye:'Şantiye', finans:'Finans', operasyon:'Operasyon', satinalma:'Satın Alma'};
+
+  function rowHtml(r){
+    var h = '<tr data-no="' + r.no + '" data-modul="' + r.modul + '" data-kapsam="' + r.kapsam + '" data-rol="' + r.rol + '" data-tarih="' + r.tarih.slice(0,10) + '"' + (r.sefGizli ? ' data-sef-gizli="1"' : '') + '>';
+    h += '<td data-lbl="Rapor"><div class="rp2-cell"><div class="rp2-mark"><i class="fa-solid ' + r.ikon + '"></i></div>'
+      + '<div class="rp2-info"><b>' + r.ad + '</b><span>' + r.aciklama + '</span></div></div></td>';
+    h += '<td data-col="modul" data-lbl="Modül"><span class="gtag">' + MODUL_LBL[r.modul] + '</span></td>';
+    h += '<td data-col="kapsam" data-lbl="Kapsam">' + r.kapsamTxt + '</td>';
+    h += '<td data-col="rol" data-lbl="Erişim Rolü">' + r.rolTxt + '</td>';
+    h += '<td data-col="calisma" data-lbl="Son Çalıştırma"><span class="rp2-calisma" data-calisma><i class="fa-regular fa-clock"></i>' + r.tarihLbl + '</span></td>';
+    h += '<td data-lbl=""><div class="row-acts"><a class="btn btn-ghost btn-sm" href="' + r.href + '" data-no-confirm><i class="fa-solid fa-arrow-right"></i> Görüntüle</a></div></td>';
+    h += '</tr>';
+    return h;
+  }
+  document.getElementById('raporBody').innerHTML = RAPORLAR.map(rowHtml).join('');
+
+  /* ---- RBAC (6C2 K-kararı devamı) — Hakediş + Cari raporları şefe kapalı; önceki
+     sürümde kart kaldırılıyordu, şimdi SATIR kaldırılır + modül chip sayaçları ve
+     KPI'lar yeniden hesaplanır. ---- */
+  if(GV.role === 'sef'){
+    document.querySelectorAll('#tblRapor tbody tr[data-sef-gizli="1"]').forEach(function(tr){ tr.remove(); });
+  }
+  var ROLE_ERISIM = {superadmin:'yonetim', sahip:'yonetim', yonetim:'yonetim', teknik:'teknik', sef:'sef', muhasebe:'muhasebe', ik:'ik'};
+  var kpiErisimEl = document.getElementById('kpiErisim'), kpiErisimSub = document.getElementById('kpiErisimSub');
+  var myRolKey = ROLE_ERISIM[GV.role];
+  if(kpiErisimEl){
+    if(myRolKey){
+      var n = 0;
+      document.querySelectorAll('#tblRapor tbody tr').forEach(function(tr){
+        if((tr.getAttribute('data-rol') || '').split(' ').indexOf(myRolKey) !== -1) n++;
+      });
+      kpiErisimEl.textContent = n;
+      if(kpiErisimSub) kpiErisimSub.innerHTML = '<i class="fa-solid fa-id-badge"></i> ' + ((GV.R && GV.R.role) || GV.role) + ' rolünde erişilebilir';
+    } else {
+      kpiErisimEl.textContent = '0';
+      if(kpiErisimSub) kpiErisimSub.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Bu rolde tanımlı erişim yok';
+    }
+  }
+
+  var raporTotal = document.querySelectorAll('#tblRapor tbody tr').length;
+
+  /* ============ çok-eksenli bileşik filtre motoru (D18 _gvApply deseni —
+     crm-finans-taseron.html / crm-operasyon-arac.html emsali BİREBİR): arama +
+     modül chip + gelişmiş filtre (modül/rol/kapsam/tarih aralığı) AND'lenir. ============ */
+  var tblRapor = document.getElementById('raporBody').closest('table');
+  var curModul = 'hepsi';
+  var fpVals = { modul:'', rol:'', kapsam:'', tarih:null };
+
+  tblRapor._gvApply = function(){
+    var card = tblRapor.closest('.gv-card');
+    var inp = card.querySelector('input[data-table-search]');
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var shown = 0;
+    tblRapor.querySelectorAll('tbody tr').forEach(function(tr){
+      var okChip = curModul === 'hepsi' || tr.getAttribute('data-modul') === curModul;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okModul = !fpVals.modul || tr.getAttribute('data-modul') === fpVals.modul;
+      var okRol = !fpVals.rol || (tr.getAttribute('data-rol') || '').split(' ').indexOf(fpVals.rol) !== -1;
+      var okKapsam = !fpVals.kapsam || tr.getAttribute('data-kapsam') === fpVals.kapsam;
+      var okTarih = true;
+      if(fpVals.tarih && fpVals.tarih.from){
+        var d = new Date(tr.getAttribute('data-tarih') + 'T00:00:00');
+        okTarih = d >= fpVals.tarih.from && d <= fpVals.tarih.to;
+      }
+      var show = okChip && okTerm && okModul && okRol && okKapsam && okTarih;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    var empty = card.querySelector('[data-table-empty]');
+    if(empty) empty.hidden = shown !== 0;
+    var cnt = card.querySelector('[data-table-count]') || document.querySelector('[data-table-count]');
+    if(cnt) cnt.textContent = shown;
+    if(window.gvPagerRefresh) window.gvPagerRefresh(tblRapor, true);
+    syncRaporCount(shown);
+  };
+
+  document.getElementById('moduleChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-modul]'); if(!ch) return;
+    document.querySelectorAll('#moduleChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    curModul = ch.getAttribute('data-modul');
+    gvApplyFilters(tblRapor, true);
+  });
+
+  /* modül chip sayaçları — şef budamasından SONRA gerçek satır sayısına göre */
+  (function syncChipCounts(){
+    var counts = {hepsi:0};
+    tblRapor.querySelectorAll('tbody tr').forEach(function(tr){
+      counts.hepsi++;
+      var m = tr.getAttribute('data-modul');
+      counts[m] = (counts[m] || 0) + 1;
+    });
+    document.querySelectorAll('#moduleChips .chip[data-modul]').forEach(function(ch){
+      var c = ch.querySelector('.ch-cnt');
+      if(c) c.textContent = counts[ch.getAttribute('data-modul')] || 0;
+    });
+  })();
+
+  /* ---- Gelişmiş Filtre paneli — bu sayfanın 3 select'i data-fp-key KULLANMAZ
+     (bileşik motor elle okur, spec-filtre-tarih.md §3 "sayfa-lokal motor" deseni);
+     yalnız tarih aralığı gvFilterPanel'in daterange widget'ı ile OTOMATİK bağlanır. ---- */
+  var fpModulSel = document.getElementById('fpModul');
+  var fpRolSel = document.getElementById('fpRol');
+  var fpKapsamSel = document.getElementById('fpKapsam');
+  var fpHandle = null;
+  if(window.gvFilterPanel){
+    fpHandle = window.gvFilterPanel.init('#fpRapor', {
+      activeRow: '#achipsRapor',
+      onApply: function(state){
+        fpVals.tarih = (state.tarih && state.tarih.raw) ? state.tarih.raw : null;
+        fpVals.modul = fpModulSel.value;
+        fpVals.rol = fpRolSel.value;
+        fpVals.kapsam = fpKapsamSel.value;
+        renderExtraChips();
+        gvApplyFilters(tblRapor, true);
+      },
+      onClear: function(){
+        fpVals = { modul:'', rol:'', kapsam:'', tarih:null };
+        fpModulSel.value = ''; fpRolSel.value = ''; fpKapsamSel.value = '';
+        renderExtraChips();
+        gvApplyFilters(tblRapor, true);
+      }
+    });
+  }
+  /* modül/rol/kapsam select'leri gvFilterPanel'in [data-fp-key] taraması DIŞINDA
+     tutuldu (motor elle okuyor) — ama B §3.4 "uygulanan filtreler chip olur" kuralı
+     için üç ekstra achip elle ENJEKTE edilir/kaldırılır (tarih chip'i zaten otomatik). */
+  var achipsList = document.querySelector('#achipsRapor .gv-achips');
+  var achipsRow = document.getElementById('achipsRapor');
+  function renderExtraChips(){
+    if(!achipsList) return;
+    achipsList.querySelectorAll('.gv-achip[data-extra]').forEach(function(el){ el.remove(); });
+    var defs = [
+      {key:'modul', val:fpVals.modul, lbl:'Modül: ' + (MODUL_LBL[fpVals.modul] || '')},
+      {key:'rol', val:fpVals.rol, lbl:'Rol: ' + (fpRolSel.options[fpRolSel.selectedIndex] ? fpRolSel.options[fpRolSel.selectedIndex].textContent : '')},
+      {key:'kapsam', val:fpVals.kapsam, lbl:'Kapsam: ' + (fpKapsamSel.options[fpKapsamSel.selectedIndex] ? fpKapsamSel.options[fpKapsamSel.selectedIndex].textContent : '')}
+    ];
+    defs.forEach(function(d){
+      if(!d.val) return;
+      var chip = document.createElement('span'); chip.className = 'gv-achip'; chip.setAttribute('data-extra', d.key);
+      var txt = document.createElement('span'); txt.textContent = d.lbl;
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'ac-x'; x.setAttribute('aria-label', 'Filtreyi kaldır');
+      x.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      x.addEventListener('click', function(){
+        fpVals[d.key] = '';
+        if(d.key === 'modul') fpModulSel.value = '';
+        if(d.key === 'rol') fpRolSel.value = '';
+        if(d.key === 'kapsam') fpKapsamSel.value = '';
+        renderExtraChips();
+        gvApplyFilters(tblRapor, true);
+      });
+      chip.appendChild(txt); chip.appendChild(x); achipsList.appendChild(chip);
+    });
+    var anyExtra = defs.some(function(d){ return !!d.val; });
+    var anyDate = achipsList.querySelector('.gv-achip:not([data-extra])');
+    if(achipsRow) achipsRow.hidden = !anyExtra && !anyDate;
+  }
+
+  /* ============ B §4 — Kolonlar (gvCols) ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtn', table: '#tblRapor', screen: 'raporlar',
+      cols: [
+        {key:'modul', lbl:'Modül', def:true},
+        {key:'kapsam', lbl:'Kapsam', def:true},
+        {key:'rol', lbl:'Erişim Rolü', def:true},
+        {key:'calisma', lbl:'Son Çalıştırma', def:true}
+      ]
+    });
+  }
+
+  /* ============ B §2.1 madde 10 — Seçili kayıt işlemleri (gvBulk) ============
+     "Şimdi Çalıştır" GERÇEK etkiye sahiptir: seçili satırların "Son Çalıştırma"
+     hücresini anlık saate günceller (mock ama görünür/kanıtlanabilir etki). ============ */
+  function refreshRow(tr){
+    var el = tr.querySelector('[data-calisma]');
+    if(!el) return;
+    var now = new Date();
+    var lbl = now.getDate() + ' ' + ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][now.getMonth()] + ' ' + now.getFullYear()
+      + ', ' + ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2) + ' (az önce)';
+    el.innerHTML = '<i class="fa-regular fa-clock"></i>' + lbl;
+    el.classList.add('is-fresh');
+  }
+  if(window.gvBulk){
+    gvBulk.init('#tblRapor', {
+      aksiyonlar: [
+        {etiket:'Şimdi Çalıştır', ikon:'fa-arrows-rotate', onClick:function(rows){
+          rows.forEach(refreshRow);
+          gvResult('cikti-hazir', { baslik:'Rapor(lar) yenilendi', mesaj: rows.length + ' rapor şimdi yeniden çalıştırıldı.' });
+        }},
+        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
+          gvToast(rows.length + ' rapor için çıktı hazırlandı.', {type:'info'});
+        }}
+      ]
+    });
+  }
+  document.getElementById('btnYenileTumu').addEventListener('click', function(){
+    var vis = Array.prototype.filter.call(tblRapor.querySelectorAll('tbody tr'), function(tr){ return !tr.hidden; });
+    vis.forEach(refreshRow);
+    gvResult('cikti-hazir', { baslik:'Tüm raporlar yenilendi', mesaj: vis.length + ' rapor şimdi yeniden çalıştırıldı.' });
+  });
+
+  /* ============ §15 — kayıt sayısı özeti (gvCount) ============ */
+  function syncRaporCount(shown){
+    if(!window.gvCount) return;
+    var opts = { toplam: raporTotal };
+    if(shown !== raporTotal) opts.filtreSonucu = shown;
+    gvCount.render('#raporFoot', opts);
+  }
+
+  /* boş durum "Filtreleri Temizle" CTA — B §9.1 yönlendirme kuralı: rapor kataloğu
+     kullanıcı tarafından OLUŞTURULAMAZ (sistemsel tanım), bu yüzden CTA yeni-kayıt
+     yerine filtre temizlemeye yönlendirir. */
+  document.querySelectorAll('.ge-clear-all').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var srch = document.querySelector('input[data-table-search]'); if(srch) srch.value = '';
+      curModul = 'hepsi';
+      document.querySelectorAll('#moduleChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+      document.querySelector('#moduleChips .chip[data-modul="hepsi"]').classList.add('is-on');
+      if(fpHandle) fpHandle.clear(); else gvApplyFilters(tblRapor, true);
+    });
+  });
+
+  gvApplyFilters(tblRapor, true);
 })();
 </script>
 </body>

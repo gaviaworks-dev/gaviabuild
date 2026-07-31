@@ -17,7 +17,11 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Banka Hareketleri (§3.5-3.8) ============ */
-#tblHareket{min-width:1520px}
+/* [T-L2] min-width YALNIZ masaüstünde — ID seçici .gtable-cards{min-width:0}'ı
+   specificity'de ezip 390px'te kart yerine sıkışmış tablo göstermesin (bilinen
+   tuzak #1, bkz kararlar.md madde 189 / crm-personel.html emsali). Bu koruma
+   sayfada EKSİKTİ — T-L2 dalgasında eklendi. */
+@media(min-width:641px){ #tblHareket{min-width:1520px} }
 #tblHareket .num{white-space:nowrap;font-variant-numeric:tabular-nums}
 .bh-desc{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .bh-in{color:var(--ok);font-weight:700}
@@ -26,9 +30,24 @@
 .bh-hesap .bnk-mark{width:26px;height:26px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:10.5px;font-weight:800}
 .bh-hesap span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--ink-2);font-size:12.5px}
 
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+/* [T-L2 fix] ui.css'in TABAN `.filter-bar{flex-wrap:wrap}` kuralı (0-1-0 specificity)
+   burada .stack varyantımızın flex-direction:column'una rağmen KALICI kalıyordu —
+   .filter-bar.stack kendisi de bir flex-wrap konteyneri oluyor, bu da column-yönlü
+   wrap ile birlikte çocuk .filter-row'ların cross-axis stretch'ini bozup kendi
+   max-content genişliğine (577px) büyümesine ve 390px'te gerçek ICB/doc-level
+   taşmaya yol açıyordu (Tuzak #2, kanıt: tasks/devir-TL2.md). flex-wrap:nowrap
+   ile taban kuralı burada AÇIKÇA ezilir — .filter-row zaten KENDİ flex-wrap:wrap'ini
+   taşıyor (satır 36), iç sarma bundan ETKİLENMEZ. */
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px;flex-wrap:nowrap}
+.filter-bar.stack .filter-row{min-width:0}
 .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
 #btnSeciliCikti[disabled]{pointer-events:none;opacity:.45}
+@media(max-width:640px){
+  .filter-row .frow-lbl{min-width:0;width:100%}
+  .filter-row .gv-chipbar-wrap{width:100%}
+}
 </style>
 </head>
 <body data-sec="finans" data-screen="banka-hareket">
@@ -104,14 +123,18 @@
           <a class="btn btn-ghost btn-sm" id="btnSeciliCikti" href="crm-finans-banka-cikti.html" disabled><i class="fa-solid fa-print"></i> Seçili Kayıtların Çıktısı <span id="seciliSayi"></span></a>
         </div>
         <div class="filter-row">
-          <span class="frow-lbl" style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Yön</span>
-          <div class="chips" data-target="#tblHareket">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">16</span></button>
-            <button class="chip" data-filter="giris">Giriş <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="cikis">Çıkış <span class="ch-cnt">10</span></button>
-            <button class="chip" data-filter="virman">Virman <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="masraf">Masraf <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="iade">İade <span class="ch-cnt">1</span></button>
+          <span class="frow-lbl">Yön</span>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblHareket">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">16</span></button>
+              <button class="chip" data-filter="giris">Giriş <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="cikis">Çıkış <span class="ch-cnt">10</span></button>
+              <button class="chip" data-filter="virman">Virman <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="masraf">Masraf <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="iade">İade <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
       </div>

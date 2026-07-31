@@ -106,6 +106,7 @@
         <div class="ph-sub"><span data-table-count>6</span> hakediş · işverene/idareye kesilen hakedişler</div>
       </div>
       <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="#" id="btnKurumExport" data-gv-export='{"baslik":"Kurum hakedişleri","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Çıktı Al</a>
         <a class="btn btn-acc btn-sm" href="crm-finans-hakedis-form.html?tur=kurum" data-view="olusturabilir" hidden><i class="fa-solid fa-plus"></i> Yeni Hakediş</a>
       </div>
     </div>
@@ -181,7 +182,7 @@
         </select>
       </div>
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblKurum">
+        <table class="gtable gtable-cards" id="tblKurum" data-paginate="25">
           <thead>
             <tr>
               <th>Hakediş</th>
@@ -411,6 +412,55 @@
           {key:'tutar', lbl:'Tutar', def:true},
           {key:'tarih', lbl:'Tarih', def:true},
           {key:'durum', lbl:'Durum', def:true}
+        ]
+      });
+    }
+
+    /* ============ B §2.1 madde 9 — Çıktı Al (gvExport). ciktiHref VERİLMEZ:
+       crm-finans-hakedis-cikti.html tek-kayıt (?hkd=/?th=) yazdırma önizlemesidir,
+       liste-seviyesi kapsam/format navigasyonunu ANLAMAZ (bkz tasks/celiskiler.md) —
+       bu yüzden pdf/yazdir dalı da gvResult "çıktı hazırlandı" akışına düşer; excel
+       dalı GV_EXPORTERS ile GERÇEK indirme yapar (B §6.4). ============ */
+    window.GV_EXPORTERS = window.GV_EXPORTERS || {};
+    GV_EXPORTERS['Kurum hakedişleri'] = function(){
+      var aoa = [['Hakediş','Kurum','Şantiye','Dönem','Tutar','Tarih','Durum']];
+      tblKurum.querySelectorAll('tbody tr').forEach(function(tr){
+        if(tr.hidden || tr.classList.contains('gv-fp-hide') || tr.classList.contains('gv-pg-hide')) return;
+        var no = tr.querySelector('.hk-info b'); if(!no) return;
+        aoa.push([
+          no.textContent.trim(),
+          (tr.querySelector('[data-col="kurum"]') || {}).textContent || '',
+          (tr.querySelector('[data-col="santiye"]') || {}).textContent || '',
+          (tr.querySelector('[data-col="donem"]') || {}).textContent || '',
+          (tr.querySelector('[data-col="tutar"]') || {}).textContent || '',
+          (tr.querySelector('[data-col="tarih"]') || {}).textContent || '',
+          (tr.querySelector('[data-col="durum"]') || {}).textContent.trim() || ''
+        ]);
+      });
+      return {file:'kurum-hakedisleri', sheet:'Kurum Hakedişleri', cols:[14,26,20,14,14,12,16], aoa:aoa};
+    };
+    if(window.gvExport) gvExport.bind();
+
+    /* ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri (gvBulk). "Arşivle"
+       B §9.3'ün "kayıt arşivleme" kritik aksiyonu — tehlikeli:true. ============ */
+    if(window.gvBulk){
+      gvBulk.init('#tblKurum', {
+        aksiyonlar: [
+          {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
+            gvResult('cikti-hazir', {
+              mesaj: rows.length + ' hakediş için çıktı hazırlandı. (statik prototip — gerçek dosya üretilmez)',
+              aksiyonlar: [{etiket:'Kapat', birincil:true}]
+            });
+          }},
+          {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
+            var n = 0;
+            rows.forEach(function(tr){
+              if(tr.getAttribute('data-arsiv') === '1') return;
+              tr.setAttribute('data-arsiv', '1'); n++;
+            });
+            gvApplyFilters(tblKurum, true);
+            gvToast(n + ' hakediş arşivlendi.', {type:'danger'});
+          }}
         ]
       });
     }

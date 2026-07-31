@@ -77,6 +77,19 @@
 .gv-empty-cards .ge-ico{width:48px;height:48px;border-radius:50%;background:var(--bg);display:grid;place-items:center;margin:0 auto 12px;color:var(--muted);font-size:17px}
 .gv-empty-cards h4{font-size:13.5px;color:var(--ink);margin-bottom:5px}
 .gv-empty-cards p{font-size:12px;color:var(--muted);margin:0}
+
+/* filter-bar: arama + chip slider + gelişmiş filtre aynı satırda (kart grid tek
+   satırlık filtre barı yeterli — kurum/sözleşmeler'in iki satırlı stack deseni
+   burada gerekmiyor, tek chip grubu var). */
+.filter-bar .gv-chipbar-wrap{flex:1 1 220px;min-width:0}
+
+/* ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri, kart grid'i için sayfa-
+   lokal uyarlama. gvBulk yalnız <table> ile çalışır (bkz ui.js); bu sayfa <table>
+   KULLANMADIĞINDAN (yukarıdaki §9/§17 notu) aynı GÖRSEL DİLİ (.row-chk/.chk-box,
+   .gv-bulk-bar — ui.css'te zaten global) sayfa-lokal JS ile karta uygular. ============ */
+.tas-card{position:relative}
+.tas-chk{position:absolute;top:16px;right:16px;z-index:1}
+.tas-card.is-tas-checked{box-shadow:0 0 0 2px var(--acc-ink)}
 </style>
 </head>
 <body data-sec="finans" data-screen="taseronlar">
@@ -140,10 +153,15 @@
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="tasSearch" placeholder="Taşeron adı veya kapsam ara">
         </div>
-        <div class="chips" id="tasChips">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" id="tasChips">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">3</span></button>
+            <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="tasColsBtn" data-demo="Taşeron kartları kolon bazlı değil — kimlik/performans kartıdır, ayrıntı için Detaya git."><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
         <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTaseronlar">
           <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
         </button>
@@ -161,8 +179,20 @@
       </div>
     </div>
 
-    <div class="tas-grid" id="tasGrid">
+    <!-- ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri (sayfa-lokal, kart
+         grid uyarlaması — bkz tasks/celiskiler.md #2 ve yukarıdaki CSS notu). ============ -->
+    <div class="gv-bulk-bar" id="tasBulkBar" hidden>
+      <span class="gvb-count" id="tasBbCount">0 kayıt seçildi</span>
+      <div class="gvb-acts">
+        <button type="button" class="btn btn-ghost btn-sm" id="tasBbCikti" data-no-confirm><i class="fa-solid fa-print"></i> Çıktı Al</button>
+        <button type="button" class="btn btn-danger btn-sm" id="tasBbPasif" data-no-confirm><i class="fa-solid fa-ban"></i> Pasife Al</button>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="tasBbClear"><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
+    </div>
+
+    <div class="tas-grid" id="tasGrid" data-paginate="25">
       <div class="gv-card tas-card is-warn" data-santiye="vadi" data-tas="TAS-01" data-lc="aktif">
+        <label class="row-chk tas-chk" aria-label="TAS-01 seç"><input type="checkbox" class="tas-chk-input"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
         <div class="tas-head">
           <div class="tas-mark">DB</div>
           <div class="tas-id">
@@ -199,6 +229,7 @@
       </div>
 
       <div class="gv-card tas-card" data-santiye="vadi" data-tas="TAS-02" data-lc="aktif">
+        <label class="row-chk tas-chk" aria-label="TAS-02 seç"><input type="checkbox" class="tas-chk-input"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
         <div class="tas-head">
           <div class="tas-mark">EM</div>
           <div class="tas-id">
@@ -231,6 +262,7 @@
       </div>
 
       <div class="gv-card tas-card" data-santiye="liman" data-tas="TAS-03" data-lc="aktif">
+        <label class="row-chk tas-chk" aria-label="TAS-03 seç"><input type="checkbox" class="tas-chk-input"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>
         <div class="tas-head">
           <div class="tas-mark">YK</div>
           <div class="tas-id">
@@ -373,6 +405,7 @@
       if(show) shown++;
     });
     document.getElementById('tasEmpty').hidden = shown !== 0;
+    if(window.gvPagerRefresh) gvPagerRefresh('#tasGrid', true);
   }
 
   document.getElementById('tasSearch').addEventListener('input', render);
@@ -443,6 +476,59 @@
         }
       });
     }
+  });
+
+  /* ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri (sayfa-lokal bulk bar).
+     gvBulk yalnız <table> ile çalışır; bu sayfa kart grid'i olduğundan AYNI görsel
+     dili (.row-chk/.chk-box/.gv-bulk-bar — ui.css'te zaten global) elle bağlar. ============ */
+  var tasBulkBar = document.getElementById('tasBulkBar');
+  var tasBbCount = document.getElementById('tasBbCount');
+  function tasSelectedCards(){
+    return cards().filter(function(c){ var chk = c.querySelector('.tas-chk-input'); return chk && chk.checked; });
+  }
+  function tasSyncBulkBar(){
+    var sel = tasSelectedCards();
+    tasBulkBar.hidden = sel.length === 0;
+    tasBbCount.textContent = sel.length + ' kayıt seçildi';
+    cards().forEach(function(c){
+      var chk = c.querySelector('.tas-chk-input');
+      c.classList.toggle('is-tas-checked', !!(chk && chk.checked));
+    });
+  }
+  document.getElementById('tasGrid').addEventListener('change', function(e){
+    if(e.target.classList.contains('tas-chk-input')) tasSyncBulkBar();
+  });
+  document.getElementById('tasBbClear').addEventListener('click', function(){
+    cards().forEach(function(c){ var chk = c.querySelector('.tas-chk-input'); if(chk) chk.checked = false; });
+    tasSyncBulkBar();
+  });
+  document.getElementById('tasBbCikti').addEventListener('click', function(){
+    var sel = tasSelectedCards();
+    if(!sel.length) return;
+    gvResult('cikti-hazir', {
+      mesaj: sel.length + ' taşeron kartı için çıktı hazırlandı. (statik prototip — gerçek dosya üretilmez)',
+      aksiyonlar: [{etiket:'Kapat', birincil:true}]
+    });
+  });
+  document.getElementById('tasBbPasif').addEventListener('click', function(){
+    var sel = tasSelectedCards().filter(function(c){ return (c.getAttribute('data-lc') || 'aktif') === 'aktif'; });
+    if(!sel.length) return;
+    gvConfirm({
+      danger:true, icon:'fa-ban', title: sel.length + ' taşeron kartı pasife alınsın mı?',
+      message: 'Seçili taşeron kartları pasife alınır; hakediş/sözleşme/cari geçmişi ve adam-gün rakamları DEĞİŞMEZ, TERSİNİR bir işlemdir.',
+      ok:'Pasife Al', cancel:'Vazgeç',
+      onConfirm:function(){
+        sel.forEach(function(c){
+          c.setAttribute('data-lc', 'pasif');
+          var h3 = c.querySelector('.tas-id h3');
+          var old = h3.querySelector('.tas-lc-badge'); if(old) old.remove();
+          var s = document.createElement('span'); s.className = 'tas-lc-badge pasif'; s.textContent = 'Pasif'; h3.appendChild(s);
+          var chk = c.querySelector('.tas-chk-input'); if(chk) chk.checked = false;
+        });
+        tasSyncBulkBar(); render();
+        gvToast(sel.length + ' taşeron kartı pasife alındı.', {type:'danger'});
+      }
+    });
   });
 
   render();

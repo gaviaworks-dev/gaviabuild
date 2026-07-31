@@ -70,8 +70,9 @@
         <h1>Raporlar</h1>
         <div class="ph-sub" id="phSub"><span data-table-count>4</span> sağlık raporu kaydı</div>
       </div>
-      <div class="ph-actions" data-hr-only>
-        <a class="btn btn-acc btn-sm" href="crm-personel-rapor-form.html"><i class="fa-solid fa-plus"></i> Rapor Kaydı Ekle</a>
+      <div class="ph-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btnRaporCikti"><i class="fa-solid fa-print"></i> Çıktı Al</button>
+        <a class="btn btn-acc btn-sm" href="crm-personel-rapor-form.html" data-hr-only><i class="fa-solid fa-plus"></i> Rapor Kaydı Ekle</a>
       </div>
     </div>
 
@@ -139,7 +140,7 @@
       </div>
 
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblRapor">
+        <table class="gtable gtable-cards" id="tblRapor" data-paginate="10">
           <thead>
             <tr>
               <th>Personel</th>
@@ -343,6 +344,46 @@
         {key:'gun', lbl:'Gün', def:true},
         {key:'kurum', lbl:'Kurum', def:true},
         {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
+  /* ============ B §2.1 madde 9 — Çıktı Al (gvExport, imperatif). ciktiHref
+     VERİLMEDİ — özel bir çıktı önizleme sayfası yok; pdf/yazdir/excel dalları
+     gvResult('cikti-hazir', …) akışına düşer (spec-v2-core.md §1, normal). ============ */
+  if(window.gvExport){
+    gvExport.init('#btnRaporCikti', { baslik: 'Sağlık Raporları', kapsam: ['tumu', 'filtreli'] });
+  }
+
+  /* ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri (gvBulk, spec-v2-core.md §6).
+     "Onayla" satırı SGK bildirim akışında bir sonraki adıma taşır (bekliyor →
+     bildirildi) — badge span'i ve data-f'i DOĞRUDAN günceller (rozet metni/tonu
+     satır statik HTML'de gömülü, tek kaynak). "Arşivle" mevcut tekil satır
+     arşivleme aksiyonuyla (aşağıda) AYNI mekanizmayı (data-arsiv="1") kullanır. ============ */
+  if(window.gvBulk){
+    gvBulk.init('#tblRapor', {
+      aksiyonlar: [
+        {etiket:'Onayla', ikon:'fa-check', onClick:function(rows){
+          var n = 0;
+          rows.forEach(function(tr){
+            if(tr.getAttribute('data-f') === 'tamam' || tr.getAttribute('data-f') === 'bildirildi') return;
+            tr.setAttribute('data-f', 'bildirildi'); tr.setAttribute('data-durum', 'bildirildi');
+            var badge = tr.querySelector('[data-col="durum"] .gstat');
+            if(badge){ badge.className = 'gstat info'; badge.textContent = "SGK'ya bildirildi"; }
+            n++;
+          });
+          if(n) gvApplyFilters(document.getElementById('tblRapor'), true);
+          gvToast(n + ' rapor kaydı SGK\'ya bildirildi olarak işaretlendi.', {type:'ok'});
+        }},
+        {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
+          var n = 0;
+          rows.forEach(function(tr){
+            if(tr.getAttribute('data-arsiv') === '1') return;
+            tr.setAttribute('data-arsiv', '1'); n++;
+          });
+          if(window.gvPagerRefresh) gvPagerRefresh('#tblRapor', true);
+          gvToast(n + ' rapor kaydı arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+        }}
       ]
     });
   }

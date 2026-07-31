@@ -296,7 +296,7 @@
       </div>
 
       <div class="gc-body flush gv-cards-pad" id="arListeWrap">
-        <table class="gtable gtable-cards" id="tblArac">
+        <table class="gtable gtable-cards" id="tblArac" data-paginate="4">
           <thead>
             <tr>
               <th class="col-chk"><label class="row-chk" id="arChkAllWrap"><input type="checkbox" id="arChkAll" aria-label="Görünen tüm araçları seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label></th>
@@ -719,6 +719,10 @@
     document.getElementById('arListeWrap').hidden = v === 'card';
     document.getElementById('arGrid').hidden = v !== 'card';
     applyFilter();
+    /* pager nav'ı arListeWrap'in kardeşi olarak eklenir (gvPager) — kart
+       görünümünde tablo gizliyken pager'ın yalın kalması yanlış olur, elle gizlenir */
+    var pgNav = document.querySelector('#arListeWrap + .gv-pager');
+    if(pgNav && v === 'card') pgNav.hidden = true;
   }
   document.getElementById('viewBtnListe').addEventListener('click', function(){ setView('list'); });
   document.getElementById('viewBtnKart').addEventListener('click', function(){ setView('card'); });
@@ -815,6 +819,11 @@
     document.getElementById('arEmptyCards').hidden = shown !== 0;
     document.getElementById('arFoot').textContent = shown + ' araç gösteriliyor · toplam ' + ARAC.length + ' kayıt';
     syncChkUI();
+    /* §14 — Sayfalama: filtre/arama/chip değişince sayfa 1'e döner, görünür
+       satırlara göre yeniden dilimlenir (gvPager, tasks/spec-v2-core.md). Kart
+       görünümü (arGrid) sayfalanmaz — pager nav'ı yalnız Liste görünümünde
+       anlamlı, setView() kart moduna geçince gizler. */
+    if(window.gvPagerRefresh) window.gvPagerRefresh('#tblArac', true);
   }
   document.getElementById('arSearch').addEventListener('input', applyFilter);
   document.getElementById('arSantiyeChips').addEventListener('click', function(e){
@@ -961,6 +970,13 @@
 
   setView(getView());
   applyFilter();
+  /* gvPager kendini DOMContentLoaded'da kurar (bu satırdan SONRA) — kayıtlı
+     görünüm 'card' ise pager nav'ı o an henüz yokken setView() içindeki gizleme
+     no-op kalmıştı; burada tekrar denenir. */
+  document.addEventListener('DOMContentLoaded', function(){
+    var pgNav = document.querySelector('#arListeWrap + .gv-pager');
+    if(pgNav && getView() === 'card') pgNav.hidden = true;
+  });
 })();
 </script>
 </body>

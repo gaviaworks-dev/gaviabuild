@@ -173,7 +173,7 @@
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblCari">
+        <table class="gtable gtable-cards" id="tblCari" data-paginate="8">
           <thead>
             <tr>
               <th>Firma</th>
@@ -402,6 +402,8 @@
           <p>Aramayı temizleyin veya farklı bir kategori filtresi seçin.</p>
         </div>
       </div>
+      <!-- §15 — kayıt sayısı özeti (gvCount, A §3'ün toplam/aktif/arşiv/filtre-sonucu eksenleri) -->
+      <div class="gc-foot"><span id="cariFoot">—</span></div>
       <div class="cross-link">
         <i class="fa-solid fa-scale-balanced lead"></i>
         <span>Bir carinin bakiyesini ve hareket dökümünü görmek için Cari Durum sorgusunu kullanın.</span>
@@ -486,6 +488,49 @@
     });
   }
 
+  /* ============ B §2.1 madde 10 — Seçili kayıt işlemleri (gvBulk, spec-v2-core.md §6) ============ */
+  if(window.gvBulk){
+    gvBulk.init('#tblCari', {
+      aksiyonlar: [
+        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
+          gvToast(rows.length + ' cari kaydının çıktısı hazırlandı.', {type:'info'});
+        }},
+        {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
+          rows.forEach(function(row){ row.setAttribute('data-arsiv', '1'); row.setAttribute('data-durum', 'arsivlendi'); });
+          if(window.gvPagerRefresh) window.gvPagerRefresh('#tblCari', true);
+          gvToast(rows.length + ' cari arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+        }}
+      ]
+    });
+  }
+
+  /* ============ §15 — kayıt sayısı özeti (gvCount) ============
+     Toplam SABİT (12, tbody'deki tüm satır); aktif/arşiv bu toplamın alt kırılımı;
+     filtreSonucu YALNIZ görünen kayıt sayısı toplamdan/aktif tabandan FARKLIYSA
+     eklenir (A §3 kuralı: M ile N asla eşit sayılmaz). `gvpage` olayı gvPager'ın
+     HER yeniden dilimlemesinde (arama/chip/gelişmiş filtre/sayfa değişimi) ateşlenir
+     — tek bir dinleyici tüm eksenleri kapsar. */
+  var cariTotal = document.querySelectorAll('#tblCari tbody tr').length;
+  function syncCariCount(){
+    var tbl = document.getElementById('tblCari');
+    if(!tbl || !window.gvCount) return;
+    var showArsiv = tbl.classList.contains('gv-show-arsiv');
+    var visible = 0, arsivCount = 0;
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var isArsiv = tr.getAttribute('data-arsiv') === '1';
+      if(isArsiv) arsivCount++;
+      var archOk = !isArsiv || showArsiv;
+      if(archOk && !tr.hidden && !tr.classList.contains('gv-fp-hide')) visible++;
+    });
+    var aktifBase = cariTotal - arsivCount;
+    var opts = { toplam: cariTotal, aktif: aktifBase, arsiv: arsivCount };
+    var baseline = showArsiv ? cariTotal : aktifBase;
+    if(visible !== baseline) opts.filtreSonucu = visible;
+    gvCount.render('#cariFoot', opts);
+  }
+  document.getElementById('tblCari').addEventListener('gvpage', syncCariCount);
+  syncCariCount();
+
   /* ============ §8.4 — gvCols (Kolonlar). Kolon seti mevcut tablo başlıklarından
      türetildi; "Firma" (kimlik hücresi) ve işlem hücresi data-col TAŞIMAZ, sabit
      kalır — sırası/görünürlüğü değişmez (santiye/personel emsalinin AYNI deseni). ============ */
@@ -529,6 +574,7 @@
       onConfirm:function(){
         row.setAttribute('data-arsiv', '1');
         row.setAttribute('data-durum', 'arsivlendi');
+        if(window.gvPagerRefresh) window.gvPagerRefresh('#tblCari', true);
         gvToast(label + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
       }
     });

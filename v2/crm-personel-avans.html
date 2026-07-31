@@ -202,7 +202,7 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       </div>
 
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblAvans">
+        <table class="gtable gtable-cards" id="tblAvans" data-paginate="10">
           <thead>
             <tr>
               <th class="df-no"><label class="row-chk" id="avChkAllWrap" hidden><input type="checkbox" id="avChkAll" aria-label="Görünen tüm talepleri seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>Avans No / Personel</th>
@@ -587,6 +587,14 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       tr.classList.toggle('gv-arsiv-hide', archived && !forceShow);
     });
     syncCounts();
+    /* B §2.1 madde 13 — sayfalama (data-paginate) eklendi. Bu fonksiyon arama/chip/
+       gelişmiş filtre/kebab yaşam-döngüsü değişiminin ORTAK çıkış noktası — quick-
+       chip/arama zaten ui.js'in kendi applyFilters'ından pager refresh alıyor
+       (D18), ama gelişmiş filtre paneli bu tabloya opts.table VERMEDİĞİ için
+       (kendi applyAdvanced() motoru var, yukarı bkz) ve kebab'daki tekil arşivle/
+       pasife al aksiyonu (setLifecycle) hiçbiri pager'ı senkronlamıyordu — burada
+       eklendi (spec-v2-core.md §6 TUZAK notu). */
+    if(window.gvPagerRefresh) window.gvPagerRefresh('#tblAvans', true);
   }
 
   /* ---- §9 gelişmiş filtre paneli — sayfanın KENDİ quick-chip/arama motoru

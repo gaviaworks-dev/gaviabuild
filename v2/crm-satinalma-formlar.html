@@ -164,7 +164,7 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblForm">
+        <table class="gtable gtable-cards" id="tblForm" data-paginate="25">
           <thead>
             <tr>
               <th>Form</th>
@@ -354,21 +354,29 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
       ['Form No','Tarih','Şantiye','Tedarikçi','Kalem','Kaynak Talep','Tutar (₺)','Durum']
     ];
     rows.forEach(function(tr){
-      var td = tr.children;
-      var no = td[0].querySelector('.fr-info b'), not = td[0].querySelector('.fr-info span');
-      var kalem = td[2].querySelector('.fr-desc');
-      var tedarikci = td[2].cloneNode(true);
-      var kd = tedarikci.querySelector('.fr-desc'); if(kd) kd.remove();
-      var tutar = (td[4].textContent || '').replace(/[^\d]/g, '');
+      /* §14/gvBulk notu: satır hücreleri artık SABİT konumda değil (gvBulk seçim
+         kolonu enjekte edebilir, gvCols kullanıcı sırasına göre yeniden dizebilir)
+         — konumsal td[i] YERİNE data-col/işaret sınıflarıyla ROBUST okuma yapılır. */
+      var formCell = tr.querySelector('.fr-info') || tr.querySelector('td');
+      var no = formCell && formCell.querySelector('b'), not = formCell && formCell.querySelector('span');
+      var santiye = tr.querySelector('[data-col="santiye"]');
+      var tedarikciCell = tr.querySelector('[data-col="tedarikci"]');
+      var kalem = tedarikciCell && tedarikciCell.querySelector('.fr-desc');
+      var tedarikci = tedarikciCell ? tedarikciCell.cloneNode(true) : null;
+      if(tedarikci){ var kd = tedarikci.querySelector('.fr-desc'); if(kd) kd.remove(); }
+      var kaynak = tr.querySelector('[data-col="kaynak"]');
+      var tutarCell = tr.querySelector('[data-col="tutar"]');
+      var tutar = ((tutarCell && tutarCell.textContent) || '').replace(/[^\d]/g, '');
+      var durum = tr.querySelector('[data-col="durum"]');
       aoa.push([
         no ? no.textContent.trim() : '',
         not ? not.textContent.split('·')[0].trim() : '',
-        td[1].textContent.trim(),
-        tedarikci.textContent.replace(/·\s*$/, '').trim(),
+        santiye ? santiye.textContent.trim() : '',
+        tedarikci ? tedarikci.textContent.replace(/·\s*$/, '').trim() : '',
         kalem ? kalem.textContent.trim() : '',
-        (td[3].textContent || '').trim(),
+        kaynak ? kaynak.textContent.trim() : '',
         tutar ? parseInt(tutar, 10) : '',
-        (td[5].textContent || '').trim()
+        durum ? durum.textContent.trim() : ''
       ]);
     });
     return { file:'satinalma-formlari-icmal-temmuz-2026', sheet:'SA Formları',
@@ -387,6 +395,24 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
         var tbl = document.getElementById('tblForm');
         if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
       }
+    });
+  }
+
+  /* ============ B §2.1 madde 10 — Seçili kayıt işlemleri (gvBulk, spec-v2-core.md §6) ============ */
+  if(window.gvBulk){
+    gvBulk.init('#tblForm', {
+      aksiyonlar: [
+        {etiket:'Onaya Gönder', ikon:'fa-paper-plane', onClick:function(rows){
+          gvToast(rows.length + ' form onaya gönderildi.', {type:'ok'});
+        }},
+        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
+          gvToast(rows.length + ' formun çıktısı hazırlandı.', {type:'info'});
+        }},
+        {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
+          rows.forEach(function(row){ row.setAttribute('data-arsiv', '1'); });
+          gvToast(rows.length + ' form arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+        }}
+      ]
     });
   }
 

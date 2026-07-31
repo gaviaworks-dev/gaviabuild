@@ -437,7 +437,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblOnay">
+        <table class="gtable gtable-cards" id="tblOnay" data-paginate="25" data-paginate-key="onay">
           <thead><tr><th class="col-per">Şantiye</th><th>Durum</th><th></th></tr></thead>
           <tbody>
             <tr data-f="taslak" data-santiye="vadi"><td><div class="pp-cell"><div class="pp-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-building"></i></div><div class="pp-info"><b>Vadi Konakları</b><span>7 personel</span></div></div></td><td><span class="gstat off">Taslak</span></td><td><div class="row-acts"><button type="button" class="ia-btn onay-goster" data-santiye="vadi" data-no-confirm aria-label="Şantiyeyi görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button></div></td></tr>
@@ -497,7 +497,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblPuantaj">
+        <table class="gtable gtable-cards" id="tblPuantaj" data-paginate="25" data-paginate-key="puantaj">
           <thead>
             <tr>
               <th class="col-chk"><label class="row-chk" id="ptChkAllWrap"><input type="checkbox" id="ptChkAll" aria-label="Görünen tüm personeli seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label></th>
@@ -552,7 +552,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
           </div>
         </div>
         <div class="gc-body flush gv-cards-pad">
-          <table class="gtable gtable-cards" id="tblTaseron">
+          <table class="gtable gtable-cards" id="tblTaseron" data-paginate="25" data-paginate-key="taseron">
             <thead>
               <tr>
                 <th class="col-per">Personel</th>
@@ -578,7 +578,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
           <div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Firma Bazlı Haftalık Özet</div>
         </div>
         <div class="gc-body flush gv-cards-pad">
-          <table class="gtable gtable-cards" id="tblTaseronOzet">
+          <table class="gtable gtable-cards" id="tblTaseronOzet" data-paginate="25" data-paginate-key="taseronozet">
             <thead>
               <tr>
                 <th class="col-per">Firma</th>
@@ -968,10 +968,11 @@ th.is-today .dh-d{color:var(--acc-ink)}
       var show = !(fpTip === 'taseron' || fpTip === 'tedarikci');
       if(show && fpDurum && tr.getAttribute('data-durum-bugun') !== fpDurum) show = false;
       if(show && fpDep && tr.getAttribute('data-departman') !== fpDep) show = false;
-      tr.style.display = show ? '' : 'none';
+      tr.hidden = !show;
       if(show) biShown++;
     });
     if(ptBodyEl) ptToggleFpEmpty(ptBodyEl, 12, biShown, biRows.length);
+    if(window.gvPagerRefresh) gvPagerRefresh('#tblPuantaj', true);
 
     var tgBodyEl = document.getElementById('tgBody');
     if(WEEK !== -1 && tgBodyEl){
@@ -982,10 +983,11 @@ th.is-today .dh-d{color:var(--acc-ink)}
         if(show && fpSantiye && tr.getAttribute('data-santiye') !== fpSantiye) show = false;
         if(show && fpDurum && tr.getAttribute('data-durum-bugun') !== fpDurum) show = false;
         if(show && fpDep && tr.getAttribute('data-departman') !== fpDep) show = false;
-        tr.style.display = show ? '' : 'none';
+        tr.hidden = !show;
         if(show) tShown++;
       });
       ptToggleFpEmpty(tgBodyEl, 10, tShown, tRows.length);
+      if(window.gvPagerRefresh) gvPagerRefresh('#tblTaseron', true);
     }
   }
 
@@ -1626,6 +1628,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
           + '<td class="num" data-lbl="Haftalık Adam-Gün"><div class="tg-total">'+f.prevToplam+' adam-gün<span>arşiv</span></div></td></tr>';
       });
       tgOzetBody.innerHTML = arsivOzet;
+      if(window.gvPagerRefresh){ gvPagerRefresh('#tblTaseron', true); gvPagerRefresh('#tblTaseronOzet', true); }
       return;
     }
 
@@ -1687,6 +1690,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
       oh += '</tr>';
     });
     tgOzetBody.innerHTML = oh;
+    if(window.gvPagerRefresh) gvPagerRefresh('#tblTaseronOzet', true);
   }
   renderTaseron();
 
