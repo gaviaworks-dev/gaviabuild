@@ -186,17 +186,26 @@ a.mn-bar:hover{box-shadow:var(--sh-sm)}
 .mini-d.is-today,.mini-d.is-today:hover{background:var(--acc-ink);color:#fff;box-shadow:none}
 
 /* ---- katman filtreleri (renkli checkbox) ---- */
-.lyr-list{padding:9px 12px 12px;display:flex;flex-direction:column;gap:1px}
+/* §9.2 (K-180) — katman sayısı arttıkça kart aşağı uzamasın diye SABİT yükseklik +
+   İÇ scroll: liste 6 satırdan uzunsa (~258px) kendi içinde kaydırılır, "Katmanları
+   Yönet" linki HER ZAMAN kartın altında sabit kalır (liste dışında, kaydırılmaz). */
+.lyr-list{padding:9px 12px 12px;display:flex;flex-direction:column;gap:1px;max-height:258px;overflow-y:auto;scrollbar-width:thin}
+.lyr-list::-webkit-scrollbar{width:6px}
+.lyr-list::-webkit-scrollbar-track{background:transparent}
+.lyr-list::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
 .lyr{position:relative;display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;transition:.15s var(--ease)}
 .lyr:hover{background:var(--bg)}
 .lyr input{position:absolute;opacity:0;pointer-events:none}
 .lyr-box{width:16px;height:16px;border-radius:5px;border:2px solid var(--evc,var(--acc-ink));display:flex;align-items:center;justify-content:center;flex:none;color:transparent;font-size:8.5px;transition:.15s var(--ease)}
 .lyr input:checked + .lyr-box{background:var(--evc,var(--acc-ink));color:#fff}
 .lyr input:focus-visible + .lyr-box{outline:2px solid var(--acc);outline-offset:2px}
+/* uzun katman adları kırılmaz, ellipsis (§9.2 madde 5) — metin ayrı span'e alındı
+   (bare text node'a text-overflow uygulanamaz) */
+.lyr-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lyr-div{height:1px;background:var(--line);margin:6px 2px}
 /* ---- Dalga 20 — "Katmanları Yönet" çapraz link (gv_katmanlar CRUD sahibi
    crm-santiye-ajanda-katman.html'e gider; bu sayfa yalnız OKUR, YAZMAZ) ---- */
-.lyr-manage{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:var(--acc-ink);text-decoration:none;transition:.15s var(--ease)}
+.lyr-manage{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:var(--acc-ink);text-decoration:none;transition:.15s var(--ease);flex:none}
 .lyr-manage:hover{background:var(--bg)}
 .lyr-manage i:last-child{margin-left:auto;font-size:10px;transition:.2s var(--ease)}
 .lyr-manage:hover i:last-child{transform:translateX(3px)}
@@ -207,9 +216,10 @@ a.mn-bar:hover{box-shadow:var(--sh-sm)}
   .ajd-main{width:100%;min-width:0}
   .ajd-side{order:-1;width:100%;position:static}
   .ajd-mini{display:none}
-  .lyr-list{flex-direction:row;flex-wrap:wrap;gap:7px;padding:12px 14px}
+  .lyr-list{flex-direction:row;flex-wrap:wrap;gap:7px;padding:12px 14px;max-height:150px}
   .lyr{border:1px solid var(--line);border-radius:var(--r-pill);padding:6px 13px 6px 9px;font-size:12.5px;background:var(--paper)}
   .lyr:hover{border-color:var(--line-2)}
+  .lyr-txt{max-width:180px}
   .lyr-div{display:none}
 }
 @media(max-width:640px){
@@ -329,13 +339,13 @@ a.mn-bar:hover{box-shadow:var(--sh-sm)}
                dinamik olarak ezilir — D18-B2 idiyomu. JS-off ortamda bu 5 filtre çalışır durumda
                kalır (kanonik olay verisiyle 1:1 örtüşüyor). -->
           <div class="lyr-list" id="lyrList">
-            <label class="lyr" style="--evc:var(--acc-ink)"><input type="checkbox" data-lyr="ALL"><span class="lyr-box"><i class="fa-solid fa-check"></i></span>Tümü</label>
+            <label class="lyr" style="--evc:var(--acc-ink)"><input type="checkbox" data-lyr="ALL"><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">Tümü</span></label>
             <div class="lyr-div"></div>
-            <label class="lyr" style="--evc:var(--acc-deep)"><input type="checkbox" data-lyr="beton" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span>Beton Dökümü</label>
-            <label class="lyr" style="--evc:color-mix(in srgb, var(--ink-2) 60%, var(--muted) 40%)"><input type="checkbox" data-lyr="denetim"><span class="lyr-box"><i class="fa-solid fa-check"></i></span>Denetim</label>
-            <label class="lyr" style="--evc:var(--acc-ink)"><input type="checkbox" data-lyr="hakedis" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span>Hakediş</label>
-            <label class="lyr" style="--evc:var(--danger)"><input type="checkbox" data-lyr="isg" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span>İSG</label>
-            <label class="lyr" style="--evc:color-mix(in srgb, var(--info) 70%, var(--ink) 30%)"><input type="checkbox" data-lyr="toplanti" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span>Toplantı</label>
+            <label class="lyr" style="--evc:var(--acc-deep)"><input type="checkbox" data-lyr="beton" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">Beton Dökümü</span></label>
+            <label class="lyr" style="--evc:color-mix(in srgb, var(--ink-2) 60%, var(--muted) 40%)"><input type="checkbox" data-lyr="denetim"><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">Denetim</span></label>
+            <label class="lyr" style="--evc:var(--acc-ink)"><input type="checkbox" data-lyr="hakedis" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">Hakediş</span></label>
+            <label class="lyr" style="--evc:var(--danger)"><input type="checkbox" data-lyr="isg" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">İSG</span></label>
+            <label class="lyr" style="--evc:color-mix(in srgb, var(--info) 70%, var(--ink) 30%)"><input type="checkbox" data-lyr="toplanti" checked><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">Toplantı</span></label>
           </div>
           <a class="lyr-manage" href="crm-santiye-ajanda-katman.html"><i class="fa-solid fa-sliders"></i> Katmanları Yönet <i class="fa-solid fa-arrow-right"></i></a>
         </div>
@@ -522,9 +532,9 @@ a.mn-bar:hover{box-shadow:var(--sh-sm)}
   /* katman listesini DİNAMİK bas — statik bake (5 kanonik) JS yüklenince bu ile
      ezilir (D18-B2); renk/ikon/etiket KATMANLAR'dan (dolayısıyla Katman Yönetimi'nden) gelir */
   (function renderLyrList(){
-    var h = '<label class="lyr" style="--evc:var(--acc-ink)"><input type="checkbox" data-lyr="ALL"'+(layersAllOn()?' checked':'')+'><span class="lyr-box"><i class="fa-solid fa-check"></i></span>Tümü</label><div class="lyr-div"></div>';
+    var h = '<label class="lyr" style="--evc:var(--acc-ink)"><input type="checkbox" data-lyr="ALL"'+(layersAllOn()?' checked':'')+'><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">Tümü</span></label><div class="lyr-div"></div>';
     KATMANLAR.forEach(function(k){
-      h += '<label class="lyr" style="--evc:'+k.renk+'"><input type="checkbox" data-lyr="'+k.key+'"'+(layers[k.key]?' checked':'')+'><span class="lyr-box"><i class="fa-solid fa-check"></i></span>'+esc(k.ad)+'</label>';
+      h += '<label class="lyr" style="--evc:'+k.renk+'" title="'+esc(k.ad)+'"><input type="checkbox" data-lyr="'+k.key+'"'+(layers[k.key]?' checked':'')+'><span class="lyr-box"><i class="fa-solid fa-check"></i></span><span class="lyr-txt">'+esc(k.ad)+'</span></label>';
     });
     document.getElementById('lyrList').innerHTML = h;
   })();

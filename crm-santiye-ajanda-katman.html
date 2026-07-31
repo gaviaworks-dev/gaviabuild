@@ -60,7 +60,7 @@
    kullanmak olurdu. */
 .ktm-swatch{width:38px;height:38px;border-radius:var(--r-md);flex:none;display:grid;place-items:center;color:#fff;font-size:14px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
 .ktm-info{flex:1 1 220px;min-width:0}
-.ktm-info b{display:block;font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.005em}
+.ktm-info b{display:block;font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.005em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ktm-meta{font-size:12px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:3px 8px}
 .ktm-meta span{display:inline-flex;align-items:center;gap:5px}
 .ktm-meta i{font-size:10.5px;color:var(--line-2)}
@@ -404,7 +404,7 @@
     badges += k.durum === 'arsiv' ? '<span class="gstat off">Arşivlendi</span>' : '';
     return '<div class="ktm-row'+(k.durum === 'gizli' ? ' is-gizli' : '')+(k.durum === 'arsiv' ? ' is-gizli' : '')+'" data-id="'+k.id+'">'
       + '<span class="ktm-swatch" style="background:'+k.renk+'"><i class="fa-solid '+k.ikon+'"></i></span>'
-      + '<div class="ktm-info"><b>'+esc(k.ad)+'</b><div class="ktm-meta">'+meta.join('')+'</div></div>'
+      + '<div class="ktm-info"><b title="'+esc(k.ad)+'">'+esc(k.ad)+'</b><div class="ktm-meta">'+meta.join('')+'</div></div>'
       + '<div class="ktm-badges">'+badges+'</div>'
       + '<div class="ktm-roles">'+roleChipsHTML(k)+'</div>'
       + '<div class="ktm-actions">'
@@ -613,6 +613,27 @@
     if(rowPop){ rowPop.remove(); rowPop = null; }
     document.querySelectorAll('.ktm-kebab.is-open').forEach(function(b){ b.classList.remove('is-open'); b.setAttribute('aria-expanded','false'); });
   }
+  /* ---- sıralama (9.3 madde 11) — buildless "yukarı/aşağı" deseni, gvCols'un
+     "sürükle-bırak DEĞİL, yukarı/aşağı buton" tercihiyle TUTARLI (spec-liste-
+     mimarisi.md §7). Sıralama ANLIK GÖRÜNÜR listeye (aktif filtre) göre çalışır;
+     dizideki gerçek konum, hedef komşu satırın konumuyla TAKAS edilir — böylece
+     filtre ne olursa olsun kullanıcının GÖRDÜĞÜ sırayla tutarlıdır. Ayrı bir `sira`
+     alanı YOK — görüntü sırası doğrudan `katmanlar` dizisinin kendi sırasıdır,
+     bu üç sayfanın da (santiye-ajanda/panel-ajanda render'ları) okuduğu sıra. */
+  function moveKatman(id, dir){
+    var idx = katmanlar.findIndex(function(x){ return x.id === id; });
+    if(idx === -1) return;
+    var visible = katmanlar.filter(matches);
+    var vIdx = visible.findIndex(function(x){ return x.id === id; });
+    var targetV = vIdx + dir;
+    if(vIdx === -1 || targetV < 0 || targetV >= visible.length) return;
+    var idx2 = katmanlar.findIndex(function(x){ return x.id === visible[targetV].id; });
+    if(idx2 === -1) return;
+    var tmp = katmanlar[idx]; katmanlar[idx] = katmanlar[idx2]; katmanlar[idx2] = tmp;
+    saveKatmanlar(katmanlar);
+    render();
+    gvToast('"' + katmanlar[idx2].ad + '" sırası güncellendi.', {type:'ok'});
+  }
   function openRowPop(btn, id){
     closeRowPop();
     var k = katmanlar.filter(function(x){ return x.id === id; })[0];
@@ -621,8 +642,14 @@
     pop.className = 'gv-pop open';
     var arsivLbl = k.durum === 'arsiv' ? 'Aktife Al' : 'Arşivle';
     var arsivIco = k.durum === 'arsiv' ? 'fa-rotate-left' : 'fa-box-archive';
+    var visible = katmanlar.filter(matches);
+    var vIdx = visible.findIndex(function(x){ return x.id === id; });
+    var canUp = vIdx > 0, canDown = vIdx !== -1 && vIdx < visible.length - 1;
     pop.innerHTML =
-      '<button type="button" data-ract="duzenle"><i class="fa-solid fa-pen"></i> Düzenle</button>'
+      (canUp ? '<button type="button" data-ract="yukari" data-no-confirm><i class="fa-solid fa-arrow-up"></i> Yukarı Taşı</button>' : '')
+    + (canDown ? '<button type="button" data-ract="asagi" data-no-confirm><i class="fa-solid fa-arrow-down"></i> Aşağı Taşı</button>' : '')
+    + (canUp || canDown ? '<div class="gp-div"></div>' : '')
+    + '<button type="button" data-ract="duzenle"><i class="fa-solid fa-pen"></i> Düzenle</button>'
     + (k.durum !== 'arsiv' ? '<button type="button" data-ract="gizle"><i class="fa-solid '+(k.durum === 'gizli' ? 'fa-eye' : 'fa-eye-slash')+'"></i> '+(k.durum === 'gizli' ? 'Takvimde Göster' : 'Takvimden Gizle')+'</button>' : '')
     + '<div class="gp-div"></div>'
     + '<button type="button" class="danger" data-ract="arsiv" data-no-confirm><i class="fa-solid '+arsivIco+'"></i> '+arsivLbl+'</button>';
@@ -644,6 +671,8 @@
       b.addEventListener('click', function(){
         var act = b.getAttribute('data-ract');
         closeRowPop();
+        if(act === 'yukari'){ moveKatman(id, -1); return; }
+        if(act === 'asagi'){ moveKatman(id, 1); return; }
         if(act === 'duzenle'){ openEditModal(id); return; }
         if(act === 'gizle'){
           k.durum = k.durum === 'gizli' ? 'aktif' : 'gizli';
