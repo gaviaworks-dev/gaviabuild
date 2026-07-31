@@ -147,7 +147,13 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-kategori.html"><i class="fa-solid fa-sitemap"></i> Kategori Yönetimi</a>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-marka.html"><i class="fa-solid fa-tags"></i> Marka &amp; Model</a>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-arac.html"><i class="fa-solid fa-car-side"></i> Araç Filosu (10)</a>
-        <a class="btn btn-acc btn-sm" href="crm-operasyon-demirbas-form.html"><i class="fa-solid fa-plus"></i> Yeni Demirbaş</a>
+        <!-- §11.2 (K-192) — 3 yeni buton: Etiketleri Yönet/QR-Barkod Yazdır/Dışa Aktar.
+             Mevcut 5 buton (Dashboard…Araç Filosu) önceki dalgalarda üretilmiş gerçek
+             navigasyon — kaldırılmadı, doküman'ın 4 buton listesi bu sayfaya EKLENDİ. -->
+        <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-etiket.html"><i class="fa-solid fa-tag"></i> Etiketleri Yönet</a>
+        <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-etiket-yazdir.html"><i class="fa-solid fa-print"></i> QR / Barkod Yazdır</a>
+        <a class="btn btn-ghost btn-sm" href="#" data-export="Demirbaş envanteri"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-acc btn-sm" href="crm-operasyon-demirbas-form.html"><i class="fa-solid fa-plus"></i> Yeni Demirbaş Ekle</a>
       </div>
     </div>
 
@@ -535,7 +541,7 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     h += '<td><span class="gstat '+D.cls+'">'+D.lbl+'</span></td>';
     h += '<td><div class="row-acts"><a class="ia-btn" href="crm-operasyon-demirbas-detay.html'+(d.zmt ? '?zmt='+d.zmt : '')+'" data-no-confirm data-tip="Detay" aria-label="Demirbaş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
       + '<a class="ia-btn" href="crm-operasyon-demirbas-form.html?mod=duzenle'+(d.zmt && d.zmt !== '041' ? '&zmt='+d.zmt : '')+'" data-no-confirm data-tip="Düzenle" aria-label="Düzenle"><i class="fa-solid fa-pen"></i></a>'
-      + '<a class="ia-btn" href="crm-operasyon-demirbas-etiket.html?zmt='+(d.zmt || d.no.split('-').pop())+'" data-no-confirm data-tip="Etiket Yazdır" aria-label="Etiket yazdır"><i class="fa-solid fa-qrcode"></i></a>'
+      + '<a class="ia-btn" href="crm-operasyon-demirbas-etiket-yazdir.html?zmt='+(d.zmt || d.no.split('-').pop())+'" data-no-confirm data-tip="Etiket Yazdır" aria-label="Etiket yazdır"><i class="fa-solid fa-qrcode"></i></a>'
       + '<button type="button" class="ia-btn" data-no-confirm data-arsiv-btn data-tip="Arşivle" aria-label="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>';
     h += '</tr>';
     return h;
@@ -802,7 +808,7 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     var nos = Object.keys(selectedNos);
     if(!nos.length){ gvToast('Önce en az bir demirbaş seçin.', {type:'info'}); return; }
     var shortNos = nos.map(function(no){ var d = DEMIRBAS_BY_NO[no]; return d.zmt || d.no.split('-').pop(); });
-    location.href = 'crm-operasyon-demirbas-etiket.html?zmt=' + shortNos.join(',');
+    location.href = 'crm-operasyon-demirbas-etiket-yazdir.html?zmt=' + shortNos.join(',');
   });
   document.getElementById('bbDurumSelect').addEventListener('change', function(e){
     var val = e.target.value; if(!val) return;
@@ -864,8 +870,9 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
      türetilmiş, her kayıt için GERÇEKTEN farklı/benzersiz, indirilebilir bir görsel
      desen üretilir). Bu blok yalnız "toplu barkod oluştur" bulk-aksiyonunun ÖNİZLEME
      modalıdır; tekli "Etiket Yazdır" satır aksiyonu artık her satırın row-acts'inde
-     `crm-operasyon-demirbas-etiket.html?zmt=<no>`'ye gerçek `<a href>` ile linklidir
-     (Dalga 5/Denetim-2 kapatması — bkz. tasks/kararlar.md, dosya artık diskte var).
+     `crm-operasyon-demirbas-etiket-yazdir.html?zmt=<no>`'ye gerçek `<a href>` ile
+     linklidir (Dalga 5/Denetim-2 kapatması, Dalga 4/TA'da yazdır sayfasına repoint
+     edildi — K-192, bkz. tasks/kararlar.md).
      ============ */
   function hashCode(str){ var h = 0; for(var i=0;i<str.length;i++){ h = ((h<<5)-h+str.charCodeAt(i))|0; } return h; }
   function genBars(code, n){

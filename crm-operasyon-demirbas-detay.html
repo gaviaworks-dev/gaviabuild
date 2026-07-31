@@ -212,6 +212,11 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         <div class="gd-block">
           <div class="gd-label">Kalem Bilgileri</div>
           <div class="ctx-row"><span class="ctx-lbl">Demirbaş Kodu (DMR)</span><span class="ctx-val" id="kalemDmrKod">—</span></div>
+          <!-- §16 madde 8 — etiketler demirbaş detayına BAĞLI çalışmalı: yönetim
+               listesindeki kayda ve doğrudan yazdırma akışına gerçek <a href> ile
+               erişim (K-192). dmrKod===null (Araç, 044) için gizlenir — o kategori
+               için etiket üretilmez (kararlar madde 110). -->
+          <div class="ctx-row" id="kalemEtiketRow"><span class="ctx-lbl">Etiket</span><span class="ctx-val" id="kalemEtiket">—</span></div>
           <div class="ctx-row"><span class="ctx-lbl">Ana Kategori / Alt Kategori</span><span class="ctx-val" id="kalemKategori">—</span></div>
           <div class="ctx-row"><span class="ctx-lbl" id="kalemSeriLbl">Seri No</span><span class="ctx-val" id="kalemSeri">—</span></div>
           <div class="ctx-row"><span class="ctx-lbl">Marka / Model</span><span class="ctx-val" id="kalemMarka">—</span></div>
@@ -999,6 +1004,19 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
     document.getElementById('kalemDmrKod').innerHTML = item.dmrKod
       ? item.dmrKod + ' <span style="font-weight:500;color:var(--muted);font-size:11px">(ZMT no’sundan deterministik türetildi)</span>'
       : '<span style="font-weight:500;color:var(--muted)">' + (item.dmrNot || 'Bu kalem için ayrı bir DMR kodu yok') + '</span>';
+    /* §16 madde 8 — etiket satırı: DMR kodu olan kayıtlarda "Etiket Listesinde Görüntüle"
+       (crm-operasyon-demirbas-etiket.html, yönetim kaydı) + "Yazdır" (etiket-yazdir.html,
+       gerçek çıktı) linkleri; Araç (dmrKod null) için satır tamamen gizlenir. */
+    var etkRow = document.getElementById('kalemEtiketRow');
+    if(item.dmrKod){
+      etkRow.hidden = false;
+      document.getElementById('kalemEtiket').innerHTML =
+        '<a href="crm-operasyon-demirbas-etiket.html?zmt=' + key + '" style="color:var(--acc-ink);font-weight:700">Etiket Kaydını Görüntüle</a>'
+        + ' <span style="color:var(--line-2)">·</span> '
+        + '<a href="crm-operasyon-demirbas-etiket-yazdir.html?zmt=' + key + '" style="color:var(--acc-ink);font-weight:700">Yazdır</a>';
+    } else {
+      etkRow.hidden = true;
+    }
     document.getElementById('kalemKategori').textContent = item.kategori.alt ? (item.kategori.ana + ' › ' + item.kategori.alt) : item.kategori.lbl;
     document.getElementById('kalemSeriLbl').textContent = item.seriLbl;
     document.getElementById('kalemSeri').textContent = item.seri;
