@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Etiket Yazdır — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style id="etkPageSizeRule">@page{margin:10mm}</style>
+<style>
+/* ============ SAYFAYA ÖZEL — Demirbaş Etiketi Yazdır (§11.3 aksiyon 2/3, §14-15) ============
+   YENİ dosya (Dalga 4/TA). Eski crm-operasyon-demirbas-etiket.html'in yazdırma/barkod
+   üretim mantığının (kararlar.md madde 109: gerçek taranabilir kod ÜRETİLEMEZ — buildless
+   kısıtı, DMR koduna göre DETERMİNİSTİK üretilmiş barkod/QR-benzeri desen) KAYNAK-TRANSFERİ
+   ile kurulmuştur — desen İCAT EDİLMEDİ, birebir aynı hash/mulberry32 algoritması.
+   MENÜSÜZ ALT AKIŞ: data-sec/data-screen crm-operasyon-demirbas-etiket.html'in EKRANINI
+   miraslar (kararlar.md madde 149 emsali, "ana ekranın screen'ini miraslar, rol matrisi
+   değişmez") — shell.js'e YENİ satır EKLENMEDİ, rail/menü normal render olur ama bu sayfaya
+   işaret eden ayrı bir menü kalemi YOK; yalnız crm-operasyon-demirbas.html (satır/toplu
+   "Etiket Yazdır" aksiyonları) ve crm-operasyon-demirbas-etiket.html (liste satırı "QR
+   Yazdır"/"Barkod Yazdır" aksiyonları) buraya gerçek <a href> ile bağlanır. */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.etk-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);margin-bottom:16px}
+.etk-toolbar select{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;outline:none;cursor:pointer}
+.etk-toolbar select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+.etk-toolbar .etk-spacer{flex:1}
+.etk-count{font-size:12.5px;font-weight:700;color:var(--muted)}
+
+/* ---- barkod / QR görsel bileşenleri (deterministik, gerçek üretim) ---- */
+.etk-bars{display:flex;align-items:flex-end;gap:1px;height:34px}
+.etk-bars i{display:block;height:100%;background:#111;flex:none}
+.etk-qr{display:grid;gap:0;background:#fff;padding:2px}
+.etk-qr i{display:block;background:#fff}
+.etk-qr i.on{background:#111}
+
+/* ---- önizleme / etiket kartları ---- */
+.etk-sheet{display:flex;flex-wrap:wrap;gap:14px;padding:18px;background:var(--bg);border-radius:var(--r-lg)}
+.etk-item{background:#fff;border:1px solid var(--line-2);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:4px;color:#111;cursor:pointer;transition:.15s var(--ease);box-shadow:var(--sh-sm)}
+.etk-item:hover{box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.etk-item .etk-firma{font-size:8px;font-weight:800;letter-spacing:.04em;color:#222;display:flex;align-items:center;gap:4px}
+.etk-item .etk-firma .g{width:12px;height:12px;border-radius:3px;background:var(--gv-deep,#020837);color:var(--gv-mint,#3FD5AD);display:grid;place-items:center;font-size:7px;font-weight:800}
+.etk-item .etk-ad{font-size:11px;font-weight:800;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.etk-item .etk-model{font-size:8.5px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.etk-item .etk-mid{display:flex;align-items:center;gap:6px;margin-top:2px}
+.etk-item .etk-dmrkod{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:8px;color:#111;text-align:center}
+.etk-item .etk-alt{font-size:7.5px;color:#555;line-height:1.35;border-top:1px dashed #ccc;padding-top:3px;margin-top:2px}
+.etk-item .etk-rowacts{display:flex;justify-content:center;margin-top:2px}
+.etk-item .etk-rowacts button{font-size:7.5px;font-weight:700;color:var(--acc-ink);background:none;border:none;cursor:pointer;padding:2px 4px;display:flex;align-items:center;gap:3px}
+
+/* boyut presetleri (mm — @page kuralı JS ile dinamik güncellenir, kart ölçüsü de eşlenir) */
+.etk-item.sz-40x30{width:40mm;height:30mm;font-size:6px}
+.etk-item.sz-50x30{width:50mm;height:30mm;font-size:6.5px}
+.etk-item.sz-60x40{width:60mm;height:40mm;font-size:7.5px}
+.etk-item.sz-40x30 .etk-bars,.etk-item.sz-50x30 .etk-bars{height:20px}
+.etk-item.sz-60x40 .etk-bars{height:26px}
+.etk-item.sz-40x30 .etk-qr,.etk-item.sz-50x30 .etk-qr{width:26px;height:26px}
+.etk-item.sz-60x40 .etk-qr{width:34px;height:34px}
+
+.etk-empty-note{font-size:12.5px;color:var(--muted);padding:24px;text-align:center}
+.etk-arac-note{font-size:11px;color:var(--muted);padding:12px 16px;border-top:1px dashed var(--line)}
+
+/* ---- kamera simülasyonu overlay (barkod/QR'a tıklayınca "okutma" simülasyonu) ---- */
+.etk-scan-ov{position:fixed;inset:0;background:rgba(2,8,55,.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+.etk-scan-box{background:var(--paper);border-radius:var(--r-lg);max-width:420px;width:100%;padding:26px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.etk-scan-box i.fa-camera{font-size:30px;color:var(--acc-ink);margin-bottom:14px}
+.etk-scan-box h3{font-size:15px;margin-bottom:8px}
+.etk-scan-box p{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+
+/* ============ Yazdırma ============ */
+@media print{
+  .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.gv-crumb,.gv-page-head,.etk-toolbar,.gc-head,.etk-info-card,.gc-foot,.etk-arac-note,.etk-item .etk-rowacts{display:none !important}
+  .gv-card{border:none !important;box-shadow:none !important;border-radius:0 !important}
+  .gv-main{margin:0 !important;padding:0 !important}
+  .gv-app{display:block !important}
+  .etk-sheet{background:#fff !important;padding:0 !important;gap:0 !important;display:block !important}
+  .etk-item{box-shadow:none !important;border:1px solid #999 !important;page-break-after:always;break-after:page;margin:0 auto}
+  .etk-item:last-child{page-break-after:auto;break-after:auto}
+}
+</style>
+</head>
+<body data-sec="varlik" data-screen="demirbas-etiket">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-operasyon-demirbas.html">Demirbaş</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="crm-operasyon-demirbas-etiket.html">Demirbaş Etiketleri</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Yazdır</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Günlük Kayıt</div>
+        <h1>Etiket Yazdır</h1>
+        <div class="ph-sub" id="etkYzSub">Barkod ve QR-benzeri desen DMR koduna göre deterministik üretilir; gerçek bir tarayıcı ile okunamaz (statik prototip kısıtı).</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-etiket.html"><i class="fa-solid fa-arrow-left"></i> Etiketlere Dön</a>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnScanSim" data-no-confirm><i class="fa-solid fa-camera"></i> Kamerayla Tara (simülasyon)</button>
+        <button type="button" class="btn btn-acc btn-sm" id="btnYazdir" data-no-confirm><i class="fa-solid fa-print"></i> Yazdır</button>
+      </div>
+    </div>
+
+    <div class="etk-toolbar">
+      <label for="etkBoyut" style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--muted)"><i class="fa-solid fa-ruler-combined"></i> Etiket Boyutu</label>
+      <select id="etkBoyut" aria-label="Etiket boyutu">
+        <option value="40x30">40 × 30 mm</option>
+        <option value="50x30" selected>50 × 30 mm</option>
+        <option value="60x40">60 × 40 mm</option>
+      </select>
+      <div class="etk-spacer"></div>
+      <span class="etk-count"><span id="etkSeciliSayi">0</span> etiket yazdırılacak</span>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-tags"></i> Yazdırma / Önizleme</div></div>
+      <div class="gc-body" style="padding:0">
+        <div class="etk-sheet" id="etkSheet"></div>
+        <p class="etk-empty-note" id="etkEmpty" hidden>Bu bağlantıda yazdırılacak geçerli bir demirbaş etiketi bulunamadı — <a href="crm-operasyon-demirbas-etiket.html" style="color:var(--acc-ink);font-weight:700">Demirbaş Etiketleri</a> listesinden bir kayıt seçin.</p>
+      </div>
+      <div class="etk-arac-note"><i class="fa-solid fa-circle-info"></i> ZMT-2026-044 (Araç) için etiket üretilmez — bu kayıt "Araç" geçiş-kategorisindedir ve plaka/şasi bazlı takibi <a href="crm-operasyon-arac-detay.html?arac=ARC-01" style="color:var(--acc-ink);font-weight:700">Araç modülünde</a> yapılır (kararlar.md madde 110).</div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ============ kanonik 10 ZMT kaydı — crm-operasyon-demirbas.html'in DEMIRBAS_ALL
+     dizisiyle BİREBİR aynı dmrKod/seriNo/kişi/şantiye değerleri (kaynak-transferi, ayrı
+     bir kayıt İCAT EDİLMEDİ). Araç (044) DMR kodu TAŞIMAZ — etiket üretilmez. ============ */
+  var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye', depo:'Merkez depo'};
+  var ITEMS = [
+    {no:'041', zmt:'ZMT-2026-041', ad:'İş Telefonu', model:'Samsung Galaxy A54, 64GB', seriNo:'SN-A54-2K7719X', dmrKod:'DMR-TEL-SAMSU-000041', kat:'Bilgi Teknolojileri › Cep Telefonu', kisi:'Hasan Demirci', santiye:'vadi', ic:'fa-mobile-screen-button'},
+    {no:'042', zmt:'ZMT-2026-042', ad:'El Aleti Seti', model:'Bosch GSB 18V-55, 18 parça', seriNo:'SN-GSB1855-4K2201B', dmrKod:'DMR-SARJ-BOSCH-000042', kat:'Şarjlı Aletler › Şarjlı Matkap', kisi:'Hasan Demirci', santiye:'vadi', ic:'fa-screwdriver-wrench'},
+    {no:'043', zmt:'ZMT-2026-043', ad:'Güvenlik Ekipmanı', model:'Baret + Yelek + Bot Seti', seriNo:'—', dmrKod:'DMR-ISG-MUHT-000043', kat:'İSG › Kişisel Koruyucu Donanım Seti', kisi:'Hasan Demirci', santiye:'vadi', ic:'fa-shield-halved'},
+    {no:'044', zmt:'ZMT-2026-044', ad:'Araç (Ford Ranger)', model:'34 ABC 123', seriNo:'—', dmrKod:null, kat:'Araç — geçiş kategorisi', kisi:'Hasan Demirci', santiye:'vadi', ic:'fa-truck-pickup', disabled:true},
+    {no:'045', zmt:'ZMT-2026-045', ad:'Tablet', model:'Samsung Galaxy Tab A9, 64GB', seriNo:'SN-TABA9-7K3841L', dmrKod:'DMR-TAB-SAMSU-000045', kat:'Bilgi Teknolojileri › Tablet', kisi:'Aylin Koç', santiye:'liman', ic:'fa-tablet-screen-button'},
+    {no:'046', zmt:'ZMT-2026-046', ad:'Lazer Metre', model:'Bosch GLM 50 C', seriNo:'SN-GLM50C-9L0532', dmrKod:'DMR-OLCU-BOSCH-000046', kat:'Ölçüm Cihazları › Lazer Metre', kisi:'Ömer Taşkın', santiye:'merkez', ic:'fa-ruler-combined'},
+    {no:'047', zmt:'ZMT-2026-047', ad:'Kırıcı-Delici', model:'Hilti TE 60-A36', seriNo:'SN-TE60-8842X', dmrKod:'DMR-ELALT-HILTI-000047', kat:'El Aletleri › Kırıcı ve Deliciler', kisi:'(kişisiz)', santiye:'depo', ic:'fa-gears'},
+    {no:'048', zmt:'ZMT-2026-048', ad:'El Telsizi Seti', model:'Motorola CP040, 4 adet', seriNo:'SN-CP040-SET04', dmrKod:'DMR-BT-MOTOR-000048', kat:'Bilgi Teknolojileri › Telsiz/İletişim', kisi:'(kişisiz)', santiye:'depo', ic:'fa-walkie-talkie'},
+    {no:'2025-017', zmt:'ZMT-2025-017', ad:'El Telsizi', model:'Motorola CP040', seriNo:'SN-CP040-2M1187', dmrKod:'DMR-BT-MOTOR-000017', kat:'Bilgi Teknolojileri › Telsiz/İletişim', kisi:'Hasan Demirci (iade edildi)', santiye:null, ic:'fa-walkie-talkie'},
+    {no:'2025-009', zmt:'ZMT-2025-009', ad:'Jeneratör', model:'Honda EU22i', seriNo:'SN-EU22I-3H7743', dmrKod:'DMR-MKN-HONDA-000009', kat:'Makine ve Ağır Ekipman › Jeneratör', kisi:'(kişisiz, hurda)', santiye:null, ic:'fa-gears'}
+  ];
+  var FIRMA_ADI = 'Yapıtaş İnşaat A.Ş.';
+
+  /* ============ kararlar.md madde 109 — deterministik barkod/QR üretimi (kaynak-transferi) ============ */
+  function hashCode(str){ var h = 0; for(var i = 0; i < str.length; i++){ h = ((h << 5) - h + str.charCodeAt(i)) | 0; } return h; }
+  function mulberry32(seed){
+    return function(){
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function genBars(code, n){
+    var h = hashCode(code), bars = [];
+    for(var i = 0; i < n; i++){ bars.push((Math.abs((h >> (i % 24)) ^ (h * (i + 7))) % 4) + 1); }
+    return bars;
+  }
+  function genQrGrid(code, n){
+    var rnd = mulberry32(hashCode(code));
+    var grid = [];
+    for(var y = 0; y < n; y++){ var row = []; for(var x = 0; x < n; x++){ row.push(rnd() > 0.52 ? 1 : 0); } grid.push(row); }
+    function stampFinder(gy, gx){
+      for(var y = 0; y < 5; y++){
+        for(var x = 0; x < 5; x++){
+          var on = (y === 0 || y === 4 || x === 0 || x === 4 || (y >= 2 && y <= 2 && x >= 2 && x <= 2));
+          if(gy + y < n && gx + x < n) grid[gy + y][gx + x] = on ? 1 : 0;
+        }
+      }
+    }
+    stampFinder(0, 0); stampFinder(0, n - 5); stampFinder(n - 5, 0);
+    return grid;
+  }
+  function barsHtml(code, h){
+    var bars = genBars(code, 26);
+    return '<div class="etk-bars" style="height:' + (h || 34) + 'px">' + bars.map(function(w){ return '<i style="width:' + w + 'px"></i>'; }).join('') + '</div>';
+  }
+  function qrHtml(code, n){
+    n = n || 12;
+    var grid = genQrGrid(code, n);
+    var cells = '';
+    grid.forEach(function(row){ row.forEach(function(v){ cells += '<i class="' + (v ? 'on' : '') + '"></i>'; }); });
+    return '<div class="etk-qr" style="grid-template-columns:repeat(' + n + ',1fr);grid-template-rows:repeat(' + n + ',1fr)">' + cells + '</div>';
+  }
+  function drawCanvasLabel(item){
+    var cv = document.createElement('canvas');
+    cv.width = 480; cv.height = 320;
+    var ctx = cv.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.strokeStyle = '#999'; ctx.strokeRect(4, 4, cv.width - 8, cv.height - 8);
+    ctx.fillStyle = '#111'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(FIRMA_ADI, 16, 26);
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText(item.ad, 16, 56);
+    ctx.font = '13px sans-serif'; ctx.fillStyle = '#555';
+    ctx.fillText(item.model, 16, 76);
+    var bars = genBars(item.dmrKod, 40), x = 16;
+    ctx.fillStyle = '#111';
+    bars.forEach(function(w){ ctx.fillRect(x, 96, w * 2, 60); x += w * 2 + 1; });
+    ctx.font = '12px ui-monospace,monospace'; ctx.textAlign = 'left';
+    ctx.fillText(item.dmrKod, 16, 172);
+    var n = 16, cell = 8, qx = cv.width - (n * cell) - 20, qy = 96;
+    var grid = genQrGrid(item.dmrKod, n);
+    ctx.fillStyle = '#fff'; ctx.fillRect(qx - 4, qy - 4, n * cell + 8, n * cell + 8);
+    ctx.fillStyle = '#111';
+    for(var y = 0; y < n; y++){ for(var xx = 0; xx < n; xx++){ if(grid[y][xx]) ctx.fillRect(qx + xx * cell, qy + y * cell, cell, cell); } }
+    ctx.font = '12px sans-serif'; ctx.fillStyle = '#333';
+    ctx.fillText('Seri No: ' + item.seriNo, 16, 200);
+    ctx.fillText(item.zmt + ' · ' + item.kat, 16, 220);
+    ctx.fillText((SANTIYE_ADI[item.santiye] || '—') + ' · ' + item.kisi, 16, 240);
+    ctx.font = 'italic 10px sans-serif'; ctx.fillStyle = '#888';
+    ctx.fillText('Barkod/QR gerçekten üretilmiştir, ancak gerçek bir tarayıcı ile okunamaz (simülasyon).', 16, cv.height - 14);
+    return cv;
+  }
+  function downloadPng(item){
+    var cv = drawCanvasLabel(item);
+    var a = document.createElement('a');
+    a.download = item.dmrKod + '.png';
+    a.href = cv.toDataURL('image/png');
+    a.click();
+    gvToast(item.dmrKod + '.png indirildi.');
+  }
+
+  /* ============ ?zmt= — hangi etiketler yazdırılacak ============
+     · ?zmt=046           → tekli
+     · ?zmt=041,042,046   → çoklu (demirbas.html toplu "Etiket Yazdır" bulk-aksiyonu)
+     · param YOK           → DMR kodu olan TÜM kayıtlar (demirbas.html üst-aksiyon
+                              "QR / Barkod Yazdır" — toplu hızlı yazdırma) */
+  var q = new URLSearchParams(location.search);
+  var raw = q.get('zmt');
+  var items;
+  if(raw){
+    var wanted = raw.split(',').map(function(s){
+      s = s.trim();
+      return /^\d{1,3}$/.test(s) ? ('00' + s).slice(-3) : s;
+    });
+    items = ITEMS.filter(function(it){ return wanted.indexOf(it.no) !== -1 && it.dmrKod; });
+  } else {
+    items = ITEMS.filter(function(it){ return !!it.dmrKod; });
+  }
+
+  var SIZE_MM = {'40x30':{w:40, h:30}, '50x30':{w:50, h:30}, '60x40':{w:60, h:40}};
+  function curSizeKey(){ return document.getElementById('etkBoyut').value; }
+  function applyPageSize(){
+    var key = curSizeKey();
+    var s = SIZE_MM[key];
+    document.getElementById('etkPageSizeRule').textContent = '@page{size:' + s.w + 'mm ' + s.h + 'mm;margin:0}';
+  }
+
+  function itemLabelHtml(it, sizeKey){
+    var qn = sizeKey === '60x40' ? 14 : 10;
+    return '<div class="etk-item sz-' + sizeKey + '" data-scan="' + it.no + '" tabindex="0" role="button" aria-label="' + it.ad + ' barkodunu okut (simülasyon)">'
+      + '<div class="etk-firma"><span class="g">G</span>' + FIRMA_ADI + '</div>'
+      + '<div class="etk-ad">' + it.ad + '</div>'
+      + '<div class="etk-model">' + it.model + '</div>'
+      + '<div class="etk-mid">' + barsHtml(it.dmrKod, sizeKey === '60x40' ? 26 : 20) + qrHtml(it.dmrKod, qn) + '</div>'
+      + '<div class="etk-dmrkod">' + it.dmrKod + '</div>'
+      + '<div class="etk-alt">' + it.zmt + ' · ' + it.seriNo + '<br>' + (SANTIYE_ADI[it.santiye] || '—') + ' · ' + it.kisi + '</div>'
+      + '<div class="etk-rowacts"><button type="button" data-png="' + it.no + '" data-no-confirm><i class="fa-solid fa-download"></i> PNG İndir</button></div>'
+      + '</div>';
+  }
+
+  function renderSheet(){
+    var sizeKey = curSizeKey();
+    applyPageSize();
+    document.getElementById('etkSheet').innerHTML = items.map(function(it){ return itemLabelHtml(it, sizeKey); }).join('');
+    document.getElementById('etkEmpty').hidden = items.length !== 0;
+    document.getElementById('etkSeciliSayi').textContent = items.length;
+    document.getElementById('etkYzSub').textContent = items.length + ' etiket · Barkod/QR-benzeri desen DMR koduna göre deterministik üretilir; gerçek bir tarayıcı ile okunamaz (statik prototip kısıtı).';
+  }
+
+  document.getElementById('etkBoyut').addEventListener('change', renderSheet);
+  document.getElementById('btnYazdir').addEventListener('click', function(){
+    if(!items.length){ gvToast('Yazdırılacak geçerli bir etiket bulunamadı.', {type:'danger'}); return; }
+    window.print();
+  });
+
+  document.getElementById('etkSheet').addEventListener('click', function(e){
+    var pngBtn = e.target.closest('[data-png]');
+    if(pngBtn){
+      e.stopPropagation();
+      var pit = items.filter(function(x){ return x.no === pngBtn.getAttribute('data-png'); })[0];
+      if(pit) downloadPng(pit);
+      return;
+    }
+    var card = e.target.closest('[data-scan]'); if(!card) return;
+    var it = items.filter(function(x){ return x.no === card.getAttribute('data-scan'); })[0];
+    if(!it) return;
+    gvToast(it.dmrKod + ' okundu (simülasyon) — ' + it.zmt + ' detayına yönlendiriliyor.', {type:'ok'});
+    setTimeout(function(){ location.href = 'crm-operasyon-demirbas-detay.html?zmt=' + it.no.slice(-3); }, 700);
+  });
+  document.getElementById('etkSheet').addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    var card = e.target.closest('[data-scan]'); if(!card) return;
+    e.preventDefault(); card.click();
+  });
+
+  document.getElementById('btnScanSim').addEventListener('click', function(){
+    var ov = document.createElement('div');
+    ov.className = 'etk-scan-ov';
+    ov.innerHTML = '<div class="etk-scan-box"><i class="fa-solid fa-camera"></i>'
+      + '<h3>Kamerayla Tara (simülasyon)</h3>'
+      + '<p>Bu statik prototipte gerçek kamera erişimi yoktur. Aşağıdaki önizlemede bir barkod/QR etiketine tıklayarak "okutma" işlemini simüle edebilirsiniz.</p>'
+      + '<button type="button" class="btn btn-acc btn-sm" id="etkScanClose" data-no-confirm>Anladım</button></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function(e){ if(e.target === ov || e.target.closest('#etkScanClose')) ov.remove(); });
+  });
+
+  applyPageSize();
+  renderSheet();
+})();
+</script>
+</body>
+</html>
