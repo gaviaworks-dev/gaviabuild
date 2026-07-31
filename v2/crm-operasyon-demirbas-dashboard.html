@@ -83,6 +83,19 @@
 .dr-inputs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dr-inputs input[type="date"]{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;outline:none}
 .dr-inputs input[type="date"]:focus{border-color:var(--acc)}
+
+/* ============ B §6.2/§7.3 eklentileri (T-RY) — grafik alanı (gvDonut/gvBar) ·
+   QR/barkod okutma geçmişi · hata durumu. MEVCUT .gv-card/.gc-body/.gv-empty/
+   .rank-row dilinden devralındı, yeni bir bileşen dili İCAT EDİLMEDİ. ============ */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
+.scan-list{display:flex;flex-direction:column;gap:0}
+.scan-row{display:flex;align-items:flex-start;gap:12px;padding:12px 22px;border-bottom:1px solid var(--line)}
+.scan-row:last-child{border-bottom:none}
+.scan-ico{width:32px;height:32px;flex:none;border-radius:var(--r-md);background:rgba(var(--acc-rgb),.1);color:var(--acc-ink);display:grid;place-items:center;font-size:13px}
+.scan-body{min-width:0;flex:1}
+.scan-body b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
+.scan-body span{font-size:11.5px;color:var(--muted)}
+.scan-date{flex:none;font-size:11.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
 </style>
 </head>
 <body data-sec="varlik" data-screen="demirbas-dashboard">
@@ -147,6 +160,24 @@
     <div class="kpi-grid" id="kpiGrid"></div>
     <div class="rep-src" style="padding:0;margin:-8px 0 18px"><i class="fa-solid fa-circle-info"></i> <span>Bu envaride "Kullanımda" ayrı bir kayıt sınıfı değildir — zimmetli kalemlerin tamamı aktif kullanımdadır; bu yüzden "Kullanımdaki" ve "Zimmetli" kartları BİLEREK aynı 6 kaydı gösterir (kaynak: crm-operasyon-demirbas.html durum ekseni).</span></div>
 
+    <!-- ============ B §6.2/§7.3 — grafik alanı: durum dağılımı (zimmetli/bakım/kayıp/
+         arşiv) + şantiye bazlı dağılım (gvDonut/gvBar, spec-v2-core.md §7) ============ -->
+    <div class="dash-cols">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-pie"></i> Durum Dağılımı — Grafik</div><span class="ph-sub" style="margin:0">Zimmetli · Depoda · Serviste · Hurda · İade</span></div>
+        <div class="gc-body" id="durumDonutWrap"></div>
+      </div>
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-map-location-dot"></i> Şantiye Bazlı Demirbaş Dağılımı</div><span class="ph-sub" style="margin:0">Filtreden bağımsız — tüm şantiyeler</span></div>
+        <div class="gc-body" id="konumChartWrap"></div>
+      </div>
+    </div>
+    <div class="gv-card" style="margin-bottom:20px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-qrcode"></i> QR/Barkod Okutma Geçmişi</div><span class="ph-sub" style="margin:0">Kaynak: crm-operasyon-demirbas-etiket.html</span></div>
+      <div class="gc-body flush"><div class="scan-list" id="scanListWrap"></div></div>
+      <div class="rep-src"><i class="fa-solid fa-circle-info"></i> <span>9 etiketlenebilir kayıttan yalnız 2'sinde okutma kaydı var; kalanı henüz saha/iade kontrolünde okutulmadı (bkz. crm-operasyon-demirbas-etiket.html "Son Okutma" kolonu).</span></div>
+    </div>
+
     <div class="dash-cols">
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Durum Dağılımı</div></div>
@@ -191,14 +222,27 @@
     </div>
 
     <div class="gv-card">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Garanti ve Kalibrasyon Takvimi</div><span class="ph-sub" style="margin:0">Yaklaşan tarihe göre sıralı</span></div>
-      <div class="gc-body flush" id="takvimTblWrap">
-        <table class="gtable" id="tblTakvim">
+      <div class="gc-head rp-gc-head-wrap"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Garanti ve Kalibrasyon Takvimi</div><span class="ph-sub" style="margin:0">Yaklaşan tarihe göre sıralı</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnTakvimHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <!-- ============ B §6.2 madde 15 — boş durum VE hata durumu (4-state, gvEmpty.durum) ============ -->
+      <div class="gc-body flush" id="takvimStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Takvim verisi yüklenemedi</h4>
+          <p>Garanti/kalibrasyon tarihleri şu an alınamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnTakvimHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <div data-gv-state="empty" class="gv-empty" hidden></div>
+        <table class="gtable" id="tblTakvim" data-gv-state="content" hidden>
           <thead><tr><th>Kalem</th><th>Tür</th><th>Tarih</th><th class="num">Durum</th></tr></thead>
           <tbody id="takvimBody"></tbody>
         </table>
       </div>
-      <div class="gv-empty" id="takvimEmpty" hidden></div>
       <div class="rep-src" id="takvimNot"><i class="fa-solid fa-circle-info"></i> <span>ZMT-2026-046'nın garanti bitiş tarihi (20.01.2027, crm-operasyon-demirbas.html/-detay.html/-form.html'in üçü de birleşiyor — kararlar.md madde 146) kanonik bugüne (2 Temmuz 2026) göre ~202 gün uzakta, dolayısıyla "garanti yaklaşan" listesinde GÖRÜNMEZ; yalnız kalibrasyon kontrolü (20.07.2026, zimmet tarihinden 6 aylık periyot) 30 gün eşiği içindedir.</span></div>
       <div class="cross-link">
         <i class="fa-solid fa-bell lead"></i>
@@ -278,6 +322,16 @@
 
   var santiyeFiltre = 'tumu';   /* B §6.2 — şantiye/proje filtresi (T-R4) */
   var takvimFrom = '', takvimTo = '';   /* B §6.2 — tarih aralığı, garanti/kalibrasyon takvimine uygulanır */
+  var takvimHata = false;   /* B §6.2 madde 15 — hata durumu demo bayrağı (T-RY) */
+
+  /* ============ B §6.2/§7.3 — QR/barkod okutma geçmişi. Kaynak: crm-operasyon-demirbas-etiket.html
+     ETIKET_DURUM (9 etiketlenebilir DEMIRBAS kaydı, ZMT-2026-044/araç hariç) — 9 kayıttan yalnız
+     2'sinde `okutma` alanı dolu; aşağıdaki liste o 2 gerçek okutma olayının BİREBİR transferidir,
+     yeni bir tarih/olay İCAT EDİLMEDİ. ============ */
+  var SCAN_GECMISI = [
+    {no:'ZMT-2026-045', ad:'Tablet', olay:'Okutuldu (saha teslim kontrolü)', tarih:'2026-07-02', tarihEtiket:'2 Tem 2026'},
+    {no:'ZMT-2025-017', ad:'El Telsizi', olay:'Okutuldu (iade teslim kontrolü)', tarih:'2026-01-03', tarihEtiket:'3 Oca 2026'}
+  ];
 
   function demirbasEslesir(d){
     if(santiyeFiltre === 'tumu') return true;
@@ -378,21 +432,39 @@
     takvim.sort(function(x,y){ return gunFarki(x.tarih) - gunFarki(y.tarih); });
     document.getElementById('takvimNot').hidden = !!(takvimFrom || takvimTo);
     if(!takvim.length){
-      document.getElementById('takvimTblWrap').hidden = true;
-      document.getElementById('takvimEmpty').hidden = false;
-      gvEmpty.render(document.getElementById('takvimEmpty'), {
+      gvEmpty.render(document.querySelector('#takvimStateWrap [data-gv-state="empty"]'), {
         ikon:'fa-calendar-check', baslik:'Seçili aralıkta/şantiyede kayıt yok',
         aciklama: 'Bu filtre kombinasyonunda garanti veya kalibrasyon tarihi olan bir demirbaş kalemi bulunamadı.',
         aksiyon: {etiket:'Filtreleri Temizle', href:'crm-operasyon-demirbas-dashboard.html'}
       });
     } else {
-      document.getElementById('takvimEmpty').hidden = true;
-      document.getElementById('takvimTblWrap').hidden = false;
       document.getElementById('takvimBody').innerHTML = takvim.map(function(t){
         var g = gunFarki(t.tarih);
         return '<tr><td><div class="tv-item"><b>'+t.no+'</b><span>'+t.ad+'</span></div></td><td>'+t.tur+'</td><td>'+ddmmyyyy(t.tarih)+'</td>'
           + '<td class="num"><span class="gstat '+rozetCls(g)+'">'+durumMetni(g)+'</span></td></tr>';
       }).join('');
+    }
+    if(window.gvEmpty) gvEmpty.durum('#takvimStateWrap', {yukleniyor:false, hata:takvimHata, sonucSayisi:takvim.length});
+
+    /* ---- B §6.2/§7.3 — grafik alanı: durum dağılımı + şantiye bazlı dağılım
+       (gvDonut/gvBar, spec-v2-core.md §7) ---- */
+    if(window.gvDonut){
+      var durumDonutVeri = [
+        {lbl:'Zimmetli', val:zimmetli.length, tone:'ok'},
+        {lbl:'Depoda', val:depoda.length, tone:'info'},
+        {lbl:'Serviste', val:serviste.length, tone:'warn'},
+        {lbl:'Hurda', val:DEMIRBAS_VIEW.filter(function(d){ return d.durum==='hurda'; }).length, tone:'danger'},
+        {lbl:'İade Edildi', val:DEMIRBAS_VIEW.filter(function(d){ return d.durum==='iade'; }).length, tone:'muted'}
+      ].filter(function(r){ return r.val > 0; });
+      var durumDonutWrap = document.getElementById('durumDonutWrap');
+      if(durumDonutVeri.length) gvDonut(durumDonutWrap, durumDonutVeri, {baslik:'Durum dağılımı', merkezAlt:'kalem'});
+      else gvEmpty.render(durumDonutWrap, {ikon:'fa-boxes-stacked', baslik:'Bu görünümde kayıt yok', aciklama:'Seçili şantiye filtresinde durum dağılımı gösterecek bir demirbaş kalemi yok.'});
+    }
+    if(window.gvBar){
+      var konumChartVeri = konumRows.map(function(r){ return {lbl:r.name, val:r.val, valLbl:r.val + ' kalem'}; });
+      var konumChartWrap = document.getElementById('konumChartWrap');
+      if(konumChartVeri.length) gvBar(konumChartWrap, konumChartVeri, {yon:'yatay', baslik:'Şantiye bazlı demirbaş dağılımı', labelWidth:130});
+      else gvEmpty.render(konumChartWrap, {ikon:'fa-map-location-dot', baslik:'Kayıt yok', aciklama:'Şantiye/konum dağılımı gösterecek bir demirbaş kalemi yok.'});
     }
 
     /* ---- B §6.2 — yorum/değerlendirme alanı ---- */
@@ -428,6 +500,20 @@
     document.getElementById('drFrom').value = ''; document.getElementById('drTo').value = '';
     render();
   });
+
+  /* ============ B §6.2/§7.3 — QR/barkod okutma geçmişi listesi (filtreden bağımsız,
+     şantiye/envanter geneli bir log — bkz. SCAN_GECMISI tanımı) ============ */
+  document.getElementById('scanListWrap').innerHTML = SCAN_GECMISI.map(function(s){
+    return '<div class="scan-row"><div class="scan-ico"><i class="fa-solid fa-qrcode"></i></div>'
+      + '<div class="scan-body"><b>' + s.no + ' · ' + s.ad + '</b><span>' + s.olay + '</span></div>'
+      + '<span class="scan-date">' + s.tarihEtiket + '</span></div>';
+  }).join('');
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi (T-RY) ============ */
+  var btnTakvimHataDemo = document.getElementById('btnTakvimHataDemo');
+  var btnTakvimHataRetry = document.getElementById('btnTakvimHataRetry');
+  if(btnTakvimHataDemo) btnTakvimHataDemo.addEventListener('click', function(){ takvimHata = true; render(); });
+  if(btnTakvimHataRetry) btnTakvimHataRetry.addEventListener('click', function(){ takvimHata = false; render(); });
 
   /* B §6.4 — çıktı al (gvExport) */
   if(window.gvExport){

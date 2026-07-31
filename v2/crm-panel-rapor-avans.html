@@ -50,6 +50,10 @@
 .filtre-ozet{padding:14px 22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:8px}
 .filtre-ozet i{color:var(--acc-ink)}
 .filtre-ozet b{color:var(--ink)}
+
+/* [T-RX] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md K-... T-R1 deseni) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -241,11 +245,23 @@
          avn-013/012/011: zincire Genel Müdür eklenir (₺6.000 üzeri tutarlarda devreye giriyor,
          kayıt bazlı doğrulama: 8.000/6.500/10.000 hepsi GM'li; 3.500/4.000 GM'siz) → "gm". -->
     <div class="gv-card" style="margin-bottom:20px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-diagram-project"></i> Zincir Aşama Kırılımı</div><span class="ph-sub" id="zincirScopeLbl" style="margin:0">tüm kayıtlar</span></div>
-      <div class="gc-body flush">
+      <div class="gc-head rp-gc-head-wrap"><div class="gc-title"><i class="fa-solid fa-diagram-project"></i> Zincir Aşama Kırılımı</div><span class="ph-sub" id="zincirScopeLbl" style="margin:0">tüm kayıtlar</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnAvnHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <div class="gc-body flush" id="avnZincirStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Avans verileri alınamadı</h4>
+          <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnAvnHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
         <!-- statik bake — DEFAULT (dönem=tümü, şantiye=tümü) 5 kayıtlık görünür setten
              CANLI hesaplanan zincir kırılımı; JS yüklenince render() aynı mount'u ezer — D18-B2 -->
-        <table class="gtable" id="tblZincir">
+        <table class="gtable" id="tblZincir" data-gv-state="content">
           <thead><tr><th>Zincir Tipi</th><th class="num">Kayıt</th><th class="num">Tutar</th></tr></thead>
           <tbody id="tblZincirBody"><tr><td>Standart (Şef → Muhasebe)</td><td class="num">2</td><td class="num">₺7.500</td></tr><tr><td>GM Onaylı (+ Genel Müdür)</td><td class="num">3</td><td class="num">₺24.500</td></tr><tr class="bm-total"><td>Toplam</td><td class="num">5</td><td class="num">₺32.000</td></tr></tbody>
         </table>
@@ -433,6 +449,16 @@
       render();
     });
   }
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+  var btnAvnHataDemo = document.getElementById('btnAvnHataDemo');
+  var btnAvnHataRetry = document.getElementById('btnAvnHataRetry');
+  if(btnAvnHataDemo) btnAvnHataDemo.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#avnZincirStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+  });
+  if(btnAvnHataRetry) btnAvnHataRetry.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#avnZincirStateWrap', {yukleniyor:false, hata:false, sonucSayisi:1});
+  });
 
   /* ============ ÇIKTI — gvExport (B §6.4). ciktiHref liste-tipi çıktı sayfası
      (personel/santiye/durum/from/to param destekli) — kontrol edildi, uyumlu.

@@ -159,6 +159,18 @@
         </div>
       </div>
 
+      <!-- ============ GRAFİK ALANI (B §6.2 madde 6, spec-v2-core.md §7) ============ -->
+      <div class="rp-charts-2" style="margin-bottom:20px">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Şantiye Bazlı Maliyet Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartMrSantiye"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Kalem Türü Dağılımı</h3><span class="ph-sub" style="margin:0" id="chartMrKalemSub">3 şantiye toplamı</span></div>
+          <div class="rp-chart-body" id="chartMrKalem"></div>
+        </div>
+      </div>
+
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Şantiye × Kalem Türü Matrisi</div><span class="ph-sub" style="margin:0">2026 kayıtlı toplamlar</span></div>
         <div class="gc-body flush">
@@ -350,9 +362,52 @@
 
   function num(txt){ return parseInt(String(txt).replace(/[^\d]/g,''), 10) || 0; }
   function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  /* [T-RX] gvBar (yatay, ui.css/ui.js kilitli) sabit 480 birimlik viewBox kullanır;
+     satırın maksimum barı tam genişliğe ulaştığında değer etiketi viewBox sınırını
+     aşıp kırpılıyor (₺ milyonluk tutarlarda gözlemlendi, bkz tasks/devir-TRX.md).
+     Bileşen değiştirilemediği için sayfa-lokal kısaltılmış gösterim — ALTINDAKİ
+     tabloda/KPI'da tam hassasiyet zaten var, burada yalnız grafik ETİKETİ kısalır. */
+  function tlKisa(n){
+    var abs = Math.abs(n);
+    if(abs < 1000000) return tl(n);
+    var decimals = abs >= 10000000 ? 0 : 1;
+    var mn = (n / 1000000).toLocaleString('tr-TR', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+    return '₺' + mn + ' Mn';
+  }
   var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
   var GENEL_TOPLAM = 5694680;
   var KALEM_ROWS = ['Kasa Çıkışı','Kurum Hakedişi','Taşeron Hakedişi','Satın Alma'];
+
+  /* ============ GRAFİK ALANI — tblKalem matrisinin (tek gerçek kaynak) o an görünür
+     sütunlarından CANLI türetilir, yeni sayı UYDURULMAZ ============ */
+  function updateMrCharts(s){
+    var totalRow = document.querySelector('#tblKalem tr.km-total');
+    if(window.gvBar && totalRow){
+      var vadiTot = num(totalRow.querySelector('td[data-s="vadi"]').textContent);
+      var limanTot = num(totalRow.querySelector('td[data-s="liman"]').textContent);
+      var merkezTot = num(totalRow.querySelector('td[data-s="merkez"]').textContent);
+      gvBar('#chartMrSantiye', [
+        {lbl:'Vadi Konakları', val:vadiTot, valLbl:tlKisa(vadiTot), tone: (s === 'tumu' || s === 'vadi') ? 'acc' : 'muted'},
+        {lbl:'Liman Lojistik', val:limanTot, valLbl:tlKisa(limanTot), tone: (s === 'tumu' || s === 'liman') ? undefined : 'muted'},
+        {lbl:'Merkez Şantiye', val:merkezTot, valLbl:tlKisa(merkezTot), tone: (s === 'tumu' || s === 'merkez') ? undefined : 'muted'}
+      ], {yon:'yatay', baslik:'Şantiye bazlı maliyet dağılımı'});
+    }
+    if(window.gvDonut){
+      var col = (s === 'tumu' || s === 'diger') ? 'tumu' : s;
+      var rows = document.querySelectorAll('#tblKalem tbody tr');
+      var kasaV = num(rows[0].querySelector('td[data-s="'+col+'"]').textContent);
+      var kurumV = num(rows[1].querySelector('td[data-s="'+col+'"]').textContent);
+      var taseronV = num(rows[2].querySelector('td[data-s="'+col+'"]').textContent);
+      var satinV = num(rows[3].querySelector('td[data-s="'+col+'"]').textContent);
+      var veri = [];
+      if(kasaV) veri.push({lbl:'Kasa Çıkışı', val:kasaV, tone:'acc'});
+      if(kurumV) veri.push({lbl:'Kurum Hakedişi', val:kurumV, tone:'info'});
+      if(taseronV) veri.push({lbl:'Taşeron Hakedişi', val:taseronV, tone:'warn'});
+      if(satinV) veri.push({lbl:'Satın Alma', val:satinV, tone:'muted'});
+      gvDonut('#chartMrKalem', veri, {baslik:'Kalem türü dağılımı', merkezAlt:'toplam'});
+    }
+    document.getElementById('chartMrKalemSub').textContent = s === 'tumu' ? '3 şantiye toplamı' : SANTIYE_ADI[s];
+  }
 
   function renderMaliyet(s){
     document.querySelectorAll('#mrSantiyeChips .chip').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-s') === s); });
@@ -393,6 +448,7 @@
       document.getElementById('mrKpiBelge').textContent = '30';
       document.getElementById('mrKpiBelgeDelta').innerHTML = '<i class="fa-solid fa-layer-group"></i> 9 kasa · 6 kurum · 6 taşeron · 9 satın alma';
       document.getElementById('mrNote').innerHTML = '<i class="fa-solid fa-lightbulb"></i> <strong>3 şantiyenin toplam maliyeti ₺5.694.680</strong> — Vadi Konakları tek başına toplamın %66\'sını oluşturuyor (kurum hakedişi ağırlıklı). Merkez Şantiye iç yatırım projesi olduğu için hakediş kalemi taşımıyor, maliyeti neredeyse tamamen satın almadan (%83) geliyor.';
+      updateMrCharts(s);
       return;
     }
 
@@ -427,6 +483,7 @@
     document.getElementById('mrKpiBelgeDelta').innerHTML = '<i class="fa-solid fa-layer-group"></i> 4 kalem türünden ' + kalemTuru + " tanesi bu şantiyede işlendi";
 
     document.getElementById('mrNote').innerHTML = '<i class="fa-solid fa-lightbulb"></i> <strong>' + SANTIYE_ADI[s] + ' maliyeti ' + tl(toplam) + '</strong> — genel toplamın %' + pay + "'i. En büyük kalem <b>" + maxLbl + '</b> (' + tl(vals[maxLbl]) + ', şantiye toplamının %' + Math.round(vals[maxLbl]/toplam*100) + "'i)." + (bekleyen ? ' ' + tl(bekleyen) + ' onayda/bekleyen tutar bu şantiyeye ait.' : ' Onayda bekleyen kalem yok.');
+    updateMrCharts(s);
   }
 
   document.getElementById('mrSantiyeChips').addEventListener('click', function(e){

@@ -67,6 +67,10 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
 
 /* mobilde 6-7 haneli TL tutarları 2 sütuna sığmıyor (kart kırpılması) — tek sütuna düşür */
 @media(max-width:480px){ .kpi-grid{grid-template-columns:1fr} }
+
+/* [T-RX] .rp-sect-head (sayfa-lokal) flex-wrap:nowrap; başlık+alt-başlık+demo butonu
+   üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md T-R1 deseni) — sayfa-lokal sarma. */
+@media(max-width:640px){ #tlTerminSectHead{flex-wrap:wrap} #tlTerminSectHead .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -408,10 +412,11 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     </div>
 
     <!-- ============ TERMİN TAKİBİ ============ -->
-    <div class="rp-sect-head">
+    <div class="rp-sect-head" id="tlTerminSectHead">
       <h2><i class="fa-solid fa-truck-ramp-box"></i> Termin Takibi</h2>
       <span data-view="yonetim">crm-satinalma-termin.html</span>
       <span data-view="sef" hidden>crm-satinalma-termin.html — Vadi Konakları</span>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnTlHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
     </div>
 
     <!-- statik bake — DEFAULT (rol-agnostic) yönetim görünümü; JS yüklenince aynı
@@ -441,8 +446,18 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
 
     <!-- kaynak: crm-satinalma-termin.html tbody :131-178, 6 kayıt birebir. -->
     <div class="gv-card" style="margin-bottom:24px">
-      <div class="gc-body flush">
-        <table class="gtable" id="tblTermin">
+      <div class="gc-body flush" id="tlTerminStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Termin verileri alınamadı</h4>
+          <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnTlHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <table class="gtable" id="tblTermin" data-gv-state="content">
           <thead><tr><th>Sipariş / Tedarikçi</th><th>Şantiye</th><th>Malzeme</th><th>Planlanan Teslim</th><th>Durum</th></tr></thead>
           <tbody>
             <tr data-tarih="2026-07-02" data-santiye="vadi" data-kalan="bugun">
@@ -738,6 +753,16 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
   } else {
     document.getElementById('tlSantiyeRow').hidden = true;
   }
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+  var btnTlHataDemo = document.getElementById('btnTlHataDemo');
+  var btnTlHataRetry = document.getElementById('btnTlHataRetry');
+  if(btnTlHataDemo) btnTlHataDemo.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#tlTerminStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+  });
+  if(btnTlHataRetry) btnTlHataRetry.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#tlTerminStateWrap', {yukleniyor:false, hata:false, sonucSayisi:1});
+  });
 
   /* ============ ÇIKTI — gvExport (B §6.4). ciktiHref VERİLMEDİ — crm-satinalma-icmal-cikti.html
      TEK FORM (?form=) çıktısıdır, bu rapor KONSOLİDE 3-tablo liste olduğu için kapsam

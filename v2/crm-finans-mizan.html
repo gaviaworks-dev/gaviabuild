@@ -134,6 +134,11 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
 .mz-santiye-row b{font-variant-numeric:tabular-nums;color:var(--ink)}
 .eval-box{font-size:12.5px;color:var(--ink-2);line-height:1.7}
 .eval-box b{color:var(--ink)}
+
+/* ============ B §6.2 eklentileri (T-RY) — özet KPI kartları · grafik alanı ·
+   boş durum · hata durumu. MEVCUT kpi-grid/kpi-card/gv-empty/gvBar dilinden
+   devralındı, yeni bir bileşen dili İCAT EDİLMEDİ. ============ */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="finans" data-screen="mizan">
@@ -175,6 +180,32 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
         <div class="mz-eyebrow"><i class="fa-solid fa-map"></i> Faz 2 Finans Genişleme · Hazırlık — detay doküman bekleniyor</div>
         <h1>Mizan Modülü</h1>
         <p class="mz-value">Mizan; kasa, banka, kredi kartı, Pluxee kart, cari, hakediş, taşeron/tedarikçi ödemesi, avans ve satın alma faturası gibi <b>tüm finansal hareketleri tek bir hesap planında</b> toplayıp her hesabın borç/alacak bakiyesini gösteren temel muhasebe raporudur. Yapıtaş İnşaat A.Ş. için hedef: şantiye bazlı nakit durumunu, cari alacak/borç dengesini ve dönemsel gelir/gider dağılımını tek ekrandan, denetime hazır bir formatta görebilmek.</p>
+      </div>
+    </div>
+
+    <!-- ============ B §6.2 madde 5 — özet KPI kartları. Kaynak: aşağıdaki "Kaynak
+         Hesap Bakiyeleri" tablosunun .mz-total satırı (mzToplamBorc/mzToplamAlacak) —
+         ikinci bir tutar İCAT EDİLMEDİ, script bu kartları AYNI DOM'dan türetir. ============ -->
+    <div class="kpi-grid" style="margin-bottom:24px">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-diagram-project"></i></div>
+        <div><div class="kpi-num num">11</div><div class="kpi-lbl">Bağlı kaynak modül</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-circle-check"></i> 10 aktif · 1 kavramsal</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-arrow-down"></i></div>
+        <div><div class="kpi-num num" id="kpiMzBorc">—</div><div class="kpi-lbl">Toplam borç (kaynak bakiyesi)</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-table-list"></i> 5 hesap kodu</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+        <div><div class="kpi-num num" id="kpiMzAlacak">—</div><div class="kpi-lbl">Toplam alacak (kaynak bakiyesi)</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-table-list"></i> 3 hesap kodu</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-scale-unbalanced"></i></div>
+        <div><div class="kpi-num num" id="kpiMzFark">—</div><div class="kpi-lbl">Fark (borç − alacak)</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-circle-info"></i> Çift kayıt kurulana kadar beklenen</div></div>
       </div>
     </div>
 
@@ -337,15 +368,36 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
 
         <!-- §4.3-5/§15.2 — borç/alacak mantığı, örnek mizan tablosu -->
         <div class="gv-card">
-          <div class="gc-head" id="mzTblHead">
+          <div class="gc-head rp-gc-head-wrap" id="mzTblHead">
             <div class="gc-title"><i class="fa-solid fa-table-list"></i> Kaynak Hesap Bakiyeleri — Mizan Öncesi</div>
             <span class="gtag">2 Temmuz 2026 itibarıyla · bakiye görünümü</span>
+            <div style="display:flex;gap:8px;margin-left:auto">
+              <button type="button" class="btn btn-ghost btn-sm" id="btnMzBosDemo"><i class="fa-solid fa-inbox"></i> Boş Durumu Gör</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnMzHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+            </div>
           </div>
           <div class="gc-body" style="padding-bottom:6px">
             <p style="font-size:12.5px;color:var(--muted);margin-bottom:4px">Borç/alacak mantığı: <b style="color:var(--ink-2)">varlık hesapları</b> (kasa, kredi kartı/Pluxee bakiyesi, cari alacak, avans) normalde <b style="color:var(--ink-2)">borç</b> bakiyesi verir; <b style="color:var(--ink-2)">kaynak hesapları</b> (tedarikçi/taşeron borcu, kredi kartı dönem borcu) normalde <b style="color:var(--ink-2)">alacak</b> bakiyesi verir. Aşağıdaki tutarlar ilgili modüllerin bugünkü kanonik bakiyeleridir — gerçek çift kayıt (double-entry) eşleşmesi detay doküman sonrası kurulacaktır.</p>
           </div>
-          <div class="gc-body flush">
-            <table class="gtable" id="tblMizan">
+          <!-- ============ B §6.2 madde 15 — boş durum VE hata durumu (4-state, gvEmpty.durum) ============ -->
+          <div class="gc-body flush" id="mzTblStateWrap">
+            <div data-gv-state="loading" class="gv-empty" hidden>
+              <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+              <h4>Yükleniyor…</h4>
+            </div>
+            <div data-gv-state="error" class="gv-empty rp-error" hidden>
+              <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <h4>Kaynak hesap bakiyeleri yüklenemedi</h4>
+              <p>11 kaynak modülden bakiye verisi şu an alınamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
+              <button type="button" class="btn btn-acc btn-sm" id="btnMzHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+            </div>
+            <div data-gv-state="empty" class="gv-empty" hidden>
+              <div class="ge-ico"><i class="fa-solid fa-inbox"></i></div>
+              <h4>Seçili dönemde kaynak hareketi yok</h4>
+              <p>Bu, dönem/kaynak modül filtre kombinasyonunda mizan öncesi bakiye üretecek bir hareket bulunmadığı anlamına gelir.</p>
+              <button type="button" class="btn btn-acc btn-sm" id="btnMzBosGeriDon" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Bakiyeleri Geri Getir</button>
+            </div>
+            <table class="gtable" id="tblMizan" data-gv-state="content">
               <thead>
                 <tr>
                   <th class="mz-hcode">Kod</th>
@@ -379,6 +431,14 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
           <div class="gc-foot">
             <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Bu liste henüz mizan değil — modüllerin ham bakiyeleridir. Sıradaki adım çift kayıt (her hareketin iki hesaba birden işlenmesi) eşleştirmesini kurmak; bu kurulduğunda borç ve alacak toplamları eşitlenip gerçek mizan tablosu buradan üretilecektir. Fark rakamı bir muhasebe dengesizliği DEĞİLDİR — çift kayıt eşleştirmesi kurulana kadar beklenen bir görünümdür.</span>
           </div>
+        </div>
+
+        <!-- ============ B §6.2 madde 6 — grafik alanı: kaynak modül bazlı bakiye
+             dağılımı (gvBar, spec-v2-core.md §7). Veri AYNI 8 satırdan (tblMizan) —
+             borç ve alacak tarafı tek çubuk grafikte tone ile ayrışır. ============ -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Kaynak Modül Bazlı Bakiye Dağılımı</div><span class="ph-sub" style="margin:0">Yeşil: borç bakiyesi · turuncu: alacak bakiyesi</span></div>
+          <div class="gc-body" id="mzBarWrap"></div>
         </div>
 
         <!-- B §6.2 — yorum/değerlendirme alanı -->
@@ -520,6 +580,38 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
   document.getElementById('mzCmpBorc').textContent = tl(borc);
   document.getElementById('mzCmpAlacak').textContent = tl(alacak);
   document.getElementById('mzCmpFark').textContent = tl(fark);
+
+  /* ---- B §6.2 madde 5 — özet KPI kartları: AYNI borç/alacak/fark'tan türetilir ---- */
+  document.getElementById('kpiMzBorc').textContent = tl(borc);
+  document.getElementById('kpiMzAlacak').textContent = tl(alacak);
+  document.getElementById('kpiMzFark').textContent = tl(fark);
+
+  /* ---- B §6.2 madde 6 — grafik alanı: kaynak modül bazlı bakiye dağılımı (gvBar).
+     Veri tblMizan DOM'undan parse edilir — ikinci bir tutar İCAT EDİLMEZ. ---- */
+  var mzBarVeri = [];
+  document.querySelectorAll('#tblMizan tbody tr:not(.mz-total)').forEach(function(tr){
+    var ad = tr.children[1].textContent.trim();
+    var borcCell = tr.querySelector('.mz-borc');
+    var alacakCell = tr.querySelector('.mz-alacak');
+    if(borcCell && borcCell.textContent.trim()){
+      mzBarVeri.push({lbl:ad, val:parseTl(borcCell.textContent), valLbl:borcCell.textContent.trim(), tone:'ok'});
+    } else if(alacakCell && alacakCell.textContent.trim()){
+      mzBarVeri.push({lbl:ad, val:parseTl(alacakCell.textContent), valLbl:alacakCell.textContent.trim(), tone:'warn'});
+    }
+  });
+  if(window.gvBar) gvBar('#mzBarWrap', mzBarVeri, {yon:'yatay', baslik:'Kaynak modül bazlı bakiye dağılımı', labelWidth:190});
+
+  /* ============ B §6.2 madde 15 — boş durum VE hata durumu (4-state, gvEmpty.durum,
+     demo düğmeleriyle) ============ */
+  if(window.gvEmpty) gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:mzBarVeri.length});
+  var btnMzBosDemo = document.getElementById('btnMzBosDemo');
+  var btnMzHataDemo = document.getElementById('btnMzHataDemo');
+  var btnMzHataRetry = document.getElementById('btnMzHataRetry');
+  var btnMzBosGeriDon = document.getElementById('btnMzBosGeriDon');
+  if(btnMzBosDemo) btnMzBosDemo.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:0}); });
+  if(btnMzHataDemo) btnMzHataDemo.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:true, sonucSayisi:mzBarVeri.length}); });
+  if(btnMzHataRetry) btnMzHataRetry.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:mzBarVeri.length}); });
+  if(btnMzBosGeriDon) btnMzBosGeriDon.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:mzBarVeri.length}); });
 
   var enBuyukAlacak = { ad:'Alıcılar (Cari Alacak)', tutar:4560000 };
   var enBuyukBorc = { ad:'Satıcılar (Tedarikçi Cari Borcu)', tutar:3258200 };

@@ -202,6 +202,10 @@
       <div class="tbl-note"><i class="fa-solid fa-circle-info"></i> Tablo şirket geneli konsolide nakit pozisyonunu gösterir; kümülatif kırmızı hücreler negatif nakit pozisyonunu işaret eder. Proje bazlı haftalık kırılım kapsam dışıdır — proje/şirket geneli görünümü aşağıdaki tahsilat ve ödeme takvimi kartlarında uygulanır.</div>
     </div>
 
+    <!-- ============ KARŞILAŞTIRMA ALANI (B §6.2 madde 8) — AKIS[] checkpoint kümülatif
+         net değerlerinin (7g/30g/60g/90g, aynı KPI kartlarındaki rakamlar) dönemsel farkı ============ -->
+    <div class="rp-compare" id="nakitCompare" style="margin-bottom:20px"></div>
+
     <div class="gv-empty rp-error" id="nakitError" hidden style="margin-bottom:20px">
       <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
       <h4>Nakit akışı verisi yüklenemedi</h4>
@@ -274,6 +278,25 @@
   document.getElementById('tblAkisBody').innerHTML = rows;
 
   gvSpark('#nakitSpark', AKIS.map(function(a){ return a.kum; }), {tone: 'acc', baslik:'13 haftalık kümülatif nakit pozisyonu'});
+
+  /* ============ KARŞILAŞTIRMA ALANI — AKIS[]'teki 4 checkpoint'in (7g/30g/60g/90g)
+     kümülatif net değerleri arasındaki dönemsel fark; aynı rakamlar üstteki KPI
+     kartlarıyla BİREBİR (670.000/710.000/−2.990.000/−465.000), yeni sayı UYDURULMADI. ============ */
+  (function renderNakitCompare(){
+    var chk = {};
+    AKIS.forEach(function(a){ if(a.chk) chk[a.chk] = a.kum; });
+    function fmtSigned(n){ return (n < 0 ? '−' : '+') + tl(Math.abs(n)); }
+    function item(lbl, a, b){
+      var delta = b - a, cls = delta > 0 ? 'up' : (delta < 0 ? 'down' : 'flat');
+      var ic = delta > 0 ? 'fa-arrow-trend-up' : (delta < 0 ? 'fa-arrow-trend-down' : 'fa-minus');
+      return '<div class="rp-compare-item"><span class="rc-lbl">' + lbl + '</span><span class="rc-val">' + fmtSigned(a) + ' → ' + fmtSigned(b) + '</span>'
+        + '<span class="rp-compare-delta ' + cls + '"><i class="fa-solid ' + ic + '"></i> ' + fmtSigned(delta) + '</span></div>';
+    }
+    document.getElementById('nakitCompare').innerHTML =
+      item('Kümülatif net — 7g → 30g', chk['7g'], chk['30g'])
+      + item('Kümülatif net — 30g → 60g', chk['30g'], chk['60g'])
+      + item('Kümülatif net — 60g → 90g', chk['60g'], chk['90g']);
+  })();
 
   var rangeVal = null;
   function renderRangeKpi(){

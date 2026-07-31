@@ -78,6 +78,11 @@
 .eval-card b{color:var(--ink)}
 .eval-card ul{margin:8px 0 0;padding-left:18px}
 .eval-card li{margin-bottom:4px}
+
+/* ============ B §6.2/§7.3 eklentileri (T-RY) — grafik alanı (gvDonut/gvBar) ·
+   hata durumu. MEVCUT .gv-card/.gc-body/.gv-empty dilinden devralındı, yeni bir
+   bileşen dili İCAT EDİLMEDİ. [TR1] .gc-head nowrap taşma fix'i — bkz tasks/kararlar.md. ============ */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="varlik" data-screen="arac-dashboard">
@@ -142,6 +147,23 @@
 
     <div class="kpi-grid" id="kpiGrid"></div>
 
+    <!-- ============ B §6.2/§7.3 — grafik alanı: muayene/kasko/trafik sigortası uyarı
+         dağılımı + bakım maliyeti özeti (gvDonut/gvBar, spec-v2-core.md §7) ============ -->
+    <div class="dash-cols">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-pie"></i> Yaklaşan Uyarılar — Tür Bazında</div><span class="ph-sub" style="margin:0">Muayene · Kasko · Trafik Sigortası, ≤30 gün</span></div>
+        <div class="gc-body" id="uyariDonutWrap"></div>
+      </div>
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım Maliyeti — İlk 5 Araç</div><span class="ph-sub" style="margin:0">Tüm zamanlar · grafik özeti</span></div>
+        <div class="gc-body" id="bakimChartWrap"></div>
+      </div>
+    </div>
+    <div class="gv-card" style="margin-bottom:20px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-gas-pump"></i> Yakıt Gideri — Şantiye Bazında</div><span class="ph-sub" style="margin:0" id="yakitSantiyeSub">—</span></div>
+      <div class="gc-body" id="yakitSantiyeChartWrap"></div>
+    </div>
+
     <div class="dash-cols">
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Durum Dağılımı</div></div>
@@ -187,14 +209,27 @@
     </div>
 
     <div class="gv-card">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Muayene · Kasko · Trafik Sigortası Takvimi</div><span class="ph-sub" style="margin:0">Yaklaşan tarihe göre sıralı — arşivdeki araçlar (satıldı/hurda/kiralama bitti) hariç</span></div>
-      <div class="gc-body flush" id="takvimTblWrap">
-        <table class="gtable" id="tblTakvim">
+      <div class="gc-head rp-gc-head-wrap"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Muayene · Kasko · Trafik Sigortası Takvimi</div><span class="ph-sub" style="margin:0">Yaklaşan tarihe göre sıralı — arşivdeki araçlar (satıldı/hurda/kiralama bitti) hariç</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnTakvimHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <!-- ============ B §6.2 madde 15 — boş durum VE hata durumu (4-state, gvEmpty.durum) ============ -->
+      <div class="gc-body flush" id="takvimStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Takvim verisi yüklenemedi</h4>
+          <p>Muayene/kasko/trafik sigortası tarihleri şu an alınamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnTakvimHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <div data-gv-state="empty" class="gv-empty" hidden></div>
+        <table class="gtable" id="tblTakvim" data-gv-state="content" hidden>
           <thead><tr><th>Araç</th><th>Tür</th><th>Tarih</th><th class="num">Durum</th></tr></thead>
           <tbody id="takvimBody"></tbody>
         </table>
       </div>
-      <div class="gv-empty" id="takvimEmpty" hidden></div>
       <div class="rep-src" style="padding:0 22px 18px"><i class="fa-solid fa-circle-info"></i> <span>Eşik: 30 gün (crm-operasyon-arac-bildirim.html'deki varsayılan eşikle aynı) — bu süre içindeki veya süresi geçmiş kayıtlar kırmızı/turuncu rozetle vurgulanır.</span></div>
       <div class="cross-link">
         <i class="fa-solid fa-bell lead"></i>
@@ -290,6 +325,7 @@
 
   var donem = 'haziran';
   var santiyeFiltre = 'tumu';   /* B §6.2 — şantiye/proje filtresi (T-R4) */
+  var takvimHata = false;   /* B §6.2 madde 15 — hata durumu demo bayrağı (T-RY) */
 
   function render(){
     var ARAC_VIEW = santiyeFiltre === 'tumu' ? ARAC : ARAC.filter(function(a){ return a.santiye === santiyeFiltre; });
@@ -391,7 +427,7 @@
     renderRankList('bakimRankWrap', bakimRows, Math.max.apply(null, bakimRows.map(function(r){return r.val;}).concat([1])), false);
     document.getElementById('bakimFoot').textContent = (filtreAktif ? SANTIYE_ADI[santiyeFiltre] + ' bakım maliyeti toplamı: ' : 'Filo bakım maliyeti toplamı (tüm zamanlar): ') + tl(bakimToplam) + ' · ARC-09 kiralama kapsamında bedelsiz bakım aldığı için ₺0 gösterir';
 
-    /* ---- Muayene/Kasko/Trafik Takvimi (B §6.2 boş durum) ---- */
+    /* ---- Muayene/Kasko/Trafik Takvimi (B §6.2 boş durum + hata durumu, gvEmpty.durum 4-state) ---- */
     var takvim = [];
     aktifArac.forEach(function(a){
       if(a.muayene) takvim.push({no:a.no, plaka:a.plaka, tur:'Muayene', tarih:a.muayene});
@@ -400,21 +436,47 @@
     });
     takvim.sort(function(x,y){ return gunFarki(x.tarih) - gunFarki(y.tarih); });
     if(!takvim.length){
-      document.getElementById('takvimTblWrap').hidden = true;
-      document.getElementById('takvimEmpty').hidden = false;
-      gvEmpty.render(document.getElementById('takvimEmpty'), {
+      gvEmpty.render(document.querySelector('#takvimStateWrap [data-gv-state="empty"]'), {
         ikon:'fa-calendar-check', baslik:'Bu şantiyede yaklaşan tarih yok',
         aciklama: SANTIYE_ADI[santiyeFiltre] + ' filtresindeki araçların muayene/kasko/trafik sigortası bu görünümde listelenecek bir kaydı yok.',
         aksiyon: {etiket:'Tüm Şantiyeleri Göster', href:'crm-operasyon-arac-dashboard.html'}
       });
     } else {
-      document.getElementById('takvimEmpty').hidden = true;
-      document.getElementById('takvimTblWrap').hidden = false;
       document.getElementById('takvimBody').innerHTML = takvim.map(function(t){
         var g = gunFarki(t.tarih);
         return '<tr><td><div class="tv-arac"><b>'+t.no+'</b><span>'+t.plaka+'</span></div></td><td>'+t.tur+'</td><td>'+ddmmyyyy(t.tarih)+'</td>'
           + '<td class="num"><span class="gstat '+rozetCls(g)+'">'+durumMetni(g)+'</span></td></tr>';
       }).join('');
+    }
+    if(window.gvEmpty) gvEmpty.durum('#takvimStateWrap', {yukleniyor:false, hata:takvimHata, sonucSayisi:takvim.length});
+
+    /* ---- B §6.2/§7.3 — grafik alanı: yaklaşan uyarı dağılımı · bakım maliyeti özeti ·
+       şantiye bazlı yakıt gideri (gvDonut/gvBar, spec-v2-core.md §7) ---- */
+    if(window.gvDonut){
+      var uyariVeri = [];
+      if(muayeneYaklasan.length) uyariVeri.push({lbl:'Muayene', val:muayeneYaklasan.length, tone:'danger'});
+      if(kaskoYaklasan.length) uyariVeri.push({lbl:'Kasko', val:kaskoYaklasan.length, tone:'warn'});
+      if(trafikYaklasan.length) uyariVeri.push({lbl:'Trafik Sigortası', val:trafikYaklasan.length, tone:'info'});
+      var uyariWrap = document.getElementById('uyariDonutWrap');
+      if(uyariVeri.length) gvDonut(uyariWrap, uyariVeri, {baslik:'Yaklaşan uyarı dağılımı', merkezAlt:'uyarı'});
+      else gvEmpty.render(uyariWrap, {ikon:'fa-calendar-check', baslik:'Yaklaşan uyarı yok', aciklama:(filtreAktif ? SANTIYE_ADI[santiyeFiltre] + ' şantiyesinde' : 'Filo genelinde') + ' önümüzdeki 30 gün içinde muayene/kasko/trafik sigortası bitişi yok.'});
+    }
+    if(window.gvBar){
+      var bakimTop5 = ARAC_VIEW.filter(function(a){ return a.bakim; }).slice().sort(function(x,y){ return y.bakim-x.bakim; }).slice(0,5)
+        .map(function(a){ return {lbl:a.no, val:a.bakim, valLbl:tl(a.bakim)}; });
+      var bakimWrap = document.getElementById('bakimChartWrap');
+      if(bakimTop5.length) gvBar(bakimWrap, bakimTop5, {yon:'yatay', baslik:'Bakım maliyeti — ilk 5 araç', labelWidth:70});
+      else gvEmpty.render(bakimWrap, {ikon:'fa-screwdriver-wrench', baslik:'Bakım kaydı yok', aciklama:'Bu görünümde bakım maliyeti taşıyan araç yok.'});
+
+      var yakitSantiye = {};
+      ARAC_VIEW.forEach(function(a){ yakitSantiye[a.santiye] = (yakitSantiye[a.santiye]||0) + a.yakit[donem]; });
+      var yakitSantiyeVeri = Object.keys(yakitSantiye).filter(function(k){ return yakitSantiye[k] > 0; })
+        .map(function(k){ return {lbl:SANTIYE_ADI[k], val:yakitSantiye[k], valLbl:tl(yakitSantiye[k])}; })
+        .sort(function(a,b){ return b.val-a.val; });
+      document.getElementById('yakitSantiyeSub').textContent = (donem==='haziran' ? 'Haziran 2026 (tam ay)' : 'Temmuz 2026 (bugüne kadar)') + (filtreAktif ? ' · ' + SANTIYE_ADI[santiyeFiltre] + ' filtreli' : '');
+      var ySWrap = document.getElementById('yakitSantiyeChartWrap');
+      if(yakitSantiyeVeri.length) gvBar(ySWrap, yakitSantiyeVeri, {yon:'yatay', baslik:'Şantiye bazlı yakıt gideri', labelWidth:130});
+      else gvEmpty.render(ySWrap, {ikon:'fa-gas-pump', baslik:'Bu dönemde yakıt kaydı yok', aciklama:(filtreAktif ? SANTIYE_ADI[santiyeFiltre] + ' şantiyesinde ' : 'Filoda ') + (donem==='haziran' ? 'Haziran' : 'Temmuz') + ' ayında dolum kaydı bulunamadı.'});
     }
 
     /* ---- B §6.2 — yorum/değerlendirme alanı: kısa sentez, çıplak rakam bırakma ---- */
@@ -453,6 +515,12 @@
     this.querySelectorAll('button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
     render();
   });
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi (T-RY) ============ */
+  var btnTakvimHataDemo = document.getElementById('btnTakvimHataDemo');
+  var btnTakvimHataRetry = document.getElementById('btnTakvimHataRetry');
+  if(btnTakvimHataDemo) btnTakvimHataDemo.addEventListener('click', function(){ takvimHata = true; render(); });
+  if(btnTakvimHataRetry) btnTakvimHataRetry.addEventListener('click', function(){ takvimHata = false; render(); });
 
   /* B §6.4 — çıktı al (gvExport: format seçimi + kapsam + filtre özeti tek modalde) */
   if(window.gvExport){

@@ -173,6 +173,22 @@ body{font-family:var(--font);color:var(--on-dark)}
 .rk-empty{padding:48px 24px;text-align:center;color:var(--on-dark-mut)}
 .rk-empty i{font-size:26px;color:var(--gv-mint);margin-bottom:12px;display:block}
 .rk-empty h4{color:#fff;font-size:15px;margin-bottom:6px}
+.rk-error i{color:#e08282}
+.rk-error .btn{margin-top:12px}
+
+/* ============ B §6.2 eklentileri (T-RY) — rapor açıklaması · tarih aralığı ·
+   hata durumu (gvEmpty). Ortak ui.css'e DOKUNULMADI — bkz. gavia-mrr-raporu.html
+   AYNI bridge deseni (CSS custom property scoping, .pc-app kapsamında). ============ */
+.pc-app{
+  --ink:var(--gv-on-dark); --ink-2:var(--on-dark); --muted:var(--on-dark-mut);
+  --acc-ink:var(--gv-mint-bright); --acc-deep:var(--gv-mint);
+  --bg:rgba(255,255,255,.04); --line:var(--gv-border-dark); --line-2:var(--gv-border-dark);
+  --paper:var(--gv-night);
+}
+.pc-desc{font-size:13px;color:var(--on-dark);line-height:1.7;max-width:820px;margin:14px 0 0;
+  padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid var(--gv-border-dark);border-radius:var(--r-lg)}
+.pc-desc i{color:var(--gv-mint);margin-right:8px}
+.pc-desc b{color:#fff}
 </style>
 </head>
 <body>
@@ -202,6 +218,8 @@ body{font-family:var(--font);color:var(--on-dark)}
       <div class="pc-eyebrow"><i class="fa-solid fa-triangle-exclamation"></i> Platform Konsolu</div>
       <h1 class="pc-h1">Churn Riski</h1>
       <p class="pc-sub">Kullanım düşüşü, ödeme gecikmesi ve deneme/durgunluk sinyallerine göre risk skorlanan firmalar — her skorun dayandığı sinyal satırda görünür.</p>
+      <!-- ============ B §6.2 madde 2 — rapor açıklaması ============ -->
+      <p class="pc-desc"><i class="fa-solid fa-circle-info"></i>Risk skoru (0-100), her firma için üç sinyal grubunun ağırlıklı birleşimidir: <b>ödeme davranışı</b> (fatura vadesi geçti mi, kaç gündür), <b>kullanım trendi</b> (aktif kullanıcı/oturum sayısı son 30 günde düştü mü) ve <b>yaşam-döngüsü sinyali</b> (deneme süresi bitişi yakın mı, ücretsiz pakette uzun süredir yükseltme yok mu). 0-34 <b>Düşük</b>, 35-59 <b>Orta</b>, 60-100 <b>Yüksek</b> risk kabul edilir. Skor otomatik yenilenmez — aşağıdaki her satır, hangi somut sinyalin skoru yükselttiğini gösterir.</p>
       <div class="ph-actions" style="margin-top:14px"><button type="button" class="btn btn-ghost-dk btn-sm" id="btnRiskCikti"><i class="fa-solid fa-download"></i> Çıktı Al</button></div>
     </div>
 
@@ -222,6 +240,14 @@ body{font-family:var(--font);color:var(--on-dark)}
         <button data-p="ucretli">Ücretli (3)</button>
         <button data-p="ucretsiz">Deneme + Ücretsiz (2)</button>
       </div>
+    </div>
+    <!-- ============ B §6.2 madde 3 — tarih aralığı seçimi. Her firmanın risk skoru AYNI
+         değerlendirme tarihinde (2 Temmuz 2026, yukarıdaki snap-chip) hesaplandı; bu aralık
+         seçili değerlendirme tarihini kapsamayan bir dönem seçildiğinde listeyi/tabloyu
+         GERÇEKTEN boşaltır — yeni bir tarih İCAT EDİLMEDİ, mevcut snap-chip tarihi kullanılır. ============ -->
+    <div class="filt-row">
+      <span class="filt-lbl"><i class="fa-solid fa-calendar-days"></i> Değerlendirme Tarihi Aralığı</span>
+      <div data-gvdaterange id="rkDateRange"></div>
     </div>
 
     <div class="pc-kpis">
@@ -271,8 +297,26 @@ body{font-family:var(--font);color:var(--on-dark)}
       </div>
     </div>
 
-    <div class="risk-list" id="riskList"></div>
-    <div class="rk-empty" id="riskEmpty" hidden></div>
+    <!-- ============ B §6.2 madde 15 — boş durum VE hata durumu (4-state, gvEmpty.durum,
+         demo düğmesi risk listesi başlığı yerine ayrı bir bar olarak eklendi). ============ -->
+    <div class="filt-row" style="margin-bottom:10px">
+      <span class="filt-lbl"><i class="fa-solid fa-list-check"></i> Firma Risk Kartları</span>
+      <button type="button" class="btn btn-ghost-dk btn-sm" id="btnRiskHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+    </div>
+    <div id="riskStateWrap">
+      <div data-gv-state="loading" class="rk-empty gv-empty" hidden>
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <h4>Yükleniyor…</h4>
+      </div>
+      <div data-gv-state="error" class="rk-empty gv-empty rk-error" hidden>
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <h4>Risk kartları yüklenemedi</h4>
+        <p>Firma risk sinyalleri şu an alınamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
+        <button type="button" class="btn btn-mint btn-sm" id="btnRiskHataRetry"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+      </div>
+      <div data-gv-state="empty" class="rk-empty gv-empty" hidden></div>
+      <div data-gv-state="content" class="risk-list" id="riskList"></div>
+    </div>
 
     <!-- B §6.2 — yorum/değerlendirme alanı -->
     <div class="pc-card" style="margin-top:24px">
@@ -290,29 +334,29 @@ body{font-family:var(--font);color:var(--on-dark)}
 (function(){
   var ORT_SKOR = 37;   /* kanonik KPI — Platform ortalama risk skoru */
   var TENANTS = [
-    {key:'ege', ad:'Ege Modern İnşaat', href:'gavia-firma-detay.html?firma=ege', ankor:'#genel', paket:'CRM + Sales', paketIco:'fa-handshake', paid:true, mrr:19900, skor:72, seviye:'yuksek', seviyeEtiket:'Yüksek Risk',
+    {key:'ege', ad:'Ege Modern İnşaat', href:'gavia-firma-detay.html?firma=ege', ankor:'#genel', paket:'CRM + Sales', paketIco:'fa-handshake', paid:true, mrr:19900, skor:72, seviye:'yuksek', seviyeEtiket:'Yüksek Risk', degerlendirme:'2026-07-02',
       signals:[
         {hit:true, t:'Temmuz faturası vadesi geçti — 6 gündür tahsil edilmedi (destek talebi TCK-2026-044 açık)'},
         {hit:true, t:'Aktif kullanıcı son 30 günde %18 düştü (11 → 9)'},
         {hit:false, t:'7 aydır müşteri — henüz uzun vadeli sözleşme geçmişi yok'}
       ], contact:true},
-    {key:'kuzey', ad:'Kuzey Proje Ltd.', href:'gavia-firma-detay.html?firma=kuzey', ankor:'#paket', paket:'Basic · Deneme', paketIco:'fa-layer-group', paid:false, mrr:0, skor:48, seviye:'orta', seviyeEtiket:'Orta Risk · Dönüşüm',
+    {key:'kuzey', ad:'Kuzey Proje Ltd.', href:'gavia-firma-detay.html?firma=kuzey', ankor:'#paket', paket:'Basic · Deneme', paketIco:'fa-layer-group', paid:false, mrr:0, skor:48, seviye:'orta', seviyeEtiket:'Orta Risk · Dönüşüm', degerlendirme:'2026-07-02',
       signals:[
         {hit:true, t:'Deneme süresi 5 gün içinde bitiyor (8 Temmuz 2026) — ücretli pakete geçiş sinyali yok'},
         {hit:true, t:'Son 7 günde platform kullanımı düşük — 9 oturum, ortalama 2 aktif kullanıcı (4 lisanstan)'},
         {hit:false, t:'Açık destek talebi: deneme süresi uzatma isteği (TCK-2026-047)'}
       ], contact:true},
-    {key:'cinar', ad:'Çınar İnşaat', href:'gavia-firma-detay.html?firma=cinar', ankor:'#genel', paket:'Ücretsiz', paketIco:'fa-seedling', paid:false, mrr:0, skor:35, seviye:'orta', seviyeEtiket:'Orta Risk · Durgunluk',
+    {key:'cinar', ad:'Çınar İnşaat', href:'gavia-firma-detay.html?firma=cinar', ankor:'#genel', paket:'Ücretsiz', paketIco:'fa-seedling', paid:false, mrr:0, skor:35, seviye:'orta', seviyeEtiket:'Orta Risk · Durgunluk', degerlendirme:'2026-07-02',
       signals:[
         {hit:true, t:'2 aydır ücretsiz pakette; kullanıcı sayısı sabit (3/3, limit dolu) ve yükseltme sinyali yok'},
         {hit:false, t:'Aylık SMS bildirimi hiç kullanılmadı (0/0) — düşük etkileşim'}
       ], contact:true},
-    {key:'miray', ad:'Miray Yapı Group', href:'gavia-firma-detay.html?firma=miray', ankor:'#genel', paket:'Enterprise', paketIco:'fa-crown', paid:true, mrr:26900, skor:22, seviye:'dusuk', seviyeEtiket:'Düşük Risk',
+    {key:'miray', ad:'Miray Yapı Group', href:'gavia-firma-detay.html?firma=miray', ankor:'#genel', paket:'Enterprise', paketIco:'fa-crown', paid:true, mrr:26900, skor:22, seviye:'dusuk', seviyeEtiket:'Düşük Risk', degerlendirme:'2026-07-02',
       signals:[
         {hit:false, t:'Ödemeler düzenli, kullanım yüksek — 26 aydır kesintisiz müşteri'},
         {hit:true, t:'Fiyat notu: eski garanti fiyatı (₺26.900) güncel liste fiyatının (₺34.900) %23 altında — yenilemede görüşme konusu olabilir'}
       ], contact:false},
-    {key:'yapitas', ad:'Yapıtaş İnşaat A.Ş.', href:'gavia-firma-detay.html?firma=yapitas', ankor:'#genel', paket:'Professional', paketIco:'fa-gem', paid:true, mrr:14900, skor:10, seviye:'dusuk', seviyeEtiket:'Düşük Risk',
+    {key:'yapitas', ad:'Yapıtaş İnşaat A.Ş.', href:'gavia-firma-detay.html?firma=yapitas', ankor:'#genel', paket:'Professional', paketIco:'fa-gem', paid:true, mrr:14900, skor:10, seviye:'dusuk', seviyeEtiket:'Düşük Risk', degerlendirme:'2026-07-02',
       signals:[
         {hit:false, t:'Son 3 fatura zamanında tahsil edildi, kullanım limitleri dengeli (%68–72)'},
         {hit:false, t:'14 aydır müşteri, aktif kullanıcı trendi istikrarlı'}
@@ -324,12 +368,18 @@ body{font-family:var(--font);color:var(--on-dark)}
   function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
 
   var riskFiltre = 'tumu', paketFiltre = 'tumu';
+  var rkDateFilter = null;   /* B §6.2 madde 3 — tarih aralığı (T-RY) */
+  var riskHata = false;   /* B §6.2 madde 15 — hata durumu demo bayrağı (T-RY) */
 
   function filtered(){
     return TENANTS.filter(function(t){
       if(riskFiltre !== 'tumu' && t.seviye !== riskFiltre) return false;
       if(paketFiltre === 'ucretli' && !t.paid) return false;
       if(paketFiltre === 'ucretsiz' && t.paid) return false;
+      if(rkDateFilter){
+        var d = new Date(t.degerlendirme + 'T12:00:00');
+        if(d < rkDateFilter.from || d > rkDateFilter.to) return false;
+      }
       return true;
     });
   }
@@ -348,16 +398,13 @@ body{font-family:var(--font);color:var(--on-dark)}
 
   function renderList(){
     var rows = filtered();
+    var empty = document.querySelector('#riskStateWrap [data-gv-state="empty"]');
     if(!rows.length){
-      document.getElementById('riskList').hidden = true;
-      var empty = document.getElementById('riskEmpty');
-      empty.hidden = false;
-      empty.innerHTML = '<i class="fa-solid fa-circle-check"></i><h4>Bu filtre kombinasyonunda firma yok</h4><p>Risk seviyesi ve paket tipi filtrelerini genişletmeyi deneyin.</p>';
+      empty.innerHTML = '<i class="fa-solid fa-circle-check"></i><h4>Bu filtre kombinasyonunda firma yok</h4><p>Risk seviyesi, paket tipi veya değerlendirme tarihi aralığı filtrelerini genişletmeyi deneyin.</p>';
     } else {
-      document.getElementById('riskList').hidden = false;
-      document.getElementById('riskEmpty').hidden = true;
       document.getElementById('riskList').innerHTML = rows.map(cardHtml).join('');
     }
+    if(window.gvEmpty) gvEmpty.durum('#riskStateWrap', {yukleniyor:false, hata:riskHata, sonucSayisi:rows.length});
   }
 
   function renderKpis(){
@@ -403,13 +450,16 @@ body{font-family:var(--font);color:var(--on-dark)}
   }
 
   function renderTable(){
-    document.getElementById('rkTableBody').innerHTML = TENANTS.slice().sort(function(a,b){ return b.skor - a.skor; }).map(function(t){
+    /* B §6.2/§6.3 — tabloyu da risk/paket/tarih filtreleriyle tutarlı tutar (T-RY):
+       tarih aralığının satır sayısını GERÇEKTEN değiştirdiğini gösteren tek yer bu tablo. */
+    var rows = filtered().sort(function(a,b){ return b.skor - a.skor; });
+    document.getElementById('rkTableBody').innerHTML = rows.length ? rows.map(function(t){
       return '<tr><td class="t-strong"><a href="' + t.href + '">' + t.ad + '</a></td>'
         + '<td><span class="tier' + (t.paid?' paid':'') + '"><i class="fa-solid ' + t.paketIco + '"></i> ' + t.paket + '</span></td>'
         + '<td class="num">' + t.skor + ' / 100</td>'
         + '<td><span class="risk-badge ' + t.seviye + '" style="font-size:9.5px">' + t.seviyeEtiket + '</span></td>'
         + '<td class="num">' + (t.mrr ? tl(t.mrr) : '—') + '</td></tr>';
-    }).join('');
+    }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--on-dark-mut);padding:22px">Bu filtre kombinasyonunda firma yok.</td></tr>';
   }
 
   function renderEval(){
@@ -430,18 +480,35 @@ body{font-family:var(--font);color:var(--on-dark)}
     var btn = e.target.closest('button[data-r]'); if(!btn) return;
     riskFiltre = btn.getAttribute('data-r');
     this.querySelectorAll('button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
-    renderList();
+    renderList(); renderTable();
   });
   document.getElementById('paketFilter').addEventListener('click', function(e){
     var btn = e.target.closest('button[data-p]'); if(!btn) return;
     paketFiltre = btn.getAttribute('data-p');
     this.querySelectorAll('button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
-    renderList();
+    renderList(); renderTable();
   });
   document.getElementById('riskList').addEventListener('click', function(e){
     var btn = e.target.closest('[data-contact]'); if(!btn) return;
     gvToast(btn.getAttribute('data-contact') + ' için iletişim görevi oluşturuldu (simülasyon).', {type:'ok'});
   });
+
+  /* ============ B §6.2 madde 3 — tarih aralığı, GERÇEK filtreleme (T-RY) ============ */
+  if(window.gvDateRange){
+    gvDateRange('#rkDateRange', {
+      emptyLabel: 'Tüm tarihler',
+      onChange: function(val){
+        rkDateFilter = val ? {from:val.from, to:val.to, label:val.label} : null;
+        renderList(); renderTable();
+      }
+    });
+  }
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi (T-RY) ============ */
+  var btnRiskHataDemo = document.getElementById('btnRiskHataDemo');
+  var btnRiskHataRetry = document.getElementById('btnRiskHataRetry');
+  if(btnRiskHataDemo) btnRiskHataDemo.addEventListener('click', function(){ riskHata = true; renderList(); });
+  if(btnRiskHataRetry) btnRiskHataRetry.addEventListener('click', function(){ riskHata = false; renderList(); });
 
   if(window.gvExport){
     gvExport.init('#btnRiskCikti', {

@@ -62,6 +62,10 @@
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
 
+/* [T-RX] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md T-R1 deseni) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
+
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -250,20 +254,34 @@
 
       <!-- ============ TAŞERON FİRMA ADAM-GÜN ÖZETİ — satır bazlı, şantiye filtresiyle daralır ============ -->
       <div class="gv-card" style="margin-top:20px">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-people-group"></i> Taşeron Firma Adam-Gün Özeti</div><span class="ph-sub" style="margin:0">işlenen 4 gün · crm-operasyon-puantaj.html Taşeron sekmesi</span></div>
-        <div class="gc-body flush">
-          <table class="gtable" id="tblTaseronFirma">
-            <thead><tr><th>Firma</th><th>Şantiye</th><th class="num">Ekip</th><th class="num">Adam-Gün (4 gün)</th></tr></thead>
-            <tbody>
-              <tr data-santiye="vadi"><td>Demir-Beton İnş. Ltd.</td><td>Vadi Konakları</td><td class="num">10 kişi</td><td class="num">37 adam-gün</td></tr>
-              <tr data-santiye="vadi"><td>ElektroMek Taahhüt</td><td>Vadi Konakları</td><td class="num">6 kişi</td><td class="num">23 adam-gün</td></tr>
-              <tr data-santiye="liman"><td>Yalıtım Kardeşler</td><td>Liman Lojistik Merkezi</td><td class="num">8 kişi</td><td class="num">30 adam-gün</td></tr>
-            </tbody>
-          </table>
-          <div class="gv-empty" id="taseronFirmaEmpty" hidden>
-            <div class="ge-ico"><i class="fa-solid fa-people-group"></i></div>
-            <h4>Bu şantiyede taşeron ekibi yok</h4>
-            <p>Merkez Şantiye depo+atölye sahası olduğu için taşeron çalıştırmaz — tüm kadro öz personelden oluşur.</p>
+        <div class="gc-head rp-gc-head-wrap"><div class="gc-title"><i class="fa-solid fa-people-group"></i> Taşeron Firma Adam-Gün Özeti</div><span class="ph-sub" style="margin:0">işlenen 4 gün · crm-operasyon-puantaj.html Taşeron sekmesi</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnPtHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+        </div>
+        <div class="gc-body flush" id="ptTaseronFirmaStateWrap">
+          <div data-gv-state="loading" class="gv-empty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <h4>Yükleniyor…</h4>
+          </div>
+          <div data-gv-state="error" class="gv-empty rp-error" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>Taşeron puantaj verisi alınamadı</h4>
+            <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+            <button type="button" class="btn btn-acc btn-sm" id="btnPtHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+          </div>
+          <div data-gv-state="content">
+            <table class="gtable" id="tblTaseronFirma">
+              <thead><tr><th>Firma</th><th>Şantiye</th><th class="num">Ekip</th><th class="num">Adam-Gün (4 gün)</th></tr></thead>
+              <tbody>
+                <tr data-santiye="vadi"><td>Demir-Beton İnş. Ltd.</td><td>Vadi Konakları</td><td class="num">10 kişi</td><td class="num">37 adam-gün</td></tr>
+                <tr data-santiye="vadi"><td>ElektroMek Taahhüt</td><td>Vadi Konakları</td><td class="num">6 kişi</td><td class="num">23 adam-gün</td></tr>
+                <tr data-santiye="liman"><td>Yalıtım Kardeşler</td><td>Liman Lojistik Merkezi</td><td class="num">8 kişi</td><td class="num">30 adam-gün</td></tr>
+              </tbody>
+            </table>
+            <div class="gv-empty" id="taseronFirmaEmpty" hidden>
+              <div class="ge-ico"><i class="fa-solid fa-people-group"></i></div>
+              <h4>Bu şantiyede taşeron ekibi yok</h4>
+              <p>Merkez Şantiye depo+atölye sahası olduğu için taşeron çalıştırmaz — tüm kadro öz personelden oluşur.</p>
+            </div>
           </div>
         </div>
         <div class="gc-body" style="padding-top:0">
@@ -557,6 +575,16 @@
       }
     });
   }
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+  var btnPtHataDemo = document.getElementById('btnPtHataDemo');
+  var btnPtHataRetry = document.getElementById('btnPtHataRetry');
+  if(btnPtHataDemo) btnPtHataDemo.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#ptTaseronFirmaStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+  });
+  if(btnPtHataRetry) btnPtHataRetry.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#ptTaseronFirmaStateWrap', {yukleniyor:false, hata:false, sonucSayisi:1});
+  });
 
   /* ============ GRAFİK ALANI (B §7.3) — bağımlılıksız SVG, kanonik sayılardan ============ */
   if(window.gvBar){

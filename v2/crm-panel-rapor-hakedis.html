@@ -64,6 +64,10 @@
 
 /* mobilde 7-8 haneli TL tutarları 2 sütuna sığmıyor (kart kırpılması) — tek sütuna düşür */
 @media(max-width:480px){ .kpi-grid{grid-template-columns:1fr} }
+
+/* [T-RX] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md T-R1 deseni) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -368,9 +372,21 @@
     </div>
 
     <div class="gv-card" style="margin-bottom:24px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-contract"></i> Sözleşme Bedeli / Yürürlük Durumu</div><span class="ph-sub" style="margin:0">6 sözleşme tanımlı</span></div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblSozlesme">
+      <div class="gc-head rp-gc-head-wrap"><div class="gc-title"><i class="fa-solid fa-file-contract"></i> Sözleşme Bedeli / Yürürlük Durumu</div><span class="ph-sub" style="margin:0">6 sözleşme tanımlı</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnHkHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <div class="gc-body flush" id="hkSozlesmeStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Sözleşme verileri alınamadı</h4>
+          <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnHkHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <table class="gtable" id="tblSozlesme" data-gv-state="content">
           <thead><tr><th>Sözleşme</th><th>Şantiye</th><th class="num">Bedel</th><th>Durum</th></tr></thead>
           <tbody>
             <tr><td><div class="szl-name"><b><a href="crm-finans-sozlesme-detay.html?szl=k01" style="color:inherit">SZL-2026-K01</a> · Körfez GYO</b><span>Kurum</span></div></td><td>Vadi Konakları</td><td class="num t-strong">₺24.500.000</td><td><span class="gstat ok">Yürürlükte</span></td></tr>
@@ -543,6 +559,16 @@
     this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
     ch.classList.add('is-on');
     render();
+  });
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+  var btnHkHataDemo = document.getElementById('btnHkHataDemo');
+  var btnHkHataRetry = document.getElementById('btnHkHataRetry');
+  if(btnHkHataDemo) btnHkHataDemo.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#hkSozlesmeStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+  });
+  if(btnHkHataRetry) btnHkHataRetry.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#hkSozlesmeStateWrap', {yukleniyor:false, hata:false, sonucSayisi:1});
   });
 
   /* ============ ÇIKTI — gvExport (B §6.4). ciktiHref VERİLMEDİ — crm-finans-hakedis-cikti.html

@@ -255,6 +255,9 @@
         <div class="rp-chart-body" id="aracYakitBar"></div>
       </div>
 
+      <!-- ============ KARŞILAŞTIRMA ALANI (B §6.2 madde 8) ============ -->
+      <div class="rp-compare" id="mkCompare" style="margin-bottom:20px"></div>
+
       <div class="rp-note" id="mkNote"></div>
 
       <div class="gv-card">
@@ -521,6 +524,22 @@
   var yaklasanMuayene = ARAC.filter(function(a){ return a.muayeneGun<=30; }).length;
   var bakimAsim = ARAC.filter(function(a){ return a.bakimKm>a.bakimLimit; }).length;
   document.getElementById('mkNote').innerHTML = '<i class="fa-solid fa-lightbulb"></i> <strong>MKN-06 (Beko Loder) hidrolik arızayla bugün üretim dışı kaldı</strong> — filodaki tek arızalı ekipman. Araç filosunda ' + yaklasanMuayene + ' araç 30 gün içinde muayeneye giriyor (ARC-01, 18 gün) ve ' + bakimAsim + ' araç (ARC-04) bakım kilometresini aştığı için serviste. Yakıt giderinde en yüksek pay ~118 L/gün ile MKN-01\'de; araç filosunda en yüksek aylık işletme gideri ARC-02\'de (₺11.280).';
+
+  /* ============ KARŞILAŞTIRMA ALANI — tblBakim'in Haziran/Temmuz dönem kırılımından
+     (data-donem, aynı chip verisi) + ARAC[] muayene/bakım alanlarından CANLI türetilir.
+     Temmuz henüz 2 günlük olduğu için bakım kaydı deltası düşük güvenilirlikte —
+     crm-panel-rapor-avans.html "Temmuz toplamı (2 gün)" idiyomuyla aynı çekince notu. ============ */
+  (function renderMkCompare(){
+    var bakimHaziran = document.querySelectorAll('#tblBakim tbody tr[data-donem="haziran"]').length;
+    var bakimTemmuz = document.querySelectorAll('#tblBakim tbody tr[data-donem="temmuz"]').length;
+    document.getElementById('mkCompare').innerHTML =
+      '<div class="rp-compare-item"><span class="rc-lbl">Bakım kaydı — Haziran → Temmuz</span><span class="rc-val">' + bakimHaziran + ' → ' + bakimTemmuz + '</span>'
+        + '<span class="rp-compare-delta flat"><i class="fa-solid fa-calendar"></i> Temmuz henüz 2 günlük — karşılaştırma erken</span></div>'
+      + '<div class="rp-compare-item"><span class="rc-lbl">Muayenesi 30 gün içinde olan araç</span><span class="rc-val">' + yaklasanMuayene + ' / ' + ARAC.length + '</span>'
+        + '<span class="rp-compare-delta down"><i class="fa-solid fa-triangle-exclamation"></i> ARC-01 — 18 gün kaldı</span></div>'
+      + '<div class="rp-compare-item"><span class="rc-lbl">Bakım km sınırı aşan araç</span><span class="rc-val">' + bakimAsim + ' / ' + ARAC.length + '</span>'
+        + '<span class="rp-compare-delta down"><i class="fa-solid fa-triangle-exclamation"></i> ARC-04 — serviste</span></div>';
+  })();
 
   function bakimRangeShown(){
     var vis = 0;

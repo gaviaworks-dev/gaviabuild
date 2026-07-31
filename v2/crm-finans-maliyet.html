@@ -152,6 +152,18 @@
       <p><b>Betonarme (Kaba Yapı) kategorisi %104 ile bütçe aşımında</b> — revize ₺41.500.000 bütçeye karşı ₺43.160.000 gerçekleşen. Demir fiyat artışı BTC-2026-R1 revizyonuna rağmen etkisini sürdürüyor.</p>
     </div>
 
+    <!-- ============ GRAFİK ALANI (B §6.2 madde 6, spec-v2-core.md §7) ============ -->
+    <div class="rp-charts-2" style="margin-bottom:20px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Proje Bazlı Gerçekleşen Maliyet</h3></div>
+        <div class="rp-chart-body" id="chartMlProje"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Bütçe Kullanım Oranı</h3><span class="ph-sub" style="margin:0" id="chartMlButceSub">Vadi Konakları</span></div>
+        <div class="rp-chart-body" id="chartMlButce"></div>
+      </div>
+    </div>
+
     <div class="rp-compare" id="maliyetCompare" style="margin-bottom:20px"></div>
 
     <div id="maliyetWrap">
@@ -213,6 +225,18 @@
   if(!window.GV) return;
 
   function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  /* [T-RX] gvBar (yatay, ui.css/ui.js kilitli) sabit 480 birimlik viewBox kullanır;
+     satırın maksimum barı tam genişliğe ulaştığında değer etiketi viewBox sınırını
+     aşıp kırpılıyor (₺ milyonluk tutarlarda gözlemlendi, bkz tasks/devir-TRX.md).
+     Bileşen değiştirilemediği için sayfa-lokal kısaltılmış gösterim — ALTINDAKİ
+     tabloda/KPI'da tam hassasiyet zaten var, burada yalnız grafik ETİKETİ kısalır. */
+  function tlKisa(n){
+    var abs = Math.abs(n);
+    if(abs < 1000000) return tl(n);
+    var decimals = abs >= 10000000 ? 0 : 1;
+    var mn = (n / 1000000).toLocaleString('tr-TR', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+    return '₺' + mn + ' Mn';
+  }
   function pct(g, r){ return r ? Math.round(g/r*100) : 0; }
 
   var KATEGORI_ADI = ['Hafriyat & Zemin İşleri','Betonarme (Kaba Yapı)','Çatı & İzolasyon','Duvar & Sıva',
@@ -290,6 +314,16 @@
       + '<span class="rp-compare-delta flat"><i class="fa-solid fa-layer-group"></i>'+tl(PROJE.vadi.gerceklesen+PROJE.liman.gerceklesen+PROJE.merkez.gerceklesen)+' toplam gerçekleşen</span></div>';
   })();
 
+  /* ============ GRAFİK ALANI — proje bazlı gerçekleşen (bar, seçili projeden bağımsız
+     her zaman 3 projeyi gösterir) + seçili projenin bütçe kullanım oranı (donut, render() içinde güncellenir) ============ */
+  if(window.gvBar){
+    gvBar('#chartMlProje', [
+      {lbl:'Vadi Konakları', val:PROJE.vadi.gerceklesen, valLbl:tlKisa(PROJE.vadi.gerceklesen)},
+      {lbl:'Liman Lojistik', val:PROJE.liman.gerceklesen, valLbl:tlKisa(PROJE.liman.gerceklesen)},
+      {lbl:'Merkez Şantiye', val:PROJE.merkez.gerceklesen, valLbl:tlKisa(PROJE.merkez.gerceklesen)}
+    ], {yon:'yatay', baslik:'Proje bazlı gerçekleşen maliyet'});
+  }
+
   function render(pKey){
     document.querySelectorAll('#projeSwitch button').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-p') === pKey); });
 
@@ -314,6 +348,15 @@
     document.getElementById('kpiToplamDelta').innerHTML = '<i class="fa-solid fa-percent"></i> Revize bütçenin %' + u + "'ü";
     document.getElementById('gcSub').textContent = P.ad;
     document.getElementById('kaynakSub').textContent = P.ad + ' · ' + tl(P.gerceklesen);
+
+    document.getElementById('chartMlButceSub').textContent = P.ad;
+    if(window.gvDonut){
+      var kalan = Math.max(P.revize - P.gerceklesen, 0);
+      gvDonut('#chartMlButce', [
+        {lbl:'Gerçekleşen', val:P.gerceklesen, tone: u > 100 ? 'danger' : 'acc'},
+        {lbl:'Kalan Bütçe', val:kalan, tone:'muted'}
+      ], {baslik:P.ad + ' bütçe kullanım oranı', merkezEtiket:'%' + u, merkezAlt:'kullanım'});
+    }
 
     var maxBudget = Math.max.apply(null, P.kategoriler.map(function(k){ return k[0]; }));
     var asimIdx = -1;

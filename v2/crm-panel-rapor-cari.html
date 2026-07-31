@@ -93,6 +93,10 @@
   .tur-row .gbar{flex:1 1 100%;order:3}
   .tur-vals{min-width:0;text-align:left}
 }
+
+/* [T-RX] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+alt-başlık+demo
+   butonu üç öğeyle 390px'te taşabiliyor (bkz tasks/kararlar.md T-R1 deseni) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -353,17 +357,31 @@
 
     <!-- ============ TAŞERON KÜNYE ÖRNEĞİ — Demir-Beton, cari-detay çapraz referansı ============ -->
     <div class="gv-card" style="margin-bottom:24px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-building"></i> Taşeron Künye Örneği — Demir-Beton İnş. Ltd.</div><span class="ph-sub" style="margin:0">crm-cari-detay.html</span></div>
-      <div class="gc-body">
-        <div class="rep-src" style="margin:0 0 14px"><i class="fa-solid fa-circle-info"></i> Tuzla V.D. · 726 034 8841 · IBAN TR76 0011 1000 0000 1234 5678 91 · Sözleşme <a href="crm-finans-sozlesme-detay.html?szl=t05">SZL-2025-T05</a>, kümülatif imalat %66,7 (bkz. Hakediş Raporu).</div>
-        <table class="kn-table">
-          <thead><tr><th>Hakediş</th><th>Dönem</th><th class="num">Net Tutar</th><th>Durum</th></tr></thead>
-          <tbody>
-            <tr><td><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a></td><td>Haziran 2026</td><td class="num">₺90.000</td><td><span class="gstat wait">Onay Bekliyor</span></td></tr>
-            <tr><td><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013</a></td><td>Mayıs 2026</td><td class="num">₺210.000</td><td><span class="gstat ok">Onaylandı</span></td></tr>
-            <tr><td><a href="crm-finans-hakedis-detay.html?th=005">TH-2026-005</a></td><td>Nisan 2026</td><td class="num">₺185.000</td><td><span class="gstat ok">Ödendi</span></td></tr>
-          </tbody>
-        </table>
+      <div class="gc-head rp-gc-head-wrap"><div class="gc-title"><i class="fa-solid fa-building"></i> Taşeron Künye Örneği — Demir-Beton İnş. Ltd.</div><span class="ph-sub" style="margin:0">crm-cari-detay.html</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnCariHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <div class="gc-body" id="cariKunyeStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Cari ekstre verisi alınamadı</h4>
+          <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnCariHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <div data-gv-state="content">
+          <div class="rep-src" style="margin:0 0 14px"><i class="fa-solid fa-circle-info"></i> Tuzla V.D. · 726 034 8841 · IBAN TR76 0011 1000 0000 1234 5678 91 · Sözleşme <a href="crm-finans-sozlesme-detay.html?szl=t05">SZL-2025-T05</a>, kümülatif imalat %66,7 (bkz. Hakediş Raporu).</div>
+          <table class="kn-table">
+            <thead><tr><th>Hakediş</th><th>Dönem</th><th class="num">Net Tutar</th><th>Durum</th></tr></thead>
+            <tbody>
+              <tr><td><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a></td><td>Haziran 2026</td><td class="num">₺90.000</td><td><span class="gstat wait">Onay Bekliyor</span></td></tr>
+              <tr><td><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013</a></td><td>Mayıs 2026</td><td class="num">₺210.000</td><td><span class="gstat ok">Onaylandı</span></td></tr>
+              <tr><td><a href="crm-finans-hakedis-detay.html?th=005">TH-2026-005</a></td><td>Nisan 2026</td><td class="num">₺185.000</td><td><span class="gstat ok">Ödendi</span></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -483,6 +501,16 @@
     this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
     ch.classList.add('is-on');
     render();
+  });
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+  var btnCariHataDemo = document.getElementById('btnCariHataDemo');
+  var btnCariHataRetry = document.getElementById('btnCariHataRetry');
+  if(btnCariHataDemo) btnCariHataDemo.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#cariKunyeStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+  });
+  if(btnCariHataRetry) btnCariHataRetry.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#cariKunyeStateWrap', {yukleniyor:false, hata:false, sonucSayisi:1});
   });
 
   /* ============ ÇIKTI — gvExport (B §6.4). ciktiHref VERİLMEDİ — cari-detay/durum

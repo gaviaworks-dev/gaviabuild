@@ -141,6 +141,18 @@
       </div>
     </div>
 
+    <!-- ============ GRAFİK ALANI (B §6.2 madde 6, spec-v2-core.md §7) ============ -->
+    <div class="rp-charts-2" id="btChartsWrap" style="margin-bottom:20px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Proje Bazlı Bütçe Dağılımı</h3><span class="ph-sub" style="margin:0">revize bütçe</span></div>
+        <div class="rp-chart-body" id="chartBtProje"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Harcanan / Kalan</h3><span class="ph-sub" style="margin:0" id="chartBtHkSub">3 proje</span></div>
+        <div class="rp-chart-body" id="chartBtHk"></div>
+      </div>
+    </div>
+
     <div id="butceWrap">
     <div data-gv-state="loading" class="gv-empty" hidden>
       <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
@@ -189,6 +201,18 @@
   if(!window.GV) return;
 
   function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  /* [T-RX] gvBar (yatay, ui.css/ui.js kilitli) sabit 480 birimlik viewBox kullanır;
+     satırın maksimum barı tam genişliğe ulaştığında değer etiketi viewBox sınırını
+     aşıp kırpılıyor (₺ milyonluk tutarlarda gözlemlendi, bkz tasks/devir-TRX.md).
+     Bileşen değiştirilemediği için sayfa-lokal kısaltılmış gösterim — ALTINDAKİ
+     tabloda/KPI'da tam hassasiyet zaten var, burada yalnız grafik ETİKETİ kısalır. */
+  function tlKisa(n){
+    var abs = Math.abs(n);
+    if(abs < 1000000) return tl(n);
+    var decimals = abs >= 10000000 ? 0 : 1;
+    var mn = (n / 1000000).toLocaleString('tr-TR', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+    return '₺' + mn + ' Mn';
+  }
   function pct(g, r){ return r ? Math.round(g/r*100) : 0; }
 
   /* kaynak: mevcut pb-card'lardaki (D18) rakamlarla + crm-finans-maliyet.html
@@ -275,6 +299,7 @@
     document.querySelectorAll('#projeChips .chip').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-proje') === filter); });
 
     var sonucSayisi = keys.length;
+    document.getElementById('btChartsWrap').hidden = !sonucSayisi;
     gvEmpty.durum('#butceWrap', { sonucSayisi: sonucSayisi });
     if(!sonucSayisi){
       gvEmpty.render('#butceEmpty', {
@@ -284,6 +309,23 @@
         aksiyon:{etiket:'Şantiye Kaydına Git', href:'crm-santiye.html'}
       });
       return;
+    }
+
+    /* ============ GRAFİK ALANI — seçili kapsamdaki (keys) projelerden CANLI türetilir ============ */
+    if(window.gvBar){
+      gvBar('#chartBtProje', keys.map(function(k){
+        var P = PROJE[k];
+        return {lbl:P.ad, val:P.rev, valLbl:tlKisa(P.rev), tone: P.asimKat ? 'danger' : undefined};
+      }), {yon:'yatay', baslik:'Proje bazlı revize bütçe dağılımı', labelWidth:150});
+    }
+    if(window.gvDonut){
+      var gToplam = 0, rToplam = 0;
+      keys.forEach(function(k){ gToplam += PROJE[k].ger; rToplam += PROJE[k].rev; });
+      document.getElementById('chartBtHkSub').textContent = keys.length > 1 ? keys.length + ' proje' : PROJE[keys[0]].ad;
+      gvDonut('#chartBtHk', [
+        {lbl:'Harcanan', val:gToplam, tone:'acc'},
+        {lbl:'Kalan', val:Math.max(rToplam - gToplam, 0), tone:'muted'}
+      ], {baslik:'Harcanan / kalan bütçe', merkezEtiket:'%' + pct(gToplam, rToplam), merkezAlt:'kullanım'});
     }
 
     document.getElementById('butceGrid').innerHTML = gridHtml(keys);

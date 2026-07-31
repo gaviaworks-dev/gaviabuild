@@ -235,6 +235,12 @@
         </div>
       </div>
 
+      <!-- ============ KARŞILAŞTIRMA ALANI (B §6.2 madde 8) — kayıt/işlem tarihine (tarih
+           alanı, parseTarih ile) göre yıl kohortu karşılaştırması; DEMIRBAS[]'te durum
+           alanı yalnız GÜNCEL durumu tuttuğu için "geçmişteki zimmet sayısı" UYDURULMAZ —
+           bunun yerine kayıt yılına göre gruplanan gerçek kohort rakamları CANLI hesaplanır. -->
+      <div class="rp-compare" id="dmCompare" style="margin-bottom:20px"></div>
+
       <div class="rp-note" id="dmNote"><i class="fa-solid fa-lightbulb"></i> <strong>10 demirbaşın 6'sı zimmetli</strong> — hepsi Vadi Konakları şefi Hasan Demirci üzerinde. Merkez depoda zimmetsiz 2 kalem var (1 serviste, 1 kullanıma hazır); Liman ve Merkez şantiyelerinde yalnızca birer kalem işlenmiş — bu iki şantiyede demirbaş kaydı zayıf, envanterin gözden geçirilmesi önerilir.</div>
 
       <div class="gv-card">
@@ -401,6 +407,43 @@
     {lbl:'Merkez Şantiye', val:santiyeSayim.merkez, tone:'warn'},
     {lbl:'Merkez Depo', val:santiyeSayim.depo, tone:'muted'}
   ], {yon:'yatay', baslik:'Şantiye bazlı demirbaş dağılımı'});
+
+  /* ============ KARŞILAŞTIRMA ALANI — DEMIRBAS[] kayıt/işlem tarihinden (parseTarih)
+     yıl kohortuna göre CANLI türetilir. 2025 kohortu: teslim 10 Mar 2025 (ZMT-2025-017) +
+     teslim 8 Nis 2025 (ZMT-2025-009) — ikisi de kaynakta zaten "kişisiz/hurda-iade" olarak
+     kapanmış. 2026 kohortu: tarihi ayrıştırılabilen 7 kayıt (041-047; 048'in tarihi "—",
+     kohorta girmez). Zimmetli/kategori sayımları o kohorttaki kayıtların GÜNCEL alanlarından
+     (durum, kat) sayılır — geçmiş bir "o tarihteki durum" iddiası YOK. */
+  (function renderDmCompare(){
+    var kohort = {2025:[], 2026:[]};
+    DEMIRBAS.forEach(function(d){
+      var t = parseTarih(d.tarih);
+      if(!t) return;
+      var y = t.getFullYear();
+      if(kohort[y]) kohort[y].push(d);
+    });
+    var n25 = kohort[2025].length, n26 = kohort[2026].length;
+    var z25 = kohort[2025].filter(function(d){ return d.durum === 'zimmetli'; }).length;
+    var z26 = kohort[2026].filter(function(d){ return d.durum === 'zimmetli'; }).length;
+    function katCesidi(arr){
+      var seen = {}, n = 0;
+      arr.forEach(function(d){ if(!seen[d.kat]){ seen[d.kat] = true; n++; } });
+      return n;
+    }
+    var k25 = katCesidi(kohort[2025]);
+    var k26 = katCesidi(kohort[2026]);
+
+    function item(lbl, a, b, birim){
+      var delta = b - a, cls = delta > 0 ? 'up' : (delta < 0 ? 'down' : 'flat');
+      var ic = delta > 0 ? 'fa-arrow-trend-up' : (delta < 0 ? 'fa-arrow-trend-down' : 'fa-minus');
+      return '<div class="rp-compare-item"><span class="rc-lbl">' + lbl + ' — 2025 → 2026</span><span class="rc-val">' + a + ' → ' + b + '</span>'
+        + '<span class="rp-compare-delta ' + cls + '"><i class="fa-solid ' + ic + '"></i> ' + (delta >= 0 ? '+' : '') + delta + ' ' + birim + '</span></div>';
+    }
+    document.getElementById('dmCompare').innerHTML =
+      item('Kayıt edilen kalem', n25, n26, 'kalem')
+      + item('Hâlâ zimmetli kalem (kohorttan)', z25, z26, 'kalem')
+      + item('Kullanılan kategori çeşidi', k25, k26, 'çeşit');
+  })();
 
   var curKat = 'hepsi', curDurum = 'hepsi', curSantiye = 'tumu', curRange = null;
   function applyFilter(){

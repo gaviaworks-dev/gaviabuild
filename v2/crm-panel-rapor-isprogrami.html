@@ -50,6 +50,10 @@
 @media(max-width:640px){
   .prog-cell{min-width:150px}
 }
+
+/* [T-RX] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık+demo butonu
+   390px'te taşabiliyor (bkz tasks/kararlar.md T-R1 deseni) — sayfa-lokal sarma. */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -142,8 +146,22 @@
     </div>
 
     <div class="gv-card" style="margin-top:20px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Gecikmeler</div></div>
-      <div id="ipCrit"><div class="gv-empty"><div class="ge-ico"><i class="fa-solid fa-circle-check"></i></div><h4>Kritik gecikme yok</h4><p>Vadi Konakları iş programı takviminde şu anda gecikmiş bir kalem bulunmuyor.</p></div></div>
+      <div class="gc-head rp-gc-head-wrap"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Gecikmeler</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnIpHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <div id="ipCritStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Kritik gecikme verisi alınamadı</h4>
+          <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnIpHataRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <div id="ipCrit" data-gv-state="content"><div class="gv-empty"><div class="ge-ico"><i class="fa-solid fa-circle-check"></i></div><h4>Kritik gecikme yok</h4><p>Vadi Konakları iş programı takviminde şu anda gecikmiş bir kalem bulunmuyor.</p></div></div>
+      </div>
     </div>
 
     <!-- ============ GRAFİK ALANI (B §6.2 madde 6) ============ -->
@@ -367,6 +385,16 @@
       }
     });
   }
+
+  /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
+  var btnIpHataDemo = document.getElementById('btnIpHataDemo');
+  var btnIpHataRetry = document.getElementById('btnIpHataRetry');
+  if(btnIpHataDemo) btnIpHataDemo.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#ipCritStateWrap', {yukleniyor:false, hata:true, sonucSayisi:1});
+  });
+  if(btnIpHataRetry) btnIpHataRetry.addEventListener('click', function(){
+    if(window.gvEmpty) gvEmpty.durum('#ipCritStateWrap', {yukleniyor:false, hata:false, sonucSayisi:1});
+  });
 
   /* ============ ÇIKTI — gvExport (B §6.4). ciktiHref VERİLMEDİ — bu rapora karşılık
      gelen tek-kayıt/liste çıktı sayfası yok (santiye-detay İş Programı sekmesi ayrı
