@@ -17,7 +17,14 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Demirbaş envanteri ============ */
-#tblDemirbas{min-width:1560px}
+/* Dalga 5/T5C: min-width YALNIZ tablo modunda (>640px) — #tblDemirbas ID seçicisi
+   .gtable-cards sınıf seçicisinden specificity'de her zaman kazanır, media query
+   İÇİNE alınarak 640px altında hiç uygulanmaz (crm-personel.html emsali, kararlar 189).
+   BU KURAL, Dalga 1'in .ph-actions koşulsuz-sarma düzeltmesinden (madde altta) AYRI
+   bir konudur — o düzeltmeye DOKUNULMADI. */
+@media(min-width:641px){
+  #tblDemirbas{min-width:1560px}
+}
 .col-kategori{width:160px}
 .col-kisi{width:150px}
 .col-santiye{width:140px}
@@ -39,9 +46,16 @@
 /* iki boyutlu filtre — kategori grubu + durum grubu (crm-santiye-isg.html deseninin
    aynısı; ui.js'in tekil data-filter primitifi iki grubu birlikte AND edemediği için
    bu sayfada özel JS ile bağlanır, bkz. script — ui.js DEĞİŞTİRİLMEDİ) */
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* Dalga 5/T5C — flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali): ui.css'in temel
+   .filter-bar{flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-
+   direction + flex-wrap:wrap kombinasyonu satırların align-items:stretch ile kart
+   genişliğine kısıtlanması yerine İÇERİK genişliğine göre büyümesine sebep oluyor
+   (yeni eklenen gv-chipbar-wrap satırlarında 390px'te gerçek doc-level yatay taşmaya
+   yol açtığı bulundu ve düzeltildi). */
+.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
+.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
 .filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
 
 @media(max-width:640px){
   .dm-info b{max-width:180px}
@@ -81,11 +95,9 @@
 .row-chk .chk-box{width:16px;height:16px;border-radius:4px;border:2px solid var(--line-2);display:flex;align-items:center;justify-content:center;color:transparent;font-size:9px;transition:.15s var(--ease);background:var(--paper);flex:none}
 .row-chk input:checked + .chk-box{background:var(--acc-ink);border-color:var(--acc-ink);color:#fff}
 .row-chk input:focus-visible + .chk-box{outline:2px solid var(--acc);outline-offset:2px}
-/* Kolonlar popover — .gv-pop idiyomunun yeniden kullanımı (madde 9, crm-personel.html emsali) */
-.kolon-pop{min-width:220px}
-.kolon-item{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;border-radius:var(--r-sm);transition:.15s var(--ease)}
-.kolon-item:hover{background:var(--bg);color:var(--ink)}
-.kolon-item input{width:16px;height:16px;accent-color:var(--acc-ink);cursor:pointer;flex:none}
+/* Dalga 5/T5C — sayfa-lokal .kolon-pop/.kolon-item kaldırıldı: Kolonlar artık ortak
+   gvCols bileşeni (ui.js/ui.css .gv-colpop) kullanıyor (crm-personel.html/crm-santiye.html
+   emsali, tasks/spec-liste-mimarisi.md §3, K-168 migrasyon önerisinin bu track'te uygulanışı). */
 .dm-bulk-bar{display:flex;align-items:center;gap:14px;padding:12px 22px;background:rgba(var(--acc-rgb),.06);border-bottom:1px solid var(--line);flex-wrap:wrap}
 .dm-bulk-bar[hidden]{display:none}
 .dm-bulk-bar .bb-count{font-size:13px;font-weight:700;color:var(--ink)}
@@ -97,15 +109,12 @@
 }
 tr.is-checked{background:rgba(var(--acc-rgb),.05)}
 
-/* ============ Kolonlar (madde 9 — .gv-pop yeniden kullanımı) ile gizlenebilir
-   opsiyonel kolonlar — varsayılan liste sıkışmasın diye Seri No/Garanti Bitiş/
-   Bağlı Firma/Barkod varsayılan GİZLİ, "Kolonlar" popover'ından açılır ============ */
+/* ============ Kolonlar — gvCols'a taşındı (Dalga 5/T5C); Seri No/Garanti Bitiş/
+   Bağlı Firma/Barkod varsayılan GİZLİ kalıyor (def:false), diğer kolonlar def:true.
+   Görünürlük artık class tabanlı DEĞİL, gvCols'un cellsFor()/style.display yönetimiyle
+   çalışıyor — #tblDemirbas.hide-* kuralları/sınıfları kaldırıldı. ============ */
 .col-opt-marka,.col-opt-altkat{width:150px}
 .col-opt-seri,.col-opt-garanti,.col-opt-firma,.col-opt-barkod{width:140px}
-#tblDemirbas.hide-seri .col-opt-seri{display:none}
-#tblDemirbas.hide-garanti .col-opt-garanti{display:none}
-#tblDemirbas.hide-firma .col-opt-firma{display:none}
-#tblDemirbas.hide-barkod .col-opt-barkod{display:none}
 .dm-barkod{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-2);letter-spacing:.02em}
 .dm-garanti-doldu{color:var(--danger);font-weight:700}
 .dm-garanti-yaklasiyor{color:var(--warn);font-weight:700}
@@ -198,25 +207,33 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
         </div>
         <div class="filter-row">
           <span class="frow-lbl">Kategori</span>
-          <div class="chips" id="dmKatChips">
-            <button class="chip is-on" data-kat="hepsi">Tümü <span class="ch-cnt">10</span></button>
-            <button class="chip" data-kat="telefon">Telefon &amp; İletişim <span class="ch-cnt">3</span></button>
-            <button class="chip" data-kat="tablet">Tablet <span class="ch-cnt">1</span></button>
-            <button class="chip" data-kat="elaleti">El Aleti <span class="ch-cnt">2</span></button>
-            <button class="chip" data-kat="guvenlik">Güvenlik Ekipmanı <span class="ch-cnt">1</span></button>
-            <button class="chip" data-kat="arac">Araç <span class="ch-cnt">1</span></button>
-            <button class="chip" data-kat="makine">Makine-Ekipman <span class="ch-cnt">2</span></button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="dmKatChips">
+              <button class="chip is-on" data-kat="hepsi">Tümü <span class="ch-cnt">10</span></button>
+              <button class="chip" data-kat="telefon">Telefon &amp; İletişim <span class="ch-cnt">3</span></button>
+              <button class="chip" data-kat="tablet">Tablet <span class="ch-cnt">1</span></button>
+              <button class="chip" data-kat="elaleti">El Aleti <span class="ch-cnt">2</span></button>
+              <button class="chip" data-kat="guvenlik">Güvenlik Ekipmanı <span class="ch-cnt">1</span></button>
+              <button class="chip" data-kat="arac">Araç <span class="ch-cnt">1</span></button>
+              <button class="chip" data-kat="makine">Makine-Ekipman <span class="ch-cnt">2</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
         <div class="filter-row">
           <span class="frow-lbl">Durum</span>
-          <div class="chips" id="dmDurumChips">
-            <button class="chip is-on" data-durum="hepsi">Tümü</button>
-            <button class="chip" data-durum="zimmetli">Zimmetli</button>
-            <button class="chip" data-durum="depoda">Depoda</button>
-            <button class="chip" data-durum="serviste">Serviste</button>
-            <button class="chip" data-durum="hurda">Hurda</button>
-            <button class="chip" data-durum="iade">İade Edildi</button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="dmDurumChips">
+              <button class="chip is-on" data-durum="hepsi">Tümü</button>
+              <button class="chip" data-durum="zimmetli">Zimmetli</button>
+              <button class="chip" data-durum="depoda">Depoda</button>
+              <button class="chip" data-durum="serviste">Serviste</button>
+              <button class="chip" data-durum="hurda">Hurda</button>
+              <button class="chip" data-durum="iade">İade Edildi</button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
       </div>
@@ -263,23 +280,23 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
           <button type="button" class="btn btn-ghost btn-sm" id="bbClearBtn" data-no-confirm><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
         </div>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable hide-seri hide-garanti hide-firma hide-barkod" id="tblDemirbas">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblDemirbas">
           <thead>
             <tr>
               <th class="col-chk"><label class="row-chk" id="dmChkAllWrap"><input type="checkbox" id="dmChkAll" aria-label="Görünen tüm demirbaşları seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label></th>
               <th>Demirbaş</th>
-              <th class="col-kategori">Kategori</th>
-              <th class="col-opt-altkat">Alt Kategori</th>
-              <th class="col-opt-marka">Marka / Model</th>
-              <th class="col-opt-seri">Seri No</th>
-              <th class="col-kisi">Zimmetli Kişi</th>
-              <th class="col-santiye">Şantiye</th>
-              <th class="col-tarih">Teslim Tarihi</th>
-              <th class="col-opt-garanti">Garanti Bitiş</th>
-              <th class="col-opt-firma">Bağlı Firma</th>
-              <th class="col-opt-barkod">Barkod</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-kategori" data-col="kategori">Kategori</th>
+              <th class="col-opt-altkat" data-col="altkat">Alt Kategori</th>
+              <th class="col-opt-marka" data-col="marka">Marka / Model</th>
+              <th class="col-opt-seri" data-col="seri">Seri No</th>
+              <th class="col-kisi" data-col="kisi">Zimmetli Kişi</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th class="col-tarih" data-col="tarih">Teslim Tarihi</th>
+              <th class="col-opt-garanti" data-col="garanti">Garanti Bitiş</th>
+              <th class="col-opt-firma" data-col="firma">Bağlı Firma</th>
+              <th class="col-opt-barkod" data-col="barkod">Barkod</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
@@ -526,20 +543,20 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     var arsiv = d.durum === 'hurda' ? '1' : '0';
     var h = '<tr data-no="'+d.no+'" data-kat="'+d.kat+'" data-durum="'+d.durum+'" data-santiye="'+(d.santiye||'')+'" data-kisi="'+(d.kisi||'_kisisiz')+'"'
       + ' data-altkat="'+(d.altKat||'')+'" data-marka="'+(d.marka||'')+'" data-garantidurum="'+g.durum+'" data-bakim="'+(d.bakimGerekli?'gerekli':'gereksiz')+'" data-arsiv="'+arsiv+'">';
-    h += '<td><label class="row-chk"><input type="checkbox" class="dm-chk" data-no="'+d.no+'" aria-label="'+d.no+' seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label></td>';
-    h += '<td>'+dmCell(d)+'</td>';
-    h += '<td>'+K.lbl+'</td>';
-    h += '<td class="col-opt-altkat">'+(d.altKat ? d.altKat : '<span class="dm-yok">Araç modülünde</span>')+'</td>';
-    h += '<td class="col-opt-marka"><b style="font-size:12.5px">'+d.marka+'</b><br><span class="muted" style="font-size:11.5px">'+d.model+'</span></td>';
-    h += '<td class="col-opt-seri">'+(d.seriNo ? '<span class="dm-barkod">'+d.seriNo+'</span>' : '<span class="dm-yok">'+(d.seriNot||'—')+'</span>')+'</td>';
-    h += '<td>'+(d.kisi ? d.kisi : '<span class="dm-kisisiz">(kişisiz)</span>')+'</td>';
-    h += '<td>'+(d.santiye ? SANTIYE_ADI[d.santiye] : '<span class="dm-kisisiz">—</span>')+'</td>';
-    h += '<td>'+(d.tarihNot ? '<span class="muted" style="font-size:11.5px">'+d.tarihNot+':</span> ' : '')+d.tarih+'</td>';
-    h += '<td class="col-opt-garanti">'+(d.garantiNot ? '<span class="dm-yok">'+d.garantiNot+'</span>' : g.html)+'</td>';
-    h += '<td class="col-opt-firma">'+FIRMA_ADI+'</td>';
-    h += '<td class="col-opt-barkod">'+(d.dmrKod ? '<span class="dm-barkod">'+d.dmrKod+'</span>' : '<span class="dm-yok">'+d.dmrNot+'</span>')+'</td>';
-    h += '<td><span class="gstat '+D.cls+'">'+D.lbl+'</span></td>';
-    h += '<td><div class="row-acts"><a class="ia-btn" href="crm-operasyon-demirbas-detay.html'+(d.zmt ? '?zmt='+d.zmt : '')+'" data-no-confirm data-tip="Detay" aria-label="Demirbaş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+    h += '<td data-lbl=""><label class="row-chk"><input type="checkbox" class="dm-chk" data-no="'+d.no+'" aria-label="'+d.no+' seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label></td>';
+    h += '<td data-lbl="Demirbaş">'+dmCell(d)+'</td>';
+    h += '<td data-col="kategori" data-lbl="Kategori">'+K.lbl+'</td>';
+    h += '<td class="col-opt-altkat" data-col="altkat" data-lbl="Alt Kategori">'+(d.altKat ? d.altKat : '<span class="dm-yok">Araç modülünde</span>')+'</td>';
+    h += '<td class="col-opt-marka" data-col="marka" data-lbl="Marka / Model"><b style="font-size:12.5px">'+d.marka+'</b><br><span class="muted" style="font-size:11.5px">'+d.model+'</span></td>';
+    h += '<td class="col-opt-seri" data-col="seri" data-lbl="Seri No">'+(d.seriNo ? '<span class="dm-barkod">'+d.seriNo+'</span>' : '<span class="dm-yok">'+(d.seriNot||'—')+'</span>')+'</td>';
+    h += '<td data-col="kisi" data-lbl="Zimmetli Kişi">'+(d.kisi ? d.kisi : '<span class="dm-kisisiz">(kişisiz)</span>')+'</td>';
+    h += '<td data-col="santiye" data-lbl="Şantiye">'+(d.santiye ? SANTIYE_ADI[d.santiye] : '<span class="dm-kisisiz">—</span>')+'</td>';
+    h += '<td data-col="tarih" data-lbl="Teslim Tarihi">'+(d.tarihNot ? '<span class="muted" style="font-size:11.5px">'+d.tarihNot+':</span> ' : '')+d.tarih+'</td>';
+    h += '<td class="col-opt-garanti" data-col="garanti" data-lbl="Garanti Bitiş">'+(d.garantiNot ? '<span class="dm-yok">'+d.garantiNot+'</span>' : g.html)+'</td>';
+    h += '<td class="col-opt-firma" data-col="firma" data-lbl="Bağlı Firma">'+FIRMA_ADI+'</td>';
+    h += '<td class="col-opt-barkod" data-col="barkod" data-lbl="Barkod">'+(d.dmrKod ? '<span class="dm-barkod">'+d.dmrKod+'</span>' : '<span class="dm-yok">'+d.dmrNot+'</span>')+'</td>';
+    h += '<td data-col="durum" data-lbl="Durum"><span class="gstat '+D.cls+'">'+D.lbl+'</span></td>';
+    h += '<td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-operasyon-demirbas-detay.html'+(d.zmt ? '?zmt='+d.zmt : '')+'" data-no-confirm data-tip="Detay" aria-label="Demirbaş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
       + '<a class="ia-btn" href="crm-operasyon-demirbas-form.html?mod=duzenle'+(d.zmt && d.zmt !== '041' ? '&zmt='+d.zmt : '')+'" data-no-confirm data-tip="Düzenle" aria-label="Düzenle"><i class="fa-solid fa-pen"></i></a>'
       + '<a class="ia-btn" href="crm-operasyon-demirbas-etiket-yazdir.html?zmt='+(d.zmt || d.no.split('-').pop())+'" data-no-confirm data-tip="Etiket Yazdır" aria-label="Etiket yazdır"><i class="fa-solid fa-qrcode"></i></a>'
       + '<button type="button" class="ia-btn" data-no-confirm data-arsiv-btn data-tip="Arşivle" aria-label="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>';
@@ -680,67 +697,33 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     });
   });
 
-  /* ============ §2.8 — Kolonlar (madde 9 .gv-pop yeniden kullanımı) — Seri No/
-     Garanti Bitiş/Bağlı Firma/Barkod kolonları varsayılan gizli, kalıcı tercih ============ */
-  (function(){
-    var STORE_KEY = 'gv_crm_demirbas_kolonlar';
-    var btn = document.getElementById('kolonlarBtn');
-    var tbl = document.getElementById('tblDemirbas');
-    if(!btn || !tbl) return;
-    var wrap = btn.parentElement;
-    var COLS = [
-      {key:'seri', lbl:'Seri No'},
-      {key:'garanti', lbl:'Garanti Bitiş'},
-      {key:'firma', lbl:'Bağlı Firma'},
-      {key:'barkod', lbl:'Barkod (DMR Kod)'}
-    ];
-    function loadPrefs(){
-      try{
-        var raw = localStorage.getItem(STORE_KEY);
-        var p = raw ? JSON.parse(raw) : {};
-        var out = {};
-        COLS.forEach(function(c){ out[c.key] = p[c.key] === true; });
-        return out;
-      }catch(e){ var o = {}; COLS.forEach(function(c){ o[c.key] = false; }); return o; }
-    }
-    function savePrefs(p){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(p)); }catch(e){} }
-    function applyPrefs(p){
-      COLS.forEach(function(c){ tbl.classList.toggle('hide-' + c.key, !p[c.key]); });
-    }
-    var prefs = loadPrefs();
-    applyPrefs(prefs);
-
-    var menu = null;
-    function openMenu(){
-      if(menu) return;
-      menu = document.createElement('div');
-      menu.className = 'gv-pop kolon-pop';
-      var body = '<div class="gp-head"><b>Kolonlar</b><span>Listede gösterilecek alanları seçin</span></div>';
-      COLS.forEach(function(c){
-        body += '<label class="kolon-item"><input type="checkbox" data-kolon="'+c.key+'"'+(prefs[c.key]?' checked':'')+'><span>'+c.lbl+'</span></label>';
-      });
-      menu.innerHTML = body;
-      wrap.appendChild(menu);
-      menu.addEventListener('change', function(e){
-        var chk = e.target.closest('[data-kolon]'); if(!chk) return;
-        prefs[chk.getAttribute('data-kolon')] = chk.checked;
-        savePrefs(prefs);
-        applyPrefs(prefs);
-      });
-      btn.setAttribute('aria-expanded', 'true');
-      requestAnimationFrame(function(){ menu.classList.add('open'); });
-    }
-    function closeMenu(){
-      if(!menu) return;
-      var m = menu; menu = null;
-      m.classList.remove('open');
-      btn.setAttribute('aria-expanded', 'false');
-      setTimeout(function(){ m.remove(); }, 180);
-    }
-    btn.addEventListener('click', function(e){ e.stopPropagation(); if(menu) closeMenu(); else openMenu(); });
-    document.addEventListener('click', function(e){ if(menu && !wrap.contains(e.target)) closeMenu(); });
-    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
-  })();
+  /* ============ Dalga 5/T5C — Kolonlar (gvCols, §8.4) ============
+     Eski sayfa-lokal #kolonlarBtn popover'ı (gv_crm_demirbas_kolonlar anahtarı,
+     yalnız 4 opsiyonel kolonu göster/gizle yapabiliyordu) ortak gvCols bileşenine
+     taşındı — artık TÜM kolonlar (kategori…durum) göster/gizle + sıra + "Varsayılana
+     Dön" destekliyor. Varsayılan görünürlük KORUNDU: Seri No/Garanti Bitiş/Bağlı
+     Firma/Barkod def:false (önceden de gizliydi), diğerleri def:true (kimse kolon
+     kaybetmedi). localStorage anahtarı gv_cols_demirbas'a geçti (eski
+     gv_crm_demirbas_kolonlar artık okunmuyor — Faz 1 prototipinde veri göçü kapsam dışı). */
+  var gcHandle = null;
+  if(window.gvCols && document.getElementById('kolonlarBtn')){
+    gcHandle = gvCols.init({
+      mount: '#kolonlarBtn', table: '#tblDemirbas', screen: 'demirbas',
+      cols: [
+        {key:'kategori', lbl:'Kategori', def:true},
+        {key:'altkat', lbl:'Alt Kategori', def:true},
+        {key:'marka', lbl:'Marka / Model', def:true},
+        {key:'seri', lbl:'Seri No', def:false},
+        {key:'kisi', lbl:'Zimmetli Kişi', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'tarih', lbl:'Teslim Tarihi', def:true},
+        {key:'garanti', lbl:'Garanti Bitiş', def:false},
+        {key:'firma', lbl:'Bağlı Firma', def:false},
+        {key:'barkod', lbl:'Barkod (DMR Kod)', def:false},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
 
   /* ============ §2.8 — toplu seçim + toplu işlemler ============
      selectedNos rol-budanmış DEMIRBAS kümesiyle SINIRLI kalır (sef için zaten yalnız
@@ -779,7 +762,7 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
       syncChkUI();
     });
   }
-  function rebuildAll(){ renderList(); refreshCounts(); applyFilter(); }
+  function rebuildAll(){ renderList(); if(gcHandle) gcHandle.apply(); refreshCounts(); applyFilter(); }
   document.getElementById('bbClearBtn').addEventListener('click', function(){ selectedNos = {}; syncChkUI(); });
   /* §2.8 — Toplu Zimmetleme (durum güncellemeden AYRI: gerçekten bir kişiye atar) */
   document.getElementById('bbZimmetSelect').addEventListener('change', function(e){

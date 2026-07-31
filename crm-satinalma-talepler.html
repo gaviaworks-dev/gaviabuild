@@ -17,7 +17,12 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Malzeme Talepleri listesi ============ */
-#tblTalep{min-width:1080px}
+/* min-width YALNIZ tablo modunda (>640px) — #tblTalep ID seçicisi .gtable-cards sınıf
+   seçicisinden specificity'de her zaman kazanır, media query İÇİNE alınarak 640px
+   altında hiç uygulanmaz (crm-personel.html emsali, tasks/kararlar.md 189). */
+@media(min-width:641px){
+  #tblTalep{min-width:1080px}
+}
 .col-santiye{width:170px}
 .col-eden{width:150px}
 .col-oncelik{width:110px}
@@ -48,31 +53,32 @@
   .tl-desc{max-width:150px}
 }
 
-/* ---- mobil talep kartları (640px altı — D18 Y17): #tblTalep ile aynı tr kümesinden
-   üretilir, data-idx ile eşleşir; pager (data-paginate) 'gvpage' event'iyle senkron
-   kalır (portal-odemeler .tks-mrow deseni) ---- */
-.tl-mobile-list{display:none}
-.tl-mrow{padding:14px 18px;border-bottom:1px solid var(--line)}
-.tl-mrow:last-child{border-bottom:none}
-.tl-mrow-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
-.tl-mrow-top .tl-cell{flex:1}
-.tl-mrow-desc{display:block;font-size:13px;color:var(--ink-2);margin-bottom:9px;line-height:1.4}
-.tl-mrow-desc:hover{color:var(--acc-ink)}
-.tl-mrow-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin-bottom:10px;font-size:12px;color:var(--muted)}
-.tl-mrow-meta span{display:inline-flex;align-items:center;gap:6px}
-.tl-mrow-meta i{font-size:10.5px;color:var(--line-2)}
-.tl-mrow-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.tl-mrow-acts .ia-btn{width:36px;height:36px}
+/* Dalga 5/T5C — gv-chipbar-wrap + Kolonlar/Gelişmiş Filtre KENDİ satırında (spec-liste-
+   mimarisi.md §1 notu: chipbar'ın ebeveyni flex bir satırın PARÇASIYSA min-width:auto
+   tuzağına düşer — santiye/demirbaş/araç emsali .filter-bar.stack + .filter-row deseni).
+   flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali): ui.css'in temel .filter-bar
+   {flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-direction +
+   flex-wrap:wrap kombinasyonu satırların kart genişliğine kısıtlanması yerine İÇERİK
+   genişliğine göre büyümesine sebep oluyor (390px'te doğrulanan gerçek doc-level
+   yatay taşma — bulundu ve düzeltildi). */
+.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
+.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
+.tl-filter-acts{display:flex;gap:8px;margin-left:auto;flex:none}
 @media(max-width:640px){
-  #tblTalep{display:none}
-  .tl-mobile-list{display:block}
+  .tl-filter-acts{margin-left:0;width:100%}
+  .tl-filter-acts .btn{flex:1}
 }
+
+/* ---- Dalga 5/T5C: eski bespoke .tl-mobile-list/.tl-mrow JS-kart üretimi (D18 Y17)
+   ortak `gtable-cards` desenine geçirildi (tasks/spec-liste-mimarisi.md §4,
+   crm-personel.html/crm-santiye.html emsali) — #tblTalep artık 640px altında AYNI
+   <tr>'lerden CSS-only kart görünümüne dönüşüyor, ikinci bir DOM/state senkronizasyonu
+   gerekmiyor (buildTlCards/syncTlFilterVisibility/syncTlFpVisibility kaldırıldı). ---- */
 
 /* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme ---- */
 #tblTalep tbody tr[data-arsiv="1"]{display:none}
 #tblTalep.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
-.tl-mobile-list .tl-mrow[data-arsiv="1"]{display:none}
-.tl-mobile-list.gv-show-arsiv .tl-mrow[data-arsiv="1"]{display:block}
 </style>
 </head>
 <body data-sec="satinalma" data-screen="talepler">
@@ -132,23 +138,36 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Talep no, malzeme veya şantiye ara" data-table-search="#tblTalep">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Talep no, malzeme veya şantiye ara" data-table-search="#tblTalep">
+          </div>
         </div>
-        <div class="chips" data-target="#tblTalep">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">13</span></button>
-          <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt">7</span></button>
-          <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">2</span></button>
-          <button class="chip" data-filter="tedarik">Tedarik Sürecinde <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="revize">Revize İstendi <span class="ch-cnt">1</span></button>
+        <div class="filter-row">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblTalep">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">13</span></button>
+              <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt">7</span></button>
+              <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="tedarik">Tedarik Sürecinde <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="revize">Revize İstendi <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <div class="tl-filter-acts">
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+              <i class="fa-solid fa-table-columns"></i> Kolonlar
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTalepler">
+              <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+            </button>
+          </div>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTalepler">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
       </div>
       <div class="gv-achips-row" id="achipsTalepler" hidden>
         <div class="gv-achips"></div>
@@ -161,141 +180,141 @@
           </button>
         </div>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblTalep" data-paginate="25">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblTalep" data-paginate="25">
           <thead>
             <tr>
               <th>Talep</th>
-              <th class="col-santiye">Şantiye</th>
-              <th>Malzeme Özeti</th>
-              <th class="col-eden">Talep Eden</th>
-              <th class="col-oncelik">Öncelik</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th data-col="ozet">Malzeme Özeti</th>
+              <th class="col-eden" data-col="eden">Talep Eden</th>
+              <th class="col-oncelik" data-col="oncelik">Öncelik</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="bekliyor" data-santiye="vadi" data-tarih="2026-07-02">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a><span>2 Temmuz 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=046">Hazır beton C30 (30 m³) + demir çubuk Ø12 (2 ton)</a></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=046" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a><span>2 Temmuz 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=046">Hazır beton C30 (30 m³) + demir çubuk Ø12 (2 ton)</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Hasan Demirci</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri acil">Acil</span></td>
+              <td data-badge="bekliyor" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=046" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-santiye="liman" data-tarih="2026-07-01">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=045">MLZ-2026-045</a><span>1 Temmuz 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=045">Çelik konstrüksiyon kaynak teli + gaz tüpü</a></td>
-              <td>Şükrü Aslan</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=045" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=045">MLZ-2026-045</a><span>1 Temmuz 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=045">Çelik konstrüksiyon kaynak teli + gaz tüpü</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Şükrü Aslan</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri normal">Normal</span></td>
+              <td data-badge="bekliyor" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=045" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-santiye="merkez" data-tarih="2026-07-01">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=044">MLZ-2026-044</a><span>1 Temmuz 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=044">Yalıtım malzemesi (XPS) — 200 m²</a></td>
-              <td>Ömer Taşkın</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=044" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=044">MLZ-2026-044</a><span>1 Temmuz 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=044">Yalıtım malzemesi (XPS) — 200 m²</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Ömer Taşkın</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri normal">Normal</span></td>
+              <td data-badge="bekliyor" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=044" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-santiye="vadi" data-tarih="2026-06-30">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=043">MLZ-2026-043</a><span>30 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=043">PVC boru + pis su bağlantı seti</a></td>
-              <td>İbrahim Sönmez</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=043" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=043">MLZ-2026-043</a><span>30 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=043">PVC boru + pis su bağlantı seti</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">İbrahim Sönmez</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri normal">Normal</span></td>
+              <td data-badge="bekliyor" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=043" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-santiye="liman" data-tarih="2026-06-29">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=042">MLZ-2026-042</a><span>29 Haziran 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=042">Forklift lastiği (4 adet)</a></td>
-              <td>Halil Güneş</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=042" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=042">MLZ-2026-042</a><span>29 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=042">Forklift lastiği (4 adet)</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Halil Güneş</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri acil">Acil</span></td>
+              <td data-badge="bekliyor" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=042" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarik" data-santiye="merkez" data-tarih="2026-06-28">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=041">MLZ-2026-041</a><span>28 Haziran 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=041">Elektrik kablosu NYY 3x2,5 — 500 m</a></td>
-              <td>Recep Yaman</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat info">Tedarik Sürecinde</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=041" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=041">MLZ-2026-041</a><span>28 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=041">Elektrik kablosu NYY 3x2,5 — 500 m</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Recep Yaman</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat info">Tedarik Sürecinde</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=041" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamamlandi" data-santiye="vadi" data-tarih="2026-06-27">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=040">MLZ-2026-040</a><span>27 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=040">Alçı sıva malzemesi — 40 torba</a></td>
-              <td>Selim Doğan</td>
-              <td><span class="pri planli">Planlı</span></td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=040" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=040">MLZ-2026-040</a><span>27 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=040">Alçı sıva malzemesi — 40 torba</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Selim Doğan</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri planli">Planlı</span></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Tamamlandı</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=040" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-santiye="vadi" data-tarih="2026-06-26">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=039">MLZ-2026-039</a><span>26 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=039">İç kapı seti — 12 adet</a></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri planli">Planlı</span></td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=039" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=039">MLZ-2026-039</a><span>26 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=039">İç kapı seti — 12 adet</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Hasan Demirci</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri planli">Planlı</span></td>
+              <td data-badge="bekliyor" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=039" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="bekliyor" data-santiye="liman" data-tarih="2026-06-25">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=038">MLZ-2026-038</a><span>25 Haziran 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=038">Kaynak elektrotu + iş güvenliği ekipmanı</a></td>
-              <td>Metin Çetin</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=038" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=038">MLZ-2026-038</a><span>25 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=038">Kaynak elektrotu + iş güvenliği ekipmanı</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Metin Çetin</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri acil">Acil</span></td>
+              <td data-badge="bekliyor" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=038" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="onaylandi" data-santiye="merkez" data-tarih="2026-06-20">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=037">MLZ-2026-037</a><span>20 Haziran 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=037">Çimento (50 torba) + kum-çakıl</a></td>
-              <td>Ömer Taşkın</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td data-badge="onaylandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=037" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=037">MLZ-2026-037</a><span>20 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=037">Çimento (50 torba) + kum-çakıl</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Ömer Taşkın</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri normal">Normal</span></td>
+              <td data-badge="onaylandi" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=037" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="onaylandi" data-santiye="vadi" data-tarih="2026-06-18">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=036">MLZ-2026-036</a><span>18 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=036">Boya malzemesi — iç cephe</a></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td data-badge="onaylandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=036" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=036">MLZ-2026-036</a><span>18 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=036">Boya malzemesi — iç cephe</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Hasan Demirci</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri normal">Normal</span></td>
+              <td data-badge="onaylandi" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=036" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="reddedildi" data-santiye="liman" data-tarih="2026-06-15">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=035">MLZ-2026-035</a><span>15 Haziran 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=035">Vinç halatı değişimi</a></td>
-              <td>Aylin Koç</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td data-badge="reddedildi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=035" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=035">MLZ-2026-035</a><span>15 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=035">Vinç halatı değişimi</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Aylin Koç</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri acil">Acil</span></td>
+              <td data-badge="reddedildi" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=035" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="revize" data-santiye="vadi" data-tarih="2026-06-12">
-              <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=034">MLZ-2026-034</a><span>12 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=034">Cam ünitesi — B Blok pencere</a></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td data-badge="revize"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=034" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Talep"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=034">MLZ-2026-034</a><span>12 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="ozet" data-lbl="Malzeme Özeti"><a class="tl-desc" href="crm-satinalma-talep-detay.html?mlz=034">Cam ünitesi — B Blok pencere</a></td>
+              <td data-col="eden" data-lbl="Talep Eden">Hasan Demirci</td>
+              <td data-col="oncelik" data-lbl="Öncelik"><span class="pri normal">Normal</span></td>
+              <td data-badge="revize" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=034" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
         </table>
         <!-- statik bake — 390px mobil kart listesi, #tblTalep ile aynı 13 kayıttan (kanonik dizi VERBATIM); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
-        <div class="tl-mobile-list" id="tlMobileList"><div class="tl-mrow" data-f="bekliyor" data-idx="0"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a><span>2 Temmuz 2026</span></div></div><span class="pri acil">Acil</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=046">Hazır beton C30 (30 m³) + demir çubuk Ø12 (2 ton)</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Vadi Konakları</span><span><i class="fa-solid fa-user"></i> Hasan Demirci</span></div><div class="tl-mrow-bottom"><div><span class="gstat wait">Onay bekliyor</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=046" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="bekliyor" data-idx="1"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=045">MLZ-2026-045</a><span>1 Temmuz 2026</span></div></div><span class="pri normal">Normal</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=045">Çelik konstrüksiyon kaynak teli + gaz tüpü</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Liman Lojistik Merkezi</span><span><i class="fa-solid fa-user"></i> Şükrü Aslan</span></div><div class="tl-mrow-bottom"><div><span class="gstat wait">Onay bekliyor</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=045" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="bekliyor" data-idx="2"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=044">MLZ-2026-044</a><span>1 Temmuz 2026</span></div></div><span class="pri normal">Normal</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=044">Yalıtım malzemesi (XPS) — 200 m²</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Merkez Şantiye</span><span><i class="fa-solid fa-user"></i> Ömer Taşkın</span></div><div class="tl-mrow-bottom"><div><span class="gstat wait">Onay bekliyor</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=044" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="bekliyor" data-idx="3"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=043">MLZ-2026-043</a><span>30 Haziran 2026</span></div></div><span class="pri normal">Normal</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=043">PVC boru + pis su bağlantı seti</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Vadi Konakları</span><span><i class="fa-solid fa-user"></i> İbrahim Sönmez</span></div><div class="tl-mrow-bottom"><div><span class="gstat wait">Onay bekliyor</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=043" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="bekliyor" data-idx="4"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=042">MLZ-2026-042</a><span>29 Haziran 2026</span></div></div><span class="pri acil">Acil</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=042">Forklift lastiği (4 adet)</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Liman Lojistik Merkezi</span><span><i class="fa-solid fa-user"></i> Halil Güneş</span></div><div class="tl-mrow-bottom"><div><span class="gstat wait">Onay bekliyor</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=042" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="tedarik" data-idx="5"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=041">MLZ-2026-041</a><span>28 Haziran 2026</span></div></div><span class="pri normal">Normal</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=041">Elektrik kablosu NYY 3x2,5 — 500 m</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Merkez Şantiye</span><span><i class="fa-solid fa-user"></i> Recep Yaman</span></div><div class="tl-mrow-bottom"><div><span class="gstat info">Tedarik Sürecinde</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=041" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="tamamlandi" data-idx="6"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=040">MLZ-2026-040</a><span>27 Haziran 2026</span></div></div><span class="pri planli">Planlı</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=040">Alçı sıva malzemesi — 40 torba</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Vadi Konakları</span><span><i class="fa-solid fa-user"></i> Selim Doğan</span></div><div class="tl-mrow-bottom"><div><span class="gstat ok">Tamamlandı</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=040" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="bekliyor" data-idx="7"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=039">MLZ-2026-039</a><span>26 Haziran 2026</span></div></div><span class="pri planli">Planlı</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=039">İç kapı seti — 12 adet</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Vadi Konakları</span><span><i class="fa-solid fa-user"></i> Hasan Demirci</span></div><div class="tl-mrow-bottom"><div><span class="gstat wait">Onay bekliyor</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=039" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="bekliyor" data-idx="8"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=038">MLZ-2026-038</a><span>25 Haziran 2026</span></div></div><span class="pri acil">Acil</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=038">Kaynak elektrotu + iş güvenliği ekipmanı</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Liman Lojistik Merkezi</span><span><i class="fa-solid fa-user"></i> Metin Çetin</span></div><div class="tl-mrow-bottom"><div><span class="gstat wait">Onay bekliyor</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=038" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="onaylandi" data-idx="9"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=037">MLZ-2026-037</a><span>20 Haziran 2026</span></div></div><span class="pri normal">Normal</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=037">Çimento (50 torba) + kum-çakıl</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Merkez Şantiye</span><span><i class="fa-solid fa-user"></i> Ömer Taşkın</span></div><div class="tl-mrow-bottom"><div><span class="gstat ok">Onaylandı</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=037" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="onaylandi" data-idx="10"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=036">MLZ-2026-036</a><span>18 Haziran 2026</span></div></div><span class="pri normal">Normal</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=036">Boya malzemesi — iç cephe</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Vadi Konakları</span><span><i class="fa-solid fa-user"></i> Hasan Demirci</span></div><div class="tl-mrow-bottom"><div><span class="gstat ok">Onaylandı</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=036" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="reddedildi" data-idx="11"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=035">MLZ-2026-035</a><span>15 Haziran 2026</span></div></div><span class="pri acil">Acil</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=035">Vinç halatı değişimi</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Liman Lojistik Merkezi</span><span><i class="fa-solid fa-user"></i> Aylin Koç</span></div><div class="tl-mrow-bottom"><div><span class="gstat danger">Reddedildi</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=035" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="tl-mrow" data-f="revize" data-idx="12"><div class="tl-mrow-top"><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><a class="tl-link" href="crm-satinalma-talep-detay.html?mlz=034">MLZ-2026-034</a><span>12 Haziran 2026</span></div></div><span class="pri normal">Normal</span></div><a class="tl-mrow-desc" href="crm-satinalma-talep-detay.html?mlz=034">Cam ünitesi — B Blok pencere</a><div class="tl-mrow-meta"><span><i class="fa-solid fa-helmet-safety"></i> Vadi Konakları</span><span><i class="fa-solid fa-user"></i> Hasan Demirci</span></div><div class="tl-mrow-bottom"><div><span class="gstat warn">Revize istendi</span></div><div class="tl-mrow-acts"><a class="ia-btn" href="crm-satinalma-talep-detay.html?mlz=034" data-no-confirm="" aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div></div>
+        <!-- Dalga 5/T5C: eski bespoke .tl-mobile-list JS-kart bake'i kaldırıldı — #tblTalep artık gtable-cards ile 640px altında kendi kendine karta dönüşüyor. -->
         <!-- §7 boş durum metni (doküman BİREBİR): filtre/arama sonucu 0 kayıt İLE modülde
              hiç kayıt olmaması AYRI durumlardır — id="tlEmptyMsg" JS'te ikisi arasında
              metni değiştirir (bkz. syncTlEmptyMessage), mevcut .gv-empty/.ge-ico devralındı. -->
@@ -386,102 +405,11 @@
     el.hidden = OLUSTURABILIR.indexOf(GV.role) === -1;
   });
 
-  /* ---- mobil kart listesi (D18 Y17): masaüstü #tblTalep ile aynı tr kümesinden
-     üretilir — tek veri modeli (portal-odemeler .tks-mrow deseni). Rol budaması
-     (tr.remove, yukarıda) SONRASI çağrılır. data-idx data-label YERİNE eşleşme
-     anahtarıdır. ---- */
+  /* Dalga 5/T5C — eski bespoke .tl-mobile-list JS-kart üretimi (buildTlCards/
+     syncTlFilterVisibility/syncTlFpVisibility) KALDIRILDI: #tblTalep artık
+     `gtable-cards` ile 640px altında AYNI <tr> kümesinden CSS-only karta dönüşüyor,
+     ikinci bir DOM ağacı senkronize etmeye gerek yok (crm-personel.html emsali). */
   var tlTable = document.getElementById('tblTalep');
-  var tlMobileList = document.getElementById('tlMobileList');
-  function buildTlCards(){
-    if(!tlTable || !tlMobileList) return;
-    var tbody = tlTable.querySelector('tbody');
-    var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
-    tlMobileList.innerHTML = '';
-    rows.forEach(function(tr, idx){
-      tr.setAttribute('data-idx', idx);
-      var card = document.createElement('div');
-      card.className = 'tl-mrow';
-      card.setAttribute('data-f', tr.getAttribute('data-f') || '');
-      card.setAttribute('data-idx', idx);
-      card.setAttribute('data-arsiv', tr.getAttribute('data-arsiv') || '');
-      card.hidden = tr.hidden;
-
-      var top = document.createElement('div'); top.className = 'tl-mrow-top';
-      var cellEl = tr.querySelector('.tl-cell');
-      if(cellEl) top.appendChild(cellEl.cloneNode(true));
-      var pri = tr.querySelector('.pri');
-      if(pri) top.appendChild(pri.cloneNode(true));
-      card.appendChild(top);
-
-      var descEl = tr.querySelector('.tl-desc');
-      if(descEl){
-        var desc = document.createElement('a');
-        desc.className = 'tl-mrow-desc'; desc.href = descEl.getAttribute('href'); desc.textContent = descEl.textContent;
-        card.appendChild(desc);
-      }
-
-      var meta = document.createElement('div'); meta.className = 'tl-mrow-meta';
-      var santiyeTd = tr.children[1];
-      var edenTd = tr.children[3];
-      var site = document.createElement('span');
-      site.innerHTML = '<i class="fa-solid fa-helmet-safety"></i>';
-      site.appendChild(document.createTextNode(' ' + (santiyeTd ? santiyeTd.textContent.trim() : '—')));
-      meta.appendChild(site);
-      var eden = document.createElement('span');
-      eden.innerHTML = '<i class="fa-solid fa-user"></i>';
-      eden.appendChild(document.createTextNode(' ' + (edenTd ? edenTd.textContent.trim() : '—')));
-      meta.appendChild(eden);
-      card.appendChild(meta);
-
-      var bottom = document.createElement('div'); bottom.className = 'tl-mrow-bottom';
-      var durumTd = tr.children[5];
-      var durum = durumTd ? durumTd.querySelector('.gstat') : null;
-      var durumWrap = document.createElement('div');
-      if(durum) durumWrap.appendChild(durum.cloneNode(true));
-      bottom.appendChild(durumWrap);
-
-      var acts = document.createElement('div'); acts.className = 'tl-mrow-acts';
-      var iaBtn = tr.querySelector('.ia-btn');
-      if(iaBtn){
-        var ia = document.createElement('a');
-        ia.className = 'ia-btn'; ia.href = iaBtn.getAttribute('href');
-        ia.setAttribute('data-no-confirm', ''); ia.setAttribute('aria-label', 'Talep detayı');
-        ia.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i>';
-        acts.appendChild(ia);
-      }
-      bottom.appendChild(acts);
-      card.appendChild(bottom);
-
-      tlMobileList.appendChild(card);
-    });
-  }
-  buildTlCards();
-
-  /* filtre (chip/arama) değişince tr.hidden → card.hidden aktarımı — data-idx eşleşmesi */
-  function syncTlFilterVisibility(){
-    if(!tlTable || !tlMobileList) return;
-    Array.prototype.forEach.call(tlTable.querySelectorAll('tbody tr'), function(tr){
-      var idx = tr.getAttribute('data-idx');
-      if(idx === null) return;
-      var card = tlMobileList.querySelector('.tl-mrow[data-idx="' + idx + '"]');
-      if(card) card.hidden = tr.hidden;
-    });
-  }
-
-  /* §13 tarih aralığı — Gelişmiş Filtre paneli yalnız #tblTalep'i (opts.table) bilir,
-     390px altında görünen ayrı .tl-mrow kart listesini GÖRMEZ (spec-filtre-tarih.md
-     §3 varsayılan motorunun kapsamı tek tablo). Panelin ürettiği .gv-fp-hide sınıfını
-     (Durum + Tarih Aralığı alanları dahil) data-idx eşleşmesiyle karta da yansıtır —
-     aksi halde mobilde filtre görünmez ama masaüstünde çalışır tutarsızlığı olurdu. */
-  function syncTlFpVisibility(){
-    if(!tlTable || !tlMobileList) return;
-    Array.prototype.forEach.call(tlTable.querySelectorAll('tbody tr'), function(tr){
-      var idx = tr.getAttribute('data-idx');
-      if(idx === null) return;
-      var card = tlMobileList.querySelector('.tl-mrow[data-idx="' + idx + '"]');
-      if(card) card.classList.toggle('gv-fp-hide', tr.classList.contains('gv-fp-hide'));
-    });
-  }
 
   /* §7 boş durum metni — modülde HİÇ talep yoksa (toplam kayıt 0, rol budamasından
      sonraki taban) doküman'ın BİREBİR metni; arama/filtre 0 sonuç verdiyse mevcut
@@ -498,35 +426,10 @@
     }
   }
 
-  /* sayfalandırma (gv-pager, D17 Y5): masaüstü tabloya bağlanır (data-paginate="25",
-     13 kayıtla pager kendini gizler ama mekanizma aktif kalır). Mobil kart listesi
-     ayrı bir DOM olduğu için pager'ı görmez — 'gvpage' event'ini dinleyip aynı dilimi
-     (.gv-pg-hide) index eşleşmesiyle mobil listeye uygular (portal-odemeler deseni,
-     script satır 249-262 BİREBİR). ---- */
-  if(tlTable){
-    tlTable.addEventListener('gvpage', function(e){
-      var d = e.detail;
-      var visCards = Array.prototype.filter.call(tlMobileList.children, function(c){ return !c.hidden; });
-      visCards.forEach(function(c, i){
-        c.classList.toggle('gv-pg-hide', i < (d.page - 1) * d.size || i >= d.page * d.size);
-      });
-    });
-  }
-
-  /* ui.js'in wireTables'ı DOMContentLoaded'da chip/arama listener'larını KENDİ kurar
-     (bu script yukarıda senkron çalıştığı için o listener'lardan ÖNCE tamamlanır).
-     Kayıt sırasının ui.js'ten SONRA gelmesi için bu senkron listener'lar da
-     DOMContentLoaded'a bağlanır — aynı elemanda ui.js'in listener'ı ÖNCE, bizimki
-     SONRA tetiklenir (ekleme sırası = tetiklenme sırası), böylece tr.hidden zaten
-     güncellenmiş olur. ---- */
+  /* Dalga 5/T5C — eski gvpage→tlMobileList senkronu KALDIRILDI: gv-pager AYNI
+     <tr> kümesi üzerinde çalışıyor, gtable-cards da o kümeyi CSS ile karta çeviriyor,
+     dolayısıyla ikinci bir slice/sync gerekmiyor. */
   document.addEventListener('DOMContentLoaded', function(){
-    document.querySelectorAll('.chip[data-filter]').forEach(function(ch){
-      ch.addEventListener('click', syncTlFilterVisibility);
-    });
-    document.querySelectorAll('input[data-table-search]').forEach(function(inp){
-      inp.addEventListener('input', syncTlFilterVisibility);
-    });
-    syncTlFilterVisibility();   /* ui.js'in ilk applyFilters çağrısı SONRASI durum */
     syncTlEmptyMessage();       /* sef budamasından (tr.remove) SONRA taban sıfır mı kontrolü */
   });
 
@@ -541,9 +444,21 @@
       onApply: function(state){
         var tbl = document.getElementById('tblTalep');
         if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-        if(tlMobileList) tlMobileList.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-        syncTlFpVisibility();
       }
+    });
+  }
+
+  /* ============ Dalga 5/T5C — Kolonlar (gvCols, §8.4) ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtn', table: '#tblTalep', screen: 'talepler',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'ozet', lbl:'Malzeme Özeti', def:true},
+        {key:'eden', lbl:'Talep Eden', def:true},
+        {key:'oncelik', lbl:'Öncelik', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
     });
   }
 
@@ -573,8 +488,6 @@
       message: 'Kayıt kalıcı olarak silinmez; arşive alınır ve varsayılan listede görünmez olur. İşlem kaydına yazılır (İşlem Kayıtları\'ndan izlenebilir) ve "Arşivlenenleri Göster" filtresiyle ya da Ayarlar > Arşiv Merkezi\'nden tekrar görüntülenebilir.',
       onConfirm:function(){
         row.setAttribute('data-arsiv', '1');
-        var twin = tlMobileList ? tlMobileList.querySelector('.tl-mrow[data-idx="' + row.getAttribute('data-idx') + '"]') : null;
-        if(twin) twin.setAttribute('data-arsiv', '1');
         gvToast(label + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
       }
     });

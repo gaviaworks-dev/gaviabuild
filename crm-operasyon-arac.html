@@ -19,8 +19,13 @@
 /* ============ SAYFAYA ÖZEL — Araç Filosu ============ */
 /* T-ARC1 (§12 revizyon) — +Kod/+Firma/+Yakıt Gideri kolonları + seçim kolonu
    eklendiği için tablo genişledi (1120→1620); Liste/Kart toggle bunun mobil/dar
-   ekran telafisidir (kart görünümünde yatay kaydırma gerekmez). */
-#tblArac{min-width:1712px}
+   ekran telafisidir (kart görünümünde yatay kaydırma gerekmez).
+   Dalga 5/T5C: min-width YALNIZ tablo modunda (>640px) — #tblArac ID seçicisi
+   .gtable-cards sınıf seçicisinden specificity'de her zaman kazanır, media query
+   İÇİNE alınarak 640px altında hiç uygulanmaz (crm-personel.html emsali). */
+@media(min-width:641px){
+  #tblArac{min-width:1712px}
+}
 .col-chk{width:34px}
 .col-kod{width:78px}
 .col-km{width:92px}
@@ -132,9 +137,19 @@
 .gv-empty-cards p{font-size:12px;color:var(--muted);margin:0}
 
 /* iki boyutlu filtre — şantiye grubu + durum grubu (demirbaş/isg deseninin aynısı) */
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* Dalga 5/T5C — flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali, satır 78): ui.css'in
+   temel .filter-bar{flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-
+   direction + flex-wrap:wrap kombinasyonu satırların align-items:stretch ile 356px'e
+   kısıtlanması yerine İÇERİK genişliğine göre büyümesine sebep oluyor (390px'te chipbar
+   satırı 529px'e taşıyordu, gerçek doc-level yatay taşma — bulundu ve düzeltildi). */
+.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
+.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
 .filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+/* Dalga 5/T5C — flex-basis:0 ZORUNLU (crm-santiye.html emsali): min-width:0 TEK
+   BAŞINA yetmez, flex-basis:auto kalınca chipbar-wrap kendi İÇERİK genişliğine göre
+   hypothetical main size hesaplar ve satırı taşırır (390px'te 172px doc-level taşma
+   olarak doğrulandı, düzeltildi) — flex:1 1 0 ile taşma satırı gerçekten paylaşıyor. */
+.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
 
 @media(max-width:640px){
   .arc-info b,.arc-info .arc-sub{max-width:160px}
@@ -213,25 +228,38 @@
         </div>
         <div class="filter-row">
           <span class="frow-lbl">Şantiye</span>
-          <div class="chips" id="arSantiyeChips">
-            <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">10</span></button>
-            <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
-            <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">2</span></button>
-            <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">4</span></button>
-            <button class="chip" data-santiye="genelmerkez">Genel Merkez <span class="ch-cnt">2</span></button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="arSantiyeChips">
+              <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">10</span></button>
+              <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
+              <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">2</span></button>
+              <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">4</span></button>
+              <button class="chip" data-santiye="genelmerkez">Genel Merkez <span class="ch-cnt">2</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
         <div class="filter-row">
           <span class="frow-lbl">Durum</span>
-          <div class="chips" id="arDurumChips">
-            <button class="chip is-on" data-durum="hepsi">Tümü</button>
-            <button class="chip" data-durum="aktif">Aktif</button>
-            <button class="chip" data-durum="bakimda">Bakımda</button>
-            <button class="chip" data-durum="arizali">Arızalı</button>
-            <button class="chip" data-durum="beklemede">Beklemede</button>
-            <button class="chip" data-durum="arsivli">Arşivli <span class="ch-cnt">3</span></button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="arDurumChips">
+              <button class="chip is-on" data-durum="hepsi">Tümü</button>
+              <button class="chip" data-durum="aktif">Aktif</button>
+              <button class="chip" data-durum="bakimda">Bakımda</button>
+              <button class="chip" data-durum="arizali">Arızalı</button>
+              <button class="chip" data-durum="beklemede">Beklemede</button>
+              <button class="chip" data-durum="arsivli">Arşivli <span class="ch-cnt">3</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpArac" style="margin-left:auto">
+        </div>
+        <div class="filter-row" style="justify-content:flex-end">
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpArac">
             <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
           </button>
           <div class="view-toggle" role="group" aria-label="Görünüm">
@@ -267,22 +295,22 @@
         </div>
       </div>
 
-      <div class="gc-body flush" id="arListeWrap">
-        <table class="gtable" id="tblArac">
+      <div class="gc-body flush gv-cards-pad" id="arListeWrap">
+        <table class="gtable gtable-cards" id="tblArac">
           <thead>
             <tr>
               <th class="col-chk"><label class="row-chk" id="arChkAllWrap"><input type="checkbox" id="arChkAll" aria-label="Görünen tüm araçları seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label></th>
               <th class="col-kod">Kod</th>
               <th>Araç</th>
-              <th class="col-km num">Km</th>
-              <th class="col-firma">Bağlı Firma</th>
-              <th class="col-santiye">Şantiye</th>
-              <th class="col-zimmet">Zimmetli</th>
-              <th class="col-muayene">Muayene</th>
-              <th class="col-bakim">Bakım</th>
-              <th class="col-maliyet num">Aylık Maliyet</th>
-              <th class="col-yakit num">Aylık Yakıt Gideri</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-km num" data-col="km">Km</th>
+              <th class="col-firma" data-col="firma">Bağlı Firma</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th class="col-zimmet" data-col="zimmet">Zimmetli</th>
+              <th class="col-muayene" data-col="muayene">Muayene</th>
+              <th class="col-bakim" data-col="bakim">Bakım</th>
+              <th class="col-maliyet num" data-col="maliyet">Aylık Maliyet</th>
+              <th class="col-yakit num" data-col="yakit">Aylık Yakıt Gideri</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
@@ -611,19 +639,19 @@
     var html = '';
     ARAC.forEach(function(a){
       html += '<tr data-no="'+a.no+'" data-santiye="'+a.santiye+'" data-durum="'+a.durum+'" data-altdurum="'+(a.altDurum||'')+'" data-tip="'+a.tip+'" data-yakit="'+a.yakit+'">';
-      html += '<td>'+chkHtml(a.no)+'</td>';
-      html += '<td><span class="arc-kod-badge">'+a.no+'</span></td>';
-      html += '<td>'+aracCell(a)+'</td>';
-      html += '<td class="num arc-km">'+a.km.toLocaleString('tr-TR')+' km</td>';
-      html += '<td><span class="arc-firma" title="'+FIRMA_ADI+'">'+FIRMA_ADI+'</span></td>';
-      html += '<td>'+SANTIYE_ADI[a.santiye]+'</td>';
-      html += '<td>'+zimmetCell(a)+'</td>';
-      html += '<td>'+muayeneCell(a)+'</td>';
-      html += '<td>'+bakimCell(a)+'</td>';
-      html += '<td class="num"><div class="arc-maliyet">'+(a.maliyet ? tl(a.maliyet) : '—')+'</div></td>';
-      html += '<td class="num">'+yakitCell(a)+'</td>';
-      html += '<td>'+durumCell(a)+'</td>';
-      html += '<td>'+rowActsHtml(a)+'</td>';
+      html += '<td data-lbl="">'+chkHtml(a.no)+'</td>';
+      html += '<td data-lbl="Kod"><span class="arc-kod-badge">'+a.no+'</span></td>';
+      html += '<td data-lbl="Araç">'+aracCell(a)+'</td>';
+      html += '<td class="num arc-km" data-col="km" data-lbl="Km">'+a.km.toLocaleString('tr-TR')+' km</td>';
+      html += '<td data-col="firma" data-lbl="Bağlı Firma"><span class="arc-firma" title="'+FIRMA_ADI+'">'+FIRMA_ADI+'</span></td>';
+      html += '<td data-col="santiye" data-lbl="Şantiye">'+SANTIYE_ADI[a.santiye]+'</td>';
+      html += '<td data-col="zimmet" data-lbl="Zimmetli">'+zimmetCell(a)+'</td>';
+      html += '<td data-col="muayene" data-lbl="Muayene">'+muayeneCell(a)+'</td>';
+      html += '<td data-col="bakim" data-lbl="Bakım">'+bakimCell(a)+'</td>';
+      html += '<td class="num" data-col="maliyet" data-lbl="Aylık Maliyet"><div class="arc-maliyet">'+(a.maliyet ? tl(a.maliyet) : '—')+'</div></td>';
+      html += '<td class="num" data-col="yakit" data-lbl="Aylık Yakıt Gideri">'+yakitCell(a)+'</td>';
+      html += '<td data-col="durum" data-lbl="Durum">'+durumCell(a)+'</td>';
+      html += '<td data-lbl="">'+rowActsHtml(a)+'</td>';
       html += '</tr>';
     });
     document.getElementById('arBody').innerHTML = html;
@@ -661,6 +689,25 @@
 
   renderList();
   renderCards();
+
+  /* ============ Dalga 5/T5C — Kolonlar (gvCols, §8.4) ============ */
+  var gcHandle = null;
+  if(window.gvCols && document.getElementById('colsBtn')){
+    gcHandle = gvCols.init({
+      mount: '#colsBtn', table: '#tblArac', screen: 'arac',
+      cols: [
+        {key:'km', lbl:'Km', def:true},
+        {key:'firma', lbl:'Bağlı Firma', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'zimmet', lbl:'Zimmetli', def:true},
+        {key:'muayene', lbl:'Muayene', def:true},
+        {key:'bakim', lbl:'Bakım', def:true},
+        {key:'maliyet', lbl:'Aylık Maliyet', def:true},
+        {key:'yakit', lbl:'Aylık Yakıt Gideri', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
 
   /* ============ Liste/Kart görünüm toggle — localStorage kalıcı ============ */
   var VIEW_KEY = 'gv_arac_view';
@@ -843,6 +890,7 @@
   function rebuildAll(){
     renderList();
     renderCards();
+    if(gcHandle) gcHandle.apply();
     refresh();
     applyFilter();
   }

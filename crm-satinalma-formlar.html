@@ -17,7 +17,12 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Satın Alma Formları listesi ============ */
-#tblForm{min-width:1080px}
+/* min-width YALNIZ tablo modunda (>640px) — ID seçici .gtable-cards sınıf seçicisinden
+   specificity'de her zaman kazanır, media query İÇİNE alınarak 640px altında hiç
+   uygulanmaz (crm-personel.html emsali, tasks/kararlar.md 189). */
+@media(min-width:641px){
+  #tblForm{min-width:1080px}
+}
 .col-tutar{width:130px}
 .col-durum{width:150px}
 .col-kaynak{width:130px}
@@ -38,6 +43,22 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
 
 @media(max-width:640px){
   .fr-desc{max-width:140px}
+}
+
+/* Dalga 5/T5C — gv-chipbar-wrap KENDİ satırında (spec-liste-mimarisi.md §1 notu:
+   chipbar'ın ebeveyni flex bir satırın PARÇASIYSA min-width:auto tuzağına düşer).
+   flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali): ui.css'in temel .filter-bar
+   {flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-direction +
+   flex-wrap:wrap kombinasyonu satırların kart genişliğine kısıtlanması yerine İÇERİK
+   genişliğine göre büyümesine sebep oluyor (390px'te doğrulanan gerçek doc-level
+   yatay taşma — bulundu ve düzeltildi). */
+.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
+.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
+.fr-filter-acts{display:flex;gap:8px;margin-left:auto;flex:none}
+@media(max-width:640px){
+  .fr-filter-acts{margin-left:0;width:100%}
+  .fr-filter-acts .btn{flex:1}
 }
 
 /* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme ---- */
@@ -101,22 +122,35 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Form no, tedarikçi veya şantiye ara" data-table-search="#tblForm">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Form no, tedarikçi veya şantiye ara" data-table-search="#tblForm">
+          </div>
         </div>
-        <div class="chips" data-target="#tblForm">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">9</span></button>
-          <button class="chip" data-filter="taslak">Taslak <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="onayda">Onayda <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="siparis">Sipariş Verildi <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="iptal">İptal <span class="ch-cnt">1</span></button>
+        <div class="filter-row">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblForm">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">9</span></button>
+              <button class="chip" data-filter="taslak">Taslak <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="onayda">Onayda <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="siparis">Sipariş Verildi <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="iptal">İptal <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <div class="fr-filter-acts">
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+              <i class="fa-solid fa-table-columns"></i> Kolonlar
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpFormlar">
+              <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+            </button>
+          </div>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpFormlar">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
       </div>
       <div class="gv-achips-row" id="achipsFormlar" hidden>
         <div class="gv-achips"></div>
@@ -129,100 +163,100 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
           </button>
         </div>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblForm">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblForm">
           <thead>
             <tr>
               <th>Form</th>
-              <th class="col-santiye">Şantiye</th>
-              <th>Tedarikçi / Kalem</th>
-              <th class="col-kaynak">Kaynak Talep</th>
-              <th class="num col-tutar">Tutar</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th data-col="tedarikci">Tedarikçi / Kalem</th>
+              <th class="col-kaynak" data-col="kaynak">Kaynak Talep</th>
+              <th class="num col-tutar" data-col="tutar">Tutar</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="siparis" data-santiye="vadi" data-tarih="2026-07-02">
-              <td><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-016</b><span>2 Temmuz 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td>Ege Hazır Beton · <span class="fr-desc">Kalıp kerestesi</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=039">MLZ-2026-039</a></td>
-              <td class="num t-strong">₺32.400</td>
-              <td data-badge2="siparis"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=016" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-016</b><span>2 Temmuz 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Ege Hazır Beton · <span class="fr-desc">Kalıp kerestesi</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=039">MLZ-2026-039</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺32.400</td>
+              <td data-badge2="siparis" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=016" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="taslak" data-santiye="vadi" data-tarih="2026-07-02">
-              <td><div class="fr-cell"><div class="fr-mark" style="background:var(--bg);color:var(--muted)"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-014</b><span>2 Temmuz 2026 · teklif toplanıyor</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td>Ege Hazır Beton · <span class="fr-desc">Hazır beton C30</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a></td>
-              <td class="num t-strong">₺142.500</td>
-              <td data-badge2="taslak"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=014" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark" style="background:var(--bg);color:var(--muted)"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-014</b><span>2 Temmuz 2026 · teklif toplanıyor</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Ege Hazır Beton · <span class="fr-desc">Hazır beton C30</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺142.500</td>
+              <td data-badge2="taslak" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=014" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="onayda" data-santiye="vadi" data-tarih="2026-07-02">
-              <td><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-013</b><span>2 Temmuz 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td>Marmara Demir Çelik · <span class="fr-desc">İnşaat demiri Ø12</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a></td>
-              <td class="num t-strong">₺86.200</td>
-              <td data-badge2="onayda"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=013" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-013</b><span>2 Temmuz 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Marmara Demir Çelik · <span class="fr-desc">İnşaat demiri Ø12</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺86.200</td>
+              <td data-badge2="onayda" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=013" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="siparis" data-santiye="merkez" data-tarih="2026-06-29">
-              <td><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-012</b><span>29 Haziran 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td>Anadolu Hırdavat · <span class="fr-desc">Elektrik kablosu NYY</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=041">MLZ-2026-041</a></td>
-              <td class="num t-strong">₺18.750</td>
-              <td data-badge2="siparis"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=012" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-012</b><span>29 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Anadolu Hırdavat · <span class="fr-desc">Elektrik kablosu NYY</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=041">MLZ-2026-041</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺18.750</td>
+              <td data-badge2="siparis" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=012" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="siparis" data-santiye="merkez" data-tarih="2026-06-28">
-              <td><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-011</b><span>28 Haziran 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td>Ege Hazır Beton · <span class="fr-desc">Yalıtım malzemesi (XPS)</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=044">MLZ-2026-044</a></td>
-              <td class="num t-strong">₺24.300</td>
-              <td data-badge2="siparis"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=011" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-011</b><span>28 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Merkez Şantiye</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Ege Hazır Beton · <span class="fr-desc">Yalıtım malzemesi (XPS)</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=044">MLZ-2026-044</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺24.300</td>
+              <td data-badge2="siparis" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=011" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamamlandi" data-santiye="liman" data-tarih="2026-05-05">
-              <td><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-010</b><span>5 Mayıs 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td>Anadolu Hırdavat · <span class="fr-desc">Kaynak teli + gaz tüpü</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=033" title="Arşiv talep">MLZ-2026-033</a></td>
-              <td class="num t-strong">₺96.400</td>
-              <td data-badge2="tamamlandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=010" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-010</b><span>5 Mayıs 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Anadolu Hırdavat · <span class="fr-desc">Kaynak teli + gaz tüpü</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=033" title="Arşiv talep">MLZ-2026-033</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺96.400</td>
+              <td data-badge2="tamamlandi" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=010" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamamlandi" data-santiye="vadi" data-tarih="2026-06-15">
-              <td><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-009</b><span>15 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td>Anadolu Hırdavat · <span class="fr-desc">PVC boru seti</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=032" title="Arşiv talep">MLZ-2026-032</a></td>
-              <td class="num t-strong">₺6.150</td>
-              <td data-badge2="tamamlandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=009" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-009</b><span>15 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Anadolu Hırdavat · <span class="fr-desc">PVC boru seti</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=032" title="Arşiv talep">MLZ-2026-032</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺6.150</td>
+              <td data-badge2="tamamlandi" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=009" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tamamlandi" data-santiye="vadi" data-tarih="2026-06-12">
-              <td><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-008</b><span>12 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td>Ege Hazır Beton · <span class="fr-desc">Alçı sıva malzemesi</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=040">MLZ-2026-040</a></td>
-              <td class="num t-strong">₺11.900</td>
-              <td data-badge2="tamamlandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=008" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-008</b><span>12 Haziran 2026</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Ege Hazır Beton · <span class="fr-desc">Alçı sıva malzemesi</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=040">MLZ-2026-040</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺11.900</td>
+              <td data-badge2="tamamlandi" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=008" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr class="is-iptal" data-f="iptal" data-santiye="liman" data-tarih="2026-06-30">
-              <td><div class="fr-cell"><div class="fr-mark" style="background:var(--bg);color:var(--muted)"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-007</b><span>30 Haziran 2026 · iptal edildi</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td>Marmara Demir Çelik · <span class="fr-desc">Forklift lastiği</span></td>
-              <td><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=042">MLZ-2026-042</a></td>
-              <td class="num t-strong">₺15.600</td>
-              <td data-badge2="iptal"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=007" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Form"><div class="fr-cell"><div class="fr-mark" style="background:var(--bg);color:var(--muted)"><i class="fa-solid fa-file-invoice"></i></div><div class="fr-info"><b>SAT-2026-007</b><span>30 Haziran 2026 · iptal edildi</span></div></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="tedarikci" data-lbl="Tedarikçi / Kalem">Marmara Demir Çelik · <span class="fr-desc">Forklift lastiği</span></td>
+              <td data-col="kaynak" data-lbl="Kaynak Talep"><a class="fr-kaynak" href="crm-satinalma-talep-detay.html?mlz=042">MLZ-2026-042</a></td>
+              <td class="num t-strong" data-col="tutar" data-lbl="Tutar">₺15.600</td>
+              <td data-badge2="iptal" data-col="durum" data-lbl="Durum"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=007" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
         </table>
@@ -353,6 +387,20 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
         var tbl = document.getElementById('tblForm');
         if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
       }
+    });
+  }
+
+  /* ============ Dalga 5/T5C — Kolonlar (gvCols, §8.4) ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtn', table: '#tblForm', screen: 'formlar',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'tedarikci', lbl:'Tedarikçi / Kalem', def:true},
+        {key:'kaynak', lbl:'Kaynak Talep', def:true},
+        {key:'tutar', lbl:'Tutar', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
     });
   }
 
