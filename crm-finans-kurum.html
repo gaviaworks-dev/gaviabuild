@@ -17,11 +17,20 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Kurum Hakedişleri listesi ============ */
-#tblKurum{min-width:900px}
 .col-donem{width:130px}
 .col-tutar{width:150px}
 .col-tarih{width:150px}
 .col-durum{width:150px}
+/* masaüstü-yalnız sabit genişlik — 640px altında gtable-cards kart moduna ID-specificity
+   ile galip gelmesin diye min-width media sorgusuna alındı (bilinen tuzak,
+   tasks/spec-dalga5.md "Her sayfada yapılacak" §2) */
+@media(min-width:641px){ #tblKurum{min-width:900px} }
+/* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
+   (2) kategori chip slider KENDİ satırında (gv-chipbar-wrap block-level —
+   spec-liste-mimarisi.md §1 notu, crm-personel.html emsali BİREBİR). */
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar.stack .gv-chipbar-wrap{width:100%}
 
 .hk-cell{display:flex;align-items:center;gap:12px;min-width:0}
 .hk-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
@@ -125,20 +134,29 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Hakediş no, kurum veya şantiye ara" data-table-search="#tblKurum">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Hakediş no, kurum veya şantiye ara" data-table-search="#tblKurum">
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpKurum">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
         </div>
-        <div class="chips" data-target="#tblKurum">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="odendi">Ödendi <span class="ch-cnt">4</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblKurum">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
+            <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="odendi">Ödendi <span class="ch-cnt">4</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpKurum">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
       </div>
       <div class="gv-achips-row" id="achipsKurum" hidden>
         <div class="gv-achips"></div>
@@ -162,80 +180,80 @@
           <option value="kule-ofis">Kule Ofis B Blok</option>
         </select>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblKurum">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblKurum">
           <thead>
             <tr>
               <th>Hakediş</th>
-              <th>Kurum</th>
-              <th>Şantiye</th>
-              <th class="col-donem">Dönem</th>
-              <th class="num col-tutar">Tutar</th>
-              <th class="col-tarih">Tarih</th>
-              <th class="col-durum">Durum</th>
+              <th data-col="kurum">Kurum</th>
+              <th data-col="santiye">Şantiye</th>
+              <th class="col-donem" data-col="donem">Dönem</th>
+              <th class="num col-tutar" data-col="tutar">Tutar</th>
+              <th class="col-tarih" data-col="tarih">Tarih</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="bekliyor" data-firma="korfez" data-santiye="vadi" data-tarih="2026-06-20">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-006</b><span>Gönderildi · 20 Haz 2026</span></div></div></td>
-              <td class="t-strong">Körfez GYO</td>
-              <td>Vadi Konakları</td>
-              <td>Haziran 2026</td>
-              <td class="num t-strong">₺1.630.000</td>
-              <td class="muted">20 Haz 2026</td>
-              <td data-badge="bekliyor"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=006" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-006</b><span>Gönderildi · 20 Haz 2026</span></div></div></td>
+              <td data-col="kurum" data-lbl="Kurum" class="t-strong">Körfez GYO</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Haziran 2026</td>
+              <td data-col="tutar" data-lbl="Tutar" class="num t-strong">₺1.630.000</td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">20 Haz 2026</td>
+              <td data-col="durum" data-lbl="Durum" data-badge="bekliyor"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=006" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="odendi" data-firma="korfez" data-santiye="vadi" data-tarih="2026-06-01">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-005</b><span>Dönem: Mayıs 2026</span></div></div></td>
-              <td class="t-strong">Körfez GYO</td>
-              <td>Vadi Konakları</td>
-              <td>Mayıs 2026</td>
-              <td class="num t-strong">₺620.000</td>
-              <td class="muted">1 Haz 2026</td>
-              <td><span class="gstat ok">Ödendi</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=005" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-005</b><span>Dönem: Mayıs 2026</span></div></div></td>
+              <td data-col="kurum" data-lbl="Kurum" class="t-strong">Körfez GYO</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Mayıs 2026</td>
+              <td data-col="tutar" data-lbl="Tutar" class="num t-strong">₺620.000</td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">1 Haz 2026</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Ödendi</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=005" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="odendi" data-firma="korfez" data-santiye="vadi" data-tarih="2026-05-02">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-004</b><span>Dönem: Nisan 2026</span></div></div></td>
-              <td class="t-strong">Körfez GYO</td>
-              <td>Vadi Konakları</td>
-              <td>Nisan 2026</td>
-              <td class="num t-strong">₺540.000</td>
-              <td class="muted">2 May 2026</td>
-              <td><span class="gstat ok">Ödendi</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=004" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-004</b><span>Dönem: Nisan 2026</span></div></div></td>
+              <td data-col="kurum" data-lbl="Kurum" class="t-strong">Körfez GYO</td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="donem" data-lbl="Dönem">Nisan 2026</td>
+              <td data-col="tutar" data-lbl="Tutar" class="num t-strong">₺540.000</td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">2 May 2026</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Ödendi</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=004" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="onaylandi" data-firma="aliaga" data-santiye="liman" data-tarih="2026-06-18">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-003</b><span>Onaylandı · tahsilat bekliyor</span></div></div></td>
-              <td class="t-strong">Aliağa Liman İşletmeleri</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td>Haziran 2026</td>
-              <td class="num t-strong">₺980.000</td>
-              <td class="muted">18 Haz 2026</td>
-              <td data-badge="onaylandi"></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=003" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-003</b><span>Onaylandı · tahsilat bekliyor</span></div></div></td>
+              <td data-col="kurum" data-lbl="Kurum" class="t-strong">Aliağa Liman İşletmeleri</td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="donem" data-lbl="Dönem">Haziran 2026</td>
+              <td data-col="tutar" data-lbl="Tutar" class="num t-strong">₺980.000</td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">18 Haz 2026</td>
+              <td data-col="durum" data-lbl="Durum" data-badge="onaylandi"></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=003" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="odendi" data-firma="aliaga" data-santiye="liman" data-tarih="2026-05-20">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-002</b><span>Dönem: Mayıs 2026</span></div></div></td>
-              <td class="t-strong">Aliağa Liman İşletmeleri</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td>Mayıs 2026</td>
-              <td class="num t-strong">₺410.000</td>
-              <td class="muted">20 May 2026</td>
-              <td><span class="gstat ok">Ödendi</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=002" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-002</b><span>Dönem: Mayıs 2026</span></div></div></td>
+              <td data-col="kurum" data-lbl="Kurum" class="t-strong">Aliağa Liman İşletmeleri</td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="donem" data-lbl="Dönem">Mayıs 2026</td>
+              <td data-col="tutar" data-lbl="Tutar" class="num t-strong">₺410.000</td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">20 May 2026</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Ödendi</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=002" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="odendi" data-firma="aliaga" data-santiye="liman" data-tarih="2026-04-18">
-              <td><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-001</b><span>Dönem: Nisan 2026</span></div></div></td>
-              <td class="t-strong">Aliağa Liman İşletmeleri</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td>Nisan 2026</td>
-              <td class="num t-strong">₺265.000</td>
-              <td class="muted">18 Nis 2026</td>
-              <td><span class="gstat ok">Ödendi</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=001" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-lbl="Hakediş"><div class="hk-cell"><div class="hk-mark"><i class="fa-solid fa-building-columns"></i></div><div class="hk-info"><b>HKD-2026-001</b><span>Dönem: Nisan 2026</span></div></div></td>
+              <td data-col="kurum" data-lbl="Kurum" class="t-strong">Aliağa Liman İşletmeleri</td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="donem" data-lbl="Dönem">Nisan 2026</td>
+              <td data-col="tutar" data-lbl="Tutar" class="num t-strong">₺265.000</td>
+              <td data-col="tarih" data-lbl="Tarih" class="muted">18 Nis 2026</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Ödendi</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-hakedis-detay.html?hkd=001" data-no-confirm aria-label="Hakediş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
         </table>
@@ -378,6 +396,22 @@
         activeRow: '#achipsKurum',
         onApply: function(state){ fpState = state; gvApplyFilters(tblKurum, true); },
         onClear: function(){ fpState = {}; gvApplyFilters(tblKurum, true); }
+      });
+    }
+
+    /* ============ §8.4 — gvCols (Kolonlar). Kolon seti mevcut tablo başlıklarından
+       türetildi; "Hakediş" (kimlik hücresi) ve işlem hücresi data-col TAŞIMAZ. ============ */
+    if(window.gvCols){
+      gvCols.init({
+        mount: '#colsBtn', table: '#tblKurum', screen: 'finans-kurum',
+        cols: [
+          {key:'kurum', lbl:'Kurum', def:true},
+          {key:'santiye', lbl:'Şantiye', def:true},
+          {key:'donem', lbl:'Dönem', def:true},
+          {key:'tutar', lbl:'Tutar', def:true},
+          {key:'tarih', lbl:'Tarih', def:true},
+          {key:'durum', lbl:'Durum', def:true}
+        ]
       });
     }
 

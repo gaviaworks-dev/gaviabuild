@@ -17,10 +17,19 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Sözleşme Arşivi ============ */
-#tblSozlesme{min-width:920px}
 .col-bedel{width:150px}
 .col-sure{width:220px}
 .col-durum{width:170px}
+/* masaüstü-yalnız sabit genişlik — 640px altında gtable-cards kart moduna ID-specificity
+   ile galip gelmesin diye min-width media sorgusuna alındı (bilinen tuzak,
+   tasks/spec-dalga5.md "Her sayfada yapılacak" §2) */
+@media(min-width:641px){ #tblSozlesme{min-width:920px} }
+/* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
+   (2) kategori chip slider KENDİ satırında (gv-chipbar-wrap block-level —
+   spec-liste-mimarisi.md §1 notu, crm-personel.html emsali BİREBİR). */
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar.stack .gv-chipbar-wrap{width:100%}
 
 .gcell-info .gtag{margin-top:5px}
 
@@ -107,18 +116,25 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Sözleşme no, taraf veya şantiye ara" data-table-search="#tblSozlesme">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Sözleşme no, taraf veya şantiye ara" data-table-search="#tblSozlesme">
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpSzl" style="margin-left:auto"><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
         </div>
-        <div class="chips" data-target="#tblSozlesme">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="kurum">Kurum <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="yaklasan"><i class="fa-solid fa-triangle-exclamation"></i> Süresi Yaklaşan <span class="ch-cnt">1</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblSozlesme">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
+            <button class="chip" data-filter="kurum">Kurum <span class="ch-cnt">3</span></button>
+            <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
+            <button class="chip" data-filter="yaklasan"><i class="fa-solid fa-triangle-exclamation"></i> Süresi Yaklaşan <span class="ch-cnt">1</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpSzl" style="margin-left:auto"><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</button>
       </div>
       <div class="gv-achips-row" id="achipsSzl" hidden>
         <div class="gv-achips"></div>
@@ -127,21 +143,21 @@
           <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
         </div>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblSozlesme">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblSozlesme">
           <thead>
             <tr>
               <th>Sözleşme / Taraf</th>
-              <th>Şantiye</th>
-              <th class="num col-bedel">Bedel</th>
-              <th class="col-sure">Süre</th>
-              <th class="col-durum">Durum</th>
+              <th data-col="santiye">Şantiye</th>
+              <th class="num col-bedel" data-col="bedel">Bedel</th>
+              <th class="col-sure" data-col="sure">Süre</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="kurum" data-sozlesme="k01" data-arsiv="aktif" data-tarih="2025-01-01">
-              <td>
+              <td data-lbl="Sözleşme / Taraf">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">KG</div>
                   <div class="gcell-info">
@@ -150,14 +166,14 @@
                   </div>
                 </div>
               </td>
-              <td>Vadi Konakları</td>
-              <td class="num t-strong">₺24.500.000</td>
-              <td><div class="sure-cell"><span class="sr-range">1 Oca 2025 – 31 Ara 2026</span></div></td>
-              <td><span class="gstat ok">Yürürlükte</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=k01" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=k01" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="k01" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="k01" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="bedel" data-lbl="Bedel" class="num t-strong">₺24.500.000</td>
+              <td data-col="sure" data-lbl="Süre"><div class="sure-cell"><span class="sr-range">1 Oca 2025 – 31 Ara 2026</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Yürürlükte</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=k01" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=k01" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="k01" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="k01" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
             </tr>
             <tr data-f="kurum" data-sozlesme="k02" data-yaklasan="1" data-arsiv="aktif" data-tarih="2025-03-01">
-              <td>
+              <td data-lbl="Sözleşme / Taraf">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">AL</div>
                   <div class="gcell-info">
@@ -166,14 +182,14 @@
                   </div>
                 </div>
               </td>
-              <td>Liman Lojistik Merkezi</td>
-              <td class="num t-strong">₺9.800.000</td>
-              <td><div class="sure-cell"><span class="sr-range">1 Mar 2025 – 31 Ağu 2026</span><span class="sr-warn"><i class="fa-solid fa-triangle-exclamation"></i> Süresi yaklaşıyor</span></div></td>
-              <td><span class="gstat ok">Yürürlükte</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=k02" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=k02" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="k02" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="k02" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="bedel" data-lbl="Bedel" class="num t-strong">₺9.800.000</td>
+              <td data-col="sure" data-lbl="Süre"><div class="sure-cell"><span class="sr-range">1 Mar 2025 – 31 Ağu 2026</span><span class="sr-warn"><i class="fa-solid fa-triangle-exclamation"></i> Süresi yaklaşıyor</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Yürürlükte</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=k02" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=k02" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="k02" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="k02" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
             </tr>
             <tr data-f="kurum" data-sozlesme="k03" data-arsiv="aktif" data-tarih="2026-09-01">
-              <td>
+              <td data-lbl="Sözleşme / Taraf">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SB</div>
                   <div class="gcell-info">
@@ -182,14 +198,14 @@
                   </div>
                 </div>
               </td>
-              <td>Göl Evleri 2. Etap</td>
-              <td class="num t-strong">₺6.200.000</td>
-              <td><div class="sure-cell"><span class="sr-range">1 Eyl 2026 – 31 Ağu 2027</span></div></td>
-              <td><span class="gstat wait">İmza Bekliyor</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=k03" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=k03" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="k03" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="k03" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Göl Evleri 2. Etap</td>
+              <td data-col="bedel" data-lbl="Bedel" class="num t-strong">₺6.200.000</td>
+              <td data-col="sure" data-lbl="Süre"><div class="sure-cell"><span class="sr-range">1 Eyl 2026 – 31 Ağu 2027</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat wait">İmza Bekliyor</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=k03" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=k03" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="k03" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="k03" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
             </tr>
             <tr data-f="taseron" data-sozlesme="t05" data-arsiv="aktif" data-tarih="2026-04-01">
-              <td>
+              <td data-lbl="Sözleşme / Taraf">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">DB</div>
                   <div class="gcell-info">
@@ -198,14 +214,14 @@
                   </div>
                 </div>
               </td>
-              <td>Vadi Konakları</td>
-              <td class="num t-strong">₺450.000</td>
-              <td><div class="sure-cell"><span class="sr-range">1 Nis 2026 – 30 Eyl 2026</span></div></td>
-              <td><span class="gstat ok">Yürürlükte</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=t05" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t05" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="t05" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="t05" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="bedel" data-lbl="Bedel" class="num t-strong">₺450.000</td>
+              <td data-col="sure" data-lbl="Süre"><div class="sure-cell"><span class="sr-range">1 Nis 2026 – 30 Eyl 2026</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Yürürlükte</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=t05" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t05" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="t05" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="t05" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
             </tr>
             <tr data-f="taseron" data-sozlesme="t06" data-arsiv="aktif" data-tarih="2026-05-15">
-              <td>
+              <td data-lbl="Sözleşme / Taraf">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">YK</div>
                   <div class="gcell-info">
@@ -214,14 +230,14 @@
                   </div>
                 </div>
               </td>
-              <td>Liman Lojistik Merkezi</td>
-              <td class="num t-strong">₺310.000</td>
-              <td><div class="sure-cell"><span class="sr-range">15 May 2026 – 15 Kas 2026</span></div></td>
-              <td><span class="gstat ok">Yürürlükte</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=t06" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t06" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="t06" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="t06" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="bedel" data-lbl="Bedel" class="num t-strong">₺310.000</td>
+              <td data-col="sure" data-lbl="Süre"><div class="sure-cell"><span class="sr-range">15 May 2026 – 15 Kas 2026</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Yürürlükte</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=t06" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t06" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="t06" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="t06" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
             </tr>
             <tr data-f="taseron" data-sozlesme="t07" data-arsiv="aktif" data-tarih="2026-06-01">
-              <td>
+              <td data-lbl="Sözleşme / Taraf">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">EM</div>
                   <div class="gcell-info">
@@ -230,11 +246,11 @@
                   </div>
                 </div>
               </td>
-              <td>Vadi Konakları</td>
-              <td class="num t-strong">₺185.000</td>
-              <td><div class="sure-cell"><span class="sr-range">1 Haz 2026 – 31 Ağu 2026</span></div></td>
-              <td><span class="gstat ok">Yürürlükte</span></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=t07" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t07" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="t07" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="t07" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
+              <td data-col="santiye" data-lbl="Şantiye">Vadi Konakları</td>
+              <td data-col="bedel" data-lbl="Bedel" class="num t-strong">₺185.000</td>
+              <td data-col="sure" data-lbl="Süre"><div class="sure-cell"><span class="sr-range">1 Haz 2026 – 31 Ağu 2026</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Yürürlükte</span></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-finans-sozlesme-detay.html?szl=t07" data-no-confirm aria-label="Sözleşme detayı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="ia-btn" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t07" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a><button type="button" class="ia-btn" data-no-confirm data-szl-toggle="t07" aria-label="Pasife al veya aktif et" data-tip="Pasife Al / Aktif Et"><i class="fa-solid fa-power-off"></i></button><button type="button" class="ia-btn danger" data-no-confirm data-szl-arch="t07" aria-label="Arşivle" data-tip="Arşivle"><i class="fa-solid fa-box-archive"></i></button></div></td>
             </tr>
           </tbody>
         </table>
@@ -323,7 +339,9 @@
     if(!tblSozlesme) return;
     tblSozlesme.querySelectorAll('tbody tr[data-arsiv]').forEach(function(tr){
       var durum = tr.getAttribute('data-arsiv');
-      var cell = tr.children[4];
+      /* index yerine data-col ile hedeflenir — gvCols sıra değiştirebildiği için
+         tr.children[N] artık güvenilir değil (§8.4 kolon sırası kalıcılığı). */
+      var cell = tr.querySelector('[data-col="durum"]');
       if(!cell) return;
       var old = cell.querySelector('.arsiv-rozet'); if(old) old.remove();
       if(durum === 'aktif' || !SZL_ROZET[durum]) return;
@@ -374,6 +392,20 @@
       activeRow: '#achipsSzl',
       onApply: function(state){ szlFpState = state; gvApplyFilters(tblSozlesme, true); },
       onClear: function(){ szlFpState = {}; }
+    });
+  }
+
+  /* ============ §8.4 — gvCols (Kolonlar). Kolon seti mevcut tablo başlıklarından
+     türetildi; "Sözleşme / Taraf" (kimlik hücresi) ve işlem hücresi data-col TAŞIMAZ. ============ */
+  if(window.gvCols && tblSozlesme){
+    gvCols.init({
+      mount: '#colsBtn', table: '#tblSozlesme', screen: 'finans-sozlesmeler',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'bedel', lbl:'Bedel', def:true},
+        {key:'sure', lbl:'Süre', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
     });
   }
 

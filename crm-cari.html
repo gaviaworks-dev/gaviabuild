@@ -20,9 +20,14 @@
 .col-tur{width:120px}
 .col-bal{width:150px}
 #tblCari .gcell-info{overflow:visible}
-#tblCari{min-width:980px}
-#tblCari td.num,#tblCari td:nth-child(2),#tblCari td:nth-child(3),#tblCari td:nth-child(4){white-space:nowrap}
 .col-lastmove{width:210px}
+/* masaüstü-yalnız sabit genişlik/nowrap — 640px altında gtable-cards kart moduna
+   ID-specificity ile galip gelmesin diye min-width media sorgusuna alındı (bilinen
+   tuzak, tasks/spec-dalga5.md "Her sayfada yapılacak" §2) */
+@media(min-width:641px){
+  #tblCari{min-width:980px}
+  #tblCari td.num,#tblCari td:nth-child(2),#tblCari td:nth-child(3),#tblCari td:nth-child(4){white-space:nowrap}
+}
 
 /* firma hücresi altı tür rozeti — gcell-info üçüncü satırı */
 .gcell-info .gtag{margin-top:5px}
@@ -65,6 +70,13 @@
 /* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme ---- */
 #tblCari tbody tr[data-arsiv="1"]{display:none}
 #tblCari.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+
+/* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
+   (2) kategori chip slider KENDİ satırında (gv-chipbar-wrap block-level —
+   spec-liste-mimarisi.md §1 notu, crm-personel.html emsali BİREBİR). */
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar.stack .gv-chipbar-wrap{width:100%}
 </style>
 </head>
 <body data-sec="cari" data-screen="rehber">
@@ -124,21 +136,30 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Firma veya ilgili kişi ara" data-table-search="#tblCari">
+      <div class="filter-bar stack">
+        <div class="filter-row">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Firma veya ilgili kişi ara" data-table-search="#tblCari">
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpCari">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
         </div>
-        <div class="chips" data-target="#tblCari">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
-          <button class="chip" data-filter="musteri">Müşteri-Kurum <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="satis">Müşteri · Satış <span class="ch-cnt">2</span></button>
-          <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="tedarikci">Tedarikçi <span class="ch-cnt">4</span></button>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblCari">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
+            <button class="chip" data-filter="musteri">Müşteri-Kurum <span class="ch-cnt">3</span></button>
+            <button class="chip" data-filter="satis">Müşteri · Satış <span class="ch-cnt">2</span></button>
+            <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
+            <button class="chip" data-filter="tedarikci">Tedarikçi <span class="ch-cnt">4</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpCari">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
       </div>
       <div class="gv-achips-row" id="achipsCari" hidden>
         <div class="gv-achips"></div>
@@ -151,23 +172,23 @@
           </button>
         </div>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblCari">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblCari">
           <thead>
             <tr>
               <th>Firma</th>
-              <th>İlgili Kişi</th>
-              <th>Telefon</th>
-              <th>İlişkili Şantiye</th>
-              <th class="num col-bal">Bakiye</th>
-              <th class="col-lastmove">Son Hareket</th>
+              <th data-col="kisi">İlgili Kişi</th>
+              <th data-col="telefon">Telefon</th>
+              <th data-col="santiye">İlişkili Şantiye</th>
+              <th class="num col-bal" data-col="bakiye">Bakiye</th>
+              <th class="col-lastmove" data-col="lastmove">Son Hareket</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <!-- Müşteri / Kurum -->
             <tr data-f="musteri" data-cari="korfez-gyo">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">KG</div>
                   <div class="gcell-info">
@@ -176,15 +197,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Selin Aydemir <span class="muted" style="font-weight:500">· Proje Müdürü</span></td>
-              <td>0532 240 18 55</td>
-              <td>Vadi Konakları</td>
-              <td class="num"><div class="bal alacak"><b>₺1.850.000</b><span>Alacak</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">20 Haz</span><span class="lm-desc">Hakediş #6 gönderildi</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=korfez-gyo" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Selin Aydemir <span class="muted" style="font-weight:500">· Proje Müdürü</span></td>
+              <td data-col="telefon" data-lbl="Telefon">0532 240 18 55</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Vadi Konakları</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal alacak"><b>₺1.850.000</b><span>Alacak</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">20 Haz</span><span class="lm-desc">Hakediş #6 gönderildi</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=korfez-gyo" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="musteri" data-cari="aliaga-liman">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">AL</div>
                   <div class="gcell-info">
@@ -193,15 +214,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Erhan Kaya <span class="muted" style="font-weight:500">· Yatırım Md.</span></td>
-              <td>0232 618 44 09</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td class="num"><div class="bal alacak"><b>₺980.000</b><span>Alacak</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">18 Haz</span><span class="lm-desc">Ara hakediş onaylandı</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=aliaga-liman" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Erhan Kaya <span class="muted" style="font-weight:500">· Yatırım Md.</span></td>
+              <td data-col="telefon" data-lbl="Telefon">0232 618 44 09</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal alacak"><b>₺980.000</b><span>Alacak</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">18 Haz</span><span class="lm-desc">Ara hakediş onaylandı</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=aliaga-liman" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="musteri" data-cari="sapanca-belediyesi">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SB</div>
                   <div class="gcell-info">
@@ -210,16 +231,16 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Zeynep Ulusoy <span class="muted" style="font-weight:500">· Fen İşleri Md.</span></td>
-              <td>0264 582 11 30</td>
-              <td>Göl Evleri 2. Etap</td>
-              <td class="num"><div class="bal sifir"><b>—</b><span>Hareket yok</span></div></td>
-              <td><div class="lastmove empty">Planlama aşamasında</div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=sapanca-belediyesi" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Zeynep Ulusoy <span class="muted" style="font-weight:500">· Fen İşleri Md.</span></td>
+              <td data-col="telefon" data-lbl="Telefon">0264 582 11 30</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Göl Evleri 2. Etap</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal sifir"><b>—</b><span>Hareket yok</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove empty">Planlama aşamasında</div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=sapanca-belediyesi" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <!-- Müşteri · Satış (D11 — CRM kartlı bireysel/kurumsal alıcılar; CAR- hesap no cari kartında) -->
             <tr data-f="satis" data-cari="onaran">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SO</div>
                   <div class="gcell-info">
@@ -228,15 +249,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Kendisi <span class="muted" style="font-weight:500">· CRM MST-2026-001</span></td>
-              <td>0533 000 21 04</td>
-              <td>Kule Ofis B Blok · Vadi Konakları</td>
-              <td class="num"><div class="bal alacak"><b>₺3.592.000</b><span>Alacak</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">15 Haz</span><span class="lm-desc">14. taksit tahsilatı</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=onaran" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Kendisi <span class="muted" style="font-weight:500">· CRM MST-2026-001</span></td>
+              <td data-col="telefon" data-lbl="Telefon">0533 000 21 04</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Kule Ofis B Blok · Vadi Konakları</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal alacak"><b>₺3.592.000</b><span>Alacak</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">15 Haz</span><span class="lm-desc">14. taksit tahsilatı</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=onaran" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="satis" data-cari="toprak">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">DT</div>
                   <div class="gcell-info">
@@ -245,16 +266,16 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Kendisi <span class="muted" style="font-weight:500">· CRM MST-2026-002</span></td>
-              <td>0532 000 47 82</td>
-              <td>Vadi Konakları</td>
-              <td class="num"><div class="bal alacak"><b>₺4.560.000</b><span><i class="fa-solid fa-triangle-exclamation odue" data-tip="5. taksit vadesi geçti · 12 gün"></i> Alacak</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">20 Haz</span><span class="lm-desc">5. taksit vadesi geçti</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=toprak" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Kendisi <span class="muted" style="font-weight:500">· CRM MST-2026-002</span></td>
+              <td data-col="telefon" data-lbl="Telefon">0532 000 47 82</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Vadi Konakları</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal alacak"><b>₺4.560.000</b><span><i class="fa-solid fa-triangle-exclamation odue" data-tip="5. taksit vadesi geçti · 12 gün"></i> Alacak</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">20 Haz</span><span class="lm-desc">5. taksit vadesi geçti</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=toprak" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <!-- Taşeron -->
             <tr data-f="taseron" data-cari="demir-beton">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">DB</div>
                   <div class="gcell-info">
@@ -263,15 +284,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Yusuf Ergin</td>
-              <td>0532 411 27 63</td>
-              <td>Vadi Konakları</td>
-              <td class="num"><div class="bal borc"><b>₺342.000</b><span><i class="fa-solid fa-triangle-exclamation odue" data-tip="Vadesi geçti · 4 gün"></i> Borç</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">28 Haz</span><span class="lm-desc">Hakediş #2 onayda</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=demir-beton" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Yusuf Ergin</td>
+              <td data-col="telefon" data-lbl="Telefon">0532 411 27 63</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Vadi Konakları</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal borc"><b>₺342.000</b><span><i class="fa-solid fa-triangle-exclamation odue" data-tip="Vadesi geçti · 4 gün"></i> Borç</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">28 Haz</span><span class="lm-desc">Hakediş #2 onayda</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=demir-beton" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="taseron" data-cari="yalitim-kardesler">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">YK</div>
                   <div class="gcell-info">
@@ -280,15 +301,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Cemal Boz</td>
-              <td>0505 322 90 14</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td class="num"><div class="bal borc"><b>₺128.500</b><span>Borç</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">30 Haz</span><span class="lm-desc">Malzeme faturası girişi</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=yalitim-kardesler" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Cemal Boz</td>
+              <td data-col="telefon" data-lbl="Telefon">0505 322 90 14</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal borc"><b>₺128.500</b><span>Borç</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">30 Haz</span><span class="lm-desc">Malzeme faturası girişi</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=yalitim-kardesler" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="taseron" data-cari="elektromek">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">EM</div>
                   <div class="gcell-info">
@@ -297,16 +318,16 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Tolga Şener</td>
-              <td>0533 765 42 08</td>
-              <td>Vadi Konakları</td>
-              <td class="num"><div class="bal borc"><b>₺76.200</b><span>Borç</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">1 Tem</span><span class="lm-desc">Elektrik şaft iş kalemi</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=elektromek" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Tolga Şener</td>
+              <td data-col="telefon" data-lbl="Telefon">0533 765 42 08</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Vadi Konakları</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal borc"><b>₺76.200</b><span>Borç</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">1 Tem</span><span class="lm-desc">Elektrik şaft iş kalemi</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=elektromek" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <!-- Tedarikçi -->
             <tr data-f="tedarikci" data-cari="ege-hazir-beton">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">EB</div>
                   <div class="gcell-info">
@@ -315,15 +336,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Kadir Solmaz</td>
-              <td>0536 218 77 41</td>
-              <td>Vadi Konakları</td>
-              <td class="num"><div class="bal borc"><b>₺54.900</b><span>Borç</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">2 Tem</span><span class="lm-desc">Beton irsaliyesi (4. mikser)</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=ege-hazir-beton" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Kadir Solmaz</td>
+              <td data-col="telefon" data-lbl="Telefon">0536 218 77 41</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Vadi Konakları</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal borc"><b>₺54.900</b><span>Borç</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">2 Tem</span><span class="lm-desc">Beton irsaliyesi (4. mikser)</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=ege-hazir-beton" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarikci" data-cari="marmara-demir-celik">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">MD</div>
                   <div class="gcell-info">
@@ -332,15 +353,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Burcu İnan</td>
-              <td>0212 466 90 23</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td class="num"><div class="bal borc"><b>₺211.000</b><span><i class="fa-solid fa-triangle-exclamation odue" data-tip="Vadesi geçti · 17 gün"></i> Borç</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">15 Haz</span><span class="lm-desc">Demir sevkiyatı faturası</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=marmara-demir-celik" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Burcu İnan</td>
+              <td data-col="telefon" data-lbl="Telefon">0212 466 90 23</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Liman Lojistik Merkezi</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal borc"><b>₺211.000</b><span><i class="fa-solid fa-triangle-exclamation odue" data-tip="Vadesi geçti · 17 gün"></i> Borç</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">15 Haz</span><span class="lm-desc">Demir sevkiyatı faturası</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=marmara-demir-celik" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarikci" data-cari="anadolu-hirdavat">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">AH</div>
                   <div class="gcell-info">
@@ -349,15 +370,15 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Fatih Coşkun</td>
-              <td>0216 349 82 17</td>
-              <td>Merkez Şantiye</td>
-              <td class="num"><div class="bal borc"><b>₺9.850</b><span>Borç</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">29 Haz</span><span class="lm-desc">Hırdavat malzeme alımı</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=anadolu-hirdavat" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Fatih Coşkun</td>
+              <td data-col="telefon" data-lbl="Telefon">0216 349 82 17</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Merkez Şantiye</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal borc"><b>₺9.850</b><span>Borç</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">29 Haz</span><span class="lm-desc">Hırdavat malzeme alımı</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=anadolu-hirdavat" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarikci" data-cari="bogazici-yapi-market">
-              <td>
+              <td data-lbl="Firma">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div>
                   <div class="gcell-info">
@@ -366,12 +387,12 @@
                   </div>
                 </div>
               </td>
-              <td class="t-strong">Cem Aydoğan</td>
-              <td>0212 000 45 61</td>
-              <td>Vadi Konakları</td>
-              <td class="num"><div class="bal borc"><b>₺418.200</b><span>Borç</span></div></td>
-              <td><div class="lastmove"><span class="lm-date">12 Haz</span><span class="lm-desc">PVC doğrama faturası · vade 15 Tem</span></div></td>
-              <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=bogazici-yapi-market" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              <td data-col="kisi" data-lbl="İlgili Kişi" class="t-strong">Cem Aydoğan</td>
+              <td data-col="telefon" data-lbl="Telefon">0212 000 45 61</td>
+              <td data-col="santiye" data-lbl="İlişkili Şantiye">Vadi Konakları</td>
+              <td data-col="bakiye" data-lbl="Bakiye" class="num"><div class="bal borc"><b>₺418.200</b><span>Borç</span></div></td>
+              <td data-col="lastmove" data-lbl="Son Hareket"><div class="lastmove"><span class="lm-date">12 Haz</span><span class="lm-desc">PVC doğrama faturası · vade 15 Tem</span></div></td>
+              <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html?cari=bogazici-yapi-market" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
         </table>
@@ -462,6 +483,22 @@
         var tbl = document.getElementById('tblCari');
         if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
       }
+    });
+  }
+
+  /* ============ §8.4 — gvCols (Kolonlar). Kolon seti mevcut tablo başlıklarından
+     türetildi; "Firma" (kimlik hücresi) ve işlem hücresi data-col TAŞIMAZ, sabit
+     kalır — sırası/görünürlüğü değişmez (santiye/personel emsalinin AYNI deseni). ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtn', table: '#tblCari', screen: 'cari',
+      cols: [
+        {key:'kisi', lbl:'İlgili Kişi', def:true},
+        {key:'telefon', lbl:'Telefon', def:true},
+        {key:'santiye', lbl:'İlişkili Şantiye', def:true},
+        {key:'bakiye', lbl:'Bakiye', def:true},
+        {key:'lastmove', lbl:'Son Hareket', def:true}
+      ]
     });
   }
 
