@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Puantaj Raporu — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Puantaj Raporu (matris + ay karşılaştırma) ============ */
+.rp-back{display:inline-flex;align-items:center;gap:7px}
+
+/* durum × şantiye matrisi */
+#tblDurum{min-width:720px}
+#tblDurum td.num,#tblDurum th.num{text-align:right}
+.dm-lbl{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink)}
+.dm-ico{width:26px;height:26px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:11px}
+.dm-ico.tam{background:var(--ok-tint);color:var(--ok)}
+.dm-ico.yarim{background:var(--warn-tint);color:var(--warn)}
+.dm-ico.yok{background:var(--danger-tint);color:var(--danger)}
+.dm-ico.izin{background:var(--info-tint);color:var(--info)}
+.dm-ico.rapor{background:var(--bg);color:var(--muted);border:1px solid var(--line-2)}
+.dm-ico.fm{background:rgba(var(--acc-rgb),.16);color:var(--acc-ink)}
+.dm-ico.em{background:color-mix(in srgb, var(--warn) 30%, var(--warn-tint));color:color-mix(in srgb, var(--warn) 78%, #000)}
+.dm-ico.rt{background:var(--bg);color:var(--ink-2);border:1px dashed var(--line-2)}
+.dm-ico.ht{background:transparent;color:var(--line-2);border:1px dashed var(--line)}
+#tblDurum tr.dm-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--line-2)}
+
+/* katılım bar listesi */
+.att-list{display:flex;flex-direction:column;gap:14px}
+.att-row{display:flex;align-items:center;gap:14px}
+.att-name{flex:none;width:180px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-row .gbar{flex:1;min-width:0}
+
+/* ay karşılaştırma tablosu */
+.cmp-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.cmp-tbl th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
+.cmp-tbl td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.cmp-tbl td.num,.cmp-tbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+.cmp-tbl tr:last-child td{border-bottom:none}
+.cmp-up{color:var(--ok);font-weight:700}
+.cmp-down{color:var(--danger);font-weight:700}
+.cmp-flat{color:var(--muted)}
+
+/* öne çıkanlar */
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row .hl-meta{color:var(--muted)}
+
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+
+</style>
+</head>
+<body data-sec="raporlar" data-screen="raporlar">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Analiz</div>
+        <h1>Puantaj Raporu</h1>
+        <div class="ph-sub" data-view="yonetim">16 personel · 3 şantiye · işlenen 4 gün (29 Haziran – 2 Temmuz 2026)</div>
+        <div class="ph-sub" data-view="sef" hidden>7 personel · Vadi Konakları · işlenen 4 gün (29 Haziran – 2 Temmuz 2026)</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
+        <button class="btn btn-ghost btn-sm" data-export="Puantaj raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+      </div>
+    </div>
+
+    <!-- ============ YÖNETİM GÖRÜNÜMÜ (superadmin·sahip·yonetim·teknik·muhasebe·ik) ============ -->
+    <section data-view="yonetim">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-ico"><i class="fa-solid fa-users"></i></div>
+          <div><div class="kpi-num num">16</div><div class="kpi-lbl">İzlenen personel</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-helmet-safety"></i> 3 şantiye</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-gauge-simple-high"></i></div>
+          <div><div class="kpi-num num">%78</div><div class="kpi-lbl">Katılım oranı</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-calendar-check"></i> 50 / 64 kişi-gün</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-umbrella-beach"></i></div>
+          <div><div class="kpi-num num">12</div><div class="kpi-lbl">İzinli / Raporlu kayıt</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-file-medical"></i> 9 izin · 3 rapor</div></div>
+        </div>
+        <div class="kpi-card warn">
+          <div class="kpi-ico"><i class="fa-solid fa-arrow-trend-up"></i></div>
+          <div><div class="kpi-num num">2 FM · 1 EM</div><div class="kpi-lbl">Mesai sapması</div>
+          <div class="kpi-delta down"><i class="fa-solid fa-xmark"></i> 2 devamsız kayıt</div></div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Şantiye × Durum Matrisi</div><span class="ph-sub" style="margin:0">29 Haz – 2 Tem</span></div>
+          <div class="gc-body flush">
+            <table class="gtable" id="tblDurum">
+              <thead>
+                <tr>
+                  <th>Durum</th>
+                  <th class="num">Vadi Konakları</th>
+                  <th class="num">Liman Lojistik</th>
+                  <th class="num">Merkez Şantiye</th>
+                  <th class="num">Toplam</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- kaynak: crm-operasyon-puantaj.html PERSONEL[].gunler, indeks 0-3 (Pzt 29 Haz – Per 2 Tem) sayılarak derlendi -->
+                <tr><td><div class="dm-lbl"><span class="dm-ico tam"><i class="fa-solid fa-check"></i></span> Tam gün</div></td><td class="num">19</td><td class="num">11</td><td class="num">14</td><td class="num">44</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico yarim"><i class="fa-solid fa-circle-half-stroke"></i></span> Yarım gün</div></td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">3</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico yok"><i class="fa-solid fa-xmark"></i></span> Devamsız</div></td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td class="num">2</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico izin"><i class="fa-solid fa-umbrella-beach"></i></span> İzinli</div></td><td class="num">3</td><td class="num">6</td><td class="num">0</td><td class="num">9</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico rapor"><i class="fa-solid fa-file-medical"></i></span> Raporlu</div></td><td class="num">2</td><td class="num">0</td><td class="num">1</td><td class="num">3</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico fm"><i class="fa-solid fa-arrow-trend-up"></i></span> Fazla Mesai (FM)</div></td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td class="num">2</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico em"><i class="fa-solid fa-arrow-trend-down"></i></span> Eksik Mesai (EM)</div></td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">1</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico rt"><i class="fa-solid fa-flag"></i></span> Resmî Tatil (RT)</div></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+                <tr><td><div class="dm-lbl"><span class="dm-ico ht"><i class="fa-solid fa-moon"></i></span> Hafta Tatili (HT)</div></td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+                <tr class="dm-total"><td>Kişi-gün toplamı</td><td class="num">28</td><td class="num">20</td><td class="num">16</td><td class="num">64</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="gc-body" style="padding-top:0">
+            <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Bu haftanın Pzt–Per aralığında resmî tatile rastlanmadı; hafta tatili (Pazar) ise henüz işlenen 4 günlük aralığın dışında — bkz. Puantaj sayfası "henüz işlenmedi" günleri.</div>
+          </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Katılım Oranı — Şantiye</div></div>
+        <div class="gc-body">
+          <div class="att-list">
+            <div class="att-row"><span class="att-name">Vadi Konakları</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:79%"></div></div><span class="gbar-val">%79</span></div></div>
+            <div class="att-row"><span class="att-name">Liman Lojistik Merkezi</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:65%"></div></div><span class="gbar-val">%65</span></div></div>
+            <div class="att-row"><span class="att-name">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:94%"></div></div><span class="gbar-val">%94</span></div></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Katılım = (tam + yarım + FM + EM) / işlenen kişi-gün. Liman'daki düşüş şef Aylin Koç dahil 4 kişinin hafta boyunca izinli olmasından kaynaklanıyor.</div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Ay Karşılaştırması — Haziran vs. Temmuz</div><span class="ph-sub" style="margin:0">İşlenen 2'şer gün</span></div>
+        <div class="gc-body flush">
+          <table class="cmp-tbl">
+            <thead><tr><th>Durum</th><th class="num">Haziran (29–30)</th><th class="num">Temmuz (1–2)</th><th class="num">Fark</th></tr></thead>
+            <tbody>
+              <tr><td>Tam gün</td><td class="num">23</td><td class="num">21</td><td class="num cmp-down">−2</td></tr>
+              <!-- kaynak: crm-operasyon-puantaj.html — Haziran yarım-gün: Sadık Öz (29 Haz, idx0) + Halil Güneş (30 Haz, idx1); Temmuz yarım-gün: İbrahim Sönmez (1 Tem, idx2) -->
+              <tr><td>Yarım gün</td><td class="num">2</td><td class="num">1</td><td class="num cmp-up">−1</td></tr>
+              <tr><td>Devamsız</td><td class="num">2</td><td class="num">0</td><td class="num cmp-up">−2</td></tr>
+              <tr><td>İzinli</td><td class="num">4</td><td class="num">5</td><td class="num cmp-up">+1</td></tr>
+              <tr><td>Raporlu</td><td class="num">0</td><td class="num">3</td><td class="num cmp-up">+3</td></tr>
+              <tr><td>Fazla Mesai (FM)</td><td class="num">1</td><td class="num">1</td><td class="num cmp-flat">±0</td></tr>
+              <tr><td>Eksik Mesai (EM)</td><td class="num">0</td><td class="num">1</td><td class="num cmp-down">+1</td></tr>
+            </tbody>
+          </table>
+          <div class="rep-src" style="padding:0 22px 18px"><i class="fa-solid fa-circle-info"></i> Kaynak: crm-operasyon-puantaj.html — grid indeks 0-1 Haziran (29-30 Haz), indeks 2-3 Temmuz (1-2 Tem) günleri sayılarak derlendi.</div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-umbrella-beach"></i><span><b>Aylin Koç</b> (Şantiye Şefi, Liman) hafta boyunca (29 Haz – 2 Tem) izinli göründü — 4/4 gün. <a href="crm-personel-detay.html?per=005">Personel kaydı</a></span></div>
+            <div class="hl-row"><i class="fa-solid fa-arrow-trend-up"></i><span><b>İbrahim Sönmez</b> (Formen, Vadi) ve <b>Halil Güneş</b> (Operatör, Liman) bu hafta 1'er gün fazla mesai (FM) girdi.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-arrow-trend-down"></i><span><b>Selim Doğan</b> (Demir Ustası, Vadi) 1 gün eksik mesai (EM) ve aynı hafta içinde 1 gün devamsızlık kaydı aldı.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-xmark"></i><span><b>Osman Polat</b> (Düz İşçi, Liman) hafta başında (29 Haz) mazeretsiz devamsız görüldü.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ŞEF GÖRÜNÜMÜ (sef — yalnız Vadi Konakları) ============ -->
+    <section data-view="sef" hidden>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-ico"><i class="fa-solid fa-users"></i></div>
+          <div><div class="kpi-num num">7</div><div class="kpi-lbl">Vadi Konakları personeli</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-helmet-safety"></i> Şantiye Şefi görünümü</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-gauge-simple-high"></i></div>
+          <div><div class="kpi-num num">%79</div><div class="kpi-lbl">Katılım oranı</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-calendar-check"></i> 22 / 28 kişi-gün</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-umbrella-beach"></i></div>
+          <div><div class="kpi-num num">5</div><div class="kpi-lbl">İzinli / Raporlu kayıt</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-file-medical"></i> 3 izin · 2 rapor</div></div>
+        </div>
+        <div class="kpi-card warn">
+          <div class="kpi-ico"><i class="fa-solid fa-arrow-trend-up"></i></div>
+          <div><div class="kpi-num num">1 FM · 1 EM</div><div class="kpi-lbl">Mesai sapması</div>
+          <div class="kpi-delta down"><i class="fa-solid fa-xmark"></i> 1 devamsız kayıt</div></div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Vadi Konakları — Durum Dökümü</div><span class="ph-sub" style="margin:0">29 Haz – 2 Tem</span></div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblDurumSef">
+            <thead><tr><th>Durum</th><th class="num">Kayıt</th></tr></thead>
+            <tbody>
+              <tr><td><div class="dm-lbl"><span class="dm-ico tam"><i class="fa-solid fa-check"></i></span> Tam gün</div></td><td class="num">19</td></tr>
+              <tr><td><div class="dm-lbl"><span class="dm-ico yarim"><i class="fa-solid fa-circle-half-stroke"></i></span> Yarım gün</div></td><td class="num">1</td></tr>
+              <tr><td><div class="dm-lbl"><span class="dm-ico yok"><i class="fa-solid fa-xmark"></i></span> Devamsız</div></td><td class="num">1</td></tr>
+              <tr><td><div class="dm-lbl"><span class="dm-ico izin"><i class="fa-solid fa-umbrella-beach"></i></span> İzinli</div></td><td class="num">3</td></tr>
+              <tr><td><div class="dm-lbl"><span class="dm-ico rapor"><i class="fa-solid fa-file-medical"></i></span> Raporlu</div></td><td class="num">2</td></tr>
+              <tr><td><div class="dm-lbl"><span class="dm-ico fm"><i class="fa-solid fa-arrow-trend-up"></i></span> Fazla Mesai (FM)</div></td><td class="num">1</td></tr>
+              <tr><td><div class="dm-lbl"><span class="dm-ico em"><i class="fa-solid fa-arrow-trend-down"></i></span> Eksik Mesai (EM)</div></td><td class="num">1</td></tr>
+              <tr class="dm-total"><td>Kişi-gün toplamı</td><td class="num">28</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar — Vadi Konakları</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-arrow-trend-up"></i><span><b>İbrahim Sönmez</b> (Formen) bu hafta 1 gün fazla mesai (FM) girdi.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-arrow-trend-down"></i><span><b>Selim Doğan</b> (Demir Ustası) 1 gün eksik mesai (EM) ve 1 gün devamsızlık kaydı aldı.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-umbrella-beach"></i><span><b>Musa Erdem</b> (Düz İşçi) hafta başında 2 gün, <b>Veli Şimşek</b> (Elektrik Ustası) hafta sonunda 2 gün raporlu görünüyor.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+  var view = GV.role === 'sef' ? 'sef' : 'yonetim';
+  document.querySelectorAll('[data-view]').forEach(function(el){
+    el.hidden = el.getAttribute('data-view') !== view;
+  });
+
+  /* D15 — GERÇEK DIŞA AKTARMA: görünen görünümün durum matrisi (+ yönetimde ay
+     karşılaştırması) gerçek .xlsx/.csv olur (ui.js GV_EXPORTERS sözleşmesi). */
+  function tblAoa(tbl){
+    var out = [];
+    tbl.querySelectorAll('tr').forEach(function(tr){
+      var row = [];
+      tr.querySelectorAll('th,td').forEach(function(c){
+        var t = c.textContent.replace(/\s+/g, ' ').trim();
+        row.push(c.classList.contains('num') && /^\d+$/.test(t) ? parseInt(t, 10) : t);
+      });
+      out.push(row);
+    });
+    return out;
+  }
+  window.GV_EXPORTERS = window.GV_EXPORTERS || {};
+  GV_EXPORTERS['Puantaj raporu'] = function(){
+    var sef = view === 'sef';
+    var aoa = [
+      ['YAPITAŞ İNŞAAT A.Ş. — PUANTAJ RAPORU'],
+      [sef ? 'Vadi Konakları · işlenen 4 gün (29 Haziran – 2 Temmuz 2026)'
+           : '16 personel · 3 şantiye · işlenen 4 gün (29 Haziran – 2 Temmuz 2026)'],
+      [],
+      [sef ? 'Vadi Konakları — Durum Dökümü (29 Haz – 2 Tem)' : 'Şantiye × Durum Matrisi (29 Haz – 2 Tem)']
+    ].concat(tblAoa(document.getElementById(sef ? 'tblDurumSef' : 'tblDurum')));
+    if(!sef){
+      aoa.push([], ['Ay Karşılaştırması — Haziran (29–30) vs. Temmuz (1–2), işlenen 2\'şer gün']);
+      aoa = aoa.concat(tblAoa(document.querySelector('.cmp-tbl')));
+    }
+    return { file:'puantaj-raporu-' + (sef ? 'vadi-' : '') + '29haz-2tem-2026',
+             sheet:'Puantaj', cols:[30, 17, 17, 17, 10], aoa:aoa };
+  };
+})();
+</script>
+</body>
+</html>

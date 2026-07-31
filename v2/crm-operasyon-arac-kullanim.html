@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Araç Kullanım Kayıtları — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Araç Kullanım Kayıtları (§12, §13 tarih aralığı benimseme) ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.veh-mini{display:flex;align-items:center;gap:16px;padding:18px 22px;flex-wrap:wrap}
+.vm-mark{width:44px;height:44px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:17px;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.vm-info b{display:block;font-size:14.5px;font-weight:800;color:var(--ink)}
+.vm-info span{font-size:12px;color:var(--muted)}
+.vm-badges{margin-left:auto}
+
+#tblKullanim{min-width:1080px}
+#tblKullanim .num{text-align:right;white-space:nowrap}
+
+.ekle-card{display:none;margin-bottom:16px}
+.ekle-card.open{display:block}
+.ekle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:20px 22px}
+@media(max-width:900px){.ekle-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ekle-grid{grid-template-columns:1fr}}
+.ekle-grid .gfield.full{grid-column:1/-1}
+.ekle-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body data-sec="varlik" data-screen="arac-kullanim">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-operasyon-arac.html">Araçlar</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="crm-operasyon-arac-detay.html" id="crumbAracLink">ARC-01</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Kullanım Kayıtları</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Günlük Kayıt</div>
+        <h1>Araç Kullanım Kayıtları</h1>
+        <div class="ph-sub" id="pageSub">—</div>
+      </div>
+      <div class="ph-actions">
+        <select id="fAracSec" class="btn btn-ghost btn-sm" style="padding:9px 14px"></select>
+        <button type="button" class="btn btn-acc btn-sm" id="btnEkleAc" data-no-confirm><i class="fa-solid fa-plus"></i> Kullanım Kaydı Ekle</button>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="veh-mini">
+        <div class="vm-mark" id="vmMark"><i class="fa-solid fa-car-side"></i></div>
+        <div class="vm-info"><b id="vmTitle">—</b><span id="vmSub">—</span></div>
+        <div class="vm-badges"><span class="gstat ok" id="vmKmBadge">—</span></div>
+      </div>
+    </div>
+
+    <div class="gv-card ekle-card" id="ekleCard">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-plus"></i> Yeni Kullanım Kaydı</div></div>
+      <form class="gform" id="kulForm" onsubmit="return false">
+        <div class="ekle-grid">
+          <div class="gfield"><label for="fTarih">Tarih</label><input type="date" id="fTarih" value="2026-07-02"></div>
+          <div class="gfield"><label for="fSurucu">Sürücü</label><input type="text" id="fSurucu" placeholder="ör. Hasan Demirci"></div>
+          <div class="gfield">
+            <label for="fSantiyeSec">Şantiye</label>
+            <select id="fSantiyeSec">
+              <option value="vadi">Vadi Konakları</option>
+              <option value="liman">Liman Lojistik Merkezi</option>
+              <option value="merkez">Merkez Şantiye</option>
+              <option value="genelmerkez">Genel Merkez</option>
+            </select>
+          </div>
+          <div class="gfield"><label for="fYakitL">Yakıt (L) <span class="gf-hint">(isteğe bağlı)</span></label><input type="number" id="fYakitL" min="0" placeholder="ör. 45"></div>
+          <div class="gfield"><label for="fYakitFiyat">Yakıt Birim Fiyatı (₺/L) <span class="gf-hint">(isteğe bağlı)</span></label><input type="number" id="fYakitFiyat" min="0" step="0.1" placeholder="ör. 44.80"></div>
+          <div class="gfield"><label for="fCikisKm">Çıkış Km</label><input type="number" id="fCikisKm" min="0" placeholder="ör. 42180"></div>
+          <div class="gfield"><label for="fDonusKm">Dönüş Km</label><input type="number" id="fDonusKm" min="0" placeholder="ör. 42300"></div>
+          <div class="gfield full"><label for="fAmac">Amaç</label><input type="text" id="fAmac" placeholder="ör. Malzeme tedarik — nakliyeci depo"></div>
+          <div class="gfield full"><label for="fNotlar">Notlar <span class="gf-hint">(isteğe bağlı)</span></label><textarea id="fNotlar" rows="2" placeholder="Ek açıklama…"></textarea></div>
+        </div>
+        <div class="ekle-foot">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnEkleVazgec">Vazgeç</button>
+          <button type="button" class="btn btn-acc btn-sm" id="btnEkleKaydet" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Kaydı Ekle</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="gv-card">
+      <div class="filter-bar">
+        <div class="fb-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="kulSearch" placeholder="Sürücü, şantiye veya amaç ara">
+        </div>
+        <div data-gvdaterange id="tarihFiltre" data-fp-label="Tarih"></div>
+      </div>
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-road-circle-check"></i> Kullanım Kayıtları</div>
+        <span class="gtag" id="kulCount">0 kayıt</span>
+      </div>
+      <div class="gc-body flush">
+        <table class="gtable" id="tblKullanim">
+          <thead><tr><th>Tarih</th><th>Sürücü</th><th>Şantiye</th><th class="num">Çıkış Km</th><th class="num">Dönüş Km</th><th class="num">Yapılan Km</th><th class="num">Yakıt</th><th class="num">Yakıt Tutarı</th><th>Amaç</th><th>Notlar</th></tr></thead>
+          <tbody id="kulBody"></tbody>
+        </table>
+        <div class="gv-empty" id="kulEmpty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-road-circle-check"></i></div>
+          <h4>Kullanım kaydı yok</h4>
+          <p>Seçilen araç/aralık için kayıtlı bir sefer bulunmuyor.</p>
+        </div>
+      </div>
+      <div class="gc-foot"><span id="kulFoot">—</span></div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye', genelmerkez:'Genel Merkez'};
+  function ddmmyyyy(iso){ var p = iso.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR', {maximumFractionDigits:0}); }
+
+  /* ---- §12 araç + kullanım kaydı verisi — crm-operasyon-arac-detay.html "kullanim"
+     özet dizisiyle tarih/km alanlarında SENKRON (o dosyada yalnız en yeni 1-2 kayıt
+     özetlenir, burada tam liste). "fiyat" — T-ARC3 spec-arac-yakit.md kapsamında EKLENEN
+     yakıt birim fiyatı — yakit.html'in aylık toplam hesabına bu ekran da katkı sağlar
+     (bkz. Motorin/Benzin dönemsel fiyat bandı, yakit.html ile SENKRON). ---- */
+  var ARAC = {
+    'ARC-01':{plaka:'34 ABC 123', model:'Ford Ranger 4x4 Pikap', santiye:'vadi', guncelKm:42300,
+      kayitlar:[
+        {tarih:'2026-07-01', surucu:'Hasan Demirci', santiye:'vadi', cikisKm:42180, donusKm:42300, yakit:38, fiyat:44.80, amac:'Malzeme tedarik — nakliyeci depo'},
+        {tarih:'2026-06-28', surucu:'Hasan Demirci', santiye:'vadi', cikisKm:41960, donusKm:42180, yakit:0, fiyat:0, amac:'Şantiye içi malzeme taşıma'},
+        {tarih:'2026-06-20', surucu:'Ali Vural', santiye:'vadi', cikisKm:41700, donusKm:41960, yakit:35, fiyat:44.10, amac:'Beton santrali sipariş takibi'},
+        {tarih:'2026-06-10', surucu:'Hasan Demirci', santiye:'vadi', cikisKm:41520, donusKm:41700, yakit:0, fiyat:0, amac:'Belediye imar müdürlüğü evrak teslimi'}
+      ]},
+    'ARC-02':{plaka:'34 SRV 641', model:'Mercedes Sprinter 316 Servis', santiye:'vadi', guncelKm:61200,
+      kayitlar:[
+        {tarih:'2026-06-30', surucu:'İbrahim Sönmez', santiye:'vadi', cikisKm:61050, donusKm:61200, yakit:52, fiyat:44.10, amac:'Personel servis güzergâhı — sabah/akşam'},
+        {tarih:'2026-06-23', surucu:'İbrahim Sönmez', santiye:'vadi', cikisKm:60890, donusKm:61050, yakit:48, fiyat:44.10, amac:'Personel servis güzergâhı — sabah/akşam'}
+      ]},
+    'ARC-03':{plaka:'35 KLT 208', model:'Toyota Hilux Pikap', santiye:'liman', guncelKm:78450,
+      kayitlar:[
+        {tarih:'2026-06-29', surucu:'Aylin Koç', santiye:'liman', cikisKm:78300, donusKm:78450, yakit:30, fiyat:44.10, amac:'Liman gümrük evrak teslimi'},
+        {tarih:'2026-06-15', surucu:'Şükrü Aslan', santiye:'liman', cikisKm:78100, donusKm:78300, yakit:32, fiyat:44.10, amac:'Malzeme depo transferi'}
+      ]},
+    'ARC-04':{plaka:'41 DBL 457', model:'Fiat Doblo Cargo Panelvan', santiye:'merkez', guncelKm:87400,
+      kayitlar:[
+        {tarih:'2026-06-29', surucu:'Recep Yaman', santiye:'merkez', cikisKm:87250, donusKm:87400, yakit:22, fiyat:44.10, amac:'Depo malzeme taşıma — servise giriş öncesi'}
+      ]},
+    'ARC-05':{plaka:'34 GNL 310', model:'Renault Megane Sedan', santiye:'genelmerkez', guncelKm:18900,
+      kayitlar:[
+        {tarih:'2026-06-30', surucu:'Elif Sarıkaya', santiye:'genelmerkez', cikisKm:18820, donusKm:18900, yakit:6, fiyat:48.40, amac:'Şantiye ziyareti — teknik denetim (Merkez Şantiye)'},
+        {tarih:'2026-06-18', surucu:'Elif Sarıkaya', santiye:'genelmerkez', cikisKm:18720, donusKm:18820, yakit:7, fiyat:48.40, amac:'Belediye toplantısı'}
+      ]},
+    'ARC-06':{plaka:'41 FTR 118', model:'Ford Transit 350L Kamyonet', santiye:'merkez', guncelKm:132600,
+      kayitlar:[
+        {tarih:'2026-06-25', surucu:'Sadık Öz', santiye:'merkez', cikisKm:132450, donusKm:132600, yakit:40, fiyat:44.10, amac:'Depo havuz aracı — malzeme dağıtımı'}
+      ]},
+    'ARC-07':{plaka:'34 ESK 771', model:'Renault Kangoo Van', santiye:'merkez', guncelKm:168400, kayitlar:[]},
+    'ARC-08':{plaka:'34 PLK 552', model:'Volkswagen Transporter T6', santiye:'genelmerkez', guncelKm:54200,
+      kayitlar:[
+        {tarih:'2026-07-01', surucu:'Baran Yıldız', santiye:'genelmerkez', cikisKm:54080, donusKm:54200, yakit:28, fiyat:44.80, amac:'Satın alma tedarikçi ziyareti'}
+      ]},
+    'ARC-09':{plaka:'34 KRL 090', model:'Fiat Egea Sedan', santiye:'liman', guncelKm:32100, kayitlar:[]},
+    'ARC-10':{plaka:'41 HRD 233', model:'Ford Cargo 1826 Kamyon', santiye:'merkez', guncelKm:310500, kayitlar:[]}
+  };
+
+  var q = new URLSearchParams(location.search);
+  var key = ARAC[q.get('arac')] ? q.get('arac') : 'ARC-01';
+  var v = ARAC[key];
+
+  var selArac = document.getElementById('fAracSec');
+  Object.keys(ARAC).forEach(function(no){
+    var opt = document.createElement('option');
+    opt.value = no; opt.textContent = no + ' — ' + ARAC[no].plaka;
+    if(no === key) opt.selected = true;
+    selArac.appendChild(opt);
+  });
+  selArac.addEventListener('change', function(){ location.href = 'crm-operasyon-arac-kullanim.html?arac=' + selArac.value; });
+
+  function render(){
+    document.title = key + ' Kullanım Kayıtları — Gavia CRM';
+    document.getElementById('crumbAracLink').textContent = key;
+    document.getElementById('crumbAracLink').href = 'crm-operasyon-arac-detay.html?arac=' + key;
+    document.getElementById('pageSub').textContent = v.plaka + ' — ' + v.model + ' için sefer/kullanım kayıtları';
+    document.getElementById('vmTitle').textContent = key + ' — ' + v.plaka;
+    document.getElementById('vmSub').textContent = v.model + ' · ' + SANTIYE_ADI[v.santiye];
+    document.getElementById('vmKmBadge').innerHTML = '<i class="fa-solid fa-gauge-high"></i> Güncel km: ' + v.guncelKm.toLocaleString('tr-TR');
+  }
+  render();
+
+  function renderTable(){
+    var term = document.getElementById('kulSearch').value.trim().toLocaleLowerCase('tr');
+    var drEl = document.getElementById('tarihFiltre');
+    var range = drEl._gvValue;
+    var rows = v.kayitlar.slice().sort(function(a,b){ return b.tarih.localeCompare(a.tarih); }).filter(function(k){
+      var okTerm = !term || (k.surucu + ' ' + SANTIYE_ADI[k.santiye] + ' ' + k.amac + ' ' + (k.notlar||'')).toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okDate = true;
+      if(range && range.from){
+        var d = new Date(k.tarih + 'T00:00:00');
+        okDate = d >= range.from && d <= range.to;
+      }
+      return okTerm && okDate;
+    });
+    document.getElementById('kulCount').textContent = rows.length + ' kayıt';
+    document.getElementById('kulEmpty').hidden = rows.length !== 0;
+    document.getElementById('kulBody').innerHTML = rows.map(function(k){
+      return '<tr>'
+        + '<td>' + ddmmyyyy(k.tarih) + '</td>'
+        + '<td>' + k.surucu + '</td>'
+        + '<td>' + SANTIYE_ADI[k.santiye] + '</td>'
+        + '<td class="num">' + k.cikisKm.toLocaleString('tr-TR') + '</td>'
+        + '<td class="num">' + k.donusKm.toLocaleString('tr-TR') + '</td>'
+        + '<td class="num">' + (k.donusKm - k.cikisKm).toLocaleString('tr-TR') + ' km</td>'
+        + '<td class="num">' + (k.yakit ? k.yakit + ' L' : '—') + '</td>'
+        + '<td class="num">' + (k.yakit && k.fiyat ? tl(Math.round(k.yakit * k.fiyat)) : '—') + '</td>'
+        + '<td style="font-size:12.5px;color:var(--ink-2);max-width:220px">' + k.amac + '</td>'
+        + '<td style="font-size:12.5px;color:var(--muted);max-width:180px">' + (k.notlar || '—') + '</td>'
+        + '</tr>';
+    }).join('');
+    var yakitToplam = rows.reduce(function(s,k){ return s + (k.yakit && k.fiyat ? Math.round(k.yakit * k.fiyat) : 0); }, 0);
+    document.getElementById('kulFoot').textContent = rows.length + ' kayıt gösteriliyor · toplam ' + v.kayitlar.length + ' kayıt · gösterilen yakıt tutarı ' + tl(yakitToplam);
+  }
+  renderTable();
+  document.getElementById('kulSearch').addEventListener('input', renderTable);
+  document.addEventListener('gvdaterange', function(e){
+    if(e.target && e.target.id === 'tarihFiltre') renderTable();
+  });
+
+  /* ---- kayıt ekle ---- */
+  document.getElementById('btnEkleAc').addEventListener('click', function(){
+    document.getElementById('ekleCard').classList.add('open');
+    this.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+  document.getElementById('btnEkleVazgec').addEventListener('click', function(){
+    document.getElementById('ekleCard').classList.remove('open');
+  });
+  document.getElementById('btnEkleKaydet').addEventListener('click', function(){
+    var tarih = document.getElementById('fTarih').value;
+    var surucu = document.getElementById('fSurucu').value.trim();
+    var cikis = parseInt(document.getElementById('fCikisKm').value, 10);
+    var donus = parseInt(document.getElementById('fDonusKm').value, 10);
+    var amac = document.getElementById('fAmac').value.trim();
+    if(!tarih || !surucu){ gvToast('Tarih ve sürücü girin.', {type:'danger'}); return; }
+    if(!cikis || !donus || donus < cikis){ gvToast('Çıkış/dönüş kilometresini kontrol edin.', {type:'danger'}); return; }
+    if(!amac){ gvToast('Amaç girin.', {type:'danger'}); return; }
+    v.kayitlar.push({
+      tarih: tarih, surucu: surucu, santiye: document.getElementById('fSantiyeSec').value,
+      cikisKm: cikis, donusKm: donus, yakit: parseInt(document.getElementById('fYakitL').value, 10) || 0,
+      fiyat: parseFloat(document.getElementById('fYakitFiyat').value) || 0,
+      amac: amac, notlar: document.getElementById('fNotlar').value.trim()
+    });
+    if(donus > v.guncelKm) v.guncelKm = donus;
+    gvToast('Kullanım kaydı eklendi — ' + key + ' seferleri güncellendi.');
+    document.getElementById('kulForm').reset();
+    document.getElementById('fTarih').value = '2026-07-02';
+    document.getElementById('ekleCard').classList.remove('open');
+    render(); renderTable();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Hesap Ayarları — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — hesap güvenliği ============ */
+.hs-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1100px){.hs-cols{grid-template-columns:minmax(0,1fr)}}
+.hs-stack{display:flex;flex-direction:column;gap:16px}
+
+/* güvenlik satırı — toggle'lı tercih */
+.sec-row{display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--line)}
+.sec-row:last-child{border-bottom:none}
+.sec-ico{width:40px;height:40px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:15px;background:rgba(var(--acc-rgb),.1);color:var(--acc-ink)}
+.sec-info{flex:1;min-width:0;line-height:1.4}
+.sec-info b{font-size:13.5px;font-weight:700;color:var(--ink);display:block}
+.sec-info span{font-size:12.5px;color:var(--muted)}
+
+/* oturum satırı */
+.ses-row{display:flex;align-items:center;gap:13px;padding:14px 22px;border-bottom:1px solid var(--line)}
+.ses-row:last-child{border-bottom:none}
+.ses-ico{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:14px;background:var(--bg);color:var(--ink-2)}
+.ses-row.is-current .ses-ico{background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.ses-info{flex:1;min-width:0;line-height:1.4}
+.ses-info b{display:block;font-size:13.5px;font-weight:700;color:var(--ink)}
+.ses-info span{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body data-sec="hesap" data-screen="hesap">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Hesabım</div>
+        <h1>Hesap Ayarları</h1>
+        <div class="ph-sub">Parola, oturum güvenliği ve giriş geçmişi</div>
+      </div>
+    </div>
+
+    <div class="hs-cols">
+      <div class="hs-stack">
+        <!-- parola değiştir -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-key"></i> Parola Değiştir</div></div>
+          <div class="gc-body">
+            <form class="gform" onsubmit="event.preventDefault(); gvToast('Parolanız güncellendi.')">
+              <div class="gfield full">
+                <label for="hEski">Mevcut parola</label>
+                <input id="hEski" type="password" autocomplete="current-password" placeholder="••••••••">
+              </div>
+              <div class="gfield">
+                <label for="hYeni">Yeni parola</label>
+                <input id="hYeni" type="password" autocomplete="new-password" placeholder="En az 8 karakter">
+              </div>
+              <div class="gfield">
+                <label for="hYeni2">Yeni parola (tekrar)</label>
+                <input id="hYeni2" type="password" autocomplete="new-password" placeholder="Yeni parolayı doğrulayın">
+              </div>
+              <div class="gfield full">
+                <span class="gf-hint">Parola en az 8 karakter olmalı; büyük harf, rakam ve işaret içermesi önerilir.</span>
+              </div>
+              <div class="gfield full" style="flex-direction:row;justify-content:flex-end;gap:10px">
+                <button type="submit" class="btn btn-acc btn-sm"><i class="fa-solid fa-check"></i> Parolayı Güncelle</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- oturum güvenliği -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-shield-halved"></i> Oturum Güvenliği</div></div>
+          <div class="gc-body" style="padding-top:6px;padding-bottom:6px">
+            <div class="sec-row">
+              <div class="sec-ico"><i class="fa-solid fa-mobile-screen"></i></div>
+              <div class="sec-info"><b>İki adımlı doğrulama</b><span>Girişte SMS ile tek kullanımlık kod istenir</span></div>
+              <label class="gv-toggle"><input type="checkbox" data-sec-opt="İki adımlı doğrulama"><span class="tg-track"></span></label>
+            </div>
+            <div class="sec-row">
+              <div class="sec-ico"><i class="fa-solid fa-bell-concierge"></i></div>
+              <div class="sec-info"><b>Yeni cihaz uyarısı</b><span>Tanınmayan cihazdan girişte e-posta gönderilir</span></div>
+              <label class="gv-toggle"><input type="checkbox" checked data-sec-opt="Yeni cihaz uyarısı"><span class="tg-track"></span></label>
+            </div>
+            <div class="sec-row">
+              <div class="sec-ico"><i class="fa-solid fa-clock"></i></div>
+              <div class="sec-info"><b>Otomatik oturum kapatma</b><span>30 dakika hareketsizlikte oturum sonlanır</span></div>
+              <label class="gv-toggle"><input type="checkbox" checked data-sec-opt="Otomatik oturum kapatma"><span class="tg-track"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hs-stack">
+        <!-- aktif oturumlar -->
+        <div class="gv-card">
+          <div class="gc-head">
+            <div class="gc-title"><i class="fa-solid fa-laptop"></i> Aktif Oturumlar</div>
+            <button class="btn btn-ghost btn-sm" data-no-confirm onclick="gvToast('Diğer tüm oturumlar sonlandırıldı.',{type:'info'})">Diğerlerini Sonlandır</button>
+          </div>
+          <div class="gc-body flush">
+            <div class="ses-row is-current">
+              <div class="ses-ico"><i class="fa-solid fa-desktop"></i></div>
+              <div class="ses-info"><b>Bu cihaz — Chrome, macOS</b><span>İstanbul · 88.243.xx.xx · şu an aktif</span></div>
+              <span class="gstat ok">Bu oturum</span>
+            </div>
+            <div class="ses-row">
+              <div class="ses-ico"><i class="fa-solid fa-mobile-screen"></i></div>
+              <div class="ses-info"><b>iPhone — Safari</b><span>İstanbul · 178.240.xx.xx · dün 18:42</span></div>
+              <button class="ia-btn" data-no-confirm aria-label="Oturumu sonlandır" onclick="gvToast('iPhone oturumu sonlandırıldı.',{type:'info'})"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+            <div class="ses-row">
+              <div class="ses-ico"><i class="fa-solid fa-tablet-screen-button"></i></div>
+              <div class="ses-info"><b>Galaxy Tab — Chrome, Android</b><span>Şantiye ofisi · 31.155.xx.xx · 29 Haz 07:12</span></div>
+              <button class="ia-btn" data-no-confirm aria-label="Oturumu sonlandır" onclick="gvToast('Tablet oturumu sonlandırıldı.',{type:'info'})"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- giriş geçmişi -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Giriş Geçmişi</div></div>
+          <div class="gc-body flush">
+            <div class="act-list">
+              <div class="act-row">
+                <div class="act-ico ok"><i class="fa-solid fa-right-to-bracket"></i></div>
+                <div class="act-info"><b>Başarılı giriş — Chrome, macOS</b><span>İstanbul · 88.243.xx.xx</span></div>
+                <span class="act-time">Bugün 07:58</span>
+              </div>
+              <div class="act-row">
+                <div class="act-ico ok"><i class="fa-solid fa-right-to-bracket"></i></div>
+                <div class="act-info"><b>Başarılı giriş — Safari, iPhone</b><span>İstanbul · 178.240.xx.xx</span></div>
+                <span class="act-time">Dün 18:42</span>
+              </div>
+              <div class="act-row">
+                <div class="act-ico warn"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="act-info"><b>Hatalı parola denemesi</b><span>Ankara · 195.87.xx.xx · hesap kilitlenmedi</span></div>
+                <span class="act-time">30 Haz 22:15</span>
+              </div>
+              <div class="act-row">
+                <div class="act-ico ok"><i class="fa-solid fa-right-to-bracket"></i></div>
+                <div class="act-info"><b>Başarılı giriş — Chrome, Android</b><span>Şantiye ofisi · 31.155.xx.xx</span></div>
+                <span class="act-time">29 Haz 07:12</span>
+              </div>
+            </div>
+          </div>
+          <div class="gc-foot">
+            <span style="display:flex;align-items:center;gap:8px"><i class="fa-solid fa-circle-info" style="color:var(--acc-ink)"></i> Şüpheli bir giriş görürseniz parolanızı hemen değiştirin.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+/* güvenlik tercihleri — toggle simülasyonu */
+document.querySelectorAll('input[data-sec-opt]').forEach(function(inp){
+  inp.addEventListener('change', function(){
+    gvToast(inp.getAttribute('data-sec-opt') + (inp.checked ? ' açıldı.' : ' kapatıldı.'), {type: inp.checked ? 'ok' : 'info'});
+  });
+});
+</script>
+</body>
+</html>

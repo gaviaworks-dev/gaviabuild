@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Hakediş Çıktısı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+/* =====================================================================
+   HAKEDİŞ ÇIKTISI — §18 / yeni-sayfa-listesi.md satır 64 (Dalga 4 / Finans).
+   KAYNAK-TRANSFER: crm-satinalma-icmal-cikti.html deseni BİREBİR devralındı
+   (shell'siz, kendi kendine yeten çıktı ekranı; ck-bar + .paper + print CSS
+   içeride, yalnız tokens.css yüklenir; pp-band/pi-title/pp-tbl/pp-sign sınıf
+   dili AYNI). A4 DİKEY (crm-operasyon-kasa-cikti.html emsali) — tek hakediş
+   imzaya hazır döküm, icmal'in çok-tedarikçili yatay tablosu burada gerekmiyor.
+   ÇİFT MAP ?th=/?hkd= — crm-finans-hakedis-detay.html'deki TH/HKD kanonik
+   kayıtlarının kimlik+tutar alt kümesi BİREBİR kopyalandı (o dosya READ-ONLY
+   referans, kaynak rakam İCAT EDİLMEDİ). Rich olmayan kayıtlarda kalem/kesinti
+   dökümü kaynakta yok — "dökümü ayrıntılandırılmadı" notuyla dürüstçe belirtilir.
+   ===================================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:#525659;min-height:100vh;padding:88px 16px 40px;
+  -webkit-font-smoothing:antialiased}
+
+/* ---- ekran-only araç çubuğu ---- */
+.ck-bar{position:fixed;inset:0 0 auto 0;height:60px;background:var(--gv-deep);color:var(--on-dark);
+  display:flex;align-items:center;gap:14px;padding:0 22px;z-index:10;box-shadow:0 2px 14px rgba(0,0,0,.35)}
+.ck-bar .cb-brand{font-weight:800;font-size:15px;letter-spacing:-.01em;color:#fff;display:flex;align-items:center;gap:10px}
+.ck-bar .cb-brand .g{width:28px;height:28px;border-radius:8px;background:var(--gv-mint);color:var(--gv-deep);
+  display:grid;place-items:center;font-size:14px;font-weight:800}
+.ck-bar .cb-sub{font-size:12px;color:var(--on-dark-mut,#9aa3b2)}
+.ck-bar .cb-spacer{flex:1}
+.ck-bar select{font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:8px 10px;outline:none;cursor:pointer;max-width:340px}
+.ck-bar .cb-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.18);color:#fff;background:transparent;
+  cursor:pointer;text-decoration:none;transition:.2s var(--ease)}
+.ck-bar .cb-btn:hover{background:rgba(255,255,255,.08)}
+.ck-bar .cb-btn.acc{background:var(--gv-mint);border-color:var(--gv-mint);color:var(--gv-deep)}
+.ck-bar .cb-btn.acc:hover{background:var(--gv-mint-bright)}
+
+/* ---- A4 kâğıt — DİKEY ---- */
+.paper{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#111;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);padding:14mm 12mm 12mm}
+
+/* logo bandı */
+.pp-band{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:0}
+.pp-band .pb-firm{display:flex;align-items:center;gap:10px}
+.pp-band .pb-g{width:34px;height:34px;border:2px solid #111;display:grid;place-items:center;font-weight:800;font-size:17px}
+.pp-band .pb-name{font-weight:800;font-size:15px;letter-spacing:.02em}
+.pp-band .pb-name span{display:block;font-weight:600;font-size:9.5px;letter-spacing:.08em;color:#444}
+.pp-band .pb-doc{font-size:9.5px;font-weight:700;color:#444;text-align:right;line-height:1.5}
+
+/* başlık bloğu — hakediş no + tür (icmal pi-title deseni) */
+.pi-title{display:grid;grid-template-columns:1fr 50mm;border:1.5px solid #111;border-top:none}
+.pi-title .pt-name{padding:11px 13px;font-size:13px;font-weight:800;letter-spacing:.01em;display:flex;align-items:center}
+.pi-title .pt-name b{margin-right:7px}
+.pi-title .pt-side{border-left:1.5px solid #111;display:flex;flex-direction:column}
+.pi-title .pt-side b{flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;letter-spacing:.02em;padding:5px;text-align:center}
+.pi-title .pt-side span{border-top:1px solid #111;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:.08em;padding:3px;background:#f2f2f2}
+
+/* kimlik satırları — 2 kolonlu kv grid */
+.pk-grid{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #111;border-top:none}
+.pk-cell{border-right:1px solid #666;border-bottom:1px solid #666;padding:5px 10px;font-size:9.5px;display:flex;justify-content:space-between;gap:8px}
+.pk-cell:nth-child(2n){border-right:none}
+.pk-cell:nth-last-child(-n+2){border-bottom:none}
+.pk-cell b{font-weight:800;color:#222;text-align:right}
+.pk-cell span{color:#555;font-weight:600}
+
+/* ana tablo (kalem/kesinti/net) */
+table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-top:none;font-size:10px;margin-top:10px}
+.pp-tbl th{background:#f2f2f2;border:1px solid #111;font-size:8.5px;font-weight:800;letter-spacing:.05em;
+  padding:6px 6px;text-transform:uppercase}
+.pp-tbl td{border:1px solid #666;padding:5px 8px;vertical-align:middle}
+.pp-tbl .c-ad{width:auto}
+.pp-tbl .c-meta{display:block;font-size:8px;color:#666;margin-top:1px}
+.pp-tbl .c-num{width:32mm;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pp-tbl tr.r-sub td{background:#f2f2f2;font-weight:800;border-top:2px solid #111}
+.pp-tbl tr.r-kesinti td.c-num{color:#a11}
+.pp-tbl tr.r-kesinti td.c-num::before{content:"− "}
+.pp-tbl tr.r-net td{background:#e8f7f0;font-weight:800;font-size:11.5px;border-top:2px solid #111}
+.pp-tbl .r-note td{font-style:italic;color:#666;font-size:9px;text-align:center}
+
+/* kümülatif + vergi/fatura blokları — iki kolon yan yana */
+.pp-two{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid #111;border-top:none}
+.pp-two .pt-col{padding:8px 10px;font-size:9px}
+.pp-two .pt-col:first-child{border-right:1px solid #111}
+.pp-two h6{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#333;margin-bottom:5px}
+.pp-two .kv{display:flex;justify-content:space-between;gap:6px;padding:2px 0;color:#333}
+.pp-two .kv b{font-weight:800;color:#111;text-align:right}
+.pp-two .kv.tot{border-top:1px solid #999;margin-top:3px;padding-top:4px;font-weight:800}
+
+/* imza bloğu — chain uzunluğuna göre dinamik kolon sayısı */
+.pp-sign{display:grid;border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pp-sign .sg{border-right:1px solid #111;padding:8px 8px 4px;min-height:30mm;display:flex;flex-direction:column}
+.pp-sign .sg:last-child{border-right:none}
+.pp-sign .sg-role{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#333;margin-bottom:3px}
+.pp-sign .sg-name{font-size:10.5px;font-weight:800}
+.pp-sign .sg-title{font-size:9px;font-weight:600;color:#444}
+.pp-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
+.pp-note{font-size:8.5px;color:#555;padding-top:6px;line-height:1.6}
+
+@media print{
+  body{background:#fff;padding:0}
+  .ck-bar{display:none}
+  .paper{width:auto;min-height:0;margin:0;box-shadow:none;padding:8mm 6mm}
+  @page{size:A4 portrait;margin:8mm}
+}
+@media (max-width:900px){
+  .paper{width:100%;min-height:0;padding:16px 12px;overflow-x:auto}
+  .pi-title{grid-template-columns:1fr}
+  .pi-title .pt-side{border-left:none;border-top:1.5px solid #111;flex-direction:row}
+  .pi-title .pt-side b{padding:8px}
+  .pi-title .pt-side span{border-top:none;border-left:1px solid #111;display:flex;align-items:center;padding:0 10px}
+  .pk-grid{grid-template-columns:1fr}
+  .pk-cell:nth-child(2n){border-right:none;border-bottom:1px solid #666}
+  .pk-cell:nth-last-child(-n+2){border-bottom:1px solid #666}
+  .pk-cell:last-child{border-bottom:none}
+  .pp-two{grid-template-columns:1fr}
+  .pp-two .pt-col:first-child{border-right:none;border-bottom:1px solid #111}
+  .pp-sign{grid-template-columns:1fr 1fr !important}
+}
+</style>
+</head>
+<body>
+
+<div class="ck-bar">
+  <div class="cb-brand"><span class="g">G</span> Gavia CRM <span class="cb-sub">· Hakediş Çıktısı — imzaya hazır döküm</span></div>
+  <div class="cb-spacer"></div>
+  <select id="ckRec" aria-label="Hakediş seç"></select>
+  <a class="cb-btn" href="crm-finans-hakedis-detay.html" id="ckBack"><i class="fa-solid fa-arrow-left"></i> Hakediş Detayı</a>
+  <button class="cb-btn acc" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır</button>
+</div>
+
+<div class="paper" id="paper">
+  <div class="pp-band">
+    <div class="pb-firm">
+      <div class="pb-g">Y</div>
+      <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>HAKEDİŞ DÖKÜMÜ</span></div>
+    </div>
+    <div class="pb-doc">Form No: HKF-01 · Rev.01<br>Düzenleme: 30.07.2026</div>
+  </div>
+
+  <!-- statik bake — DEFAULT th=014; JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+  <div id="ppBody"><div class="pi-title"><div class="pt-name"><b>TH-2026-014</b> Vadi Konakları — Haziran 2026 dönemi kaba inşaat hakedişi</div><div class="pt-side"><b>Taşeron</b><span>HAKEDİŞ TÜRÜ</span></div></div><div class="pk-grid"><div class="pk-cell"><span>Taraf</span><b>Demir-Beton İnş. Ltd.</b></div><div class="pk-cell"><span>Yetkili Kişi</span><b>Yusuf Ergin · Taşeron Sorumlusu</b></div><div class="pk-cell"><span>Şantiye</span><b>Vadi Konakları</b></div><div class="pk-cell"><span>Sözleşme</span><b>SZL-2025-T05</b></div><div class="pk-cell"><span>Dönem</span><b>Haziran 2026</b></div><div class="pk-cell"><span>Gönderim Tarihi</span><b>28 Haziran 2026</b></div><div class="pk-cell"><span>Oluşturan</span><b>Hasan Demirci</b></div><div class="pk-cell"><span>Onay/Ödeme Durumu</span><b>Onay Bekliyor</b></div></div><table class="pp-tbl"><thead><tr><th>İmalat Kalemi / Kesinti</th><th style="width:32mm">Tutar</th></tr></thead><tbody><tr><td class="c-ad">Kalıp işçiliği<span class="c-meta">500 m² × ₺85</span></td><td class="c-num">₺42.500</td></tr><tr><td class="c-ad">Demir montajı<span class="c-meta">4 ton × ₺9.500</span></td><td class="c-num">₺38.000</td></tr><tr><td class="c-ad">Beton dökümü C30<span class="c-meta">28 m³ × ₺1.625</span></td><td class="c-num">₺45.500</td></tr><tr class="r-sub"><td class="c-ad">Brüt Hakediş Toplamı</td><td class="c-num">₺126.000</td></tr><tr class="r-kesinti"><td class="c-ad">Stopaj<span class="c-meta">%3</span></td><td class="c-num">₺3.780</td></tr><tr class="r-kesinti"><td class="c-ad">Teminat kesintisi<span class="c-meta">%5</span></td><td class="c-num">₺6.300</td></tr><tr class="r-kesinti"><td class="c-ad">Avans mahsubu<span class="c-meta">SZL-2025-T05 avansından mahsup</span></td><td class="c-num">₺25.920</td></tr><tr class="r-net"><td class="c-ad">Net Ödenecek Tutar</td><td class="c-num">₺90.000</td></tr></tbody></table><div class="pp-two"><div class="pt-col"><h6>Kümülatif İmalat</h6><div class="kv"><span>Önceki dönemden devreden</span><b>₺210.000</b></div><div class="kv"><span>Bu dönem imalat</span><b>₺90.000</b></div><div class="kv tot"><span>Toplam hakediş (%66,7)</span><b>₺300.000</b></div><div class="kv"><span>Sözleşme bedeli</span><b>₺450.000</b></div></div><div class="pt-col"><h6>Vergi &amp; Fatura</h6><div class="kv"><span>Hakediş türü</span><b>Taşeron Hakedişi</b></div><div class="kv"><span>KDV</span><b>%20 (fatura aşamasında ayrıca hesaplanır)</b></div><div class="kv"><span>KDV tevkifatı</span><b>4/10 kısmi tevkifat (fatura aşamasında)</b></div><div class="kv"><span>Fatura</span><b>Henüz kesilmedi (onay sürecinde)</b></div><div class="kv"><span>Ödeme vadesi</span><b>Onaydan en geç 15 gün içinde</b></div></div></div><div class="pp-sign" id="ppSign" style="grid-template-columns:repeat(4,1fr)"><div class="sg"><div class="sg-role">Şantiye Şefi</div><div class="sg-name">Hasan Demirci</div><div class="sg-title">28 Haziran 2026</div><div class="sg-line">İMZA</div></div><div class="sg"><div class="sg-role">Teknik Müdür</div><div class="sg-name">Elif Sarıkaya</div><div class="sg-title">29 Haziran 2026</div><div class="sg-line">İMZA</div></div><div class="sg"><div class="sg-role">Muhasebe</div><div class="sg-name">Nesrin Aydın</div><div class="sg-title">Tarih bekleniyor</div><div class="sg-line">İMZA</div></div><div class="sg"><div class="sg-role">Genel Müdür</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Tarih bekleniyor</div><div class="sg-line">İMZA</div></div></div></div>
+
+  <p class="pp-note">Bu döküm, Gavia CRM hakediş kaydındaki onaylı kalem/kesinti/kümülatif bilgilerini içerir; el ile eklenen kayıt geçersizdir.
+  KDV ve tevkifat tutarları fatura düzenlenirken ayrıca hesaplanır, bu dökümdeki net tutarı değiştirmez. İmzalar tamamlanmadan ödeme yapılmaz.</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  function esc(t){ var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+
+  var STATUS_LBL = {bekliyor:'Onay Bekliyor', onaylandi:'Onaylandı', odendi:'Ödendi'};
+  var KDV_TXT = '%20 (fatura aşamasında ayrıca hesaplanır)';
+  var TEVKIFAT_TXT = { th:'4/10 kısmi tevkifat (fatura aşamasında)', hkd:'Uygulanmaz (kurumsal işveren sözleşmesi)' };
+  var FATURA_TXT = { bekliyor:'Henüz kesilmedi (onay sürecinde)', onaylandi:'Düzenleme sürecinde' };
+
+  /* ---- Kanonik TH/HKD alt kümesi — crm-finans-hakedis-detay.html ile BİREBİR
+     (no/taraf/şantiye/sözleşme/dönem/tutar/durum/kalem/kesinti/kum/fatura/chain).
+     O dosya READ-ONLY referans olarak kullanıldı, hiçbir rakam değiştirilmedi. ---- */
+  var TH = {
+    '014':{ no:'TH-2026-014', title:'Vadi Konakları — Haziran 2026 dönemi kaba inşaat hakedişi',
+      taraf:{ad:'Demir-Beton İnş. Ltd.', kisi:'Yusuf Ergin · Taşeron Sorumlusu'}, santiye:'Vadi Konakları',
+      szl:'SZL-2025-T05', szlHref:'crm-finans-sozlesme-detay.html?szl=t05', donem:'Haziran 2026', durum:'bekliyor',
+      gonderim:'28 Haziran 2026', olusturan:'Hasan Demirci', rich:true,
+      kalemler:[
+        {ad:'Kalıp işçiliği', meta:'500 m² × ₺85', tutar:42500},
+        {ad:'Demir montajı', meta:'4 ton × ₺9.500', tutar:38000},
+        {ad:'Beton dökümü C30', meta:'28 m³ × ₺1.625', tutar:45500}
+      ], brut:126000,
+      kesintiler:[
+        {ad:'Stopaj', meta:'%3', tutar:3780},
+        {ad:'Teminat kesintisi', meta:'%5', tutar:6300},
+        {ad:'Avans mahsubu', meta:'SZL-2025-T05 avansından mahsup', tutar:25920}
+      ], tutar:90000,
+      kum:{devreden:210000, buDonem:90000, toplam:300000, bedel:450000, oran:'%66,7'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'28 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'29 Haziran 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:''},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', tarih:''}
+      ] },
+    '013':{ no:'TH-2026-013', title:'Vadi Konakları — Mayıs 2026 dönemi kaba inşaat hakedişi',
+      taraf:{ad:'Demir-Beton İnş. Ltd.', kisi:'Yusuf Ergin · Taşeron Sorumlusu'}, santiye:'Vadi Konakları',
+      szl:'SZL-2025-T05', szlHref:'crm-finans-sozlesme-detay.html?szl=t05', donem:'Mayıs 2026', durum:'onaylandi',
+      gonderim:'26 Mayıs 2026', olusturan:'Hasan Demirci', rich:false, tutar:210000,
+      kum:{devreden:0, buDonem:210000, toplam:210000, bedel:450000, oran:'%46,7'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'26 Mayıs 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'28 Mayıs 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'2 Haziran 2026'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', tarih:''}
+      ] },
+    '009':{ no:'TH-2026-009', title:'Vadi Konakları — Haziran 2026 dönemi elektrik tesisat hakedişi',
+      taraf:{ad:'ElektroMek Taahhüt', kisi:'Tolga Şener · Taşeron Sorumlusu'}, santiye:'Vadi Konakları',
+      szl:'SZL-2025-T07', szlHref:'crm-finans-sozlesme-detay.html?szl=t07', donem:'Haziran 2026', durum:'bekliyor',
+      gonderim:'1 Temmuz 2026', olusturan:'Hasan Demirci', rich:false, tutar:76200,
+      kum:{devreden:54000, buDonem:76200, toplam:130200, bedel:185000, oran:'%70,4'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'28 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'29 Haziran 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:''},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', tarih:''}
+      ] },
+    '008':{ no:'TH-2026-008', title:'Liman Lojistik Merkezi — Haziran 2026 dönemi yalıtım hakedişi',
+      taraf:{ad:'Yalıtım Kardeşler', kisi:'Cemal Boz · Taşeron Sorumlusu'}, santiye:'Liman Lojistik Merkezi',
+      szl:'SZL-2025-T06', szlHref:'crm-finans-sozlesme-detay.html?szl=t06', donem:'Haziran 2026', durum:'onaylandi',
+      gonderim:'24 Haziran 2026', olusturan:'Aylin Koç', rich:false, tutar:128500,
+      not:'Malzeme temini kısmen taşeron tarafından yapılmış olup malzeme bedeli hakedişten mahsup edilmiştir; mahsup tutarı bu dökümde ayrıntılandırılmamıştır.',
+      kum:{devreden:0, buDonem:128500, toplam:128500, bedel:310000, oran:'%41,5'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', tarih:'24 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'26 Haziran 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'30 Haziran 2026'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', tarih:''}
+      ] },
+    '005':{ no:'TH-2026-005', title:'Vadi Konakları — Nisan 2026 dönemi kaba inşaat hakedişi',
+      taraf:{ad:'Demir-Beton İnş. Ltd.', kisi:'Yusuf Ergin · Taşeron Sorumlusu'}, santiye:'Vadi Konakları',
+      szl:'SZL-2025-T05', szlHref:'crm-finans-sozlesme-detay.html?szl=t05', donem:'Nisan 2026', durum:'odendi',
+      gonderim:'28 Nisan 2026', olusturan:'Hasan Demirci', rich:false, tutar:185000,
+      fatura:{no:'FTR-2026-0083', tarih:'7 Mayıs 2026'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'28 Nisan 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'29 Nisan 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'5 Mayıs 2026'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', tarih:'10 Mayıs 2026'}
+      ] },
+    '002':{ no:'TH-2026-002', title:'Vadi Konakları — Mart 2026 dönemi elektrik tesisat hakedişi',
+      taraf:{ad:'ElektroMek Taahhüt', kisi:'Tolga Şener · Taşeron Sorumlusu'}, santiye:'Vadi Konakları',
+      szl:'SZL-2025-T07', szlHref:'crm-finans-sozlesme-detay.html?szl=t07', donem:'Mart 2026', durum:'odendi',
+      gonderim:'25 Mart 2026', olusturan:'Hasan Demirci', rich:false, tutar:54000,
+      fatura:{no:'FTR-2026-0055', tarih:'12 Nisan 2026'},
+      kum:{devreden:0, buDonem:54000, toplam:54000, bedel:185000, oran:'%29,2'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'25 Mart 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'27 Mart 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'2 Nisan 2026'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', tarih:'15 Nisan 2026'}
+      ] }
+  };
+  var HKD = {
+    '006':{ no:'HKD-2026-006', title:'Vadi Konakları — Haziran 2026 dönemi kurum hakedişi',
+      taraf:{ad:'Körfez GYO', kisi:'Selin Aydemir · Proje Müdürü'}, santiye:'Vadi Konakları',
+      szl:'SZL-2026-K01', szlHref:'crm-finans-sozlesme-detay.html?szl=k01', donem:'Haziran 2026', durum:'bekliyor',
+      gonderim:'20 Haziran 2026', olusturan:'Hasan Demirci', rich:false, tutar:1630000,
+      not:'Kurum hakedişlerinde stopaj/teminat kesintisi uygulanmaz; brüt tutar net ödenir.',
+      kum:{devreden:1160000, buDonem:1630000, toplam:2790000, bedel:24500000, oran:'%11,4'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'20 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'22 Haziran 2026'},
+        {rol:'Körfez GYO', kisi:'Selin Aydemir', tarih:''}
+      ] },
+    '005':{ no:'HKD-2026-005', title:'Vadi Konakları — Mayıs 2026 dönemi kurum hakedişi',
+      taraf:{ad:'Körfez GYO', kisi:'Selin Aydemir · Proje Müdürü'}, santiye:'Vadi Konakları',
+      szl:'SZL-2026-K01', szlHref:'crm-finans-sozlesme-detay.html?szl=k01', donem:'Mayıs 2026', durum:'odendi',
+      gonderim:'20 Mayıs 2026', olusturan:'Hasan Demirci', rich:false, tutar:620000,
+      not:'Kurum hakedişlerinde stopaj/teminat kesintisi uygulanmaz; brüt tutar net ödenir.',
+      fatura:{no:'FTR-2026-0095', tarih:'29 Mayıs 2026'},
+      kum:{devreden:540000, buDonem:620000, toplam:1160000, bedel:24500000, oran:'%4,7'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'20 Mayıs 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'22 Mayıs 2026'},
+        {rol:'Körfez GYO', kisi:'Selin Aydemir', tarih:'28 Mayıs 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'1 Haziran 2026'}
+      ] },
+    '004':{ no:'HKD-2026-004', title:'Vadi Konakları — Nisan 2026 dönemi kurum hakedişi',
+      taraf:{ad:'Körfez GYO', kisi:'Selin Aydemir · Proje Müdürü'}, santiye:'Vadi Konakları',
+      szl:'SZL-2026-K01', szlHref:'crm-finans-sozlesme-detay.html?szl=k01', donem:'Nisan 2026', durum:'odendi',
+      gonderim:'20 Nisan 2026', olusturan:'Hasan Demirci', rich:false, tutar:540000,
+      not:'Kurum hakedişlerinde stopaj/teminat kesintisi uygulanmaz; brüt tutar net ödenir.',
+      fatura:{no:'FTR-2026-0065', tarih:'28 Nisan 2026'},
+      kum:{devreden:0, buDonem:540000, toplam:540000, bedel:24500000, oran:'%2,2'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', tarih:'20 Nisan 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'22 Nisan 2026'},
+        {rol:'Körfez GYO', kisi:'Selin Aydemir', tarih:'26 Nisan 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'2 Mayıs 2026'}
+      ] },
+    '003':{ no:'HKD-2026-003', title:'Liman Lojistik Merkezi — Haziran 2026 dönemi kurum hakedişi',
+      taraf:{ad:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya · Yatırım Md.'}, santiye:'Liman Lojistik Merkezi',
+      szl:'SZL-2026-K02', szlHref:'crm-finans-sozlesme-detay.html?szl=k02', donem:'Haziran 2026', durum:'onaylandi',
+      gonderim:'14 Haziran 2026', olusturan:'Aylin Koç', rich:false, tutar:980000,
+      not:'Kurum hakedişlerinde stopaj/teminat kesintisi uygulanmaz; brüt tutar net ödenir.',
+      kum:{devreden:675000, buDonem:980000, toplam:1655000, bedel:9800000, oran:'%16,9'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', tarih:'14 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'16 Haziran 2026'},
+        {rol:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya', tarih:'18 Haziran 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:''}
+      ] },
+    '002':{ no:'HKD-2026-002', title:'Liman Lojistik Merkezi — Mayıs 2026 dönemi kurum hakedişi',
+      taraf:{ad:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya · Yatırım Md.'}, santiye:'Liman Lojistik Merkezi',
+      szl:'SZL-2026-K02', szlHref:'crm-finans-sozlesme-detay.html?szl=k02', donem:'Mayıs 2026', durum:'odendi',
+      gonderim:'10 Mayıs 2026', olusturan:'Aylin Koç', rich:false, tutar:410000,
+      not:'Kurum hakedişlerinde stopaj/teminat kesintisi uygulanmaz; brüt tutar net ödenir.',
+      fatura:{no:'FTR-2026-0071', tarih:'17 Mayıs 2026'},
+      kum:{devreden:265000, buDonem:410000, toplam:675000, bedel:9800000, oran:'%6,9'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', tarih:'10 Mayıs 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'12 Mayıs 2026'},
+        {rol:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya', tarih:'16 Mayıs 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'20 Mayıs 2026'}
+      ] },
+    '001':{ no:'HKD-2026-001', title:'Liman Lojistik Merkezi — Nisan 2026 dönemi kurum hakedişi',
+      taraf:{ad:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya · Yatırım Md.'}, santiye:'Liman Lojistik Merkezi',
+      szl:'SZL-2026-K02', szlHref:'crm-finans-sozlesme-detay.html?szl=k02', donem:'Nisan 2026', durum:'odendi',
+      gonderim:'8 Nisan 2026', olusturan:'Aylin Koç', rich:false, tutar:265000,
+      not:'Kurum hakedişlerinde stopaj/teminat kesintisi uygulanmaz; brüt tutar net ödenir.',
+      fatura:{no:'FTR-2026-0052', tarih:'15 Nisan 2026'},
+      kum:{devreden:0, buDonem:265000, toplam:265000, bedel:9800000, oran:'%2,7'},
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', tarih:'8 Nisan 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', tarih:'10 Nisan 2026'},
+        {rol:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya', tarih:'14 Nisan 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', tarih:'18 Nisan 2026'}
+      ] }
+  };
+
+  var SELECT_ORDER = [
+    ['th','014'],['th','013'],['th','009'],['th','008'],['th','005'],['th','002'],
+    ['hkd','006'],['hkd','005'],['hkd','004'],['hkd','003'],['hkd','002'],['hkd','001']
+  ];
+
+  var sel = document.getElementById('ckRec');
+  sel.innerHTML = SELECT_ORDER.map(function(pair){
+    var rec = (pair[0] === 'th' ? TH : HKD)[pair[1]];
+    return '<option value="' + pair[0] + '-' + pair[1] + '">' + rec.no + ' — ' + rec.taraf.ad + '</option>';
+  }).join('');
+
+  function render(seri, id){
+    var rec = (seri === 'th' ? TH : HKD)[id];
+    var tarafKey = seri === 'th' ? 'Taşeron' : 'Kurum';
+    document.title = rec.no + ' — Hakediş Çıktısı — Gavia CRM';
+    sel.value = seri + '-' + id;
+    document.getElementById('ckBack').href = 'crm-finans-hakedis-detay.html?' + seri + '=' + id;
+
+    var kimlikHtml = ''
+      + '<div class="pk-cell"><span>Taraf</span><b>' + esc(rec.taraf.ad) + '</b></div>'
+      + '<div class="pk-cell"><span>Yetkili Kişi</span><b>' + esc(rec.taraf.kisi) + '</b></div>'
+      + '<div class="pk-cell"><span>Şantiye</span><b>' + esc(rec.santiye) + '</b></div>'
+      + '<div class="pk-cell"><span>Sözleşme</span><b>' + rec.szl + '</b></div>'
+      + '<div class="pk-cell"><span>Dönem</span><b>' + rec.donem + '</b></div>'
+      + '<div class="pk-cell"><span>Gönderim Tarihi</span><b>' + rec.gonderim + '</b></div>'
+      + '<div class="pk-cell"><span>Oluşturan</span><b>' + esc(rec.olusturan) + '</b></div>'
+      + '<div class="pk-cell"><span>Onay/Ödeme Durumu</span><b>' + STATUS_LBL[rec.durum] + '</b></div>';
+
+    var tblHtml;
+    if(rec.rich){
+      var kalemRows = rec.kalemler.map(function(k){
+        return '<tr><td class="c-ad">' + k.ad + '<span class="c-meta">' + k.meta + '</span></td><td class="c-num">' + tl(k.tutar) + '</td></tr>';
+      }).join('');
+      var kesintiRows = rec.kesintiler.map(function(k){
+        return '<tr class="r-kesinti"><td class="c-ad">' + k.ad + '<span class="c-meta">' + k.meta + '</span></td><td class="c-num">' + tl(k.tutar) + '</td></tr>';
+      }).join('');
+      tblHtml = '<table class="pp-tbl"><thead><tr><th>İmalat Kalemi / Kesinti</th><th style="width:32mm">Tutar</th></tr></thead><tbody>'
+        + kalemRows
+        + '<tr class="r-sub"><td class="c-ad">Brüt Hakediş Toplamı</td><td class="c-num">' + tl(rec.brut) + '</td></tr>'
+        + kesintiRows
+        + '<tr class="r-net"><td class="c-ad">Net Ödenecek Tutar</td><td class="c-num">' + tl(rec.tutar) + '</td></tr>'
+        + '</tbody></table>';
+    } else {
+      tblHtml = '<table class="pp-tbl"><thead><tr><th>Dönem İmalatı / Hizmet Bedeli</th><th style="width:32mm">Tutar</th></tr></thead><tbody>'
+        + '<tr><td class="c-ad">' + rec.donem + ' dönemi ' + tarafKey.toLowerCase() + ' hakedişi</td><td class="c-num">' + tl(rec.tutar) + '</td></tr>'
+        + '<tr class="r-note"><td colspan="2">Kalem/kesinti dökümü bu görünümde ayrıntılandırılmamıştır — bkz. hakediş detay sayfası.</td></tr>'
+        + '<tr class="r-net"><td class="c-ad">Net ' + (seri === 'th' ? 'Ödenecek' : 'Tahsil Edilecek') + ' Tutar</td><td class="c-num">' + tl(rec.tutar) + '</td></tr>'
+        + '</tbody></table>';
+    }
+
+    var kumColHtml = rec.kum
+      ? '<h6>Kümülatif İmalat</h6>'
+        + '<div class="kv"><span>Önceki dönemden devreden</span><b>' + tl(rec.kum.devreden) + '</b></div>'
+        + '<div class="kv"><span>Bu dönem imalat</span><b>' + tl(rec.kum.buDonem) + '</b></div>'
+        + '<div class="kv tot"><span>Toplam hakediş (' + rec.kum.oran + ')</span><b>' + tl(rec.kum.toplam) + '</b></div>'
+        + '<div class="kv"><span>Sözleşme bedeli</span><b>' + tl(rec.kum.bedel) + '</b></div>'
+      : '<h6>Kümülatif İmalat</h6><div class="kv"><span>Bu hakedişin kümülatif oranı için</span><b>' + rec.szl + ' sözleşme detayına bakınız</b></div>';
+
+    var faturaVal = rec.fatura ? rec.fatura.no + ' · ' + rec.fatura.tarih : (FATURA_TXT[rec.durum] || FATURA_TXT.bekliyor);
+    var vade = seri === 'th' ? 'Onaydan en geç 15 gün içinde' : 'Onaydan en geç 30 gün içinde';
+    var vergiColHtml = '<h6>Vergi &amp; Fatura</h6>'
+      + '<div class="kv"><span>Hakediş türü</span><b>' + tarafKey + ' Hakedişi</b></div>'
+      + '<div class="kv"><span>KDV</span><b>' + KDV_TXT + '</b></div>'
+      + '<div class="kv"><span>KDV tevkifatı</span><b>' + TEVKIFAT_TXT[seri] + '</b></div>'
+      + '<div class="kv"><span>Fatura</span><b>' + faturaVal + '</b></div>'
+      + '<div class="kv"><span>Ödeme vadesi</span><b>' + vade + '</b></div>';
+
+    var signHtml = rec.chain.map(function(c){
+      return '<div class="sg"><div class="sg-role">' + c.rol + '</div><div class="sg-name">' + esc(c.kisi) + '</div><div class="sg-title">' + (c.tarih || 'Tarih bekleniyor') + '</div><div class="sg-line">İMZA</div></div>';
+    }).join('');
+
+    document.getElementById('ppBody').innerHTML = ''
+      + '<div class="pi-title"><div class="pt-name"><b>' + rec.no + '</b> ' + esc(rec.title) + '</div><div class="pt-side"><b>' + tarafKey + '</b><span>HAKEDİŞ TÜRÜ</span></div></div>'
+      + '<div class="pk-grid">' + kimlikHtml + '</div>'
+      + tblHtml
+      + (rec.not ? '<p class="pp-note" style="border:1.5px solid #111;border-top:none;padding:6px 10px"><i class="fa-solid fa-circle-info"></i> ' + rec.not + '</p>' : '')
+      + '<div class="pp-two"><div class="pt-col">' + kumColHtml + '</div><div class="pt-col">' + vergiColHtml + '</div></div>'
+      + '<div class="pp-sign" id="ppSign" style="grid-template-columns:repeat(' + rec.chain.length + ',1fr)">' + signHtml + '</div>';
+  }
+
+  var q = new URLSearchParams(location.search);
+  var thP = q.get('th'), hkdP = q.get('hkd');
+  var seri, id;
+  if(thP !== null && TH[thP]){ seri = 'th'; id = thP; }
+  else if(hkdP !== null && HKD[hkdP]){ seri = 'hkd'; id = hkdP; }
+  else { seri = 'th'; id = '014'; }
+
+  render(seri, id);
+  sel.addEventListener('change', function(){
+    var parts = this.value.split('-');
+    history.replaceState(null, '', 'crm-finans-hakedis-cikti.html?' + parts[0] + '=' + parts[1]);
+    render(parts[0], parts[1]);
+  });
+})();
+</script>
+</body>
+</html>

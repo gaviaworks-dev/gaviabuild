@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Sözleşme &amp; Teslimat — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Sözleşme & Teslimat ============ */
+#tblSsz{min-width:1000px}
+.col-birim{width:200px}
+.col-bedel{width:140px}
+.col-ilerleme{width:170px}
+.col-durum{width:150px}
+.col-tems{width:130px}
+
+.gcell-info .gtag{margin-top:5px}
+
+/* ödeme ilerleme mini-bileşen (tablo hücresi) */
+.pay-mini{display:flex;flex-direction:column;gap:3px}
+.pay-mini .pm-done{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--ok)}
+.pay-mini .pm-note{font-size:11px;color:var(--muted)}
+.pay-wait{font-size:12px;color:var(--muted);font-style:italic}
+
+/* sekme çubuğu — cari-detay ile birebir dil */
+.gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 4px;margin-right:26px;flex:none;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--muted);background:none;border:none;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tab i{font-size:13px}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+.gv-tab .tb-cnt{font-size:10.5px;font-weight:700;background:var(--bg);color:var(--ink-2);padding:1px 6px;border-radius:var(--r-pill)}
+.gv-tab.is-active .tb-cnt{background:rgba(var(--acc-rgb),.16);color:var(--acc-deep)}
+.tab-panel{animation:tabIn .22s var(--ease)}
+
+/* teslimat kartları */
+.tsl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;padding:20px 22px}
+@media(max-width:640px){.tsl-grid{grid-template-columns:1fr;padding:16px}}
+.tsl-card{border:1px solid var(--line);border-radius:var(--r-md);padding:16px;display:flex;flex-direction:column;gap:10px;transition:.2s var(--ease)}
+.tsl-card:hover{border-color:var(--acc-ink);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.tsl-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.tsl-ico{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:14px;background:var(--ok-tint);color:var(--ok)}
+.tsl-body b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.tsl-body span{font-size:12px;color:var(--muted)}
+.tsl-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+.tsl-meta a{color:var(--acc-ink);font-weight:700}
+
+/* teslim sürecindeki sözleşme kartları */
+.proc-card{border:1px solid var(--line);border-radius:var(--r-md);padding:18px;display:flex;flex-direction:column;gap:12px}
+.proc-card + .proc-card{margin-top:14px}
+.proc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.proc-top b{font-size:14px;font-weight:700;color:var(--ink)}
+.proc-top span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.proc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.proc-note{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--ink-2);line-height:1.6;background:var(--bg);border-radius:var(--r-md);padding:11px 13px}
+.proc-note i{color:var(--warn);margin-top:2px;flex:none}
+.proc-foot{display:flex;justify-content:flex-end}
+
+.gv-empty-wrap{padding:20px 22px}
+</style>
+</head>
+<body data-sec="satis" data-screen="sozlesmeler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Satış</div>
+        <h1>Sözleşme &amp; Teslimat</h1>
+        <div class="ph-sub" id="phSub"><span data-table-count>7</span> sözleşme · 2 teslim sürecinde · 3 tamamlanmış teslimat</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="#" data-export="Sözleşme listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-file-signature"></i></div>
+        <div><div class="kpi-num num" id="kpiSozlesme">7</div><div class="kpi-lbl">İmzalı / bekleyen sözleşme</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> Vadi · Göl Evleri · Kule Ofis</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-signature"></i></div>
+        <div><div class="kpi-num num" id="kpiBekleyen">1</div><div class="kpi-lbl">İmza bekleyen</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-clock"></i> Korkut · VK-D-05</div></div>
+      </div>
+      <div class="kpi-card" style="--kpi-info:1">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-dolly"></i></div>
+        <div><div class="kpi-num num" id="kpiSurec">2</div><div class="kpi-lbl">Teslim sürecinde</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-list-check"></i> Checklist takibinde</div></div>
+      </div>
+      <div class="kpi-card" style="--kpi-ok:1">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-key"></i></div>
+        <div><div class="kpi-num num" id="kpiTeslim">3</div><div class="kpi-lbl">Tamamlanan teslimat</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-file-circle-check"></i> Kule Ofis B Blok</div></div>
+      </div>
+    </div>
+
+    <div class="gv-tabs" role="tablist" aria-label="Sözleşme sekmeleri">
+      <button class="gv-tab is-active" data-tab="sozlesme" role="tab" aria-selected="true"><i class="fa-solid fa-file-contract"></i> Sözleşmeler <span class="tb-cnt" id="tabCntSsz">7</span></button>
+      <button class="gv-tab" data-tab="teslimat" role="tab" aria-selected="false"><i class="fa-solid fa-dolly"></i> Teslimatlar <span class="tb-cnt" id="tabCntTsl">5</span></button>
+    </div>
+
+    <!-- ============ SEKME: SÖZLEŞMELER ============ -->
+    <section class="tab-panel" data-tab-panel="sozlesme" role="tabpanel" aria-label="Sözleşmeler">
+      <div class="gv-card">
+        <div class="filter-bar">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Sözleşme no, müşteri veya birim ara" data-table-search="#tblSsz">
+          </div>
+          <div class="chips" data-target="#tblSsz">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">7</span></button>
+            <button class="chip" data-filter="imzali">İmzalı <span class="ch-cnt">4</span></button>
+            <button class="chip" data-filter="surecte">Teslim Sürecinde <span class="ch-cnt">2</span></button>
+            <button class="chip" data-filter="bekliyor">İmza Bekliyor <span class="ch-cnt">1</span></button>
+          </div>
+        </div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblSsz">
+            <thead>
+              <tr>
+                <th>Sözleşme / Müşteri</th>
+                <th class="col-birim">Birim / Paket</th>
+                <th class="num col-bedel">Bedel</th>
+                <th class="col-ilerleme">Ödeme İlerlemesi</th>
+                <th class="col-durum">Durum</th>
+                <th class="col-tems">Temsilci</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-f="imzali" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2025-042">
+                <td>
+                  <div class="gcell">
+                    <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SO</div>
+                    <div class="gcell-info">
+                      <div class="gcell-name">SSZ-2025-042 · <a href="crm-satis-musteri-detay.html?mst=001" style="color:inherit">Selçuk Onaran</a></div>
+                      <span class="gtag">Kurumsal · Referans</span>
+                    </div>
+                  </div>
+                </td>
+                <td>KO-B-304 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
+                <td class="num t-strong">₺4.100.000</td>
+                <td><span class="gstat ok" style="font-size:11px">Tamamlandı</span></td>
+                <td><span class="gstat ok">İmzalı</span></td>
+                <td>Okan Eren</td>
+                <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2025-042" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              </tr>
+              <tr data-f="imzali" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2026-003">
+                <td>
+                  <div class="gcell">
+                    <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SO</div>
+                    <div class="gcell-info">
+                      <div class="gcell-name">SSZ-2026-003 · <a href="crm-satis-musteri-detay.html?mst=001" style="color:inherit">Selçuk Onaran</a></div>
+                      <span class="gtag">Kurumsal · Referans</span>
+                    </div>
+                  </div>
+                </td>
+                <td>VK-C-18 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong">₺6.120.000</td>
+                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:38.9%"></div></div><span class="gbar-val">14/36</span></div></td>
+                <td><span class="gstat ok">İmzalı</span></td>
+                <td>Okan Eren</td>
+                <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-003" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              </tr>
+              <tr data-f="imzali" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2026-004">
+                <td>
+                  <div class="gcell">
+                    <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">DT</div>
+                    <div class="gcell-info">
+                      <div class="gcell-name">SSZ-2026-004 · <a href="crm-satis-musteri-detay.html?mst=002" style="color:inherit">Derya Toprak</a></div>
+                      <span class="gtag">Yatırımcı · Satış Ofisi</span>
+                    </div>
+                  </div>
+                </td>
+                <td>3 daire paketi <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong">₺13.665.000</td>
+                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:33.3%"></div></div><span class="gbar-val">4/12</span></div></td>
+                <td><span class="gstat ok">İmzalı</span></td>
+                <td>Okan Eren</td>
+                <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-004" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              </tr>
+              <tr data-f="imzali" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2026-005">
+                <td>
+                  <div class="gcell">
+                    <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">VD</div>
+                    <div class="gcell-info">
+                      <div class="gcell-name">SSZ-2026-005 · Volkan Demirel</div>
+                      <span class="gtag">Bireysel · Arşiv</span>
+                    </div>
+                  </div>
+                </td>
+                <td>VK-D-14 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong">₺6.120.000</td>
+                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:66.7%"></div></div><span class="gbar-val">16/24</span></div></td>
+                <td><span class="gstat ok">İmzalı</span></td>
+                <td>Okan Eren</td>
+                <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-005" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              </tr>
+              <tr data-f="surecte" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2025-051">
+                <td>
+                  <div class="gcell">
+                    <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">RK</div>
+                    <div class="gcell-info">
+                      <div class="gcell-name">SSZ-2025-051 · Rıza Kalkan</div>
+                      <span class="gtag">Bireysel · Arşiv</span>
+                    </div>
+                  </div>
+                </td>
+                <td>KO-B-311 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
+                <td class="num t-strong">₺4.100.000</td>
+                <td><div class="pay-mini"><span class="pm-done"><i class="fa-solid fa-circle-check"></i> Taksitler tamam</span><span class="pm-note">Teslimde ₺555.000 bekliyor</span></div></td>
+                <td><span class="gstat info">Teslim Sürecinde</span></td>
+                <td>Okan Eren</td>
+                <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2025-051" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              </tr>
+              <tr data-f="surecte" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2025-058">
+                <td>
+                  <div class="gcell">
+                    <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">MI</div>
+                    <div class="gcell-info">
+                      <div class="gcell-name">SSZ-2025-058 · Meltem Işık</div>
+                      <span class="gtag">Bireysel · Arşiv</span>
+                    </div>
+                  </div>
+                </td>
+                <td>KO-B-406 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
+                <td class="num t-strong">₺4.350.000</td>
+                <td><div class="pay-mini"><span class="pm-done"><i class="fa-solid fa-circle-check"></i> Taksitler tamam</span><span class="pm-note">Teslimde ₺550.000 bekliyor</span></div></td>
+                <td><span class="gstat info">Teslim Sürecinde</span></td>
+                <td>Okan Eren</td>
+                <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2025-058" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              </tr>
+              <tr data-f="bekliyor" data-tems="selin" data-href="crm-satis-sozlesme-detay.html?ssz=2026-007">
+                <td>
+                  <div class="gcell">
+                    <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BK</div>
+                    <div class="gcell-info">
+                      <div class="gcell-name">SSZ-2026-007 · <a href="crm-satis-musteri-detay.html?mst=005" style="color:inherit">Baha &amp; Zeynep Korkut</a></div>
+                      <span class="gtag">Bireysel · Referans</span>
+                    </div>
+                  </div>
+                </td>
+                <td>VK-D-05 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong">₺4.200.000</td>
+                <td><span class="pay-wait">İmza sonrası başlar</span></td>
+                <td><span class="gstat wait">İmza Bekliyor</span></td>
+                <td>Selin Acar</td>
+                <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-007" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="gv-empty" data-table-empty hidden>
+            <div class="ge-ico"><i class="fa-solid fa-file-contract"></i></div>
+            <h4>Eşleşen sözleşme yok</h4>
+            <p>Aramayı temizleyin veya farklı bir durum filtresi seçin.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SEKME: TESLİMATLAR ============ -->
+    <section class="tab-panel" data-tab-panel="teslimat" role="tabpanel" aria-label="Teslimatlar" hidden>
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-list-check"></i> Teslim Sürecindeki Sözleşmeler</div>
+        </div>
+        <div class="gc-body" id="procList">
+          <div class="proc-card" data-tems="okan">
+            <div class="proc-top">
+              <div>
+                <b>KO-B-311 · Rıza Kalkan</b>
+                <span>SSZ-2025-051 · Kule Ofis B Blok</span>
+              </div>
+              <span class="gstat info">Teslim Sürecinde</span>
+            </div>
+            <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:75%"></div></div><span class="gbar-val">9/12 kalem</span></div>
+            <div class="proc-chips">
+              <span class="gstat danger">Eksik: Mutfak dolabı kapak ayarı</span>
+              <span class="gstat danger">Eksik: Banyo silikon derz yenileme</span>
+            </div>
+            <div class="proc-foot"><a class="btn btn-ghost btn-sm" href="crm-satis-sozlesme-detay.html?ssz=2025-051">Sözleşme &amp; Checklist <i class="fa-solid fa-arrow-right"></i></a></div>
+          </div>
+          <div class="proc-card" data-tems="okan">
+            <div class="proc-top">
+              <div>
+                <b>KO-B-406 · Meltem Işık</b>
+                <span>SSZ-2025-058 · Kule Ofis B Blok</span>
+              </div>
+              <span class="gstat info">Teslim Sürecinde</span>
+            </div>
+            <div class="proc-note"><i class="fa-solid fa-triangle-exclamation"></i> Teslimat randevusu müşteri talebiyle ertelendi; yeni tarih planlanıyor. Detay: <a href="crm-satis-talep-detay.html?sst=011" style="color:var(--acc-ink);font-weight:700">SST-2026-011</a></div>
+            <div class="proc-foot"><a class="btn btn-ghost btn-sm" href="crm-satis-sozlesme-detay.html?ssz=2025-058">Sözleşme Detayı <i class="fa-solid fa-arrow-right"></i></a></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:16px">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-key"></i> Tamamlanmış Teslimatlar</div>
+        </div>
+        <div class="tsl-grid" id="tslGrid">
+          <div class="tsl-card" data-tems="okan">
+            <div class="tsl-top">
+              <div class="tsl-ico"><i class="fa-solid fa-door-open"></i></div>
+              <span class="gstat ok" style="font-size:11px">İmzalı Tutanak</span>
+            </div>
+            <div class="tsl-body"><b>TSL-2026-001</b><span>Selçuk Onaran · KO-B-304</span></div>
+            <div class="tsl-meta"><span>Teslim: 15 Mar 2026</span><a href="crm-satis-sozlesme-detay.html?ssz=2025-042">Sözleşme <i class="fa-solid fa-arrow-right"></i></a></div>
+          </div>
+          <div class="tsl-card" data-tems="okan">
+            <div class="tsl-top">
+              <div class="tsl-ico"><i class="fa-solid fa-door-open"></i></div>
+              <span class="gstat ok" style="font-size:11px">İmzalı Tutanak</span>
+            </div>
+            <div class="tsl-body"><b>TSL-2026-002</b><span>Ejder Balcı · KO-B-107</span></div>
+            <div class="tsl-meta"><span>Teslim: 20 Mar 2026</span><span class="muted">Arşiv kayıt</span></div>
+          </div>
+          <div class="tsl-card" data-tems="okan">
+            <div class="tsl-top">
+              <div class="tsl-ico"><i class="fa-solid fa-door-open"></i></div>
+              <span class="gstat ok" style="font-size:11px">İmzalı Tutanak</span>
+            </div>
+            <div class="tsl-body"><b>TSL-2026-003</b><span>Seray Ünal · KO-B-212</span></div>
+            <div class="tsl-meta"><span>Teslim: 25 Mar 2026</span><span class="muted">Arşiv kayıt</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gv-empty-wrap" id="tslEmptyWrap" hidden>
+        <div class="gv-empty">
+          <div class="ge-ico"><i class="fa-solid fa-box-open"></i></div>
+          <h4>Bu temsilcide teslimat kaydı yok</h4>
+          <p>Selin Acar'ın portföyünde henüz teslim sürecine giren ya da tamamlanan bir sözleşme bulunmuyor.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* satır tıklanınca detay aç (gcell dışına tıklansa da) */
+  document.querySelectorAll('#tblSsz tbody tr[data-href]').forEach(function(tr){
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', function(e){
+      if(e.target.closest('a')) return;
+      location.href = tr.getAttribute('data-href');
+    });
+  });
+
+  /* sekme motoru — cari-detay ile aynı dil */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+  function activateTab(id){
+    tabs.forEach(function(t){
+      var on = t.getAttribute('data-tab') === id;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      activateTab(t.getAttribute('data-tab'));
+      history.replaceState(null, '', '#' + t.getAttribute('data-tab'));
+    });
+  });
+  var initial = (location.hash || '').replace('#', '');
+  activateTab(tabs.some(function(t){ return t.getAttribute('data-tab') === initial; }) ? initial : 'sozlesme');
+
+  /* D11: satış temsilcisi yalnız kendi müşterisinin kayıtlarını görür (data-tems budaması) —
+     görev/demirbaş budama idiyomuyla aynı: tr.remove() (hidden DEĞİL — filtre motoru geri açar) */
+  if(GV.role === 'satistemsilci'){
+    document.querySelectorAll('[data-tems]').forEach(function(el){
+      if(el.getAttribute('data-tems') !== 'selin') el.remove();
+    });
+
+    var rows = document.querySelectorAll('#tblSsz tbody tr');
+    var waiting = document.querySelectorAll('#tblSsz tbody tr .gstat.wait').length;
+    var surec = document.querySelectorAll('#tblSsz tbody tr .gstat.info').length;
+    var tslCards = document.querySelectorAll('#tslGrid .tsl-card').length;
+
+    document.getElementById('kpiSozlesme').textContent = rows.length;
+    document.getElementById('kpiBekleyen').textContent = waiting;
+    document.getElementById('kpiSurec').textContent = surec;
+    document.getElementById('kpiTeslim').textContent = tslCards;
+    document.getElementById('tabCntSsz').textContent = rows.length;
+    document.getElementById('tabCntTsl').textContent = tslCards + document.querySelectorAll('#procList .proc-card').length;
+    document.querySelector('[data-table-count]').textContent = rows.length;
+    document.getElementById('phSub').innerHTML = '<span data-table-count>' + rows.length + '</span> sözleşme · Selin Acar portföyü';
+
+    /* tek satır kaldığı için durum filtresi anlamsızlaşır — chip çubuğu tamamen kaldırılır */
+    var chipsRow = document.querySelector('.chips[data-target="#tblSsz"]');
+    if(chipsRow) chipsRow.hidden = true;
+
+    if(document.getElementById('procList').children.length === 0 && tslCards === 0){
+      document.getElementById('tslEmptyWrap').hidden = false;
+      document.querySelectorAll('[data-tab-panel="teslimat"] > .gv-card').forEach(function(card){ card.style.display = 'none'; });
+    }
+  }
+})();
+</script>
+</body>
+</html>

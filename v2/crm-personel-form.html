@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Personel — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Yeni Personel Formu ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+
+/* sekme çubuğu — santiye-detay/personel-detay ile aynı desen, sayfa-lokal kopya */
+.form-grid .gv-card > .gv-tabs{padding:18px 22px 0}
+.gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 4px;margin-right:26px;flex:none;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--muted);background:none;border:none;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tab i{font-size:13px}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+.gv-tab .tb-cnt{font-size:10.5px;font-weight:700;background:var(--bg);color:var(--ink-2);padding:1px 6px;border-radius:var(--r-pill)}
+.gv-tab.is-active .tb-cnt{background:rgba(var(--acc-rgb),.16);color:var(--acc-deep)}
+.tab-panel{animation:tabIn .22s var(--ease)}
+@keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* form içi bölüm başlıkları — tek gv-card, çok alt-bölüm */
+.fg-section{padding:20px 22px}
+.fg-section + .fg-section{border-top:1px solid var(--line)}
+.fg-section-head{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.fg-section-head i{font-size:13px;color:var(--acc-ink);width:18px;text-align:center}
+.fg-section-head h3{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:.01em}
+.fg-section-head span{font-size:11.5px;color:var(--muted);font-weight:600}
+
+.gf-hint-auto{display:flex;align-items:center;gap:6px;color:var(--acc-ink)}
+.gf-hint-auto i{font-size:11px}
+
+/* adres il/ilçe satırı — crm-santiye-form.html:30-31 desenin birebir sayfa-lokal kopyası */
+.addr-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.addr-row{grid-template-columns:1fr}}
+
+/* eş/aile alt-alanları — koşullu görünür, sol accent şerit ile gruplanmış hissi */
+.gf-sub{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;padding:14px 16px 2px;margin-top:-2px;border-left:2px solid rgba(var(--acc-rgb),.35)}
+@media(max-width:640px){.gf-sub{grid-template-columns:minmax(0,1fr)}}
+
+/* evrak eki — dosya ekleme simülasyonu */
+.attach-zone{border:1.5px dashed var(--line);border-radius:var(--r-sm);padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;cursor:pointer;transition:.2s var(--ease);background:var(--bg)}
+.attach-zone:hover{border-color:var(--acc);background:rgba(var(--acc-rgb),.04)}
+.attach-zone i{font-size:20px;color:var(--acc-ink)}
+.attach-zone b{font-size:12.5px;color:var(--ink);font-weight:700}
+.attach-zone span{font-size:11.5px;color:var(--muted)}
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.attach-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:12.5px}
+.attach-row i{color:var(--acc-ink);font-size:13px}
+.attach-row b{font-weight:700;color:var(--ink)}
+.attach-row span{color:var(--muted);font-size:11.5px;margin-left:auto}
+
+/* evrak — 12 kategorili liste (kanonik evrak seti; detay sayfasıyla aynı sıra) */
+.evr-list{display:flex;flex-direction:column}
+.evr-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.evr-row:last-child{border-bottom:none}
+.evr-ico{width:28px;height:28px;flex:none;border-radius:8px;display:grid;place-items:center;font-size:12px;background:var(--bg);color:var(--acc-ink)}
+.evr-name{flex:1 1 140px;min-width:0;font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evr-acts{display:inline-flex;gap:6px;flex:none;margin-left:auto}
+.evr-acts .ia-btn[hidden]{display:none}
+.evr-req{font-size:10px;padding:2px 7px;flex:none}
+
+/* zimmet — çoğaltılabilir blok (R3, cari-form klon deseni §2.5) */
+.zmt-list{display:flex;flex-direction:column;gap:14px;margin-bottom:14px}
+.zmt-block{border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px}
+.zmt-block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.zmt-block-head b{font-size:12.5px;font-weight:800;color:var(--ink);display:inline-flex;align-items:center;gap:7px}
+.zmt-block-head b i{color:var(--acc-ink);font-size:12px}
+.row-remove{width:30px;height:30px;flex:none;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--paper);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s var(--ease)}
+.row-remove:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-tint)}
+.zmt-attach{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;border:1.5px dashed var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--muted)}
+.zmt-attach i{color:var(--acc-ink)}
+.zmt-attach b{color:var(--ink);font-weight:700;margin-right:auto}
+
+/* §10.1 — eğitim bilgileri, çoklu satır (Okul adı · Eğitim seviyesi · Mezuniyet yılı ÜÇÜ
+   YAN YANA; 390px'te alt alta). zmt-list/row-remove ile aynı çoğaltma deseni (kaynak-transfer). */
+.egt-list{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.egt-row{display:grid;grid-template-columns:1.5fr 1.1fr .8fr 34px;gap:10px 12px;align-items:start}
+.egt-row label{display:block;font-size:11px;font-weight:700;color:var(--ink-2);margin-bottom:5px;letter-spacing:.02em}
+.egt-row input,.egt-row select{width:100%;font-family:inherit;font-size:13px;font-weight:500;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px;outline:none;transition:.18s var(--ease)}
+.egt-row input:focus,.egt-row select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.14)}
+.egt-row input.err{border-color:var(--danger)}
+.egt-yil-wrap{position:relative}
+.egt-err{display:none;margin-top:5px;font-size:11px;font-weight:700;color:var(--danger)}
+.egt-err.show{display:block}
+.egt-row .row-remove{margin-top:22px}
+@media(max-width:640px){
+  .egt-row{grid-template-columns:1fr}
+  .egt-row .row-remove{margin-top:0;align-self:flex-end}
+}
+
+.fg-note{grid-column:1/-1;display:flex;align-items:center;gap:7px;margin-top:2px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.fg-note i{font-size:12px}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* §7.5 — Özel Alanlar (kabul kriteri 2): çoklu seçim tipi için ozel-alan.html rol-chip
+   dilinden ödünç alınmış chip-toggle grid (yeni component İCAT EDİLMEDİ, .chip zaten
+   ortak ui.css'te tanımlı — burada yalnız sarmalayıcı düzen eklendi). */
+.oaf-chip-select{display:flex;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body data-sec="personel" data-screen="liste">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-personel.html">Personel Listesi</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Yeni Personel</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">İnsan Kaynağı</div>
+        <h1>Yeni Personel Kaydı</h1>
+        <div class="ph-sub">Kimlik, atama ve İK bilgilerini girin; kayıt oluşturulunca özlük dosyası otomatik açılır.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="gv-card">
+        <!-- 7 sekme: Kişisel · İletişim · Görev&Departman · SGK/Maaş · Evrak · Zimmet · İzin/Avans/Rapor
+             (K4 kararı). Mevcut 6 bölümün alanları AYNEN korunur,
+             yalnız yeniden gruplanır; Zimmet + İzin/Avans/Rapor YENİ placeholder sekmelerdir. -->
+        <div class="gv-tabs" role="tablist" aria-label="Personel formu sekmeleri">
+          <button class="gv-tab is-active" data-tab="kisisel" role="tab" aria-selected="true"><i class="fa-solid fa-id-card"></i> Kişisel</button>
+          <button class="gv-tab" data-tab="iletisim" role="tab" aria-selected="false"><i class="fa-solid fa-address-book"></i> İletişim</button>
+          <button class="gv-tab" data-tab="gorev" role="tab" aria-selected="false"><i class="fa-solid fa-helmet-safety"></i> Görev &amp; Departman</button>
+          <button class="gv-tab" data-tab="sgk" role="tab" aria-selected="false" data-payroll-only><i class="fa-solid fa-sack-dollar"></i> SGK / Maaş</button>
+          <button class="gv-tab" data-tab="evrak" role="tab" aria-selected="false"><i class="fa-solid fa-paperclip"></i> Evrak</button>
+          <button class="gv-tab" data-tab="zimmet" role="tab" aria-selected="false"><i class="fa-solid fa-toolbox"></i> Zimmet</button>
+          <button class="gv-tab" data-tab="izinavans" role="tab" aria-selected="false"><i class="fa-solid fa-umbrella-beach"></i> İzin / Avans / Rapor</button>
+        </div>
+
+        <section class="tab-panel" data-tab-panel="kisisel" role="tabpanel" aria-label="Kişisel">
+          <div class="fg-section">
+            <div class="fg-section-head"><i class="fa-solid fa-id-card"></i><h3>Kimlik</h3></div>
+            <form class="gform" id="personelForm">
+              <div class="gfield full">
+                <label for="fAd">Ad Soyad</label>
+                <input type="text" id="fAd" placeholder="Örn. Kerem Aydın">
+              </div>
+              <div class="gfield">
+                <label for="fTc">TC Kimlik No <span class="gf-hint">(mock — maskeli)</span></label>
+                <input type="text" id="fTc" placeholder="123••••••67" maxlength="11" inputmode="numeric">
+              </div>
+              <div class="gfield">
+                <label for="fDogum">Doğum Tarihi</label>
+                <input type="date" id="fDogum">
+              </div>
+              <div class="gfield">
+                <label for="fKanGrubu">Kan Grubu</label>
+                <select id="fKanGrubu">
+                  <option value="">— Seçiniz —</option>
+                  <option>A Rh+</option>
+                  <option>A Rh-</option>
+                  <option>B Rh+</option>
+                  <option>B Rh-</option>
+                  <option>AB Rh+</option>
+                  <option>AB Rh-</option>
+                  <option>0 Rh+</option>
+                  <option>0 Rh-</option>
+                  <option>Bilinmiyor</option>
+                </select>
+              </div>
+            </form>
+          </div>
+
+          <div class="fg-section" data-admin-only>
+            <div class="fg-section-head"><i class="fa-solid fa-folder-open"></i><h3>Kişisel Bilgiler (İK)</h3><span>Sadece İK ve yönetim görür</span></div>
+            <div class="gform">
+              <div class="gfield">
+                <label for="fMedeni">Medeni Durum</label>
+                <select id="fMedeni">
+                  <option value="bekar">Bekar</option>
+                  <option value="evli">Evli</option>
+                </select>
+              </div>
+              <div class="gfield">
+                <label for="fYakinlikBos">&nbsp;</label>
+                <span class="gf-hint">Evli seçilirse eş bilgileri aşağıda açılır.</span>
+              </div>
+              <div class="gf-sub" id="fEsWrap" hidden>
+                <div class="gfield">
+                  <label for="fEsAd">Eş Ad Soyad</label>
+                  <input type="text" id="fEsAd" placeholder="Eşin adı soyadı">
+                </div>
+                <div class="gfield">
+                  <label for="fEsCalisma">Eş Çalışma Durumu</label>
+                  <select id="fEsCalisma">
+                    <option>Çalışıyor</option>
+                    <option>Çalışmıyor</option>
+                  </select>
+                </div>
+              </div>
+              <div class="gfield full">
+                <label style="margin-bottom:0">Eğitim Bilgileri <span class="gf-hint">(birden fazla eğitim kaydı eklenebilir — okul, seviye, mezuniyet yılı üçü yan yana)</span></label>
+              </div>
+              <!-- §10.1 — çoğaltılabilir eğitim satırı (zmt-list ile aynı createElement+innerHTML
+                   deseni). Yeni personel formu boş başlar; en az 1 satır ile açılır. -->
+              <div class="gfield full">
+                <div class="egt-list" id="egtList"></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button type="button" class="btn btn-ghost btn-sm" id="btnEgitimEkle" data-no-confirm><i class="fa-solid fa-plus"></i> Eğitim Ekle</button>
+                  <button type="button" class="btn btn-ghost btn-sm" id="btnYeniSatirEkle" data-no-confirm><i class="fa-solid fa-plus"></i> Yeni Satır Ekle</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- §7.5 — Özel Alan Yönetimi köprüsü (denetim eksiği kapatma): tanımlar
+               crm-personel-ozel-alan.html'in localStorage'ından (gv_crm_personel_ozel_alan)
+               OKUNUR, JS ile burada render edilir. Statik olarak boş/hidden başlar — JS
+               tanım varsa açar (kabul kriteri "özel alan personel formunda görünmelidir"). -->
+          <div class="fg-section" id="fgOzelAlan" hidden>
+            <div class="fg-section-head"><i class="fa-solid fa-sliders"></i><h3>Özel Alanlar</h3><span>Firma yöneticisinin tanımladığı ek personel bilgileri</span></div>
+            <div class="gform" id="ozelAlanForm"></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="iletisim" role="tabpanel" aria-label="İletişim" hidden>
+          <div class="fg-section">
+            <div class="fg-section-head"><i class="fa-solid fa-address-book"></i><h3>İletişim</h3></div>
+            <div class="gform">
+              <div class="gfield">
+                <label for="fTel">Telefon</label>
+                <input type="tel" id="fTel" placeholder="05XX XXX XX XX">
+              </div>
+              <div class="gfield">
+                <label for="fEposta">E-posta <span class="gf-hint">(isteğe bağlı)</span></label>
+                <input type="email" id="fEposta" placeholder="ad.soyad@yapitas.example">
+              </div>
+              <div class="gfield full">
+                <label>Adres</label>
+                <div class="addr-row">
+                  <input type="text" id="fIl" placeholder="İl — örn. İstanbul">
+                  <input type="text" id="fIlce" placeholder="İlçe — örn. Çekmeköy">
+                </div>
+              </div>
+              <div class="gfield full">
+                <label for="fAcikAdres">Açık Adres <span class="gf-hint">(isteğe bağlı)</span></label>
+                <textarea id="fAcikAdres" rows="2" placeholder="Mahalle, cadde, sokak, no…"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg-section" data-admin-only>
+            <div class="fg-section-head"><i class="fa-solid fa-phone-volume"></i><h3>Acil Durum Kişisi</h3><span>Sadece İK ve yönetim görür</span></div>
+            <div class="gform">
+              <div class="gfield">
+                <label for="fAcilAd">Acil Durum Kişisi — Ad Soyad</label>
+                <input type="text" id="fAcilAd" placeholder="Örn. Meltem Demirci">
+              </div>
+              <div class="gfield">
+                <label for="fAcilTel">Acil Durum Kişisi — Telefon</label>
+                <input type="tel" id="fAcilTel" placeholder="05XX XXX XX XX">
+              </div>
+              <div class="gfield">
+                <label for="fAcilYakinlik">Acil Durum Kişisi — Yakınlık</label>
+                <select id="fAcilYakinlik">
+                  <option>Eş</option>
+                  <option>Anne</option>
+                  <option>Baba</option>
+                  <option>Kardeş</option>
+                  <option>Diğer</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="gorev" role="tabpanel" aria-label="Görev &amp; Departman" hidden>
+          <div class="fg-section">
+            <div class="fg-section-head"><i class="fa-solid fa-helmet-safety"></i><h3>Pozisyon &amp; Atama</h3></div>
+            <div class="gform">
+              <div class="gfield">
+                <label for="fPozisyon">Pozisyon</label>
+                <select id="fPozisyon">
+                  <option>Saha Personeli</option>
+                  <option>Formen</option>
+                  <option>Kalıpçı</option>
+                  <option>Demir Ustası</option>
+                  <option>Elektrik Ustası</option>
+                  <option>Operatör</option>
+                  <option>Kaynakçı</option>
+                  <option>Marangoz</option>
+                  <option>Düz İşçi</option>
+                  <option>Yalıtım Ustası</option>
+                  <option>Şantiye Şefi</option>
+                  <option>Muhasebe</option>
+                  <option>Satın Alma</option>
+                  <option>İnsan Kaynakları</option>
+                  <option>Teknik Müdür</option>
+                  <option>Genel Müdür</option>
+                </select>
+              </div>
+              <div class="gfield" id="fFirmaWrap">
+                <label for="fFirma">Firma / Taşeron</label>
+                <select id="fFirma">
+                  <option value="yapitas">Yapıtaş İnşaat A.Ş. (öz kadro)</option>
+                  <option value="demirbeton">Demir-Beton İnş. Ltd.</option>
+                  <option value="elektromek">ElektroMek Taahhüt</option>
+                  <option value="yalitimkardesler">Yalıtım Kardeşler</option>
+                </select>
+              </div>
+              <div class="gfield" id="fKalfaWrap" hidden>
+                <label for="fKalfa">Kalfa</label>
+                <select id="fKalfa"><option value="">— Seçiniz —</option></select>
+              </div>
+              <div class="gfield">
+                <label for="fSantiye">Şantiye / Birim</label>
+                <select id="fSantiye">
+                  <option>Vadi Konakları</option>
+                  <option>Liman Lojistik Merkezi</option>
+                  <option>Merkez Şantiye</option>
+                  <option>Kule Ofis B Blok</option>
+                  <option>Göl Evleri 2. Etap</option>
+                  <option>Merkez Ofis</option>
+                </select>
+              </div>
+              <div class="gfield">
+                <label for="fBaslama">İşe Başlama</label>
+                <input type="date" id="fBaslama" value="2026-07-13">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="sgk" role="tabpanel" aria-label="SGK / Maaş" data-payroll-only hidden>
+          <div class="fg-section">
+            <div class="fg-section-head"><i class="fa-solid fa-sack-dollar"></i><h3>Ücret &amp; SGK</h3><span>Sadece yönetim görür</span></div>
+            <div class="gform">
+              <div class="gfield">
+                <label for="fBrutUcret">Brüt Ücret</label>
+                <input type="text" id="fBrutUcret" placeholder="₺25.000" inputmode="decimal">
+              </div>
+              <div class="gfield">
+                <label for="fSgkSicil">SGK Sicil No</label>
+                <input type="text" id="fSgkSicil" placeholder="Örn. 2905163842" inputmode="numeric">
+              </div>
+              <div class="gfield">
+                <label for="fSgkTarih">SGK Giriş Tarihi</label>
+                <input type="date" id="fSgkTarih" value="2026-07-13">
+              </div>
+              <div class="fg-note"><i class="fa-solid fa-circle-info"></i><span>Bordro hesaplaması bu ekranda yapılmaz; tutarlar sözleşme brütüdür.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="evrak" role="tabpanel" aria-label="Evrak" hidden>
+          <div class="fg-section">
+            <div class="fg-section-head"><i class="fa-solid fa-paperclip"></i><h3>Evrak</h3><span>12 kategori — kayıt oluşturulunca özlük dosyasına aktarılır · ilk 3 kategori (Kimlik, İş sözleşmesi, SGK bildirgesi) zorunludur</span></div>
+            <!-- 12 kanonik evrak kategorisi JS ile render edilir (personel-detay ile aynı set ve sıra).
+                 Yeni-kayıt formu boş başlar: her satır "Yüklenmedi" ile açılır, tek "Yükle" aksiyonu görünür;
+                 yükleme sonrası Görüntüle/Değiştir/Sil açılır — 12 satırda gereksiz görsel yük oluşmasın diye. -->
+            <!-- statik bake — EVRAK_KATEGORI dizisinden VERBATIM (12 kanonik kategori, hepsi
+                 "Yüklenmedi" — kaydın ilk hali); JS yüklenince aynı mount innerHTML ile
+                 ezilir (evrList.innerHTML = EVRAK_KATEGORI.map(...)) — D18-B2 -->
+            <div class="evr-list" id="evrList"><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-id-card"></i></div><span class="evr-name">Kimlik fotokopisi</span><span class="gtag mint evr-req">Zorunlu</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="Kimlik fotokopisi yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="Kimlik fotokopisi görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="Kimlik fotokopisi değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="Kimlik fotokopisi sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-file-signature"></i></div><span class="evr-name">İş sözleşmesi</span><span class="gtag mint evr-req">Zorunlu</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="İş sözleşmesi yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="İş sözleşmesi görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="İş sözleşmesi değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="İş sözleşmesi sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-building-columns"></i></div><span class="evr-name">SGK işe giriş bildirgesi</span><span class="gtag mint evr-req">Zorunlu</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="SGK işe giriş bildirgesi yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="SGK işe giriş bildirgesi görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="SGK işe giriş bildirgesi değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="SGK işe giriş bildirgesi sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-house-chimney"></i></div><span class="evr-name">İkametgâh</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="İkametgâh yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="İkametgâh görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="İkametgâh değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="İkametgâh sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-scale-balanced"></i></div><span class="evr-name">Adli sicil kaydı</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="Adli sicil kaydı yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="Adli sicil kaydı görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="Adli sicil kaydı değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="Adli sicil kaydı sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-notes-medical"></i></div><span class="evr-name">Sağlık raporu</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="Sağlık raporu yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="Sağlık raporu görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="Sağlık raporu değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="Sağlık raporu sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-shield-halved"></i></div><span class="evr-name">İSG eğitim sertifikası</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="İSG eğitim sertifikası yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="İSG eğitim sertifikası görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="İSG eğitim sertifikası değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="İSG eğitim sertifikası sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-award"></i></div><span class="evr-name">Mesleki yeterlilik belgesi</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="Mesleki yeterlilik belgesi yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="Mesleki yeterlilik belgesi görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="Mesleki yeterlilik belgesi değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="Mesleki yeterlilik belgesi sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-id-card-clip"></i></div><span class="evr-name">Ehliyet / SRC belgesi</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="Ehliyet / SRC belgesi yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="Ehliyet / SRC belgesi görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="Ehliyet / SRC belgesi değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="Ehliyet / SRC belgesi sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-graduation-cap"></i></div><span class="evr-name">Diploma / sertifika</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="Diploma / sertifika yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="Diploma / sertifika görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="Diploma / sertifika değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="Diploma / sertifika sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-phone-volume"></i></div><span class="evr-name">Acil durum kişi formu</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="Acil durum kişi formu yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="Acil durum kişi formu görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="Acil durum kişi formu değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="Acil durum kişi formu sil" hidden><i class="fa-solid fa-trash"></i></button></div></div><div class="evr-row"><div class="evr-ico"><i class="fa-solid fa-user-shield"></i></div><span class="evr-name">KVKK / açık rıza metni</span><span class="gstat off evr-stat">Yüklenmedi</span><div class="evr-acts"><button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="KVKK / açık rıza metni yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button><button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="KVKK / açık rıza metni görüntüle" hidden><i class="fa-solid fa-eye"></i></button><button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="KVKK / açık rıza metni değiştir" hidden><i class="fa-solid fa-rotate"></i></button><button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="KVKK / açık rıza metni sil" hidden><i class="fa-solid fa-trash"></i></button></div></div></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="zimmet" role="tabpanel" aria-label="Zimmet" hidden>
+          <div class="fg-section">
+            <div class="fg-section-head"><i class="fa-solid fa-toolbox"></i><h3>Zimmet</h3><span>Personele teslim edilecek demirbaşları burada kaydedin</span></div>
+            <!-- çoğaltılabilir zimmet bloğu — cari-form klon deseni (createElement+innerHTML, delegated .row-remove).
+                 Demirbaş seçimi crm-operasyon-demirbas.html DEMIRBAS[] ile birebir (10 kalem kanonik envanter). -->
+            <div class="zmt-list" id="zmtList"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnZimmetEkle" data-no-confirm><i class="fa-solid fa-plus"></i> Zimmet Ekle</button>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-tab-panel="izinavans" role="tabpanel" aria-label="İzin, Avans, Rapor" hidden>
+          <div class="fg-section">
+            <div class="fg-section-head"><i class="fa-solid fa-umbrella-beach"></i><h3>İzin / Avans / Rapor</h3></div>
+            <div class="gv-empty" style="padding:32px 24px">
+              <div class="ge-ico"><i class="fa-solid fa-folder-open"></i></div>
+              <h4>Kayıtlar personel oluşturulduktan sonra açılır</h4>
+              <p>İzin, avans ve rapor süreçleri personel kaydı tamamlandıktan sonra ilgili modüllerden yürütülür.</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px">
+                <a class="btn btn-ghost btn-sm" href="crm-personel-izin.html"><i class="fa-solid fa-umbrella-beach"></i> İzin</a>
+                <a class="btn btn-ghost btn-sm" href="crm-personel-avans.html"><i class="fa-solid fa-hand-holding-dollar"></i> Avans</a>
+                <a class="btn btn-ghost btn-sm" href="crm-personel-rapor.html"><i class="fa-solid fa-file-medical"></i> Rapor</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="form-foot">
+          <a class="btn btn-ghost btn-sm" href="crm-personel.html">Vazgeç</a>
+          <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="personelSubmit"><i class="fa-solid fa-user-plus"></i> Personeli Kaydet</button>
+        </div>
+      </div>
+
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Kayıt Notları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-shield-halved"></i><span>Kaydın onaylanmasıyla İSG eğitimi ve evrak takibi özlük dosyasına otomatik eklenir.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-umbrella-beach"></i><span>Yıllık izin bakiyesi kıdeme göre İK tarafından ayrıca tanımlanır.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-lock"></i><span>TC kimlik ve İK bilgileri sadece İK ve yönetim rolüne açıktır.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+  if(['superadmin','sahip','yonetim','ik'].indexOf(GV.role) === -1){
+    document.querySelectorAll('[data-admin-only]').forEach(function(el){ el.hidden = true; });
+  }
+  if(['superadmin','sahip'].indexOf(GV.role) === -1){
+    document.querySelectorAll('[data-payroll-only]').forEach(function(el){ el.hidden = true; });
+  }
+
+  var medeni = document.getElementById('fMedeni'), esWrap = document.getElementById('fEsWrap');
+  if(medeni){
+    medeni.addEventListener('change', function(){ esWrap.hidden = medeni.value !== 'evli'; });
+  }
+
+  /* ---- Firma/Taşeron + Kalfa — yalnız 10 saha pozisyonunda açılır (D19 madde 5 / S6) ---- */
+  var SAHA_POZ = ['Saha Personeli','Formen','Kalıpçı','Demir Ustası','Elektrik Ustası','Operatör','Kaynakçı','Marangoz','Düz İşçi','Yalıtım Ustası'];
+  var KALFA_MAP = {
+    demirbeton:      [{v:'huseyin', lbl:'Hüseyin Palabıyık'}, {v:'bekir', lbl:'Bekir Sarıoğlu'}],
+    elektromek:       [{v:'mustafa', lbl:'Mustafa Doğanay'}],
+    yalitimkardesler: [{v:'salih', lbl:'Salih Bingöl'}, {v:'ercan', lbl:'Ercan Kavaklı'}]
+  };
+  var fPozisyon = document.getElementById('fPozisyon');
+  var fFirmaWrap = document.getElementById('fFirmaWrap'), fFirma = document.getElementById('fFirma');
+  var fKalfaWrap = document.getElementById('fKalfaWrap'), fKalfa = document.getElementById('fKalfa');
+  function renderKalfaOpts(){
+    var list = KALFA_MAP[fFirma.value] || [];
+    fKalfa.innerHTML = '<option value="">— Seçiniz —</option>' + list.map(function(k){
+      return '<option value="' + k.v + '">' + k.lbl + '</option>';
+    }).join('');
+  }
+  function syncFirmaKalfa(){
+    var isSaha = SAHA_POZ.indexOf(fPozisyon.value) !== -1;
+    fFirmaWrap.hidden = !isSaha;
+    if(!isSaha){
+      fFirma.value = 'yapitas';
+      fKalfaWrap.hidden = true;
+      return;
+    }
+    renderKalfaOpts();
+    fKalfaWrap.hidden = (fFirma.value === 'yapitas');
+  }
+  if(fPozisyon){
+    fPozisyon.addEventListener('change', syncFirmaKalfa);
+    fFirma.addEventListener('change', syncFirmaKalfa);
+    syncFirmaKalfa();
+  }
+
+  /* ---- Evrak — 12 kanonik kategori (özlük matrisi + detay ile birebir aynı set/sıra) ---- */
+  var EVRAK_KATEGORI = [
+    {ad:'Kimlik fotokopisi',           ic:'fa-id-card',           zorunlu:true},
+    {ad:'İş sözleşmesi',               ic:'fa-file-signature',    zorunlu:true},
+    {ad:'SGK işe giriş bildirgesi',    ic:'fa-building-columns',  zorunlu:true},
+    {ad:'İkametgâh',                   ic:'fa-house-chimney'},
+    {ad:'Adli sicil kaydı',            ic:'fa-scale-balanced'},
+    {ad:'Sağlık raporu',               ic:'fa-notes-medical'},
+    {ad:'İSG eğitim sertifikası',      ic:'fa-shield-halved'},
+    {ad:'Mesleki yeterlilik belgesi',  ic:'fa-award'},
+    {ad:'Ehliyet / SRC belgesi',       ic:'fa-id-card-clip'},
+    {ad:'Diploma / sertifika',         ic:'fa-graduation-cap'},
+    {ad:'Acil durum kişi formu',       ic:'fa-phone-volume'},
+    {ad:'KVKK / açık rıza metni',      ic:'fa-user-shield'}
+  ];
+  var evrList = document.getElementById('evrList');
+  if(evrList){
+    evrList.innerHTML = EVRAK_KATEGORI.map(function(k){
+      return '<div class="evr-row">'
+        + '<div class="evr-ico"><i class="fa-solid ' + k.ic + '"></i></div>'
+        + '<span class="evr-name">' + k.ad + '</span>'
+        + (k.zorunlu ? '<span class="gtag mint evr-req">Zorunlu</span>' : '')
+        + '<span class="gstat off evr-stat">Yüklenmedi</span>'
+        + '<div class="evr-acts">'
+        + '<button type="button" class="ia-btn" data-act="yukle" data-no-confirm aria-label="' + k.ad + ' yükle"><i class="fa-solid fa-cloud-arrow-up"></i></button>'
+        + '<button type="button" class="ia-btn" data-act="goruntule" data-no-confirm aria-label="' + k.ad + ' görüntüle" hidden><i class="fa-solid fa-eye"></i></button>'
+        + '<button type="button" class="ia-btn" data-act="degistir" data-no-confirm aria-label="' + k.ad + ' değiştir" hidden><i class="fa-solid fa-rotate"></i></button>'
+        + '<button type="button" class="ia-btn" data-act="sil" data-no-confirm aria-label="' + k.ad + ' sil" hidden><i class="fa-solid fa-trash"></i></button>'
+        + '</div></div>';
+    }).join('');
+
+    evrList.addEventListener('click', function(e){
+      var btnEl = e.target.closest('.ia-btn'); if(!btnEl) return;
+      var row = btnEl.closest('.evr-row');
+      var name = row.querySelector('.evr-name').textContent;
+      var stat = row.querySelector('.evr-stat');
+      var acts = row.querySelectorAll('.evr-acts .ia-btn');
+      var act = btnEl.getAttribute('data-act');
+      if(act === 'yukle' || act === 'degistir'){
+        stat.textContent = 'Yüklendi';
+        stat.className = 'gstat ok evr-stat';
+        acts.forEach(function(b){ b.hidden = (b.getAttribute('data-act') === 'yukle'); });
+        gvToast(name + ' ' + (act === 'yukle' ? 'yüklendi (mock).' : 'değiştirildi (mock).'));
+      } else if(act === 'sil'){
+        stat.textContent = 'Yüklenmedi';
+        stat.className = 'gstat off evr-stat';
+        acts.forEach(function(b){ b.hidden = (b.getAttribute('data-act') !== 'yukle'); });
+        gvToast(name + ' kaldırıldı (mock).');
+      } else if(act === 'goruntule'){
+        gvToast(name + ' görüntüleniyor (mock).', {type:'info'});
+      }
+    });
+  }
+
+  /* ---- Zimmet — çoğaltılabilir blok (R3, cari-form klon deseni §2.5) ---- */
+  var ZIMMET_KATEGORI = [
+    {v:'telefon',  lbl:'Telefon & İletişim'},
+    {v:'tablet',   lbl:'Tablet'},
+    {v:'elaleti',  lbl:'El Aleti'},
+    {v:'guvenlik', lbl:'Güvenlik Ekipmanı'},
+    {v:'arac',     lbl:'Araç'},
+    {v:'makine',   lbl:'Makine-Ekipman'}
+  ];
+  /* crm-operasyon-demirbas.html DEMIRBAS[] ile birebir — 10 kanonik kalem. */
+  var DEMIRBAS_MINI = [
+    {no:'ZMT-2026-041', ad:'İş Telefonu',       marka:'Samsung Galaxy A54, 64GB',      kat:'telefon',  kisi:'Hasan Demirci', durum:'Zimmetli'},
+    {no:'ZMT-2026-042', ad:'El Aleti Seti',     marka:'Bosch GSB 18V-55, 18 parça',    kat:'elaleti',  kisi:'Hasan Demirci', durum:'Zimmetli'},
+    {no:'ZMT-2026-043', ad:'Güvenlik Ekipmanı', marka:'baret + yelek + bot seti',      kat:'guvenlik', kisi:'Hasan Demirci', durum:'Zimmetli'},
+    {no:'ZMT-2026-044', ad:'Araç',              marka:'Ford Ranger pikap, 34 ABC 123', kat:'arac',     kisi:'Hasan Demirci', durum:'Zimmetli'},
+    {no:'ZMT-2026-045', ad:'Tablet',            marka:'Samsung Galaxy Tab A9, 64GB',   kat:'tablet',   kisi:'Aylin Koç',      durum:'Zimmetli'},
+    {no:'ZMT-2026-046', ad:'Lazer Metre',       marka:'Bosch GLM 50 C',                kat:'elaleti',  kisi:'Ömer Taşkın',    durum:'Zimmetli'},
+    {no:'ZMT-2026-047', ad:'Kırıcı-Delici',     marka:'Hilti TE 60-A36',               kat:'makine',   kisi:null,             durum:'Serviste'},
+    {no:'ZMT-2026-048', ad:'El Telsizi Seti',   marka:'Motorola CP040, 4 adet',        kat:'telefon',  kisi:null,             durum:'Depoda'},
+    {no:'ZMT-2025-017', ad:'El Telsizi',        marka:'Motorola CP040',                kat:'telefon',  kisi:'Hasan Demirci', durum:'İade Edildi'},
+    {no:'ZMT-2025-009', ad:'Jeneratör',         marka:'Honda EU22i',                   kat:'makine',   kisi:null,             durum:'Hurda'}
+  ];
+  var turOptsHtml = ZIMMET_KATEGORI.map(function(k){ return '<option value="' + k.v + '">' + k.lbl + '</option>'; }).join('');
+  var demirbasOptsHtml = '<option value="">— Listeden seç —</option>' + DEMIRBAS_MINI.map(function(d){
+    return '<option value="' + d.no + '" data-ad="' + d.ad + '" data-marka="' + d.marka + '" data-kat="' + d.kat + '">'
+      + d.no + ' — ' + d.ad + ' (' + (d.kisi || 'kişisiz') + ', ' + d.durum + ')</option>';
+  }).join('');
+
+  function zmtBlockHtml(n){
+    return '<div class="zmt-block">'
+      + '<div class="zmt-block-head"><b><i class="fa-solid fa-toolbox"></i> Zimmet #' + n + '</b>'
+      + '<button type="button" class="row-remove" data-no-confirm aria-label="Zimmet kaydını kaldır"><i class="fa-solid fa-trash"></i></button></div>'
+      + '<div class="gform">'
+      + '<div class="gfield"><label>Zimmet Türü</label><select class="zmt-tur">' + turOptsHtml + '</select></div>'
+      + '<div class="gfield"><label>Demirbaş Seçimi <span class="gf-hint">(mevcut envanterden)</span></label><select class="zmt-demirbas">' + demirbasOptsHtml + '</select></div>'
+      + '<div class="gfield"><label>Demirbaş Adı</label><input type="text" class="zmt-ad" placeholder="Örn. Kırıcı-Delici"></div>'
+      + '<div class="gfield"><label>Seri No <span class="gf-hint">(varsa)</span></label><input type="text" class="zmt-seri" placeholder="Örn. HTI-2024-1183"></div>'
+      + '<div class="gfield"><label>Marka / Model</label><input type="text" class="zmt-marka" placeholder="Örn. Hilti TE 60-A36"></div>'
+      + '<div class="gfield"><label>Teslim Tarihi</label><input type="date" class="zmt-teslim-tarih"></div>'
+      + '<div class="gfield"><label>Teslim Eden</label><input type="text" class="zmt-teslim-eden" placeholder="Örn. Depo Sorumlusu"></div>'
+      + '<div class="gfield"><label>Teslim Alan</label><input type="text" class="zmt-teslim-alan" placeholder="Personel adı"></div>'
+      + '<div class="gfield full"><label>Açıklama <span class="gf-hint">(isteğe bağlı)</span></label><textarea rows="2" class="zmt-aciklama" placeholder="Zimmet ile ilgili not…"></textarea></div>'
+      + '<div class="gfield full"><label>Zimmet Formu</label><div class="zmt-attach"><i class="fa-solid fa-paperclip"></i><b>Zimmet teslim tutanağı</b><span class="zmt-form-stat">Yüklenmedi</span><button type="button" class="btn btn-ghost btn-sm zmt-form-yukle" data-no-confirm>Yükle</button></div></div>'
+      + '<div class="gfield"><label>İade Tarihi <span class="gf-hint">(varsa)</span></label><input type="date" class="zmt-iade-tarih"></div>'
+      + '<div class="gfield"><label>İade Durumu</label><select class="zmt-iade-durum"><option value="zimmetli">Zimmetli</option><option value="iade">İade Edildi</option></select></div>'
+      + '</div></div>';
+  }
+  function zmtRenumber(){
+    Array.prototype.slice.call(zmtList.querySelectorAll('.zmt-block')).forEach(function(b, idx){
+      b.querySelector('.zmt-block-head b').innerHTML = '<i class="fa-solid fa-toolbox"></i> Zimmet #' + (idx + 1);
+    });
+  }
+  var zmtList = document.getElementById('zmtList');
+  function zmtAddBlock(){
+    var wrap = document.createElement('div');
+    wrap.innerHTML = zmtBlockHtml(zmtList.children.length + 1);
+    zmtList.appendChild(wrap.firstChild);
+  }
+  if(zmtList){
+    zmtAddBlock();
+    document.getElementById('btnZimmetEkle').addEventListener('click', zmtAddBlock);
+
+    zmtList.addEventListener('click', function(e){
+      var rm = e.target.closest('.row-remove');
+      if(rm){ rm.closest('.zmt-block').remove(); zmtRenumber(); return; }
+      var yukle = e.target.closest('.zmt-form-yukle');
+      if(yukle){
+        yukle.parentElement.querySelector('.zmt-form-stat').textContent = 'Yüklendi';
+        gvToast('Zimmet teslim tutanağı yüklendi (mock).');
+      }
+    });
+    zmtList.addEventListener('change', function(e){
+      var sel = e.target.closest('.zmt-demirbas'); if(!sel) return;
+      var opt = sel.options[sel.selectedIndex];
+      if(!opt.value) return;
+      var block = sel.closest('.zmt-block');
+      block.querySelector('.zmt-ad').value = opt.getAttribute('data-ad') || '';
+      block.querySelector('.zmt-marka').value = opt.getAttribute('data-marka') || '';
+      var kat = opt.getAttribute('data-kat');
+      if(kat) block.querySelector('.zmt-tur').value = kat;
+    });
+  }
+
+  /* ---- §10.1 Eğitim Bilgileri — çoğaltılabilir satır (zmt-list ile aynı desen).
+     Okul adı · Eğitim seviyesi · Mezuniyet yılı ÜÇÜ YAN YANA; mezuniyet yılı 1950–2026
+     aralığında doğrulanır (hatalıda inline uyarı — engellemez, kayıt anında da kontrol edilir). ---- */
+  var EGITIM_SEVIYE = [
+    {v:'ilkogretim', lbl:'İlköğretim'},
+    {v:'lise', lbl:'Lise'},
+    {v:'onlisans', lbl:'Ön Lisans'},
+    {v:'lisans', lbl:'Lisans'},
+    {v:'yukseklisans', lbl:'Yüksek Lisans'},
+    {v:'doktora', lbl:'Doktora'},
+    {v:'sertifika', lbl:'Sertifika Programı'},
+    {v:'mesleki', lbl:'Mesleki Eğitim'},
+    {v:'diger', lbl:'Diğer'}
+  ];
+  var egtSeviyeOpts = '<option value="">— Seçiniz —</option>' + EGITIM_SEVIYE.map(function(s){
+    return '<option value="' + s.v + '">' + s.lbl + '</option>';
+  }).join('');
+
+  function egtRowHtml(n){
+    return '<div class="egt-row">'
+      + '<div><label>Okul Adı</label><input type="text" class="egt-okul" placeholder="Örn. Yıldız Teknik Üniversitesi"></div>'
+      + '<div><label>Eğitim Seviyesi</label><select class="egt-seviye">' + egtSeviyeOpts + '</select></div>'
+      + '<div class="egt-yil-wrap"><label>Mezuniyet Yılı</label><input type="text" class="egt-yil" inputmode="numeric" maxlength="4" placeholder="Örn. 2018"><span class="egt-err">Yıl 1950–2026 arasında olmalı.</span></div>'
+      + '<button type="button" class="row-remove egt-sil" data-no-confirm aria-label="Eğitim kaydını kaldır (' + n + ')"><i class="fa-solid fa-trash"></i></button>'
+      + '</div>';
+  }
+
+  var egtList = document.getElementById('egtList');
+  function egtAddRow(){
+    var wrap = document.createElement('div');
+    wrap.innerHTML = egtRowHtml(egtList.children.length + 1);
+    var row = wrap.firstChild;
+    egtList.appendChild(row);
+    var okul = row.querySelector('.egt-okul');
+    if(okul) okul.focus();
+  }
+  function egtValidateYil(input){
+    var row = input.closest('.egt-row');
+    var errEl = row.querySelector('.egt-err');
+    var v = input.value.trim();
+    if(!v){ input.classList.remove('err'); errEl.classList.remove('show'); return true; }
+    var ok = /^\d{4}$/.test(v) && parseInt(v, 10) >= 1950 && parseInt(v, 10) <= 2026;
+    input.classList.toggle('err', !ok);
+    errEl.classList.toggle('show', !ok);
+    return ok;
+  }
+  if(egtList){
+    egtAddRow();
+    document.getElementById('btnEgitimEkle').addEventListener('click', egtAddRow);
+    document.getElementById('btnYeniSatirEkle').addEventListener('click', egtAddRow);
+    egtList.addEventListener('click', function(e){
+      var rm = e.target.closest('.egt-sil');
+      if(rm) rm.closest('.egt-row').remove();
+    });
+    egtList.addEventListener('blur', function(e){
+      var yil = e.target.closest('.egt-yil');
+      if(yil) egtValidateYil(yil);
+    }, true);
+  }
+
+  var btn = document.getElementById('personelSubmit');
+  if(btn){
+    btn.addEventListener('click', function(){
+      /* ---- §10.1 mezuniyet yılı doğrulaması — kayıt anında da kontrol edilir, hatalı
+         satır varsa kayıt DURDURULUR (inline uyarı zaten blur'da gösterilmişti). ---- */
+      if(egtList){
+        var egtHatali = 0;
+        Array.prototype.slice.call(egtList.querySelectorAll('.egt-yil')).forEach(function(inp){
+          if(!egtValidateYil(inp)) egtHatali++;
+        });
+        if(egtHatali > 0){
+          gvToast(egtHatali + ' eğitim kaydında mezuniyet yılı hatalı (1950–2026 aralığında olmalı).', {type:'danger'});
+          return;
+        }
+      }
+      /* ---- kayıt anında zorunlu evrak uyarısı (madde 9 kapatma) — engellemez, bilgilendirir.
+         Sayı EVRAK_KATEGORI zorunlu:true kayıtlarının o anki DOM durumundan türetilir. ---- */
+      var eksikZorunlu = 0;
+      if(evrList){
+        Array.prototype.slice.call(evrList.querySelectorAll('.evr-row')).forEach(function(row, i){
+          var kat = EVRAK_KATEGORI[i];
+          if(kat && kat.zorunlu && row.querySelector('.evr-stat').classList.contains('off')) eksikZorunlu++;
+        });
+      }
+      if(eksikZorunlu > 0){
+        gvToast('Personel kaydı oluşturuldu — ' + eksikZorunlu + ' zorunlu evrak eksik, özlük dosyasında takip edilecek.', {type:'info'});
+      } else {
+        gvToast('Personel kaydı oluşturuldu.');
+      }
+      setTimeout(function(){ location.href = 'crm-personel.html'; }, 900);
+    });
+  }
+})();
+</script>
+<script>
+/* =====================================================================
+   §7.5 — Özel Alan Yönetimi köprüsü / kabul kriteri 2+4 (crm-personel-ozel-alan.html'in
+   4 eksik kabul kriterinden ilki, Dalga 7 denetim bulgusu). Tanım kaynağı OKUNUR —
+   crm-personel-ozel-alan.html'in KULLANDIĞI localStorage anahtarı (gv_crm_personel_ozel_alan),
+   İKİNCİ bir state kopyası YOK, yalnız SEED fallback (o dosyayla BİREBİR aynı) burada da
+   tutulur — localStorage boşsa (ilk ziyaret) aynı 5 varsayılan alan görünür. 10 alan
+   tipinin her biri kendi doğru input'unu üretir; "Personel formunda göster" kabul kriteri
+   HER ZAMAN true olduğundan (oaUseForm disabled+checked) form:true filtresi teknik
+   olarak fazladan güvenlik, hepsi zaten true. Rol kısıtı (f.hidden) varsa alan formda
+   HİÇ render EDİLMEZ (kabul kriteri 4). Girilen değerler kayıt anında (mevcut
+   personelSubmit akışı — 2. script bloğu, DOKUNULMADI) localStorage'a AYRI bir demo
+   anahtarda (gv_crm_personel_ozel_deger) yazılır: bu form zaten gerçek bir personel
+   kaydı OLUŞTURMUYOR (mock — toast + yönlendirme), dolayısıyla "kaydedilen son özel alan
+   değer seti" doğrulama amaçlı persist edilir; kanonik personel satırları BU BLOKTA
+   OKUNMAZ/DEĞİŞTİRİLMEZ. ===================================================================== */
+(function(){
+  if(!window.GV) return;
+  var OA_KEY = 'gv_crm_personel_ozel_alan';
+  var OA_VAL_KEY = 'gv_crm_personel_ozel_deger';
+  var OA_SEED = [
+    {id:'oa1', ad:'Bot Numarası', tip:'sayi', opt:'', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa2', ad:'Beden Ölçüsü', tip:'secim', opt:'S,M,L,XL,XXL', form:true, col:true, filter:false, hidden:[]},
+    {id:'oa3', ad:'Usta Seviyesi', tip:'secim', opt:'Çırak,Kalfa,Usta,Formen', form:true, col:true, filter:true, hidden:[]},
+    {id:'oa4', ad:'Turnike Kart No', tip:'kisa-metin', opt:'', form:true, col:false, filter:false, hidden:['personel']},
+    {id:'oa5', ad:'Personel Özel Notu', tip:'uzun-metin', opt:'', form:true, col:false, filter:false, hidden:['personel','sef','teknik']}
+  ];
+  function loadOaFields(){
+    try{
+      var raw = localStorage.getItem(OA_KEY);
+      if(!raw) return OA_SEED.slice();
+      var p = JSON.parse(raw);
+      return Array.isArray(p) && p.length ? p : OA_SEED.slice();
+    }catch(e){ return OA_SEED.slice(); }
+  }
+  function oaOpts(f){ return (f.opt || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+  function escAttr(s){ return String(s).replace(/"/g, '&quot;'); }
+
+  var oaFields = loadOaFields().filter(function(f){ return f.form; });
+  var visibleOaFields = oaFields.filter(function(f){ return !(f.hidden && f.hidden.indexOf(GV.role) !== -1); });
+
+  var oaWrap = document.getElementById('fgOzelAlan');
+  var oaMount = document.getElementById('ozelAlanForm');
+
+  function renderOaField(f){
+    var id = 'oaf_' + f.id;
+    var full = (f.tip === 'uzun-metin' || f.tip === 'dosya') ? ' full' : '';
+    var label = '<label for="' + id + '">' + f.ad + '</label>';
+    var input;
+    switch(f.tip){
+      case 'kisa-metin':
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '" placeholder="' + escAttr(f.ad) + '">';
+        break;
+      case 'uzun-metin':
+        input = '<textarea id="' + id + '" data-oaf="' + f.id + '" rows="2" placeholder="' + escAttr(f.ad) + '"></textarea>';
+        break;
+      case 'sayi':
+        input = '<input type="number" id="' + id + '" data-oaf="' + f.id + '" placeholder="Örn. 42">';
+        break;
+      case 'tarih':
+        input = '<input type="date" id="' + id + '" data-oaf="' + f.id + '">';
+        break;
+      case 'secim':
+        input = '<select id="' + id + '" data-oaf="' + f.id + '"><option value="">— Seçiniz —</option>'
+          + oaOpts(f).map(function(o){ return '<option value="' + escAttr(o) + '">' + o + '</option>'; }).join('') + '</select>';
+        break;
+      case 'coklu-secim':
+        input = '<div class="oaf-chip-select" id="' + id + '" data-oaf="' + f.id + '">'
+          + oaOpts(f).map(function(o){ return '<button type="button" class="chip" data-v="' + escAttr(o) + '">' + o + '</button>'; }).join('') + '</div>';
+        break;
+      case 'evet-hayir':
+        input = '<label class="gv-toggle"><input type="checkbox" id="' + id + '" data-oaf="' + f.id + '"><span class="tg-track"></span></label>';
+        break;
+      case 'dosya':
+        input = '<div class="zmt-attach" id="' + id + '" data-oaf="' + f.id + '"><i class="fa-solid fa-paperclip"></i><b>' + f.ad + '</b>'
+          + '<span class="oaf-file-stat">Yüklenmedi</span><button type="button" class="btn btn-ghost btn-sm oaf-file-yukle" data-no-confirm>Yükle</button></div>';
+        break;
+      case 'etiket':
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '" placeholder="Etiketleri virgülle ayırın — örn. vardiya-gündüz, forklift-sertifikalı">';
+        break;
+      case 'para-birimi':
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '" inputmode="decimal" placeholder="₺0">';
+        break;
+      default:
+        input = '<input type="text" id="' + id + '" data-oaf="' + f.id + '">';
+    }
+    return '<div class="gfield' + full + '">' + label + input + '</div>';
+  }
+
+  if(oaWrap && oaMount && visibleOaFields.length){
+    oaWrap.hidden = false;
+    oaMount.innerHTML = visibleOaFields.map(renderOaField).join('');
+
+    oaMount.addEventListener('click', function(e){
+      var chip = e.target.closest('.oaf-chip-select .chip');
+      if(chip){ chip.classList.toggle('is-on'); return; }
+      var fileBtn = e.target.closest('.oaf-file-yukle');
+      if(fileBtn){
+        var box = fileBtn.closest('[data-oaf]');
+        box.querySelector('.oaf-file-stat').textContent = 'Yüklendi';
+        gvToast(box.querySelector('b').textContent + ' yüklendi (mock).');
+      }
+    });
+  }
+
+  function collectOaValues(){
+    var out = {};
+    if(!oaMount) return out;
+    visibleOaFields.forEach(function(f){
+      var el = oaMount.querySelector('[data-oaf="' + f.id + '"]');
+      if(!el) return;
+      var val;
+      if(f.tip === 'evet-hayir') val = el.checked;
+      else if(f.tip === 'coklu-secim') val = Array.prototype.slice.call(el.querySelectorAll('.chip.is-on')).map(function(c){ return c.getAttribute('data-v'); });
+      else if(f.tip === 'dosya') val = el.querySelector('.oaf-file-stat').textContent === 'Yüklendi';
+      else val = el.value;
+      out[f.id] = {ad: f.ad, tip: f.tip, deger: val};
+    });
+    return out;
+  }
+
+  var oaSubmitBtn = document.getElementById('personelSubmit');
+  if(oaSubmitBtn && visibleOaFields.length){
+    oaSubmitBtn.addEventListener('click', function(){
+      try{
+        localStorage.setItem(OA_VAL_KEY, JSON.stringify({savedAt: Date.now(), role: GV.role, values: collectOaValues()}));
+      }catch(e){ /* localStorage kapalıysa sessizce yut — mevcut save() deseniyle aynı */ }
+    });
+  }
+})();
+</script>
+<script>
+/* sekme motoru — personel-detay ile aynı desen, form sayfasında hash/replaceState YOK (sade activate) */
+(function(){
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+  function activate(id){
+    tabs.forEach(function(t){
+      var on = t.getAttribute('data-tab') === id;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){ if(t.hidden) return; activate(t.getAttribute('data-tab')); });
+  });
+})();
+</script>
+</body>
+</html>

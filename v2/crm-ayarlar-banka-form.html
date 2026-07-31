@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Banka Hesabı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Banka Hesabı Ekle/Düzenle (§2.2, T-A)
+   Kaynak-transfer: crumb+form-grid+side-tip crm-operasyon-demirbas-form.html ile
+   birebir; IBAN maskeleme bu sayfaya özel (.bf-iban*). ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+
+.form-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.form-foot-r{display:flex;gap:10px}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* IBAN alanı */
+#fIban{font-variant-numeric:tabular-nums;letter-spacing:.03em}
+#fIban.is-invalid{border-color:var(--danger);background:var(--danger-tint)}
+#fIban.is-valid{border-color:var(--ok)}
+.bf-iban-hint{font-size:11.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:6px}
+.bf-iban-hint.err{color:var(--danger)}
+.bf-iban-hint.ok{color:var(--ok)}
+
+/* varsayılan/aktif switch satırı */
+.bf-switchrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg)}
+.bf-switchrow + .bf-switchrow{margin-top:10px}
+.bf-switchrow .bf-sw-lbl{font-size:13px;font-weight:700;color:var(--ink)}
+.bf-switchrow .bf-sw-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* son işlemler — işlem kaydı simülasyonu (§2.2 "değişiklikler işlem kayıtlarına yazılmalıdır") */
+.bk-log{display:flex;flex-direction:column}
+.bk-log-row{display:flex;align-items:flex-start;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
+.bk-log-row:last-child{border-bottom:none}
+.bk-log-ico{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:12px;background:rgba(var(--acc-rgb),.1);color:var(--acc-ink);margin-top:1px}
+.bk-log-body{flex:1;min-width:0;line-height:1.45}
+.bk-log-line{font-size:12.5px;color:var(--ink-2)}
+.bk-log-line b{color:var(--ink);font-weight:700}
+.bk-log-meta{margin-top:3px;font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bk-log-meta a{color:var(--acc-ink);font-weight:700}
+.bk-log-meta a:hover{text-decoration:underline}
+.bk-log-empty{font-size:12.5px;color:var(--muted);padding:6px 0}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="banka-form">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-ayarlar-firma.html">Firma Ayarları</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="crm-ayarlar-firma.html#bilgi">Banka Hesapları</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="bfCrumbNow">—</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Firma Ayarları</div>
+        <h1 id="bfTitle">Banka Hesabı</h1>
+        <div class="ph-sub" id="bfSub">Yapıtaş İnşaat A.Ş. adına kayıtlı banka hesabı bilgileri</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <!-- ============ SOL: form ============ -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-building-columns"></i> Hesap Bilgileri</div></div>
+        <div class="gc-body">
+          <form class="gform" id="bankaForm" onsubmit="return false">
+            <div class="gfield full">
+              <label for="fHesapAd">Hesap adı</label>
+              <input type="text" id="fHesapAd" placeholder="ör. Ana Hesap, Hakediş Tahsilat Hesabı">
+              <span class="gf-hint">Bu ad hesap listesinde ve çıktı ekranlarında görünür.</span>
+            </div>
+            <div class="gfield">
+              <label for="fBankaAd">Banka adı</label>
+              <input type="text" id="fBankaAd" placeholder="ör. Garanti BBVA">
+            </div>
+            <div class="gfield">
+              <label for="fSubeAd">Şube adı</label>
+              <input type="text" id="fSubeAd" placeholder="ör. Ümraniye Şubesi">
+            </div>
+            <div class="gfield">
+              <label for="fSubeKod">Şube kodu</label>
+              <input type="text" id="fSubeKod" placeholder="ör. 620" inputmode="numeric">
+            </div>
+            <div class="gfield">
+              <label for="fHesapNo">Hesap no</label>
+              <input type="text" id="fHesapNo" placeholder="ör. 6298891">
+            </div>
+            <div class="gfield full">
+              <label for="fHesapSahibi">Hesap sahibi</label>
+              <input type="text" id="fHesapSahibi" value="Yapıtaş İnşaat A.Ş.">
+            </div>
+            <div class="gfield full">
+              <label for="fIban">IBAN</label>
+              <input type="text" id="fIban" placeholder="TR00 0000 0000 0000 0000 0000 00" autocomplete="off" spellcheck="false" maxlength="32">
+              <div class="bf-iban-hint" id="bfIbanHint"><i class="fa-solid fa-circle-info"></i> 0 / 24 hane girildi</div>
+            </div>
+            <div class="gfield">
+              <label for="fParaBirimi">Para birimi</label>
+              <select id="fParaBirimi">
+                <option value="TRY" selected>₺ Türk Lirası (TRY)</option>
+                <option value="USD">$ Amerikan Doları (USD)</option>
+                <option value="EUR">€ Euro (EUR)</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fHesapTur">Hesap türü</label>
+              <select id="fHesapTur">
+                <option value="vadesiz">Vadesiz Hesap</option>
+                <option value="vadeli">Vadeli Hesap</option>
+                <option value="maas">Maaş Ödeme Hesabı</option>
+                <option value="dth">Döviz Tevdiat Hesabı (DTH)</option>
+              </select>
+            </div>
+            <div class="gfield full">
+              <label for="fAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label>
+              <textarea id="fAciklama" rows="2" placeholder="ör. Kurum hakediş tahsilatları için kullanılır"></textarea>
+            </div>
+          </form>
+
+          <div style="margin-top:6px">
+            <div class="bf-switchrow">
+              <div>
+                <div class="bf-sw-lbl">Varsayılan hesap yap</div>
+                <div class="bf-sw-sub">Çıktı şablonlarında ve tahsilat formlarında ilk sırada bu hesap görünür.</div>
+              </div>
+              <label class="gv-toggle"><input type="checkbox" id="fVarsayilan"><span class="tg-track"></span></label>
+            </div>
+            <div class="bf-switchrow">
+              <div>
+                <div class="bf-sw-lbl">Hesap aktif</div>
+                <div class="bf-sw-sub">Pasife alınan hesap arşivde kalır, çıktı ekranlarında listelenmez.</div>
+              </div>
+              <label class="gv-toggle"><input type="checkbox" id="fAktif" checked><span class="tg-track"></span></label>
+            </div>
+          </div>
+        </div>
+        <div class="form-foot">
+          <span class="inv-note" style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)"><i class="fa-solid fa-circle-info" style="color:var(--acc-ink)"></i> Kaydedilen değişiklikler işlem kayıtlarına yazılır.</span>
+          <div class="form-foot-r">
+            <a class="btn btn-ghost btn-sm" href="crm-ayarlar-firma.html#bilgi">Vazgeç</a>
+            <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="bankaSubmit"><i class="fa-solid fa-floppy-disk"></i> Hesabı Kaydet</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bilgi notları ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Kullanım Alanları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-file-signature"></i><span>Teklif ve sözleşme çıktısı</span></div>
+            <div class="side-tip"><i class="fa-solid fa-file-invoice"></i><span>Fatura</span></div>
+            <div class="side-tip"><i class="fa-solid fa-hand-holding-dollar"></i><span>Tahsilat formu</span></div>
+            <div class="side-tip"><i class="fa-solid fa-globe"></i><span>Müşteri portalı ödeme bilgisi</span></div>
+            <div class="side-tip"><i class="fa-solid fa-scale-balanced"></i><span>Cari mutabakat</span></div>
+            <div class="side-tip"><i class="fa-solid fa-cash-register"></i><span>Kasa &amp; finans çıktıları</span></div>
+          </div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-shield-halved"></i> Kayıt Notları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-hashtag"></i><span>IBAN, TR ile başlayıp 24 rakamla devam etmelidir; girerken otomatik gruplanır.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-box-archive"></i><span>Hesap silinemez — kullanım dışı bırakılan hesaplar arşive (Pasif) alınır.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-star"></i><span>Varsayılan hesap değiştirildiğinde önceki varsayılan otomatik düşer; her zaman en az bir varsayılan hesap kalır.</span></div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son İşlemler</div></div>
+          <div class="gc-body">
+            <div class="bk-log" id="bkFormLog">
+              <div class="bk-log-empty" id="bkFormLogEmpty">Bu oturumda henüz bu formdan bir işlem yapılmadı.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ============ mock hesap seti — crm-ayarlar-firma.html Banka Hesapları kartıyla
+     BİREBİR (id sırası orada da aynı); kanonik firma bilgisi: vergi no 935 041 7768,
+     ticaret sicil İST-254891 (shell.js). Gerçek arka uç yok — bu dizi yalnız bu
+     sayfanın ?mod=duzenle&hesap= önizlemesi için sayfa-lokal mock veridir. ============ */
+  var ACCOUNTS = {
+    '1': {banka:'Garanti BBVA', sube:'Ümraniye Şubesi', subeKod:'620', hesapAd:'Ana Hesap',
+          sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR12 0006 2000 4560 0006 2988 91', hesapNo:'6298891',
+          paraBirimi:'TRY', tur:'vadesiz', varsayilan:true, aktif:true,
+          aciklama:'Genel işletme ve tedarikçi ödemeleri.'},
+    '2': {banka:'Akbank', sube:'Ataşehir Şubesi', subeKod:'460', hesapAd:'Hakediş Tahsilat Hesabı',
+          sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR44 0004 6000 3288 8000 1594 07', hesapNo:'1594-07',
+          paraBirimi:'TRY', tur:'vadesiz', varsayilan:false, aktif:true,
+          aciklama:'Kurum hakediş tahsilatları için kullanılır (Körfez GYO, Aliağa Liman).'},
+    '3': {banka:'Ziraat Bankası', sube:'Gebze Şubesi', subeKod:'100', hesapAd:'Maaş Ödeme Hesabı',
+          sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR73 0001 0002 3812 3456 7850 02', hesapNo:'3456-7850',
+          paraBirimi:'TRY', tur:'maas', varsayilan:false, aktif:false,
+          aciklama:'Şube birleşmesi sonrası kullanımdan kaldırıldı; toplu maaş ödemeleri Garanti BBVA hesabına taşındı.'}
+  };
+
+  var params = new URLSearchParams(location.search);
+  var mod = params.get('mod') === 'duzenle' ? 'duzenle' : 'ekle';
+  var hesapId = params.get('hesap');
+  var existing = mod === 'duzenle' ? ACCOUNTS[hesapId] : null;
+
+  document.title = (mod === 'duzenle' ? 'Banka Hesabını Düzenle' : 'Yeni Banka Hesabı') + ' — Gavia CRM';
+  document.getElementById('bfTitle').textContent = mod === 'duzenle' ? 'Banka Hesabını Düzenle' : 'Yeni Banka Hesabı Ekle';
+  document.getElementById('bfCrumbNow').textContent = mod === 'duzenle' ? 'Hesabı Düzenle' : 'Yeni Hesap Ekle';
+  document.getElementById('bfSub').textContent = mod === 'duzenle'
+    ? 'Mevcut banka hesabı bilgilerini güncelleyin.'
+    : 'Yapıtaş İnşaat A.Ş. adına yeni bir banka hesabı tanımlayın.';
+
+  var f = {
+    hesapAd: document.getElementById('fHesapAd'),
+    bankaAd: document.getElementById('fBankaAd'),
+    subeAd: document.getElementById('fSubeAd'),
+    subeKod: document.getElementById('fSubeKod'),
+    hesapNo: document.getElementById('fHesapNo'),
+    sahip: document.getElementById('fHesapSahibi'),
+    iban: document.getElementById('fIban'),
+    paraBirimi: document.getElementById('fParaBirimi'),
+    tur: document.getElementById('fHesapTur'),
+    aciklama: document.getElementById('fAciklama'),
+    varsayilan: document.getElementById('fVarsayilan'),
+    aktif: document.getElementById('fAktif')
+  };
+
+  if(existing){
+    f.hesapAd.value = existing.hesapAd;
+    f.bankaAd.value = existing.banka;
+    f.subeAd.value = existing.sube;
+    f.subeKod.value = existing.subeKod;
+    f.hesapNo.value = existing.hesapNo;
+    f.sahip.value = existing.sahip;
+    f.iban.value = existing.iban;
+    f.paraBirimi.value = existing.paraBirimi;
+    f.tur.value = existing.tur;
+    f.aciklama.value = existing.aciklama;
+    f.varsayilan.checked = existing.varsayilan;
+    f.aktif.checked = existing.aktif;
+  } else if(!hesapId && mod === 'duzenle'){
+    /* ?mod=duzenle ama ?hesap= verilmemiş/eşleşmemiş — sessizce ekleme formuna düş */
+    mod = 'ekle';
+  }
+
+  /* ============ IBAN canlı maskeleme + doğrulama — TR + 24 hane, 4'lü gruplama ============ */
+  var ibanHint = document.getElementById('bfIbanHint');
+  function formatIban(raw){
+    raw = (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    var digits;
+    if(raw.slice(0, 2) === 'TR') digits = raw.slice(2).replace(/[^0-9]/g, '');
+    else digits = raw.replace(/[^0-9]/g, '');
+    digits = digits.slice(0, 24);
+    var full = 'TR' + digits;
+    var groups = [];
+    for(var i = 0; i < full.length; i += 4) groups.push(full.slice(i, i + 4));
+    return {display: groups.join(' '), digits: digits};
+  }
+  function ibanState(){
+    var r = formatIban(f.iban.value);
+    var n = r.digits.length;
+    f.iban.value = r.display;
+    if(n === 0){
+      ibanHint.className = 'bf-iban-hint';
+      ibanHint.innerHTML = '<i class="fa-solid fa-circle-info"></i> 0 / 24 hane girildi';
+      f.iban.classList.remove('is-invalid', 'is-valid');
+      return false;
+    }
+    if(n < 24){
+      ibanHint.className = 'bf-iban-hint';
+      ibanHint.innerHTML = '<i class="fa-solid fa-circle-info"></i> ' + n + ' / 24 hane girildi';
+      f.iban.classList.remove('is-invalid', 'is-valid');
+      return false;
+    }
+    ibanHint.className = 'bf-iban-hint ok';
+    ibanHint.innerHTML = '<i class="fa-solid fa-circle-check"></i> Geçerli IBAN biçimi (TR + 24 hane)';
+    f.iban.classList.remove('is-invalid'); f.iban.classList.add('is-valid');
+    return true;
+  }
+  function ibanInvalidOnBlurOrSubmit(){
+    var r = formatIban(f.iban.value);
+    if(r.digits.length !== 24){
+      ibanHint.className = 'bf-iban-hint err';
+      ibanHint.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> IBAN 24 haneli olmalıdır (TR + 24 rakam) — şu an ' + r.digits.length + ' hane.';
+      f.iban.classList.add('is-invalid'); f.iban.classList.remove('is-valid');
+      return false;
+    }
+    return true;
+  }
+  f.iban.addEventListener('input', ibanState);
+  f.iban.addEventListener('blur', ibanInvalidOnBlurOrSubmit);
+  if(existing) ibanState();
+
+  /* şef rolü ise hesap sahibi/banka bilgisi salt-okunur değildir (bu ekran yalnız
+     ayarlar erişimi olan roller için menüde açılır) — GV.role bazlı ek kısıt yok */
+
+  /* ============ son işlemler mini akış — işlem kayıtlarına yazma simülasyonu ============ */
+  var bkFormLogSeq = 870; /* T-B'nin yetkili(850)/imza(860) serileriyle çakışmaması için 870'ten başlar. */
+  var bkFormLogList = document.getElementById('bkFormLog');
+  var bkFormLogEmpty = document.getElementById('bkFormLogEmpty');
+  function addBkFormLog(lineHtml){
+    bkFormLogSeq++;
+    if(bkFormLogEmpty){ bkFormLogEmpty.remove(); bkFormLogEmpty = null; }
+    var row = document.createElement('div');
+    row.className = 'bk-log-row';
+    var now = new Date();
+    var saat = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    row.innerHTML =
+      '<div class="bk-log-ico"><i class="fa-solid fa-building-columns"></i></div>' +
+      '<div class="bk-log-body">' +
+        '<div class="bk-log-line">' + lineHtml + '</div>' +
+        '<div class="bk-log-meta"><span>LOG-2026-' + bkFormLogSeq + '</span><span>· ' + saat + '</span><a href="crm-ayarlar-log.html">İşlem kayıtlarında görüntüle</a></div>' +
+      '</div>';
+    bkFormLogList.insertBefore(row, bkFormLogList.firstChild);
+  }
+
+  document.getElementById('bankaSubmit').addEventListener('click', function(){
+    var hesapAd = f.hesapAd.value.trim();
+    var bankaAd = f.bankaAd.value.trim();
+    var sahip = f.sahip.value.trim();
+    if(!hesapAd){ gvToast('Hesap adı girin.', {type:'danger'}); f.hesapAd.focus(); return; }
+    if(!bankaAd){ gvToast('Banka adı girin.', {type:'danger'}); f.bankaAd.focus(); return; }
+    if(!sahip){ gvToast('Hesap sahibi girin.', {type:'danger'}); f.sahip.focus(); return; }
+    if(!ibanInvalidOnBlurOrSubmit()){ gvToast('IBAN eksik veya hatalı — 24 hane girin.', {type:'danger'}); f.iban.focus(); return; }
+
+    var msg = (mod === 'duzenle' ? (hesapAd + ' güncellendi') : (hesapAd + ' banka hesabı olarak eklendi'))
+      + (f.varsayilan.checked ? ' ve varsayılan hesap yapıldı' : '') + '.';
+    gvToast(msg + ' İşlem kaydına yazıldı.');
+    addBkFormLog(bankaAd + ' — <b>' + hesapAd + '</b> ' + (mod === 'duzenle' ? 'güncellendi' : 'eklendi') + (f.varsayilan.checked ? ' · varsayılan yapıldı' : ''));
+    setTimeout(function(){ location.href = 'crm-ayarlar-firma.html#bilgi'; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

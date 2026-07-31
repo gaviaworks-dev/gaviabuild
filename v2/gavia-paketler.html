@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){
+  try{
+    var q = new URLSearchParams(location.search);
+    var role = q.get('role');
+    if(role){ localStorage.setItem('gv_crm_role', role); }
+    else { role = localStorage.getItem('gv_crm_role'); }
+    if(role !== 'superadmin'){ location.replace('index.html'); }
+  }catch(e){ location.replace('index.html'); }
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Platform Konsolu — Paketler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ PLATFORM KONSOLU — ortak kabuk (bkz. gavia-panel.html) ============ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--font);color:var(--on-dark)}
+.pc-app{min-height:100vh;display:flex;flex-direction:column;background:var(--gv-deep);
+  background-image:radial-gradient(1100px 620px at 100% -10%, rgba(63,213,173,.10), transparent 60%),
+    radial-gradient(900px 520px at -10% 110%, rgba(63,213,173,.06), transparent 55%);
+  background-repeat:no-repeat;}
+.pc-top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:16px;
+  padding:0 clamp(18px,3vw,40px);height:66px;border-bottom:1px solid var(--gv-border-dark);
+  background:rgba(2,8,55,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.pc-mark{width:38px;height:38px;flex:none;border-radius:11px;background:linear-gradient(155deg,#3FD5AD,#4FE5BD);
+  display:grid;place-items:center;font-weight:800;font-size:17px;color:#020837;letter-spacing:-.5px}
+.pc-brand{display:flex;flex-direction:column;line-height:1.2}
+.pc-brand b{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.pc-brand span{font-size:10px;font-weight:700;color:var(--on-dark-mut);letter-spacing:.06em;text-transform:uppercase}
+.pc-div{width:1px;height:26px;background:var(--gv-border-dark);flex:none}
+.pc-nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.pc-nav::-webkit-scrollbar{display:none}
+.pc-nav a{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--r-pill);
+  font-size:13px;font-weight:700;color:var(--on-dark-mut);text-decoration:none;transition:.18s var(--ease);white-space:nowrap}
+.pc-nav a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.pc-nav a.is-on{color:var(--gv-deep);background:var(--gv-mint)}
+.pc-top-r{margin-left:auto;display:flex;align-items:center;gap:12px;flex:none}
+.pc-persona{display:flex;align-items:center;gap:10px}
+.pc-ava{width:32px;height:32px;border-radius:50%;flex:none;background:var(--gv-mint-glow);color:var(--gv-mint-bright);
+  display:grid;place-items:center;font-size:12px;font-weight:800}
+.pc-persona-id{line-height:1.25;display:none}
+.pc-persona-id b{display:block;font-size:12.5px;font-weight:700;color:#fff}
+.pc-persona-id span{font-size:10.5px;color:var(--on-dark-mut)}
+@media(min-width:860px){.pc-persona-id{display:block}}
+.pc-back{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:var(--r-md);
+  border:1px solid var(--gv-border-dark);color:var(--on-dark);font-size:13px;font-weight:700;
+  text-decoration:none;transition:.18s var(--ease);white-space:nowrap;font-family:inherit}
+.pc-back:hover{border-color:var(--gv-mint);background:rgba(255,255,255,.04)}
+.pc-back i{color:var(--gv-mint);font-size:11px}
+@media(max-width:720px){.pc-back span{display:none}}
+.pc-main{flex:1;width:100%;max-width:1320px;margin:0 auto;padding:clamp(24px,3vw,40px) clamp(18px,3vw,40px) 60px}
+.pc-head{margin-bottom:26px}
+.pc-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gv-mint);
+  margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.pc-h1{font-size:clamp(22px,2.6vw,28px);font-weight:800;color:#fff;letter-spacing:-.02em;margin:0}
+.pc-sub{font-size:13.5px;color:var(--on-dark-mut);margin-top:6px;max-width:580px;line-height:1.5}
+.pc-card{background:var(--gv-night);border:1px solid var(--gv-border-dark);border-radius:var(--r-lg)}
+.pc-card-head{display:flex;align-items:center;gap:10px;padding:17px 22px;border-bottom:1px solid var(--gv-border-dark);flex-wrap:wrap}
+.pc-card-title{font-size:14.5px;font-weight:800;color:#fff;display:flex;align-items:center;gap:9px;letter-spacing:-.01em}
+.pc-card-title i{color:var(--gv-mint);font-size:13px}
+.pc-card-sub{font-size:12px;color:var(--on-dark-mut);margin-top:2px}
+.pc-card-body.flush{padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pc-card-foot{padding:13px 22px;border-top:1px solid var(--gv-border-dark);font-size:12px;color:var(--on-dark-faint);display:flex;align-items:center;gap:8px}
+.pc-card-foot i{color:var(--gv-mint)}
+
+/* ---- paket kartları — nötr, hiyerarşisiz (Professional öne çıkarılmaz) ---- */
+.pkg-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:28px}
+@media(max-width:1180px){.pkg-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.pkg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.pkg-grid{grid-template-columns:minmax(0,1fr)}}
+.pkg-card{background:var(--gv-night);border:1px solid var(--gv-border-dark);border-radius:var(--r-lg);
+  padding:22px 20px;display:flex;flex-direction:column;gap:16px;transition:.22s var(--ease)}
+.pkg-card:hover{transform:translateY(-3px);border-color:rgba(63,213,173,.3)}
+.pkg-ico{width:38px;height:38px;border-radius:10px;background:var(--gv-mint-glow);color:var(--gv-mint-bright);
+  display:grid;place-items:center;font-size:15px}
+.pkg-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em}
+.pkg-price{font-size:23px;font-weight:800;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pkg-price span{font-size:12px;color:var(--on-dark-mut);font-weight:600;margin-left:3px}
+.pkg-feat{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;flex:1}
+.pkg-feat li{font-size:12.5px;color:var(--on-dark);display:flex;gap:8px;align-items:flex-start;line-height:1.4}
+.pkg-feat li i{color:var(--gv-mint);font-size:10.5px;margin-top:3px;flex:none}
+.pkg-feat li.plus{color:#fff;font-weight:700}
+
+/* ---- matris ---- */
+.pkg-matrix{width:100%;border-collapse:collapse;min-width:780px}
+.pkg-matrix th,.pkg-matrix td{padding:12px 16px;border-bottom:1px solid var(--gv-border-dark);font-size:12.5px;text-align:center;color:var(--on-dark)}
+.pkg-matrix thead th{color:var(--on-dark-mut);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.pkg-matrix td:first-child,.pkg-matrix th:first-child{text-align:left;font-weight:700;color:#fff;white-space:nowrap;padding-left:22px}
+.pkg-matrix td:last-child,.pkg-matrix th:last-child{padding-right:22px}
+.pkg-matrix .yes{color:var(--gv-mint-bright);font-size:14px}
+.pkg-matrix .no{color:var(--on-dark-faint);font-size:14px}
+.pkg-matrix tbody tr:last-child td{border-bottom:none}
+.pkg-matrix .sec-row td{background:rgba(255,255,255,.02);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gv-mint);text-align:left;padding-top:14px}
+@media(max-width:640px){.pc-card-head{padding:14px 16px}.pc-card-foot{padding:12px 16px}}
+</style>
+</head>
+<body>
+<div class="pc-app">
+  <header class="pc-top">
+    <div class="pc-mark">G</div>
+    <div class="pc-brand"><b>Gaviaworks</b><span>Platform Konsolu</span></div>
+    <div class="pc-div"></div>
+    <nav class="pc-nav" aria-label="Konsol sekmeleri">
+      <a href="gavia-panel.html"><i class="fa-solid fa-gauge-high"></i> Genel Bakış</a>
+      <a href="gavia-firmalar.html"><i class="fa-solid fa-building"></i> Firmalar</a>
+      <a href="gavia-paketler.html" class="is-on"><i class="fa-solid fa-box-open"></i> Paketler</a>
+      <a href="gavia-mrr-raporu.html"><i class="fa-solid fa-chart-line"></i> MRR Raporu</a>
+      <a href="gavia-churn-riski.html"><i class="fa-solid fa-triangle-exclamation"></i> Churn Riski</a>
+    </nav>
+    <div class="pc-top-r">
+      <div class="pc-persona">
+        <div class="pc-ava">DA</div>
+        <div class="pc-persona-id"><b>Deniz Aksoy</b><span>Gavia Platform Yöneticisi</span></div>
+      </div>
+      <a class="pc-back" href="crm-panel.html?role=superadmin"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>CRM'e Dön</span></a>
+    </div>
+  </header>
+
+  <main class="pc-main">
+    <div class="pc-head">
+      <div class="pc-eyebrow"><i class="fa-solid fa-box-open"></i> Platform Konsolu</div>
+      <h1 class="pc-h1">Paketler</h1>
+      <p class="pc-sub">5 abonelik paketi — limitler ve modül kapsamı her seviyede kümülatif olarak genişler.</p>
+    </div>
+
+    <div class="pkg-grid">
+      <div class="pkg-card">
+        <div class="pkg-ico"><i class="fa-solid fa-seedling"></i></div>
+        <div><div class="pkg-name">Ücretsiz</div><div class="pkg-price">₺0<span>/ ay</span></div></div>
+        <ul class="pkg-feat">
+          <li><i class="fa-solid fa-check"></i> 3 kullanıcı · 1 şantiye</li>
+          <li><i class="fa-solid fa-check"></i> 1 GB depolama · SMS yok</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Şantiye &amp; Saha</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Görev Takibi</li>
+        </ul>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-ico"><i class="fa-solid fa-layer-group"></i></div>
+        <div><div class="pkg-name">Basic</div><div class="pkg-price">₺7.900<span>/ ay</span></div></div>
+        <ul class="pkg-feat">
+          <li><i class="fa-solid fa-check"></i> 10 kullanıcı · 2 şantiye</li>
+          <li><i class="fa-solid fa-check"></i> 10 GB depolama · 1.000 SMS</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Personel &amp; İK</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Saha Kayıtları</li>
+        </ul>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-ico"><i class="fa-solid fa-gem"></i></div>
+        <div><div class="pkg-name">Professional</div><div class="pkg-price">₺14.900<span>/ ay</span></div></div>
+        <ul class="pkg-feat">
+          <li><i class="fa-solid fa-check"></i> 25 kullanıcı · 5 şantiye</li>
+          <li><i class="fa-solid fa-check"></i> 50 GB depolama · 5.000 SMS</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Satın Alma · Cariler</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Hakediş &amp; Sözleşme</li>
+        </ul>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-ico"><i class="fa-solid fa-handshake"></i></div>
+        <div><div class="pkg-name">CRM + Sales</div><div class="pkg-price">₺19.900<span>/ ay</span></div></div>
+        <ul class="pkg-feat">
+          <li><i class="fa-solid fa-check"></i> 40 kullanıcı · 8 şantiye</li>
+          <li><i class="fa-solid fa-check"></i> 100 GB depolama · 10.000 SMS</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Satış CRM</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Müşteri Portalı</li>
+        </ul>
+      </div>
+      <div class="pkg-card">
+        <div class="pkg-ico"><i class="fa-solid fa-crown"></i></div>
+        <div><div class="pkg-name">Enterprise</div><div class="pkg-price">₺34.900<span>/ ay</span></div></div>
+        <ul class="pkg-feat">
+          <li><i class="fa-solid fa-check"></i> Sınırsız kullanıcı/şantiye</li>
+          <li><i class="fa-solid fa-check"></i> 500 GB depolama · 25.000 SMS</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Stok &amp; ERP · Çoklu Firma</li>
+          <li class="plus"><i class="fa-solid fa-plus"></i> Öncelikli destek</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pc-card">
+      <div class="pc-card-head">
+        <div><div class="pc-card-title"><i class="fa-solid fa-table-cells"></i> Paket × Modül / Limit Matrisi</div><div class="pc-card-sub">10 modül kümülatif olarak açılır; her paket bir önceki paketin kapsamını içerir.</div></div>
+      </div>
+      <div class="pc-card-body flush">
+        <table class="pkg-matrix">
+          <thead>
+            <tr>
+              <th>Kapsam</th>
+              <th>Ücretsiz</th>
+              <th>Basic</th>
+              <th>Professional</th>
+              <th>CRM + Sales</th>
+              <th>Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sec-row"><td colspan="6">Modüller</td></tr>
+            <tr><td>Şantiye &amp; Saha</td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Görev Takibi</td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Personel &amp; İK</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Saha Kayıtları</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Satın Alma</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Cariler</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Hakediş &amp; Sözleşme</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Satış CRM</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Stok &amp; ERP</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+            <tr><td>Çoklu Firma Yönetimi</td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="no"><i class="fa-solid fa-minus"></i></td><td class="yes"><i class="fa-solid fa-check"></i></td></tr>
+
+            <tr class="sec-row"><td colspan="6">Limitler</td></tr>
+            <tr><td>Kullanıcı</td><td>3</td><td>10</td><td>25</td><td>40</td><td>Sınırsız</td></tr>
+            <tr><td>Şantiye</td><td>1</td><td>2</td><td>5</td><td>8</td><td>Sınırsız</td></tr>
+            <tr><td>Depolama</td><td>1 GB</td><td>10 GB</td><td>50 GB</td><td>100 GB</td><td>500 GB</td></tr>
+            <tr><td>Aylık SMS</td><td>Yok</td><td>1.000</td><td>5.000</td><td>10.000</td><td>25.000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> Müşteri Portalı, CRM + Sales paketinde Satış CRM ile birlikte açılan ayrı bir portal yüzeyidir; modül sayacına dahil değildir.</div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/ui.js"></script>
+</body>
+</html>

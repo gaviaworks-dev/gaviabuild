@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<script>
+/* GUARD — sayfa-içi rol çözümü (gavia-panel.html ile AYNI desen, bkz. shell.js §
+   "GAVIA PLATFORM KONSOLU" yorumu): ?role → localStorage(gv_crm_role) → superadmin
+   DEĞİLSE gerçek 403 ekranına gider. En üstte, shell.js'ten ÖNCE çalışır — bu geliştirici
+   demo sayfası yalnız superadmin'e görünür olmalı (Dalga 5 devir notu, tasks/acik-kalemler.md).
+   shell.js'in kendi bölüm-seviyesi guard'ı (data-sec="ayarlar") zaten superadmin+sahip
+   DIŞINDAKİ rolleri 403'e düşürür; bu ek kontrol sahip'i de dışlayarak YALNIZ superadmin
+   bırakır — shell.js'e dokunmadan (Denetim-D dosya yetkisi dışı) tam kilitleme. */
+(function(){
+  try{
+    var q = new URLSearchParams(location.search);
+    var role = q.get('role');
+    if(role){ localStorage.setItem('gv_crm_role', role); }
+    else { role = localStorage.getItem('gv_crm_role'); }
+    if(role !== 'superadmin'){ location.replace('crm-sistem-403.html?hedef=' + encodeURIComponent('ayarlar/filtre-demo')); }
+  }catch(e){ location.replace('crm-sistem-403.html?hedef=ayarlar%2Ffiltre-demo'); }
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Filtre &amp; Tarih Aralığı Bileşenleri — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Filtre & Tarih Aralığı Demo ============
+   Bu sayfa Dalga 1 / T-CSS'in §9 (gvFilterPanel) ve §13 (gvDateRange) ortak
+   bileşenlerinin CANLI örneğidir — tasks/spec-filtre-tarih.md'nin karşılığı.
+   Diğer track'ler Dalga 4'te kendi liste sayfalarına bu iskeleti uyarlayacak. */
+.demo-note{
+  display:flex;gap:14px;padding:16px 20px;margin-bottom:20px;
+  background:rgba(var(--acc-rgb),.06);border:1px solid rgba(var(--acc-rgb),.22);border-radius:var(--r-lg);
+}
+.demo-note i{color:var(--acc-ink);font-size:17px;flex:none;margin-top:2px}
+.demo-note p{font-size:13px;color:var(--ink-2);line-height:1.6}
+.demo-note code{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px}
+.col-il{width:150px}
+.col-tarih{width:130px}
+.col-durum{width:120px}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="filtre-demo">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Sistem · Bileşen Vitrini</div>
+        <h1>Filtre &amp; Tarih Aralığı Bileşenleri</h1>
+        <div class="ph-sub">§9 gelişmiş filtre paneli + §13 tarih aralığı — Dalga 1 ortak bileşen demosu</div>
+      </div>
+    </div>
+
+    <div class="demo-note">
+      <i class="fa-solid fa-circle-info"></i>
+      <p>
+        Bu sayfadaki kayıtlar <strong>kurgusal demo verisidir</strong>, kanonik kadro/şantiye
+        sayılarıyla ilgisi yoktur. Amaç, <code>ui.css</code> + <code>ui.js</code>'e eklenen
+        <code>gvFilterPanel</code> ve <code>gvDateRange</code> bileşenlerini çalışır halde
+        göstermektir. HTML iskeleti ve JS init çağrısı birebir <code>tasks/spec-filtre-tarih.md</code>
+        dosyasındadır — Dalga 4'te 18 liste sayfası bu deseni benimseyecek.
+      </p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-list-check"></i></div>
+        <div><div class="kpi-num num" data-table-count>12</div><div class="kpi-lbl">Demo kaydı</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-check"></i></div>
+        <div><div class="kpi-num num">8</div><div class="kpi-lbl">Aktif</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-pause"></i></div>
+        <div><div class="kpi-num num">4</div><div class="kpi-lbl">Pasif</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-sliders"></i></div>
+        <div><div class="kpi-num num" id="fpBadgeEcho">0</div><div class="kpi-lbl">Uygulanan gelişmiş filtre</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="filter-bar">
+        <div class="fb-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Demo kaydı ara" data-table-search="#tblDemo">
+        </div>
+        <div class="chips" data-target="#tblDemo">
+          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
+          <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">8</span></button>
+          <button class="chip" data-filter="pasif">Pasif <span class="ch-cnt">4</span></button>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpDemo">
+          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+        </button>
+      </div>
+
+      <div class="gv-achips-row" id="achipsRow" hidden>
+        <div class="gv-achips" id="achipsList"></div>
+        <div class="gv-achips-acts">
+          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor — bu prototipte simülasyondur.">
+            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+          </button>
+        </div>
+      </div>
+
+      <div class="gc-body flush">
+        <table class="gtable" id="tblDemo">
+          <thead>
+            <tr>
+              <th>Kayıt</th>
+              <th class="col-il">İl</th>
+              <th class="col-tarih">Tarih</th>
+              <th class="col-durum">Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tblDemoBody"></tbody>
+        </table>
+      </div>
+      <div class="gv-empty" data-table-empty hidden>
+        <div class="ge-ico"><i class="fa-solid fa-filter-circle-xmark"></i></div>
+        <h4>Sonuç bulunamadı</h4>
+        <p>Seçili filtrelerle eşleşen demo kaydı yok. Filtreleri gevşetmeyi deneyin.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ §9 — sağ off-canvas gelişmiş filtre paneli ============ -->
+<div class="gv-fpanel-ov" id="fpDemoOv">
+  <aside class="gv-fpanel" id="fpDemo" role="dialog" aria-modal="true" aria-label="Gelişmiş Filtre">
+    <div class="gv-fpanel-head">
+      <h3><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</h3>
+      <button type="button" class="gv-fpanel-close" aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="gv-fpanel-body">
+      <div class="gfield">
+        <label>Durum</label>
+        <select data-fp-key="durum" data-fp-label="Durum">
+          <option value="">Tümü</option>
+          <option value="aktif">Aktif</option>
+          <option value="pasif">Pasif</option>
+        </select>
+      </div>
+      <div class="gfield">
+        <label>İl</label>
+        <select data-fp-key="il" data-fp-label="İl">
+          <option value="">Tümü</option>
+          <option value="istanbul">İstanbul</option>
+          <option value="izmir">İzmir</option>
+          <option value="kocaeli">Kocaeli</option>
+        </select>
+      </div>
+      <div class="gfield">
+        <label>Şantiye</label>
+        <select data-fp-key="santiye" data-fp-label="Şantiye">
+          <option value="">Tümü</option>
+          <option value="vadi">Vadi Konakları</option>
+          <option value="liman">Liman Lojistik</option>
+          <option value="merkez">Merkez Şantiye</option>
+        </select>
+      </div>
+      <div class="gfield">
+        <label>Onay Durumu</label>
+        <select data-fp-key="onay" data-fp-label="Onay Durumu">
+          <option value="">Tümü</option>
+          <option value="bekliyor">Onay bekliyor</option>
+          <option value="onaylandi">Onaylandı</option>
+          <option value="reddedildi">Reddedildi</option>
+        </select>
+      </div>
+      <div class="gfield">
+        <label>Tarih Aralığı</label>
+        <div data-gvdaterange data-fp-key="tarih" data-fp-label="Tarih"></div>
+      </div>
+    </div>
+    <div class="gv-fpanel-foot">
+      <button type="button" class="btn btn-ghost" data-fp-clear">Temizle</button>
+      <button type="button" class="btn btn-acc" data-fp-apply>Uygula</button>
+    </div>
+  </aside>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  'use strict';
+  /* ---- demo veri seti — kurgusal, kanonik kadro/şantiyeyle bağı yok ---- */
+  var IL_AD = {istanbul:'İstanbul', izmir:'İzmir', kocaeli:'Kocaeli'};
+  var SANTIYE_AD = {vadi:'Vadi Konakları', liman:'Liman Lojistik', merkez:'Merkez Şantiye'};
+  var ROWS = [
+    {ad:'Demo Kaydı 001', il:'istanbul', santiye:'vadi',   tarih:'2026-06-29', durum:'aktif', onay:'onaylandi'},
+    {ad:'Demo Kaydı 002', il:'istanbul', santiye:'vadi',   tarih:'2026-06-25', durum:'aktif', onay:'bekliyor'},
+    {ad:'Demo Kaydı 003', il:'izmir',    santiye:'liman',  tarih:'2026-06-18', durum:'aktif', onay:'onaylandi'},
+    {ad:'Demo Kaydı 004', il:'izmir',    santiye:'liman',  tarih:'2026-06-10', durum:'pasif', onay:'reddedildi'},
+    {ad:'Demo Kaydı 005', il:'kocaeli',  santiye:'merkez', tarih:'2026-06-30', durum:'aktif', onay:'onaylandi'},
+    {ad:'Demo Kaydı 006', il:'kocaeli',  santiye:'merkez', tarih:'2026-05-28', durum:'pasif', onay:'bekliyor'},
+    {ad:'Demo Kaydı 007', il:'istanbul', santiye:'liman',  tarih:'2026-06-27', durum:'aktif', onay:'onaylandi'},
+    {ad:'Demo Kaydı 008', il:'istanbul', santiye:'merkez', tarih:'2026-06-01', durum:'aktif', onay:'bekliyor'},
+    {ad:'Demo Kaydı 009', il:'izmir',    santiye:'vadi',   tarih:'2026-04-22', durum:'pasif', onay:'reddedildi'},
+    {ad:'Demo Kaydı 010', il:'kocaeli',  santiye:'liman',  tarih:'2026-06-15', durum:'aktif', onay:'onaylandi'},
+    {ad:'Demo Kaydı 011', il:'istanbul', santiye:'vadi',   tarih:'2026-06-05', durum:'pasif', onay:'bekliyor'},
+    {ad:'Demo Kaydı 012', il:'izmir',    santiye:'merkez', tarih:'2026-06-30', durum:'aktif', onay:'onaylandi'}
+  ];
+  function fmtTarih(iso){
+    var d = new Date(iso + 'T00:00:00');
+    var AY = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+    return d.getDate() + ' ' + AY[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  var tbody = document.getElementById('tblDemoBody');
+  tbody.innerHTML = ROWS.map(function(r){
+    return '<tr data-f="' + r.durum + '" data-durum="' + r.durum + '" data-il="' + r.il + '" data-santiye="' + r.santiye + '" data-onay="' + r.onay + '" data-tarih="' + r.tarih + '">'
+      + '<td><div class="gcell"><div class="gcell-mark">' + r.ad.slice(-2) + '</div>'
+      + '<div class="gcell-info"><div class="gcell-name">' + r.ad + '</div>'
+      + '<span class="gcell-sub">' + SANTIYE_AD[r.santiye] + '</span></div></div></td>'
+      + '<td>' + IL_AD[r.il] + '</td>'
+      + '<td>' + fmtTarih(r.tarih) + '</td>'
+      + '<td><span class="gstat ' + (r.durum === 'aktif' ? 'ok' : 'off') + '">' + (r.durum === 'aktif' ? 'Aktif' : 'Pasif') + '</span></td>'
+      + '<td><div class="row-acts"><button type="button" class="ia-btn" data-no-confirm aria-label="Görüntüle"><i class="fa-solid fa-eye"></i></button></div></td>'
+      + '</tr>';
+  }).join('');
+
+  /* ---- §9 + §13 bileşen kurulumu — spec: tasks/spec-filtre-tarih.md ---- */
+  var fp = window.gvFilterPanel.init('#fpDemo', {
+    table: '#tblDemo',
+    activeRow: '#achipsRow',
+    onApply: function(state){
+      document.getElementById('fpBadgeEcho').textContent = Object.keys(state).length;
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Araç Bakım Geçmişi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Araç Bakım Geçmişi (§12) ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.veh-mini{display:flex;align-items:center;gap:16px;padding:18px 22px;flex-wrap:wrap}
+.vm-mark{width:44px;height:44px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:17px;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.vm-info b{display:block;font-size:14.5px;font-weight:800;color:var(--ink)}
+.vm-info span{font-size:12px;color:var(--muted)}
+.vm-badges{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+#tblBakim{min-width:1040px}
+#tblBakim .num{text-align:right;white-space:nowrap}
+.bk-tur-tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:7px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line);white-space:nowrap}
+.bk-tur-tag.cls-ariza{background:var(--danger-tint);color:var(--danger);border-color:transparent}
+.bk-tur-tag.cls-periyodik{background:rgba(var(--acc-rgb),.1);color:var(--acc-ink);border-color:transparent}
+.bk-detail-toggle{background:none;border:none;padding:6px;cursor:pointer;color:var(--muted);font-size:13px;border-radius:var(--r-sm)}
+.bk-detail-toggle:hover{background:var(--bg);color:var(--acc-ink)}
+.bk-detail-toggle.is-open i{transform:rotate(180deg)}
+.bk-detail-toggle i{transition:.15s var(--ease)}
+tr.bk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
+.bk-detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 20px}
+@media(max-width:900px){.bk-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.bk-detail-grid dt{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.bk-detail-grid dd{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.bk-detail-grid .full{grid-column:1/-1}
+
+.ekle-card{display:none;margin-bottom:16px}
+.ekle-card.open{display:block}
+.ekle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:20px 22px}
+@media(max-width:900px){.ekle-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ekle-grid{grid-template-columns:1fr}}
+.ekle-grid .gfield.full{grid-column:1/-1}
+.ekle-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--line)}
+
+.role-note{display:flex;align-items:flex-start;gap:13px;background:var(--bg);border:1px dashed var(--line-2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px}
+.role-note .rn-ico{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--paper);border:1px solid var(--line);color:var(--muted);font-size:14px}
+.role-note .rn-b{min-width:0;line-height:1.5}
+.role-note .rn-b b{font-size:13px;color:var(--ink-2);font-weight:700}
+.role-note .rn-b p{font-size:12.5px;color:var(--muted);margin-top:3px}
+</style>
+</head>
+<body data-sec="varlik" data-screen="arac-bakim">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-operasyon-arac.html">Araçlar</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="crm-operasyon-arac-detay.html" id="crumbAracLink">ARC-01</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Bakım Geçmişi</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Günlük Kayıt</div>
+        <h1>Araç Bakım Geçmişi</h1>
+        <div class="ph-sub" id="pageSub">—</div>
+      </div>
+      <div class="ph-actions">
+        <select id="fAracSec" class="btn btn-ghost btn-sm" style="padding:9px 14px"></select>
+        <button type="button" class="btn btn-acc btn-sm" id="btnEkleAc" data-no-confirm><i class="fa-solid fa-plus"></i> Bakım Kaydı Ekle</button>
+      </div>
+    </div>
+
+    <div class="role-note" id="arsivNote" hidden>
+      <div class="rn-ico"><i class="fa-solid fa-box-archive"></i></div>
+      <div class="rn-b"><b>Bu araç arşivlenmiş</b><p>Arşivlenmiş araçlara yeni bakım kaydı eklenemez — geçmiş kayıtlar yalnızca görüntülenebilir.</p></div>
+    </div>
+
+    <div class="gv-card">
+      <div class="veh-mini">
+        <div class="vm-mark" id="vmMark"><i class="fa-solid fa-car-side"></i></div>
+        <div class="vm-info"><b id="vmTitle">—</b><span id="vmSub">—</span></div>
+        <div class="vm-badges" id="vmBadges"></div>
+      </div>
+    </div>
+
+    <div class="gv-card ekle-card" id="ekleCard">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-plus"></i> Yeni Bakım Kaydı</div></div>
+      <form class="gform" id="bakimForm" onsubmit="return false">
+        <div class="ekle-grid">
+          <div class="gfield"><label for="fTarih">Tarih</label><input type="date" id="fTarih" value="2026-07-02"></div>
+          <div class="gfield"><label for="fKm">Kilometre</label><input type="number" id="fKm" min="0" placeholder="ör. 43500"></div>
+          <div class="gfield">
+            <label for="fTur">Bakım Türü</label>
+            <select id="fTur">
+              <option value="periyodik">Periyodik bakım</option>
+              <option value="yag">Yağ bakımı</option>
+              <option value="lastik">Lastik değişimi</option>
+              <option value="fren">Fren sistemi</option>
+              <option value="aku">Akü değişimi</option>
+              <option value="motor-arizasi">Motor arızası</option>
+              <option value="elektrik-arizasi">Elektrik arızası</option>
+              <option value="kaporta">Kaporta işlemi</option>
+              <option value="hasar-onarimi">Hasar onarımı</option>
+              <option value="genel-kontrol">Genel kontrol</option>
+              <option value="diger">Diğer</option>
+            </select>
+          </div>
+          <div class="gfield"><label for="fServis">Servis</label><input type="text" id="fServis" placeholder="ör. Ford Yetkili Servis — Ümraniye"></div>
+          <div class="gfield"><label for="fParcalar">Değiştirilen Parçalar <span class="gf-hint">(isteğe bağlı)</span></label><input type="text" id="fParcalar" placeholder="ör. Yağ filtresi, hava filtresi"></div>
+          <div class="gfield"><label for="fFatura">Fatura No</label><input type="text" id="fFatura" placeholder="ör. FTR-2026-0512"></div>
+          <div class="gfield"><label for="fIscilik">İşçilik Tutarı (₺)</label><input type="number" id="fIscilik" min="0" placeholder="ör. 1200"></div>
+          <div class="gfield"><label for="fParcaTutar">Parça Tutarı (₺)</label><input type="number" id="fParcaTutar" min="0" placeholder="ör. 3000"></div>
+          <div class="gfield"><label for="fToplamGoster">Toplam Tutar</label><input type="text" id="fToplamGoster" readonly value="₺0" style="font-weight:800;color:var(--ink)"></div>
+          <div class="gfield"><label for="fServisteGun">Serviste Kalma Süresi <span class="gf-hint">(gün, isteğe bağlı)</span></label><input type="number" id="fServisteGun" min="0" placeholder="ör. 3"></div>
+          <div class="gfield"><label for="fGaranti">Garanti Kapsamında mı</label><select id="fGaranti"><option value="hayir">Hayır</option><option value="evet">Evet</option></select></div>
+          <div class="gfield"><label for="fArizaKaydi">Arıza Kaydı No <span class="gf-hint">(isteğe bağlı)</span></label><input type="text" id="fArizaKaydi" placeholder="ör. AR-2026-011"></div>
+          <div class="gfield full"><label for="fNotlar">Notlar <span class="gf-hint">(isteğe bağlı)</span></label><textarea id="fNotlar" rows="2" placeholder="Yapılan işlemler…"></textarea></div>
+        </div>
+        <div class="ekle-foot">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnEkleVazgec">Vazgeç</button>
+          <button type="button" class="btn btn-acc btn-sm" id="btnEkleKaydet" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Kaydı Ekle</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Kronolojik Bakım Kayıtları</div>
+        <span class="gtag" id="bkCount">0 kayıt</span>
+      </div>
+      <div class="gc-body flush">
+        <table class="gtable" id="tblBakim">
+          <thead><tr><th>Tarih</th><th class="num">Km</th><th>Tür</th><th>Servis</th><th class="num">Toplam Tutar</th><th>Fatura No</th><th>Garanti</th><th></th></tr></thead>
+          <tbody id="bakimBody"></tbody>
+        </table>
+        <div class="gv-empty" id="bakimEmpty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+          <h4>Bakım kaydı yok</h4>
+          <p>Bu araç için henüz kayıtlı bir bakım işlemi bulunmuyor.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye', genelmerkez:'Genel Merkez'};
+  /* ---- Bakım türleri — kararlar.md/plan §7.1 11 sabit seçenek (eski serbest 5 türden genişletildi) ---- */
+  var TUR_LBL = {
+    periyodik:'Periyodik bakım', yag:'Yağ bakımı', lastik:'Lastik değişimi', fren:'Fren sistemi',
+    aku:'Akü değişimi', 'motor-arizasi':'Motor arızası', 'elektrik-arizasi':'Elektrik arızası',
+    kaporta:'Kaporta işlemi', 'hasar-onarimi':'Hasar onarımı', 'genel-kontrol':'Genel kontrol', diger:'Diğer'
+  };
+  var TUR_ARIZA = ['motor-arizasi', 'elektrik-arizasi', 'hasar-onarimi'];
+  function turClass(tur){ return TUR_ARIZA.indexOf(tur) !== -1 ? 'cls-ariza' : (tur === 'periyodik' || tur === 'genel-kontrol' ? 'cls-periyodik' : ''); }
+  /* 4-durumlu — arac.html/arac-arsiv.html'in kanoniğiyle hizalı (karar: 'pasif' geçici/
+     operasyonel durumdur, arşiv sayılmaz — T-ARC1 acik-kalemler.md madde 1 devri) */
+  var ARCHIVE_STATES = ['arsivlendi', 'satildi', 'hurda', 'kiralamaBitti'];
+  var BUGUN = new Date(2026, 6, 2);
+  function gunFarki(iso){ return Math.round((new Date(iso + 'T00:00:00') - BUGUN) / 86400000); }
+  function tarihRozet(iso){
+    if(!iso) return {cls:'ok', lbl:null, warn:false};
+    var g = gunFarki(iso);
+    if(g < 0) return {cls:'danger', lbl:(-g) + ' gün geçti', warn:true};
+    if(g <= 30) return {cls:'warn', lbl:g + ' gün kaldı', warn:true};
+    return {cls:'ok', lbl:null, warn:false};
+  }
+  function ddmmyyyy(iso){ if(!iso) return '—'; var p = iso.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+
+  /* ---- §12 araç + bakım geçmişi verisi — crm-operasyon-arac-detay.html ile
+     tarih/km alanlarında SENKRON (bkz. o dosyanın bakimGecmis dizisi). ---- */
+  /* ---- kayıt yardımcı — iscilik+parca ayrı girilir, toplam DAİMA türetilir (uydurma tek
+     alan yok). degisenParcalar/garanti/servisteGun/arizaKaydi YENİ alanlar (plan §1.2
+     Sekme 6 / §7.1 11-tür genişlemesi). ---- */
+  function bk(tarih, km, tur, servis, iscilik, parca, fatura, notlar, extra){
+    var r = {tarih:tarih, km:km, tur:tur, servis:servis, iscilik:iscilik, parca:parca, tutar:iscilik+parca, fatura:fatura, notlar:notlar,
+      degisenParcalar:'—', garanti:false, arizaKaydi:null, servisteGun:null};
+    return extra ? Object.assign(r, extra) : r;
+  }
+  var ARAC = {
+    'ARC-01':{plaka:'34 ABC 123', model:'Ford Ranger 4x4 Pikap', santiye:'vadi', durum:'aktif', guncelKm:42300, sonrakiBakimKm:50000, sonrakiBakimTarihi:'2026-08-15',
+      gecmis:[
+        bk('2026-05-15', 40000, 'periyodik', 'Ford Yetkili Servis — Ümraniye', 1200, 3650, 'FTR-2026-0512', 'Yağ, filtre, fren kontrolü', {degisenParcalar:'Motor yağı, yağ filtresi, hava filtresi, fren balatası (ön)', garanti:false, servisteGun:1}),
+        bk('2025-11-12', 28500, 'yag', 'Ford Yetkili Servis — Ümraniye', 450, 1650, 'FTR-2025-1188', 'Yağ + filtre değişimi, genel kontrol', {degisenParcalar:'Motor yağı, yağ filtresi', garanti:true, servisteGun:1}),
+        bk('2025-06-03', 15200, 'lastik', 'Lassa Bayii — Çekmeköy', 400, 6000, 'LSB-2025-0940', '4 lastik değişimi', {degisenParcalar:'4× 265/70 R16 lastik', garanti:false, servisteGun:1})
+      ]},
+    'ARC-02':{plaka:'34 SRV 641', model:'Mercedes Sprinter 316 Servis', santiye:'vadi', durum:'aktif', guncelKm:61200, sonrakiBakimKm:70000, sonrakiBakimTarihi:'2026-08-20',
+      gecmis:[
+        bk('2026-05-20', 58000, 'fren', 'Mercedes Yetkili Servis — Kartal', 1400, 3800, 'MB-2026-0771', 'Periyodik bakım + fren balata değişimi', {degisenParcalar:'Ön/arka fren balatası, fren diski', garanti:false, servisteGun:2}),
+        bk('2025-12-02', 44100, 'yag', 'Mercedes Yetkili Servis — Kartal', 500, 2150, 'MB-2025-1420', 'Yağ + filtre değişimi', {degisenParcalar:'Motor yağı, yağ+hava filtresi', garanti:true, servisteGun:1})
+      ]},
+    'ARC-03':{plaka:'35 KLT 208', model:'Toyota Hilux Pikap', santiye:'liman', durum:'aktif', guncelKm:78450, sonrakiBakimKm:80000, sonrakiBakimTarihi:'2026-09-01',
+      gecmis:[
+        bk('2026-04-10', 74000, 'periyodik', 'Toyota Yetkili Servis — Menemen', 900, 3200, 'TY-2026-0355', 'Yağ, filtre, lastik rotasyonu', {degisenParcalar:'Motor yağı, yağ filtresi, polen filtresi', garanti:false, servisteGun:1})
+      ]},
+    'ARC-04':{plaka:'41 DBL 457', model:'Fiat Doblo Cargo Panelvan', santiye:'merkez', durum:'aktif', guncelKm:87400, sonrakiBakimKm:85000, sonrakiBakimTarihi:'2026-06-30',
+      gecmis:[
+        bk('2026-02-02', 80000, 'periyodik', 'Fiat Yetkili Servis — Gebze', 700, 2600, 'FT-2026-0129', 'Yağ, filtre kontrolü', {degisenParcalar:'Motor yağı, yağ filtresi', garanti:false, servisteGun:1}),
+        bk('2026-06-30', 87400, 'motor-arizasi', 'Fiat Yetkili Servis — Gebze', 0, 0, '—', 'Şanzıman arızası — parça bekleniyor, araç serviste', {degisenParcalar:'Şanzıman (parça temini bekleniyor)', garanti:false, arizaKaydi:'AR-2026-011', servisteGun:null})
+      ]},
+    'ARC-05':{plaka:'34 GNL 310', model:'Renault Megane Sedan', santiye:'genelmerkez', durum:'aktif', guncelKm:18900, sonrakiBakimKm:30000, sonrakiBakimTarihi:'2026-11-01',
+      gecmis:[bk('2026-02-02', 12000, 'periyodik', 'Renault Yetkili Servis — Ataşehir', 600, 2300, 'RN-2026-0087', 'İlk periyodik bakım', {degisenParcalar:'Motor yağı, yağ+polen filtresi', garanti:true, servisteGun:1})]},
+    'ARC-06':{plaka:'41 FTR 118', model:'Ford Transit 350L Kamyonet', santiye:'merkez', durum:'aktif', guncelKm:132600, sonrakiBakimKm:135000, sonrakiBakimTarihi:'2026-09-15',
+      gecmis:[bk('2026-03-18', 125000, 'periyodik', 'Ford Yetkili Servis — Gebze', 1000, 3700, 'FTR-2026-0288', 'Yağ, filtre, fren kontrolü', {degisenParcalar:'Motor yağı, yağ filtresi, fren balatası (arka)', garanti:false, servisteGun:1})]},
+    'ARC-07':{plaka:'34 ESK 771', model:'Renault Kangoo Van', santiye:'merkez', durum:'satildi', guncelKm:168400, sonrakiBakimKm:null, sonrakiBakimTarihi:null,
+      gecmis:[bk('2026-01-10', 165000, 'periyodik', 'Renault Servis — Gebze', 350, 1450, 'RN-2026-0021', 'Satış öncesi son periyodik bakım', {degisenParcalar:'Motor yağı, yağ filtresi', garanti:false, servisteGun:1})]},
+    'ARC-08':{plaka:'34 PLK 552', model:'Volkswagen Transporter T6', santiye:'genelmerkez', durum:'aktif', guncelKm:54200, sonrakiBakimKm:65000, sonrakiBakimTarihi:'2026-08-05',
+      gecmis:[bk('2026-04-05', 50000, 'periyodik', 'VW Yetkili Servis — Ümraniye', 950, 3000, 'VW-2026-0410', 'Yağ, filtre, fren kontrolü', {degisenParcalar:'Motor yağı, yağ filtresi, fren balatası (ön)', garanti:false, servisteGun:1})]},
+    'ARC-09':{plaka:'34 KRL 090', model:'Fiat Egea Sedan', santiye:'liman', durum:'kiralamaBitti', guncelKm:32100, sonrakiBakimKm:null, sonrakiBakimTarihi:null,
+      gecmis:[bk('2026-01-15', 28000, 'periyodik', 'Kiralama firması servis ağı', 0, 0, '—', 'Kiralama sözleşmesi kapsamında — bedelsiz', {degisenParcalar:'Motor yağı, yağ filtresi', garanti:true, servisteGun:1})]},
+    'ARC-10':{plaka:'41 HRD 233', model:'Ford Cargo 1826 Kamyon', santiye:'merkez', durum:'hurda', guncelKm:310500, sonrakiBakimKm:null, sonrakiBakimTarihi:null,
+      gecmis:[bk('2025-11-05', 305000, 'periyodik', 'Ford Ticari Servis — Dilovası', 1300, 3800, 'FTR-2025-1901', 'Kaza öncesi son periyodik bakım', {degisenParcalar:'Motor yağı, yağ filtresi, fren balatası (tüm aks)', garanti:false, servisteGun:2})]}
+  };
+
+  var q = new URLSearchParams(location.search);
+  var key = ARAC[q.get('arac')] ? q.get('arac') : 'ARC-01';
+  var v = ARAC[key];
+
+  var selArac = document.getElementById('fAracSec');
+  Object.keys(ARAC).forEach(function(no){
+    var opt = document.createElement('option');
+    opt.value = no; opt.textContent = no + ' — ' + ARAC[no].plaka;
+    if(no === key) opt.selected = true;
+    selArac.appendChild(opt);
+  });
+  selArac.addEventListener('change', function(){ location.href = 'crm-operasyon-arac-bakim.html?arac=' + selArac.value; });
+
+  function render(){
+    document.title = key + ' Bakım Geçmişi — Gavia CRM';
+    document.getElementById('crumbAracLink').textContent = key;
+    document.getElementById('crumbAracLink').href = 'crm-operasyon-arac-detay.html?arac=' + key;
+    document.getElementById('pageSub').textContent = v.plaka + ' — ' + v.model + ' için kronolojik bakım kayıtları';
+    document.getElementById('vmTitle').textContent = key + ' — ' + v.plaka;
+    document.getElementById('vmSub').textContent = v.model + ' · ' + SANTIYE_ADI[v.santiye] + ' · Güncel km: ' + v.guncelKm.toLocaleString('tr-TR');
+
+    var archived = ARCHIVE_STATES.indexOf(v.durum) !== -1;
+    document.getElementById('arsivNote').hidden = !archived;
+    document.getElementById('btnEkleAc').disabled = archived;
+    if(archived) document.getElementById('btnEkleAc').setAttribute('data-tip', 'Arşivlenmiş araçlara yeni kayıt eklenemez');
+
+    var badges = '';
+    if(v.sonrakiBakimKm){
+      var kalan = v.sonrakiBakimKm - v.guncelKm;
+      badges += '<span class="gstat ' + (kalan < 0 ? 'danger' : (kalan <= 3000 ? 'warn' : 'ok')) + '"><i class="fa-solid fa-gauge-high"></i> ' + (kalan < 0 ? Math.abs(kalan).toLocaleString('tr-TR') + ' km hedef aşıldı' : kalan.toLocaleString('tr-TR') + ' km kaldı') + '</span>';
+    }
+    if(v.sonrakiBakimTarihi){
+      var r = tarihRozet(v.sonrakiBakimTarihi);
+      badges += '<span class="gstat ' + (r.warn ? r.cls : 'ok') + '"><i class="fa-solid fa-calendar-days"></i> Sonraki bakım: ' + ddmmyyyy(v.sonrakiBakimTarihi) + (r.warn ? ' — ' + r.lbl : '') + '</span>';
+    } else if(archived){
+      badges += '<span class="gstat off">Planlı bakım yok — araç arşivde</span>';
+    }
+    document.getElementById('vmBadges').innerHTML = badges;
+
+    var sorted = v.gecmis.slice().sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
+    document.getElementById('bkCount').textContent = sorted.length + ' kayıt';
+    document.getElementById('bakimEmpty').hidden = sorted.length !== 0;
+    document.getElementById('bakimBody').innerHTML = sorted.map(function(b, i){
+      var did = 'bkd-' + i;
+      var row = '<tr>'
+        + '<td>' + ddmmyyyy(b.tarih) + '</td>'
+        + '<td class="num">' + b.km.toLocaleString('tr-TR') + ' km</td>'
+        + '<td><span class="bk-tur-tag ' + turClass(b.tur) + '">' + TUR_LBL[b.tur] + '</span></td>'
+        + '<td>' + b.servis + '</td>'
+        + '<td class="num">' + (b.tutar ? tl(b.tutar) : '—') + '</td>'
+        + '<td>' + b.fatura + '</td>'
+        + '<td>' + (b.garanti ? '<span class="gstat ok">Garanti kapsamında</span>' : '<span class="gstat off">Kapsam dışı</span>') + '</td>'
+        + '<td><button type="button" class="bk-detail-toggle" data-detail="' + did + '" aria-label="Detayları göster"><i class="fa-solid fa-chevron-down"></i></button></td>'
+        + '</tr>';
+      row += '<tr class="bk-detail-row" id="' + did + '" hidden><td colspan="8"><div class="bk-detail-grid">'
+        + '<div><dt>İşçilik Tutarı</dt><dd>' + (b.iscilik ? tl(b.iscilik) : '—') + '</dd></div>'
+        + '<div><dt>Parça Tutarı</dt><dd>' + (b.parca ? tl(b.parca) : '—') + '</dd></div>'
+        + '<div><dt>Serviste Kalma Süresi</dt><dd>' + (b.servisteGun != null ? b.servisteGun + ' gün' : '—') + '</dd></div>'
+        + '<div><dt>Arıza Kaydı</dt><dd>' + (b.arizaKaydi || '—') + '</dd></div>'
+        + '<div class="full"><dt>Değiştirilen Parçalar</dt><dd>' + (b.degisenParcalar || '—') + '</dd></div>'
+        + '<div class="full"><dt>Notlar</dt><dd>' + (b.notlar || '—') + '</dd></div>'
+        + '</div></td></tr>';
+      return row;
+    }).join('');
+  }
+  render();
+
+  document.getElementById('bakimBody').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-detail]'); if(!btn) return;
+    var el = document.getElementById(btn.getAttribute('data-detail'));
+    el.hidden = !el.hidden;
+    btn.classList.toggle('is-open', !el.hidden);
+  });
+
+  document.getElementById('btnEkleAc').addEventListener('click', function(){
+    if(this.disabled) return;
+    document.getElementById('ekleCard').classList.add('open');
+    this.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+  document.getElementById('btnEkleVazgec').addEventListener('click', function(){
+    document.getElementById('ekleCard').classList.remove('open');
+  });
+
+  /* toplam tutar canlı önizleme — işçilik+parça DAİMA türetilir, elle girilmez */
+  function updateToplamPreview(){
+    var iscilik = parseInt(document.getElementById('fIscilik').value, 10) || 0;
+    var parca = parseInt(document.getElementById('fParcaTutar').value, 10) || 0;
+    document.getElementById('fToplamGoster').value = tl(iscilik + parca);
+  }
+  document.getElementById('fIscilik').addEventListener('input', updateToplamPreview);
+  document.getElementById('fParcaTutar').addEventListener('input', updateToplamPreview);
+
+  document.getElementById('btnEkleKaydet').addEventListener('click', function(){
+    var tarih = document.getElementById('fTarih').value;
+    var km = parseInt(document.getElementById('fKm').value, 10);
+    if(!tarih || !km){ gvToast('Tarih ve kilometre girin.', {type:'danger'}); return; }
+    var servis = document.getElementById('fServis').value.trim();
+    if(!servis){ gvToast('Servis adını girin.', {type:'danger'}); return; }
+    var iscilik = parseInt(document.getElementById('fIscilik').value, 10) || 0;
+    var parca = parseInt(document.getElementById('fParcaTutar').value, 10) || 0;
+    v.gecmis.push({
+      tarih: tarih, km: km, tur: document.getElementById('fTur').value, servis: servis,
+      iscilik: iscilik, parca: parca, tutar: iscilik + parca,
+      fatura: document.getElementById('fFatura').value.trim() || '—',
+      degisenParcalar: document.getElementById('fParcalar').value.trim() || '—',
+      garanti: document.getElementById('fGaranti').value === 'evet',
+      arizaKaydi: document.getElementById('fArizaKaydi').value.trim() || null,
+      servisteGun: document.getElementById('fServisteGun').value ? parseInt(document.getElementById('fServisteGun').value, 10) : null,
+      notlar: document.getElementById('fNotlar').value.trim()
+    });
+    if(km > v.guncelKm) v.guncelKm = km;
+    gvToast('Bakım kaydı eklendi — ' + key + ' geçmişi güncellendi (toplam ' + tl(iscilik + parca) + ').');
+    document.getElementById('bakimForm').reset();
+    document.getElementById('fTarih').value = '2026-07-02';
+    document.getElementById('fToplamGoster').value = '₺0';
+    document.getElementById('ekleCard').classList.remove('open');
+    render();
+  });
+})();
+</script>
+</body>
+</html>

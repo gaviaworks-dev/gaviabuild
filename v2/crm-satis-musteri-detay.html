@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Aylin Şahinoğlu — Müşteri Kartı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Müşteri Kartı (?mst= çok-kayıt şablonu) ============ */
+.ph-back{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:10px;transition:.18s var(--ease)}
+.ph-back i{font-size:11px}
+.ph-back:hover{color:var(--acc-ink)}
+
+.mst-hero{display:grid;grid-template-columns:1.7fr 1fr;gap:30px;padding:26px 26px 24px;margin-bottom:22px}
+.mst-hero-id{display:flex;gap:18px}
+.mst-hero-mark{width:58px;height:58px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:19px;font-weight:800;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.mst-hero-info{flex:1;min-width:0}
+.mst-hero-tags{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.mst-hero-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 22px}
+.mst-hero-meta dt{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.mst-hero-meta dd{font-size:13px;font-weight:700;color:var(--ink)}
+.mst-hero-meta dd a{color:var(--acc-ink)}
+.hero-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.ok .hstat-num{color:var(--ok)}
+a.hstat{border:1px solid transparent;transition:.2s var(--ease)}
+a.hstat:hover{border-color:var(--acc-ink);transform:translateY(-2px);box-shadow:var(--sh-sm)}
+a.hstat .hstat-lbl i{font-size:10px;margin-left:3px;color:var(--acc-ink)}
+@media(max-width:980px){.mst-hero{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){
+  .mst-hero{padding:20px 18px}
+  .mst-hero-id{flex-direction:column}
+  .mst-hero-meta{grid-template-columns:1fr}
+}
+
+/* etiketler */
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tag-row .gtag{background:var(--bg)}
+
+/* sekme çubuğu — cari-detay/santiye-detay ile aynı dil */
+.gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 4px;margin-right:26px;flex:none;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--muted);background:none;border:none;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tab i{font-size:13px}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+.tab-panel{animation:tabIn .22s var(--ease)}
+@keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.dash-cols{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:16px;align-items:start}
+@media(max-width:1100px){.dash-cols{grid-template-columns:minmax(0,1fr)}}
+
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font-size:13px}
+.ctx-row:not(:last-child){border-bottom:1px solid var(--line)}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+.ctx-row .ctx-val a{color:var(--acc-ink)}
+
+/* görüşme notları */
+.note-item{padding:16px 22px;display:flex;gap:14px}
+.note-item:not(:last-child){border-bottom:1px solid var(--line)}
+.note-dot{width:34px;height:34px;flex:none;border-radius:var(--r-circle);background:rgba(var(--acc-rgb),.12);color:var(--acc-ink);display:grid;place-items:center;font-size:12px}
+.note-body{min-width:0;flex:1}
+.note-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.note-who{font-size:13px;font-weight:800;color:var(--ink)}
+.note-date{font-size:11.5px;color:var(--muted);font-weight:600}
+.note-txt{font-size:13px;color:var(--ink-2);line-height:1.6}
+
+/* teklifler tablosu */
+.col-tno{width:150px}
+.col-tut{width:130px}
+.col-tst{width:170px}
+
+/* dosyalar */
+.file-row{display:flex;align-items:center;gap:12px;padding:13px 22px;border-bottom:1px solid var(--line)}
+.file-row:last-child{border-bottom:none}
+.file-ico{width:36px;height:36px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:14px;background:var(--info-tint);color:var(--info)}
+.file-ico.pdf{background:var(--danger-tint);color:var(--danger)}
+.file-ico.img{background:var(--ok-tint);color:var(--ok)}
+.file-info{flex:1;min-width:0;line-height:1.35}
+.file-info b{display:block;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-info span{font-size:11.5px;color:var(--muted)}
+
+/* aktivite zaman çizelgesi */
+.ml-timeline{list-style:none;padding:22px;display:flex;flex-direction:column}
+.ml-item{position:relative;padding-left:34px;padding-bottom:24px}
+.ml-item:last-child{padding-bottom:2px}
+.ml-item::before{content:"";position:absolute;left:9px;top:22px;bottom:-6px;width:2px;background:var(--line)}
+.ml-item:last-child::before{display:none}
+.ml-dot{position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:var(--r-circle);background:var(--paper);border:2px solid var(--line-2);display:grid;place-items:center;font-size:9px;color:var(--muted)}
+.ml-item.done .ml-dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.ml-body b{display:block;font-size:13.5px;font-weight:700;color:var(--ink)}
+.ml-body span{font-size:12px;color:var(--muted)}
+
+.portal-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--acc-ink);background:rgba(var(--acc-rgb),.1);border:1px solid rgba(var(--acc-rgb),.25);padding:3px 9px;border-radius:7px}
+.gc-foot-note{padding:14px 22px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;align-items:flex-start;gap:8px;line-height:1.6}
+.gc-foot-note i{color:var(--acc-ink);margin-top:2px}
+</style>
+</head>
+<body data-sec="satis" data-screen="musteriler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <a class="ph-back" href="crm-satis-musteriler.html"><i class="fa-solid fa-arrow-left"></i> Müşteriler</a>
+        <div class="ph-eyebrow" id="gdEyebrow">Satış · Müşteri Kartı</div>
+        <h1 id="gdTitle">—</h1>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="#" data-demo="Düzenleme ekranı bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</a>
+      </div>
+    </div>
+
+    <!-- ============ MÜŞTERİ KARTI ============ -->
+    <div class="gv-card mst-hero">
+      <div class="mst-hero-id">
+        <div class="mst-hero-mark" id="mMark">—</div>
+        <div class="mst-hero-info">
+          <!-- statik bake — DEFAULT (MST-2026-003, ?mst= yok); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+          <div class="mst-hero-tags" id="mTags"><span class="gtag" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink);border-color:transparent">Bireysel</span><span class="gstat warn">Opsiyon — bitiş 14 Tem</span></div>
+          <dl class="mst-hero-meta">
+            <div><dt>Kaynak</dt><dd id="mKaynak">—</dd></div>
+            <div><dt>Temsilci</dt><dd id="mTemsilci">—</dd></div>
+            <div><dt>Telefon</dt><dd id="mTelefon">—</dd></div>
+            <div><dt>E-posta</dt><dd id="mEposta">—</dd></div>
+            <div><dt>Adres / İl</dt><dd id="mAdres">—</dd></div>
+            <div><dt>Meslek / Sektör</dt><dd id="mMeslek">—</dd></div>
+            <div><dt>Bütçe Aralığı</dt><dd id="mButce">—</dd></div>
+            <div><dt>İlgilendiği Proje / Tip</dt><dd id="mIlgi">—</dd></div>
+            <div><dt>İletişim Tercihi</dt><dd id="mIletisim">—</dd></div>
+            <div><dt>KVKK Onayı</dt><dd id="mKvkk">—</dd></div>
+            <div><dt>Kayıt Tarihi</dt><dd id="mKayit">—</dd></div>
+            <div><dt>Son Temas</dt><dd id="mSonTemas">—</dd></div>
+            <div style="grid-column:1/-1"><dt>Sonraki Adım</dt><dd id="mSonrakiAdim">—</dd></div>
+          </dl>
+          <!-- statik bake — DEFAULT (MST-2026-003 etiketleri); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+          <div class="tag-row" id="mEtiketler"><span class="gtag">Opsiyon — Acil</span><span class="gtag">İlk Konut</span><span class="gtag">Web Lead</span></div>
+        </div>
+      </div>
+      <!-- statik bake — DEFAULT (MST-2026-003 hero stat'ları); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+      <div class="hero-stats" id="mStats"><div class="hstat warn"><span class="hstat-num">14 Tem</span><span class="hstat-lbl">Opsiyon bitiş tarihi</span></div><a class="hstat" href="crm-satis-teklif-detay.html?tkf=003"><span class="hstat-num">TKF-2026-003</span><span class="hstat-lbl">Onaylı teklif · %3 indirim <i class="fa-solid fa-arrow-right"></i></span></a><a class="hstat" href="crm-satis-birim-detay.html?birim=VK-B-11"><span class="hstat-num">VK-B-11</span><span class="hstat-lbl">İlgili birim <i class="fa-solid fa-arrow-right"></i></span></a><div class="hstat"><span class="hstat-num">2</span><span class="hstat-lbl">Açık fırsat — FRS-005, FRS-018</span></div></div>
+    </div>
+
+    <!-- ============ SEKMELER ============ -->
+    <div class="gv-tabs" role="tablist" aria-label="Müşteri kartı sekmeleri">
+      <button class="gv-tab is-active" data-tab="ozet" role="tab" aria-selected="true"><i class="fa-solid fa-address-card"></i> Özet</button>
+      <button class="gv-tab" data-tab="notlar" role="tab" aria-selected="false"><i class="fa-solid fa-comments"></i> Görüşme Notları</button>
+      <button class="gv-tab" data-tab="teklifler" role="tab" aria-selected="false"><i class="fa-solid fa-file-invoice-dollar"></i> Teklifler</button>
+      <button class="gv-tab" data-tab="dosyalar" role="tab" aria-selected="false"><i class="fa-solid fa-folder-open"></i> Dosyalar</button>
+      <button class="gv-tab" data-tab="aktivite" role="tab" aria-selected="false"><i class="fa-solid fa-clock-rotate-left"></i> Aktivite</button>
+    </div>
+
+    <!-- ============ ÖZET ============ -->
+    <section class="tab-panel" data-tab-panel="ozet" role="tabpanel" aria-label="Özet">
+      <div class="dash-cols">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Süreç Özeti</div></div>
+          <div class="gc-body"><p style="font-size:13.5px;line-height:1.75;color:var(--ink-2)" id="ozetMetin">—</p></div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-link"></i> İlişkili Kayıtlar</div></div>
+          <!-- statik bake — DEFAULT (MST-2026-003 ilişkili kayıtlar + ödeme planı özeti); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+        <div class="gc-body" style="padding-top:6px" id="ozetLinkler"><div class="ctx-row"><span class="ctx-lbl"><i class="fa-solid fa-building-circle-check" style="color:var(--acc-ink);width:16px;text-align:center;margin-right:8px"></i>Opsiyonlu birim · bitiş 14 Tem</span><span class="ctx-val"><a href="crm-satis-birim-detay.html?birim=VK-B-11">VK-B-11</a></span></div><div class="ctx-row"><span class="ctx-lbl"><i class="fa-solid fa-file-invoice-dollar" style="color:var(--acc-ink);width:16px;text-align:center;margin-right:8px"></i>Onaylı teklif · %3 indirim</span><span class="ctx-val"><a href="crm-satis-teklif-detay.html?tkf=003">TKF-2026-003</a></span></div><div class="ctx-row"><span class="ctx-lbl"><i class="fa-solid fa-table-columns" style="color:var(--acc-ink);width:16px;text-align:center;margin-right:8px"></i>Opsiyon aşamasındaki fırsat</span><span class="ctx-val"><a href="crm-satis-firsat-detay.html?frs=005">FRS-2026-005</a></span></div><div class="ctx-row"><span class="ctx-lbl"><i class="fa-solid fa-table-columns" style="color:var(--acc-ink);width:16px;text-align:center;margin-right:8px"></i>VK-B-12 · sunum aşaması</span><span class="ctx-val"><a href="crm-satis-firsat-detay.html?frs=018">FRS-2026-018</a></span></div><div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line)"><div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:10px">ODP-2026-001 — Ödeme Planı (VK-B-11)</div><div class="ctx-row"><span class="ctx-lbl">Liste fiyatı</span><span class="ctx-val">₺6.120.000 <span class="muted" style="font-weight:500">(%3 indirim)</span></span></div><div class="ctx-row"><span class="ctx-lbl">Net tutar</span><span class="ctx-val" style="color:var(--acc-ink)">₺5.940.000</span></div><div class="ctx-row"><span class="ctx-lbl">Peşinat</span><span class="ctx-val">₺1.485.000 (%25)</span></div><div class="ctx-row"><span class="ctx-lbl">Taksit</span><span class="ctx-val">36 × ₺103.750</span></div><div class="ctx-row"><span class="ctx-lbl">Teslimde</span><span class="ctx-val">₺720.000</span></div></div></div>
+        </div>
+      </div>
+      <div class="gv-card" id="cariCard" hidden>
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-scale-balanced"></i> Cari Hesabı</div></div>
+        <div class="gc-body" id="cariBody"></div>
+      </div>
+    </section>
+
+    <!-- ============ GÖRÜŞME NOTLARI ============ -->
+    <section class="tab-panel" data-tab-panel="notlar" role="tabpanel" aria-label="Görüşme Notları" hidden>
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-comments"></i> Görüşme Geçmişi</div></div>
+        <!-- statik bake — DEFAULT (MST-2026-003 görüşme notları, sekme JS'siz gizli kalır); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+        <div id="notlarList"><div class="note-item"><div class="note-dot"><i class="fa-solid fa-comment"></i></div><div class="note-body"><div class="note-head"><span class="note-who">Selin Acar</span><span class="note-date">9 Temmuz 2026</span></div><p class="note-txt">Opsiyon bitiş tarihi hatırlatıldı; sözleşme evraklarının hazırlanması için randevu 13 Temmuz’a alındı.</p></div></div><div class="note-item"><div class="note-dot"><i class="fa-solid fa-comment"></i></div><div class="note-body"><div class="note-head"><span class="note-who">Selin Acar</span><span class="note-date">27 Haziran 2026</span></div><p class="note-txt">ODP-2026-001 ödeme planı müşteriyle telefonda gözden geçirildi, taksit tutarı onaylandı.</p></div></div><div class="note-item"><div class="note-dot"><i class="fa-solid fa-comment"></i></div><div class="note-body"><div class="note-head"><span class="note-who">Selin Acar</span><span class="note-date">20 Haziran 2026</span></div><p class="note-txt">TKF-2026-003 teklifi %3 indirimle onaylandı, opsiyon süresi 14 Temmuz’a uzatıldı.</p></div></div><div class="note-item"><div class="note-dot"><i class="fa-solid fa-comment"></i></div><div class="note-body"><div class="note-head"><span class="note-who">Selin Acar</span><span class="note-date">12 Haziran 2026</span></div><p class="note-txt">VK-B-11 dairesi için saha gezisi yapıldı, kat planı ve teslim tarihi paylaşıldı.</p></div></div><div class="note-item"><div class="note-dot"><i class="fa-solid fa-comment"></i></div><div class="note-body"><div class="note-head"><span class="note-who">Selin Acar</span><span class="note-date">2 Mayıs 2026</span></div><p class="note-txt">Web formu üzerinden gelen ilk talep değerlendirildi, bütçe ve proje tercihi netleştirildi.</p></div></div></div>
+      </div>
+    </section>
+
+    <!-- ============ TEKLİFLER ============ -->
+    <section class="tab-panel" data-tab-panel="teklifler" role="tabpanel" aria-label="Teklifler" hidden>
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Teklif Geçmişi</div></div>
+        <div class="gc-body flush">
+          <table class="gtable">
+            <thead><tr><th class="col-tno">Teklif</th><th>Birim / Paket</th><th class="num col-tut">Tutar</th><th class="col-tst">Durum</th></tr></thead>
+            <!-- statik bake — DEFAULT (MST-2026-003 teklif geçmişi, sekme JS'siz gizli kalır); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+            <tbody id="tekliflerBody"><tr><td><a href="crm-satis-teklif-detay.html?tkf=003" style="color:var(--ink);font-weight:700">TKF-2026-003</a></td><td>VK-B-11 · 3+1 daire</td><td class="num">₺5.940.000</td><td><span class="gstat ok">Onaylı</span></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DOSYALAR ============ -->
+    <section class="tab-panel" data-tab-panel="dosyalar" role="tabpanel" aria-label="Dosyalar" hidden>
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-folder-open"></i> Müşteri Dosyaları</div>
+          <span class="gtag"><i class="fa-solid fa-flask"></i> Simülasyon</span>
+        </div>
+        <!-- statik bake — DEFAULT (MST-2026-003 dosyaları, sekme JS'siz gizli kalır); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+        <div id="dosyalarList"><div class="file-row"><div class="file-ico pdf"><i class="fa-solid fa-file-pdf"></i></div><div class="file-info"><b>aylin-sahinoglu-kimlik.pdf</b><span>220 KB</span></div><button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm aria-label="İndir"><i class="fa-solid fa-download"></i></button></div><div class="file-row"><div class="file-ico pdf"><i class="fa-solid fa-file-pdf"></i></div><div class="file-info"><b>odp-2026-001-odeme-plani.pdf</b><span>96 KB</span></div><button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm aria-label="İndir"><i class="fa-solid fa-download"></i></button></div><div class="file-row"><div class="file-ico img"><i class="fa-solid fa-file-image"></i></div><div class="file-info"><b>vk-b-11-kat-plani.jpg</b><span>1,4 MB</span></div><button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm aria-label="İndir"><i class="fa-solid fa-download"></i></button></div></div>
+      </div>
+    </section>
+
+    <!-- ============ AKTİVİTE ============ -->
+    <section class="tab-panel" data-tab-panel="aktivite" role="tabpanel" aria-label="Aktivite" hidden>
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Aktivite Geçmişi</div></div>
+        <ol class="ml-timeline" id="aktiviteList"></ol>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+  var acc = 'background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)';
+  var info = 'background:var(--info-tint);color:var(--info)';
+  var ok = 'background:var(--ok-tint);color:var(--ok)';
+  var warn = 'background:var(--warn-tint);color:var(--warn)';
+  var danger = 'background:var(--danger-tint);color:var(--danger)';
+  var neu = 'background:var(--bg);color:var(--muted);border:1px solid var(--line)';
+
+  /* ---- ?mst= çok-kayıt şablonu — 10 müşteri, 3'ü zengin içerik (001/002/003 = default),
+     kalanı standart içerik (bkz. shell.js "DALGA 11 KANONİK TANIMLAR — MÜŞTERİLER"). ---- */
+  var ITEMS = {
+    '003':{ // DEFAULT — Aylin Şahinoğlu, opsiyon süreci showcase
+      no:'MST-2026-003', ad:'Aylin Şahinoğlu', tur:'Bireysel', turStyle:acc,
+      durum:{cls:'warn', lbl:'Opsiyon — bitiş 14 Tem'},
+      kaynak:'Web', temsilci:{name:'Selin Acar', href:null},
+      telefon:'0535 000 33 09', eposta:'aylin.sahinoglu@ornek.example', adres:'Üsküdar / İstanbul',
+      meslek:'Yazılım — kıdemli ürün yöneticisi', butce:'₺5.500.000 – ₺6.500.000',
+      ilgi:'Vadi Konakları — 3+1 daire (ilk konut alımı)', iletisim:'WhatsApp',
+      kvkk:'Onaylı · 2 Mayıs 2026', kayit:'2 Mayıs 2026', sonTemas:'30 Haziran 2026',
+      sonrakiAdim:'Opsiyon süresi bitmeden sözleşme imza randevusu — 13 Temmuz 2026',
+      etiketler:['Opsiyon — Acil','İlk Konut','Web Lead'],
+      stats:[
+        {val:'14 Tem', lbl:'Opsiyon bitiş tarihi', cls:'warn'},
+        {val:'TKF-2026-003', lbl:'Onaylı teklif · %3 indirim', href:'crm-satis-teklif-detay.html?tkf=003'},
+        {val:'VK-B-11', lbl:'İlgili birim', href:'crm-satis-birim-detay.html?birim=VK-B-11'},
+        {val:'2', lbl:'Açık fırsat — FRS-005, FRS-018'}
+      ],
+      ozet:'Aylin Şahinoğlu, Vadi Konakları B Blok 11 no’lu 3+1 daire için 14 Temmuz 2026’da sona erecek opsiyon sürecinde. %3 indirimli TKF-2026-003 teklifi onaylandı ve ODP-2026-001 ödeme planı hazırlandı; sözleşme imzasının opsiyon bitiş tarihinden önce tamamlanması bekleniyor. Aynı müşteri ayrıca B Blok 12 no’lu daire için sunum aşamasında (FRS-018).',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'VK-B-11', sub:'Opsiyonlu birim · bitiş 14 Tem', href:'crm-satis-birim-detay.html?birim=VK-B-11'},
+        {ico:'fa-file-invoice-dollar', lbl:'TKF-2026-003', sub:'Onaylı teklif · %3 indirim', href:'crm-satis-teklif-detay.html?tkf=003'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-005', sub:'Opsiyon aşamasındaki fırsat', href:'crm-satis-firsat-detay.html?frs=005'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-018', sub:'VK-B-12 · sunum aşaması', href:'crm-satis-firsat-detay.html?frs=018'}
+      ],
+      odemePlani:{
+        baslik:'ODP-2026-001 — Ödeme Planı (VK-B-11)',
+        liste:'₺6.120.000', indirim:'%3 indirim', net:'₺5.940.000',
+        satirlar:[
+          {lbl:'Peşinat', val:'₺1.485.000 (%25)'},
+          {lbl:'Taksit', val:'36 × ₺103.750'},
+          {lbl:'Teslimde', val:'₺720.000'}
+        ]
+      },
+      notlar:[
+        {tarih:'9 Temmuz 2026', yazan:'Selin Acar', metin:'Opsiyon bitiş tarihi hatırlatıldı; sözleşme evraklarının hazırlanması için randevu 13 Temmuz’a alındı.'},
+        {tarih:'27 Haziran 2026', yazan:'Selin Acar', metin:'ODP-2026-001 ödeme planı müşteriyle telefonda gözden geçirildi, taksit tutarı onaylandı.'},
+        {tarih:'20 Haziran 2026', yazan:'Selin Acar', metin:'TKF-2026-003 teklifi %3 indirimle onaylandı, opsiyon süresi 14 Temmuz’a uzatıldı.'},
+        {tarih:'12 Haziran 2026', yazan:'Selin Acar', metin:'VK-B-11 dairesi için saha gezisi yapıldı, kat planı ve teslim tarihi paylaşıldı.'},
+        {tarih:'2 Mayıs 2026', yazan:'Selin Acar', metin:'Web formu üzerinden gelen ilk talep değerlendirildi, bütçe ve proje tercihi netleştirildi.'}
+      ],
+      teklifler:[
+        {no:'TKF-2026-003', birim:'VK-B-11 · 3+1 daire', tutar:5940000, durum:{cls:'ok',lbl:'Onaylı'}, href:'crm-satis-teklif-detay.html?tkf=003'}
+      ],
+      dosyalar:[
+        {ad:'aylin-sahinoglu-kimlik.pdf', boyut:'220 KB', tip:'pdf'},
+        {ad:'odp-2026-001-odeme-plani.pdf', boyut:'96 KB', tip:'pdf'},
+        {ad:'vk-b-11-kat-plani.jpg', boyut:'1,4 MB', tip:'img'}
+      ],
+      aktivite:[
+        {tarih:'2 Mayıs 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Web formu — Selin Acar atandı'},
+        {tarih:'12 Haziran 2026', baslik:'Saha gezisi yapıldı', sub:'VK-B-11'},
+        {tarih:'20 Haziran 2026', baslik:'Teklif onaylandı', sub:'TKF-2026-003 · %3 indirim'},
+        {tarih:'22 Haziran 2026', baslik:'Opsiyon başlatıldı', sub:'Bitiş: 14 Temmuz 2026'},
+        {tarih:'9 Temmuz 2026', baslik:'Sözleşme randevusu planlandı', sub:'13 Temmuz 2026'}
+      ]
+    },
+    '001':{ // Selçuk Onaran — kazanılmış kurumsal
+      no:'MST-2026-001', ad:'Selçuk Onaran', tur:'Kurumsal', turStyle:info,
+      durum:{cls:'ok', lbl:'Kazanıldı'}, portal:true,
+      kaynak:'Referans', temsilci:{name:'Okan Eren', href:null},
+      telefon:'0532 000 11 21', eposta:'selcuk.onaran@ornek.example', adres:'Kadıköy / İstanbul',
+      meslek:'İnşaat malzemeleri toptan ticareti — şirket ortağı', butce:'₺5.000.000 – ₺7.000.000',
+      ilgi:'Vadi Konakları — 3+1 daire (portföy genişletme)', iletisim:'Telefon',
+      kvkk:'Onaylı · 3 Ocak 2026', kayit:'3 Ocak 2026', sonTemas:'20 Haziran 2026',
+      sonrakiAdim:'Temmuz ayı taksit hatırlatma araması — 15 Temmuz 2026',
+      etiketler:['Portal Kullanıcısı','Referans Getirdi','Kurumsal'],
+      cari:{no:'CAR-2026-021', href:'crm-cari-detay.html?cari=onaran', bakiye:3592000},
+      stats:[
+        {val:'₺3.592.000', lbl:'VK-C-18 kalan bakiye', cls:'danger'},
+        {val:'SSZ-2026-003', lbl:'Aktif sözleşme · 14/36 taksit', href:'crm-satis-sozlesme-detay.html?ssz=2026-003'},
+        {val:'CAR-2026-021', lbl:'Cari hesabı', href:'crm-cari-detay.html?cari=onaran'},
+        {val:'2', lbl:'Satın alınan birim'}
+      ],
+      ozet:'Selçuk Onaran, Gavia CRM’in Portal demo müşterisidir — kendi hesabıyla Satış Sonrası Portal’a giriş yaparak talep açabilir ve ödeme planını izleyebilir. Kule Ofis B Blok 304 no’lu ofisi teslim aldı (TSL-2026-001); Vadi Konakları C Blok 18 no’lu daire için 36 taksitli sözleşmesinde 14 taksit ödendi, kalan bakiye ₺3.592.000. Cari hesabı CAR-2026-021 üzerinden takip edilir.',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'KO-B-304', sub:'Teslim edildi · TSL-2026-001', href:'crm-satis-birim-detay.html?birim=KO-B-304'},
+        {ico:'fa-building-circle-check', lbl:'VK-C-18', sub:'14/36 taksit ödendi', href:'crm-satis-birim-detay.html?birim=VK-C-18'},
+        {ico:'fa-file-signature', lbl:'SSZ-2025-042', sub:'KO-B-304 sözleşmesi · İmzalı', href:'crm-satis-sozlesme-detay.html?ssz=2025-042'},
+        {ico:'fa-file-signature', lbl:'SSZ-2026-003', sub:'VK-C-18 sözleşmesi · İmzalı', href:'crm-satis-sozlesme-detay.html?ssz=2026-003'},
+        {ico:'fa-headset', lbl:'SST-2026-007', sub:'Portal — klima drenaj garantisi', href:'crm-satis-talep-detay.html?sst=007'},
+        {ico:'fa-headset', lbl:'SST-2026-010', sub:'Portal — taksit planı bilgi talebi', href:'crm-satis-talep-detay.html?sst=010'}
+      ],
+      notlar:[
+        {tarih:'20 Haziran 2026', yazan:'Okan Eren', metin:'Temmuz taksiti öncesi bilgilendirme araması yapıldı, ödeme planında sorun yok.'},
+        {tarih:'30 Haziran 2026', yazan:'Okan Eren', metin:'Portal üzerinden klima drenaj garanti talebi (SST-2026-007) açtığı bildirildi, teknik ekibe yönlendirildi.'},
+        {tarih:'10 Mart 2026', yazan:'Okan Eren', metin:'KO-B-304 teslim tutanağı imzalandı, anahtar teslimi yapıldı.'},
+        {tarih:'3 Ocak 2026', yazan:'Okan Eren', metin:'Referansla gelen ilk görüşme yapıldı, iki farklı proje için ilgisi netleşti.'}
+      ],
+      teklifler:[
+        {no:'TKF-2026-001', birim:'VK-C-18 · 3+1 daire', tutar:6120000, durum:{cls:'ok',lbl:'Onaylı'}, href:'crm-satis-teklif-detay.html?tkf=001'}
+      ],
+      dosyalar:[
+        {ad:'selcuk-onaran-kimlik.pdf', boyut:'198 KB', tip:'pdf'},
+        {ad:'ssz-2026-003-sozlesme.pdf', boyut:'1,1 MB', tip:'pdf'},
+        {ad:'ko-b-304-teslim-tutanagi.pdf', boyut:'340 KB', tip:'pdf'}
+      ],
+      aktivite:[
+        {tarih:'3 Ocak 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Referans — Okan Eren atandı'},
+        {tarih:'18 Ocak 2026', baslik:'KO-B-304 için teklif onaylandı', sub:'SSZ-2025-042 imzalandı'},
+        {tarih:'10 Mart 2026', baslik:'KO-B-304 teslim edildi', sub:'TSL-2026-001'},
+        {tarih:'5 Nisan 2026', baslik:'VK-C-18 sözleşmesi imzalandı', sub:'SSZ-2026-003 · 36 taksit'},
+        {tarih:'30 Haziran 2026', baslik:'Portal talebi açıldı', sub:'SST-2026-007 · klima drenaj garantisi'},
+        {tarih:'20 Haziran 2026', baslik:'Taksit hatırlatma araması yapıldı', sub:'14/36 taksit ödendi'}
+      ]
+    },
+    '002':{ // Derya Toprak — yatırımcı, gecikme uyarısı
+      no:'MST-2026-002', ad:'Derya Toprak', tur:'Yatırımcı', turStyle:ok,
+      durum:{cls:'info', lbl:'Kapora — aktif fırsat'},
+      kaynak:'Satış Ofisi', temsilci:{name:'Okan Eren', href:null},
+      telefon:'0533 000 22 45', eposta:'derya.toprak@ornek.example', adres:'Ataşehir / İstanbul',
+      meslek:'Serbest mali müşavir — gayrimenkul yatırımcısı', butce:'₺25.000.000+ (çoklu birim portföyü)',
+      ilgi:'Vadi Konakları (3 daire aldı) + Göl Evleri 2. Etap villa (görüşmede)', iletisim:'E-posta',
+      kvkk:'Onaylı · 14 Şubat 2026', kayit:'14 Şubat 2026', sonTemas:'1 Temmuz 2026',
+      sonrakiAdim:'Vadesi geçen taksit için ödeme planı görüşmesi',
+      etiketler:['Çoklu Birim','Yatırımcı','Risk — Gecikme'],
+      cari:{no:'CAR-2026-022', href:'crm-cari-detay.html?cari=toprak', bakiye:4560000, gecikme:true},
+      stats:[
+        {val:'₺570.000', lbl:'5. taksit — 12 gün gecikmede', cls:'danger'},
+        {val:'SSZ-2026-004', lbl:'Aktif sözleşme · 3 daire paketi', href:'crm-satis-sozlesme-detay.html?ssz=2026-004'},
+        {val:'CAR-2026-022', lbl:'Cari hesabı', href:'crm-cari-detay.html?cari=toprak'},
+        {val:'2', lbl:'Açık fırsat — FRS-011, FRS-015'}
+      ],
+      ozet:'Derya Toprak, Vadi Konakları A Blok 03 ve 09 ile C Blok 21 no’lu üç daireyi %6 indirimli paket halinde satın aldı (SSZ-2026-004, ₺13.665.000). 12 taksitten 4’ü ödendi; 5. taksit (₺570.000) 12 gündür gecikmede — cari hesabında (CAR-2026-022) vadesi geçmiş bakiye olarak görünüyor. Ayrıca C Blok 24 dubleks için kapora verdi (FRS-011) ve Göl Evleri 2. Etap’ta iki villa için görüşme sürdürüyor (FRS-015).',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'VK-A-03, VK-A-09, VK-C-21', sub:'Teslim edildi · SSZ-2026-004', href:'crm-satis-sozlesme-detay.html?ssz=2026-004'},
+        {ico:'fa-building-circle-check', lbl:'VK-C-24', sub:'Kapora alındı', href:'crm-satis-birim-detay.html?birim=VK-C-24'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-011', sub:'Kapora aşamasındaki fırsat', href:'crm-satis-firsat-detay.html?frs=011'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-015', sub:'GE2-V21 + GE2-V22 · sunum', href:'crm-satis-firsat-detay.html?frs=015'}
+      ],
+      danger:{baslik:'Vadesi geçen taksit', metin:'5. taksit (₺570.000), SSZ-2026-004 sözleşmesi kapsamında 12 gündür gecikmede. Cari hesap (CAR-2026-022) bu tutarı vadesi geçmiş borç olarak gösteriyor.'},
+      notlar:[
+        {tarih:'1 Temmuz 2026', yazan:'Okan Eren', metin:'Gecikmiş taksit için müşteriye e-posta gönderildi, ödeme planı revizyonu teklif edildi.'},
+        {tarih:'22 Haziran 2026', yazan:'Okan Eren', metin:'GE2 V-21 ve V-22 villaları için ikinci saha gezisi yapıldı, fiyat teklifleri istendi.'},
+        {tarih:'10 Haziran 2026', yazan:'Okan Eren', metin:'VK-C-24 dubleks için kapora alındı, sözleşme hazırlığı başladı.'},
+        {tarih:'14 Şubat 2026', yazan:'Okan Eren', metin:'Satış ofisi ziyaretinde üç daireli paket için görüşme yapıldı.'}
+      ],
+      teklifler:[
+        {no:'TKF-2026-002', birim:'VK A-03/A-09/C-21 · 3 daire paketi', tutar:13665000, durum:{cls:'ok',lbl:'Onaylı'}, href:'crm-satis-teklif-detay.html?tkf=002'}
+      ],
+      dosyalar:[
+        {ad:'derya-toprak-kimlik.pdf', boyut:'210 KB', tip:'pdf'},
+        {ad:'ssz-2026-004-sozlesme.pdf', boyut:'1,3 MB', tip:'pdf'},
+        {ad:'vk-c-24-kapora-makbuzu.pdf', boyut:'88 KB', tip:'pdf'}
+      ],
+      aktivite:[
+        {tarih:'14 Şubat 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Satış ofisi — Okan Eren atandı'},
+        {tarih:'2 Mart 2026', baslik:'3 daire paketi teklifi onaylandı', sub:'TKF-2026-002 · %6 indirim'},
+        {tarih:'15 Mart 2026', baslik:'SSZ-2026-004 sözleşmesi imzalandı', sub:'12 taksit'},
+        {tarih:'10 Haziran 2026', baslik:'VK-C-24 için kapora alındı', sub:'FRS-2026-011'},
+        {tarih:'20 Haziran 2026', baslik:'5. taksit vadesi geçti', sub:'₺570.000 — gecikme başladı'}
+      ]
+    },
+    '004':{
+      no:'MST-2026-004', ad:'Mert Kavukçu', tur:'Bireysel', turStyle:acc,
+      durum:{cls:'wait', lbl:'Teklif — müdür onayında'},
+      kaynak:'Sosyal Medya', temsilci:{name:'Selin Acar', href:null},
+      telefon:'0536 000 44 67', eposta:'mert.kavukcu@ornek.example', adres:'Maltepe / İstanbul',
+      meslek:'E-ticaret — mağaza sahibi', butce:'₺5.500.000 – ₺6.200.000',
+      ilgi:'Vadi Konakları — 3+1 daire', iletisim:'Telefon',
+      kvkk:'Onaylı · 10 Haziran 2026', kayit:'10 Haziran 2026', sonTemas:'30 Haziran 2026',
+      sonrakiAdim:'Müdür onayı sonrası teklif geri dönüşü bekleniyor',
+      etiketler:['Instagram Lead','Teklif Aşamasında'],
+      stats:[
+        {val:'₺5.814.000', lbl:'TKF-2026-006 teklif tutarı — %5 indirim'},
+        {val:'VK-B-19', lbl:'İlgili birim · rezerve', href:'crm-satis-birim-detay.html?birim=VK-B-19'},
+        {val:'TKF-2026-006', lbl:'Müdür onayında', href:'crm-satis-teklif-detay.html?tkf=006'},
+        {val:'1', lbl:'Açık fırsat — FRS-009'}
+      ],
+      ozet:'Mert Kavukçu, Instagram reklamı üzerinden gelen bir lead olarak Vadi Konakları B Blok 19 no’lu daireyle ilgileniyor. %5 indirim talebini içeren TKF-2026-006 teklifi Selin Acar tarafından hazırlandı ve satış müdürü onayına gönderildi; onay sonrası birim rezerveden satışa dönecek. Daha önce Göl Evleri 2. Etap V-15 villasını da değerlendirmiş, ancak finansman yetersizliği nedeniyle o fırsat kaybedilmişti.',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'VK-B-19', sub:'Rezerve — teklif onayında', href:'crm-satis-birim-detay.html?birim=VK-B-19'},
+        {ico:'fa-file-invoice-dollar', lbl:'TKF-2026-006', sub:'%5 indirim · müdür onayında', href:'crm-satis-teklif-detay.html?tkf=006'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-009', sub:'Teklif aşamasındaki fırsat', href:'crm-satis-firsat-detay.html?frs=009'}
+      ],
+      notlar:[
+        {tarih:'30 Haziran 2026', yazan:'Selin Acar', metin:'TKF-2026-006 satış müdürü onayına gönderildi, müşteriye süreç bilgilendirmesi yapıldı.'},
+        {tarih:'24 Haziran 2026', yazan:'Selin Acar', metin:'%5 indirim talebi görüşüldü, teklif hazırlığına başlandı.'},
+        {tarih:'10 Haziran 2026', yazan:'Selin Acar', metin:'Instagram reklamından gelen talep değerlendirildi, VK-B-19 için randevu oluşturuldu.'}
+      ],
+      teklifler:[
+        {no:'TKF-2026-006', birim:'VK-B-19 · 3+1 daire', tutar:5814000, durum:{cls:'wait',lbl:'Müdür onayında'}, href:'crm-satis-teklif-detay.html?tkf=006'}
+      ],
+      dosyalar:[
+        {ad:'mert-kavukcu-kimlik.pdf', boyut:'176 KB', tip:'pdf'}
+      ],
+      aktivite:[
+        {tarih:'10 Haziran 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Sosyal medya — Selin Acar atandı'},
+        {tarih:'24 Haziran 2026', baslik:'VK-B-19 için teklif hazırlandı', sub:'%5 indirim talebi'},
+        {tarih:'30 Haziran 2026', baslik:'Teklif müdür onayına gönderildi', sub:'TKF-2026-006'}
+      ]
+    },
+    '005':{
+      no:'MST-2026-005', ad:'Baha &amp; Zeynep Korkut', tur:'Bireysel', turStyle:acc,
+      durum:{cls:'', lbl:'Sözleşme — imza bekliyor', style:acc},
+      kaynak:'Referans', temsilci:{name:'Selin Acar', href:null},
+      telefon:'0537 000 55 12', eposta:'baha.korkut@ornek.example', adres:'İzmit / Kocaeli',
+      meslek:'Kamu mühendisi (eş: öğretmen)', butce:'₺9.000.000 – ₺10.500.000',
+      ilgi:'Vadi Konakları — dubleks (6. kat)', iletisim:'Telefon',
+      kvkk:'Onaylı · 5 Haziran 2026', kayit:'5 Haziran 2026', sonTemas:'2 Temmuz 2026',
+      sonrakiAdim:'SSZ-2026-007 imza randevusu bekleniyor',
+      etiketler:['Sözleşme Aşamasında','Referans — Şahinoğlu'],
+      stats:[
+        {val:'SSZ-2026-007', lbl:'İmza bekliyor', href:'crm-satis-sozlesme-detay.html?ssz=2026-007'},
+        {val:'VK-D-05', lbl:'İlgili birim · dubleks', href:'crm-satis-birim-detay.html?birim=VK-D-05'},
+        {val:'₺9.800.000', lbl:'Sözleşme bedeli'},
+        {val:'Aylin Şahinoğlu', lbl:'Referans veren müşteri'}
+      ],
+      ozet:'Baha ve Zeynep Korkut çifti, Aylin Şahinoğlu’nun referansıyla Vadi Konakları D Blok 05 no’lu dubleks daireye başvurdu. Süreç hızlı ilerledi ve sözleşme (SSZ-2026-007) hazırlandı; yalnızca imza randevusu bekleniyor. Birim şu an rezerve durumda, imza tamamlanınca satışa dönecek.',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'VK-D-05', sub:'Rezerve — sözleşme imzada', href:'crm-satis-birim-detay.html?birim=VK-D-05'},
+        {ico:'fa-file-signature', lbl:'SSZ-2026-007', sub:'İmza bekliyor', href:'crm-satis-sozlesme-detay.html?ssz=2026-007'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-002', sub:'Sözleşme aşamasındaki fırsat', href:'crm-satis-firsat-detay.html?frs=002'}
+      ],
+      notlar:[
+        {tarih:'2 Temmuz 2026', yazan:'Selin Acar', metin:'Sözleşme metni müşteriyle paylaşıldı, imza için randevu planlanıyor.'},
+        {tarih:'20 Haziran 2026', yazan:'Selin Acar', metin:'Dubleks için son fiyat teklifi kabul edildi, sözleşme hazırlığı başladı.'},
+        {tarih:'5 Haziran 2026', yazan:'Selin Acar', metin:'Aylin Şahinoğlu’nun yönlendirmesiyle ilk görüşme yapıldı, D-05 dubleksi gezildi.'}
+      ],
+      teklifler:[],
+      dosyalar:[
+        {ad:'korkut-kimlik-cifti.pdf', boyut:'240 KB', tip:'pdf'},
+        {ad:'ssz-2026-007-taslak.pdf', boyut:'980 KB', tip:'pdf'}
+      ],
+      aktivite:[
+        {tarih:'5 Haziran 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Referans — Selin Acar atandı'},
+        {tarih:'20 Haziran 2026', baslik:'VK-D-05 rezerve edildi', sub:'Sözleşme hazırlığı başladı'},
+        {tarih:'2 Temmuz 2026', baslik:'Sözleşme metni paylaşıldı', sub:'SSZ-2026-007 — imza bekliyor'}
+      ]
+    },
+    '006':{
+      no:'MST-2026-006', ad:'Nova Gayrimenkul', tur:'Bayi', turStyle:info,
+      durum:{cls:'warn', lbl:'Müzakere'},
+      kaynak:'Fuar', temsilci:{name:'Okan Eren', href:null},
+      telefon:'0212 000 66 30', eposta:'info@novagayrimenkul.example', adres:'Şişli / İstanbul',
+      meslek:'Gayrimenkul pazarlama ve bayilik — kurumsal', butce:'₺70.000.000+ (toplu bayi paketi)',
+      ilgi:'Göl Evleri 2. Etap — 6 villa bayi paketi + Vadi Konakları 3 daire', iletisim:'E-posta',
+      kvkk:'Onaylı · 12 Mayıs 2026', kayit:'12 Mayıs 2026', sonTemas:'2 Temmuz 2026',
+      sonrakiAdim:'GM onayı sonrası TKF-2026-007 imza süreci',
+      etiketler:['Bayi','Toplu Satış','GM Onayı Bekleniyor'],
+      stats:[
+        {val:'₺70.980.000', lbl:'TKF-2026-007 müzakere tutarı — %9 indirim'},
+        {val:'6 + 3', lbl:'Villa + daire, toplu paket'},
+        {val:'TKF-2026-007', lbl:'GM onayında', href:'crm-satis-teklif-detay.html?tkf=007'},
+        {val:'Kaan Sezer', lbl:'İlgili kişi — Satış Direktörü'}
+      ],
+      ozet:'Nova Gayrimenkul, İstanbul Emlak Fuarı’nda kurulan temasın ardından Göl Evleri 2. Etap’tan 6 villalık bayi paketi (V-25..V-30) için %9 indirimli TKF-2026-007 teklifini müzakere ediyor; tutar eşik üstü olduğu için Genel Müdür onayında. Ayrıca Vadi Konakları’ndan 3 daire (A-11/A-12/A-14) için ayrı bir teklif taslağı hazırlanıyor.',
+      ozetLinkler:[
+        {ico:'fa-file-invoice-dollar', lbl:'TKF-2026-007', sub:'%9 indirim · GM onayında', href:'crm-satis-teklif-detay.html?tkf=007'},
+        {ico:'fa-file-invoice-dollar', lbl:'TKF-2026-008', sub:'VK 3 daire · taslak', href:'crm-satis-teklif-detay.html?tkf=008'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-007', sub:'Müzakere aşamasındaki fırsat', href:'crm-satis-firsat-detay.html?frs=007'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-010', sub:'VK 3 daire · teklif aşaması', href:'crm-satis-firsat-detay.html?frs=010'}
+      ],
+      notlar:[
+        {tarih:'3 Temmuz 2026', yazan:'Okan Eren', metin:'GM onayı için toplantı planlandı, bayi indirim gerekçesi hazırlandı.'},
+        {tarih:'18 Haziran 2026', yazan:'Okan Eren', metin:'6 villalık paket için fiyat müzakeresi yapıldı, %9 indirim talebi iletildi.'},
+        {tarih:'12 Mayıs 2026', yazan:'Okan Eren', metin:'Fuar standında ilk görüşme yapıldı, bayilik koşulları paylaşıldı.'}
+      ],
+      teklifler:[
+        {no:'TKF-2026-007', birim:'GE2-V25..V30 · 6 villa (bayi)', tutar:70980000, durum:{cls:'wait',lbl:'GM onayında'}, href:'crm-satis-teklif-detay.html?tkf=007'},
+        {no:'TKF-2026-008', birim:'VK A-11/A-12/A-14 · 3 daire', tutar:18360000, durum:{cls:'off',lbl:'Taslak'}, href:'crm-satis-teklif-detay.html?tkf=008'}
+      ],
+      dosyalar:[
+        {ad:'nova-bayilik-sozlesmesi.pdf', boyut:'560 KB', tip:'pdf'},
+        {ad:'ge2-6-villa-paket-teklifi.pdf', boyut:'410 KB', tip:'pdf'}
+      ],
+      aktivite:[
+        {tarih:'12 Mayıs 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Fuar — Okan Eren atandı'},
+        {tarih:'18 Haziran 2026', baslik:'6 villa paketi müzakeresi başladı', sub:'FRS-2026-007'},
+        {tarih:'25 Haziran 2026', baslik:'TKF-2026-007 GM onayına gönderildi', sub:'%9 indirim — eşik üstü'},
+        {tarih:'2 Temmuz 2026', baslik:'VK 3 daire teklif taslağı hazırlandı', sub:'TKF-2026-008'}
+      ]
+    },
+    '007':{
+      no:'MST-2026-007', ad:'Halil Sancak', tur:'Arsa Sahibi', turStyle:warn,
+      durum:{cls:'info', lbl:'Görüşme'},
+      kaynak:'Satış Ofisi', temsilci:{name:'Okan Eren', href:null},
+      telefon:'0538 000 77 84', eposta:'halil.sancak@ornek.example', adres:'Sapanca / Sakarya',
+      meslek:'Tarım arazisi sahibi — emlak', butce:'— (kat karşılığı takası, nakit değil)',
+      ilgi:'Göl Evleri 2. Etap 3. etap arsası — kat karşılığı', iletisim:'Telefon',
+      kvkk:'Onaylı · 20 Nisan 2026', kayit:'20 Nisan 2026', sonTemas:'27 Haziran 2026',
+      sonrakiAdim:'Arsa değerleme raporu bekleniyor',
+      etiketler:['Arsa Sahibi','Kat Karşılığı','Çoklu Anlaşma'],
+      stats:[
+        {val:'Kat Karşılığı', lbl:'Anlaşma türü — nakit değil'},
+        {val:'VK A-01/A-02', lbl:'Mevcut anlaşma birimi', href:'crm-satis-birim-detay.html?birim=VK-A-01'},
+        {val:'GE2 3.Etap', lbl:'Görüşmedeki yeni arsa'},
+        {val:'2', lbl:'Aktif anlaşma / görüşme'}
+      ],
+      ozet:'Halil Sancak, Vadi Konakları arsasını kat karşılığı devretmiş bir arsa sahibidir; A Blok 01 ve 02 no’lu daireler bu anlaşma kapsamında kendisine tahsis edildi ve satış listesinde kapalı görünür. Şimdi Göl Evleri 2. Etap 3. etap arazisi için benzer bir kat karşılığı anlaşması görüşülüyor; değerleme raporu bekleniyor.',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'VK-A-01', sub:'Kat karşılığı — kapalı', href:'crm-satis-birim-detay.html?birim=VK-A-01'},
+        {ico:'fa-building-circle-check', lbl:'VK-A-02', sub:'Kat karşılığı — kapalı', href:'crm-satis-birim-detay.html?birim=VK-A-02'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-013', sub:'Görüşme — GE2 3. Etap arsası', href:'crm-satis-firsat-detay.html?frs=013'}
+      ],
+      notlar:[
+        {tarih:'27 Haziran 2026', yazan:'Okan Eren', metin:'GE2 3. etap arazisi için ön görüşme yapıldı, değerleme talep edildi.'},
+        {tarih:'15 Mayıs 2026', yazan:'Okan Eren', metin:'VK-A-01/A-02 tahsisiyle ilgili tapu süreci tamamlandığı teyit edildi.'},
+        {tarih:'20 Nisan 2026', yazan:'Okan Eren', metin:'Satış ofisi ziyaretinde yeni arsa fırsatı gündeme geldi.'}
+      ],
+      teklifler:[],
+      dosyalar:[
+        {ad:'halil-sancak-tapu-fotokopisi.pdf', boyut:'310 KB', tip:'pdf'}
+      ],
+      aktivite:[
+        {tarih:'20 Nisan 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Satış ofisi — Okan Eren atandı'},
+        {tarih:'15 Mayıs 2026', baslik:'VK-A-01/A-02 tahsisi tamamlandı', sub:'Kat karşılığı anlaşması'},
+        {tarih:'27 Haziran 2026', baslik:'GE2 3. Etap arsa görüşmesi başladı', sub:'FRS-2026-013'}
+      ]
+    },
+    '008':{
+      no:'MST-2026-008', ad:'Ferda Yücel', tur:'Kiracı Adayı', turStyle:neu,
+      durum:{cls:'info', lbl:'Görüşme'},
+      kaynak:'WhatsApp', temsilci:{name:'Selin Acar', href:null},
+      telefon:'0539 000 88 19', eposta:'ferda.yucel@ornek.example', adres:'Konak / İzmir',
+      meslek:'Bağımsız danışman', butce:'₺28.000 – ₺35.000 / ay kira',
+      ilgi:'Kule Ofis B Blok — B-207 ofis kiralama', iletisim:'WhatsApp',
+      kvkk:'Onaylı · 18 Haziran 2026', kayit:'18 Haziran 2026', sonTemas:'24 Haziran 2026',
+      sonrakiAdim:'Teklif süresi doldu — yeni teklif hazırlanacak (kira bitişi 31 Temmuz)',
+      etiketler:['Kiralama','Teklif Yenilenecek'],
+      stats:[
+        {val:'₺32.000 / ay', lbl:'İlk kira teklifi'},
+        {val:'KO-B-207', lbl:'İlgili ofis', href:'crm-satis-birim-detay.html?birim=KO-B-207'},
+        {val:'31 Tem', lbl:'Mevcut kiracının kira bitişi'},
+        {val:'Süresi Doldu', lbl:'TKF-2026-005 durumu', href:'crm-satis-teklif-detay.html?tkf=005'}
+      ],
+      ozet:'Ferda Yücel, WhatsApp üzerinden gelen bir talep ile Kule Ofis B Blok 207 no’lu ofisi kiralamak istiyor. Mevcut kiracının sözleşmesi 31 Temmuz’da sona erecek. İlk kira teklifi (TKF-2026-005) süresi dolduğu için geçersiz kaldı; yeni bir teklif hazırlanması gerekiyor.',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'KO-B-207', sub:'Kiralık — kira bitişi 31 Tem', href:'crm-satis-birim-detay.html?birim=KO-B-207'},
+        {ico:'fa-file-invoice-dollar', lbl:'TKF-2026-005', sub:'Süresi doldu', href:'crm-satis-teklif-detay.html?tkf=005'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-012', sub:'Görüşme aşamasındaki fırsat', href:'crm-satis-firsat-detay.html?frs=012'}
+      ],
+      notlar:[
+        {tarih:'24 Haziran 2026', yazan:'Selin Acar', metin:'İlk teklifin süresi doldu, müşteri hâlâ ilgili — yeni teklif hazırlanacak.'},
+        {tarih:'19 Haziran 2026', yazan:'Selin Acar', metin:'KO-B-207 ofisi için WhatsApp üzerinden fotoğraf ve plan paylaşıldı.'},
+        {tarih:'18 Haziran 2026', yazan:'Selin Acar', metin:'WhatsApp Business hattından gelen ilk mesaj değerlendirildi.'}
+      ],
+      teklifler:[
+        {no:'TKF-2026-005', birim:'KO-B-207 · kiralama', tutar:32000, durum:{cls:'off',lbl:'Süresi doldu'}, href:'crm-satis-teklif-detay.html?tkf=005'}
+      ],
+      dosyalar:[],
+      aktivite:[
+        {tarih:'18 Haziran 2026', baslik:'Müşteri kartı oluşturuldu', sub:'WhatsApp — Selin Acar atandı'},
+        {tarih:'19 Haziran 2026', baslik:'KO-B-207 için teklif hazırlandı', sub:'TKF-2026-005'},
+        {tarih:'24 Haziran 2026', baslik:'Teklif süresi doldu', sub:'Yeniden teklif planlanıyor'}
+      ]
+    },
+    '009':{
+      no:'MST-2026-009', ad:'Tuncay Ilgaz', tur:'Bireysel', turStyle:acc,
+      durum:{cls:'danger', lbl:'Kaybedildi — Fiyat'},
+      kaynak:'Web', temsilci:{name:'Selin Acar', href:null},
+      telefon:'0530 000 99 56', eposta:'tuncay.ilgaz@ornek.example', adres:'Çankaya / Ankara',
+      meslek:'Serbest muhasebeci mali müşavir', butce:'₺3.800.000 – ₺4.200.000',
+      ilgi:'Vadi Konakları — 2+1 daire', iletisim:'E-posta',
+      kvkk:'Onaylı · 2 Haziran 2026', kayit:'2 Haziran 2026', sonTemas:'18 Haziran 2026',
+      sonrakiAdim:'Yok — süreç kapandı',
+      etiketler:['Kaybedildi — Fiyat','Web Lead'],
+      stats:[
+        {val:'Fiyat', lbl:'Kayıp nedeni'},
+        {val:'%12', lbl:'Talep edilen indirim (reddedildi)'},
+        {val:'VK-B-07', lbl:'İlgili birim', href:'crm-satis-birim-detay.html?birim=VK-B-07'},
+        {val:'TKF-2026-004', lbl:'Reddedilen teklif', href:'crm-satis-teklif-detay.html?tkf=004'}
+      ],
+      ozet:'Tuncay Ilgaz, Vadi Konakları B Blok 07 no’lu daire için %12 indirim talep etti; bu oran Genel Müdür onay eşiğinin çok üzerinde kaldığı için TKF-2026-004 reddedildi. Müşteri fiyat farkını kabul etmeyerek süreçten çekildi, fırsat “Fiyat” gerekçesiyle kaybedildi olarak kapatıldı.',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'VK-B-07', sub:'Satışta — tekrar listelendi', href:'crm-satis-birim-detay.html?birim=VK-B-07'},
+        {ico:'fa-file-invoice-dollar', lbl:'TKF-2026-004', sub:'%12 indirim — reddedildi', href:'crm-satis-teklif-detay.html?tkf=004'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-004', sub:'Kaybedildi — Fiyat', href:'crm-satis-firsat-detay.html?frs=004'}
+      ],
+      notlar:[
+        {tarih:'18 Haziran 2026', yazan:'Selin Acar', metin:'Müşteri fiyat farkını kabul etmedi, süreç kapatıldı.'},
+        {tarih:'12 Haziran 2026', yazan:'Selin Acar', metin:'%12 indirim talebi Genel Müdür’e iletildi, eşik aşımı nedeniyle reddedildi.'},
+        {tarih:'2 Haziran 2026', yazan:'Selin Acar', metin:'Web formu üzerinden gelen talep değerlendirildi, VK-B-07 için randevu verildi.'}
+      ],
+      teklifler:[
+        {no:'TKF-2026-004', birim:'VK-B-07 · 2+1 daire', tutar:3696000, durum:{cls:'danger',lbl:'Reddedildi'}, href:'crm-satis-teklif-detay.html?tkf=004'}
+      ],
+      dosyalar:[],
+      aktivite:[
+        {tarih:'2 Haziran 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Web — Selin Acar atandı'},
+        {tarih:'12 Haziran 2026', baslik:'İndirim talebi GM’e iletildi', sub:'%12 — TKF-2026-004'},
+        {tarih:'15 Haziran 2026', baslik:'Teklif reddedildi', sub:'Eşik aşımı — GM onayı çıkmadı'},
+        {tarih:'18 Haziran 2026', baslik:'Fırsat kaybedildi olarak kapatıldı', sub:'Neden: Fiyat'}
+      ]
+    },
+    '010':{
+      no:'MST-2026-010', ad:'Nihat Karaduman', tur:'Bireysel', turStyle:acc,
+      durum:{cls:'off', lbl:'Yeni'},
+      kaynak:'Web', temsilci:{name:'Okan Eren', href:null},
+      telefon:'0531 000 10 73', eposta:'nihat.karaduman@ornek.example', adres:'Beşiktaş / İstanbul',
+      meslek:'Finans — yatırım bankacısı', butce:'₺13.000.000 – ₺14.500.000',
+      ilgi:'Göl Evleri 2. Etap — villa', iletisim:'Telefon',
+      kvkk:'Onaylı · 1 Temmuz 2026', kayit:'1 Temmuz 2026', sonTemas:'2 Temmuz 2026',
+      sonrakiAdim:'İlk görüşme — 12 Temmuz 2026',
+      etiketler:['Yeni Lead','Web'],
+      stats:[
+        {val:'GE2-V07', lbl:'İlgilendiği villa', href:'crm-satis-birim-detay.html?birim=GE2-V07'},
+        {val:'12 Tem', lbl:'İlk görüşme tarihi'},
+        {val:'Web', lbl:'Kaynak kanalı'},
+        {val:'1', lbl:'Açık fırsat — FRS-016'}
+      ],
+      ozet:'Nihat Karaduman, web sitesi üzerinden Göl Evleri 2. Etap V-07 no’lu villa için bilgi talep etti. Kayıt yeni açıldı, henüz ilk görüşme yapılmadı; 12 Temmuz 2026’da telefon görüşmesi planlandı.',
+      ozetLinkler:[
+        {ico:'fa-building-circle-check', lbl:'GE2-V07', sub:'Satışta', href:'crm-satis-birim-detay.html?birim=GE2-V07'},
+        {ico:'fa-table-columns', lbl:'FRS-2026-016', sub:'Yeni aşamasındaki fırsat', href:'crm-satis-firsat-detay.html?frs=016'}
+      ],
+      notlar:[
+        {tarih:'2 Temmuz 2026', yazan:'Okan Eren', metin:'Web formu üzerinden gelen talep incelendi, bütçe aralığı GE2 villalarıyla uyumlu.'},
+        {tarih:'8 Temmuz 2026', yazan:'Okan Eren', metin:'Kayıt açıldı, ilk görüşme için randevu planlandı.'}
+      ],
+      teklifler:[],
+      dosyalar:[],
+      aktivite:[
+        {tarih:'1 Temmuz 2026', baslik:'Müşteri kartı oluşturuldu', sub:'Web — Okan Eren atandı'},
+        {tarih:'10 Temmuz 2026', baslik:'İlk telefon teması kuruldu', sub:'Randevu: 12 Temmuz 2026'}
+      ]
+    }
+  };
+
+  var q = new URLSearchParams(location.search);
+  var rawMst = q.get('mst');
+  var key = rawMst;
+  if(!ITEMS[key]) key = rawMst ? null : '003';
+  var item = key && ITEMS[key];
+
+  if(!item){
+    gvNotFound({
+      code: rawMst ? rawMst.toUpperCase() : null,
+      tur: 'müşteri',
+      listHref: 'crm-satis-musteriler.html', listLbl: 'Müşterilere dön',
+      defHref: 'crm-satis-musteri-detay.html', defLbl: 'Varsayılan kaydı aç'
+    });
+    return;
+  }
+
+  function initials(name){
+    var parts = name.replace(/&amp;.*$/, '').trim().split(/\s+/).filter(Boolean);
+    if(parts.length < 2) return (parts[0] || 'M').slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  }
+
+  function render(){
+    document.title = item.ad.replace(/&amp;/g,'&') + ' — Müşteri Kartı — Gavia CRM';
+    document.getElementById('gdEyebrow').textContent = 'Satış · ' + item.no;
+    document.getElementById('gdTitle').innerHTML = item.ad;
+    document.getElementById('mMark').textContent = initials(item.ad);
+    document.getElementById('mMark').setAttribute('style', item.turStyle);
+
+    var tagsWrap = document.getElementById('mTags');
+    var durumStyle = item.durum.style ? (' style="' + item.durum.style + '"') : '';
+    var durumClass = item.durum.cls ? (' ' + item.durum.cls) : '';
+    tagsWrap.innerHTML = '<span class="gtag" style="' + item.turStyle + ';border-color:transparent">' + item.tur + '</span>'
+      + '<span class="gstat' + durumClass + '"' + durumStyle + '>' + item.durum.lbl + '</span>'
+      + (item.portal ? '<span class="portal-badge"><i class="fa-solid fa-globe"></i> Portal Kullanıcısı</span>' : '');
+
+    document.getElementById('mKaynak').textContent = item.kaynak;
+    document.getElementById('mTemsilci').textContent = item.temsilci.name;
+    document.getElementById('mTelefon').textContent = item.telefon;
+    document.getElementById('mEposta').textContent = item.eposta;
+    document.getElementById('mAdres').textContent = item.adres;
+    document.getElementById('mMeslek').textContent = item.meslek;
+    document.getElementById('mButce').textContent = item.butce;
+    document.getElementById('mIlgi').textContent = item.ilgi;
+    document.getElementById('mIletisim').textContent = item.iletisim;
+    document.getElementById('mKvkk').innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--ok);margin-right:5px"></i>' + item.kvkk;
+    document.getElementById('mKayit').textContent = item.kayit;
+    document.getElementById('mSonTemas').textContent = item.sonTemas;
+    document.getElementById('mSonrakiAdim').textContent = item.sonrakiAdim;
+
+    document.getElementById('mEtiketler').innerHTML = item.etiketler.map(function(t){
+      return '<span class="gtag">' + t + '</span>';
+    }).join('');
+
+    document.getElementById('mStats').innerHTML = item.stats.map(function(s){
+      var tag = s.href ? 'a' : 'div';
+      var hrefAttr = s.href ? (' href="' + s.href + '"') : '';
+      var clsAttr = s.cls ? (' hstat ' + s.cls) : ' hstat';
+      var arrow = s.href ? ' <i class="fa-solid fa-arrow-right"></i>' : '';
+      return '<' + tag + ' class="' + clsAttr.trim() + '"' + hrefAttr + '><span class="hstat-num">' + s.val + '</span><span class="hstat-lbl">' + s.lbl + arrow + '</span></' + tag + '>';
+    }).join('');
+
+    /* Özet sekmesi */
+    document.getElementById('ozetMetin').textContent = item.ozet;
+    document.getElementById('ozetLinkler').innerHTML = item.ozetLinkler.map(function(l){
+      return '<div class="ctx-row"><span class="ctx-lbl"><i class="fa-solid ' + l.ico + '" style="color:var(--acc-ink);width:16px;text-align:center;margin-right:8px"></i>' + l.sub + '</span>'
+        + '<span class="ctx-val"><a href="' + l.href + '">' + l.lbl + '</a></span></div>';
+    }).join('');
+
+    if(item.odemePlani){
+      var op = item.odemePlani;
+      document.getElementById('ozetLinkler').innerHTML += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line)">'
+        + '<div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:10px">' + op.baslik + '</div>'
+        + '<div class="ctx-row"><span class="ctx-lbl">Liste fiyatı</span><span class="ctx-val">' + op.liste + ' <span class="muted" style="font-weight:500">(' + op.indirim + ')</span></span></div>'
+        + '<div class="ctx-row"><span class="ctx-lbl">Net tutar</span><span class="ctx-val" style="color:var(--acc-ink)">' + op.net + '</span></div>'
+        + op.satirlar.map(function(s){ return '<div class="ctx-row"><span class="ctx-lbl">' + s.lbl + '</span><span class="ctx-val">' + s.val + '</span></div>'; }).join('')
+        + '</div>';
+    }
+
+    var cariCard = document.getElementById('cariCard');
+    if(item.cari){
+      cariCard.hidden = false;
+      document.getElementById('cariBody').innerHTML =
+          '<div class="ctx-row"><span class="ctx-lbl">Cari Hesap No</span><span class="ctx-val"><a href="' + item.cari.href + '">' + item.cari.no + '</a></span></div>'
+        + '<div class="ctx-row"><span class="ctx-lbl">Bakiye</span><span class="ctx-val" style="color:var(--danger)">' + tl(item.cari.bakiye) + ' borç</span></div>'
+        + (item.cari.gecikme ? '<div class="ctx-row"><span class="ctx-lbl"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);margin-right:6px"></i>Vadesi geçen tutar</span><span class="ctx-val" style="color:var(--danger)">₺570.000 · 12 gün</span></div>' : '')
+        + '<div class="ctx-row" style="border-bottom:none"><span class="ctx-lbl">&nbsp;</span><span class="ctx-val"><a href="' + item.cari.href + '" style="color:var(--acc-ink)">Cari kartını aç <i class="fa-solid fa-arrow-right"></i></a></span></div>';
+    } else {
+      cariCard.hidden = true;
+    }
+
+    if(item.danger){
+      var dCard = document.createElement('div');
+      dCard.className = 'gv-card';
+      dCard.style.marginTop = '16px';
+      dCard.style.borderColor = 'var(--danger)';
+      dCard.innerHTML = '<div class="gc-head"><div class="gc-title" style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> ' + item.danger.baslik + '</div></div>'
+        + '<div class="gc-body" style="padding-top:10px"><p style="font-size:13px;color:var(--ink-2);line-height:1.7">' + item.danger.metin + '</p></div>';
+      document.querySelector('[data-tab-panel="ozet"]').appendChild(dCard);
+    }
+
+    /* Görüşme notları */
+    document.getElementById('notlarList').innerHTML = item.notlar.map(function(n){
+      return '<div class="note-item"><div class="note-dot"><i class="fa-solid fa-comment"></i></div>'
+        + '<div class="note-body"><div class="note-head"><span class="note-who">' + n.yazan + '</span><span class="note-date">' + n.tarih + '</span></div>'
+        + '<p class="note-txt">' + n.metin + '</p></div></div>';
+    }).join('') || '<p style="padding:22px;color:var(--muted);font-size:13px">Bu müşteri için henüz görüşme notu girilmedi.</p>';
+
+    /* Teklifler */
+    document.getElementById('tekliflerBody').innerHTML = item.teklifler.map(function(t){
+      return '<tr><td><a href="' + t.href + '" style="color:var(--ink);font-weight:700">' + t.no + '</a></td>'
+        + '<td>' + t.birim + '</td><td class="num">' + tl(t.tutar) + '</td>'
+        + '<td><span class="gstat ' + t.durum.cls + '">' + t.durum.lbl + '</span></td></tr>';
+    }).join('') || '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:26px">Bu müşteri için henüz teklif oluşturulmadı.</td></tr>';
+
+    /* Dosyalar */
+    document.getElementById('dosyalarList').innerHTML = item.dosyalar.map(function(f){
+      var ico = f.tip === 'img' ? 'fa-file-image' : 'fa-file-pdf';
+      return '<div class="file-row"><div class="file-ico ' + f.tip + '"><i class="fa-solid ' + ico + '"></i></div>'
+        + '<div class="file-info"><b>' + f.ad + '</b><span>' + f.boyut + '</span></div>'
+        + '<button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm aria-label="İndir"><i class="fa-solid fa-download"></i></button></div>';
+    }).join('') || '<p style="padding:22px;color:var(--muted);font-size:13px">Bu müşteri için henüz dosya eklenmedi.</p>';
+
+    /* Aktivite */
+    document.getElementById('aktiviteList').innerHTML = item.aktivite.map(function(a, i){
+      var last = i === item.aktivite.length - 1;
+      return '<li class="ml-item ' + (last ? '' : 'done') + '"><span class="ml-dot">' + (last ? '' : '<i class="fa-solid fa-check"></i>') + '</span>'
+        + '<div class="ml-body"><b>' + a.baslik + '</b><span>' + a.tarih + ' · ' + a.sub + '</span></div></li>';
+    }).join('');
+  }
+
+  render();
+
+  /* sekme motoru */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+  function activate(id){
+    tabs.forEach(function(t){
+      var on = t.getAttribute('data-tab') === id;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      var id = t.getAttribute('data-tab');
+      activate(id);
+      history.replaceState(null, '', '#' + id);
+    });
+  });
+  var initial = (location.hash || '').replace('#', '');
+  var valid = tabs.some(function(t){ return t.getAttribute('data-tab') === initial; });
+  activate(valid ? initial : 'ozet');
+})();
+</script>
+</body>
+</html>

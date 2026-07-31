@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Sözleşme Revizyon / Ek Protokol — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: Sözleşme Revizyon / Ek Protokol (§19/§26.2-7, Dalga 3 nokta-atışı).
+   crm-finans-sozlesme-detay.html'in ?szl= MAP deseni ve gd-head/gd-grid/gd-block/ctx-row/
+   party-row/term-list iskelet dili BİREBİR devralınır (o dosya READ-ONLY referans,
+   kopyalanmadı — aynı 6 kanonik SZL kaydı burada AYNI id/bedel/süre/taraf ile yeniden
+   tutulur). Bu sayfaya ÖZGÜ olan: ek protokol/revizyon geçmişi + versiyon karşılaştırma —
+   kaynakta karşılığı olmayan YENİ bir görünüm olduğu için page-local .rev-* sınıfları
+   tanımlandı (mevcut sınıf dilinden — ctx-row/term-list ölçek ve renk tokenlarıyla). */
+.gd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.gd-head h1{font-size:21px;letter-spacing:-.015em;margin-bottom:9px;max-width:640px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:8px}
+
+.gd-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.gd-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.gd-desc{font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:13px}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+
+.rec-switch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.rec-switch label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.rec-switch select{font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;outline:none;min-width:280px}
+.rec-switch select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+
+/* ---- revizyon kartı + versiyon karşılaştırma (bu sayfaya özgü, kaynakta emsali yok) ---- */
+.rev-card{padding:18px 22px;border-bottom:1px solid var(--line)}
+.rev-card:last-child{border-bottom:none}
+.rev-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.rev-no{font-size:13.5px;font-weight:800;color:var(--ink)}
+.rev-meta{font-size:11.5px;color:var(--muted);margin-bottom:12px}
+.rev-desc{font-size:13px;color:var(--ink-2);line-height:1.6;margin-bottom:14px}
+.rev-diff{display:flex;flex-direction:column;gap:8px}
+.rev-row{display:grid;grid-template-columns:120px 1fr auto 1fr;align-items:center;gap:10px;font-size:13px;padding:8px 12px;background:var(--bg);border-radius:var(--r-sm)}
+.rev-row .rv-lbl{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.rev-row .rv-eski{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--danger);text-decoration-thickness:1.5px}
+.rev-row .rv-arrow{color:var(--muted);font-size:11px}
+.rev-row .rv-yeni{color:var(--ink);font-weight:700}
+.rev-row.is-draft .rv-yeni{color:var(--warn)}
+@media(max-width:640px){
+  .rev-row{grid-template-columns:1fr;gap:4px}
+  .rev-row .rv-arrow{display:none}
+}
+.rev-empty{padding:26px 22px;text-align:center;color:var(--muted);font-size:13px}
+.rev-ver{font-size:10.5px;font-weight:800;letter-spacing:.03em;color:var(--acc-ink);background:rgba(var(--acc-rgb),.12);border-radius:var(--r-pill);padding:2px 9px;margin-right:8px}
+.rev-files{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.rev-file-added{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:var(--r-sm);background:var(--info-tint);color:var(--ink-2);font-size:12px}
+.rev-file-added i{color:var(--info)}
+
+/* ---- ek protokol ekleme formu — gform/gfield dilinin uyarlaması (kasa-form emsali) ---- */
+.gform-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+@media(max-width:640px){.gform-2col{grid-template-columns:1fr}}
+.frm-acts{display:flex;gap:10px;flex-wrap:wrap;padding-top:4px}
+
+.gv-side-stack{display:flex;flex-direction:column;gap:16px}
+</style>
+</head>
+<body data-sec="finans" data-screen="sozlesme-revizyon">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <!-- statik bake — DEFAULT szl=t05 (sozlesme-detay.html ile AYNI varsayılan); JS
+         yüklenince ?szl= parametresine göre aynı mount innerHTML ile ezilir — D18-B2 -->
+    <div class="rec-switch">
+      <label for="szlSelect">Sözleşme</label>
+      <select id="szlSelect"><option value="t05" selected="">SZL-2025-T05 — Demir-Beton İnş. Ltd.</option><option value="t06">SZL-2025-T06 — Yalıtım Kardeşler</option><option value="t07">SZL-2025-T07 — ElektroMek Taahhüt</option><option value="k01">SZL-2026-K01 — Körfez GYO</option><option value="k02">SZL-2026-K02 — Aliağa Liman İşletmeleri</option><option value="k03">SZL-2026-K03 — Sapanca Belediyesi</option></select>
+    </div>
+    <div id="szlRoot"><div class="gd-head"><div><div class="gd-eyebrow">Demir-Beton İnş. Ltd. · Taşeron Sözleşmesi #SZL-2025-T05 · Revizyon / Ek Protokol</div><h1>Vadi Konakları kaba inşaat — kalıp, demir, beton işleri</h1><div class="gd-badges"><span class="gstat ok">Yürürlükte</span> <span class="gtag">Taşeron</span></div></div><div class="ph-actions"><a class="btn btn-ghost btn-sm" href="crm-finans-sozlesme-detay.html?szl=t05"><i class="fa-solid fa-arrow-left"></i> Sözleşme Detayına Dön</a></div></div><div class="gd-grid"><div class="gv-side-stack"><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Revizyon Geçmişi</div><span class="gc-link" style="cursor:default">1 kayıt</span></div><div class="rev-card"><div class="rev-top"><span class="rev-ver">v2</span><span class="rev-no">EP-SZL-2025-T05-01</span><span class="gstat ok">Onaylandı</span></div><div class="rev-meta">15 Mayıs 2026 · Murat Denizli · Genel Müdür onayladı</div><p class="rev-desc">A Blok zemin kat kalıp iskelesi kapsamı sözleşmeye eklendi; ek metraj için bedel güncellendi.</p><div class="rev-diff"><div class="rev-row"><span class="rv-lbl">Sözleşme Bedeli</span><span class="rv-eski">₺420.000</span><i class="fa-solid fa-arrow-right rv-arrow"></i><span class="rv-yeni">₺450.000</span></div></div><div class="rev-files"><div class="file-row"><div class="file-ico pdf"><i class="fa-solid fa-file-pdf"></i></div><div class="file-info"><b>ek-protokol-szl-2025-t05-01.pdf</b><span>340 KB · İmzalı nüsha</span></div><button class="ia-btn" data-demo="Belge önizleme hazırlanıyor (demo)" data-no-confirm="" aria-label="Görüntüle"><i class="fa-solid fa-eye"></i></button><button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm="" aria-label="İndir"><i class="fa-solid fa-download"></i></button></div></div></div></div><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-circle-plus"></i> Yeni Ek Protokol</div></div><div class="gd-block"><form class="gform" id="revForm" onsubmit="return false"><div class="gform-2col"><div class="gfield"><label for="fKalem">Değişen Kalem</label><select id="fKalem"><option>Sözleşme Bedeli</option><option>Süre</option><option>Kapsam</option><option>Teminat</option><option>Diğer</option></select></div><div class="gfield"><label for="fTarih">Tarih</label><input id="fTarih" type="date"></div><div class="gfield"><label for="fEski">Eski Değer</label><input id="fEski" type="text" placeholder="ör. ₺450.000"></div><div class="gfield"><label for="fYeni">Yeni Değer</label><input id="fYeni" type="text" placeholder="ör. yeni tutar/tarih/madde"></div></div><div class="gfield full" style="margin-top:14px"><label for="fGerekce">Gerekçe / Açıklama</label><textarea id="fGerekce" rows="3" placeholder="Değişikliğin nedeni — kalem/metraj artışı, kapsam genişlemesi, süre uzatımı vb."></textarea></div><div class="gfield full" style="margin-top:14px"><label>Belge</label><button type="button" class="btn btn-ghost btn-sm" id="btnRevBelgeEkle" data-no-confirm=""><i class="fa-solid fa-paperclip"></i> Ek Protokol Belgesi Ekle</button><div id="revBelgeListe" class="rev-files"></div></div><div class="frm-acts" style="margin-top:16px"><button type="button" class="btn btn-ghost btn-sm" id="btnRevDraft" data-no-confirm=""><i class="fa-solid fa-floppy-disk"></i> Taslak Kaydet</button><button type="button" class="btn btn-acc btn-sm" id="btnRevSend"><i class="fa-solid fa-paper-plane"></i> Onaya Gönder</button></div></form></div></div></div><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Taraflar</div><div class="ctx-row"><span class="ctx-lbl">Taraf A</span><span class="ctx-val">Yapıtaş İnşaat A.Ş.</span></div><div class="ctx-row"><span class="ctx-lbl">Taraf B</span><span class="ctx-val"><a href="crm-cari-durum.html?cari=demir-beton" style="color:var(--acc-ink)">Demir-Beton İnş. Ltd.</a></span></div></div><div class="gd-block"><div class="ctx-row"><span class="ctx-lbl">Güncel bedel</span><span class="ctx-val">₺450.000 <span class="muted" style="font-weight:500">(KDV hariç)</span></span></div><div class="ctx-row"><span class="ctx-lbl">Güncel süre</span><span class="ctx-val">1 Nisan 2026 – 30 Eylül 2026</span></div><div class="ctx-row"><span class="ctx-lbl">Teminat</span><span class="ctx-val">%5 kesin teminat mektubu</span></div><div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val"><a href="crm-santiye-detay.html" style="color:var(--acc-ink);font-weight:700">Vadi Konakları</a></span></div><div class="ctx-row"><span class="ctx-lbl">İmza tarihi</span><span class="ctx-val">28 Mart 2026</span></div></div></div></div></div></div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ---- SZL-2026-{K01,K02,K03} + SZL-2025-{T05,T06,T07} — crm-finans-sozlesme-detay.html
+     SZL nesnelerinden yalnız kimlik alt kümesi (no/ad/tip/title/santiye/bedel/sure/teminat/
+     imza/taraf) BİREBİR taşındı; kapsam/ödeme-koşulları/hakedişler listesi bu sayfanın
+     konusu değil (sozlesme-detay.html'in işi), tekrar edilmedi.
+     REVİZYONLAR (revs) bu sayfaya ÖZGÜ — kaynakta revizyon geçmişi hiç yoktu (S19-2 boşluğu
+     buydu). Her revizyon canonicaldeki GÜNCEL bedel/süre değerine ULAŞACAK şekilde kurgulandı
+     (eski→yeni), yani sozlesme-detay.html'deki ₺450.000/₺24.500.000 gibi rakamlarla ÇELİŞMEZ —
+     onlar zaten "yeni" (son) değer olarak burada da aynen geçiyor. Onaylanmamış tek örnek
+     (k02, taslak/beklemede) sureUyari='Süresi yaklaşıyor' bayrağıyla tutarlı bir süre uzatma
+     TEKLİFİDİR, henüz sözleşmenin kendisini değiştirmez — sozlesme-detay.html'in süre alanı
+     bu yüzden BOZULMAZ. ---- */
+  var SZL = {
+    t05:{ no:'SZL-2025-T05', ad:'Demir-Beton İnş. Ltd.', ini:'DB', tip:'Taşeron', title:'Vadi Konakları kaba inşaat — kalıp, demir, beton işleri',
+      santiye:'Vadi Konakları', santiyeHref:true, durum:'ok', durumLbl:'Yürürlükte',
+      bedel:'₺450.000', bedelNot:'(KDV hariç)', sure:'1 Nisan 2026 – 30 Eylül 2026', teminat:'%5 kesin teminat mektubu', imza:'28 Mart 2026',
+      taraf:{ad:'Demir-Beton İnş. Ltd.', ini:'DB', kisi:'Yusuf Ergin · Taşeron', cariHref:'crm-cari-durum.html?cari=demir-beton'},
+      revs:[
+        {no:'EP-SZL-2025-T05-01', tarih:'15 Mayıs 2026', durum:'onaylandi', onaylayan:'Murat Denizli · Genel Müdür',
+         aciklama:'A Blok zemin kat kalıp iskelesi kapsamı sözleşmeye eklendi; ek metraj için bedel güncellendi.',
+         degisen:[{alan:'Sözleşme Bedeli', eski:'₺420.000', yeni:'₺450.000'}],
+         belge:{ad:'ek-protokol-szl-2025-t05-01.pdf', meta:'340 KB · İmzalı nüsha'}}
+      ]},
+    t06:{ no:'SZL-2025-T06', ad:'Yalıtım Kardeşler', ini:'YK', tip:'Taşeron', title:'Liman Lojistik Merkezi — çatı ve cephe yalıtımı',
+      santiye:'Liman Lojistik Merkezi', santiyeHref:false, durum:'ok', durumLbl:'Yürürlükte',
+      bedel:'₺310.000', bedelNot:'(KDV hariç)', sure:'15 Mayıs 2026 – 15 Kasım 2026', teminat:'%5 kesin teminat mektubu', imza:'5 Mayıs 2026',
+      taraf:{ad:'Yalıtım Kardeşler', ini:'YK', kisi:'Cemal Boz · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=yalitim-kardesler'},
+      revs:[
+        {no:'EP-SZL-2025-T06-01', tarih:'1 Haziran 2026', durum:'onaylandi', onaylayan:'Murat Denizli · Genel Müdür',
+         aciklama:'Çatı yalıtım malzemesi temini taşerona devredildi; malzeme bedeli sonraki hakedişlerden mahsup edilecek (bkz. TH-2026-008).',
+         degisen:[{alan:'Kapsam', eski:'Malzeme Yapıtaş İnşaat tarafından temin edilir', yeni:'Malzeme taşeron tarafından temin edilir, hakedişten mahsup edilir'}],
+         belge:{ad:'ek-protokol-szl-2025-t06-01.pdf', meta:'298 KB · İmzalı nüsha'}}
+      ]},
+    t07:{ no:'SZL-2025-T07', ad:'ElektroMek Taahhüt', ini:'EM', tip:'Taşeron', title:'Vadi Konakları elektrik tesisat taahhüdü',
+      santiye:'Vadi Konakları', santiyeHref:true, durum:'ok', durumLbl:'Yürürlükte',
+      bedel:'₺185.000', bedelNot:'(KDV hariç)', sure:'1 Haziran 2026 – 31 Ağustos 2026', teminat:'%5 kesin teminat mektubu', imza:'20 Mayıs 2026',
+      taraf:{ad:'ElektroMek Taahhüt', ini:'EM', kisi:'Tolga Şener · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=elektromek'},
+      revs:[]},
+    k01:{ no:'SZL-2026-K01', ad:'Körfez GYO', ini:'KG', tip:'Kurum', title:'Vadi Konakları — kurumsal işveren sözleşmesi',
+      santiye:'Vadi Konakları', santiyeHref:true, durum:'ok', durumLbl:'Yürürlükte',
+      bedel:'₺24.500.000', sure:'1 Ocak 2025 – 31 Aralık 2026', teminat:'%5 kesin teminat mektubu', imza:'15 Aralık 2024',
+      taraf:{ad:'Körfez GYO', ini:'KG', kisi:'Selin Aydemir · Proje Müdürü', cariHref:'crm-cari-durum.html?cari=korfez-gyo'},
+      revs:[
+        {no:'EP-SZL-2026-K01-01', tarih:'10 Mart 2025', durum:'onaylandi', onaylayan:'Murat Denizli · Genel Müdür',
+         aciklama:'B Blok dış cephe kaplama ve peyzaj imalatları kapsama eklendi; sözleşme bedeli buna göre güncellendi.',
+         degisen:[{alan:'Sözleşme Bedeli', eski:'₺23.800.000', yeni:'₺24.500.000'}],
+         belge:{ad:'ek-protokol-szl-2026-k01-01.pdf', meta:'410 KB · İmzalı nüsha'}}
+      ]},
+    k02:{ no:'SZL-2026-K02', ad:'Aliağa Liman İşletmeleri', ini:'AL', tip:'Kurum', title:'Liman Lojistik Merkezi — kurumsal işveren sözleşmesi',
+      santiye:'Liman Lojistik Merkezi', santiyeHref:false, durum:'ok', durumLbl:'Yürürlükte', sureUyari:'Süresi yaklaşıyor',
+      bedel:'₺9.800.000', sure:'1 Mart 2025 – 31 Ağustos 2026', teminat:'%5 kesin teminat mektubu', imza:'10 Şubat 2025',
+      taraf:{ad:'Aliağa Liman İşletmeleri', ini:'AL', kisi:'Erhan Kaya · Yatırım Md.', cariHref:'crm-cari-durum.html?cari=aliaga-liman'},
+      revs:[
+        {no:'EP-SZL-2026-K02-01', tarih:'18 Temmuz 2026', durum:'taslak', onaylayan:null,
+         aciklama:'Kalan hangar imalatları için süre uzatımı teklif edildi; Aliağa Liman İşletmeleri onayı bekleniyor.',
+         degisen:[{alan:'Süre (bitiş)', eski:'31 Ağustos 2026', yeni:'31 Aralık 2026 (teklif)'}]}
+      ]},
+    k03:{ no:'SZL-2026-K03', ad:'Sapanca Belediyesi', ini:'SB', tip:'Kurum', title:'Göl Evleri 2. Etap — kurumsal işveren sözleşmesi',
+      santiye:'Göl Evleri 2. Etap', santiyeHref:false, durum:'wait', durumLbl:'İmza Bekliyor',
+      bedel:'₺6.200.000', sure:'1 Eylül 2026 – 31 Ağustos 2027', teminat:'%5 kesin teminat mektubu (imza sonrası alınacak)', imza:null,
+      taraf:{ad:'Sapanca Belediyesi', ini:'SB', kisi:'Zeynep Ulusoy · Fen İşleri Md.', cariHref:'crm-cari-durum.html?cari=sapanca-belediyesi'},
+      revs:[]}
+  };
+  var DEFAULT_ID = 't05';
+  var DURUM_CLS = {ok:'ok', wait:'wait'};
+  var REV_DURUM = {onaylandi:{cls:'ok', lbl:'Onaylandı'}, taslak:{cls:'wait', lbl:'Taslak — onay bekliyor'}};
+
+  var q = new URLSearchParams(location.search);
+  var raw = q.get('szl');
+  var id = raw === null ? DEFAULT_ID : (SZL[raw] ? raw : null);
+  var rec = id ? SZL[id] : null;
+
+  var root = document.getElementById('szlRoot');
+  var szlSelect = document.getElementById('szlSelect');
+  var ORDER = ['t05','t06','t07','k01','k02','k03'];
+  szlSelect.innerHTML = ORDER.map(function(k){
+    var r = SZL[k];
+    return '<option value="' + k + '"' + (id === k ? ' selected' : '') + '>' + r.no + ' — ' + r.ad + '</option>';
+  }).join('');
+  szlSelect.addEventListener('change', function(){
+    location.href = 'crm-finans-sozlesme-revizyon.html?szl=' + szlSelect.value;
+  });
+
+  if(!rec){
+    GV.crumb('Kayıt bulunamadı');
+    gvNotFound({
+      mount: '#szlRoot',
+      code: raw ? raw.toUpperCase() : null,
+      tur: 'sözleşme',
+      listHref: 'crm-finans-sozlesmeler.html', listLbl: 'Sözleşme arşivine dön',
+      defHref: 'crm-finans-sozlesme-revizyon.html', defLbl: 'Varsayılan kaydı aç'
+    });
+    return;
+  }
+
+  GV.crumb(rec.no + ' · Revizyon / Ek Protokol');
+  document.title = rec.ad + ' — Sözleşme Revizyon / Ek Protokol — Gavia CRM';
+
+  var santiyeHtml = rec.santiyeHref
+    ? '<a href="crm-santiye-detay.html" style="color:var(--acc-ink);font-weight:700">' + rec.santiye + '</a>'
+    : rec.santiye;
+  var detayHref = 'crm-finans-sozlesme-detay.html?szl=' + id;
+
+  /* ---- §8.4 revizyonu — versiyon numarası: orijinal sözleşme v1 kabul edilir, her
+     onaylanmış ek protokol sırayla v2/v3… numarası alır (taslak/beklemede olanlar henüz
+     versiyon numarası ALMAZ — yürürlüğe girmedi). Ek protokol dosyaları orijinal sözleşme
+     dosyasından (crm-finans-sozlesme-detay.html "Belge" bloğu) AYRI, kendi file-row'una
+     sahiptir — §14 koruma: mevcut yapı üzerine eklenir. ---- */
+  var verCounter = 1;
+  var revHtml = rec.revs.length
+    ? rec.revs.map(function(r){
+        var st = REV_DURUM[r.durum];
+        var verBadge = '';
+        if(r.durum === 'onaylandi'){ verCounter++; verBadge = '<span class="rev-ver">v' + verCounter + '</span>'; }
+        var diffHtml = r.degisen.map(function(d){
+          return '<div class="rev-row' + (r.durum === 'taslak' ? ' is-draft' : '') + '">'
+            + '<span class="rv-lbl">' + d.alan + '</span>'
+            + '<span class="rv-eski">' + d.eski + '</span>'
+            + '<i class="fa-solid fa-arrow-right rv-arrow"></i>'
+            + '<span class="rv-yeni">' + d.yeni + '</span>'
+            + '</div>';
+        }).join('');
+        var belgeHtml = r.belge
+          ? '<div class="rev-files"><div class="file-row"><div class="file-ico pdf"><i class="fa-solid fa-file-pdf"></i></div>'
+            + '<div class="file-info"><b>' + r.belge.ad + '</b><span>' + r.belge.meta + '</span></div>'
+            + '<button class="ia-btn" data-demo="Belge önizleme hazırlanıyor (demo)" data-no-confirm aria-label="Görüntüle"><i class="fa-solid fa-eye"></i></button>'
+            + '<button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm aria-label="İndir"><i class="fa-solid fa-download"></i></button></div></div>'
+          : '<div class="rev-files"><p class="gd-desc" style="margin:0;font-size:12px">Bu protokol için henüz imzalı belge yüklenmedi.</p></div>';
+        return '<div class="rev-card">'
+          + '<div class="rev-top">' + verBadge + '<span class="rev-no">' + r.no + '</span><span class="gstat ' + st.cls + '">' + st.lbl + '</span></div>'
+          + '<div class="rev-meta">' + r.tarih + (r.onaylayan ? ' · ' + r.onaylayan + ' onayladı' : '') + '</div>'
+          + '<p class="rev-desc">' + r.aciklama + '</p>'
+          + '<div class="rev-diff">' + diffHtml + '</div>'
+          + belgeHtml
+          + '</div>';
+      }).join('')
+    : '<div class="rev-empty">' + (rec.durum === 'wait' ? 'Sözleşme henüz imzalanmadı; imza öncesi revizyon/ek protokol uygulanamaz.' : 'Bu sözleşmede henüz revizyon veya ek protokol yok.') + '</div>';
+
+  var formDisabled = rec.durum === 'wait';
+  var formHtml = ''
+    + '<div class="gv-card">'
+    +   '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-circle-plus"></i> Yeni Ek Protokol</div></div>'
+    +   '<div class="gd-block">'
+    +     (formDisabled
+          ? '<p class="gd-desc"><i class="fa-solid fa-circle-info" style="color:var(--acc-ink);margin-right:6px"></i>Sözleşme imza aşamasında olduğu için ek protokol eklenemez.</p>'
+          : '<form class="gform" id="revForm" onsubmit="return false">'
+          +   '<div class="gform-2col">'
+          +     '<div class="gfield"><label for="fKalem">Değişen Kalem</label><select id="fKalem"><option>Sözleşme Bedeli</option><option>Süre</option><option>Kapsam</option><option>Teminat</option><option>Diğer</option></select></div>'
+          +     '<div class="gfield"><label for="fTarih">Tarih</label><input id="fTarih" type="date"></div>'
+          +     '<div class="gfield"><label for="fEski">Eski Değer</label><input id="fEski" type="text" placeholder="ör. ' + rec.bedel + '"></div>'
+          +     '<div class="gfield"><label for="fYeni">Yeni Değer</label><input id="fYeni" type="text" placeholder="ör. yeni tutar/tarih/madde"></div>'
+          +   '</div>'
+          +   '<div class="gfield full" style="margin-top:14px"><label for="fGerekce">Gerekçe / Açıklama</label><textarea id="fGerekce" rows="3" placeholder="Değişikliğin nedeni — kalem/metraj artışı, kapsam genişlemesi, süre uzatımı vb."></textarea></div>'
+          +   '<div class="gfield full" style="margin-top:14px"><label>Belge</label><button type="button" class="btn btn-ghost btn-sm" id="btnRevBelgeEkle" data-no-confirm><i class="fa-solid fa-paperclip"></i> Ek Protokol Belgesi Ekle</button><div id="revBelgeListe" class="rev-files"></div></div>'
+          +   '<div class="frm-acts" style="margin-top:16px">'
+          +     '<button type="button" class="btn btn-ghost btn-sm" id="btnRevDraft" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Taslak Kaydet</button>'
+          +     '<button type="button" class="btn btn-acc btn-sm" id="btnRevSend"><i class="fa-solid fa-paper-plane"></i> Onaya Gönder</button>'
+          +   '</div>'
+          + '</form>')
+    +   '</div>'
+    + '</div>';
+
+  root.innerHTML = ''
+    + '<div class="gd-head">'
+    +   '<div>'
+    +     '<div class="gd-eyebrow">' + rec.ad + ' · ' + rec.tip + ' Sözleşmesi #' + rec.no + ' · Revizyon / Ek Protokol</div>'
+    +     '<h1>' + rec.title + '</h1>'
+    +     '<div class="gd-badges"><span class="gstat ' + DURUM_CLS[rec.durum] + '">' + rec.durumLbl + '</span> <span class="gtag">' + rec.tip + '</span></div>'
+    +   '</div>'
+    +   '<div class="ph-actions"><a class="btn btn-ghost btn-sm" href="' + detayHref + '"><i class="fa-solid fa-arrow-left"></i> Sözleşme Detayına Dön</a></div>'
+    + '</div>'
+    + '<div class="gd-grid">'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Revizyon Geçmişi</div>'
+    +         '<span class="gc-link" style="cursor:default">' + rec.revs.length + ' kayıt</span></div>'
+    +       revHtml
+    +     '</div>'
+    +     formHtml
+    +   '</div>'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label">Taraflar</div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Taraf A</span><span class="ctx-val">Yapıtaş İnşaat A.Ş.</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Taraf B</span><span class="ctx-val"><a href="' + rec.taraf.cariHref + '" style="color:var(--acc-ink)">' + rec.taraf.ad + '</a></span></div>'
+    +       '</div>'
+    +       '<div class="gd-block">'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Güncel bedel</span><span class="ctx-val">' + rec.bedel + (rec.bedelNot ? ' <span class="muted" style="font-weight:500">' + rec.bedelNot + '</span>' : '') + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Güncel süre</span><span class="ctx-val">' + rec.sure + (rec.sureUyari ? ' <span style="color:var(--warn);font-weight:700">· ' + rec.sureUyari + '</span>' : '') + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Teminat</span><span class="ctx-val">' + rec.teminat + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val">' + santiyeHtml + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">İmza tarihi</span><span class="ctx-val">' + (rec.imza || 'İmza bekleniyor') + '</span></div>'
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+
+  if(!formDisabled){
+    var fKalem = document.getElementById('fKalem'), fEski = document.getElementById('fEski');
+    fKalem.addEventListener('change', function(){
+      var map = {'Sözleşme Bedeli':rec.bedel, 'Süre':rec.sure, 'Teminat':rec.teminat};
+      fEski.value = map[fKalem.value] || '';
+    });
+    /* ---- §8.4 revizyonu — "Ek Protokol Belgesi Ekle" artık GERÇEK [MOCK-SİM]: tıklanınca
+       forma bağlı bir dosya satırı eklenir (data-demo toast stub'ı DEĞİL); en fazla 1 belge
+       (gerçek dosya seçici yok, tek sabit mock ad üretilir, tekrar tıklama no-op). ---- */
+    var revBelgeEklendi = false;
+    document.getElementById('btnRevBelgeEkle').addEventListener('click', function(){
+      if(revBelgeEklendi) return;
+      revBelgeEklendi = true;
+      var ad = 'ek-protokol-' + id + '-taslak.pdf';
+      document.getElementById('revBelgeListe').innerHTML =
+        '<div class="rev-file-added"><i class="fa-solid fa-paperclip"></i> ' + ad + ' eklendi (demo) — kaydedilince protokol dosyası olarak listelenecek.</div>';
+      gvToast('Belge forma eklendi (demo).', {type:'info'});
+    });
+    document.getElementById('btnRevDraft').addEventListener('click', function(){
+      gvToast('Ek protokol taslak olarak kaydedildi.', {type:'info'});
+    });
+    document.getElementById('btnRevSend').addEventListener('click', function(){
+      var fYeni = document.getElementById('fYeni'), fGerekce = document.getElementById('fGerekce');
+      if(!fYeni.value.trim()){ gvToast('Yeni değer girin.', {type:'danger'}); return; }
+      if(!fGerekce.value.trim()){ gvToast('Gerekçe/açıklama girin.', {type:'danger'}); return; }
+      gvToast('Ek protokol onaya gönderildi. Genel Müdür onayı bekleniyor.');
+      setTimeout(function(){ location.href = detayHref; }, 900);
+    });
+  }
+
+  /* sef yalnız Vadi Konakları sözleşmelerini görebilir — sozlesme-detay.html ile AYNI kural */
+  var VADI_ONLY = ['k01','t05','t07'];
+  if(GV.role === 'sef' && VADI_ONLY.indexOf(id) === -1){
+    location.replace('crm-finans-sozlesme-revizyon.html?szl=t05');
+  }
+})();
+</script>
+</body>
+</html>

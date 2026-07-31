@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Hakediş Onay Geçmişi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: Hakediş Onay Geçmişi (§18/§26.2-8, Dalga 3 nokta-atışı).
+   crm-finans-hakedis-detay.html'in ?th=/?hkd= ÇİFT MAP deseni ve gd-head/gd-grid/gd-block/
+   ctx-row iskelet dili BİREBİR devralınır (o dosya READ-ONLY referans, kopyalanmadı — aynı
+   TH/HKD kanonik kayıtları burada AYNI id/alan/tarih/tutarla yeniden tutulur, tek fark:
+   bu sayfa "Onay Zinciri" kartını (gvChain primitifi) TAM SAYFA odak yapar, kalem/kesinti
+   dökümünü tekrar etmez — o detay sayfasının işi. Kanonik veriyle çelişme YOK. */
+.gd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.gd-head h1{font-size:21px;letter-spacing:-.015em;margin-bottom:9px;max-width:640px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:8px}
+
+.gd-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.gd-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:13px}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+.ctx-link{display:flex;align-items:center;gap:11px;padding:6px 0}
+.ctx-link .who-mark{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800}
+.ctx-link a{font-size:13.5px;font-weight:700;color:var(--ink)}
+.ctx-link a:hover{color:var(--acc-ink)}
+.ctx-link span{display:block;font-size:11.5px;color:var(--muted)}
+
+/* kayıt seçici — kasa .ks-card / pluxee .plx-card SEÇİCİ idiyomunun sade select uyarlaması
+   (D19/S12 emsali); tam kart-ızgarası burada gereksiz — 11 kayıt için liste seçici yeter */
+.rec-switch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.rec-switch label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.rec-switch select{font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;outline:none;min-width:260px}
+.rec-switch select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+
+.gv-side-stack{display:flex;flex-direction:column;gap:16px}
+</style>
+</head>
+<body data-sec="finans" data-screen="hakedis-onay-gecmisi">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <!-- statik bake — DEFAULT th=014 (hakedis-detay.html ile AYNI varsayılan); JS yüklenince
+         ?th=/?hkd= parametresine göre aynı mount innerHTML ile ezilir — D18-B2 -->
+    <div class="rec-switch">
+      <label for="recSelect">Hakediş</label>
+      <select id="recSelect"><optgroup label="Taşeron Hakedişleri"><option value="th:014" selected="">TH-2026-014 — Demir-Beton İnş. Ltd. · Haziran 2026</option><option value="th:013">TH-2026-013 — Demir-Beton İnş. Ltd. · Mayıs 2026</option><option value="th:009">TH-2026-009 — ElektroMek Taahhüt · Haziran 2026</option><option value="th:008">TH-2026-008 — Yalıtım Kardeşler · Haziran 2026</option><option value="th:005">TH-2026-005 — Demir-Beton İnş. Ltd. · Nisan 2026</option><option value="th:002">TH-2026-002 — ElektroMek Taahhüt · Mart 2026</option></optgroup><optgroup label="Kurum Hakedişleri"><option value="hkd:006">HKD-2026-006 — Körfez GYO · Haziran 2026</option><option value="hkd:005">HKD-2026-005 — Körfez GYO · Mayıs 2026</option><option value="hkd:004">HKD-2026-004 — Körfez GYO · Nisan 2026</option><option value="hkd:003">HKD-2026-003 — Aliağa Liman İşletmeleri · Haziran 2026</option><option value="hkd:002">HKD-2026-002 — Aliağa Liman İşletmeleri · Mayıs 2026</option><option value="hkd:001">HKD-2026-001 — Aliağa Liman İşletmeleri · Nisan 2026</option></optgroup></select>
+    </div>
+    <div id="hkRoot"><div class="gd-head"><div><div class="gd-eyebrow">Demir-Beton İnş. Ltd. · Taşeron Hakediş #TH-2026-014 · Onay Geçmişi</div><h1>Vadi Konakları — Haziran 2026 dönemi kaba inşaat hakedişi</h1><div class="gd-badges"><span class="gstat wait">Onay bekliyor</span></div></div><div class="ph-actions"><a class="btn btn-ghost btn-sm" href="crm-finans-hakedis-cikti.html?th=014"><i class="fa-solid fa-print"></i> Çıktı Al</a><a class="btn btn-ghost btn-sm" href="crm-finans-hakedis-detay.html?th=014"><i class="fa-solid fa-arrow-left"></i> Hakediş Detayına Dön</a></div></div><div class="gd-grid"><div class="gv-side-stack"><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-stamp"></i> Tam Onay Zinciri</div><span class="gc-link" style="cursor:default">4 adım · kim / ne zaman / ne yaptı</span></div><div class="gc-body"><div id="chainEl"><ol class="gv-chain"><li class="chain-step info"><span class="cs-node"><i class="fa-solid fa-paper-plane"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Hasan Demirci</b><span>Şantiye Şefi</span></div><div class="cs-when"><span class="cs-act">Oluşturdu</span><span class="cs-date">28 Haziran 2026 09:15</span></div></div></div></li><li class="chain-step ok"><span class="cs-node"><i class="fa-solid fa-check"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Elif Sarıkaya</b><span>Teknik Müdür</span></div><div class="cs-when"><span class="cs-act">Onayladı</span><span class="cs-date">29 Haziran 2026 14:20</span></div></div><div class="cs-note">Metraj saha ölçümüyle örtüşüyor, imalat kalemleri onaylandı.</div></div></li><li class="chain-step wait is-now"><span class="cs-node"><i class="fa-solid fa-hourglass-half"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Nesrin Aydın</b><span>Muhasebe</span></div><div class="cs-when"><span class="cs-act">Onay bekliyor</span></div></div></div></li><li class="chain-step idle"><span class="cs-node"><i class="fa-solid fa-minus"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Murat Denizli</b><span>Genel Müdür</span></div><div class="cs-when"><span class="cs-act">Sırada</span></div></div></div></li></ol></div></div></div></div><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Hakediş Bilgileri</div><div class="ctx-link"><div class="who-mark" style="background:var(--info-tint);color:var(--info)">DB</div><div><a href="crm-cari-durum.html?cari=demir-beton">Demir-Beton İnş. Ltd.</a><span>Taşeron · cari durum sorgusu</span></div></div></div><div class="gd-block"><div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val"><a href="crm-santiye-detay.html" style="color:inherit">Vadi Konakları</a></span></div><div class="ctx-row"><span class="ctx-lbl">Sözleşme</span><span class="ctx-val"><a href="crm-finans-sozlesme-detay.html?szl=t05" style="color:var(--acc-ink)">SZL-2025-T05</a></span></div><div class="ctx-row"><span class="ctx-lbl">Dönem</span><span class="ctx-val">Haziran 2026</span></div><div class="ctx-row"><span class="ctx-lbl">Tutar</span><span class="ctx-val">₺90.000</span></div><div class="ctx-row"><span class="ctx-lbl">Durum</span><span class="ctx-val"><span class="gstat wait">Onay bekliyor</span></span></div><div class="ctx-row"><span class="ctx-lbl">Gönderim tarihi</span><span class="ctx-val">28 Haziran 2026</span></div><div class="ctx-row"><span class="ctx-lbl">Oluşturan</span><span class="ctx-val">Hasan Demirci</span></div></div></div></div></div></div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ---- TH-2026-{002,005,008,009,013,014} + HKD-2026-{001..006} — crm-finans-hakedis-detay.html
+     TH/HKD nesnelerinden yalnız bu sayfanın ihtiyaç duyduğu alt küme (kimlik + onay zinciri)
+     BİREBİR taşındı: no/title/taraf/santiye/szl/donem/tutar/durum/gonderim/olusturan/chain.
+     Kalem/kesinti/kümülatif dökümü bu sayfanın konusu değil (hakedis-detay.html'in işi) —
+     tekrar edilmedi. Sayı/tarih/durum hiçbiri değiştirilmedi; kaynak kanoniktir. ---- */
+  var TH = {
+    '014':{ no:'TH-2026-014', taseron:{ad:'Demir-Beton İnş. Ltd.', ini:'DB', kisi:'Yusuf Ergin · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=demir-beton'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2025-T05', szlHref:'crm-finans-sozlesme-detay.html?szl=t05',
+      donem:'Haziran 2026', tutar:90000, durum:'bekliyor', gonderim:'28 Haziran 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Haziran 2026 dönemi kaba inşaat hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'28 Haziran 2026 09:15'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'29 Haziran 2026 14:20', not:'Metraj saha ölçümüyle örtüşüyor, imalat kalemleri onaylandı.'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'bekliyor'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'sirada'}
+      ] },
+    '013':{ no:'TH-2026-013', taseron:{ad:'Demir-Beton İnş. Ltd.', ini:'DB', kisi:'Yusuf Ergin · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=demir-beton'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2025-T05', szlHref:'crm-finans-sozlesme-detay.html?szl=t05',
+      donem:'Mayıs 2026', tutar:210000, durum:'onaylandi', gonderim:'26 Mayıs 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Mayıs 2026 dönemi kaba inşaat hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'26 Mayıs 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'28 Mayıs 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'2 Haziran 2026', not:'Ödeme sıraya alındı.'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'sirada'}
+      ] },
+    '009':{ no:'TH-2026-009', taseron:{ad:'ElektroMek Taahhüt', ini:'EM', kisi:'Tolga Şener · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=elektromek'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2025-T07', szlHref:'crm-finans-sozlesme-detay.html?szl=t07',
+      donem:'Haziran 2026', tutar:76200, durum:'bekliyor', gonderim:'1 Temmuz 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Haziran 2026 dönemi elektrik tesisat hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'28 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'29 Haziran 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'bekliyor'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'sirada'}
+      ] },
+    '008':{ no:'TH-2026-008', taseron:{ad:'Yalıtım Kardeşler', ini:'YK', kisi:'Cemal Boz · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=yalitim-kardesler'},
+      santiye:'Liman Lojistik Merkezi', santiyeHref:false, szl:'SZL-2025-T06', szlHref:'crm-finans-sozlesme-detay.html?szl=t06',
+      donem:'Haziran 2026', tutar:128500, durum:'onaylandi', gonderim:'24 Haziran 2026', olusturan:'Aylin Koç',
+      title:'Liman Lojistik Merkezi — Haziran 2026 dönemi yalıtım hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', durum:'olusturdu', tarih:'24 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'26 Haziran 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'30 Haziran 2026', not:'Malzeme mahsubu uygulandı, ödeme sıraya alındı.'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'sirada'}
+      ] },
+    '005':{ no:'TH-2026-005', taseron:{ad:'Demir-Beton İnş. Ltd.', ini:'DB', kisi:'Yusuf Ergin · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=demir-beton'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2025-T05', szlHref:'crm-finans-sozlesme-detay.html?szl=t05',
+      donem:'Nisan 2026', tutar:185000, durum:'odendi', gonderim:'28 Nisan 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Nisan 2026 dönemi kaba inşaat hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'28 Nisan 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'29 Nisan 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'5 Mayıs 2026'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'onaylandi', tarih:'10 Mayıs 2026', not:'Ödeme yapıldı, hakediş kapandı.'}
+      ] },
+    '002':{ no:'TH-2026-002', taseron:{ad:'ElektroMek Taahhüt', ini:'EM', kisi:'Tolga Şener · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=elektromek'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2025-T07', szlHref:'crm-finans-sozlesme-detay.html?szl=t07',
+      donem:'Mart 2026', tutar:54000, durum:'odendi', gonderim:'25 Mart 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Mart 2026 dönemi elektrik tesisat hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'25 Mart 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'27 Mart 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'2 Nisan 2026'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'onaylandi', tarih:'15 Nisan 2026', not:'Ödeme yapıldı, hakediş kapandı.'}
+      ] }
+  };
+  var HKD = {
+    '006':{ no:'HKD-2026-006', kurum:{ad:'Körfez GYO', ini:'KG', kisi:'Selin Aydemir · Proje Müdürü', cariHref:'crm-cari-durum.html?cari=korfez-gyo'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2026-K01', szlHref:'crm-finans-sozlesme-detay.html?szl=k01',
+      donem:'Haziran 2026', tutar:1630000, durum:'bekliyor', gonderim:'20 Haziran 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Haziran 2026 dönemi kurum hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'20 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'22 Haziran 2026', not:'Metraj kontrolü tamamlandı, kuruma gönderildi.'},
+        {rol:'Körfez GYO', kisi:'Selin Aydemir', durum:'bekliyor', not:'12 gündür kurum onayında.'}
+      ] },
+    '005':{ no:'HKD-2026-005', kurum:{ad:'Körfez GYO', ini:'KG', kisi:'Selin Aydemir · Proje Müdürü', cariHref:'crm-cari-durum.html?cari=korfez-gyo'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2026-K01', szlHref:'crm-finans-sozlesme-detay.html?szl=k01',
+      donem:'Mayıs 2026', tutar:620000, durum:'odendi', gonderim:'20 Mayıs 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Mayıs 2026 dönemi kurum hakedişi',
+      ksHref:'crm-operasyon-kasa-detay.html?ks=ksg-004', ksNo:'KSG-2026-004',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'20 Mayıs 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'22 Mayıs 2026'},
+        {rol:'Körfez GYO', kisi:'Selin Aydemir', durum:'onaylandi', tarih:'28 Mayıs 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'1 Haziran 2026', not:'Tahsilat KSG-2026-004 ile kasaya işlendi.'}
+      ] },
+    '004':{ no:'HKD-2026-004', kurum:{ad:'Körfez GYO', ini:'KG', kisi:'Selin Aydemir · Proje Müdürü', cariHref:'crm-cari-durum.html?cari=korfez-gyo'},
+      santiye:'Vadi Konakları', santiyeHref:true, szl:'SZL-2026-K01', szlHref:'crm-finans-sozlesme-detay.html?szl=k01',
+      donem:'Nisan 2026', tutar:540000, durum:'odendi', gonderim:'20 Nisan 2026', olusturan:'Hasan Demirci',
+      title:'Vadi Konakları — Nisan 2026 dönemi kurum hakedişi',
+      ksHref:'crm-operasyon-kasa-detay.html?ks=ksg-002', ksNo:'KSG-2026-002',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'20 Nisan 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'22 Nisan 2026'},
+        {rol:'Körfez GYO', kisi:'Selin Aydemir', durum:'onaylandi', tarih:'26 Nisan 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'2 Mayıs 2026', not:'Tahsilat KSG-2026-002 ile kasaya işlendi.'}
+      ] },
+    '003':{ no:'HKD-2026-003', kurum:{ad:'Aliağa Liman İşletmeleri', ini:'AL', kisi:'Erhan Kaya · Yatırım Md.', cariHref:'crm-cari-durum.html?cari=aliaga-liman'},
+      santiye:'Liman Lojistik Merkezi', santiyeHref:false, szl:'SZL-2026-K02', szlHref:'crm-finans-sozlesme-detay.html?szl=k02',
+      donem:'Haziran 2026', tutar:980000, durum:'onaylandi', gonderim:'14 Haziran 2026', olusturan:'Aylin Koç',
+      title:'Liman Lojistik Merkezi — Haziran 2026 dönemi kurum hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', durum:'olusturdu', tarih:'14 Haziran 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'16 Haziran 2026'},
+        {rol:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya', durum:'onaylandi', tarih:'18 Haziran 2026', not:'Onaylandı, tahsilat bekleniyor.'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'sirada'}
+      ] },
+    '002':{ no:'HKD-2026-002', kurum:{ad:'Aliağa Liman İşletmeleri', ini:'AL', kisi:'Erhan Kaya · Yatırım Md.', cariHref:'crm-cari-durum.html?cari=aliaga-liman'},
+      santiye:'Liman Lojistik Merkezi', santiyeHref:false, szl:'SZL-2026-K02', szlHref:'crm-finans-sozlesme-detay.html?szl=k02',
+      donem:'Mayıs 2026', tutar:410000, durum:'odendi', gonderim:'10 Mayıs 2026', olusturan:'Aylin Koç',
+      title:'Liman Lojistik Merkezi — Mayıs 2026 dönemi kurum hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', durum:'olusturdu', tarih:'10 Mayıs 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'12 Mayıs 2026'},
+        {rol:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya', durum:'onaylandi', tarih:'16 Mayıs 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'20 Mayıs 2026', not:'Tahsilat kasaya işlendi.'}
+      ] },
+    '001':{ no:'HKD-2026-001', kurum:{ad:'Aliağa Liman İşletmeleri', ini:'AL', kisi:'Erhan Kaya · Yatırım Md.', cariHref:'crm-cari-durum.html?cari=aliaga-liman'},
+      santiye:'Liman Lojistik Merkezi', santiyeHref:false, szl:'SZL-2026-K02', szlHref:'crm-finans-sozlesme-detay.html?szl=k02',
+      donem:'Nisan 2026', tutar:265000, durum:'odendi', gonderim:'8 Nisan 2026', olusturan:'Aylin Koç',
+      title:'Liman Lojistik Merkezi — Nisan 2026 dönemi kurum hakedişi',
+      chain:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', durum:'olusturdu', tarih:'8 Nisan 2026'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'10 Nisan 2026'},
+        {rol:'Aliağa Liman İşletmeleri', kisi:'Erhan Kaya', durum:'onaylandi', tarih:'14 Nisan 2026'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'18 Nisan 2026', not:'Tahsilat kasaya işlendi.'}
+      ] }
+  };
+  var STATUS_LBL = {bekliyor:'Onay Bekliyor', onaylandi:'Onaylandı', odendi:'Ödendi'};
+
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+
+  var q = new URLSearchParams(location.search);
+  var thRaw = q.get('th'), hkdRaw = q.get('hkd');
+  var seri, rawParam, rec;
+
+  if(thRaw !== null){ seri = 'th'; rawParam = thRaw; rec = TH[thRaw] || null; }
+  else if(hkdRaw !== null){ seri = 'hkd'; rawParam = hkdRaw; rec = HKD[hkdRaw] || null; }
+  else { seri = 'th'; rawParam = null; rec = TH['014']; }
+
+  var root = document.getElementById('hkRoot');
+  var recSelect = document.getElementById('recSelect');
+
+  /* kayıt seçici — 11 kanonik kayıt (6 TH + 5 HKD 001-006 hariç 006 dahil = 6), tarafa göre
+     gruplanmış <optgroup>; seçim ?th=/?hkd= linkine yönlendirir (kasa ?santiye= emsali) */
+  var optHtml = '<optgroup label="Taşeron Hakedişleri">';
+  ['014','013','009','008','005','002'].forEach(function(k){
+    var r = TH[k];
+    optHtml += '<option value="th:' + k + '"' + (seri === 'th' && rec && rec.no === r.no ? ' selected' : '') + '>' + r.no + ' — ' + r.taseron.ad + ' · ' + r.donem + '</option>';
+  });
+  optHtml += '</optgroup><optgroup label="Kurum Hakedişleri">';
+  ['006','005','004','003','002','001'].forEach(function(k){
+    var r = HKD[k];
+    optHtml += '<option value="hkd:' + k + '"' + (seri === 'hkd' && rec && rec.no === r.no ? ' selected' : '') + '>' + r.no + ' — ' + r.kurum.ad + ' · ' + r.donem + '</option>';
+  });
+  optHtml += '</optgroup>';
+  recSelect.innerHTML = optHtml;
+  recSelect.addEventListener('change', function(){
+    var parts = recSelect.value.split(':');
+    location.href = 'crm-finans-hakedis-onay-gecmisi.html?' + parts[0] + '=' + parts[1];
+  });
+
+  if(!rec){
+    GV.crumb('Kayıt bulunamadı');
+    gvNotFound({
+      mount: '#hkRoot',
+      code: rawParam ? rawParam.toUpperCase() : null,
+      tur: 'hakediş',
+      listHref: seri === 'hkd' ? 'crm-finans-kurum.html' : 'crm-finans-taseron.html',
+      listLbl: seri === 'hkd' ? 'Kurum hakedişlerine dön' : 'Taşeron hakedişlerine dön',
+      defHref: 'crm-finans-hakedis-onay-gecmisi.html', defLbl: 'Varsayılan kaydı aç'
+    });
+    return;
+  }
+
+  GV.crumb(rec.no + ' · Onay Geçmişi');
+  document.title = rec.no + ' Onay Geçmişi — Gavia CRM';
+
+  var taraf = seri === 'th' ? rec.taseron : rec.kurum;
+  var tarafKey = seri === 'th' ? 'Taşeron' : 'Kurum';
+  var detayHref = 'crm-finans-hakedis-detay.html?' + seri + '=' + rec.no.slice(-3);
+  var santiyeHtml = rec.santiyeHref ? '<a href="crm-santiye-detay.html" style="color:inherit">' + rec.santiye + '</a>' : rec.santiye;
+  var ksHtml = rec.ksHref
+    ? '<div class="ctx-row"><span class="ctx-lbl">Kasa tahsilat kaydı</span><span class="ctx-val"><a href="' + rec.ksHref + '" style="color:var(--acc-ink)">' + rec.ksNo + '</a></span></div>'
+    : '';
+
+  root.innerHTML = ''
+    + '<div class="gd-head">'
+    +   '<div>'
+    +     '<div class="gd-eyebrow">' + taraf.ad + ' · ' + tarafKey + ' Hakediş #' + rec.no + ' · Onay Geçmişi</div>'
+    +     '<h1>' + rec.title + '</h1>'
+    +     '<div class="gd-badges">' + gvChainBadge(rec.durum) + '</div>'
+    +   '</div>'
+    +   '<div class="ph-actions">'
+    +     '<a class="btn btn-ghost btn-sm" href="crm-finans-hakedis-cikti.html?' + seri + '=' + rec.no.slice(-3) + '"><i class="fa-solid fa-print"></i> Çıktı Al</a>'
+    +     '<a class="btn btn-ghost btn-sm" href="' + detayHref + '"><i class="fa-solid fa-arrow-left"></i> Hakediş Detayına Dön</a>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="gd-grid">'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-stamp"></i> Tam Onay Zinciri</div>'
+    +         '<span class="gc-link" style="cursor:default">' + rec.chain.length + ' adım · kim / ne zaman / ne yaptı</span></div>'
+    +       '<div class="gc-body"><div id="chainEl"></div></div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block"><div class="gd-label">Hakediş Bilgileri</div><div class="ctx-link"><div class="who-mark" style="background:var(--info-tint);color:var(--info)">' + taraf.ini + '</div><div><a href="' + taraf.cariHref + '">' + taraf.ad + '</a><span>' + tarafKey + ' · cari durum sorgusu</span></div></div></div>'
+    +       '<div class="gd-block">'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val">' + santiyeHtml + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Sözleşme</span><span class="ctx-val"><a href="' + rec.szlHref + '" style="color:var(--acc-ink)">' + rec.szl + '</a></span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Dönem</span><span class="ctx-val">' + rec.donem + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Tutar</span><span class="ctx-val">' + tl(rec.tutar) + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Durum</span><span class="ctx-val">' + gvChainBadge(rec.durum) + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Gönderim tarihi</span><span class="ctx-val">' + rec.gonderim + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Oluşturan</span><span class="ctx-val">' + rec.olusturan + '</span></div>'
+    +         ksHtml
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+
+  gvChain(document.getElementById('chainEl'), {steps: rec.chain});
+
+  /* sef yalnız Vadi Konakları hakedişlerini görebilir — hakedis-detay.html ile AYNI kural */
+  var VADI_TH = ['014','013','009','005','002'];
+  var VADI_HKD = ['006','005','004'];
+  if(GV.role === 'sef'){
+    var vadiOk = seri === 'th' ? VADI_TH.indexOf(rawParam === null ? '014' : rec.no.slice(-3)) !== -1 : VADI_HKD.indexOf(rec.no.slice(-3)) !== -1;
+    if(!vadiOk) location.replace('crm-finans-hakedis-onay-gecmisi.html?th=014');
+  }
+})();
+</script>
+</body>
+</html>

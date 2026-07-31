@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Evrak Son Kullanma Uyarıları — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Evrak Son Kullanma Tarihi Uyarı Ekranı (§13, Dalga 4/Personel) ============
+   crm-personel-ozluk.html'deki tblMatris'in warn/expired hücreleriyle BİREBİR (8 kayıt) —
+   o dosya READ-ONLY referans, YAZILMADI. §13 davranış kuralı: "son kullanma tarihi olan
+   evrak türleri yaklaşan-son-tarih uyarısı üretmeli" — bu ekran o kuralın somut karşılığı. */
+.uy-cell{display:flex;align-items:center;gap:12px;min-width:0}
+.uy-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800}
+.uy-info{min-width:0;line-height:1.35}
+.uy-info b{display:block;font-size:13.5px;font-weight:700;color:var(--ink)}
+.uy-info span{font-size:11.5px;color:var(--muted)}
+
+.gun-cell{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:13px}
+.gun-cell.crit{color:var(--danger)}
+.gun-cell.yakin{color:var(--warn)}
+.gun-cell i{font-size:11px}
+
+.col-tur{width:230px}
+.col-santiye{width:170px}
+.col-gun{width:150px}
+.col-durum{width:140px}
+
+.cross-link{display:flex;align-items:center;gap:12px;padding:15px 22px;background:var(--bg);border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.cross-link i.lead{color:var(--acc-ink);font-size:14px}
+.cross-link a{margin-left:auto;flex:none;font-size:12.5px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
+.cross-link a i{font-size:11px;transition:.25s var(--ease)}
+.cross-link a:hover i{transform:translateX(3px)}
+@media(max-width:640px){.cross-link{flex-wrap:wrap;padding:14px 16px}.cross-link a{margin-left:0}}
+</style>
+</head>
+<body data-sec="personel" data-screen="ozluk">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">İnsan Kaynağı</div>
+        <h1>Evrak Son Kullanma Uyarıları</h1>
+        <div class="ph-sub"><span data-table-count>8</span> uyarı · süre takipli evrak türlerinde yaklaşan/dolan tarihler</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-personel-ozluk.html"><i class="fa-solid fa-folder-open"></i> Özlük &amp; Evrak</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-clock"></i></div>
+        <div><div class="kpi-num num">6</div><div class="kpi-lbl">Süresi 30 gün içinde dolan</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-users"></i> 5 personelde</div></div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div><div class="kpi-num num">2</div><div class="kpi-lbl">Süresi dolmuş</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-user"></i> Ramazan Kılıç, Halil Güneş</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-gauge-simple-high"></i></div>
+        <div><div class="kpi-num num">17 gün</div><div class="kpi-lbl">Ortalama kalan süre (dolmamışlar)</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-chart-line"></i> 6 kayıt ortalaması</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-notes-medical"></i></div>
+        <div><div class="kpi-num num">4</div><div class="kpi-lbl">Süre takipli evrak türü</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> Sağlık raporu, İSG, MYB, Ehliyet/SRC</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="filter-bar">
+        <div class="fb-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Personel veya evrak türü ara" data-table-search="#tblUyari">
+        </div>
+        <div class="chips" data-target="#tblUyari">
+          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">8</span></button>
+          <button class="chip" data-filter="yakin">Süresi Yaklaşan <span class="ch-cnt">6</span></button>
+          <button class="chip" data-filter="dolmus">Süresi Dolmuş <span class="ch-cnt">2</span></button>
+        </div>
+      </div>
+      <div class="gc-body flush">
+        <table class="gtable" id="tblUyari">
+          <thead>
+            <tr>
+              <th>Personel</th>
+              <th class="col-tur">Evrak Türü</th>
+              <th class="col-santiye">Şantiye</th>
+              <th class="col-gun">Kalan Süre</th>
+              <th class="col-durum">Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <!-- statik bake — kanonik 8 kayıt, crm-personel-ozluk.html tblMatris ile BİREBİR;
+               JS yüklenince aynı satırlar sıralanıp aynı mount'a yeniden basılır — D18-B2 -->
+          <tbody id="tblBody">
+            <tr data-f="dolmus" data-per="17" data-doc="09">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">HG</div><div class="uy-info"><b>Halil Güneş</b><span>Operatör</span></div></div></td>
+              <td>Ehliyet / SRC belgesi</td>
+              <td>—</td>
+              <td><span class="gun-cell crit"><i class="fa-solid fa-triangle-exclamation"></i> 6 gün önce doldu</span></td>
+              <td><span class="gstat danger">Süresi Doldu</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=17&amp;doc=09" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=17&amp;tur=09" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="dolmus" data-per="12" data-doc="08">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RK</div><div class="uy-info"><b>Ramazan Kılıç</b><span>Kalıpçı</span></div></div></td>
+              <td>Mesleki yeterlilik belgesi</td>
+              <td>Vadi Konakları</td>
+              <td><span class="gun-cell crit"><i class="fa-solid fa-triangle-exclamation"></i> 14 gün önce doldu</span></td>
+              <td><span class="gstat danger">Süresi Doldu</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=12&amp;doc=08" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=12&amp;tur=08" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="yakin" data-per="18" data-doc="08">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">MÇ</div><div class="uy-info"><b>Metin Çetin</b><span>Kaynakçı</span></div></div></td>
+              <td>Mesleki yeterlilik belgesi</td>
+              <td>—</td>
+              <td><span class="gun-cell crit"><i class="fa-solid fa-clock"></i> 10 gün kaldı</span></td>
+              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=18&amp;doc=08" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=18&amp;tur=08" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="yakin" data-per="5" data-doc="07">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--info-tint);color:var(--info)">AK</div><div class="uy-info"><b>Aylin Koç</b><span>Şantiye Şefi</span></div></div></td>
+              <td>İSG eğitim sertifikası</td>
+              <td>Liman Lojistik Merkezi</td>
+              <td><span class="gun-cell crit"><i class="fa-solid fa-clock"></i> 12 gün kaldı</span></td>
+              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=5&amp;doc=07" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=5&amp;tur=07" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="yakin" data-per="13" data-doc="09">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SD</div><div class="uy-info"><b>Selim Doğan</b><span>Demir Ustası</span></div></div></td>
+              <td>Ehliyet / SRC belgesi</td>
+              <td>Vadi Konakları</td>
+              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 18 gün kaldı</span></td>
+              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=13&amp;doc=09" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=13&amp;tur=09" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="yakin" data-per="17" data-doc="07">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">HG</div><div class="uy-info"><b>Halil Güneş</b><span>Operatör</span></div></div></td>
+              <td>İSG eğitim sertifikası</td>
+              <td>—</td>
+              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 18 gün kaldı</span></td>
+              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=17&amp;doc=07" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=17&amp;tur=07" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="yakin" data-per="8" data-doc="06">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div><div class="uy-info"><b>Baran Yıldız</b><span>Satın Alma Sorumlusu</span></div></div></td>
+              <td>Sağlık raporu</td>
+              <td>—</td>
+              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 20 gün kaldı</span></td>
+              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=8&amp;doc=06" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=8&amp;tur=06" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="yakin" data-per="13" data-doc="06">
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SD</div><div class="uy-info"><b>Selim Doğan</b><span>Demir Ustası</span></div></div></td>
+              <td>Sağlık raporu</td>
+              <td>Vadi Konakları</td>
+              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 25 gün kaldı</span></td>
+              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=13&amp;doc=06" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=13&amp;tur=06" data-no-confirm>Yenile</a></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="gv-empty" data-table-empty hidden>
+          <div class="ge-ico"><i class="fa-solid fa-circle-check"></i></div>
+          <h4>Eşleşen uyarı yok</h4>
+          <p>Aramayı temizleyin veya farklı bir filtre seçin.</p>
+        </div>
+      </div>
+      <div class="cross-link">
+        <i class="fa-solid fa-folder-open lead"></i>
+        <span>Tüm personelin evrak durumunu görmek için özlük matrisini açın.</span>
+        <a href="crm-personel-ozluk.html">Özlük &amp; Evrak <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* satırlar zaten kalan-süreye göre sıralı statik basıldı (dolmuş → en az kalan); JS
+     yeniden sıralama yapmaz, yalnız chip/arama filtresi ui.js'in standart motoruna bırakılır. */
+})();
+</script>
+</body>
+</html>

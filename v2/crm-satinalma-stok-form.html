@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Stok Hareketi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Yeni Stok Hareketi Formu ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+
+/* tür seçici — kart tabanlı radio grubu */
+.tur-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:640px){.tur-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tur-opt{position:relative}
+.tur-opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.tur-opt label{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1.5px solid var(--line);border-radius:var(--r-md);text-align:center;cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
+.tur-opt label i{font-size:16px;color:var(--muted)}
+.tur-opt label span{font-size:12px;font-weight:700;color:var(--ink-2)}
+.tur-opt input:checked + label{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.07)}
+.tur-opt input:checked + label i,.tur-opt input:checked + label span{color:var(--acc-ink)}
+.tur-opt input:focus-visible + label{outline:2px solid var(--acc-ink);outline-offset:2px}
+
+.dyn-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;margin-top:18px;padding-top:18px;border-top:1px dashed var(--line)}
+@media(max-width:640px){.dyn-fields{grid-template-columns:minmax(0,1fr)}}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body data-sec="satinalma" data-screen="stok">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-satinalma-stok.html">Stok &amp; Depo</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbLbl">Yeni Hareket</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Tedarik</div>
+        <h1 id="pageH1">Yeni Stok Hareketi</h1>
+        <div class="ph-sub" id="pageSub">Hareket türünü seçin; alan seti seçime göre değişir. Kayıt onaylandığında Stok &amp; Depo listesine yansır (simülasyon).</div>
+        <div class="gd-desc" id="revBanner" style="display:none;margin-top:10px;padding:12px 14px;background:var(--warn-tint);color:var(--warn);border-radius:var(--r-sm);font-size:12.5px;line-height:1.5"><i class="fa-solid fa-code-branch"></i> Bu form <b id="revBannerNo"></b> kaydının yeni bir revizyonunu (v2) oluşturuyor. Önceki hali işlem geçmişinde saklanır.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <!-- ============ SOL: form ============ -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-right-left"></i> Hareket Bilgileri</div></div>
+        <div class="gc-body">
+          <div class="gd-label">Hareket Türü</div>
+          <div class="tur-grid" id="turGrid">
+            <div class="tur-opt"><input type="radio" name="tur" id="tGiris" value="giris" checked><label for="tGiris"><i class="fa-solid fa-arrow-down-to-bracket"></i><span>Giriş</span></label></div>
+            <div class="tur-opt"><input type="radio" name="tur" id="tCikis" value="cikis"><label for="tCikis"><i class="fa-solid fa-arrow-up-from-bracket"></i><span>Çıkış</span></label></div>
+            <div class="tur-opt"><input type="radio" name="tur" id="tTransfer" value="transfer"><label for="tTransfer"><i class="fa-solid fa-truck-arrow-right"></i><span>Transfer</span></label></div>
+            <div class="tur-opt"><input type="radio" name="tur" id="tIade" value="iade"><label for="tIade"><i class="fa-solid fa-rotate-left"></i><span>İade</span></label></div>
+            <div class="tur-opt"><input type="radio" name="tur" id="tFire" value="fire"><label for="tFire"><i class="fa-solid fa-fire"></i><span>Fire</span></label></div>
+            <div class="tur-opt"><input type="radio" name="tur" id="tSayim" value="sayim"><label for="tSayim"><i class="fa-solid fa-clipboard-list"></i><span>Sayım</span></label></div>
+          </div>
+
+          <form class="gform" id="hareketForm" onsubmit="return false" style="margin-top:18px">
+            <div class="gfield">
+              <label for="fKalem">Kalem</label>
+              <select id="fKalem"></select>
+            </div>
+            <div class="gfield">
+              <label for="fDepo">Depo</label>
+              <select id="fDepo">
+                <option value="D-MRK">Merkez Ana Depo (D-MRK)</option>
+                <option value="D-VDI">Vadi Şantiye Deposu (D-VDI)</option>
+                <option value="D-LMN">Liman Şantiye Deposu (D-LMN)</option>
+                <option value="D-ARC">Araç Deposu (D-ARC)</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fMiktar">Miktar</label>
+              <input type="text" id="fMiktar" placeholder="ör. 4,2">
+            </div>
+            <div class="gfield">
+              <label for="fTarih">Tarih</label>
+              <input type="text" id="fTarih" value="2 Temmuz 2026" readonly>
+            </div>
+          </form>
+
+          <!-- ============ DİNAMİK ALAN SETİ — hareket türüne göre değişir ============ -->
+          <!-- statik bake — DEFAULT 'giriş' hareket türü alan seti (FIELD_SETS.giris); JS yüklenince aynı mount innerHTML ile ezilir (radio değişince yeniden render olur) — D18-B2 -->
+          <div class="dyn-fields" id="dynFields"><div class="gfield"><label for="dyn0">İrsaliye No</label><input type="text" id="dyn0" placeholder="ör. IRS-2026-15"></div><div class="gfield"><label for="dyn1">Tedarikçi</label><select id="dyn1"><option>Ege Hazır Beton</option><option>Trakya Beton Santrali</option><option>Marmara Demir Çelik</option><option>Boğaziçi Yapı Market</option><option>Delta Elektrik</option><option>Anadolu Hırdavat</option><option>Diğer</option></select></div></div>
+        </div>
+        <div class="gd-block">
+          <div class="gd-label">Not / Açıklama</div>
+          <textarea id="fNot" rows="3" placeholder="ör. B Blok 3. kat demir imalatı" style="width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;font:inherit;color:var(--ink);resize:vertical"></textarea>
+        </div>
+        <div class="form-foot">
+          <a class="btn btn-ghost btn-sm" href="crm-satinalma-stok.html">Vazgeç</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnDraft" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Taslak Olarak Kaydet</button>
+          <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="hareketSubmit"><i class="fa-solid fa-floppy-disk"></i> Hareketi Kaydet</button>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bilgi notları ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Kayıt Notları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-hashtag"></i><span>STK takip numarası kayıt onaylandığında otomatik üretilir; bu prototipte gösterilmez.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-arrows-turn-to-dots"></i><span>Hareket türü, aşağıdaki alan setini canlı olarak değiştirir — ör. Transfer için kaynak/hedef depo, Sayım için dönem/fark alanı.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-flask"></i><span>Bu form simülasyondur; gönderilen bilgiler stok listesine kalıcı olarak eklenmez.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ?revizyon=<hareketNo> — mevcut bir stok hareketinin yeni revizyonunu oluşturma modu
+     (crm-satinalma-talep-form.html'deki ?revizyon= deseninin birebir uyarlaması). */
+  var revParam = new URLSearchParams(location.search).get('revizyon');
+  var revMatch = revParam ? String(revParam).match(/(\d{3})\s*$/) : null;
+  var revNo = revMatch ? 'STK-2026-' + revMatch[1] : null;
+  if(revNo){
+    document.title = 'Hareket Revizyonu — ' + revNo + ' — Gavia CRM';
+    document.getElementById('crumbLbl').textContent = 'Revizyon';
+    document.getElementById('pageH1').textContent = 'Hareket Revizyonu — ' + revNo;
+    document.getElementById('revBannerNo').textContent = revNo;
+    document.getElementById('revBanner').style.display = '';
+    document.getElementById('hareketSubmit').innerHTML = '<i class="fa-solid fa-code-branch"></i> Revizyonu Kaydet';
+  }
+
+  /* Kalem listesi — crm-satinalma-stok.html'deki 23 kalemle BİREBİR (yalnız ad+ölçü) */
+  var KALEMLER = [
+    ['demir-o10','Ø10 Nervürlü İnşaat Demiri (t)'], ['demir-o12','Ø12 Nervürlü İnşaat Demiri (t)'],
+    ['demir-o16','Ø16 Nervürlü İnşaat Demiri (t)'], ['demir-o20','Ø20 Nervürlü İnşaat Demiri (t)'],
+    ['sap-betonu','Şap Betonu Kuru Karışım (torba)'], ['seramik','Seramik — Yer/Duvar (m²)'],
+    ['pvc-dograma','PVC Doğrama Profil Seti (set)'], ['yalitim-levhasi','Yalıtım Levhası — XPS 5cm (m²)'],
+    ['cephe-boyasi','İç/Dış Cephe Boyası — 20L (kova)'], ['ic-kapi-seti','İç Kapı Seti (adet)'],
+    ['hasir-celik','Hasır Çelik — Q131 (m²)'], ['cimento','Çimento — CEM I 42.5R (torba)'],
+    ['tugla','Tuğla — Delikli (adet)'], ['elektrik-panosu','Elektrik Dağıtım Panosu (adet)'],
+    ['isg-kkd','İSG KKD Seti — Baret + Yelek (adet)'], ['hirdavat-sarf','Hırdavat & Sarf Paketi (paket)'],
+    ['alci-siva','Alçı Sıva Malzemesi (torba)'], ['nya-kablo','NYA 3×4 Kablo (m)'],
+    ['isg-eldiven-bot','İSG KKD Seti — Eldiven + Bot (set)'], ['kaynak-teli','Kaynak Teli / Elektrot (kg)'],
+    ['kablo-nym','NYM 3×2,5 Kablo (m)'], ['arac-bakim-sarf','Araç Bakım Sarf Seti (set)'],
+    ['jenerator-el-aleti','Jeneratör Yakıt Varili + El Aleti Seti (adet)']
+  ];
+  document.getElementById('fKalem').innerHTML = KALEMLER.map(function(k){ return '<option value="'+k[0]+'">'+k[1]+'</option>'; }).join('');
+
+  /* şef ise depo seçici kendi şantiyesine (D-VDI) sabitlenir — crm-operasyon-kasa-form.html
+     ile aynı idiyom */
+  var depoSel = document.getElementById('fDepo');
+  if(GV.role === 'sef'){ depoSel.value = 'D-VDI'; depoSel.disabled = true; }
+
+  /* ---- dinamik alan setleri — hareket türüne göre (D12 form idiyomu) ---- */
+  var FIELD_SETS = {
+    giris: [
+      {lbl:'İrsaliye No', ph:'ör. IRS-2026-15'},
+      {lbl:'Tedarikçi', select:['Ege Hazır Beton','Trakya Beton Santrali','Marmara Demir Çelik','Boğaziçi Yapı Market','Delta Elektrik','Anadolu Hırdavat','Diğer']}
+    ],
+    cikis: [
+      {lbl:'Şantiye', select:['Vadi Konakları','Liman Lojistik Merkezi','Merkez Şantiye']},
+      {lbl:'İş Kalemi', ph:'ör. B Blok 3. kat demir imalatı'}
+    ],
+    transfer: [
+      {lbl:'Kaynak Depo', select:['Merkez Ana Depo (D-MRK)','Vadi Şantiye Deposu (D-VDI)','Liman Şantiye Deposu (D-LMN)','Araç Deposu (D-ARC)']},
+      {lbl:'Hedef Depo', select:['Merkez Ana Depo (D-MRK)','Vadi Şantiye Deposu (D-VDI)','Liman Şantiye Deposu (D-LMN)','Araç Deposu (D-ARC)']}
+    ],
+    iade: [
+      {lbl:'Kaynak Saha', select:['Vadi Konakları','Liman Lojistik Merkezi','Merkez Şantiye']},
+      {lbl:'İade Nedeni', ph:'ör. sahadan artan malzeme'}
+    ],
+    fire: [
+      {lbl:'Fire Nedeni', select:['Kırılma / Hasar','Nem / Bozulma','Taşıma Kaybı','Diğer']},
+      {lbl:'Tutanak No', ph:'ör. FR-2026-004 (isteğe bağlı)'}
+    ],
+    sayim: [
+      {lbl:'Sayım Dönemi', ph:'ör. Yıl Ortası — Temmuz 2026'},
+      {lbl:'Fark', ph:'ör. +0,3 t (fazla) veya −12 adet (eksik)'}
+    ]
+  };
+  var dynWrap = document.getElementById('dynFields');
+  function renderDyn(tur){
+    var fields = FIELD_SETS[tur] || [];
+    dynWrap.innerHTML = fields.map(function(f, i){
+      var id = 'dyn' + i;
+      if(f.select){
+        return '<div class="gfield"><label for="'+id+'">'+f.lbl+'</label><select id="'+id+'">'
+          + f.select.map(function(o){ return '<option>'+o+'</option>'; }).join('') + '</select></div>';
+      }
+      return '<div class="gfield"><label for="'+id+'">'+f.lbl+'</label><input type="text" id="'+id+'" placeholder="'+(f.ph||'')+'"></div>';
+    }).join('');
+  }
+  renderDyn('giris');
+  document.getElementById('turGrid').addEventListener('change', function(e){
+    if(e.target.name !== 'tur') return;
+    renderDyn(e.target.value);
+  });
+
+  document.getElementById('btnDraft').addEventListener('click', function(){
+    gvToast('Stok hareketi taslak olarak kaydedildi.', {type:'info'});
+  });
+
+  document.getElementById('hareketSubmit').addEventListener('click', function(){
+    var miktar = document.getElementById('fMiktar').value.trim();
+    if(!miktar){ gvToast('Miktar girin.', {type:'danger'}); return; }
+    var kalemAd = document.getElementById('fKalem').selectedOptions[0].textContent;
+    var turEl = document.querySelector('input[name="tur"]:checked');
+    var turLbl = turEl.nextElementSibling.querySelector('span').textContent;
+    if(revNo){
+      gvToast(revNo + ' revizyonu (v2) kaydedildi.');
+    } else {
+      gvToast(kalemAd + ' — ' + turLbl + ' hareketi kaydedildi.');
+    }
+    setTimeout(function(){ location.href = 'crm-satinalma-stok.html'; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

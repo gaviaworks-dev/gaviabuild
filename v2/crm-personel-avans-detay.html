@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Avans Talebi Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: avans talebi detay kompozisyonu (izin-detay ile aynı iskelet dili) */
+
+.gd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.gd-head h1{font-size:22px;letter-spacing:-.015em;margin-bottom:9px;max-width:600px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:8px}
+
+.gd-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.gd-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.gd-desc{font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+
+/* özet şeridi — tutar + tarih + durum tek bakışta */
+.avd-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:0}
+.avd-summary div{padding:18px 22px;border-right:1px solid var(--line)}
+.avd-summary div:last-child{border-right:none}
+.avd-summary .avd-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.avd-summary .avd-val{font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.avd-summary .avd-val.money{color:var(--acc-ink)}
+@media(max-width:640px){.avd-summary{grid-template-columns:1fr}.avd-summary div{border-right:none;border-bottom:1px solid var(--line)}.avd-summary div:last-child{border-bottom:none}}
+
+/* ödeme şekli notu */
+.avd-note{display:flex;gap:12px;padding:16px 22px;background:rgba(var(--acc-rgb),.05);border-top:1px solid var(--line)}
+.avd-note i{color:var(--acc-ink);font-size:14px;margin-top:1px}
+.avd-note p{font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.avd-note b{color:var(--ink)}
+
+/* bağlam satırları */
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:13px}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+.ctx-link{display:flex;align-items:center;gap:11px;padding:6px 0}
+.ctx-link .who-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800}
+.ctx-link a{font-size:13.5px;font-weight:700;color:var(--ink)}
+.ctx-link a:hover{color:var(--acc-ink)}
+.ctx-link span{display:block;font-size:11.5px;color:var(--muted)}
+
+.status-acts{display:flex;flex-direction:column;gap:8px}
+.status-acts .btn{justify-content:flex-start}
+.no-action{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+.gv-side-stack{display:flex;flex-direction:column;gap:16px}
+
+/* §17 (T-J) — kayıt aksiyon şeridi (Düzenle/Kopyala/Pasife Al/Arşivle/Revizyon
+   Ekle/İşlem Geçmişini Gör/Dosya Ekle/Çıktı Al) + yaşam-döngüsü rozeti */
+.avd-acts-row{display:flex;flex-wrap:wrap;gap:8px}
+.av-lc-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.02em}
+.av-lc-badge.pasif{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.av-lc-badge.arsiv{background:var(--warn-tint);color:var(--warn)}
+.av-lc-badge.iptal{background:var(--danger-tint);color:var(--danger)}
+.avd-arsiv-note{display:flex;gap:12px;padding:14px 22px;background:var(--warn-tint);border-top:1px solid var(--line)}
+.avd-arsiv-note i{color:var(--warn);font-size:14px;margin-top:1px}
+.avd-arsiv-note p{font-size:12.5px;color:var(--ink-2);line-height:1.6}
+
+/* Revizyon Ekle inline panel */
+.avd-revizyon{padding:18px 22px;border-top:1px solid var(--line);background:rgba(var(--acc-rgb),.04)}
+.avd-revizyon .gform{margin-top:10px}
+.avd-revizyon-foot{display:flex;gap:8px;margin-top:12px}
+
+/* Dosya Ekle mini-modal — .gv-modal-ov İLE AYNI SINIF ADI KASITLI KULLANILMADI:
+   gvConfirm()'in çift-modal guard'ı document.querySelector('.gv-modal-ov')
+   şeklinde koşulsuz çalışıyor; statik/DOM'da her zaman var olan bir .gv-modal-ov
+   bu sayfadaki TÜM gvConfirm() çağrılarını (Onayla/Reddet/Pasife Al/Arşivle)
+   sessizce iptal ederdi (bkz. tasks/kararlar.md madde 29/38 — aynı kısıt). */
+.avd-modal-ov{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:22px;
+  background:rgba(2,8,55,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+  opacity:0;pointer-events:none;transition:opacity .2s var(--ease)}
+.avd-modal-ov.open{opacity:1;pointer-events:auto}
+.avd-modal-ov .gv-modal{transform:translateY(10px) scale(.985);transition:transform .22s var(--ease)}
+.avd-modal-ov.open .gv-modal{transform:none}
+</style>
+</head>
+<body data-sec="personel" data-screen="avans">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main" id="gvMain">
+    <!-- D18 Y16: lokal .gv-crumb kaldırıldı — kırıntı shell'den (GV.crumb ile kayıt segmenti) -->
+        <!-- statik bake — DEFAULT AVN-2026-014 (Ali Vural) kaydı (JS-render çıktısı) VERBATIM;
+         JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+    <div id="avdRoot"><div class="gd-head"><div><div class="gd-eyebrow">Vadi Konakları · Avans Talebi #AVN-2026-014</div><h1>Ali Vural — ₺4.000</h1><div class="gd-badges"><span id="avdBadge"><span class="gstat wait">Onay bekliyor</span></span></div></div><div class="ph-actions"><a class="btn btn-ghost btn-sm" href="crm-personel-avans.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a></div></div><div class="gv-card" style="margin-bottom:18px"><div class="avd-summary"><div><div class="avd-lbl">Talep Edilen Tutar</div><div class="avd-val money">₺4.000</div></div><div><div class="avd-lbl">Talep Tarihi</div><div class="avd-val">29 Haziran 2026</div></div></div><div class="avd-note"><i class="fa-solid fa-circle-info"></i><p><b>Ödeme şekli:</b> Onaylanırsa Temmuz 2026 bordrosundan tek seferde kesilecek.</p></div></div><div class="gd-grid"><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Talep Gerekçesi</div><p class="gd-desc">Kişisel nakit ihtiyacı (malzeme avansı değil).</p></div></div><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-stamp"></i> Onay Akışı</div></div><div class="gd-block" id="avdChain"><ol class="gv-chain"><li class="chain-step info"><span class="cs-node"><i class="fa-solid fa-paper-plane"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Ali Vural</b><span>Saha Personeli</span></div><div class="cs-when"><span class="cs-act">Oluşturdu</span><span class="cs-date">29 Haziran 2026 08:40</span></div></div></div></li><li class="chain-step ok"><span class="cs-node"><i class="fa-solid fa-check"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Hasan Demirci</b><span>Şantiye Şefi</span></div><div class="cs-when"><span class="cs-act">Onayladı</span><span class="cs-date">29 Haziran 2026 11:15</span></div></div><div class="cs-note">Malzeme avansı değil, kişisel avans — onaylıyorum.</div></div></li><li class="chain-step wait is-now"><span class="cs-node"><i class="fa-solid fa-hourglass-half"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Nesrin Aydın</b><span>Muhasebe</span></div><div class="cs-when"><span class="cs-act">Onay bekliyor</span></div></div></div></li></ol></div><div class="gd-block" id="avdActsBlock"><div class="gd-label">Aksiyon</div><div class="status-acts" id="avdActs"><button class="btn btn-sm btn-acc" data-chain-act="onayla" data-chain-name="AVN-2026-014"><i class="fa-solid fa-check"></i> Onayla</button><button class="btn btn-sm btn-ghost" data-chain-act="revize" data-chain-name="AVN-2026-014"><i class="fa-solid fa-rotate-left"></i> Revize İste</button><button class="btn btn-sm btn-danger" data-chain-act="reddet" data-chain-name="AVN-2026-014"><i class="fa-solid fa-xmark"></i> Reddet</button></div></div><div class="gd-block" id="avdNoteBlock" hidden=""><p class="no-action">Bu kayıtta sıradaki onay adımı sizde değil.</p></div></div></div><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Personel</div><div class="ctx-link"><div class="who-mark" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">AV</div><div><a href="crm-personel-detay.html?per=010">Ali Vural</a><span>Saha Personeli · Vadi Konakları</span></div></div></div><div class="gd-block"><div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val">Vadi Konakları</span></div></div></div></div></div></div>
+  </main>
+</div>
+
+<!-- ============ §17 — Dosya Ekle mini-modal ============ -->
+<div class="avd-modal-ov" id="avdDosyaOv">
+  <div class="gv-modal" role="dialog" aria-modal="true" aria-label="Dosya Ekle" style="text-align:left;max-width:420px">
+    <h3 style="margin-bottom:4px"><i class="fa-solid fa-paperclip"></i> Dosya Ekle</h3>
+    <p id="avdDosyaSub" style="margin-bottom:14px">—</p>
+    <label class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;cursor:pointer">
+      <i class="fa-solid fa-upload"></i> Dosya Seç
+      <input type="file" id="avdDosyaInput" style="position:absolute;opacity:0;width:1px;height:1px" multiple>
+    </label>
+    <div id="avdDosyaList" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
+    <div class="gv-modal-acts">
+      <button type="button" class="btn btn-ghost btn-sm" id="avdDosyaClose">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  /* Kayıt kaynağı: crm-personel-avans.html AVANS{} map'i — personel/tutar/tarih/durum/zincir
+     BİREBİR alındı (D17 DK1). Kişi bağlamı (pozisyon/şantiye) crm-personel.html kadrosundan.
+     Gerekçe + ödeme şekli metinleri, zincirdeki onay/red notlarıyla çelişmeyecek şekilde
+     türetilmiş kurgusal alanlardır (her kayıtta yorumla işaretli). */
+  var AVANS = {
+    'avn-015':{ no:'AVN-2026-015', personel:'Musa Erdem', ini:'ME', pozisyon:'Düz İşçi', santiye:'Vadi Konakları', departman:'Saha Operasyonu',
+      tutar:'₺3.500', tarih:'1 Temmuz 2026', status:'bekliyor', approverRole:'sef',
+      gerekce:'Kira ödemesi için nakit ihtiyacı.',
+      odeme:'Onaylanırsa Ağustos 2026 bordrosundan tek seferde kesilecek.',
+      steps:[
+        {rol:'Düz İşçi', kisi:'Musa Erdem', durum:'olusturdu', tarih:'1 Temmuz 2026 07:50'},
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'bekliyor'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'sirada'}
+      ] },
+    'avn-014':{ no:'AVN-2026-014', personel:'Ali Vural', ini:'AV', pozisyon:'Saha Personeli', santiye:'Vadi Konakları', departman:'Saha Operasyonu',
+      tutar:'₺4.000', tarih:'29 Haziran 2026', status:'bekliyor', approverRole:'muhasebe',
+      gerekce:'Kişisel nakit ihtiyacı (malzeme avansı değil).',
+      odeme:'Onaylanırsa Temmuz 2026 bordrosundan tek seferde kesilecek.',
+      steps:[
+        {rol:'Saha Personeli', kisi:'Ali Vural', durum:'olusturdu', tarih:'29 Haziran 2026 08:40'},
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'onaylandi', tarih:'29 Haziran 2026 11:15', not:'Malzeme avansı değil, kişisel avans — onaylıyorum.'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'bekliyor'}
+      ] },
+    'avn-013':{ no:'AVN-2026-013', personel:'Hasan Demirci', ini:'HD', pozisyon:'Şantiye Şefi', santiye:'Vadi Konakları', departman:'Şantiye Yönetimi',
+      tutar:'₺8.000', tarih:'18 Haziran 2026', status:'onaylandi', approverRole:null,
+      gerekce:'Çocuğunun okul kayıt gideri.',
+      odeme:'20 Haziran 2026’da banka listesine eklenerek ödendi; tutar Temmuz 2026 bordrosundan tek seferde kesilecek.',
+      steps:[
+        {rol:'Şantiye Şefi', kisi:'Hasan Demirci', durum:'olusturdu', tarih:'18 Haziran 2026 09:05'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'onaylandi', tarih:'18 Haziran 2026 13:40'},
+        {rol:'Muhasebe', kisi:'Nesrin Aydın', durum:'onaylandi', tarih:'20 Haziran 2026 10:00', not:'Banka listesine eklendi, 20 Haziran’da ödendi.'}
+      ] },
+    'avn-012':{ no:'AVN-2026-012', personel:'Baran Yıldız', ini:'BY', pozisyon:'Satın Alma Sorumlusu', santiye:'Merkez Ofis', departman:'Satın Alma',
+      tutar:'₺6.500', tarih:'10 Haziran 2026', status:'reddedildi', approverRole:null,
+      gerekce:'Ev taşınma masrafları.',
+      odeme:'Reddedildiği için ödeme planlanmadı.',
+      steps:[
+        {rol:'Satın Alma Sorumlusu', kisi:'Baran Yıldız', durum:'olusturdu', tarih:'10 Haziran 2026 09:30'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'reddedildi', tarih:'11 Haziran 2026 15:10', not:'Haziran ayı kasa limiti bu tutar için yetersiz; Temmuz bordrosunda değerlendirilecek.'}
+      ] },
+    'avn-011':{ no:'AVN-2026-011', personel:'Aylin Koç', ini:'AK', pozisyon:'Şantiye Şefi', santiye:'Liman Lojistik Merkezi', departman:'Şantiye Yönetimi',
+      tutar:'₺10.000', tarih:'3 Haziran 2026', status:'revize', approverRole:null,
+      gerekce:'Kişisel ihtiyaç (harcama kalemi belirtilmedi).',
+      odeme:'Revize sonrası yeniden değerlendirilecek; ödeme şekli henüz belirlenmedi.',
+      steps:[
+        {rol:'Şantiye Şefi', kisi:'Aylin Koç', durum:'olusturdu', tarih:'3 Haziran 2026 10:20'},
+        {rol:'Genel Müdür', kisi:'Murat Denizli', durum:'revize', tarih:'4 Haziran 2026 09:00', not:'Tutar gerekçesi eksik; hangi harcama kalemi için olduğunu belirtip yeniden gönderin.'}
+      ] }
+  };
+  var DEFAULT_ID = 'avn-014';
+
+  function normalize(raw){
+    if(!raw) return null;
+    var m = String(raw).toLowerCase().match(/(\d{3})\s*$/);
+    return m ? 'avn-' + m[1] : null;
+  }
+
+  var q = new URLSearchParams(location.search);
+  var rawParam = q.get('avn');
+  var id = rawParam === null ? DEFAULT_ID : normalize(rawParam);
+  /* D18: personel köprüsü ?per= kimliği (kanonik DOM-sıra numaraları) */
+  var PER = { 'Aylin Koç':'005', 'Baran Yıldız':'008', 'Hasan Demirci':'004', 'Ali Vural':'010', 'Musa Erdem':'014' };
+  var rec = id ? AVANS[id] : null;
+
+  if(!rec){
+    GV.crumb('Kayıt bulunamadı');
+    gvNotFound({
+      mount: '#avdRoot',
+      code: rawParam ? rawParam.toUpperCase() : null,
+      tur: 'avans talebi',
+      listHref: 'crm-personel-avans.html', listLbl: 'Avanslara dön',
+      defHref: 'crm-personel-avans-detay.html', defLbl: 'Varsayılan kaydı aç'
+    });
+    return;
+  }
+
+  GV.crumb(rec.no);
+  document.title = rec.no + ' — Avans Talebi Detayı — Gavia CRM';
+
+  /* §17 — kayıt yaşam-döngüsü durumu (Aktif/Pasif/Arşivlendi/İptal edildi),
+     onay zincirinden BAĞIMSIZ ikinci bir durum ekseni; oturum-içi bellekte
+     tutulur (sayfa taze yüklendiğinde varsayılana döner — prototip kapsamı). */
+  var LC = 'aktif';
+  var LC_LBL = {pasif:{cls:'pasif', lbl:'Pasif'}, arsivlendi:{cls:'arsiv', lbl:'Arşivlendi'}, iptal:{cls:'iptal', lbl:'İptal Edildi'}};
+
+  var root = document.getElementById('avdRoot');
+  function actsHtml(){
+    var idNum = rec.no.replace(/\D/g,'').slice(-3);
+    var out = '<a class="btn btn-ghost btn-sm" href="crm-personel-avans.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a>'
+      + '<a class="btn btn-ghost btn-sm" href="crm-personel-avans-form.html?mod=duzenle&avn=' + idNum + '"><i class="fa-solid fa-pen"></i> Düzenle</a>'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-avd-act="kopyala"><i class="fa-solid fa-copy"></i> Kopyala</button>';
+    if(rec.status === 'revize') out += '<button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-avd-act="revizyon"><i class="fa-solid fa-rotate-left"></i> Revizyon Ekle</button>';
+    if(LC === 'arsivlendi'){
+      out += '<button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-avd-act="arsivden-cikar"><i class="fa-solid fa-box-open"></i> Arşivden Çıkar</button>';
+    } else {
+      out += '<button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-avd-act="pasif"><i class="fa-solid fa-power-off"></i> ' + (LC === 'pasif' ? 'Aktif Et' : 'Pasife Al') + '</button>'
+        + '<button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-avd-act="arsivle"><i class="fa-solid fa-box-archive"></i> Arşivle</button>';
+    }
+    out += '<a class="btn btn-ghost btn-sm" href="crm-ayarlar-log.html"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişini Gör</a>'
+      + '<button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-avd-act="dosya"><i class="fa-solid fa-paperclip"></i> Dosya Ekle</button>'
+      + '<a class="btn btn-acc btn-sm" href="crm-personel-avans-cikti.html?avn=' + idNum + '"><i class="fa-solid fa-print"></i> Çıktı Al</a>';
+    return out;
+  }
+  function lcBadgeHtml(){
+    return LC_LBL[LC] ? ('<span class="av-lc-badge ' + LC_LBL[LC].cls + '">' + LC_LBL[LC].lbl + '</span>') : '';
+  }
+  var html = ''
+    + '<div class="gd-head">'
+    +   '<div>'
+    +     '<div class="gd-eyebrow">' + rec.santiye + ' · Avans Talebi #' + rec.no + '</div>'
+    +     '<h1>' + rec.personel + ' — ' + rec.tutar + '</h1>'
+    +     '<div class="gd-badges"><span id="avdBadge"></span><span id="avdLcBadge">' + lcBadgeHtml() + '</span></div>'
+    +   '</div>'
+    +   '<div class="ph-actions avd-acts-row" id="avdActsRow">' + actsHtml() + '</div>'
+    + '</div>'
+    + '<div class="gv-card" style="margin-bottom:18px" id="avdArsivNoteWrap"></div>'
+    + '<div class="gv-card" style="margin-bottom:18px">'
+    +   '<div class="avd-summary">'
+    +     '<div><div class="avd-lbl">Talep Edilen Tutar</div><div class="avd-val money">' + rec.tutar + '</div></div>'
+    +     '<div><div class="avd-lbl">Talep Tarihi</div><div class="avd-val">' + rec.tarih + '</div></div>'
+    +   '</div>'
+    +   '<div class="avd-note"><i class="fa-solid fa-circle-info"></i><p><b>Ödeme şekli:</b> ' + rec.odeme + '</p></div>'
+    + '</div>'
+    + '<div class="gd-grid">'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block"><div class="gd-label">Talep Gerekçesi</div><p class="gd-desc">' + rec.gerekce + '</p></div>'
+    +     '</div>'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-stamp"></i> Onay Akışı</div></div>'
+    +       '<div class="gd-block" id="avdChain"></div>'
+    +       '<div class="gd-block" id="avdActsBlock" hidden><div class="gd-label">Aksiyon</div><div class="status-acts" id="avdActs"></div></div>'
+    +       '<div class="gd-block" id="avdNoteBlock" hidden><p class="no-action">Bu kayıtta sıradaki onay adımı sizde değil.</p></div>'
+    +       '<div class="avd-revizyon" id="avdRevizyonPanel" hidden>'
+    +         '<div class="gd-label">Revizyon Gönder</div>'
+    +         '<p class="gd-desc" style="margin-bottom:10px">Genel Müdür’ün revize notunu dikkate alarak talebi güncelleyip yeniden onaya gönderin.</p>'
+    +         '<form class="gform">'
+    +           '<div class="gfield full"><label for="avdRevTutar">Talep Edilen Tutar</label><input type="text" id="avdRevTutar" value="' + rec.tutar.replace(/[^\d]/g,'') + '"></div>'
+    +           '<div class="gfield full"><label for="avdRevAciklama">Güncellenmiş Gerekçe</label><textarea id="avdRevAciklama" rows="2">' + rec.gerekce + '</textarea></div>'
+    +         '</form>'
+    +         '<div class="avd-revizyon-foot">'
+    +           '<button type="button" class="btn btn-acc btn-sm" data-no-confirm id="avdRevizyonGonder"><i class="fa-solid fa-paper-plane"></i> Revizyonu Gönder</button>'
+    +           '<button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="avdRevizyonVazgec">Vazgeç</button>'
+    +         '</div>'
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label">Personel</div>'
+    +         '<div class="ctx-link">'
+    +           '<div class="who-mark" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">' + rec.ini + '</div>'
+    +           '<div><a href="crm-personel-detay.html' + (PER[rec.personel] ? '?per=' + PER[rec.personel] : '') + '">' + rec.personel + '</a><span>' + rec.pozisyon + ' · ' + rec.santiye + '</span></div>'
+    +         '</div>'
+    +       '</div>'
+    +       '<div class="gd-block">'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Departman</span><span class="ctx-val">' + rec.departman + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val">' + rec.santiye + '</span></div>'
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+  root.innerHTML = html;
+
+  function syncArsivNote(){
+    var wrap = document.getElementById('avdArsivNoteWrap');
+    if(!wrap) return;
+    if(LC === 'arsivlendi'){
+      wrap.hidden = false;
+      wrap.innerHTML = '<div class="avd-arsiv-note"><i class="fa-solid fa-box-archive"></i><p>Bu avans talebi arşivlendi — kalıcı olarak silinmedi, avans listesinde varsayılan olarak görünmez. '
+        + '"Arşivlenenleri Göster" filtresiyle listede yeniden bulunabilir; işlem <a href="crm-ayarlar-log.html">işlem kayıtlarına</a> yazıldı.</p></div>';
+    } else {
+      wrap.hidden = true; wrap.innerHTML = '';
+    }
+  }
+  syncArsivNote();
+
+  document.getElementById('avdBadge').innerHTML = gvChainBadge(rec.status);
+  gvChain(document.getElementById('avdChain'), {steps: rec.steps});
+
+  var role = window.GV ? GV.role : null;
+  var canAct = rec.status === 'bekliyor' && (role === rec.approverRole || role === 'superadmin' || role === 'sahip');
+  if(canAct){
+    document.getElementById('avdActsBlock').hidden = false;
+    document.getElementById('avdActs').innerHTML =
+      '<button class="btn btn-sm btn-acc" data-chain-act="onayla" data-chain-name="' + rec.no + '"><i class="fa-solid fa-check"></i> Onayla</button>' +
+      '<button class="btn btn-sm btn-ghost" data-chain-act="revize" data-chain-name="' + rec.no + '"><i class="fa-solid fa-rotate-left"></i> Revize İste</button>' +
+      '<button class="btn btn-sm btn-danger" data-chain-act="reddet" data-chain-name="' + rec.no + '"><i class="fa-solid fa-xmark"></i> Reddet</button>';
+  } else if(rec.status === 'bekliyor'){
+    document.getElementById('avdNoteBlock').hidden = false;
+  }
+
+  /* ============ §17 — kayıt aksiyon şeridi kablolama ============
+     data-no-confirm HER buton için ŞART: global yıkıcı-aksiyon interceptor'ı
+     (ui.js) metinde "Arşivle"/"Çıkar" geçen tıklamaları capture fazında yakalayıp
+     stopImmediatePropagation yapar; kendi gvConfirm() akışımız bu bayrak olmadan
+     ÇALIŞMAZ — actsHtml() zaten her butona data-no-confirm ekliyor. */
+  var actsRow = document.getElementById('avdActsRow'), lcBadgeEl = document.getElementById('avdLcBadge');
+  function refreshActs(){ actsRow.innerHTML = actsHtml(); lcBadgeEl.innerHTML = lcBadgeHtml(); syncArsivNote(); }
+
+  var revPanel = document.getElementById('avdRevizyonPanel');
+  function openRevizyon(){ revPanel.hidden = false; revPanel.scrollIntoView({behavior:'smooth', block:'center'}); }
+  function closeRevizyon(){ revPanel.hidden = true; }
+  if(location.hash === '#revizyon' && rec.status === 'revize') openRevizyon();
+
+  actsRow.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-avd-act]'); if(!btn) return;
+    var kind = btn.getAttribute('data-avd-act');
+    if(kind === 'kopyala'){
+      gvToast(rec.no + ' kopyalandı — yeni talep taslağı hazırlanıyor.');
+      setTimeout(function(){ location.href = 'crm-personel-avans-form.html?kopya=' + rec.no.replace(/\D/g,'').slice(-3); }, 900);
+    } else if(kind === 'revizyon'){
+      openRevizyon();
+    } else if(kind === 'pasif'){
+      var toPasif = LC !== 'pasif';
+      gvConfirm({
+        icon: toPasif ? 'fa-power-off' : 'fa-check',
+        title: toPasif ? (rec.no + ' pasife alınsın mı?') : (rec.no + ' yeniden aktif edilsin mi?'),
+        message: toPasif ? 'Kayıt pasife alınır; onay akışı ve tutar bilgileri korunur.' : 'Kayıt yeniden aktif duruma geçirilir.',
+        ok: toPasif ? 'Pasife Al' : 'Aktif Et', cancel:'Vazgeç',
+        onConfirm:function(){ LC = toPasif ? 'pasif' : 'aktif'; refreshActs(); gvToast(rec.no + ' ' + (toPasif ? 'pasife alındı.' : 'aktif edildi.')); }
+      });
+    } else if(kind === 'arsivle'){
+      gvConfirm({
+        danger:true, icon:'fa-box-archive',
+        title: rec.no + ' arşivlensin mi?',
+        message: rec.personel + ' adına kayıtlı bu avans talebi arşivlenecek; kalıcı olarak SİLİNMEZ, avans listesinde varsayılan olarak görünmez olur ve "Arşivlenenleri Göster" filtresiyle geri getirilebilir.',
+        ok:'Arşivle', cancel:'Vazgeç',
+        onConfirm:function(){ LC = 'arsivlendi'; refreshActs(); gvToast(rec.no + ' arşivlendi.', {type:'danger', icon:'fa-box-archive'}); }
+      });
+    } else if(kind === 'arsivden-cikar'){
+      LC = 'pasif'; refreshActs();
+      gvToast(rec.no + ' arşivden çıkarıldı — pasif durumda.');
+    } else if(kind === 'dosya'){
+      openDosyaModal();
+    }
+  });
+  document.addEventListener('click', function(e){
+    if(e.target.id === 'avdRevizyonVazgec') closeRevizyon();
+    if(e.target.id === 'avdRevizyonGonder'){
+      gvToast(rec.no + ' revizyonu gönderildi — onay akışı yeniden başladı.');
+      closeRevizyon();
+    }
+  });
+
+  /* ============ Dosya Ekle mini-modal — sahte ama GERÇEK etkileşimli yükleme
+     akışı (ilerleme + tamamlanma rozeti); backend yok, oturum-içi bellek. ============ */
+  var dosyaOv = document.getElementById('avdDosyaOv'), dosyaSub = document.getElementById('avdDosyaSub');
+  var dosyaInput = document.getElementById('avdDosyaInput'), dosyaList = document.getElementById('avdDosyaList');
+  function fileChip(name, done){
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px';
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:600">'
+      + '<span><i class="fa-solid fa-file-lines" style="color:var(--muted);margin-right:7px"></i>' + name + '</span>'
+      + '<span class="dosya-durum">' + (done ? '<i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Yüklendi' : '') + '</span></div>'
+      + (done ? '' : '<div style="height:4px;background:var(--bg);border-radius:99px;margin-top:7px;overflow:hidden"><div class="dosya-bar-i" style="height:100%;width:0;background:var(--acc-ink);transition:width .2s linear"></div></div>');
+    return wrap;
+  }
+  function openDosyaModal(){
+    dosyaSub.textContent = rec.no + ' (' + rec.personel + ') kaydına dosya ekleyin — PDF, JPG veya PNG.';
+    dosyaInput.value = '';
+    dosyaInput.onchange = function(){
+      Array.prototype.forEach.call(dosyaInput.files, function(file){
+        var chip = fileChip(file.name, false);
+        dosyaList.appendChild(chip);
+        var bar = chip.querySelector('.dosya-bar-i'), pct = 0;
+        var timer = setInterval(function(){
+          pct += 18 + Math.random() * 20;
+          if(pct >= 100){ pct = 100; clearInterval(timer); chip.querySelector('.dosya-durum').innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Yüklendi'; }
+          bar.style.width = pct + '%';
+        }, 220);
+      });
+      gvToast(dosyaInput.files.length + ' dosya yükleniyor…', {type:'info'});
+    };
+    dosyaOv.classList.add('open');
+  }
+  document.getElementById('avdDosyaClose').addEventListener('click', function(){ dosyaOv.classList.remove('open'); });
+  dosyaOv.addEventListener('click', function(e){ if(e.target === dosyaOv) dosyaOv.classList.remove('open'); });
+})();
+</script>
+</body>
+</html>

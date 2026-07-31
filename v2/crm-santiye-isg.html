@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>İSG Tutanakları — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — İSG Tutanak listesi ============ */
+/* min-width YOK — §17 row-acts kolonu eklendikten sonra tablo doğal içerik genişliğine
+   (~1118px) göre boyutlanır; 1042px'lik .gc-body.flush konteynerini aşan kısım KENDİ
+   içinde yatay kayar (overflow-x:auto, doğrulandı: tasks/tk-santiye-verify.cjs),
+   body{overflow-x:clip} güvenlik hattı sayesinde ana sayfa asla kaymaz (§8). */
+.col-santiye{width:170px}
+.col-sorumlu{width:150px}
+.col-durum{width:170px}
+
+.ig-cell{display:flex;align-items:center;gap:12px;min-width:0}
+.ig-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:14px;background:var(--bg);color:var(--ink-2);border:1px solid var(--line)}
+.ig-info{min-width:0;line-height:1.35}
+.ig-info b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap}
+.ig-info b a{color:inherit}
+.ig-info b a:hover{color:var(--acc-ink)}
+.ig-info span{font-size:11.5px;color:var(--muted)}
+
+.ig-konu{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+
+/* iki boyutlu filtre — şantiye grubu + tür grubu, ui.js'in tekil data-filter primitifi
+   iki grubu birlikte AND edemediği için bu sayfada özel JS ile bağlanır (bkz. script) */
+.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
+.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+.filter-row.top{justify-content:space-between;width:100%}
+
+@media(max-width:640px){
+  .ig-konu{max-width:150px}
+  .filter-row .frow-lbl{min-width:0;width:100%}
+}
+
+/* Arşivlenenleri Göster — switch (§17), crm-santiye.html'deki "Pasif Şantiyeleri Göster"
+   ile BİREBİR aynı sayfa-lokal bileşen (ui.js'e yeni primitif eklenmez) */
+/* ui.css'te .gv-toggle ZATEN farklı bir bileşen (checkbox+.tg-track, width:42px sabit) —
+   width burada açıkça override edilir (crm-santiye.html'deki T-H switch'inin width:100%
+   ile örtük çözdüğü çakışmanın aynısı; bkz. tasks/kararlar.md). */
+.gv-toggle{display:flex;flex:none;width:auto;height:auto;position:static;align-items:center;gap:10px;font-family:inherit;background:none;border:none;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent}
+.gv-toggle-track{width:38px;height:22px;border-radius:var(--r-pill);background:var(--line-2);position:relative;flex:none;transition:background .18s var(--ease)}
+.gv-toggle-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--sh-sm);transition:transform .18s var(--ease)}
+.gv-toggle[aria-checked="true"] .gv-toggle-track{background:var(--acc)}
+.gv-toggle[aria-checked="true"] .gv-toggle-thumb{transform:translateX(16px)}
+.gv-toggle-lbl{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.col-isgacts{width:118px}
+tr.is-arsiv{opacity:.62}
+</style>
+</head>
+<body data-sec="santiye" data-screen="isg">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Saha</div>
+        <h1>İSG Tutanakları</h1>
+        <div class="ph-sub" id="igSub">11 tutanak gösteriliyor · toplam 11 kayıt</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-acc btn-sm" href="crm-santiye-isg-form.html"><i class="fa-solid fa-plus"></i> Yeni Tutanak</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-shield-halved"></i></div>
+        <div><div class="kpi-num num" id="kpiToplam">—</div><div class="kpi-lbl">Toplam tutanak</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar"></i> Haziran–Temmuz 2026</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div><div class="kpi-num num" id="kpiAcik">—</div><div class="kpi-lbl">Açık / takipte</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Aksiyon bekliyor</div></div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-ico"><i class="fa-solid fa-kit-medical"></i></div>
+        <div><div class="kpi-num num" id="kpiKaza">—</div><div class="kpi-lbl">Kaza raporu</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar"></i> Son 30 gün</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-chalkboard-user"></i></div>
+        <div><div class="kpi-num num" id="kpiToolbox">—</div><div class="kpi-lbl">Toolbox eğitimi</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-users"></i> Tamamlanan</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="filter-bar stack">
+        <div class="filter-row top">
+          <div class="fb-search" style="max-width:360px">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="igSearch" placeholder="Tutanak no, konu veya sorumlu ara">
+          </div>
+          <button type="button" class="gv-toggle" id="swArsivIsg" role="switch" aria-checked="false">
+            <span class="gv-toggle-track"><span class="gv-toggle-thumb"></span></span>
+            <span class="gv-toggle-lbl">Arşivlenenleri Göster</span>
+          </button>
+        </div>
+        <div class="filter-row">
+          <span class="frow-lbl">Şantiye</span>
+          <div class="chips" id="igSanChips">
+            <button class="chip is-on" data-san="hepsi">Tümü <span class="ch-cnt">11</span></button>
+            <button class="chip" data-san="vadi">Vadi Konakları <span class="ch-cnt">5</span></button>
+            <button class="chip" data-san="liman">Liman Lojistik <span class="ch-cnt">3</span></button>
+            <button class="chip" data-san="merkez">Merkez Şantiye <span class="ch-cnt">3</span></button>
+          </div>
+        </div>
+        <div class="filter-row">
+          <span class="frow-lbl">Tür</span>
+          <div class="chips" id="igTurChips">
+            <button class="chip is-on" data-tur="hepsi">Tümü</button>
+            <button class="chip" data-tur="toolbox">Toolbox Eğitimi</button>
+            <button class="chip" data-tur="ramakkala">Ramak Kala</button>
+            <button class="chip" data-tur="denetim">Denetim</button>
+            <button class="chip" data-tur="uygunsuzluk">Uygunsuzluk</button>
+            <button class="chip" data-tur="kaza">Kaza Raporu</button>
+          </div>
+        </div>
+      </div>
+      <div class="gc-body flush">
+        <table class="gtable" id="tblIsg">
+          <thead>
+            <tr>
+              <th>Tutanak</th>
+              <th class="col-santiye">Şantiye</th>
+              <th>Tür</th>
+              <th>Konu</th>
+              <th class="col-sorumlu">Sorumlu</th>
+              <th class="col-durum">Durum</th>
+              <th class="col-isgacts"></th>
+            </tr>
+          </thead>
+          <!-- statik bake — 11 kanonik İSG tutanağı (KAYITLAR dizisi VERBATIM, tarih-desc sıralı);
+             JS yüklenince aynı mount innerHTML ile ezer — D18-B2 -->
+        <tbody id="igBody"><tr data-san="vadi" data-tur="toolbox"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-chalkboard-user"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=011">ISG-2026-011</a></b><span>2 Tem 2026</span></div></div></td><td>Vadi Konakları</td><td><span class="gtag"><i class="fa-solid fa-chalkboard-user"></i>Toolbox Eğitimi</span></td><td><span class="ig-konu">Yüksekte çalışma ve düşme önleme</span></td><td>Hasan Demirci</td><td><span class="gstat ok">Tamamlandı</span></td></tr><tr data-san="liman" data-tur="ramakkala"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=010">ISG-2026-010</a></b><span>1 Tem 2026</span></div></div></td><td>Liman Lojistik Merkezi</td><td><span class="gtag"><i class="fa-solid fa-triangle-exclamation"></i>Ramak Kala</span></td><td><span class="ig-konu">Vinç yükü altından geçiş</span></td><td>Şükrü Aslan</td><td><span class="gstat warn">İnceleniyor</span></td></tr><tr data-san="merkez" data-tur="denetim"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-clipboard-check"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=009">ISG-2026-009</a></b><span>30 Haz 2026</span></div></div></td><td>Merkez Şantiye</td><td><span class="gtag"><i class="fa-solid fa-clipboard-check"></i>Denetim</span></td><td><span class="ig-konu">Aylık İSG iç denetimi</span></td><td>Ömer Taşkın</td><td><span class="gstat warn">Bulgu Var — Takipte</span></td></tr><tr data-san="vadi" data-tur="uygunsuzluk"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-circle-exclamation"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=008">ISG-2026-008</a></b><span>29 Haz 2026</span></div></div></td><td>Vadi Konakları</td><td><span class="gtag"><i class="fa-solid fa-circle-exclamation"></i>Uygunsuzluk</span></td><td><span class="ig-konu">İskele korkuluk eksikliği — B Blok</span></td><td>İbrahim Sönmez</td><td><span class="gstat warn">Aksiyon Bekliyor</span></td></tr><tr data-san="liman" data-tur="kaza"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-kit-medical"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=007">ISG-2026-007</a></b><span>27 Haz 2026</span></div></div></td><td>Liman Lojistik Merkezi</td><td><span class="gtag"><i class="fa-solid fa-kit-medical"></i>Kaza Raporu</span></td><td><span class="ig-konu">Forklift çarpması — hafif yaralanma</span></td><td>Aylin Koç</td><td><span class="gstat danger">İnceleniyor</span></td></tr><tr data-san="vadi" data-tur="toolbox"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-chalkboard-user"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=006">ISG-2026-006</a></b><span>25 Haz 2026</span></div></div></td><td>Vadi Konakları</td><td><span class="gtag"><i class="fa-solid fa-chalkboard-user"></i>Toolbox Eğitimi</span></td><td><span class="ig-konu">Elektrik güvenliği ve KKD kullanımı</span></td><td>Veli Şimşek</td><td><span class="gstat ok">Tamamlandı</span></td></tr><tr data-san="merkez" data-tur="ramakkala"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=005">ISG-2026-005</a></b><span>22 Haz 2026</span></div></div></td><td>Merkez Şantiye</td><td><span class="gtag"><i class="fa-solid fa-triangle-exclamation"></i>Ramak Kala</span></td><td><span class="ig-konu">Forklift-yaya güzergah kesişimi</span></td><td>Recep Yaman</td><td><span class="gstat ok">Kapatıldı</span></td></tr><tr data-san="liman" data-tur="denetim"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-clipboard-check"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=004">ISG-2026-004</a></b><span>18 Haz 2026</span></div></div></td><td>Liman Lojistik Merkezi</td><td><span class="gtag"><i class="fa-solid fa-clipboard-check"></i>Denetim</span></td><td><span class="ig-konu">Aliağa Liman İşletmeleri saha denetimi</span></td><td>Aylin Koç</td><td><span class="gstat ok">Bulgu Yok</span></td></tr><tr data-san="vadi" data-tur="uygunsuzluk"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-circle-exclamation"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=003">ISG-2026-003</a></b><span>15 Haz 2026</span></div></div></td><td>Vadi Konakları</td><td><span class="gtag"><i class="fa-solid fa-circle-exclamation"></i>Uygunsuzluk</span></td><td><span class="ig-konu">Kişisel koruyucu donanım eksik kullanımı</span></td><td>Hasan Demirci</td><td><span class="gstat ok">Kapatıldı</span></td></tr><tr data-san="merkez" data-tur="toolbox"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-chalkboard-user"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=002">ISG-2026-002</a></b><span>10 Haz 2026</span></div></div></td><td>Merkez Şantiye</td><td><span class="gtag"><i class="fa-solid fa-chalkboard-user"></i>Toolbox Eğitimi</span></td><td><span class="ig-konu">Yangın güvenliği ve tahliye tatbikatı</span></td><td>Ömer Taşkın</td><td><span class="gstat ok">Tamamlandı</span></td></tr><tr data-san="vadi" data-tur="kaza"><td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid fa-kit-medical"></i></div><div class="ig-info"><b><a href="crm-santiye-isg-detay.html?isg=001">ISG-2026-001</a></b><span>3 Haz 2026</span></div></div></td><td>Vadi Konakları</td><td><span class="gtag"><i class="fa-solid fa-kit-medical"></i>Kaza Raporu</span></td><td><span class="ig-konu">Malzeme düşmesi — yaralanma yok</span></td><td>Hasan Demirci</td><td><span class="gstat ok">Kapatıldı</span></td></tr></tbody>
+        </table>
+        <div class="gv-empty" id="igEmpty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-shield-halved"></i></div>
+          <h4>Eşleşen tutanak yok</h4>
+          <p>Aramayı temizleyin veya farklı bir şantiye/tür filtresi seçin.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ---- mock İSG tutanak verisi — numaralama Dalga 3'te doğdu (ISG-2026-###, bkz. shell.js
+     kanonik yorum bloğu). Şantiye/kişi adları kanonik listeden. İki boyutlu (şantiye+tür)
+     filtre ui.js'in tekil data-filter primitifiyle ifade edilemediği için bu sayfada özel
+     JS ile bağlandı — ui.js DEĞİŞTİRİLMEDİ, sadece çağrılmadı. ---- */
+  var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
+  var TUR = {
+    toolbox:    {ic:'fa-chalkboard-user',      lbl:'Toolbox Eğitimi'},
+    ramakkala:  {ic:'fa-triangle-exclamation',  lbl:'Ramak Kala'},
+    denetim:    {ic:'fa-clipboard-check',       lbl:'Denetim'},
+    uygunsuzluk:{ic:'fa-circle-exclamation',    lbl:'Uygunsuzluk'},
+    kaza:       {ic:'fa-kit-medical',           lbl:'Kaza Raporu'}
+  };
+  var KAYITLAR = [
+    {no:'ISG-2026-011', santiye:'vadi',   tur:'toolbox',     tarih:'2 Tem 2026',  konu:'Yüksekte çalışma ve düşme önleme', sorumlu:'Hasan Demirci', durum:'Tamamlandı', st:'ok', arsiv:false},
+    {no:'ISG-2026-010', santiye:'liman',  tur:'ramakkala',   tarih:'1 Tem 2026',  konu:'Vinç yükü altından geçiş',          sorumlu:'Şükrü Aslan',   durum:'İnceleniyor', st:'warn', arsiv:false},
+    {no:'ISG-2026-009', santiye:'merkez', tur:'denetim',     tarih:'30 Haz 2026', konu:'Aylık İSG iç denetimi',             sorumlu:'Ömer Taşkın',   durum:'Bulgu Var — Takipte', st:'warn', arsiv:false},
+    {no:'ISG-2026-008', santiye:'vadi',   tur:'uygunsuzluk', tarih:'29 Haz 2026', konu:'İskele korkuluk eksikliği — B Blok', sorumlu:'İbrahim Sönmez',durum:'Aksiyon Bekliyor', st:'warn', arsiv:false},
+    {no:'ISG-2026-007', santiye:'liman',  tur:'kaza',        tarih:'27 Haz 2026', konu:'Forklift çarpması — hafif yaralanma', sorumlu:'Aylin Koç',   durum:'İnceleniyor', st:'danger', arsiv:false},
+    {no:'ISG-2026-006', santiye:'vadi',   tur:'toolbox',     tarih:'25 Haz 2026', konu:'Elektrik güvenliği ve KKD kullanımı', sorumlu:'Veli Şimşek', durum:'Tamamlandı', st:'ok', arsiv:false},
+    {no:'ISG-2026-005', santiye:'merkez', tur:'ramakkala',   tarih:'22 Haz 2026', konu:'Forklift-yaya güzergah kesişimi',   sorumlu:'Recep Yaman',   durum:'Kapatıldı', st:'ok', arsiv:false},
+    {no:'ISG-2026-004', santiye:'liman',  tur:'denetim',     tarih:'18 Haz 2026', konu:'Aliağa Liman İşletmeleri saha denetimi', sorumlu:'Aylin Koç', durum:'Bulgu Yok', st:'ok', arsiv:false},
+    {no:'ISG-2026-003', santiye:'vadi',   tur:'uygunsuzluk', tarih:'15 Haz 2026', konu:'Kişisel koruyucu donanım eksik kullanımı', sorumlu:'Hasan Demirci', durum:'Kapatıldı', st:'ok', arsiv:false},
+    {no:'ISG-2026-002', santiye:'merkez', tur:'toolbox',     tarih:'10 Haz 2026', konu:'Yangın güvenliği ve tahliye tatbikatı', sorumlu:'Ömer Taşkın', durum:'Tamamlandı', st:'ok', arsiv:false},
+    {no:'ISG-2026-001', santiye:'vadi',   tur:'kaza',        tarih:'3 Haz 2026',  konu:'Malzeme düşmesi — yaralanma yok',   sorumlu:'Hasan Demirci', durum:'Kapatıldı', st:'ok', arsiv:false}
+  ];
+  var BY_NO = {}; KAYITLAR.forEach(function(k){ BY_NO[k.no] = k; });
+
+  var body = document.getElementById('igBody');
+  /* D18 Y9: ?isg= map dönüşümü — crm-santiye-isg-detay.html artık 11 kaydın TAMAMINI
+     tanıyan bir map'e döndü (kaynak: shell.js DALGA 18 KANONİK TANIMLAR ?isg= maddesi),
+     tek-temsili gerekçesiyle 008'e kısıtlama KALKTI. Tüm satırlar ?isg=NNN (NNN = kaydın
+     3 haneli no'su) ile linklenir; parametresiz açılış ISG-2026-008 DEFAULT'a düşer. */
+  function rowHTML(k){
+    var T = TUR[k.tur];
+    var noNum = k.no.slice(-3);
+    var noCell = '<a href="crm-santiye-isg-detay.html?isg='+noNum+'">'+k.no+'</a>';
+    var durumCell = '<span class="gstat '+k.st+'">'+k.durum+'</span>' + (k.arsiv ? ' <span class="gstat off" style="margin-left:5px">Arşivlendi</span>' : '');
+    return '<tr data-san="'+k.santiye+'" data-tur="'+k.tur+'" data-no="'+k.no+'" data-arsiv="'+(k.arsiv?'1':'0')+'"'+(k.arsiv?' class="is-arsiv"':'')+'>'
+      + '<td><div class="ig-cell"><div class="ig-mark"><i class="fa-solid '+T.ic+'"></i></div><div class="ig-info"><b>'+noCell+'</b><span>'+k.tarih+'</span></div></div></td>'
+      + '<td>'+SANTIYE_ADI[k.santiye]+'</td>'
+      + '<td><span class="gtag"><i class="fa-solid '+T.ic+'"></i>'+T.lbl+'</span></td>'
+      + '<td><span class="ig-konu">'+k.konu+'</span></td>'
+      + '<td>'+k.sorumlu+'</td>'
+      + '<td>'+durumCell+'</td>'
+      + '<td><div class="row-acts">'
+      +   '<a class="ia-btn" href="crm-santiye-isg-detay.html?isg='+noNum+'" data-no-confirm aria-label="Detay" data-tip="Detay"><i class="fa-solid fa-eye"></i></a>'
+      +   '<a class="ia-btn" href="crm-santiye-isg-form.html?mod=duzenle&isg='+noNum+'" data-no-confirm aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></a>'
+      +   '<button type="button" class="ia-btn'+(k.arsiv?'':' danger')+'" data-no-confirm data-isg-arsiv="'+k.no+'" aria-label="'+(k.arsiv?'Aktife Al':'Arşivle')+'" data-tip="'+(k.arsiv?'Aktife Al':'Arşivle')+'"><i class="fa-solid '+(k.arsiv?'fa-rotate-left':'fa-box-archive')+'"></i></button>'
+      + '</div></td></tr>';
+  }
+  function renderBody(){ body.innerHTML = KAYITLAR.map(rowHTML).join(''); }
+  renderBody();
+
+  /* şef tek şantiye görür — diğer satırlar kalıcı kaldırılır, şantiye chip grubu tekile iner */
+  if(GV.role === 'sef'){
+    document.querySelectorAll('#tblIsg tbody tr').forEach(function(tr){
+      if(tr.getAttribute('data-san') !== 'vadi') tr.remove();
+    });
+    document.querySelectorAll('#igSanChips .chip').forEach(function(ch){
+      var v = ch.getAttribute('data-san');
+      if(v !== 'hepsi' && v !== 'vadi') ch.remove();
+    });
+  }
+
+  function refreshChipCounts(){
+    var rows = document.querySelectorAll('#tblIsg tbody tr');
+    var bySan = {hepsi:0}, byTur = {hepsi:0};
+    rows.forEach(function(tr){
+      bySan.hepsi++; byTur.hepsi++;
+      var s = tr.getAttribute('data-san'); bySan[s] = (bySan[s]||0) + 1;
+      var t = tr.getAttribute('data-tur'); byTur[t] = (byTur[t]||0) + 1;
+    });
+    document.querySelectorAll('#igSanChips .chip').forEach(function(ch){
+      var c = ch.querySelector('.ch-cnt');
+      if(c) c.textContent = bySan[ch.getAttribute('data-san')] || 0;
+    });
+    return {bySan:bySan, byTur:byTur, toplam:rows.length};
+  }
+  var counts0 = refreshChipCounts();
+  document.getElementById('kpiToplam').textContent = counts0.toplam;
+  document.getElementById('kpiKaza').textContent = counts0.byTur.kaza || 0;
+  document.getElementById('kpiToolbox').textContent = counts0.byTur.toolbox || 0;
+
+  /* ---- özel iki boyutlu filtre — şantiye chip + tür chip + serbest metin AND'lenir;
+     §17 üçüncü eksen: "Arşivlenenleri Göster" switch (kapalıyken arşivlenmiş tutanak
+     hiçbir chip kombinasyonunda görünmez — crm-santiye.html'deki swPasif ile aynı dil). ---- */
+  var curSan = 'hepsi', curTur = 'hepsi';
+  var swArsiv = document.getElementById('swArsivIsg');
+  function applyFilter(){
+    var term = document.getElementById('igSearch').value.trim().toLocaleLowerCase('tr');
+    var showArsiv = swArsiv && swArsiv.getAttribute('aria-checked') === 'true';
+    var shown = 0;
+    document.querySelectorAll('#tblIsg tbody tr').forEach(function(tr){
+      var okSan = curSan === 'hepsi' || tr.getAttribute('data-san') === curSan;
+      var okTur = curTur === 'hepsi' || tr.getAttribute('data-tur') === curTur;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okArsiv = showArsiv || tr.getAttribute('data-arsiv') !== '1';
+      var show = okSan && okTur && okTerm && okArsiv;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    document.getElementById('igEmpty').hidden = shown !== 0;
+    var acik = 0;
+    document.querySelectorAll('#tblIsg tbody tr:not([hidden]) .gstat.warn, #tblIsg tbody tr:not([hidden]) .gstat.danger').forEach(function(){ acik++; });
+    document.getElementById('kpiAcik').textContent = acik;
+    document.getElementById('igSub').textContent = shown + ' tutanak gösteriliyor · toplam ' + KAYITLAR.length + ' kayıt';
+  }
+  document.getElementById('igSearch').addEventListener('input', applyFilter);
+  document.getElementById('igSanChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-san]'); if(!ch) return;
+    document.querySelectorAll('#igSanChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    curSan = ch.getAttribute('data-san');
+    applyFilter();
+  });
+  document.getElementById('igTurChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-tur]'); if(!ch) return;
+    document.querySelectorAll('#igTurChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    curTur = ch.getAttribute('data-tur');
+    applyFilter();
+  });
+  if(swArsiv){
+    swArsiv.addEventListener('click', function(){
+      var on = swArsiv.getAttribute('aria-checked') !== 'true';
+      swArsiv.setAttribute('aria-checked', on ? 'true' : 'false');
+      applyFilter();
+    });
+  }
+
+  /* ---- Arşivle / Aktife Al (§17) — İSG tutanağı resmi kayıttır, kalıcı silinmez;
+     arşivleme çalışma durumundan (Tamamlandı/İnceleniyor/…) BAĞIMSIZ ayrı bir eksendir. ---- */
+  document.getElementById('igBody').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-isg-arsiv]'); if(!btn) return;
+    var k = BY_NO[btn.getAttribute('data-isg-arsiv')]; if(!k) return;
+    var willArchive = !k.arsiv;
+    gvConfirm({
+      danger: willArchive, icon: willArchive ? 'fa-box-archive' : 'fa-rotate-left',
+      title: k.no + (willArchive ? ' arşivlensin mi?' : ' yeniden aktif edilsin mi?'),
+      message: willArchive
+        ? ('"' + k.konu + '" tutanağı arşivlenecek; varsayılan listede görünmeyecek, kayıt SİLİNMEZ. "Arşivlenenleri Göster" ile her zaman erişilebilir kalır.')
+        : ('"' + k.konu + '" tutanağı yeniden aktif hale getirilecek ve varsayılan listede görünecek.'),
+      ok: willArchive ? 'Arşivle' : 'Aktife Al', cancel:'Vazgeç',
+      onConfirm:function(){
+        k.arsiv = willArchive;
+        renderBody();
+        refreshChipCounts();
+        applyFilter();
+        gvToast(k.no + (willArchive ? ' arşivlendi — işlem kaydına eklendi.' : ' yeniden aktif.'), {type: willArchive ? 'danger' : 'ok'});
+      }
+    });
+  });
+
+  applyFilter();
+})();
+</script>
+</body>
+</html>

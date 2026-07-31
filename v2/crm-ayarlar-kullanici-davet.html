@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Kullanıcı Davet Et — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Kullanıcı Davet Et ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* koltuk mini-özet — seat-hero'nun (crm-ayarlar-kullanicilar.html) sade sidebar karşılığı */
+.seat-mini{display:flex;align-items:center;gap:13px;padding:6px 2px 10px}
+.seat-mini i{font-size:19px;color:var(--acc-ink);flex:none}
+.seat-mini b{font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.seat-mini span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.seat-track{height:8px;border-radius:var(--r-pill);background:var(--bg);border:1px solid var(--line);overflow:hidden;margin:0 2px 4px}
+.seat-track>span{display:block;height:100%;border-radius:var(--r-pill);background:var(--acc-ink)}
+
+/* kapsam hücresi — crm-ayarlar-kullanicilar.html ile birebir aynı idiyom */
+.scope{display:inline-flex;align-items:center;gap:7px;font-size:12.5px}
+.scope i{font-size:11px;color:var(--muted)}
+.scope.all{color:var(--acc-ink);font-weight:600}
+.scope.all i{color:var(--acc-ink)}
+.scope.site{color:var(--ink-2)}
+
+.role-tag{white-space:nowrap}
+
+/* yeni eklenen davet satırı — kısa vurgu */
+@keyframes rowFlash{from{background:rgba(var(--acc-rgb),.14)}to{background:transparent}}
+.row-new{animation:rowFlash 1.8s ease}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="kullanicilar">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-ayarlar-kullanicilar.html">Kullanıcılar</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Kullanıcı Davet Et</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Yönetim</div>
+        <h1>Kullanıcı Davet Et</h1>
+        <div class="ph-sub">Yapıtaş İnşaat A.Ş. hesabına yeni bir ekip üyesi davet edin; davet bağlantısı 7 gün geçerlidir.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <!-- ============ SOL: davet formu ============ -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-user-plus"></i> Davet Bilgileri</div></div>
+        <div class="gc-body">
+          <form class="gform" id="inviteForm" onsubmit="return false">
+            <div class="gfield full">
+              <label for="fAdSoyad">Ad Soyad</label>
+              <input type="text" id="fAdSoyad" placeholder="ör. Ayşe Yılmaz">
+            </div>
+            <div class="gfield">
+              <label for="fEmail">E-posta</label>
+              <input type="email" id="fEmail" placeholder="ör. ayse.yilmaz@yapitas.com.tr">
+            </div>
+            <div class="gfield">
+              <label for="fTel">Telefon <span class="gf-hint">(isteğe bağlı)</span></label>
+              <input type="tel" id="fTel" placeholder="0532 XXX XX XX">
+            </div>
+            <div class="gfield">
+              <label for="fRol">Rol</label>
+              <select id="fRol">
+                <option value="superadmin">Gavia Platform Yöneticisi</option>
+                <option value="sahip">Firma Sahibi</option>
+                <option value="yonetim">Genel Müdür</option>
+                <option value="teknik">Teknik Müdür</option>
+                <option value="sef">Şantiye Şefi</option>
+                <option value="muhasebe">Muhasebe</option>
+                <option value="satinalma">Satın Alma Sorumlusu</option>
+                <option value="ik">İK Uzmanı</option>
+                <option value="personel" selected>Saha Personeli</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fDepartman">Şantiye / Departman</label>
+              <select id="fDepartman">
+                <option>Tüm şantiyeler</option>
+                <option>Vadi Konakları</option>
+                <option>Liman Lojistik Merkezi</option>
+                <option>Merkez Şantiye</option>
+                <option>Merkez Ofis</option>
+              </select>
+            </div>
+            <div class="gfield full">
+              <label for="fNot">Yetki Notu <span class="gf-hint">(isteğe bağlı)</span></label>
+              <textarea id="fNot" rows="3" placeholder="ör. yalnız Vadi Konakları puantaj onayına erişim verilecek"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="form-foot">
+          <a class="btn btn-ghost btn-sm" href="crm-ayarlar-kullanicilar.html">Vazgeç</a>
+          <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="inviteSubmit"><i class="fa-solid fa-paper-plane"></i> Davet Gönder</button>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: koltuk + bilgi notları ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chair"></i> Koltuk Durumu</div></div>
+          <div class="gc-body">
+            <div class="seat-mini"><i class="fa-solid fa-users"></i><div><b>18<span style="font-size:13px;font-weight:600;color:var(--muted)"> / 25</span></b><span>koltuk kullanımda</span></div></div>
+            <div class="seat-track"><span style="width:72%"></span></div>
+            <div class="side-tip" style="border-bottom:none;padding-top:12px"><i class="fa-solid fa-circle-info"></i><span><b style="color:var(--ink);font-weight:700">7</b> boş koltuk kaldı. Bekleyen davetler bu sınıra dahildir; koltuk yalnız davet kabul edildiğinde tüketilir.</span></div>
+          </div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Davet Notları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-clock"></i><span>Davet bağlantısı gönderildikten sonra 7 gün geçerlidir; süresi dolan davet aşağıdan yeniden gönderilebilir.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-user-shield"></i><span>Rol ve yetki kapsamları <a href="crm-ayarlar-roller.html" style="color:var(--acc-ink);font-weight:700">Roller &amp; Yetkiler</a> ekranında tanımlıdır.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-flask"></i><span>Bu form simülasyondur; e-posta gerçekte gönderilmez — gönderim aşağıdaki listeye "Bekliyor" satırı olarak eklenir.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ davet listesi ============ -->
+    <div class="gv-card" style="margin-top:16px">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-user-clock"></i> Davetler <span class="gtag"><span data-table-count>4</span> kayıt</span></div>
+      </div>
+      <div class="gc-body flush">
+        <table class="gtable" id="inviteTbl" style="min-width:760px">
+          <thead>
+            <tr>
+              <th>Kişi</th>
+              <th>Rol</th>
+              <th>Şantiye / Departman</th>
+              <th>Gönderilme</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody id="inviteTblBody">
+            <tr>
+              <td><div class="gcell"><div class="gcell-mark">SD</div><div class="gcell-info"><div class="gcell-name"><a href="crm-ayarlar-kullanici-detay.html?u=selim-dogan" style="color:inherit">Selim Doğan</a></div><div class="gcell-sub">selim.dogan@yapitas.com.tr</div></div></div></td>
+              <td><span class="gtag role-tag">Saha Personeli</span></td>
+              <td><span class="scope site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları</span></td>
+              <td>29 Haz 2026</td>
+              <td><span class="gstat wait">Bekliyor</span></td>
+            </tr>
+            <tr>
+              <td><div class="gcell"><div class="gcell-mark">ME</div><div class="gcell-info"><div class="gcell-name">Musa Erdem</div><div class="gcell-sub">musa.erdem@yapitas.com.tr</div></div></div></td>
+              <td><span class="gtag role-tag">Saha Personeli</span></td>
+              <td><span class="scope site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları</span></td>
+              <td>22 Haz 2026</td>
+              <td><span class="gstat ok">Kabul edildi</span></td>
+            </tr>
+            <tr>
+              <td><div class="gcell"><div class="gcell-mark">HG</div><div class="gcell-info"><div class="gcell-name">Halil Güneş</div><div class="gcell-sub">halil.gunes@yapitas.com.tr</div></div></div></td>
+              <td><span class="gtag role-tag">Saha Personeli</span></td>
+              <td><span class="scope site"><i class="fa-solid fa-location-dot"></i> Liman Lojistik Merkezi</span></td>
+              <td>18 Haz 2026</td>
+              <td><span class="gstat ok">Kabul edildi</span></td>
+            </tr>
+            <tr>
+              <td><div class="gcell"><div class="gcell-mark">CB</div><div class="gcell-info"><div class="gcell-name">Caner Bulut</div><div class="gcell-sub">caner.bulut@yapitas.com.tr</div></div></div></td>
+              <td><span class="gtag role-tag">Saha Personeli</span></td>
+              <td><span class="scope site"><i class="fa-solid fa-location-dot"></i> Merkez Şantiye</span></td>
+              <td>20 Haz 2026</td>
+              <td><span class="gstat off">Süresi doldu</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="gc-foot">
+        <span class="inv-note" style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)"><i class="fa-solid fa-circle-info" style="color:var(--acc-ink)"></i> Bekleyen davetler koltuk tüketmez; koltuk yalnız davet kabul edildiğinde sayılır. Bekleyen davetler yine de boş koltuk (7) sınırına tabidir.</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* Gavia platform rolü yalnız superadmin tarafından atanabilir — sahip kendi
+     ekibine bu rolü davet edemez (Gavia tarafı ayrı bir atama süreci) */
+  var rolSel = document.getElementById('fRol');
+  if(GV.role !== 'superadmin'){
+    var suOpt = rolSel.querySelector('option[value="superadmin"]');
+    if(suOpt) suOpt.disabled = true;
+  }
+
+  /* yönetim kademesi roller şantiye seçimini "Tüm şantiyeler"e kilitler —
+     crm-operasyon-demirbas-form.html'deki şef-kilit idiyomunun rol-bazlı karşılığı */
+  var YONETIM_ROLLERI = ['superadmin','sahip','yonetim','teknik','muhasebe','satinalma','ik'];
+  var depSel = document.getElementById('fDepartman');
+  function syncDepartman(){
+    if(YONETIM_ROLLERI.indexOf(rolSel.value) !== -1){
+      depSel.value = 'Tüm şantiyeler';
+      depSel.disabled = true;
+    } else {
+      depSel.disabled = false;
+      if(depSel.value === 'Tüm şantiyeler') depSel.value = 'Vadi Konakları';
+    }
+  }
+  rolSel.addEventListener('change', syncDepartman);
+  syncDepartman();
+
+  var ROL_ETIKET = {
+    superadmin:'Gavia Platform Yöneticisi', sahip:'Firma Sahibi', yonetim:'Genel Müdür',
+    teknik:'Teknik Müdür', sef:'Şantiye Şefi', muhasebe:'Muhasebe',
+    satinalma:'Satın Alma Sorumlusu', ik:'İK Uzmanı', personel:'Saha Personeli'
+  };
+
+  function initials(ad){
+    var p = ad.trim().split(/\s+/);
+    return ((p[0]||'')[0] + (p[1]||'')[0]).toUpperCase();
+  }
+
+  document.getElementById('inviteSubmit').addEventListener('click', function(){
+    var ad = document.getElementById('fAdSoyad').value.trim();
+    var email = document.getElementById('fEmail').value.trim();
+    if(!ad){ gvToast('Ad soyad girin.', {type:'danger'}); return; }
+    if(!email || email.indexOf('@') === -1){ gvToast('Geçerli bir e-posta girin.', {type:'danger'}); return; }
+
+    var rolLbl = ROL_ETIKET[rolSel.value] || rolSel.value;
+    var dep = depSel.value;
+    var scopeCls = dep === 'Tüm şantiyeler' ? 'all' : 'site';
+    var scopeIco = dep === 'Tüm şantiyeler' ? 'fa-globe' : 'fa-location-dot';
+
+    var row = document.createElement('tr');
+    row.className = 'row-new';
+    row.innerHTML =
+      '<td><div class="gcell"><div class="gcell-mark">'+initials(ad)+'</div><div class="gcell-info"><div class="gcell-name">'+ad+'</div><div class="gcell-sub">'+(email||'—')+'</div></div></div></td>'+
+      '<td><span class="gtag role-tag">'+rolLbl+'</span></td>'+
+      '<td><span class="scope '+scopeCls+'"><i class="fa-solid '+scopeIco+'"></i> '+dep+'</span></td>'+
+      '<td>2 Tem 2026</td>'+
+      '<td><span class="gstat wait">Bekliyor</span></td>';
+    document.getElementById('inviteTblBody').prepend(row);
+
+    var cnt = document.querySelector('[data-table-count]');
+    if(cnt) cnt.textContent = String(Number(cnt.textContent) + 1);
+
+    gvToast(ad + ' adlı kullanıcıya davet gönderildi.', {icon:'fa-paper-plane'});
+    document.getElementById('inviteForm').reset();
+    rolSel.value = 'personel';
+    syncDepartman();
+  });
+})();
+</script>
+</body>
+</html>

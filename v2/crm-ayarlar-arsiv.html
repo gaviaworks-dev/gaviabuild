@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Arşiv Merkezi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Arşiv Merkezi (§17, sistem geneli) ============ */
+#tblArsiv{min-width:1080px}
+.col-modul{width:150px}
+.col-tarih{width:130px}
+.col-arsivleyen{width:170px}
+.col-durum{width:150px}
+
+.ar-cell{display:flex;align-items:center;gap:12px;min-width:0}
+.ar-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:14px}
+.ar-info{min-width:0;line-height:1.35}
+.ar-info b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
+.ar-info span{font-size:11.5px;color:var(--muted)}
+
+.ar-desc{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;color:var(--ink-2);font-size:12.5px}
+
+.mod-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:var(--r-sm);white-space:nowrap;background:rgba(var(--acc-rgb),.1);color:var(--acc-ink)}
+
+/* KPI modül dağılımı mini bar listesi */
+.dist-list{display:flex;flex-direction:column;gap:10px}
+.dist-row{display:flex;align-items:center;gap:12px;font-size:12.5px}
+.dist-row .dl-lbl{flex:none;width:130px;color:var(--ink-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dist-row .dl-track{flex:1;height:8px;border-radius:var(--r-pill);background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.dist-row .dl-fill{height:100%;border-radius:var(--r-pill);background:var(--acc-ink)}
+.dist-row .dl-val{flex:none;width:26px;text-align:right;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---- mobil kart listesi (390px) — #tblArsiv ile aynı satır kümesinden üretilir ---- */
+.ar-mobile-list{display:none}
+.ar-mrow{padding:14px 18px;border-bottom:1px solid var(--line)}
+.ar-mrow:last-child{border-bottom:none}
+.ar-mrow-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+.ar-mrow-top .ar-cell{flex:1}
+.ar-mrow-desc{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:9px;line-height:1.4}
+.ar-mrow-meta{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;margin-bottom:10px;font-size:11.5px;color:var(--muted)}
+.ar-mrow-meta span{display:inline-flex;align-items:center;gap:6px}
+.ar-mrow-meta i{font-size:10.5px;color:var(--line-2)}
+.ar-mrow-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ar-mrow-acts .ia-btn{width:36px;height:36px}
+@media(max-width:640px){
+  #tblArsiv{display:none}
+  .ar-mobile-list{display:block}
+}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="arsiv">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Ayarlar · Sistem</div>
+        <h1>Arşiv Merkezi</h1>
+        <div class="ph-sub">Sistem genelinde arşivlenmiş/pasife alınmış kayıtların tek merkezden görüntülendiği ekran — hiçbir kayıt kalıcı silinmez, yalnız arşivlenir (§17).</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-ayarlar-log.html"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Kayıtları</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-box-archive"></i></div>
+        <div><div class="kpi-num num" id="kpiToplam">7</div><div class="kpi-lbl">Toplam arşivli kayıt</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 4 modülden</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-calendar-check"></i></div>
+        <div><div class="kpi-num num" id="kpiBuAy">0</div><div class="kpi-lbl">Bu ay arşivlenen</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar"></i> Temmuz 2026</div></div>
+      </div>
+      <div class="kpi-card" style="--x:1">
+        <div class="kpi-ico" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-rotate-left"></i></div>
+        <div><div class="kpi-num num" id="kpiBuOturum">0</div><div class="kpi-lbl">Bu oturumda arşivlenen</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-clock"></i> Satın alma modülünden (canlı)</div></div>
+      </div>
+      <div class="kpi-card" style="--x:2">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-layer-group"></i></div>
+        <div><div class="kpi-num num" id="kpiModulSayisi">4</div><div class="kpi-lbl">Arşivli kaydı olan modül</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-sitemap"></i> 17 modülden</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="padding:20px 22px;margin-bottom:22px">
+      <div class="gd-label" style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Modül Bazlı Dağılım</div>
+      <div class="dist-list" id="distList"></div>
+    </div>
+
+    <div class="gv-card">
+      <div class="filter-bar">
+        <div class="fb-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Kayıt no veya açıklama ara" data-table-search="#tblArsiv">
+        </div>
+        <div class="chips" data-target="#tblArsiv" id="modChips">
+          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">7</span></button>
+          <button class="chip" data-filter="arac">Araçlar <span class="ch-cnt">3</span></button>
+          <button class="chip" data-filter="banka">Banka Hesapları <span class="ch-cnt">1</span></button>
+          <button class="chip" data-filter="imza">İmza Sirküleri <span class="ch-cnt">1</span></button>
+          <button class="chip" data-filter="dosyalar">Dosyalar (Demirbaş) <span class="ch-cnt">2</span></button>
+          <button class="chip" data-filter="satinalma">Satın Alma <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="personel">Personel <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="santiye">Şantiye <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="kredikarti">Kredi Kartı <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="pluxee">Pluxee Kart <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="yetkili">Yetkililer <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="roller">Roller <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="gorev">Görevler <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="kasa">Kasa <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="avans">Avans <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="puantaj">Puantaj <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="hakedis">Hakediş <span class="ch-cnt">0</span></button>
+          <button class="chip" data-filter="sozlesme">Sözleşmeler <span class="ch-cnt">0</span></button>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpArsiv">
+          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+        </button>
+      </div>
+
+      <div class="gv-achips-row" id="achipsArsiv" hidden>
+        <div class="gv-achips"></div>
+        <div class="gv-achips-acts">
+          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+          </button>
+        </div>
+      </div>
+
+      <div class="gc-body flush">
+        <table class="gtable" id="tblArsiv">
+          <thead>
+            <tr>
+              <th>Kayıt</th>
+              <th class="col-modul">Modül</th>
+              <th>Başlık / Açıklama</th>
+              <th class="col-tarih">Arşivlenme Tarihi</th>
+              <th class="col-arsivleyen">Arşivleyen</th>
+              <th class="col-durum">Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="arsivBody"></tbody>
+        </table>
+        <div class="ar-mobile-list" id="arsivMobileList"></div>
+        <div class="gv-empty" data-table-empty hidden>
+          <div class="ge-ico"><i class="fa-solid fa-box-open"></i></div>
+          <h4>Eşleşen arşiv kaydı yok</h4>
+          <p>Aramayı temizleyin veya farklı bir modül/durum filtresi seçin — bu modülde henüz arşivlenmiş kayıt bulunmuyor olabilir.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ Gelişmiş Filtre paneli (§9 + §13 gvDateRange, spec-filtre-tarih.md) ============ -->
+<div class="gv-fpanel-ov" id="fpArsivOv">
+  <aside class="gv-fpanel" id="fpArsiv" role="dialog" aria-modal="true" aria-label="Gelişmiş Filtre">
+    <div class="gv-fpanel-head">
+      <h3><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</h3>
+      <button type="button" class="gv-fpanel-close" aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="gv-fpanel-body">
+      <div class="gfield">
+        <label>Durum</label>
+        <select data-fp-key="durum" data-fp-label="Durum">
+          <option value="">Tümü</option>
+          <option value="satildi">Satıldı</option>
+          <option value="hurda">Hurdaya Ayrıldı</option>
+          <option value="kiralamaBitti">Kiralama Bitti</option>
+          <option value="pasif">Pasif</option>
+          <option value="gecersiz">Geçersiz</option>
+          <option value="iade">İade Edildi</option>
+        </select>
+      </div>
+      <div class="gfield">
+        <label>Arşivlenme Tarihi Aralığı</label>
+        <div data-gvdaterange data-fp-key="tarih" data-fp-label="Tarih"></div>
+      </div>
+    </div>
+    <div class="gv-fpanel-foot">
+      <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
+      <button type="button" class="btn btn-acc" data-fp-apply>Uygula</button>
+    </div>
+  </aside>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ============ GERÇEK/DOĞRULANMIŞ ARŞİV KAYITLARI — kaynak dosyalar okunarak
+     doğrulandı, DEĞİŞTİRİLMEDİ, yalnız burada LİSTELENDİ (§17 T-M kararı 47):
+     - ARC-07/09/10 → crm-operasyon-arac.html / crm-operasyon-arac-arsiv.html (T-F)
+     - Ziraat banka hesabı (hesap=3) → crm-ayarlar-firma.html (T-A)
+     - IMZ-2026-016 → crm-ayarlar-firma.html imza sirküleri (T-B)
+     - ZMT-2025-017 / ZMT-2025-009 → crm-operasyon-demirbas.html (demirbaş/dosyalar)
+     Diğer 13 modülde (Personel, Şantiye, Kredi Kartı, Pluxee, Yetkililer, Roller,
+     Görevler, Kasa, Avans, Puantaj, Hakediş, Sözleşmeler, Satın Alma) bu paket
+     kapsamında henüz doğrulanmış bir arşiv kaydı YOK — uydurma veri EKLENMEDİ,
+     bu modüllerin çip'leri "0" ile gösterilir ve filtrelenince dürüst boş durum
+     görünür. Satın alma kendi liste/detay sayfalarında oturum-lokal arşivleme
+     ÇALIŞIYOR (bkz. crm-satinalma-*.html) ama sayfalar arası state paylaşımı
+     olmadığından (repo geneli konvansiyon) bu hub'a canlı yansımaz — dürüstçe
+     boş başlar. ============ */
+  var MODUL = {
+    arac:      {lbl:'Araçlar',              ic:'fa-car-side',       bg:'rgba(var(--acc-rgb),.12)', fg:'var(--acc-ink)'},
+    banka:     {lbl:'Banka Hesapları',      ic:'fa-building-columns', bg:'var(--info-tint)', fg:'var(--info)'},
+    imza:      {lbl:'İmza Sirküleri',       ic:'fa-signature',      bg:'var(--warn-tint)', fg:'var(--warn)'},
+    dosyalar:  {lbl:'Dosyalar (Demirbaş)',  ic:'fa-box',            bg:'var(--bg)', fg:'var(--ink-2)'},
+    satinalma: {lbl:'Satın Alma',           ic:'fa-cart-shopping',  bg:'rgba(var(--acc-rgb),.12)', fg:'var(--acc-ink)'},
+    personel:  {lbl:'Personel',             ic:'fa-users',          bg:'var(--info-tint)', fg:'var(--info)'},
+    santiye:   {lbl:'Şantiye',              ic:'fa-helmet-safety',  bg:'var(--warn-tint)', fg:'var(--warn)'},
+    kredikarti:{lbl:'Kredi Kartı',          ic:'fa-credit-card',    bg:'var(--bg)', fg:'var(--ink-2)'},
+    pluxee:    {lbl:'Pluxee Kart',          ic:'fa-utensils',       bg:'var(--bg)', fg:'var(--ink-2)'},
+    yetkili:   {lbl:'Yetkililer',           ic:'fa-user-tie',       bg:'var(--info-tint)', fg:'var(--info)'},
+    roller:    {lbl:'Roller',               ic:'fa-user-shield',    bg:'var(--bg)', fg:'var(--ink-2)'},
+    gorev:     {lbl:'Görevler',             ic:'fa-list-check',     bg:'var(--bg)', fg:'var(--ink-2)'},
+    kasa:      {lbl:'Kasa',                 ic:'fa-sack-dollar',    bg:'var(--ok-tint)', fg:'var(--ok)'},
+    avans:     {lbl:'Avans',                ic:'fa-hand-holding-dollar', bg:'var(--ok-tint)', fg:'var(--ok)'},
+    puantaj:   {lbl:'Puantaj',              ic:'fa-calendar-days',  bg:'var(--info-tint)', fg:'var(--info)'},
+    hakedis:   {lbl:'Hakediş',              ic:'fa-file-invoice-dollar', bg:'var(--ok-tint)', fg:'var(--ok)'},
+    sozlesme:  {lbl:'Sözleşmeler',          ic:'fa-file-contract',  bg:'var(--bg)', fg:'var(--ink-2)'}
+  };
+
+  var DURUM_LBL = {
+    satildi:{cls:'off', lbl:'Satıldı'}, hurda:{cls:'hurda', lbl:'Hurdaya Ayrıldı'},
+    kiralamaBitti:{cls:'off', lbl:'Kiralama Bitti'}, pasif:{cls:'off', lbl:'Pasif'},
+    gecersiz:{cls:'off', lbl:'Geçersiz'}, iade:{cls:'off', lbl:'İade Edildi'}
+  };
+
+  var ARSIV = [
+    {no:'ARC-07', modul:'arac', baslik:'Renault Kangoo Van — 34 ESK 771', aciklama:'Yaşlanan filo aracı — bakım maliyeti ekonomik ömrünü aştı', tarih:'2026-05-15', arsivleyen:'Baran Yıldız', durum:'satildi', href:'crm-operasyon-arac-detay.html?arac=ARC-07'},
+    {no:'ARC-09', modul:'arac', baslik:'Fiat Egea Sedan — 34 KRL 090', aciklama:'Kiralama sözleşmesi süresi doldu — araç kiralama firmasına iade edildi', tarih:'2026-06-20', arsivleyen:'Baran Yıldız', durum:'kiralamaBitti', href:'crm-operasyon-arac-detay.html?arac=ARC-09'},
+    {no:'ARC-10', modul:'arac', baslik:'Ford Cargo 1826 Kamyon — 41 HRD 233', aciklama:'Ağır kaza sonrası onarım maliyeti araç değerini aştı — hurdaya ayrıldı', tarih:'2026-03-02', arsivleyen:'Recep Yaman', durum:'hurda', href:'crm-operasyon-arac-detay.html?arac=ARC-10'},
+    {no:'BNK-03', modul:'banka', baslik:'Ziraat Bankası — Maaş Ödeme Hesabı', aciklama:'Şube birleşmesi sonrası kullanım dışı — TR73 0001 0002 3812 3456 7850 02', tarih:null, arsivleyen:'Nesrin Aydın', durum:'pasif', href:'crm-ayarlar-firma.html'},
+    {no:'IMZ-2026-016', modul:'imza', baslik:'İmza Sirküleri v1 — Elif Sarıkaya', aciklama:'NOT-2026/1187 · elle geçersiz işaretlendi — yeni versiyon eklenene kadar geçerli değil', tarih:null, arsivleyen:'Nesrin Aydın', durum:'gecersiz', href:'crm-ayarlar-firma.html'},
+    {no:'ZMT-2025-017', modul:'dosyalar', baslik:'El Telsizi — Motorola CP040', aciklama:'Hasan Demirci zimmetinden iade edildi', tarih:'2026-01-03', arsivleyen:'Seda Karaca', durum:'iade', href:'crm-operasyon-demirbas.html'},
+    {no:'ZMT-2025-009', modul:'dosyalar', baslik:'Jeneratör — Honda EU22i', aciklama:'Hurda kararı verildi — ekonomik ömrünü tamamladı', tarih:'2026-05-12', arsivleyen:'Recep Yaman', durum:'hurda', href:'crm-operasyon-demirbas.html'}
+  ];
+
+  function fmtTarih(iso){
+    if(!iso) return '—';
+    var AY = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+    var d = new Date(iso + 'T00:00:00');
+    return d.getDate() + ' ' + AY[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function esc(t){ var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+
+  /* ---- tablo + mobil kart render ---- */
+  var tbody = document.getElementById('arsivBody');
+  var mobile = document.getElementById('arsivMobileList');
+  var rowsHtml = '', mobHtml = '';
+  ARSIV.forEach(function(a, idx){
+    var m = MODUL[a.modul];
+    var d = DURUM_LBL[a.durum] || {cls:'off', lbl:a.durum};
+    var tarihTxt = fmtTarih(a.tarih);
+    rowsHtml += '<tr data-f="' + a.modul + '" data-modul="' + a.modul + '" data-durum="' + a.durum + '"' + (a.tarih ? ' data-tarih="' + a.tarih + '"' : '') + ' data-idx="' + idx + '">'
+      + '<td><div class="ar-cell"><div class="ar-mark" style="background:' + m.bg + ';color:' + m.fg + '"><i class="fa-solid ' + m.ic + '"></i></div><div class="ar-info"><b>' + esc(a.no) + '</b><span>' + esc(a.baslik) + '</span></div></div></td>'
+      + '<td><span class="mod-chip"><i class="fa-solid ' + m.ic + '"></i> ' + m.lbl + '</span></td>'
+      + '<td><span class="ar-desc" title="' + esc(a.aciklama) + '">' + esc(a.aciklama) + '</span></td>'
+      + '<td>' + tarihTxt + '</td>'
+      + '<td>' + esc(a.arsivleyen) + '</td>'
+      + '<td><span class="gstat ' + d.cls + '">' + d.lbl + '</span></td>'
+      + '<td><div class="row-acts">'
+      +   '<a class="ia-btn" href="' + a.href + '" data-no-confirm data-tip="Görüntüle" aria-label="Görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+      +   '<button type="button" class="ia-btn" data-aktif-et="' + idx + '" data-no-confirm data-tip="Aktife Al" aria-label="Aktife Al"><i class="fa-solid fa-rotate-left"></i></button>'
+      + '</div></td></tr>';
+
+    mobHtml += '<div class="ar-mrow" data-f="' + a.modul + '" data-idx="' + idx + '">'
+      + '<div class="ar-mrow-top"><div class="ar-cell"><div class="ar-mark" style="background:' + m.bg + ';color:' + m.fg + '"><i class="fa-solid ' + m.ic + '"></i></div><div class="ar-info"><b>' + esc(a.no) + '</b><span>' + esc(a.baslik) + '</span></div></div><span class="mod-chip"><i class="fa-solid ' + m.ic + '"></i> ' + m.lbl + '</span></div>'
+      + '<span class="ar-mrow-desc">' + esc(a.aciklama) + '</span>'
+      + '<div class="ar-mrow-meta"><span><i class="fa-solid fa-calendar"></i> ' + tarihTxt + '</span><span><i class="fa-solid fa-user"></i> ' + esc(a.arsivleyen) + '</span></div>'
+      + '<div class="ar-mrow-bottom"><span class="gstat ' + d.cls + '">' + d.lbl + '</span><div class="ar-mrow-acts">'
+      +   '<a class="ia-btn" href="' + a.href + '" data-no-confirm aria-label="Görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+      +   '<button type="button" class="ia-btn" data-aktif-et="' + idx + '" data-no-confirm aria-label="Aktife Al"><i class="fa-solid fa-rotate-left"></i></button>'
+      + '</div></div></div>';
+  });
+  tbody.innerHTML = rowsHtml;
+  mobile.innerHTML = mobHtml;
+
+  /* ---- KPI: toplam / bu ay / modül dağılımı ---- */
+  document.getElementById('kpiToplam').textContent = ARSIV.length;
+  var buAy = ARSIV.filter(function(a){ return a.tarih && a.tarih.slice(0,7) === '2026-07'; }).length;
+  document.getElementById('kpiBuAy').textContent = buAy;
+
+  var dagilim = {};
+  ARSIV.forEach(function(a){ dagilim[a.modul] = (dagilim[a.modul] || 0) + 1; });
+  document.getElementById('kpiModulSayisi').textContent = Object.keys(dagilim).length;
+  var maxDag = Math.max.apply(null, Object.keys(dagilim).map(function(k){ return dagilim[k]; }));
+  var distHtml = '';
+  Object.keys(dagilim).sort(function(a,b){ return dagilim[b] - dagilim[a]; }).forEach(function(k){
+    var m = MODUL[k];
+    distHtml += '<div class="dist-row"><span class="dl-lbl">' + m.lbl + '</span>'
+      + '<div class="dl-track"><div class="dl-fill" style="width:' + Math.round(dagilim[k] / maxDag * 100) + '%"></div></div>'
+      + '<span class="dl-val">' + dagilim[k] + '</span></div>';
+  });
+  document.getElementById('distList').innerHTML = distHtml;
+
+  /* ---- Aktife Al — onay ekranıyla; cross-modül kayıtlarda gerçek durum
+     değişikliği kaynak sayfada yapılır (ayrı sayfa yüklemeleri arası state
+     paylaşımı repo genelinde yok) — bu hub kendi görünümünden kaldırır ve
+     kaynağa yönlendirici dürüst bir not gösterir. ---- */
+  function wireAktifEt(container){
+    container.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-aktif-et]'); if(!btn) return;
+      var idx = +btn.getAttribute('data-aktif-et');
+      var a = ARSIV[idx];
+      gvConfirm({
+        icon:'fa-rotate-left', ok:'Aktife Al', cancel:'Vazgeç',
+        title: a.no + ' yeniden aktif edilsin mi?',
+        message: a.baslik + ' kaydı yeniden aktif duruma alınacak. Bu hub bir görüntüleme merkezidir — kalıcı durum değişikliği ' + MODUL[a.modul].lbl + ' modülünün kendi ekranında (yukarıdaki "Görüntüle" linki) yapılır; buradan kaldırıldığında yalnız bu oturumun görünümü güncellenir.',
+        onConfirm:function(){
+          document.querySelectorAll('[data-f="' + a.modul + '"][data-idx="' + idx + '"]').forEach(function(el){ el.remove(); });
+          gvToast(a.no + ' bu görünümden kaldırıldı — kalıcı geri yükleme için ' + MODUL[a.modul].lbl + ' modülüne gidin.');
+        }
+      });
+    });
+  }
+  wireAktifEt(tbody);
+  wireAktifEt(mobile);
+
+  /* ---- Gelişmiş Filtre paneli (Durum + tarih aralığı) ---- */
+  if(window.gvFilterPanel){
+    window.gvFilterPanel.init('#fpArsiv', { table: '#tblArsiv' });
+  }
+
+  /* ---- mobil kart görünürlük senkronu — ui.js'in chip/arama motoru (tr.hidden)
+     ve gvFilterPanel'in varsayılan motoru (.gv-fp-hide) yalnız #tblArsiv'in KENDİ
+     <tr>'lerini günceller; .ar-mrow ayrı bir DOM olduğundan data-idx eşleşmesiyle
+     senkronize edilir (crm-satinalma-talepler.html'deki syncTlFilterVisibility
+     deseninin aynısı). ---- */
+  function syncMobileVisibility(){
+    tbody.querySelectorAll('tr').forEach(function(tr){
+      var idx = tr.getAttribute('data-idx');
+      var card = mobile.querySelector('.ar-mrow[data-idx="' + idx + '"]');
+      if(card) card.hidden = tr.hidden || tr.classList.contains('gv-fp-hide');
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('#modChips .chip[data-filter]').forEach(function(ch){
+      ch.addEventListener('click', function(){ setTimeout(syncMobileVisibility, 0); });
+    });
+    document.querySelectorAll('input[data-table-search]').forEach(function(inp){
+      inp.addEventListener('input', function(){ setTimeout(syncMobileVisibility, 0); });
+    });
+    syncMobileVisibility();
+  });
+  document.getElementById('fpArsiv').addEventListener('click', function(){ setTimeout(syncMobileVisibility, 0); });
+})();
+</script>
+</body>
+</html>
+</content>

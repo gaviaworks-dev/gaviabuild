@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Şantiye Maliyet Raporu — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Şantiye Maliyet Raporu (matris + kompozisyon bar) ============ */
+.rp-back{display:inline-flex;align-items:center;gap:7px}
+
+#tblKalem{min-width:640px}
+#tblKalem td.num,#tblKalem th.num{text-align:right}
+.km-lbl{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink)}
+.km-ico{width:26px;height:26px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:11px}
+.km-ico.kasa{background:rgba(var(--acc-rgb),.16);color:var(--acc-ink)}
+.km-ico.kurum{background:var(--info-tint);color:var(--info)}
+.km-ico.taseron{background:var(--warn-tint);color:var(--warn)}
+.km-ico.satinalma{background:var(--bg);color:var(--ink-2);border:1px solid var(--line-2)}
+#tblKalem tr.km-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--line-2)}
+
+/* toplam maliyet — şantiye payı (basit karşılaştırma bar'ı) */
+.att-list{display:flex;flex-direction:column;gap:14px}
+.att-row{display:flex;align-items:center;gap:14px}
+.att-name{flex:none;width:180px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-row .gbar{flex:1;min-width:0}
+.att-row .gbar-val{width:auto;min-width:96px;text-align:right}
+
+/* kompozisyon — yığılmış bar (kütüphane yok, el yazımı div) */
+.cmp-row{margin-bottom:18px}
+.cmp-row:last-child{margin-bottom:0}
+.cmp-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.cmp-head b{font-size:13.5px;font-weight:700;color:var(--ink)}
+.cmp-head span{font-size:13px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.cmp-stack{display:flex;height:20px;border-radius:var(--r-sm);overflow:hidden;background:var(--bg);border:1px solid var(--line)}
+.cmp-seg{height:100%}
+.cmp-seg.kasa{background:var(--acc-ink)}
+.cmp-seg.kurum{background:var(--info)}
+.cmp-seg.taseron{background:var(--warn)}
+.cmp-seg.satinalma{background:var(--ink-2)}
+.cmp-legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+.cmp-legend .lg-item{display:inline-flex;align-items:center;gap:7px}
+.cmp-legend .lg-sw{width:12px;height:12px;border-radius:4px;flex:none}
+.cmp-legend .lg-sw.kasa{background:var(--acc-ink)}
+.cmp-legend .lg-sw.kurum{background:var(--info)}
+.cmp-legend .lg-sw.taseron{background:var(--warn)}
+.cmp-legend .lg-sw.satinalma{background:var(--ink-2)}
+
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row a{color:var(--acc-ink);font-weight:700;text-decoration:none}
+.hl-row a:hover{text-decoration:underline}
+
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+</style>
+</head>
+<body data-sec="raporlar" data-screen="raporlar">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Analiz</div>
+        <h1>Şantiye Maliyet Raporu</h1>
+        <div class="ph-sub" data-view="yonetim">3 şantiye · kasa + hakediş + satın alma kalemlerinden derlenmiş toplam ₺5.694.680</div>
+        <div class="ph-sub" data-view="sef" hidden>Vadi Konakları · derlenmiş toplam ₺3.745.800</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
+        <a class="btn btn-acc btn-sm" href="crm-finans-maliyet.html"><i class="fa-solid fa-chart-column"></i> Detaylı maliyet ekranı →</a>
+        <button class="btn btn-ghost btn-sm" data-export="Maliyet raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+      </div>
+    </div>
+
+    <!-- ============ YÖNETİM GÖRÜNÜMÜ (superadmin·sahip·yonetim·teknik·muhasebe·ik) ============ -->
+    <section data-view="yonetim">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-ico"><i class="fa-solid fa-coins"></i></div>
+          <div><div class="kpi-num num compact" style="font-size:19px">₺5.694.680</div><div class="kpi-lbl">Toplam maliyet (3 şantiye)</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-file-lines"></i> 30 kaynak kalem</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-helmet-safety"></i></div>
+          <div><div class="kpi-num num compact" style="font-size:19px">₺3.745.800</div><div class="kpi-lbl">Vadi Konakları payı</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-percent"></i> Toplamın %66'sı</div></div>
+        </div>
+        <div class="kpi-card warn">
+          <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div><div class="kpi-num num compact" style="font-size:19px">₺1.928.850</div><div class="kpi-lbl">Onayda / bekleyen toplam</div>
+          <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Tamamı Vadi Konakları'na ait</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico"><i class="fa-solid fa-file-invoice"></i></div>
+          <div><div class="kpi-num num">30</div><div class="kpi-lbl">Kaynak belge</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 9 kasa · 6 kurum · 6 taşeron · 9 satın alma</div></div>
+        </div>
+      </div>
+
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Şantiye × Kalem Türü Matrisi</div><span class="ph-sub" style="margin:0">2026 kayıtlı toplamlar</span></div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblKalem">
+            <thead>
+              <tr>
+                <th>Kalem Türü</th>
+                <th class="num">Vadi Konakları</th>
+                <th class="num">Liman Lojistik</th>
+                <th class="num">Merkez Şantiye</th>
+                <th class="num">Toplam</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- kaynak: crm-operasyon-kasa.html KSA-2026-013…022 (taslak KSA-2026-022 tutarsız + reddedilen KSA-2026-017 ₺4.500 Liman — ikisi de hariç) -->
+              <tr><td><div class="km-lbl"><span class="km-ico kasa"><i class="fa-solid fa-cash-register"></i></span> Kasa Çıkışı</div></td><td class="num">₺61.450</td><td class="num">₺17.050</td><td class="num">₺8.880</td><td class="num">₺87.380</td></tr>
+              <!-- kaynak: crm-finans-kurum.html HKD-2026-001…006 -->
+              <tr><td><div class="km-lbl"><span class="km-ico kurum"><i class="fa-solid fa-building-columns"></i></span> Kurum Hakedişi</div></td><td class="num">₺2.790.000</td><td class="num">₺1.655.000</td><td class="num">₺0</td><td class="num">₺4.445.000</td></tr>
+              <!-- kaynak: crm-finans-taseron.html TH-2026-002/005/008/009/013/014 (net tutar) -->
+              <tr><td><div class="km-lbl"><span class="km-ico taseron"><i class="fa-solid fa-people-arrows"></i></span> Taşeron Hakedişi</div></td><td class="num">₺615.200</td><td class="num">₺128.500</td><td class="num">₺0</td><td class="num">₺743.700</td></tr>
+              <!-- kaynak: crm-satinalma-formlar.html SAT-2026-008/009/010/011/012/013/014/016 (SAT-2026-007 ₺15.600 iptal — hariç tutuldu). SAT-2026-013 (₺86.200, Onayda) bu satır toplamına zaten dahildi; "Onayda/bekleyen toplam" KPI kartına da ayrıca eklendi. D18 SAT-2026-010 uzlaştırması: Liman ₺9.400→₺96.400 (Anadolu Hırdavat, ₺96.400). -->
+              <tr><td><div class="km-lbl"><span class="km-ico satinalma"><i class="fa-solid fa-file-invoice"></i></span> Satın Alma</div></td><td class="num">₺279.150</td><td class="num">₺96.400</td><td class="num">₺43.050</td><td class="num">₺418.600</td></tr>
+              <tr class="km-total"><td>Şantiye Toplamı</td><td class="num">₺3.745.800</td><td class="num">₺1.896.950</td><td class="num">₺51.930</td><td class="num">₺5.694.680</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="gc-body" style="padding-top:0">
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Merkez Şantiye'de kurum/taşeron hakedişi görünmüyor — iç yatırım projesi olduğu için işverene hakediş kesilmiyor (bkz. şantiye kaydı).</div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Reddedilen KSA-2026-017 (₺4.500, Liman) ve iptal edilen SAT-2026-007 (₺15.600, Liman) toplama dahil edilmedi.</div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Toplam Maliyet — Şantiye Payı</div></div>
+        <div class="gc-body">
+          <div class="att-list">
+            <div class="att-row"><span class="att-name">Vadi Konakları</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div><span class="gbar-val">₺3.745.800</span></div>
+            <div class="att-row"><span class="att-name">Liman Lojistik Merkezi</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:50.6%"></div></div></div><span class="gbar-val">₺1.896.950</span></div>
+            <div class="att-row"><span class="att-name">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:1.4%"></div></div></div><span class="gbar-val">₺51.930</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Bar genişliği en yüksek şantiye (Vadi Konakları) referans alınarak orantılandı.</div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-layer-group"></i> Maliyet Kompozisyonu — Şantiye Bazında</div></div>
+        <div class="gc-body">
+          <div class="cmp-row">
+            <div class="cmp-head"><b>Vadi Konakları</b><span>₺3.745.800</span></div>
+            <div class="cmp-stack">
+              <div class="cmp-seg kasa" style="width:1.6%" data-tip="Kasa ₺61.450"></div>
+              <div class="cmp-seg kurum" style="width:74.5%" data-tip="Kurum Hakedişi ₺2.790.000"></div>
+              <div class="cmp-seg taseron" style="width:16.4%" data-tip="Taşeron Hakedişi ₺615.200"></div>
+              <div class="cmp-seg satinalma" style="width:7.5%" data-tip="Satın Alma ₺279.150"></div>
+            </div>
+          </div>
+          <div class="cmp-row">
+            <div class="cmp-head"><b>Liman Lojistik Merkezi</b><span>₺1.896.950</span></div>
+            <div class="cmp-stack">
+              <div class="cmp-seg kasa" style="width:0.9%" data-tip="Kasa ₺17.050"></div>
+              <div class="cmp-seg kurum" style="width:87.3%" data-tip="Kurum Hakedişi ₺1.655.000"></div>
+              <div class="cmp-seg taseron" style="width:6.8%" data-tip="Taşeron Hakedişi ₺128.500"></div>
+              <div class="cmp-seg satinalma" style="width:5.1%" data-tip="Satın Alma ₺96.400"></div>
+            </div>
+          </div>
+          <div class="cmp-row">
+            <div class="cmp-head"><b>Merkez Şantiye</b><span>₺51.930</span></div>
+            <div class="cmp-stack">
+              <div class="cmp-seg kasa" style="width:17.1%" data-tip="Kasa ₺8.880"></div>
+              <div class="cmp-seg satinalma" style="width:82.9%" data-tip="Satın Alma ₺43.050"></div>
+            </div>
+          </div>
+          <div class="cmp-legend">
+            <span class="lg-item"><span class="lg-sw kasa"></span> Kasa Çıkışı</span>
+            <span class="lg-item"><span class="lg-sw kurum"></span> Kurum Hakedişi</span>
+            <span class="lg-item"><span class="lg-sw taseron"></span> Taşeron Hakedişi</span>
+            <span class="lg-item"><span class="lg-sw satinalma"></span> Satın Alma</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-triangle-exclamation"></i><span>En büyük onay bekleyen kalem <a href="crm-finans-hakedis-detay.html?hkd=006">HKD-2026-006</a> (₺1.630.000, Körfez GYO, Vadi Konakları) — 12 gündür onay bekliyor.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-people-arrows"></i><span>Taşeron hakedişlerinde ₺166.200 onay bekliyor — <a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a> (Demir-Beton, ₺90.000) ve <a href="crm-finans-hakedis-detay.html?th=009">TH-2026-009</a> (ElektroMek, ₺76.200), ikisi de Vadi Konakları.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-file-invoice"></i><span><a href="crm-satinalma-form-detay.html">SAT-2026-013</a> (₺86.200, inşaat demiri Ø12, Vadi Konakları) Genel Müdür onayında — "Onayda / bekleyen toplam" KPI'sına dahil.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-ban"></i><span><a href="crm-satinalma-formlar.html">SAT-2026-007</a> (₺15.600, forklift lastiği, Liman) tedarikçide stok kalmadığı için iptal edildi; <a href="crm-operasyon-kasa-detay.html">KSA-2026-017</a> (₺4.500, Liman) reddedildi — ikisi de toplama dahil edilmedi.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-helmet-safety"></i><span>Merkez Şantiye maliyetinin %83'ü satın alma kalemlerinden (₺43.050) oluşuyor; iç yatırım projesi olduğu için hakediş kalemi yok.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ŞEF GÖRÜNÜMÜ (sef — yalnız Vadi Konakları) ============ -->
+    <section data-view="sef" hidden>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-ico"><i class="fa-solid fa-coins"></i></div>
+          <div><div class="kpi-num num compact" style="font-size:19px">₺3.745.800</div><div class="kpi-lbl">Vadi Konakları toplam maliyet</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-file-lines"></i> 17 kaynak kalem</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-building-columns"></i></div>
+          <div><div class="kpi-num num compact" style="font-size:19px">₺2.790.000</div><div class="kpi-lbl">Kurum hakedişi</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-percent"></i> Toplamın %75'i</div></div>
+        </div>
+        <div class="kpi-card warn">
+          <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div><div class="kpi-num num compact" style="font-size:19px">₺1.928.850</div><div class="kpi-lbl">Onayda / bekleyen toplam</div>
+          <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Kasa + hakediş + taşeron + satın alma</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico"><i class="fa-solid fa-file-invoice"></i></div>
+          <div><div class="kpi-num num">17</div><div class="kpi-lbl">Kaynak belge</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 5 kasa · 3 kurum · 4 taşeron · 5 satın alma</div></div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Vadi Konakları — Kalem Türü Dökümü</div></div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblKalemSef">
+            <thead><tr><th>Kalem Türü</th><th class="num">Tutar</th></tr></thead>
+            <tbody>
+              <tr><td><div class="km-lbl"><span class="km-ico kasa"><i class="fa-solid fa-cash-register"></i></span> Kasa Çıkışı</div></td><td class="num">₺61.450</td></tr>
+              <tr><td><div class="km-lbl"><span class="km-ico kurum"><i class="fa-solid fa-building-columns"></i></span> Kurum Hakedişi</div></td><td class="num">₺2.790.000</td></tr>
+              <tr><td><div class="km-lbl"><span class="km-ico taseron"><i class="fa-solid fa-people-arrows"></i></span> Taşeron Hakedişi</div></td><td class="num">₺615.200</td></tr>
+              <tr><td><div class="km-lbl"><span class="km-ico satinalma"><i class="fa-solid fa-file-invoice"></i></span> Satın Alma</div></td><td class="num">₺279.150</td></tr>
+              <tr class="km-total"><td>Toplam</td><td class="num">₺3.745.800</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-layer-group"></i> Maliyet Kompozisyonu</div></div>
+        <div class="gc-body">
+          <div class="cmp-row">
+            <div class="cmp-head"><b>Vadi Konakları</b><span>₺3.745.800</span></div>
+            <div class="cmp-stack">
+              <div class="cmp-seg kasa" style="width:1.6%" data-tip="Kasa ₺61.450"></div>
+              <div class="cmp-seg kurum" style="width:74.5%" data-tip="Kurum Hakedişi ₺2.790.000"></div>
+              <div class="cmp-seg taseron" style="width:16.4%" data-tip="Taşeron Hakedişi ₺615.200"></div>
+              <div class="cmp-seg satinalma" style="width:7.5%" data-tip="Satın Alma ₺279.150"></div>
+            </div>
+          </div>
+          <div class="cmp-legend">
+            <span class="lg-item"><span class="lg-sw kasa"></span> Kasa Çıkışı</span>
+            <span class="lg-item"><span class="lg-sw kurum"></span> Kurum Hakedişi</span>
+            <span class="lg-item"><span class="lg-sw taseron"></span> Taşeron Hakedişi</span>
+            <span class="lg-item"><span class="lg-sw satinalma"></span> Satın Alma</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="gv-card" style="margin-top:20px">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar — Vadi Konakları</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-triangle-exclamation"></i><span>En büyük onay bekleyen kalem <a href="crm-finans-hakedis-detay.html?hkd=006">HKD-2026-006</a> (₺1.630.000, Körfez GYO) — 12 gündür onay bekliyor.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-people-arrows"></i><span>Taşeron hakedişlerinde ₺166.200 onay bekliyor — <a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a> (Demir-Beton, ₺90.000) ve <a href="crm-finans-hakedis-detay.html?th=009">TH-2026-009</a> (ElektroMek, ₺76.200).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-cash-register"></i><span>Kasa tarafında ₺46.450 onayda/revizede — <a href="crm-operasyon-kasa-detay.html">KSA-2026-021</a>, <a href="crm-operasyon-kasa-detay.html">KSA-2026-018</a> ve <a href="crm-operasyon-kasa-detay.html">KSA-2026-016</a>.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-file-invoice"></i><span><a href="crm-satinalma-form-detay.html">SAT-2026-013</a> (₺86.200, inşaat demiri Ø12) Genel Müdür onayında — "Onayda / bekleyen toplam" KPI'sına dahil.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+  var view = GV.role === 'sef' ? 'sef' : 'yonetim';
+  document.querySelectorAll('[data-view]').forEach(function(el){
+    el.hidden = el.getAttribute('data-view') !== view;
+  });
+})();
+</script>
+</body>
+</html>

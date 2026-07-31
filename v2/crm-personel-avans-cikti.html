@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Avans Çıktısı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+/* =====================================================================
+   AVANS ÇIKTISI (§6/T-J) — crm-operasyon-kasa-cikti.html deseninin BİREBİR
+   devralımı (ck-bar + .paper A4 + print CSS sayfa içinde, shell/ui YÜKLENMEZ
+   — kendi kendine yeten çıktı ekranı); kapsam-şeridi + çoklu-seçim + gerçek
+   CSV indirme davranışı crm-operasyon-kredikarti-cikti.html (§14/T-G) deseninden
+   BİREBİR uyarlandı (ck-scope + selIds mekaniği + csvEscape/Blob). Marka rengi
+   .pb-g rozetinde var(--acc)/var(--acc-ink) token'ları üzerinden gelir — sabit
+   hex YOK (T-A'nın marka-rengi tokenini tüketir, ortak CSS'e yazılmadı).
+   ===================================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:#525659;min-height:100vh;padding:88px 16px 40px;
+  -webkit-font-smoothing:antialiased}
+
+/* ---- ekran-only araç çubuğu (kasa-cikti .ck-bar birebir) ---- */
+.ck-bar{position:fixed;inset:0 0 auto 0;height:60px;background:var(--gv-deep);color:var(--on-dark);
+  display:flex;align-items:center;gap:14px;padding:0 22px;z-index:10;box-shadow:0 2px 14px rgba(0,0,0,.35)}
+.ck-bar .cb-brand{font-weight:800;font-size:15px;letter-spacing:-.01em;color:#fff;display:flex;align-items:center;gap:10px}
+.ck-bar .cb-brand .g{width:28px;height:28px;border-radius:8px;background:var(--gv-mint);color:var(--gv-deep);
+  display:grid;place-items:center;font-size:14px;font-weight:800}
+.ck-bar .cb-sub{font-size:12px;color:var(--on-dark-mut,#9aa3b2)}
+.ck-bar .cb-spacer{flex:1}
+.ck-bar .cb-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.18);color:#fff;background:transparent;
+  cursor:pointer;text-decoration:none;transition:.2s var(--ease)}
+.ck-bar .cb-btn:hover{background:rgba(255,255,255,.08)}
+.ck-bar .cb-btn.acc{background:var(--gv-mint);border-color:var(--gv-mint);color:var(--gv-deep)}
+.ck-bar .cb-btn.acc:hover{background:var(--gv-mint-bright)}
+
+/* ---- kapsam kontrol şeridi — kasa-cikti tek <select>'inin çok-boyutlu hâli ---- */
+.ck-scope{width:297mm;max-width:100%;margin:0 auto 14px;background:#2a2e45;border-radius:12px;
+  padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;color:#fff}
+.ck-scope .cs-field{display:flex;flex-direction:column;gap:5px;min-width:150px}
+.ck-scope .cs-field label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#aeb4c9}
+.ck-scope select,.ck-scope input[type="date"]{font-family:inherit;font-size:12.5px;font-weight:600;color:#fff;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;outline:none}
+.ck-scope .cs-dates{display:flex;gap:8px;align-items:flex-end}
+.ck-scope .cs-acts{display:flex;gap:8px;margin-left:auto}
+.ck-scope .cs-acts .cb-btn{padding:8px 14px}
+.ck-scope .cs-sel-banner{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;flex:1}
+.ck-scope .cs-sel-banner .gtag{background:var(--gv-mint);color:var(--gv-deep);font-weight:800;padding:3px 9px;border-radius:99px;font-size:11.5px}
+@media(max-width:900px){ .ck-scope{padding:12px 14px} .ck-scope .cs-acts{margin-left:0;width:100%} }
+
+/* ---- A4 kâğıt — YATAY (12 sütun için genişlik gerekir, kasa-cikti portrait 7 sütunluktu) ---- */
+.paper{width:297mm;min-height:210mm;margin:0 auto;background:#fff;color:#111;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);padding:12mm 10mm 10mm}
+
+/* logo bandı — firma logosu (§19.2 kural: img DEĞİL, div+background-image cover/center;
+   burada gerçek logo dosyası yok, marka rengi/harf rozeti aynı yaklaşımla div'dir) */
+.pp-band{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:0}
+.pp-band .pb-firm{display:flex;align-items:center;gap:10px}
+.pp-band .pb-g{width:34px;height:34px;border-radius:8px;background:var(--acc, #3FD5AD);color:#0A0E27;
+  display:grid;place-items:center;font-weight:800;font-size:17px;background-position:center;background-size:cover}
+.pp-band .pb-name{font-weight:800;font-size:15px;letter-spacing:.02em}
+.pp-band .pb-name span{display:block;font-weight:600;font-size:9.5px;letter-spacing:.08em;color:#444}
+.pp-band .pb-doc{font-size:9.5px;font-weight:700;color:#444;text-align:right;line-height:1.5}
+
+/* kapsam bilgi kutusu — aktif filtreler döküm başlığında görünür (§6 kabul kriteri) */
+.pp-info{border:1.5px solid #111;border-top:none;font-size:9.5px}
+.pp-info .pi-row{display:flex;border-bottom:1px solid #111}
+.pp-info .pi-row:last-child{border-bottom:none}
+.pp-info .pi-lbl{flex:none;width:40mm;padding:6px 8px;font-weight:800;letter-spacing:.05em;background:#f2f2f2;
+  border-right:1px solid #111;text-transform:uppercase}
+.pp-info .pi-val{flex:1;padding:6px 8px;font-weight:700;letter-spacing:.01em}
+
+/* başlık bloğu */
+.pp-title{display:grid;grid-template-columns:1fr 70mm;border:1.5px solid #111;border-top:none}
+.pp-title .pt-name{padding:10px 14px;font-size:14px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center}
+.pp-title .pt-range{border-left:1.5px solid #111;display:flex;flex-direction:column}
+.pp-title .pt-range b{flex:1;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;letter-spacing:.02em;padding:6px;text-align:center}
+.pp-title .pt-range span{border-top:1px solid #111;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:.08em;padding:4px;background:#f2f2f2}
+
+/* hareket tablosu — 12 sütun, YOĞUN (kredikarti-cikti idiyomu) */
+.pp-scroll{overflow-x:auto}
+table.pp-tbl{width:100%;min-width:260mm;border-collapse:collapse;border:1.5px solid #111;border-top:none;font-size:8.3px}
+.pp-tbl thead{display:table-header-group}
+.pp-tbl th{background:#f2f2f2;border:1px solid #111;font-size:7px;font-weight:800;letter-spacing:.03em;
+  padding:5px 3px;text-transform:uppercase;line-height:1.3;text-align:center}
+.pp-tbl td{border:1px solid #777;padding:4px 5px;vertical-align:middle;page-break-inside:avoid}
+.pp-tbl tbody tr{page-break-inside:avoid}
+.pp-tbl .c-no{width:6mm;text-align:center;color:#444;font-weight:600}
+.pp-tbl .c-per{width:26mm;font-weight:700}
+.pp-tbl .c-dep{width:22mm;font-size:7.6px}
+.pp-tbl .c-san{width:24mm;font-size:7.6px}
+.pp-tbl .c-tarih{width:16mm;text-align:center;font-weight:600;white-space:nowrap}
+.pp-tbl .c-tutar{width:19mm;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+.pp-tbl .c-aciklama{width:34mm;font-size:7.3px;color:#333}
+.pp-tbl .c-durum,.pp-tbl .c-odeme{width:19mm;font-size:7.3px;text-align:center}
+.pp-tbl .c-onaylayan{width:22mm;font-size:7.6px}
+.pp-tbl .c-not{width:30mm;font-size:7.1px;color:#444;font-style:italic}
+.pp-tbl tr.r-total td{background:#f2f2f2;font-weight:800;border-top:2px solid #111}
+
+/* durum özeti */
+.pp-ozet-title{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin:10px 0 4px;color:#222}
+table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-size:8.5px}
+.pp-ozet th{background:#f2f2f2;border:1px solid #111;font-size:7px;font-weight:800;letter-spacing:.03em;padding:5px 4px;text-transform:uppercase;text-align:center}
+.pp-ozet td{border:1px solid #777;padding:5px 4px;text-align:center;font-variant-numeric:tabular-nums;font-weight:700}
+.pp-ozet td.c-odurum{text-align:left;font-weight:800}
+.pp-ozet tr.r-genel td{background:#e8e8e8;font-weight:800;border-top:2px solid #111}
+
+/* imza bloğu — talep eden · onaylayan · teslim alan (§6/§19.2 kabul kriteri) */
+.pp-sign{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid #111;border-top:none;page-break-inside:avoid;margin-top:0}
+.pp-sign .sg{border-right:1px solid #111;padding:8px 8px 4px;min-height:28mm;display:flex;flex-direction:column}
+.pp-sign .sg:last-child{border-right:none}
+.pp-sign .sg-role{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#333;margin-bottom:3px}
+.pp-sign .sg-name{font-size:10.5px;font-weight:800}
+.pp-sign .sg-title{font-size:9px;font-weight:600;color:#444}
+.pp-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
+.pp-note{font-size:8.5px;color:#555;padding-top:8px;line-height:1.6}
+
+@media print{
+  body{background:#fff;padding:0}
+  .ck-bar{display:none}
+  .ck-scope{display:none}
+  .paper{width:auto;min-height:0;margin:0;box-shadow:none;padding:6mm 5mm}
+  @page{size:A4 landscape;margin:7mm}
+}
+@media (max-width:1200px){
+  .ck-scope,.paper{width:100%}
+}
+@media (max-width:900px){
+  .paper{min-height:0;padding:16px 12px}
+  .pp-title{grid-template-columns:1fr}
+  .pp-title .pt-range{border-left:none;border-top:1.5px solid #111;flex-direction:row}
+  .pp-title .pt-range b{padding:8px}
+  .pp-title .pt-range span{border-top:none;border-left:1px solid #111;display:flex;align-items:center;padding:0 10px}
+  .pp-info .pi-row{flex-direction:column}
+  .pp-info .pi-lbl{width:auto;border-right:none;border-bottom:1px solid #111}
+  .pp-sign{grid-template-columns:1fr}
+  .pp-sign .sg{border-right:none;border-bottom:1px solid #111}
+  .pp-sign .sg:last-child{border-bottom:none}
+}
+</style>
+</head>
+<body>
+
+<div class="ck-bar">
+  <div class="cb-brand"><span class="g">G</span> Gavia CRM <span class="cb-sub">· Avans Çıktısı — imzaya hazır döküm</span></div>
+  <div class="cb-spacer"></div>
+  <a class="cb-btn" href="crm-personel-avans.html" id="ckBack"><i class="fa-solid fa-arrow-left"></i> Avanslar</a>
+  <button class="cb-btn" type="button" id="ckExcel"><i class="fa-solid fa-file-csv"></i> Excel İndir</button>
+  <button class="cb-btn acc" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır</button>
+</div>
+
+<div class="ck-scope" id="ckScope"></div>
+
+<div class="paper">
+  <div class="pp-band">
+    <div class="pb-firm">
+      <div class="pb-g">Y</div>
+      <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>PERSONEL AVANS DÖKÜMÜ</span></div>
+    </div>
+    <div class="pb-doc">Form No: AVF-01 · Rev.01<br>Düzenleme: <span id="ppBugun">2 Temmuz 2026</span></div>
+  </div>
+
+  <div class="pp-info" id="ppInfo"></div>
+
+  <div class="pp-title">
+    <div class="pt-name" id="ppBaslik">TÜM AVANS TALEPLERİ — DÖKÜM</div>
+    <div class="pt-range">
+      <b id="ppAralik">Tüm Zamanlar</b>
+      <span>TARİH ARALIĞI</span>
+    </div>
+  </div>
+
+  <div class="pp-scroll">
+    <table class="pp-tbl" id="ppTable">
+      <thead>
+        <tr>
+          <th class="c-no">#</th>
+          <th class="c-per">Personel</th>
+          <th class="c-dep">Departman</th>
+          <th class="c-san">Şantiye</th>
+          <th class="c-tarih">Talep Tarihi</th>
+          <th class="c-tutar">Talep Tutarı</th>
+          <th class="c-tutar">Onaylanan Tutar</th>
+          <th class="c-aciklama">Açıklama</th>
+          <th class="c-durum">Talep Durumu</th>
+          <th class="c-onaylayan">Onaylayan</th>
+          <th class="c-tarih">Onay Tarihi</th>
+          <th class="c-odeme">Ödeme Durumu</th>
+          <th class="c-not">Notlar</th>
+        </tr>
+      </thead>
+      <tbody id="ppRows"></tbody>
+    </table>
+  </div>
+
+  <div class="pp-ozet-title">Talep Durumuna Göre Özet</div>
+  <table class="pp-ozet" id="ppOzet">
+    <thead>
+      <tr>
+        <th style="text-align:left">Talep Durumu</th>
+        <th>Kayıt Sayısı</th>
+        <th>Talep Edilen Toplam</th>
+        <th>Onaylanan Toplam</th>
+      </tr>
+    </thead>
+    <tbody id="ppOzetRows"></tbody>
+  </table>
+
+  <div class="pp-sign" id="ppSign">
+    <div class="sg"><div class="sg-role">Talep Eden</div><div class="sg-name" id="sgTalep">—</div><div class="sg-title" id="sgTalepAlt">İmza sahibi listede tek personel varsa gösterilir</div><div class="sg-line">İMZA</div></div>
+    <div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name" id="sgOnay">—</div><div class="sg-title" id="sgOnayAlt">İmza sahibi listede tek onaylayan varsa gösterilir</div><div class="sg-line">İMZA</div></div>
+    <div class="sg"><div class="sg-role">Teslim Alan</div><div class="sg-name">—</div><div class="sg-title">Ödeme anında imzalanır</div><div class="sg-line">İMZA</div></div>
+  </div>
+  <p class="pp-note">Bu döküm, seçilen kapsama göre Gavia CRM avans kayıtlarındaki onay akışı ve tutar bilgilerini içerir; el ile eklenen kayıt geçersizdir.
+  Onaylanan tutar yalnız onaylanmış taleplerde dolu gelir; onay bekleyen/reddedilen/revize taleplerde "—" gösterilir. Toplamlar avans listesindeki
+  KPI'lar ile birebir aynıdır. İmzalar tamamlanmadan ödeme yapılmaz.</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  /* Kanonik avans verisi — crm-personel-avans.html + crm-personel-avans-detay.html
+     AVANS map'leriyle BİREBİR (no/personel/tutar/tarih/durum/gerekçe/onay-zinciri
+     hiçbiri değiştirilmedi). departman/onaylayan/onayTarihi/odeme/not alanları o
+     dosyalardaki onay zincirinden TÜRETİLMİŞTİR — yeni tutar/kimlik İCAT EDİLMEDİ.
+     Departman ataması shell.js personel gruplarıyla tutarlı (tasks/kararlar.md'de not edildi):
+     Ali Vural/Musa Erdem → Saha Operasyonu · Hasan Demirci/Aylin Koç → Şantiye Yönetimi ·
+     Baran Yıldız → Satın Alma. */
+  function tl(n){ return n == null ? '' : '₺' + n.toLocaleString('tr-TR'); }
+  function esc(t){ var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+  var DURUM_LBL = {bekliyor:'Onay Bekliyor', onaylandi:'Onaylandı', reddedildi:'Reddedildi', revize:'Revize İstendi'};
+
+  var AVANS = [
+    { id:'avn-015', no:'AVN-2026-015', personel:'Musa Erdem', departman:'Saha Operasyonu', santiye:'Vadi Konakları',
+      tarihISO:'2026-07-01', tarihTxt:'1 Temmuz 2026', tutar:3500, tutarOnaylanan:null,
+      aciklama:'Kira ödemesi için nakit ihtiyacı.', durum:'bekliyor',
+      onaylayan:null, onayTarihi:null, odeme:'Onay sürecinde — ödeme planlanmadı', notlar:null },
+    { id:'avn-014', no:'AVN-2026-014', personel:'Ali Vural', departman:'Saha Operasyonu', santiye:'Vadi Konakları',
+      tarihISO:'2026-06-29', tarihTxt:'29 Haziran 2026', tutar:4000, tutarOnaylanan:null,
+      aciklama:'Kişisel nakit ihtiyacı (malzeme avansı değil).', durum:'bekliyor',
+      onaylayan:null, onayTarihi:null, odeme:'Onay sürecinde — ödeme planlanmadı',
+      notlar:'Şantiye şefi onayladı: “Malzeme avansı değil, kişisel avans — onaylıyorum.” Muhasebe onayı bekleniyor.' },
+    { id:'avn-013', no:'AVN-2026-013', personel:'Hasan Demirci', departman:'Şantiye Yönetimi', santiye:'Vadi Konakları',
+      tarihISO:'2026-06-18', tarihTxt:'18 Haziran 2026', tutar:8000, tutarOnaylanan:8000,
+      aciklama:'Çocuğunun okul kayıt gideri.', durum:'onaylandi',
+      onaylayan:'Nesrin Aydın', onayTarihi:'20 Haziran 2026', odeme:'Ödendi',
+      notlar:'Banka listesine eklendi, 20 Haziran’da ödendi.' },
+    { id:'avn-012', no:'AVN-2026-012', personel:'Baran Yıldız', departman:'Satın Alma', santiye:'Merkez Ofis',
+      tarihISO:'2026-06-10', tarihTxt:'10 Haziran 2026', tutar:6500, tutarOnaylanan:null,
+      aciklama:'Ev taşınma masrafları.', durum:'reddedildi',
+      onaylayan:'Murat Denizli', onayTarihi:'11 Haziran 2026', odeme:'Ödeme yapılmadı (reddedildi)',
+      notlar:'Haziran ayı kasa limiti bu tutar için yetersiz; Temmuz bordrosunda değerlendirilecek.' },
+    { id:'avn-011', no:'AVN-2026-011', personel:'Aylin Koç', departman:'Şantiye Yönetimi', santiye:'Liman Lojistik Merkezi',
+      tarihISO:'2026-06-03', tarihTxt:'3 Haziran 2026', tutar:10000, tutarOnaylanan:null,
+      aciklama:'Kişisel ihtiyaç (harcama kalemi belirtilmedi).', durum:'revize',
+      onaylayan:'Murat Denizli', onayTarihi:'4 Haziran 2026', odeme:'Beklemede (revize)',
+      notlar:'Tutar gerekçesi eksik; hangi harcama kalemi için olduğunu belirtip yeniden gönderin.' }
+  ];
+  var BY_ID = {}; AVANS.forEach(function(a){ BY_ID[a.id] = a; });
+  var PERSONEL_LIST = AVANS.map(function(a){ return a.personel; }).filter(function(v,i,arr){ return arr.indexOf(v) === i; });
+  var SANTIYE_LIST = ['Vadi Konakları','Liman Lojistik Merkezi','Merkez Şantiye','Merkez Ofis'];
+  var DURUM_LIST = ['bekliyor','onaylandi','reddedildi','revize'];
+
+  var AY_UZUN = {'01':'Ocak','02':'Şubat','03':'Mart','04':'Nisan','05':'Mayıs','06':'Haziran','07':'Temmuz','08':'Ağustos','09':'Eylül','10':'Ekim','11':'Kasım','12':'Aralık'};
+  function fmtTarihUzun(iso){ var p = iso.split('-'); return parseInt(p[2],10) + ' ' + AY_UZUN[p[1]] + ' ' + p[0]; }
+
+  var q = new URLSearchParams(location.search);
+  /* tek avans (detaydan) ?avn=014 → aynı ids mekanizmasına 1 elemanlı dizi olarak
+     çevrilir; liste sayfasından seçili çoklu kayıt ?ids=avn-014,avn-013 doğrudan gelir. */
+  var selIds = null;
+  if(q.get('ids')) selIds = q.get('ids').split(',').filter(Boolean);
+  else if(q.get('avn')){
+    var norm = 'avn-' + String(q.get('avn')).replace(/\D/g,'').slice(-3);
+    if(BY_ID[norm]) selIds = [norm];
+  }
+
+  var state = {
+    personel: q.get('personel') || 'hepsi',
+    santiye: q.get('santiye') || 'hepsi',
+    durum: q.get('durum') || 'hepsi',
+    from: q.get('from') || '', to: q.get('to') || '', dlabel: q.get('dlabel') || ''
+  };
+
+  var scopeEl = document.getElementById('ckScope');
+  function renderScope(){
+    if(selIds){
+      scopeEl.innerHTML = '<div class="cs-sel-banner"><span class="gtag">' + (selIds.length === 1 ? 'Tek Kayıt Modu' : 'Seçili Kayıtlar Modu') + '</span>'
+        + '<span>' + selIds.length + ' avans talebi ' + (selIds.length === 1 ? 'doğrudan seçildi' : 'listeden seçildi') + ' — kapsam filtreleri devre dışı</span></div>'
+        + '<div class="cs-acts"><a class="cb-btn" href="crm-personel-avans.html"><i class="fa-solid fa-list"></i> Tüm Listeye Dön</a></div>';
+      return;
+    }
+    var perOpts = '<option value="hepsi">Tümü Personel</option>' + PERSONEL_LIST.map(function(p){
+      return '<option value="'+esc(p)+'"'+(state.personel===p?' selected':'')+'>'+esc(p)+'</option>';
+    }).join('');
+    var santiyeOpts = '<option value="hepsi">Tümü</option>' + SANTIYE_LIST.map(function(s){
+      return '<option value="'+esc(s)+'"'+(state.santiye===s?' selected':'')+'>'+esc(s)+'</option>';
+    }).join('');
+    var durumOpts = '<option value="hepsi">Tümü</option>' + DURUM_LIST.map(function(d){
+      return '<option value="'+d+'"'+(state.durum===d?' selected':'')+'>'+DURUM_LBL[d]+'</option>';
+    }).join('');
+    scopeEl.innerHTML =
+        '<div class="cs-field"><label>Personel</label><select id="csPersonel">'+perOpts+'</select></div>'
+      + '<div class="cs-field"><label>Şantiye</label><select id="csSantiye">'+santiyeOpts+'</select></div>'
+      + '<div class="cs-field"><label>Onay Durumu</label><select id="csDurum">'+durumOpts+'</select></div>'
+      + '<div class="cs-dates"><div class="cs-field"><label>Başlangıç</label><input type="date" id="csFrom" value="'+state.from+'"></div>'
+      +   '<div class="cs-field"><label>Bitiş</label><input type="date" id="csTo" value="'+state.to+'"></div></div>'
+      + '<div class="cs-acts"><button type="button" class="cb-btn" id="csClear"><i class="fa-solid fa-filter-circle-xmark"></i> Temizle</button>'
+      +   '<button type="button" class="cb-btn acc" id="csApply"><i class="fa-solid fa-check"></i> Uygula</button></div>';
+    document.getElementById('csApply').addEventListener('click', function(){
+      state.personel = document.getElementById('csPersonel').value;
+      state.santiye = document.getElementById('csSantiye').value;
+      state.durum = document.getElementById('csDurum').value;
+      state.from = document.getElementById('csFrom').value;
+      state.to = document.getElementById('csTo').value;
+      state.dlabel = state.from && state.to ? (fmtTarihUzun(state.from) + ' – ' + fmtTarihUzun(state.to)) : '';
+      syncUrl(); render();
+    });
+    document.getElementById('csClear').addEventListener('click', function(){
+      state = {personel:'hepsi', santiye:'hepsi', durum:'hepsi', from:'', to:'', dlabel:''};
+      syncUrl(); renderScope(); render();
+    });
+  }
+  function syncUrl(){
+    var p = new URLSearchParams();
+    if(selIds){ p.set('ids', selIds.join(',')); }
+    else {
+      if(state.personel !== 'hepsi') p.set('personel', state.personel);
+      if(state.santiye !== 'hepsi') p.set('santiye', state.santiye);
+      if(state.durum !== 'hepsi') p.set('durum', state.durum);
+      if(state.from) p.set('from', state.from);
+      if(state.to) p.set('to', state.to);
+      if(state.dlabel) p.set('dlabel', state.dlabel);
+    }
+    history.replaceState(null, '', 'crm-personel-avans-cikti.html?' + p.toString());
+  }
+
+  function filtered(){
+    if(selIds) return selIds.map(function(id){ return BY_ID[id]; }).filter(Boolean);
+    return AVANS.filter(function(a){
+      if(state.personel !== 'hepsi' && a.personel !== state.personel) return false;
+      if(state.santiye !== 'hepsi' && a.santiye !== state.santiye) return false;
+      if(state.durum !== 'hepsi' && a.durum !== state.durum) return false;
+      if(state.from && a.tarihISO < state.from) return false;
+      if(state.to && a.tarihISO > state.to) return false;
+      return true;
+    });
+  }
+
+  function pickUnique(list){
+    var uniq = list.filter(function(v,i,arr){ return v && arr.indexOf(v) === i; });
+    return uniq.length === 1 ? uniq[0] : null;
+  }
+
+  function render(){
+    var rows = filtered();
+    var rowsHtml = '', ozetHtml = '';
+    var toplamTalep = 0, toplamOnay = 0;
+    var perDurum = {};
+    DURUM_LIST.forEach(function(d){ perDurum[d] = {n:0, talep:0, onay:0}; });
+
+    rows.forEach(function(a, i){
+      toplamTalep += a.tutar;
+      if(a.tutarOnaylanan) toplamOnay += a.tutarOnaylanan;
+      perDurum[a.durum].n++;
+      perDurum[a.durum].talep += a.tutar;
+      if(a.tutarOnaylanan) perDurum[a.durum].onay += a.tutarOnaylanan;
+      rowsHtml += '<tr>'
+        + '<td class="c-no">'+(i+1)+'</td>'
+        + '<td class="c-per">'+esc(a.personel)+'<span style="display:block;font-weight:600;color:#666">'+a.no+'</span></td>'
+        + '<td class="c-dep">'+esc(a.departman)+'</td>'
+        + '<td class="c-san">'+esc(a.santiye)+'</td>'
+        + '<td class="c-tarih">'+a.tarihTxt+'</td>'
+        + '<td class="c-tutar">'+tl(a.tutar)+'</td>'
+        + '<td class="c-tutar">'+(a.tutarOnaylanan ? tl(a.tutarOnaylanan) : '—')+'</td>'
+        + '<td class="c-aciklama">'+esc(a.aciklama)+'</td>'
+        + '<td class="c-durum">'+DURUM_LBL[a.durum]+'</td>'
+        + '<td class="c-onaylayan">'+(a.onaylayan ? esc(a.onaylayan) : '—')+'</td>'
+        + '<td class="c-tarih">'+(a.onayTarihi || '—')+'</td>'
+        + '<td class="c-odeme">'+esc(a.odeme)+'</td>'
+        + '<td class="c-not">'+(a.notlar ? esc(a.notlar) : '—')+'</td>'
+        + '</tr>';
+    });
+
+    if(!rows.length){
+      rowsHtml = '<tr><td colspan="13" style="text-align:center;padding:22px;color:#888">Seçilen kapsama uyan avans talebi bulunamadı.</td></tr>';
+    } else {
+      rowsHtml += '<tr class="r-total"><td></td><td colspan="4">TOPLAM ('+rows.length+' kayıt)</td>'
+        + '<td class="c-tutar">'+tl(toplamTalep)+'</td><td class="c-tutar">'+tl(toplamOnay)+'</td>'
+        + '<td colspan="6"></td></tr>';
+    }
+    document.getElementById('ppRows').innerHTML = rowsHtml;
+
+    DURUM_LIST.forEach(function(d){
+      var v = perDurum[d];
+      if(!v.n) return;
+      ozetHtml += '<tr><td class="c-odurum">'+DURUM_LBL[d]+'</td><td>'+v.n+'</td><td>'+tl(v.talep)+'</td><td>'+(v.onay ? tl(v.onay) : '—')+'</td></tr>';
+    });
+    if(rows.length) ozetHtml += '<tr class="r-genel"><td class="c-odurum">TOPLAM</td><td>'+rows.length+'</td><td>'+tl(toplamTalep)+'</td><td>'+(toplamOnay ? tl(toplamOnay) : '—')+'</td></tr>';
+    else ozetHtml = '<tr><td colspan="4" style="text-align:center;color:#888">Kayıt yok</td></tr>';
+    document.getElementById('ppOzetRows').innerHTML = ozetHtml;
+
+    var baslik = selIds
+      ? (selIds.length === 1 ? (rows[0] ? rows[0].no + ' — ' + rows[0].personel : 'SEÇİLİ TALEP') : 'SEÇİLİ TALEPLER — ' + rows.length + ' KAYIT')
+      : (state.personel !== 'hepsi' ? (state.personel.toLocaleUpperCase('tr') + ' — AVANS DÖKÜMÜ') : 'TÜM AVANS TALEPLERİ — DÖKÜM');
+    document.getElementById('ppBaslik').textContent = baslik;
+    document.getElementById('ppAralik').textContent = selIds ? (selIds.length === 1 ? 'Tek Kayıt' : 'Seçili Kayıtlar') : (state.dlabel || 'Tüm Zamanlar');
+
+    var infoRows = '';
+    if(selIds){
+      infoRows += '<div class="pi-row"><div class="pi-lbl">Kapsam</div><div class="pi-val">'
+        + (selIds.length === 1 ? 'Detaydan tek kayıt çıktısı' : 'Listeden seçili ' + selIds.length + ' kayıt') + '</div></div>';
+    } else {
+      infoRows += '<div class="pi-row"><div class="pi-lbl">Aktif Filtreler</div><div class="pi-val">'
+        + 'Personel: ' + (state.personel === 'hepsi' ? 'Tümü' : state.personel) + ' · '
+        + 'Şantiye: ' + (state.santiye === 'hepsi' ? 'Tümü' : state.santiye) + ' · '
+        + 'Onay Durumu: ' + (state.durum === 'hepsi' ? 'Tümü' : DURUM_LBL[state.durum]) + ' · '
+        + 'Tarih: ' + (state.dlabel || 'Tüm Zamanlar')
+        + '</div></div>';
+    }
+    infoRows += '<div class="pi-row"><div class="pi-lbl">Para Birimi</div><div class="pi-val">Türk Lirası (₺ TRY) — tüm tutarlar</div></div>';
+    document.getElementById('ppInfo').innerHTML = infoRows;
+
+    /* İmza kutuları — isim yalnız kayıt kümesi TEK bir değere indirgeniyorsa
+       gösterilir (pickUnique); birden çok personel/onaylayan varsa isim alanı
+       BOŞ bırakılır (rol etiketi + boş imza çizgisi kalır) — Talep Eden ve
+       Onaylayan AYNI mantıkla, kurumsal bir varsayılan isim İCAT EDİLMEZ. */
+    var talepAdi = pickUnique(rows.map(function(a){ return a.personel; }));
+    var onaySahibi = pickUnique(rows.map(function(a){ return a.onaylayan; }));
+    document.getElementById('sgTalep').textContent = talepAdi || '—';
+    document.getElementById('sgOnay').textContent = onaySahibi || '—';
+    document.getElementById('sgTalepAlt').textContent = talepAdi ? rows[0].departman : 'İmza sahibi listede tek personel varsa gösterilir';
+    document.getElementById('sgOnayAlt').textContent = onaySahibi ? 'Muhasebe / Genel Müdür' : 'İmza sahibi listede tek onaylayan varsa gösterilir';
+
+    window._ckLastRender = {rows: rows, baslik: baslik};
+  }
+
+  /* ---- Excel İndir — gerçek CSV (Blob + <a download>), BOM'lu ';' ayraç
+     (ui.js aoaToCsv ile AYNI mantık; bu sayfa ui.js YÜKLEMEDİĞİ için kendi küçük kopyası) ---- */
+  function csvEscape(s){ s = s == null ? '' : String(s); return /[;"\r\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }
+  document.getElementById('ckExcel').addEventListener('click', function(){
+    var rows = filtered();
+    var aoa = [['Personel Avans Dökümü — Gavia CRM'], [document.getElementById('ppBaslik').textContent],
+      ['#','Avans No','Personel','Departman','Şantiye','Talep Tarihi','Talep Tutarı','Onaylanan Tutar','Açıklama','Talep Durumu','Onaylayan','Onay Tarihi','Ödeme Durumu','Notlar']];
+    rows.forEach(function(a, i){
+      aoa.push([i+1, a.no, a.personel, a.departman, a.santiye, a.tarihTxt, a.tutar, a.tutarOnaylanan || '', a.aciklama,
+        DURUM_LBL[a.durum], a.onaylayan || '', a.onayTarihi || '', a.odeme, a.notlar || '']);
+    });
+    var csv = '﻿' + aoa.map(function(row){ return row.map(csvEscape).join(';'); }).join('\r\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'avans-dokumu-' + (selIds ? 'secili' : (state.personel !== 'hepsi' ? state.personel.toLocaleLowerCase('tr').replace(/\s+/g,'-') : 'tumu')) + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+  });
+
+  renderScope();
+  render();
+})();
+</script>
+</body>
+</html>

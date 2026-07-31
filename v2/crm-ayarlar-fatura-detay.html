@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Fatura Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — fatura detayı [D4/§21-7]
+   ?fatura= parametrik. Toplam değerleri crm-ayarlar-faturalar.html listesindeki Tutar
+   kolonuyla BİREBİR (KDV dahil tek sticker fiyat, firma.html geleneği); bu sayfa yalnız
+   o toplamın KDV hariç/KDV kalemlerine geri-hesaplanmış dökümünü gösterir — JS'te tek
+   yerden (toplam/1.2), elle iki ayrı sayı yazılmıyor. ============ */
+.fd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.fd-antet{border:1px solid var(--line);border-radius:var(--r-md);background:var(--paper);box-shadow:var(--sh-sm);padding:18px 20px}
+.fd-antet-top{display:flex;align-items:center;gap:14px;padding-bottom:13px;border-bottom:2px solid var(--gv-deep)}
+.fd-mark{width:40px;height:40px;flex:none;border-radius:10px;background:var(--gv-deep);display:grid;place-items:center;font-size:17px;font-weight:800;color:var(--gv-mint)}
+.fd-id{line-height:1.35;min-width:0}
+.fd-id b{display:block;font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.fd-id span{font-size:11px;color:var(--muted)}
+.fd-rows{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+.fd-rows .ar{display:flex;gap:8px;font-size:11.5px;color:var(--ink-2)}
+.fd-rows .ar i{width:14px;text-align:center;color:var(--muted);font-size:10px;margin-top:2px}
+
+.fd-meta{display:flex;flex-direction:column;gap:10px;text-align:right}
+.fd-meta-row{line-height:1.3}
+.fd-meta-row b{display:block;font-size:15px;font-weight:800;color:var(--ink)}
+.fd-meta-row span{font-size:11.5px;color:var(--muted)}
+
+.fd-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+.fd-row:last-child{border-bottom:none}
+.fd-row b{color:var(--ink);font-variant-numeric:tabular-nums}
+.fd-row.total{padding-top:14px;border-top:2px solid var(--line);border-bottom:none;font-size:14.5px}
+.fd-row.total b{font-size:18px;font-weight:800;color:var(--acc-ink)}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="fatura-detay">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow"><a href="crm-ayarlar-faturalar.html" style="color:inherit">Ayarlar · SaaS · Faturalar</a></div>
+        <h1 id="fdBaslik">Fatura GVF-2026-010</h1>
+        <div class="ph-sub">Yapıtaş İnşaat A.Ş. — abonelik fatura dökümü</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-ayarlar-faturalar.html"><i class="fa-solid fa-arrow-left"></i> Faturalara Dön</a>
+        <button class="btn btn-acc btn-sm" data-no-confirm onclick="gvToast('Fatura PDF indirmesi bu demo ortamında simüle edilir.',{type:'info'})"><i class="fa-solid fa-download"></i> PDF İndir</button>
+      </div>
+    </div>
+
+    <div class="fd-head">
+      <div class="fd-antet">
+        <div class="fd-antet-top">
+          <div class="fd-mark">G</div>
+          <div class="fd-id"><b>GAVIAWORKS TEKNOLOJİ A.Ş.</b><span>Gavia CRM — SaaS Abonelik Hizmeti</span></div>
+        </div>
+        <div class="fd-rows">
+          <div class="ar"><i class="fa-solid fa-location-dot"></i> Maslak Mah. Teknoloji Cad. No:7, Sarıyer / İstanbul</div>
+          <div class="ar"><i class="fa-solid fa-phone"></i> 0850 000 00 00 · faturalama@gaviaworks.com</div>
+          <div class="ar"><i class="fa-solid fa-building-user"></i> Fatura edilen: Yapıtaş İnşaat A.Ş. · Ümraniye VD · 935 041 7768</div>
+        </div>
+      </div>
+      <div class="fd-meta">
+        <div class="fd-meta-row"><b id="fdDurumBadge"><span class="gstat ok">Ödendi</span></b></div>
+        <div class="fd-meta-row"><b id="fdDonem">Temmuz 2026</b><span>Fatura dönemi</span></div>
+        <div class="fd-meta-row"><b id="fdOdeme">Kurumsal Kredi Kartı •••• 4412</b><span>Ödeme yöntemi</span></div>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list"></i> Kalemler</div></div>
+      <div class="gc-body flush">
+        <table class="gtable">
+          <thead><tr><th>Açıklama</th><th class="num">Tutar</th></tr></thead>
+          <tbody>
+            <tr><td class="t-strong" id="fdKalemAd">Professional Paket — Aylık Abonelik</td><td class="num" id="fdKalemTutar">₺12.417</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="gc-body" style="padding-top:8px">
+        <div class="fd-row"><span>Ara toplam (KDV hariç)</span><b id="fdAraToplam">₺12.417</b></div>
+        <div class="fd-row"><span>KDV (%20)</span><b id="fdKdv">₺2.483</b></div>
+        <div class="fd-row total"><span>Genel Toplam</span><b id="fdGenelToplam">₺14.900</b></div>
+      </div>
+      <div class="gc-foot" id="fdNot"><span class="inv-note"><i class="fa-solid fa-circle-info"></i> Bu fatura standart aylık abonelik tahsilatıdır.</span></div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  /* kanonik fatura verisi — toplamlar crm-ayarlar-faturalar.html listesiyle birebir */
+  var FATURA = {
+    'GVF-2026-010': { donem:'Temmuz 2026', kalem:'Professional Paket — Aylık Abonelik', toplam:14900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' },
+    'GVF-2026-009': { donem:'Haziran 2026', kalem:'Professional Paket — Aylık Abonelik', toplam:14900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' },
+    'GVF-2026-008': { donem:'Mayıs 2026', kalem:'Basic → Professional Paket Geçişi — Orantılı Fark', toplam:13400, durum:'odendi', not:'Bu dönem içinde Basic paketten Professional pakete yükseltme yapıldığından tutar orantılı hesaplanmıştır.' },
+    'GVF-2026-007': { donem:'Nisan 2026', kalem:'Basic Paket — Aylık Abonelik', toplam:7900, durum:'gecikti', not:'Tahsilat 3 gün gecikti; kayıtlı ödeme yönteminde geçici bir sorun yaşandı, otomatik tekrar deneme planlandı.' },
+    'GVF-2026-006': { donem:'Mart 2026', kalem:'Basic Paket — Aylık Abonelik', toplam:7900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' },
+    'GVF-2026-005': { donem:'Şubat 2026', kalem:'Basic Paket — Aylık Abonelik', toplam:7900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' },
+    'GVF-2026-004': { donem:'Ocak 2026', kalem:'Basic Paket — Aylık Abonelik', toplam:7900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' },
+    'GVF-2025-012': { donem:'Aralık 2025', kalem:'Basic Paket — Aylık Abonelik', toplam:7900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' },
+    'GVF-2025-011': { donem:'Kasım 2025', kalem:'Basic Paket — Aylık Abonelik', toplam:7900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' },
+    'GVF-2025-010': { donem:'Ekim 2025', kalem:'Basic Paket — Aylık Abonelik', toplam:7900, durum:'odendi', not:'Bu fatura standart aylık abonelik tahsilatıdır.' }
+  };
+  var DURUM_BADGE = {
+    odendi:  '<span class="gstat ok">Ödendi</span>',
+    gecikti: '<span class="gstat warn">Gecikti</span>'
+  };
+
+  function trFmt(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+
+  function render(faturaNo){
+    var f = FATURA[faturaNo];
+    if(!f){ faturaNo = 'GVF-2026-010'; f = FATURA[faturaNo]; }
+    var altToplam = Math.round(f.toplam / 1.2);
+    var kdv = f.toplam - altToplam;
+
+    document.getElementById('fdBaslik').textContent = 'Fatura ' + faturaNo;
+    document.getElementById('fdDonem').textContent = f.donem;
+    document.getElementById('fdDurumBadge').innerHTML = DURUM_BADGE[f.durum] || DURUM_BADGE.odendi;
+    document.getElementById('fdOdeme').textContent = f.durum === 'gecikti' ? 'Kurumsal Kredi Kartı •••• 4412 (yeniden deneniyor)' : 'Kurumsal Kredi Kartı •••• 4412';
+    document.getElementById('fdKalemAd').textContent = f.kalem;
+    document.getElementById('fdKalemTutar').textContent = trFmt(altToplam);
+    document.getElementById('fdAraToplam').textContent = trFmt(altToplam);
+    document.getElementById('fdKdv').textContent = trFmt(kdv);
+    document.getElementById('fdGenelToplam').textContent = trFmt(f.toplam);
+    document.getElementById('fdNot').innerHTML = '<span class="inv-note"><i class="fa-solid fa-circle-info"></i> ' + f.not + '</span>';
+    document.title = 'Fatura ' + faturaNo + ' — Gavia CRM';
+  }
+
+  var q = new URLSearchParams(location.search);
+  render(q.get('fatura') || 'GVF-2026-010');
+})();
+</script>
+</body>
+</html>

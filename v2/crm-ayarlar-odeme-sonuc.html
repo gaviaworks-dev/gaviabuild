@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Ödeme Sonucu — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ §21 — Ödeme Sonucu (2 durum: basarili · basarisiz, TEK parametrik şablon,
+   crm-sistem-onay-durum.html'in hero+özet+sonraki-adım desenini devralır) ============
+   ?durum=basarili|basarisiz · ?tutar=&kart=&fatura=&paket=&donus= */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.od-hero{padding:42px 32px 38px;text-align:center}
+.od-ico{width:76px;height:76px;margin:0 auto 20px;border-radius:var(--r-circle);display:flex;align-items:center;justify-content:center;font-size:29px}
+.od-title{font-size:22px;font-weight:800;color:var(--ink);margin:0 0 9px;letter-spacing:-.01em}
+.od-desc{font-size:14px;color:var(--muted);max-width:480px;margin:0 auto 18px;line-height:1.6}
+.od-kayit-chip{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);padding:7px 14px;border-radius:var(--r-pill);margin-bottom:24px}
+.od-kayit-chip i{color:var(--muted);font-size:11px}
+.od-cta-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+
+.od-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:18px 22px;padding:20px 22px}
+.od-item{display:flex;flex-direction:column;gap:4px;min-width:0}
+.od-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.od-val{font-size:14px;color:var(--ink);font-weight:700;line-height:1.4;font-variant-numeric:tabular-nums}
+
+.od-guard{padding:16px 22px 20px;font-size:13px;color:var(--ink-2);line-height:1.6}
+.od-next{padding:6px 22px 18px;display:flex;flex-direction:column;gap:0}
+.od-next-item{display:flex;gap:12px;align-items:flex-start;padding:10px 0}
+.od-next-item+.od-next-item{border-top:1px dashed var(--line)}
+.od-next-ico{width:24px;height:24px;flex:none;border-radius:var(--r-sm);background:rgba(var(--acc-rgb),.1);color:var(--acc-ink);display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:1px}
+.od-next-txt{font-size:13px;color:var(--ink-2);line-height:1.55;padding-top:2px}
+
+@media(max-width:640px){
+  .od-hero{padding:32px 18px 28px}
+  .od-summary{grid-template-columns:1fr 1fr}
+  .od-cta-row{flex-direction:column;align-items:stretch}
+  .od-cta-row .btn{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="odeme-sonuc">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-ayarlar-faturalar.html">Faturalar</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Ödeme Sonucu</span>
+    </div>
+
+    <!-- statik bake — varsayılan durum (param yok): basarili, Professional -->
+    <div class="gv-card">
+      <div class="od-hero">
+        <div class="od-ico" id="odIco" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+        <h1 class="od-title" id="odTitle">Ödeme Alındı</h1>
+        <p class="od-desc" id="odDesc">₺14.900 tutarındaki ödemeniz başarıyla tahsil edildi. Faturanız hesabınıza eklendi.</p>
+        <div class="od-kayit-chip"><i class="fa-regular fa-file-lines"></i><span id="odKayitTxt">GVF-2026-011 · Professional</span></div>
+        <div class="od-cta-row" id="odCtaRow">
+          <a class="btn btn-acc btn-sm" href="crm-ayarlar-fatura-detay.html?fatura=GVF-2026-011" id="odCtaPrimary"><i class="fa-solid fa-file-invoice"></i> Faturayı Görüntüle</a>
+          <a class="btn btn-ghost btn-sm" href="crm-panel.html" id="odCtaSecondary"><i class="fa-solid fa-gauge-high"></i> Panele Dön</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-top:18px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-receipt"></i> Ödeme Özeti</div></div>
+      <div class="od-summary" id="odSummaryBody">
+        <div class="od-item"><span class="od-lbl">Tutar</span><span class="od-val" id="odTutar">₺14.900</span></div>
+        <div class="od-item"><span class="od-lbl">Ödeme Yöntemi</span><span class="od-val" id="odKart">Kurumsal Kredi Kartı •••• 4412</span></div>
+        <div class="od-item"><span class="od-lbl">Fatura No</span><span class="od-val" id="odFatura">GVF-2026-011</span></div>
+        <div class="od-item"><span class="od-lbl">Paket</span><span class="od-val" id="odPaket">Professional</span></div>
+        <div class="od-item"><span class="od-lbl">Tarih</span><span class="od-val" id="odTarih">2 Temmuz 2026</span></div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-top:18px" id="odGuardCard" hidden>
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Ret Nedeni</div></div>
+      <div class="od-guard" id="odGuardBody"></div>
+    </div>
+
+    <div class="gv-card" style="margin-top:18px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> Sonraki Adım</div></div>
+      <div class="od-next" id="odNextBody">
+        <div class="od-next-item"><span class="od-next-ico"><i class="fa-solid fa-file-invoice"></i></span><span class="od-next-txt">Fatura PDF'i Ayarlar &gt; Faturalar sayfasından her zaman indirebilirsiniz.</span></div>
+        <div class="od-next-item"><span class="od-next-ico"><i class="fa-solid fa-calendar"></i></span><span class="od-next-txt">Bir sonraki tahsilat 1 Ağustos 2026'da aynı ödeme yöntemiyle otomatik yapılacak.</span></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var STAT = {
+    basarili: {
+      ic:'fa-circle-check', bg:'var(--ok-tint)', fg:'var(--ok)',
+      baslik:'Ödeme Alındı',
+      desc:function(t,p){ return t + ' tutarındaki ödemeniz başarıyla tahsil edildi. Faturanız hesabınıza eklendi.'; },
+      ctaPrimary:{ico:'fa-file-invoice', lbl:'Faturayı Görüntüle', cls:'btn-acc', href:function(f){ return 'crm-ayarlar-fatura-detay.html?fatura='+encodeURIComponent(f); }},
+      ctaSecondary:{ico:'fa-gauge-high', lbl:'Panele Dön', cls:'btn-ghost', href:function(){ return 'crm-panel.html'; }},
+      next:function(){ return ['Fatura PDF\'i Ayarlar &gt; Faturalar sayfasından her zaman indirebilirsiniz.', 'Bir sonraki tahsilat 1 Ağustos 2026\'da aynı ödeme yöntemiyle otomatik yapılacak.']; },
+      guard:null
+    },
+    basarisiz: {
+      ic:'fa-circle-xmark', bg:'var(--danger-tint)', fg:'var(--danger)',
+      baslik:'Ödeme Alınamadı',
+      desc:function(t,p){ return t + ' tutarındaki tahsilat denemesi başarısız oldu. Aboneliğiniz aktif kalmaya devam ediyor; ödeme yöntemini kontrol edip tekrar deneyin.'; },
+      ctaPrimary:{ico:'fa-rotate-right', lbl:'Tekrar Dene', cls:'btn-acc', href:function(f,q){ return 'crm-ayarlar-odeme-sonuc.html?durum=basarili&' + q; }},
+      ctaSecondary:{ico:'fa-wallet', lbl:'Ödeme Yöntemini Değiştir', cls:'btn-ghost', href:function(){ return 'crm-ayarlar-odeme-yontemi.html'; }},
+      next:function(){ return ['3 gün içinde otomatik olarak tekrar tahsilat denenecek.', 'Ödeme 7 gün içinde alınamazsa aboneliğiniz Ayarlar &gt; Abonelik İptali akışına göre askıya alınabilir.']; },
+      guard:function(kart){ return '<p><b>Kart tarafından reddedildi.</b> Bankanız "' + kart + '" kartındaki işlemi onaylamadı — olası nedenler: kart limiti yetersiz, 3D Secure doğrulaması tamamlanmadı veya kart geçerlilik süresi dolmuş.</p><p style="margin-top:8px">Ödeme yöntemini güncelleyip tekrar deneyebilir ya da farklı bir kart/IBAN ekleyebilirsiniz.</p>'; }
+    }
+  };
+
+  function qp(name){ try{ return new URLSearchParams(location.search).get(name); }catch(e){ return null; } }
+
+  var durum = qp('durum') || 'basarili';
+  var D = STAT[durum] || STAT.basarili;
+  var tutar = qp('tutar') || '₺14.900';
+  var kart = qp('kart') || 'Kurumsal Kredi Kartı •••• 4412';
+  var fatura = qp('fatura') || 'GVF-2026-011';
+  var paket = qp('paket') || 'Professional';
+  var tarih = qp('tarih') || '2 Temmuz 2026';
+  var qs = new URLSearchParams({tutar:tutar, kart:kart, fatura:fatura, paket:paket, tarih:tarih}).toString();
+
+  var odIco = document.getElementById('odIco');
+  odIco.style.background = D.bg; odIco.style.color = D.fg;
+  odIco.innerHTML = '<i class="fa-solid ' + D.ic + '"></i>';
+  document.getElementById('odTitle').textContent = D.baslik;
+  document.getElementById('odDesc').innerHTML = D.desc(tutar, paket);
+  document.getElementById('odKayitTxt').textContent = fatura + ' · ' + paket;
+  document.getElementById('odTutar').textContent = tutar;
+  document.getElementById('odKart').textContent = kart;
+  document.getElementById('odFatura').textContent = fatura;
+  document.getElementById('odPaket').textContent = paket;
+  document.getElementById('odTarih').textContent = tarih;
+
+  var p = document.getElementById('odCtaPrimary');
+  p.className = 'btn btn-sm ' + D.ctaPrimary.cls;
+  p.innerHTML = '<i class="fa-solid ' + D.ctaPrimary.ico + '"></i> ' + D.ctaPrimary.lbl;
+  p.setAttribute('href', D.ctaPrimary.href(fatura, qs));
+
+  var s = document.getElementById('odCtaSecondary');
+  s.className = 'btn btn-sm ' + D.ctaSecondary.cls;
+  s.innerHTML = '<i class="fa-solid ' + D.ctaSecondary.ico + '"></i> ' + D.ctaSecondary.lbl;
+  s.setAttribute('href', D.ctaSecondary.href());
+
+  document.getElementById('odNextBody').innerHTML = D.next().map(function(t, i){
+    var icoSet = ['fa-file-invoice','fa-calendar','fa-circle-info'];
+    return '<div class="od-next-item"><span class="od-next-ico"><i class="fa-solid '+(icoSet[i]||'fa-circle-info')+'"></i></span><span class="od-next-txt">'+t+'</span></div>';
+  }).join('');
+
+  var guardCard = document.getElementById('odGuardCard');
+  if(D.guard){
+    guardCard.hidden = false;
+    document.getElementById('odGuardBody').innerHTML = D.guard(kart);
+  } else {
+    guardCard.hidden = true;
+  }
+})();
+</script>
+</body>
+</html>

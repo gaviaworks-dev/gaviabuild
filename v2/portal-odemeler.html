@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Ödemelerim — Müşteri Portalı — Yapıtaş İnşaat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;padding-bottom:48px}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+
+.pf-top{position:sticky;top:0;z-index:20;height:var(--top-h);background:var(--paper);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px}
+.pf-brand{display:flex;align-items:center;gap:11px;min-width:0}
+.pf-mark{width:36px;height:36px;flex:none;border-radius:10px;background:linear-gradient(155deg,var(--gv-night),var(--gv-deep));
+  color:var(--gv-mint);display:grid;place-items:center;font-weight:800;font-size:16px;letter-spacing:-.02em}
+.pf-brandtext{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.pf-brandtext b{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+.pf-brandtext span{font-size:10.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.pf-user{display:flex;align-items:center;gap:8px;flex:none}
+.pf-chip{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-pill);padding:6px 12px 6px 6px}
+.pf-ava{width:26px;height:26px;flex:none;border-radius:50%;background:rgba(var(--acc-rgb),.16);color:var(--acc-ink);display:grid;place-items:center;font-size:10.5px;font-weight:800}
+.pf-chip span{font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.pf-logout{width:36px;height:36px;flex:none;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);transition:.2s var(--ease)}
+.pf-logout:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-tint)}
+@media (max-width:560px){ .pf-chip span{display:none} .pf-chip{padding:6px;border-radius:50%} }
+
+.pf-tabs{position:sticky;top:var(--top-h);z-index:19;background:var(--paper);border-bottom:1px solid var(--line);display:flex}
+.pf-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 10px;
+  font-size:11px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;transition:.2s var(--ease)}
+.pf-tab i{font-size:15px}
+.pf-tab:hover{color:var(--ink-2)}
+.pf-tab.active{color:var(--acc-ink);border-color:var(--acc-ink)}
+@media (min-width:641px){
+  .pf-tabs{gap:2px;padding:0 18px}
+  .pf-tab{flex:none;flex-direction:row;padding:14px 18px;font-size:13px}
+}
+
+.pf-wrap{max-width:1080px;margin:0 auto;padding:22px 16px 8px}
+@media (min-width:900px){ .pf-wrap{padding:34px 32px 8px} }
+.pf-hero{margin-bottom:24px}
+.pf-eyebrow{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:7px}
+.pf-hero h1{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:var(--ink)}
+.pf-hero p{font-size:13.5px;color:var(--muted);margin:0;max-width:58ch;line-height:1.55}
+.pf-section-lbl{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin:30px 0 13px;display:flex;align-items:center;gap:8px}
+.pf-section-lbl i{color:var(--acc-ink)}
+
+/* ---- kpi-card mobil: dar ekranda ikon+metin yan yana sığmıyor (₺ tutarları
+   tek kelime, satır kıramaz) — ikonu üste alıp metne tam kart genişliği verir ---- */
+@media (max-width:480px){
+  .kpi-card{flex-direction:column;align-items:flex-start;gap:8px;padding:16px}
+  .kpi-num{font-size:19px}
+}
+
+/* ---- ödeme ilerleme şeridi (panel'deki inşaat halkasıyla aynı görsel dil) ---- */
+.pp-card{padding:20px 20px 18px}
+.pp-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.pp-head b{font-size:13.5px;color:var(--ink)}
+.pp-head span{font-size:12px;color:var(--muted)}
+.pp-track{display:flex;flex-wrap:wrap;gap:3px}
+.pp-seg{flex:1 1 auto;min-width:7px;max-width:16px;height:24px;border-radius:4px;background:var(--line)}
+.pp-seg.done{background:var(--acc-ink)}
+.pp-seg.next{background:var(--paper);border:2px solid var(--acc-ink)}
+.pp-legend{display:flex;gap:16px;margin-top:12px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.pp-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;background:currentColor}
+.pp-legend .done{color:var(--acc-ink)}
+.pp-legend .next{color:var(--acc-ink)}
+.pp-legend .wait{color:var(--line-2)}
+
+/* ---- taksit tablosu ---- */
+.tks-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tks-table{width:100%;border-collapse:collapse;font-size:13px;min-width:540px}
+.tks-table thead th{position:sticky;top:0;background:var(--paper);text-align:left;font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--line);z-index:1}
+.tks-table td{padding:10px 16px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.tks-table td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+.tks-table tr.next td{background:rgba(var(--acc-rgb),.07)}
+.tks-table tr.pesin td,.tks-table tr.teslim td{background:var(--bg);font-weight:700}
+.tks-table a.mkb{font-size:11.5px;font-weight:700;color:var(--acc-ink);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+
+/* ---- mobil taksit listesi (640px altı — yatay kaydırma yerine dikey kart) ---- */
+.tks-mobile-list{display:none}
+.tks-mrow{padding:12px 18px;border-bottom:1px solid var(--line)}
+.tks-mrow:last-child{border-bottom:none}
+.tks-mrow.next{background:rgba(var(--acc-rgb),.07)}
+/* hash hedef vurgusu — sayfa-lokal (D17 Y8): kalıcı sol-kenar işareti + hafif tint,
+   üstüne giriş flash'ı; flash bitince kalıcı tona döner */
+.tks-table tr.is-target td{background:rgba(var(--acc-rgb),.1)}
+.tks-table tr.is-target td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+.tks-mrow.is-target{background:rgba(var(--acc-rgb),.1);box-shadow:inset 3px 0 0 var(--acc)}
+.tks-table tr.is-flash td,.tks-mrow.is-flash{animation:hedefVurgu 2s ease-out 1}
+@keyframes hedefVurgu{0%,30%{background:rgba(var(--acc-rgb),.22)}}
+.tks-mrow.pesin,.tks-mrow.teslim{background:var(--bg)}
+.tks-mrow-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:7px}
+.tks-mrow-no{font-size:11.5px;font-weight:700;color:var(--muted);flex:none}
+.tks-mrow-date{font-size:13px;color:var(--ink-2);flex:1;padding:0 8px}
+.tks-mrow-amt{font-size:14.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;flex:none}
+.tks-mrow-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px}
+@media (max-width:640px){
+  .tks-wrap{display:none}
+  .tks-mobile-list{display:block}
+}
+
+/* ---- KO-B-304 kapalı özet ---- */
+.closed-card{display:flex;align-items:center;gap:16px;padding:18px 20px;flex-wrap:wrap}
+.closed-ico{width:46px;height:46px;flex:none;border-radius:12px;background:var(--ok-tint);color:var(--ok);display:grid;place-items:center;font-size:19px}
+.closed-info{flex:1;min-width:220px}
+.closed-info b{font-size:14.5px;color:var(--ink);display:block;margin-bottom:2px}
+.closed-info span{font-size:12.5px;color:var(--muted)}
+.closed-stats{display:flex;gap:22px;flex-wrap:wrap}
+.closed-stat dt{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.closed-stat dd{font-size:13.5px;font-weight:800;color:var(--ink);margin:0}
+</style>
+</head>
+<body data-page="odemeler">
+
+<header class="pf-top">
+  <div class="pf-brand">
+    <div class="pf-mark">Y</div>
+    <div class="pf-brandtext"><b>Yapıtaş İnşaat</b><span>Müşteri Portalı</span></div>
+  </div>
+  <div class="pf-user">
+    <div class="pf-chip"><div class="pf-ava">SO</div><span>Selçuk Onaran</span></div>
+    <a class="pf-logout" href="index.html" title="Çıkış" aria-label="Çıkış"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+  </div>
+</header>
+
+<nav class="pf-tabs" aria-label="Portal sekmeleri">
+  <a class="pf-tab" href="portal-panel.html"><i class="fa-solid fa-house"></i><span>Panel</span></a>
+  <a class="pf-tab active" href="portal-odemeler.html"><i class="fa-solid fa-file-invoice-dollar"></i><span>Ödemelerim</span></a>
+  <a class="pf-tab" href="portal-belgeler.html"><i class="fa-solid fa-folder-open"></i><span>Belgelerim</span></a>
+  <a class="pf-tab" href="portal-talepler.html"><i class="fa-solid fa-comment-dots"></i><span>Taleplerim</span></a>
+</nav>
+
+<main class="pf-wrap">
+
+  <div class="pf-hero">
+    <div class="pf-eyebrow">Ödeme Planı — VK-C-18</div>
+    <h1>Vadi Konakları C Blok 18</h1>
+    <p>SSZ-2026-003 sözleşmesi kapsamındaki taksit takviminiz ve tahsilat makbuzlarınız aşağıdadır.</p>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-file-contract"></i></div>
+      <div><div class="kpi-num">₺6.120.000</div><div class="kpi-lbl">Sözleşme bedeli</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-circle-check"></i></div>
+      <div><div class="kpi-num">₺2.528.000</div><div class="kpi-lbl">Ödenen tutar</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div><div class="kpi-num">₺3.592.000</div><div class="kpi-lbl">Kalan tutar</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-calendar-day"></i></div>
+      <div><div class="kpi-num">15 Tem 2026</div><div class="kpi-lbl">Sıradaki vade</div></div>
+    </div>
+  </div>
+
+  <div class="gv-card pp-card">
+    <div class="pp-head"><b>Taksit İlerlemesi</b><span>14 / 36 taksit ödendi — peşinat ve teslim bedeli hariç</span></div>
+    <!-- statik bake — DEFAULT (hash yok, sayfa 1) rol-agnostik taksit görünümü; JS yüklenince aynı mount innerHTML ile ezilir (portal-odemeler.html kaynak script'i, lines dizisi) — D18-B2 -->
+    <div class="pp-track" id="ppTrack"><div class="pp-seg done" title="Taksit 1"></div><div class="pp-seg done" title="Taksit 2"></div><div class="pp-seg done" title="Taksit 3"></div><div class="pp-seg done" title="Taksit 4"></div><div class="pp-seg done" title="Taksit 5"></div><div class="pp-seg done" title="Taksit 6"></div><div class="pp-seg done" title="Taksit 7"></div><div class="pp-seg done" title="Taksit 8"></div><div class="pp-seg done" title="Taksit 9"></div><div class="pp-seg done" title="Taksit 10"></div><div class="pp-seg done" title="Taksit 11"></div><div class="pp-seg done" title="Taksit 12"></div><div class="pp-seg done" title="Taksit 13"></div><div class="pp-seg done" title="Taksit 14"></div><div class="pp-seg next" title="Taksit 15"></div><div class="pp-seg " title="Taksit 16"></div><div class="pp-seg " title="Taksit 17"></div><div class="pp-seg " title="Taksit 18"></div><div class="pp-seg " title="Taksit 19"></div><div class="pp-seg " title="Taksit 20"></div><div class="pp-seg " title="Taksit 21"></div><div class="pp-seg " title="Taksit 22"></div><div class="pp-seg " title="Taksit 23"></div><div class="pp-seg " title="Taksit 24"></div><div class="pp-seg " title="Taksit 25"></div><div class="pp-seg " title="Taksit 26"></div><div class="pp-seg " title="Taksit 27"></div><div class="pp-seg " title="Taksit 28"></div><div class="pp-seg " title="Taksit 29"></div><div class="pp-seg " title="Taksit 30"></div><div class="pp-seg " title="Taksit 31"></div><div class="pp-seg " title="Taksit 32"></div><div class="pp-seg " title="Taksit 33"></div><div class="pp-seg " title="Taksit 34"></div><div class="pp-seg " title="Taksit 35"></div><div class="pp-seg " title="Taksit 36"></div></div>
+    <div class="pp-legend">
+      <span><i class="done"></i>Ödendi</span>
+      <span><i class="next"></i>Sıradaki (15 Tem 2026)</span>
+      <span><i class="wait"></i>Planlandı</span>
+    </div>
+  </div>
+
+  <div class="pf-section-lbl"><i class="fa-solid fa-table-list"></i> Taksit Tablosu</div>
+  <div class="gv-card">
+    <div class="tks-wrap">
+      <table class="tks-table" data-paginate="25">
+        <thead><tr><th>#</th><th>Vade Tarihi</th><th style="text-align:right">Tutar</th><th>Durum</th><th>Makbuz</th></tr></thead>
+        <tbody id="tksBody"><tr class="pesin" data-idx="0"><td>—</td><td>3 Mayıs 2025</td><td class="num">₺918.000</td><td><span class="gstat ok">Ödendi</span></td><td>—</td></tr><tr class="" data-idx="1"><td>1</td><td>15 Mayıs 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-001"><i class="fa-solid fa-receipt"></i> MKB-2026-001</a></td></tr><tr class="" data-idx="2"><td>2</td><td>15 Haziran 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-002"><i class="fa-solid fa-receipt"></i> MKB-2026-002</a></td></tr><tr class="" data-idx="3"><td>3</td><td>15 Temmuz 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-003"><i class="fa-solid fa-receipt"></i> MKB-2026-003</a></td></tr><tr class="" data-idx="4"><td>4</td><td>15 Ağustos 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-004"><i class="fa-solid fa-receipt"></i> MKB-2026-004</a></td></tr><tr class="" data-idx="5"><td>5</td><td>15 Eylül 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-005"><i class="fa-solid fa-receipt"></i> MKB-2026-005</a></td></tr><tr class="" data-idx="6"><td>6</td><td>15 Ekim 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-006"><i class="fa-solid fa-receipt"></i> MKB-2026-006</a></td></tr><tr class="" data-idx="7"><td>7</td><td>15 Kasım 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-007"><i class="fa-solid fa-receipt"></i> MKB-2026-007</a></td></tr><tr class="" data-idx="8"><td>8</td><td>15 Aralık 2025</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-008"><i class="fa-solid fa-receipt"></i> MKB-2026-008</a></td></tr><tr class="" data-idx="9"><td>9</td><td>15 Ocak 2026</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-009"><i class="fa-solid fa-receipt"></i> MKB-2026-009</a></td></tr><tr class="" data-idx="10"><td>10</td><td>15 Şubat 2026</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-010"><i class="fa-solid fa-receipt"></i> MKB-2026-010</a></td></tr><tr class="" data-idx="11"><td>11</td><td>15 Mart 2026</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-011"><i class="fa-solid fa-receipt"></i> MKB-2026-011</a></td></tr><tr class="" data-idx="12"><td>12</td><td>15 Nisan 2026</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-012"><i class="fa-solid fa-receipt"></i> MKB-2026-012</a></td></tr><tr class="" data-idx="13"><td>13</td><td>15 Mayıs 2026</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-013"><i class="fa-solid fa-receipt"></i> MKB-2026-013</a></td></tr><tr class="" data-idx="14"><td>14</td><td>15 Haziran 2026</td><td class="num">₺115.000</td><td><span class="gstat ok">Ödendi</span></td><td><a class="mkb" href="portal-belgeler.html#mkb-014"><i class="fa-solid fa-receipt"></i> MKB-2026-014</a></td></tr><tr class="next" id="tks-next" data-idx="15"><td>15</td><td>15 Temmuz 2026</td><td class="num">₺115.000</td><td><span class="gstat info">Sıradaki</span></td><td>—</td></tr><tr class="" data-idx="16"><td>16</td><td>15 Ağustos 2026</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="17"><td>17</td><td>15 Eylül 2026</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="18"><td>18</td><td>15 Ekim 2026</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="19"><td>19</td><td>15 Kasım 2026</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="20"><td>20</td><td>15 Aralık 2026</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="21"><td>21</td><td>15 Ocak 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="22"><td>22</td><td>15 Şubat 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="23"><td>23</td><td>15 Mart 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="" data-idx="24"><td>24</td><td>15 Nisan 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="25"><td>25</td><td>15 Mayıs 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="26"><td>26</td><td>15 Haziran 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="27"><td>27</td><td>15 Temmuz 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="28"><td>28</td><td>15 Ağustos 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="29"><td>29</td><td>15 Eylül 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="30"><td>30</td><td>15 Ekim 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="31"><td>31</td><td>15 Kasım 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="32"><td>32</td><td>15 Aralık 2027</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="33"><td>33</td><td>15 Ocak 2028</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="34"><td>34</td><td>15 Şubat 2028</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="35"><td>35</td><td>15 Mart 2028</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="gv-pg-hide" data-idx="36"><td>36</td><td>15 Nisan 2028</td><td class="num">₺115.000</td><td><span class="gstat off">Planlandı</span></td><td>—</td></tr><tr class="teslim gv-pg-hide" data-idx="37"><td>—</td><td>Aralık 2026 (hedef)</td><td class="num">₺1.062.000</td><td><span class="gstat wait">Bekliyor</span></td><td>—</td></tr></tbody>
+      </table>
+    </div>
+    <div class="tks-mobile-list" id="tksMobileList"><div class="tks-mrow pesin" data-idx="0"><div class="tks-mrow-top"><span class="tks-mrow-no">—</span><span class="tks-mrow-date">3 Mayıs 2025</span><span class="tks-mrow-amt">₺918.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span>—</span></div></div><div class="tks-mrow " data-idx="1"><div class="tks-mrow-top"><span class="tks-mrow-no">1</span><span class="tks-mrow-date">15 Mayıs 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-001"><i class="fa-solid fa-receipt"></i> MKB-2026-001</a></span></div></div><div class="tks-mrow " data-idx="2"><div class="tks-mrow-top"><span class="tks-mrow-no">2</span><span class="tks-mrow-date">15 Haziran 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-002"><i class="fa-solid fa-receipt"></i> MKB-2026-002</a></span></div></div><div class="tks-mrow " data-idx="3"><div class="tks-mrow-top"><span class="tks-mrow-no">3</span><span class="tks-mrow-date">15 Temmuz 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-003"><i class="fa-solid fa-receipt"></i> MKB-2026-003</a></span></div></div><div class="tks-mrow " data-idx="4"><div class="tks-mrow-top"><span class="tks-mrow-no">4</span><span class="tks-mrow-date">15 Ağustos 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-004"><i class="fa-solid fa-receipt"></i> MKB-2026-004</a></span></div></div><div class="tks-mrow " data-idx="5"><div class="tks-mrow-top"><span class="tks-mrow-no">5</span><span class="tks-mrow-date">15 Eylül 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-005"><i class="fa-solid fa-receipt"></i> MKB-2026-005</a></span></div></div><div class="tks-mrow " data-idx="6"><div class="tks-mrow-top"><span class="tks-mrow-no">6</span><span class="tks-mrow-date">15 Ekim 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-006"><i class="fa-solid fa-receipt"></i> MKB-2026-006</a></span></div></div><div class="tks-mrow " data-idx="7"><div class="tks-mrow-top"><span class="tks-mrow-no">7</span><span class="tks-mrow-date">15 Kasım 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-007"><i class="fa-solid fa-receipt"></i> MKB-2026-007</a></span></div></div><div class="tks-mrow " data-idx="8"><div class="tks-mrow-top"><span class="tks-mrow-no">8</span><span class="tks-mrow-date">15 Aralık 2025</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-008"><i class="fa-solid fa-receipt"></i> MKB-2026-008</a></span></div></div><div class="tks-mrow " data-idx="9"><div class="tks-mrow-top"><span class="tks-mrow-no">9</span><span class="tks-mrow-date">15 Ocak 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-009"><i class="fa-solid fa-receipt"></i> MKB-2026-009</a></span></div></div><div class="tks-mrow " data-idx="10"><div class="tks-mrow-top"><span class="tks-mrow-no">10</span><span class="tks-mrow-date">15 Şubat 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-010"><i class="fa-solid fa-receipt"></i> MKB-2026-010</a></span></div></div><div class="tks-mrow " data-idx="11"><div class="tks-mrow-top"><span class="tks-mrow-no">11</span><span class="tks-mrow-date">15 Mart 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-011"><i class="fa-solid fa-receipt"></i> MKB-2026-011</a></span></div></div><div class="tks-mrow " data-idx="12"><div class="tks-mrow-top"><span class="tks-mrow-no">12</span><span class="tks-mrow-date">15 Nisan 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-012"><i class="fa-solid fa-receipt"></i> MKB-2026-012</a></span></div></div><div class="tks-mrow " data-idx="13"><div class="tks-mrow-top"><span class="tks-mrow-no">13</span><span class="tks-mrow-date">15 Mayıs 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-013"><i class="fa-solid fa-receipt"></i> MKB-2026-013</a></span></div></div><div class="tks-mrow " data-idx="14"><div class="tks-mrow-top"><span class="tks-mrow-no">14</span><span class="tks-mrow-date">15 Haziran 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat ok">Ödendi</span><span><a class="mkb" href="portal-belgeler.html#mkb-014"><i class="fa-solid fa-receipt"></i> MKB-2026-014</a></span></div></div><div class="tks-mrow next" data-idx="15"><div class="tks-mrow-top"><span class="tks-mrow-no">15</span><span class="tks-mrow-date">15 Temmuz 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat info">Sıradaki</span><span>—</span></div></div><div class="tks-mrow " data-idx="16"><div class="tks-mrow-top"><span class="tks-mrow-no">16</span><span class="tks-mrow-date">15 Ağustos 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="17"><div class="tks-mrow-top"><span class="tks-mrow-no">17</span><span class="tks-mrow-date">15 Eylül 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="18"><div class="tks-mrow-top"><span class="tks-mrow-no">18</span><span class="tks-mrow-date">15 Ekim 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="19"><div class="tks-mrow-top"><span class="tks-mrow-no">19</span><span class="tks-mrow-date">15 Kasım 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="20"><div class="tks-mrow-top"><span class="tks-mrow-no">20</span><span class="tks-mrow-date">15 Aralık 2026</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="21"><div class="tks-mrow-top"><span class="tks-mrow-no">21</span><span class="tks-mrow-date">15 Ocak 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="22"><div class="tks-mrow-top"><span class="tks-mrow-no">22</span><span class="tks-mrow-date">15 Şubat 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="23"><div class="tks-mrow-top"><span class="tks-mrow-no">23</span><span class="tks-mrow-date">15 Mart 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow " data-idx="24"><div class="tks-mrow-top"><span class="tks-mrow-no">24</span><span class="tks-mrow-date">15 Nisan 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="25"><div class="tks-mrow-top"><span class="tks-mrow-no">25</span><span class="tks-mrow-date">15 Mayıs 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="26"><div class="tks-mrow-top"><span class="tks-mrow-no">26</span><span class="tks-mrow-date">15 Haziran 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="27"><div class="tks-mrow-top"><span class="tks-mrow-no">27</span><span class="tks-mrow-date">15 Temmuz 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="28"><div class="tks-mrow-top"><span class="tks-mrow-no">28</span><span class="tks-mrow-date">15 Ağustos 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="29"><div class="tks-mrow-top"><span class="tks-mrow-no">29</span><span class="tks-mrow-date">15 Eylül 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="30"><div class="tks-mrow-top"><span class="tks-mrow-no">30</span><span class="tks-mrow-date">15 Ekim 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="31"><div class="tks-mrow-top"><span class="tks-mrow-no">31</span><span class="tks-mrow-date">15 Kasım 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="32"><div class="tks-mrow-top"><span class="tks-mrow-no">32</span><span class="tks-mrow-date">15 Aralık 2027</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="33"><div class="tks-mrow-top"><span class="tks-mrow-no">33</span><span class="tks-mrow-date">15 Ocak 2028</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="34"><div class="tks-mrow-top"><span class="tks-mrow-no">34</span><span class="tks-mrow-date">15 Şubat 2028</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="35"><div class="tks-mrow-top"><span class="tks-mrow-no">35</span><span class="tks-mrow-date">15 Mart 2028</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow gv-pg-hide" data-idx="36"><div class="tks-mrow-top"><span class="tks-mrow-no">36</span><span class="tks-mrow-date">15 Nisan 2028</span><span class="tks-mrow-amt">₺115.000</span></div><div class="tks-mrow-bottom"><span class="gstat off">Planlandı</span><span>—</span></div></div><div class="tks-mrow teslim gv-pg-hide" data-idx="37"><div class="tks-mrow-top"><span class="tks-mrow-no">—</span><span class="tks-mrow-date">Aralık 2026 (hedef)</span><span class="tks-mrow-amt">₺1.062.000</span></div><div class="tks-mrow-bottom"><span class="gstat wait">Bekliyor</span><span>—</span></div></div></div>
+  </div>
+
+  <div class="pf-section-lbl"><i class="fa-solid fa-building"></i> KO-B-304 — Kule Ofis B Blok</div>
+  <div class="gv-card closed-card">
+    <div class="closed-ico"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="closed-info"><b>Ödemesi tamamlandı</b><span>SSZ-2025-042 · bedelin tamamı teslim öncesinde tahsil edildi</span></div>
+    <div class="closed-stats">
+      <div class="closed-stat"><dt>Bedel</dt><dd>₺4.100.000</dd></div>
+      <div class="closed-stat"><dt>Teslim</dt><dd>15 Mart 2026</dd></div>
+      <div class="closed-stat"><dt>Tutanak</dt><dd>TSL-2026-001</dd></div>
+    </div>
+  </div>
+
+</main>
+
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  'use strict';
+  function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+  var AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+  var pesinat = 918000, taksitTutar = 115000, taksitSayi = 36, odenenTaksit = 14, teslim = 1062000;
+
+  /* ---- taksit satırları — tek veri modeli, hem masaüstü tablo hem mobil kart listesi bundan üretilir ---- */
+  var lines = [{cls:'pesin', no:'—', tarih:'3 Mayıs 2025', tutar:pesinat, durum:'<span class="gstat ok">Ödendi</span>', mkb:'—'}];
+  for(var i = 1; i <= taksitSayi; i++){
+    var dt = new Date(2025, 4 + (i - 1), 15);
+    var tarih = dt.getDate() + ' ' + AYLAR[dt.getMonth()] + ' ' + dt.getFullYear();
+    var cls = '', durum, mkb = '—';
+    if(i <= odenenTaksit){
+      durum = '<span class="gstat ok">Ödendi</span>';
+      var mkbNo = String(i).padStart(3, '0');
+      mkb = '<a class="mkb" href="portal-belgeler.html#mkb-' + mkbNo + '"><i class="fa-solid fa-receipt"></i> MKB-2026-' + mkbNo + '</a>';
+    } else if(i === odenenTaksit + 1){
+      cls = 'next';
+      durum = '<span class="gstat info">Sıradaki</span>';
+    } else {
+      durum = '<span class="gstat off">Planlandı</span>';
+    }
+    lines.push({cls:cls, no:i, tarih:tarih, tutar:taksitTutar, durum:durum, mkb:mkb});
+  }
+  lines.push({cls:'teslim', no:'—', tarih:'Aralık 2026 (hedef)', tutar:teslim, durum:'<span class="gstat wait">Bekliyor</span>', mkb:'—'});
+
+  var tableRows = '', cardRows = '';
+  lines.forEach(function(l, idx){
+    /* data-idx: masaüstü tablo ile mobil kart listesi aynı 'lines' döngüsünden
+       birebir sırayla basılır — pager hedef-sayfa hesabı (FIX A) bu index'e dayanır */
+    tableRows += '<tr class="' + l.cls + '"' + (l.cls === 'next' ? ' id="tks-next"' : '') + ' data-idx="' + idx + '"><td>' + l.no + '</td><td>' + l.tarih + '</td><td class="num">' + tl(l.tutar) + '</td><td>' + l.durum + '</td><td>' + l.mkb + '</td></tr>';
+    cardRows += '<div class="tks-mrow ' + l.cls + '" data-idx="' + idx + '">'
+      + '<div class="tks-mrow-top"><span class="tks-mrow-no">' + l.no + '</span><span class="tks-mrow-date">' + l.tarih + '</span><span class="tks-mrow-amt">' + tl(l.tutar) + '</span></div>'
+      + '<div class="tks-mrow-bottom">' + l.durum + '<span>' + l.mkb + '</span></div>'
+      + '</div>';
+  });
+  document.getElementById('tksBody').innerHTML = tableRows;
+  document.getElementById('tksMobileList').innerHTML = cardRows;
+
+  /* ---- sayfalandırma (gv-pager, D17 pager yayılımı): masaüstü tabloya bağlanır.
+     Mobil kart listesi ayrı bir DOM olduğu için pager'ı görmez — 'gvpage' event'ini
+     dinleyip aynı dilimi (.gv-pg-hide) index eşleşmesiyle mobil listeye uygular. ---- */
+  var tksTable = document.querySelector('.tks-table');
+  var tksMobileList = document.getElementById('tksMobileList');
+  var pgBoyut = parseInt(tksTable.getAttribute('data-paginate'), 10) || 25;
+  var pgMevcutSayfa = 1;
+  tksTable.addEventListener('gvpage', function(e){
+    var d = e.detail;
+    pgMevcutSayfa = d.page;
+    Array.prototype.forEach.call(tksMobileList.children, function(r, i){
+      r.classList.toggle('gv-pg-hide', i < (d.page - 1) * d.size || i >= d.page * d.size);
+    });
+  });
+
+  /* ---- FIX A + pager: #tks-next hedefi aktif sayfada değilse pager hedef sayfaya
+     atlar. Yüklemede inline script pager kurulumundan ÖNCE koştuğu için hedef sayfa
+     ?page= URL-state'ine yazılır (gvPager init'te bunu okur — hash her zaman ?page='i
+     ezer, RB "hash kazanır" kuralı). hashchange'de nav'daki sayfa butonuna programatik
+     tıklama kullanılır (ui.js'e dokunmadan). ---- */
+  function hedefIdx(){
+    if(location.hash !== '#tks-next') return null;
+    var el = document.getElementById('tks-next');
+    if(!el) return null;
+    var idx = parseInt(el.getAttribute('data-idx'), 10);
+    return isNaN(idx) ? null : idx;
+  }
+  function hedefSayfaNo(idx){ return Math.floor(idx / pgBoyut) + 1; }
+
+  var ilkIdx = hedefIdx();
+  if(ilkIdx !== null){
+    var ilkSayfa = hedefSayfaNo(ilkIdx);
+    gvUrlState.set({ page: ilkSayfa > 1 ? ilkSayfa : null });
+  }
+
+  gvPager(tksTable);
+  var pgNav = document.querySelector('.gv-pager');
+  /* nav kuruluşta .tks-wrap içine düşer (overflow-x konteyneri, 640px altında
+     display:none) — kart altına, hem masaüstü hem mobilde görünür şekilde taşı */
+  if(pgNav) tksMobileList.parentNode.insertBefore(pgNav, tksMobileList.nextSibling);
+
+  function hedefSayfayaAtla(){
+    var idx = hedefIdx();
+    if(idx === null || !pgNav) return;
+    var hedef = hedefSayfaNo(idx);
+    if(hedef === pgMevcutSayfa) return;
+    var btn = pgNav.querySelector('[data-pg="' + hedef + '"]');
+    if(btn) btn.click();
+  }
+
+  /* ---- ilerleme şeridi: 36 taksit tick'i ---- */
+  var track = document.getElementById('ppTrack');
+  var tickHtml = '';
+  for(var t = 1; t <= taksitSayi; t++){
+    var cls = t <= odenenTaksit ? 'done' : (t === odenenTaksit + 1 ? 'next' : '');
+    tickHtml += '<div class="pp-seg ' + cls + '" title="Taksit ' + t + '"></div>';
+  }
+  track.innerHTML = tickHtml;
+
+  /* ---- hash hedefine vurgu (D17 Y8): #tks-next sıradaki (15 Tem) taksiti hem masaüstü
+     tabloda hem mobil kart listesinde işaretler — kalıcı .is-target + tek seferlik
+     .is-flash; hedef değişirse eski işaret temizlenir; görünür olan kaydırılır.
+     Sayfa atlaması (hedefSayfayaAtla) İLK çalışır — is-target satırı hâlâ .gv-pg-hide
+     ile gizliyken işaretlenip kaydırma atlanmasın diye. ---- */
+  var hedefler = [];
+  function flashHedef(){
+    hedefler.forEach(function(el){ el.classList.remove('is-target','is-flash'); });
+    hedefler = [];
+    if(location.hash !== '#tks-next') return;
+    var els = document.querySelectorAll('tr.next, .tks-mrow.next');
+    var scrolled = false;
+    Array.prototype.forEach.call(els, function(el){
+      hedefler.push(el);
+      el.classList.add('is-target');
+      void el.offsetWidth;
+      el.classList.add('is-flash');
+      if(!scrolled && el.offsetParent){ el.scrollIntoView({block:'center'}); scrolled = true; }
+    });
+  }
+  function hedefeGit(){ hedefSayfayaAtla(); flashHedef(); }
+  window.addEventListener('hashchange', hedefeGit);
+  setTimeout(hedefeGit, 60);
+})();
+</script>
+</body>
+</html>

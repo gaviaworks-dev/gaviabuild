@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Saha Bildirimi Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: saha bildirimi detay kompozisyonu (isg-detay/rapor-detay ile aynı iskelet
+   dili — gd-head/gd-grid/gd-block/ctx-row/who-mark; D18-T1 — ?bil= param map, 8 kayıt,
+   DEFAULT 001 Hasan Demirci) */
+.gd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.gd-head h1{font-size:22px;letter-spacing:-.015em;margin-bottom:9px;max-width:600px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:8px}
+
+.gd-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.gd-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.gd-desc{font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+
+/* bağlam satırları */
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:13px}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+.ctx-link{display:flex;align-items:center;gap:11px;padding:6px 0}
+.ctx-link .who-mark{width:36px;height:36px;flex:none;border-radius:var(--r-circle);display:grid;place-items:center;font-size:13px;font-weight:800}
+.ctx-link a{font-size:13.5px;font-weight:700;color:var(--ink)}
+.ctx-link a:hover{color:var(--acc-ink)}
+.ctx-link span{display:block;font-size:11.5px;color:var(--muted)}
+
+.gv-side-stack{display:flex;flex-direction:column;gap:16px}
+
+/* fotoğraf alanı — crm-santiye-bildirimler.html feed kartıyla AYNI desen (<img> DEĞİL,
+   div + background-image cover/center; gerçek foto yok, token-türevi gradyan + tip ikonu) */
+.gd-photo-card{overflow:hidden}
+.gd-photo-card .gd-label{padding:18px 18px 0;margin-bottom:12px}
+.post-photo{aspect-ratio:16/9;background-size:cover;background-position:center;position:relative;display:flex;align-items:center;justify-content:center}
+.post-photo i{font-size:34px;color:rgba(255,255,255,.9)}
+.post-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,8,55,0) 55%,rgba(2,8,55,.34) 100%)}
+.post-tag{position:absolute;left:14px;bottom:12px;z-index:1;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:var(--r-pill);background:rgba(255,255,255,.92);color:var(--ink);backdrop-filter:blur(2px)}
+.post-tag i{font-size:10.5px;color:inherit}
+.photo-vadi{background-image:linear-gradient(135deg, color-mix(in srgb, var(--acc) 55%, var(--gv-deep)) 0%, color-mix(in srgb, var(--acc) 18%, var(--gv-deep)) 100%)}
+.photo-liman{background-image:linear-gradient(135deg, color-mix(in srgb, var(--info) 60%, var(--gv-deep)) 0%, color-mix(in srgb, var(--info) 18%, var(--gv-deep)) 100%)}
+.photo-merkez{background-image:linear-gradient(135deg, color-mix(in srgb, var(--warn) 55%, var(--gv-deep)) 0%, color-mix(in srgb, var(--warn) 16%, var(--gv-deep)) 100%)}
+
+/* Gördüm aksiyonu — feed'deki post-meta/post-ack ile AYNI davranış (sayaç artırır) */
+.gd-ack-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.gd-ack-row .eye-cnt{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.post-ack{font-size:12.5px;font-weight:700;color:var(--acc-ink);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:4px 2px}
+.post-ack:hover{color:var(--acc-deep)}
+.post-ack.is-acked{color:var(--ok)}
+.post-ack.is-acked i{color:var(--ok)}
+
+/* ============ GÖRSEL ÜZERİNDE İŞARETLE — §9.2 (D-Dalga20) ============ */
+.photo-mark-btn{position:absolute;right:12px;top:12px;z-index:2;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;padding:7px 13px;border-radius:var(--r-pill);background:rgba(255,255,255,.92);color:var(--ink);border:none;cursor:pointer;transition:.18s var(--ease)}
+.photo-mark-btn:hover{background:#fff;color:var(--acc-ink)}
+
+.ver-section{padding:18px 22px}
+.ver-list{display:flex;flex-direction:column;gap:10px}
+.ver-row{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);flex-wrap:wrap}
+.ver-thumb{width:56px;height:40px;flex:none;border-radius:7px;background-size:cover;background-position:center;border:1px solid var(--line-2)}
+.ver-info{flex:1;min-width:140px}
+.ver-info b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
+.ver-info span{font-size:11.5px;color:var(--muted)}
+.ver-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ver-acts .btn{white-space:nowrap}
+
+/* editör modalı — .gv-modal-ov (kilitli, overlay) paylaşılır; kutu genişliği kendi sınıfımızda */
+.editor-modal{width:min(760px,94vw);max-height:92vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-lg);padding:22px;transform:translateY(10px) scale(.985);transition:transform .22s var(--ease)}
+.gv-modal-ov.open .editor-modal{transform:none}
+.editor-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.editor-head h3{font-size:16px;letter-spacing:-.01em}
+.editor-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px}
+.editor-close:hover{color:var(--ink)}
+.editor-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:var(--bg);border-radius:var(--r-md)}
+.et-group{display:flex;align-items:center;gap:6px}
+.et-btn{width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--paper);color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;transition:.15s var(--ease)}
+.et-btn:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
+.et-btn.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.1)}
+.et-color{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+.et-color.is-on{border-color:var(--ink)}
+.editor-canvas-wrap{border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;touch-action:none;line-height:0}
+#editorCanvas{width:100%;height:auto;display:block;cursor:crosshair;touch-action:none}
+.editor-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:12px}
+.editor-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+
+/* karşılaştırma lightbox — §12.3 */
+.compare-modal{width:min(880px,94vw);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-lg);padding:22px;transform:translateY(10px) scale(.985);transition:transform .22s var(--ease)}
+.gv-modal-ov.open .compare-modal{transform:none}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+@media(max-width:640px){.compare-grid{grid-template-columns:1fr}}
+.compare-col b{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.compare-img{aspect-ratio:16/9;border-radius:var(--r-md);background-size:cover;background-position:center;border:1px solid var(--line)}
+
+/* ============ YORUMLAR — §9.3 (crm-gorev-detay.html #201-235'ten BİREBİR devralınan
+   görsel dil; ayrı dosya olduğu için sayfa-lokal kopya — ortak CSS'e taşınmadı) ============ */
+.cmt-row{display:flex;gap:12px;padding:14px 0}
+.cmt-row:first-child{padding-top:0}
+.cmt-ava{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:800;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)}
+.cmt-body{flex:1;min-width:0;background:var(--bg);border-radius:var(--r-md);padding:11px 14px}
+.cmt-head{display:flex;align-items:baseline;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+.cmt-head b{font-size:12.5px;font-weight:700;color:var(--ink)}
+.cmt-head span{font-size:11px;color:var(--muted)}
+.cmt-text{font-size:13px;color:var(--ink-2);line-height:1.55}
+.cmt-tag{font-weight:700;color:var(--acc-ink);margin-left:3px}
+.cmt-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;flex-wrap:wrap}
+.cmt-read{font-size:10.5px;color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+.cmt-acts{display:flex;align-items:center;gap:12px}
+.cmt-act{font-size:11px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;padding:0}
+.cmt-act:hover{color:var(--acc-ink)}
+.cmt-act.danger:hover{color:var(--danger)}
+.cmt-compose{display:flex;gap:12px;padding-top:16px;margin-top:6px;border-top:1px solid var(--line);position:relative}
+.cmt-compose .cmt-ava{background:var(--bg);color:var(--muted)}
+.cmt-compose-field{flex:1;display:flex;gap:8px;flex-wrap:wrap}
+.cmt-compose-field input{flex:1;min-width:120px}
+.cmt-compose-field .ia-btn{cursor:pointer}
+.cmt-attach{display:flex;align-items:center;gap:9px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line-2)}
+.cmt-attach-photo{width:44px;height:44px;flex:none;border-radius:8px;background-size:cover;background-position:center;display:grid;place-items:center;color:rgba(255,255,255,.9);font-size:14px}
+.cmt-attach-name{font-size:11.5px;color:var(--muted);font-weight:600}
+.cmt-file-pending{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2);font-weight:600;margin-top:10px;padding:8px 12px;background:var(--bg);border-radius:var(--r-sm)}
+.cmt-file-remove{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px}
+.cmt-file-remove:hover{color:var(--danger)}
+.cmt-pending-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.cmt-pending-tags:empty{display:none}
+
+.cmt-mentions{position:absolute;bottom:calc(100% + 6px);left:46px;z-index:5;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--sh-lg);min-width:200px;max-height:220px;overflow:auto;padding:6px}
+.cmt-mentions button{display:block;width:100%;text-align:left;padding:7px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2);background:none;border:none;border-radius:var(--r-sm);cursor:pointer}
+.cmt-mentions button:hover{background:var(--bg);color:var(--ink)}
+
+.cmt-type-row{margin-bottom:12px}
+.tip-group{display:flex;gap:8px;flex-wrap:wrap}
+.tip-opt{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
+.tip-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.tip-opt.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+
+.ic-note-card{background:var(--warn-tint);border-color:color-mix(in srgb, var(--warn) 35%, var(--line))}
+.ic-note-card .gd-label{color:color-mix(in srgb, var(--warn) 70%, black)}
+</style>
+</head>
+<body data-sec="santiye" data-screen="bildirimler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <!-- statik bake — DEFAULT kayıt (bil=001, Hasan Demirci / Vadi, ?bil= yoksa)
+         tam render VERBATIM; JS yüklenince aynı mount innerHTML ile ezilir, ?bil= farklı
+         kayda geçerse devralır — D18-B2 -->
+    <div id="bilRoot"><div class="gd-head"><div><div class="gd-eyebrow">Vadi Konakları · Saha Bildirimi #SBL-2026-001</div><h1>B Blok temel betonu bugün tamamlandı</h1><div class="gd-badges"><span class="gtag"><i class="fa-solid fa-helmet-safety"></i> Yapı İlerlemesi</span><span class="gstat info" id="yeniBadge">Yeni</span></div></div><div class="ph-actions"><a class="btn btn-ghost btn-sm" href="crm-santiye-bildirimler.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a></div></div><div class="gd-grid"><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Bildirim Metni</div><p class="gd-desc">B Blok temel betonu bugün tamamlandı, ekip 3. kat kalıp işine geçiyor. Döküm sırasında hava koşulları uygundu, numune küpleri laboratuvara gönderildi.</p></div><div class="gd-block"><div class="gd-ack-row"><span class="eye-cnt" id="eyeCnt"><i class="fa-solid fa-eye"></i> 6 kişi gördü</span><button class="post-ack" id="ackBtn" data-no-confirm=""><i class="fa-regular fa-thumbs-up"></i> Gördüm</button></div></div></div><div class="gv-card gd-photo-card" style="position:relative"><div class="gd-label">Fotoğraf</div><button type="button" class="photo-mark-btn" id="markBtn" data-no-confirm hidden><i class="fa-solid fa-pen-ruler"></i> İşaretle</button><div class="post-photo photo-vadi"><i class="fa-solid fa-helmet-safety"></i><span class="post-tag"><i class="fa-solid fa-helmet-safety"></i> Yapı İlerlemesi</span></div></div><div class="gv-card"><div class="ver-section"><div class="gd-label">Revize Versiyonları</div><div class="ver-empty" id="verEmpty" style="font-size:12.5px;color:var(--muted)">Henüz revize versiyonu yok — görseli işaretleyip ilk versiyonu oluşturun.</div><div class="ver-list" id="verList"></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">Yorumlar <span class="gf-hint" style="text-transform:none;letter-spacing:0;font-weight:600">— tüm bildirim erişimi olan roller görür</span></div><div class="cmt-type-row" id="cmtTypeGroup"><div class="tip-group"><label class="tip-opt is-on" data-t="genel"><input type="radio" name="cmttype" value="genel" checked> Genel</label><label class="tip-opt" data-t="teknik"><input type="radio" name="cmttype" value="teknik"> Teknik</label><label class="tip-opt" data-t="isg"><input type="radio" name="cmttype" value="isg"> İSG</label><label class="tip-opt" data-t="revize-talebi"><input type="radio" name="cmttype" value="revize-talebi"> Revize Talebi</label><label class="tip-opt" data-t="yonetim-notu"><input type="radio" name="cmttype" value="yonetim-notu"> Yönetim Notu</label></div></div><div id="gdComments"><div class="cmt-row" data-cidx="0"><div class="cmt-ava">ES</div><div class="cmt-body"><div class="cmt-head"><b>Elif Sarıkaya</b><span class="gstat danger">Revize Talebi</span><span>2 Temmuz, 11:20</span></div><div class="cmt-text">B Blok temel betonunun kuzeydoğu köşesinde yüzey pürüzlülüğü görünüyor — bu bölgenin tekrar kontrol edilmesi gerekiyor.<span class="cmt-tag">@Hasan Demirci</span> <span class="cmt-tag">#Teknik Ofis</span></div><div class="cmt-foot"><span class="cmt-read"><i class="fa-solid fa-check-double"></i> 4 kişi gördü</span></div></div></div><div class="cmt-row" data-cidx="1"><div class="cmt-ava">HD</div><div class="cmt-body"><div class="cmt-head"><b>Hasan Demirci</b><span class="gtag">Genel</span><span>2 Temmuz, 13:05</span></div><div class="cmt-text">Kontrol için ekip yarın sabah sahada olacak, bulguları fotoğraflayıp paylaşacağım.</div><div class="cmt-foot"><span class="cmt-read"><i class="fa-solid fa-check-double"></i> 2 kişi gördü</span></div></div></div></div><div class="cmt-compose"><div class="cmt-ava" id="cmtMeAva">·</div><div class="cmt-compose-field"><input type="text" placeholder="Yorum yazın…" id="cmtInput"><button type="button" class="ia-btn" id="cmtTagKisi" data-tip="Kişi etiketle" aria-label="Kişi etiketle" data-no-confirm><i class="fa-solid fa-at"></i></button><button type="button" class="ia-btn" id="cmtTagDept" data-tip="Departman etiketle" aria-label="Departman etiketle" data-no-confirm><i class="fa-solid fa-building"></i></button><label class="ia-btn" for="cmtFile" data-tip="Fotoğraf/belge ekle" aria-label="Ek ekle"><i class="fa-regular fa-paperclip"></i></label><input type="file" id="cmtFile" accept="image/*,.pdf" hidden><button type="button" class="ia-btn" id="cmtVerAttach" data-tip="Revize edilmiş görsel ekle" aria-label="Revize görsel ekle" data-no-confirm><i class="fa-solid fa-pen-ruler"></i></button><button type="button" class="btn btn-acc btn-sm" data-no-confirm id="cmtSend"><i class="fa-solid fa-paper-plane"></i> Gönder</button></div></div><div class="cmt-pending-tags" id="cmtPendingTags" hidden></div><div class="cmt-file-pending" id="cmtFilePending" hidden><i class="fa-solid fa-paperclip"></i> <span id="cmtFileName"></span> <button type="button" class="cmt-file-remove" id="cmtFileRemove" aria-label="Eki kaldır"><i class="fa-solid fa-xmark"></i></button></div></div></div><div class="gv-card ic-note-card" id="icNotBlock" data-view="ic-not" hidden><div class="gd-block"><div class="gd-label"><i class="fa-solid fa-lock"></i> İç Notlar <span class="gtag" style="background:var(--paper);margin-left:6px">Yalnız Yönetim Görür</span></div><p style="font-size:12px;color:var(--ink-2);margin-bottom:14px;line-height:1.6">Bu alan bildirim akışına kapalıdır; yalnız yönetim/teknik rolleri görür ve not ekleyebilir.</p><div id="icNotList"><div class="cmt-row"><div class="cmt-ava" style="background:var(--paper)">MD</div><div class="cmt-body" style="background:var(--paper)"><div class="cmt-head"><b>Murat Denizli</b><span>2 Temmuz, 14:00</span></div><div class="cmt-text">Kuzeydoğu köşe sorunuysa bu üçüncü tekrar — kalıp ekibiyle ayrıca konuşulmalı, gerekirse eğitim planlanır.</div></div></div></div><div class="cmt-compose"><div class="cmt-ava" id="icNotMeAva">·</div><div class="cmt-compose-field"><input type="text" placeholder="İç not yazın…" id="icNotInput"><button class="btn btn-sm" data-no-confirm id="icNotSend" style="background:color-mix(in srgb, var(--warn) 85%, black);color:#fff"><i class="fa-solid fa-lock"></i> Not Ekle</button></div></div></div></div></div><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Bildirim Bilgileri</div><div class="ctx-row"><span class="ctx-lbl">Tarih</span><span class="ctx-val">2 Temmuz 2026, 09:40</span></div><div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val"><a href="crm-santiye-detay.html?santiye=vadi" style="color:var(--acc-ink);font-weight:700">Vadi Konakları</a></span></div><div class="ctx-row"><span class="ctx-lbl">Tür</span><span class="ctx-val">Yapı İlerlemesi</span></div><div class="ctx-row"><span class="ctx-lbl">Konum / Blok</span><span class="ctx-val">B Blok, Temel</span></div><div class="ctx-row"><span class="ctx-lbl">Aciliyet</span><span class="ctx-val">Bilgi Amaçlı</span></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">Paylaşan</div><div class="ctx-link"><div class="who-mark" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)">HD</div><div><a href="crm-personel-detay.html?per=004">Hasan Demirci</a><span>Şantiye Şefi · Vadi Konakları</span></div></div></div></div></div></div></div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ---- SBL-2026-0## SAHA BİLDİRİM SERİSİ (D18-T1 — shell.js DALGA 18 kanoniği) —
+     kaynak: crm-santiye-bildirimler.html #feedList DOM sırası 001-008 BİREBİR (kişi/
+     şantiye/tarih/tür/metin/gördü sayısı). 001 Hasan Demirci DEFAULT. baslik alanı
+     gövde metninin ilk tümcesinden VERBATİM alınmış kısa başlıktır (uydurma yok). ---- */
+  var BIL = {
+    '001':{ no:'SBL-2026-001', kisi:'Hasan Demirci', ini:'HD', per:'004', pozisyon:'Şantiye Şefi',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'2 Temmuz 2026, 09:40',
+      tur:'Yapı İlerlemesi', turIcon:'fa-helmet-safety',
+      baslik:'B Blok temel betonu bugün tamamlandı',
+      body:'B Blok temel betonu bugün tamamlandı, ekip 3. kat kalıp işine geçiyor. Döküm sırasında hava koşulları uygundu, numune küpleri laboratuvara gönderildi.',
+      konum:'B Blok, Temel', aciliyet:'Bilgi Amaçlı',
+      gordu:6, yeni:true, avaBg:'rgba(var(--acc-rgb),.14)', avaColor:'var(--acc-ink)', avaBorder:false,
+      /* §9.2/§9.3 örnek senaryo (doküman §9.2 kullanım örneği): teknik müdür sorunlu alanı
+         işaretler + not ekler, ilgili kişiye/departmana bildirim gider. */
+      comments:[
+        { who:'Elif Sarıkaya', date:'2 Temmuz, 11:20', type:'revize-talebi',
+          text:'B Blok temel betonunun kuzeydoğu köşesinde yüzey pürüzlülüğü görünüyor — bu bölgenin tekrar kontrol edilmesi gerekiyor.',
+          kisiEtiket:['Hasan Demirci'], departmanEtiket:['Teknik Ofis'], gordu:4 },
+        { who:'Hasan Demirci', date:'2 Temmuz, 13:05', type:'genel',
+          text:'Kontrol için ekip yarın sabah sahada olacak, bulguları fotoğraflayıp paylaşacağım.', gordu:2 }
+      ],
+      icNotes:[
+        { who:'Murat Denizli', date:'2 Temmuz, 14:00',
+          text:'Kuzeydoğu köşe sorunuysa bu üçüncü tekrar — kalıp ekibiyle ayrıca konuşulmalı, gerekirse eğitim planlanır.' }
+      ] },
+    '002':{ no:'SBL-2026-002', kisi:'İbrahim Sönmez', ini:'İS', per:'011', pozisyon:'Formen',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'2 Temmuz 2026, 08:15',
+      tur:'Elektrik/Mekanik', turIcon:'fa-bolt',
+      baslik:'Zemin kat elektrik tesisatı döşemesi başladı',
+      body:'Zemin kat elektrik tesisatı döşemesi başladı, kablo kanalları B ve C aksında tamamlandı.',
+      gordu:3, yeni:true, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '003':{ no:'SBL-2026-003', kisi:'Aylin Koç', ini:'AK', per:'005', pozisyon:'Şantiye Şefi',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'1 Temmuz 2026, 16:20',
+      tur:'Yapı İlerlemesi', turIcon:'fa-helmet-safety',
+      baslik:'Çelik konstrüksiyon montajı 3. modülde tamamlandı',
+      body:'Çelik konstrüksiyon montajı 3. modülde tamamlandı; vinç operasyonu güvenlik çemberi kapatılarak yürütüldü, kaza/ramak kala kaydı yok.',
+      gordu:9, yeni:true, avaBg:'var(--info-tint)', avaColor:'var(--info)', avaBorder:false },
+    '004':{ no:'SBL-2026-004', kisi:'Şükrü Aslan', ini:'ŞA', per:'016', pozisyon:'Formen',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'1 Temmuz 2026, 11:05',
+      tur:'İSG', turIcon:'fa-shield-halved',
+      baslik:'Haftalık İSG toplantısı yapıldı',
+      body:'Haftalık İSG toplantısı yapıldı; baret, emniyet kemeri ve iş ayakkabısı kontrolü tüm ekipte tamamlandı, eksik ekipman yok.',
+      gordu:5, yeni:true, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '005':{ no:'SBL-2026-005', kisi:'Ömer Taşkın', ini:'ÖT', per:'006', pozisyon:'Şantiye Şefi',
+      siteKey:'merkez', site:'Merkez Şantiye', tarih:'30 Haziran 2026, 14:50',
+      tur:'Atölye/Depo', turIcon:'fa-warehouse',
+      baslik:'Atölye çatı kaplama işi yaklaşık %80 seviyesinde',
+      body:'Atölye çatı kaplama işi yaklaşık %80 seviyesinde; kalan panel siparişi bu hafta içinde tamamlanacak.',
+      gordu:4, yeni:false, avaBg:'var(--warn-tint)', avaColor:'var(--warn)', avaBorder:false },
+    '006':{ no:'SBL-2026-006', kisi:'Recep Yaman', ini:'RY', per:'020', pozisyon:'Formen',
+      siteKey:'merkez', site:'Merkez Şantiye', tarih:'30 Haziran 2026, 10:30',
+      tur:'Malzeme Teslimatı', turIcon:'fa-truck-pickup',
+      baslik:'Yeni gelen kalıp kerestesi sahaya indirildi',
+      body:'Yeni gelen kalıp kerestesi sahaya indirildi ve depo alanında istiflendi; irsaliye Satın Alma\'ya iletildi.',
+      gordu:2, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '007':{ no:'SBL-2026-007', kisi:'Metin Çetin', ini:'MÇ', per:'018', pozisyon:'Kaynakçı',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'29 Haziran 2026, 09:00',
+      tur:'Kalite Kontrol', turIcon:'fa-magnifying-glass',
+      baslik:'Kaynak noktalarının kalite kontrolü tamamlandı',
+      body:'Kaynak noktalarının kalite kontrolü tamamlandı; tutanak ve fotoğraflar ekte, revize gereken nokta çıkmadı.',
+      gordu:3, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '008':{ no:'SBL-2026-008', kisi:'Ramazan Kılıç', ini:'RK', per:'012', pozisyon:'Kalıpçı',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'28 Haziran 2026, 15:40',
+      tur:'Yapı İlerlemesi', turIcon:'fa-helmet-safety',
+      baslik:'3. kat perde kalıbı kuruldu',
+      body:'3. kat perde kalıbı kuruldu, demir donatı kontrolü için Teknik Müdür\'ün onayı bekleniyor.',
+      konum:'B Blok, 3. Kat', aciliyet:'Takip Gerekli',
+      gordu:4, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    /* ---- 009-022: D-Dalga20 §9.4, 14 tür genişlemesi için eklenen kayıtlar — mevcut 8
+       kişi/şantiyeden türetildi (crm-santiye-bildirimler.html #feedList ile BİREBİR) ---- */
+    '009':{ no:'SBL-2026-009', kisi:'Hasan Demirci', ini:'HD', per:'004', pozisyon:'Şantiye Şefi',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'27 Haziran 2026, 14:20',
+      tur:'Beton Dökümü', turIcon:'fa-trowel',
+      baslik:'C Blok perde betonu bugün döküldü',
+      body:'C Blok perde betonu bugün döküldü, numune küpleri laboratuvara gönderildi.',
+      gordu:5, yeni:false, avaBg:'rgba(var(--acc-rgb),.14)', avaColor:'var(--acc-ink)', avaBorder:false },
+    '010':{ no:'SBL-2026-010', kisi:'Şükrü Aslan', ini:'ŞA', per:'016', pozisyon:'Formen',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'26 Haziran 2026, 10:10',
+      tur:'Hasar/Arıza', turIcon:'fa-house-crack',
+      baslik:'Forklift hidrolik hortumunda sızıntı tespit edildi',
+      body:'Forklift hidrolik hortumunda sızıntı tespit edildi, ekipman geçici olarak devre dışı bırakıldı.',
+      gordu:6, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '011':{ no:'SBL-2026-011', kisi:'İbrahim Sönmez', ini:'İS', per:'011', pozisyon:'Formen',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'25 Haziran 2026, 09:00',
+      tur:'İSG Uygunsuzluğu', turIcon:'fa-triangle-exclamation',
+      baslik:'3. kat kalıp iskelesinde iki işçinin emniyet kemeri takmadığı tespit edildi',
+      body:'3. kat kalıp iskelesinde iki işçinin emniyet kemeri takmadığı tespit edildi, uyarı yapıldı ve İSG sorumlusuna bildirildi.',
+      gordu:8, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '012':{ no:'SBL-2026-012', kisi:'Ömer Taşkın', ini:'ÖT', per:'006', pozisyon:'Şantiye Şefi',
+      siteKey:'merkez', site:'Merkez Şantiye', tarih:'24 Haziran 2026, 16:45',
+      tur:'Makine Arızası', turIcon:'fa-gears',
+      baslik:'Atölyedeki kompresörde arıza oluştu',
+      body:'Atölyedeki kompresörde arıza oluştu, yedek parça siparişi Satın Alma\'ya iletildi; iş bu süreçte mobil kompresörle sürdürülüyor.',
+      gordu:4, yeni:false, avaBg:'var(--warn-tint)', avaColor:'var(--warn)', avaBorder:false },
+    '013':{ no:'SBL-2026-013', kisi:'Hasan Demirci', ini:'HD', per:'004', pozisyon:'Şantiye Şefi',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'23 Haziran 2026, 11:30',
+      tur:'Taşeron Sahada', turIcon:'fa-people-group',
+      baslik:'Demir-Beton İnş. Ltd. ekibi bugün 10 kişilik kadrosundan 8\'iyle sahada',
+      body:'Demir-Beton İnş. Ltd. ekibi bugün 10 kişilik kadrosundan 8\'iyle sahada, B Blok demir donatı işine devam ediyor.',
+      gordu:3, yeni:false, avaBg:'rgba(var(--acc-rgb),.14)', avaColor:'var(--acc-ink)', avaBorder:false },
+    '014':{ no:'SBL-2026-014', kisi:'Aylin Koç', ini:'AK', per:'005', pozisyon:'Şantiye Şefi',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'22 Haziran 2026, 17:00',
+      tur:'İş Tamamlandı', turIcon:'fa-circle-check',
+      baslik:'3. modül çelik konstrüksiyon montajı tamamlandı',
+      body:'3. modül çelik konstrüksiyon montajı tamamlandı, teslim tutanağı hazırlandı.',
+      gordu:6, yeni:false, avaBg:'var(--info-tint)', avaColor:'var(--info)', avaBorder:false },
+    '015':{ no:'SBL-2026-015', kisi:'Hasan Demirci', ini:'HD', per:'004', pozisyon:'Şantiye Şefi',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'21 Haziran 2026, 10:15',
+      tur:'Revize Gerekiyor', turIcon:'fa-rotate-left',
+      baslik:'B Blok 3. kat perde kalıbı ölçüsünde sapma tespit edildi',
+      body:'B Blok 3. kat perde kalıbı ölçüsünde sapma tespit edildi, teknik ofisten revize onayı bekleniyor.',
+      gordu:5, yeni:false, avaBg:'rgba(var(--acc-rgb),.14)', avaColor:'var(--acc-ink)', avaBorder:false,
+      comments:[
+        { who:'Elif Sarıkaya', date:'21 Haziran, 12:00', type:'revize-talebi',
+          text:'Ölçü sapması B Blok geneline yayılmış olabilir, teknik ofis tüm katı yeniden ölçsün.',
+          kisiEtiket:['Hasan Demirci'], departmanEtiket:['Teknik Ofis'], gordu:3 }
+      ] },
+    '016':{ no:'SBL-2026-016', kisi:'Aylin Koç', ini:'AK', per:'005', pozisyon:'Şantiye Şefi',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'20 Haziran 2026, 15:20',
+      tur:'Acil Durum', turIcon:'fa-siren', aciliyet:'Acil',
+      baslik:'Vinç operasyonu sırasında ani rüzgar nedeniyle çalışma durduruldu',
+      body:'Vinç operasyonu sırasında ani rüzgar nedeniyle çalışma durduruldu, ekip güvenli alana çekildi; acil durum protokolü uygulandı.',
+      gordu:10, yeni:false, avaBg:'var(--info-tint)', avaColor:'var(--info)', avaBorder:false,
+      comments:[
+        { who:'Murat Denizli', date:'20 Haziran, 16:10', type:'yonetim-notu',
+          text:'Ekip güvenliği önceliğimiz, vinç operasyonu hava durumu netleşene kadar durdurulsun.',
+          departmanEtiket:['Şantiye Ekibi'], gordu:6 }
+      ] },
+    '017':{ no:'SBL-2026-017', kisi:'Recep Yaman', ini:'RY', per:'020', pozisyon:'Formen',
+      siteKey:'merkez', site:'Merkez Şantiye', tarih:'19 Haziran 2026, 08:10',
+      tur:'Hava Koşulu Etkisi', turIcon:'fa-cloud-rain',
+      baslik:'Beklenmeyen sağanak nedeniyle atölye çatı işi bugün durduruldu',
+      body:'Beklenmeyen sağanak nedeniyle atölye çatı işi bugün durduruldu, program bir gün ötelendi.',
+      gordu:4, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '018':{ no:'SBL-2026-018', kisi:'Aylin Koç', ini:'AK', per:'005', pozisyon:'Şantiye Şefi',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'18 Haziran 2026, 13:40',
+      tur:'Denetim Notu', turIcon:'fa-clipboard-check',
+      baslik:'Haftalık kalite denetiminde temel kalıp toleransları kontrol edildi',
+      body:'Haftalık kalite denetiminde temel kalıp toleransları kontrol edildi, iki noktada küçük sapma raporlandı.',
+      gordu:5, yeni:false, avaBg:'var(--info-tint)', avaColor:'var(--info)', avaBorder:false },
+    '019':{ no:'SBL-2026-019', kisi:'Hasan Demirci', ini:'HD', per:'004', pozisyon:'Şantiye Şefi',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'17 Haziran 2026, 11:00',
+      tur:'Hakediş Kanıt Fotoğrafı', turIcon:'fa-file-invoice-dollar',
+      baslik:'Haziran dönemi hakediş kanıtı için B Blok temel imalatının fotoğrafları çekildi',
+      body:'Haziran dönemi hakediş kanıtı için B Blok temel imalatının fotoğrafları çekildi, muhasebeye iletildi.',
+      gordu:3, yeni:false, avaBg:'rgba(var(--acc-rgb),.14)', avaColor:'var(--acc-ink)', avaBorder:false },
+    '020':{ no:'SBL-2026-020', kisi:'Ömer Taşkın', ini:'ÖT', per:'006', pozisyon:'Şantiye Şefi',
+      siteKey:'merkez', site:'Merkez Şantiye', tarih:'16 Haziran 2026, 09:30',
+      tur:'Öncesi/Sonrası Kaydı', turIcon:'fa-images',
+      baslik:'Atölye çatı kaplaması öncesi/sonrası karşılaştırma kaydı alındı',
+      body:'Atölye çatı kaplaması öncesi/sonrası karşılaştırma kaydı alındı, %80 tamamlanma net görülüyor.',
+      gordu:4, yeni:false, avaBg:'var(--warn-tint)', avaColor:'var(--warn)', avaBorder:false },
+    '021':{ no:'SBL-2026-021', kisi:'Şükrü Aslan', ini:'ŞA', per:'016', pozisyon:'Formen',
+      siteKey:'liman', site:'Liman Lojistik Merkezi', tarih:'15 Haziran 2026, 14:50',
+      tur:'Çevre', turIcon:'fa-leaf',
+      baslik:'Şantiye çevresine yağmur suyu drenaj hattı için geçici toprak set çekildi',
+      body:'Şantiye çevresine yağmur suyu drenaj hattı için geçici toprak set çekildi, çevre etkisi azaltıldı.',
+      gordu:3, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true },
+    '022':{ no:'SBL-2026-022', kisi:'İbrahim Sönmez', ini:'İS', per:'011', pozisyon:'Formen',
+      siteKey:'vadi', site:'Vadi Konakları', tarih:'14 Haziran 2026, 16:10',
+      tur:'Şantiye İlerleme Kaydı', turIcon:'fa-chart-line',
+      baslik:'Haftalık şantiye ilerleme kaydı: 3. kat kalıp %60 tamamlandı',
+      body:'Haftalık şantiye ilerleme kaydı: 3. kat kalıp %60 tamamlandı, malzeme akışı planlandığı gibi.',
+      gordu:4, yeni:false, avaBg:'var(--bg)', avaColor:'var(--ink-2)', avaBorder:true }
+  };
+  var DEFAULT_ID = '001';
+
+  function normalize(raw){
+    if(!raw) return null;
+    var m = String(raw).toLowerCase().match(/(\d{3})\s*$/);
+    return m ? m[1] : null;
+  }
+
+  var q = new URLSearchParams(location.search);
+  var rawParam = q.get('bil');
+  var id = rawParam === null ? DEFAULT_ID : normalize(rawParam);
+  var rec = id ? BIL[id] : null;
+
+  if(!rec){
+    GV.crumb('Kayıt bulunamadı');
+    gvNotFound({
+      mount: '#bilRoot',
+      code: rawParam ? rawParam.toUpperCase() : null,
+      tur: 'saha bildirimi',
+      listHref: 'crm-santiye-bildirimler.html', listLbl: 'Bildirim listesine dön',
+      defHref: 'crm-santiye-bildirim-detay.html', defLbl: 'İlk bildirimi aç'
+    });
+    return;
+  }
+
+  /* şef budaması — yalnız Vadi Konakları bildirimlerini görebilir; başka şantiyenin
+     kaydına doğrudan URL ile gidilirse sessizce DEFAULT'a (bil=001, Vadi) döner
+     (crm-santiye-detay.html'deki aynı desen; feed'de kartlar zaten kalıcı kaldırılıyor) */
+  if(GV.role === 'sef' && rec.siteKey !== 'vadi'){
+    location.replace('crm-santiye-bildirim-detay.html');
+    return;
+  }
+
+  GV.crumb(rec.no);
+  document.title = rec.kisi + ' — Saha Bildirimi — Gavia CRM';
+
+  /* §17 — arşiv durumu; onay/görülme akışından (yeni/görüldü) BAĞIMSIZ ayrı bir eksen,
+     bu sayfa oturumu içinde tutulur (repo genelindeki sayfa-lokal state konvansiyonu). */
+  var isArchived = false;
+
+  var root = document.getElementById('bilRoot');
+  root.innerHTML = ''
+    + '<div class="gd-head">'
+    +   '<div>'
+    +     '<div class="gd-eyebrow">' + rec.site + ' · Saha Bildirimi #' + rec.no + '</div>'
+    +     '<h1>' + rec.baslik + '</h1>'
+    +     '<div class="gd-badges" id="bilBadges">'
+    +       '<span class="gtag"><i class="fa-solid ' + rec.turIcon + '"></i> ' + rec.tur + '</span>'
+    +       (rec.yeni ? '<span class="gstat info" id="yeniBadge">Yeni</span>' : '<span class="gstat off" id="yeniBadge">Görüldü</span>')
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="ph-actions">'
+    +     '<a class="btn btn-ghost btn-sm" href="crm-santiye-bildirimler.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a>'
+    +     '<a class="btn btn-ghost btn-sm" href="crm-santiye-bildirim-form.html?mod=duzenle&bil=' + id + '"><i class="fa-solid fa-pen"></i> Düzenle</a>'
+    +     '<button type="button" class="btn btn-sm btn-danger" data-no-confirm id="bilArsivBtn"><i class="fa-solid fa-box-archive"></i> Arşivle</button>'
+    +     '<a class="btn btn-ghost btn-sm" href="crm-ayarlar-log.html" data-no-confirm><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişi</a>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="gd-grid">'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label">Bildirim Metni</div>'
+    +         '<p class="gd-desc">' + rec.body + '</p>'
+    +       '</div>'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-ack-row">'
+    +           '<span class="eye-cnt" id="eyeCnt"><i class="fa-solid fa-eye"></i> ' + rec.gordu + ' kişi gördü</span>'
+    +           '<button class="post-ack" id="ackBtn" data-no-confirm><i class="fa-regular fa-thumbs-up"></i> Gördüm</button>'
+    +         '</div>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="gv-card gd-photo-card" style="position:relative">'
+    +       '<div class="gd-label">Fotoğraf</div>'
+    +       '<button type="button" class="photo-mark-btn" id="markBtn" data-no-confirm hidden><i class="fa-solid fa-pen-ruler"></i> İşaretle</button>'
+    +       '<div class="post-photo photo-' + rec.siteKey + '"><i class="fa-solid ' + rec.turIcon + '"></i><span class="post-tag"><i class="fa-solid ' + rec.turIcon + '"></i> ' + rec.tur + '</span></div>'
+    +     '</div>'
+    +     '<div class="gv-card">'
+    +       '<div class="ver-section">'
+    +         '<div class="gd-label">Revize Versiyonları</div>'
+    +         '<div class="ver-empty" id="verEmpty" style="font-size:12.5px;color:var(--muted)">Henüz revize versiyonu yok — görseli işaretleyip ilk versiyonu oluşturun.</div>'
+    +         '<div class="ver-list" id="verList"></div>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label">Yorumlar <span class="gf-hint" style="text-transform:none;letter-spacing:0;font-weight:600">— tüm bildirim erişimi olan roller görür</span></div>'
+    +         '<div class="cmt-type-row" id="cmtTypeGroup"><div class="tip-group">'
+    +           '<label class="tip-opt is-on" data-t="genel"><input type="radio" name="cmttype" value="genel" checked> Genel</label>'
+    +           '<label class="tip-opt" data-t="teknik"><input type="radio" name="cmttype" value="teknik"> Teknik</label>'
+    +           '<label class="tip-opt" data-t="isg"><input type="radio" name="cmttype" value="isg"> İSG</label>'
+    +           '<label class="tip-opt" data-t="revize-talebi"><input type="radio" name="cmttype" value="revize-talebi"> Revize Talebi</label>'
+    +           '<label class="tip-opt" data-t="yonetim-notu"><input type="radio" name="cmttype" value="yonetim-notu"> Yönetim Notu</label>'
+    +         '</div></div>'
+    +         '<div id="gdComments"></div>'
+    +         '<div class="cmt-compose">'
+    +           '<div class="cmt-ava" id="cmtMeAva">·</div>'
+    +           '<div class="cmt-compose-field">'
+    +             '<input type="text" placeholder="Yorum yazın…" id="cmtInput">'
+    +             '<button type="button" class="ia-btn" id="cmtTagKisi" data-tip="Kişi etiketle" aria-label="Kişi etiketle" data-no-confirm><i class="fa-solid fa-at"></i></button>'
+    +             '<button type="button" class="ia-btn" id="cmtTagDept" data-tip="Departman etiketle" aria-label="Departman etiketle" data-no-confirm><i class="fa-solid fa-building"></i></button>'
+    +             '<label class="ia-btn" for="cmtFile" data-tip="Fotoğraf/belge ekle" aria-label="Ek ekle"><i class="fa-regular fa-paperclip"></i></label>'
+    +             '<input type="file" id="cmtFile" accept="image/*,.pdf" hidden>'
+    +             '<button type="button" class="ia-btn" id="cmtVerAttach" data-tip="Revize edilmiş görsel ekle" aria-label="Revize görsel ekle" data-no-confirm><i class="fa-solid fa-pen-ruler"></i></button>'
+    +             '<button type="button" class="btn btn-acc btn-sm" data-no-confirm id="cmtSend"><i class="fa-solid fa-paper-plane"></i> Gönder</button>'
+    +           '</div>'
+    +         '</div>'
+    +         '<div class="cmt-pending-tags" id="cmtPendingTags" hidden></div>'
+    +         '<div class="cmt-file-pending" id="cmtFilePending" hidden><i class="fa-solid fa-paperclip"></i> <span id="cmtFileName"></span> <button type="button" class="cmt-file-remove" id="cmtFileRemove" aria-label="Eki kaldır"><i class="fa-solid fa-xmark"></i></button></div>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="gv-card ic-note-card" id="icNotBlock" data-view="ic-not" hidden>'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label"><i class="fa-solid fa-lock"></i> İç Notlar <span class="gtag" style="background:var(--paper);margin-left:6px">Yalnız Yönetim Görür</span></div>'
+    +         '<p style="font-size:12px;color:var(--ink-2);margin-bottom:14px;line-height:1.6">Bu alan bildirim akışına kapalıdır; yalnız yönetim/teknik rolleri görür ve not ekleyebilir.</p>'
+    +         '<div id="icNotList"></div>'
+    +         '<div class="cmt-compose">'
+    +           '<div class="cmt-ava" id="icNotMeAva">·</div>'
+    +           '<div class="cmt-compose-field">'
+    +             '<input type="text" placeholder="İç not yazın…" id="icNotInput">'
+    +             '<button class="btn btn-sm" data-no-confirm id="icNotSend" style="background:color-mix(in srgb, var(--warn) 85%, black);color:#fff"><i class="fa-solid fa-lock"></i> Not Ekle</button>'
+    +           '</div>'
+    +         '</div>'
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="gv-side-stack">'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label">Bildirim Bilgileri</div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Tarih</span><span class="ctx-val">' + rec.tarih + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val"><a href="crm-santiye-detay.html?santiye=' + rec.siteKey + '" style="color:var(--acc-ink);font-weight:700">' + rec.site + '</a></span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Tür</span><span class="ctx-val">' + rec.tur + '</span></div>'
+    +         (rec.konum ? '<div class="ctx-row"><span class="ctx-lbl">Konum / Blok</span><span class="ctx-val">' + rec.konum + '</span></div>' : '')
+    +         (rec.aciliyet ? '<div class="ctx-row"><span class="ctx-lbl">Aciliyet</span><span class="ctx-val">' + rec.aciliyet + '</span></div>' : '')
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="gv-card">'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label">Paylaşan</div>'
+    +         '<div class="ctx-link">'
+    +           '<div class="who-mark" style="background:' + rec.avaBg + ';color:' + rec.avaColor + (rec.avaBorder ? ';border:1px solid var(--line)' : '') + '">' + rec.ini + '</div>'
+    +           '<div><a href="crm-personel-detay.html?per=' + rec.per + '">' + rec.kisi + '</a><span>' + rec.pozisyon + ' · ' + rec.site + '</span></div>'
+    +         '</div>'
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+
+  /* Gördüm aksiyonu — feed'deki .post-ack ile AYNI davranış: tek seferlik, sayaç artırır */
+  var ackBtn = document.getElementById('ackBtn');
+  ackBtn.addEventListener('click', function(){
+    if(ackBtn.classList.contains('is-acked')) return;
+    ackBtn.classList.add('is-acked');
+    ackBtn.innerHTML = '<i class="fa-solid fa-check"></i> Gördün';
+    var eye = document.getElementById('eyeCnt');
+    var n = parseInt(eye.textContent, 10) || 0;
+    eye.innerHTML = '<i class="fa-solid fa-eye"></i> ' + (n + 1) + ' kişi gördü';
+  });
+
+  /* §17 — Arşivle / Aktife Al. Bu sayfada statik kalıcı .gv-modal-ov yok — gvConfirm
+     doğrudan kullanılabilir. Arşiv durumu görülme/yeni rozetinden bağımsız ayrı eksen. */
+  var arsivBtn = document.getElementById('bilArsivBtn');
+  if(arsivBtn){
+    arsivBtn.addEventListener('click', function(){
+      var willArchive = !isArchived;
+      gvConfirm({
+        danger: willArchive, icon: willArchive ? 'fa-box-archive' : 'fa-rotate-left',
+        title: rec.no + (willArchive ? ' arşivlensin mi?' : ' yeniden aktif edilsin mi?'),
+        message: willArchive
+          ? 'Bu bildirim arşivlenecek; Saha Bildirimleri akışında varsayılan görünümde görünmeyecek, kayıt SİLİNMEZ ve "Arşivlenenleri Göster" ile her zaman erişilebilir kalır.'
+          : 'Bu bildirim yeniden aktif duruma alınacak ve akışta varsayılan görünüme dönecek.',
+        ok: willArchive ? 'Arşivle' : 'Aktife Al', cancel:'Vazgeç',
+        onConfirm:function(){
+          isArchived = willArchive;
+          arsivBtn.className = 'btn btn-sm ' + (isArchived ? 'btn-ghost' : 'btn-danger');
+          arsivBtn.innerHTML = '<i class="fa-solid ' + (isArchived ? 'fa-rotate-left' : 'fa-box-archive') + '"></i> ' + (isArchived ? 'Aktife Al' : 'Arşivle');
+          var badges = document.getElementById('bilBadges');
+          var existing = badges.querySelector('.gstat.off[data-arsiv-badge]');
+          if(isArchived && !existing){
+            badges.insertAdjacentHTML('beforeend', '<span class="gstat off" data-arsiv-badge>Arşivlendi</span>');
+          } else if(!isArchived && existing){
+            existing.remove();
+          }
+          gvToast(rec.no + (isArchived ? ' arşivlendi — işlem kaydına eklendi.' : ' yeniden aktif.'), {type: isArchived ? 'danger' : 'ok'});
+        }
+      });
+    });
+  }
+
+  function initials(name){ return String(name).split(' ').map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase(); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ============ REVİZE VERSİYONLARI — §9.2 (görsel işaretleme sonucu) ============ */
+  var curVersions = [];
+  function renderVersions(){
+    var wrap = document.getElementById('verList');
+    var emptyEl = document.getElementById('verEmpty');
+    if(!curVersions.length){ wrap.innerHTML = ''; emptyEl.hidden = false; return; }
+    emptyEl.hidden = true;
+    wrap.innerHTML = curVersions.map(function(v){
+      return '<div class="ver-row">'
+        + '<div class="ver-thumb" style="background-image:url(' + v.dataUrl + ')"></div>'
+        + '<div class="ver-info"><b>v' + v.n + ' · İşaretli Versiyon</b><span>' + v.ts + ' · ' + v.author + '</span></div>'
+        + '<div class="ver-acts">'
+        +   '<button type="button" class="btn btn-ghost btn-sm" data-vact="karsilastir" data-vn="' + v.n + '" data-no-confirm><i class="fa-solid fa-clone"></i> Karşılaştır</button>'
+        +   '<button type="button" class="btn btn-ghost btn-sm" data-vact="yorum" data-vn="' + v.n + '" data-no-confirm><i class="fa-regular fa-comment"></i> Yoruma Bağla</button>'
+        +   '<a class="btn btn-acc btn-sm" href="crm-gorev-form.html?kaynak=revize&bil=' + id + '"><i class="fa-solid fa-list-check"></i> Görev Oluştur</a>'
+        + '</div></div>';
+    }).join('');
+  }
+  renderVersions();
+  document.getElementById('verList').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-vact]'); if(!btn) return;
+    var vn = parseInt(btn.getAttribute('data-vn'), 10);
+    var v = curVersions[vn - 1]; if(!v) return;
+    if(btn.getAttribute('data-vact') === 'karsilastir'){
+      openCompare(v);
+    } else if(btn.getAttribute('data-vact') === 'yorum'){
+      comments.push({ who:(GV.R && GV.R.name) || 'Siz', date:'şimdi', type:'revize-talebi',
+        text:'İşaretli görsel (v' + v.n + ') eklendi — incelenmesi rica olunur.',
+        versionRef:{ label:'v' + v.n, dataUrl:v.dataUrl }, gordu:0 });
+      renderComments();
+      gvToast('Revize görsel yoruma bağlandı.', {type:'info'});
+    }
+  });
+
+  /* ============ YORUMLAR — §9.3 (crm-gorev-detay.html deseninden devralındı) ============ */
+  var comments = rec.comments || (rec.comments = []);
+  var MGMT_ROLES = ['superadmin','sahip','yonetim'];
+  function commentTypeBadge(type){
+    var M = {
+      'genel':'<span class="gtag">Genel</span>',
+      'teknik':'<span class="gstat info">Teknik</span>',
+      'isg':'<span class="gstat warn">İSG</span>',
+      'revize-talebi':'<span class="gstat danger">Revize Talebi</span>',
+      'yonetim-notu':'<span class="gtag mint">Yönetim Notu</span>',
+      'gorev-donusturuldu':'<span class="gstat ok">Göreve Dönüştürüldü</span>'
+    };
+    return M[type] || M.genel;
+  }
+  function commentRowHtml(c, idx){
+    var canManage = (GV.R && c.who === GV.R.name) || MGMT_ROLES.indexOf(GV.role) !== -1;
+    var tagsHtml = '';
+    (c.kisiEtiket || []).forEach(function(n){ tagsHtml += ' <span class="cmt-tag">@' + n + '</span>'; });
+    (c.departmanEtiket || []).forEach(function(n){ tagsHtml += ' <span class="cmt-tag">#' + n + '</span>'; });
+    var attachHtml = '';
+    if(c.attach){
+      attachHtml = '<div class="cmt-attach"><div class="cmt-attach-photo photo-' + rec.siteKey + '"><i class="fa-solid ' + (c.attach.ic || 'fa-image') + '"></i></div><span class="cmt-attach-name"><i class="fa-solid fa-paperclip"></i> ' + c.attach.name + ' · ' + c.attach.size + '</span></div>';
+    } else if(c.versionRef){
+      attachHtml = '<div class="cmt-attach"><div class="cmt-attach-photo" style="background-image:url(' + c.versionRef.dataUrl + ')"></div><span class="cmt-attach-name"><i class="fa-solid fa-pen-ruler"></i> İşaretli görsel ' + c.versionRef.label + '</span></div>';
+    }
+    return '<div class="cmt-row" data-cidx="' + idx + '">'
+      + '<div class="cmt-ava">' + initials(c.who) + '</div>'
+      + '<div class="cmt-body">'
+      +   '<div class="cmt-head"><b>' + c.who + '</b>' + commentTypeBadge(c.type) + '<span>' + c.date + (c.edited ? ' · düzenlendi' : '') + '</span></div>'
+      +   '<div class="cmt-text">' + escapeHtml(c.text) + tagsHtml + '</div>'
+      +   attachHtml
+      +   '<div class="cmt-foot">'
+      +     '<span class="cmt-read"><i class="fa-solid fa-check-double"></i> ' + (c.gordu || 0) + ' kişi gördü</span>'
+      +     '<div class="cmt-acts">'
+      +       (c.type !== 'gorev-donusturuldu' ? '<button type="button" class="cmt-act" data-cact="gorev" data-no-confirm>Göreve Dönüştür</button>' : '')
+      +       (canManage ? '<button type="button" class="cmt-act" data-cact="duzenle" data-no-confirm>Düzenle</button>' : '')
+      +       (canManage ? '<button type="button" class="cmt-act danger" data-cact="sil" data-no-confirm>Sil</button>' : '')
+      +     '</div>'
+      +   '</div>'
+      + '</div></div>';
+  }
+  function renderComments(){
+    var wrap = document.getElementById('gdComments');
+    if(!comments.length){
+      wrap.innerHTML = '<div class="gv-empty" style="padding:26px 8px"><div class="ge-ico"><i class="fa-solid fa-comments"></i></div><h4>Bu bildirime henüz yorum yapılmadı</h4><p>İlk yorumu siz yazın.</p></div>';
+      return;
+    }
+    wrap.innerHTML = comments.map(function(c, i){ return commentRowHtml(c, i); }).join('');
+  }
+  renderComments();
+
+  document.getElementById('gdComments').addEventListener('click', function(e){
+    var row = e.target.closest('.cmt-row'); if(!row) return;
+    var idx = parseInt(row.getAttribute('data-cidx'), 10);
+    var c = comments[idx]; if(!c) return;
+    var act = e.target.closest('[data-cact]'); if(!act) return;
+    var kind = act.getAttribute('data-cact');
+    if(kind === 'gorev'){
+      c.type = 'gorev-donusturuldu';
+      renderComments();
+      gvToast('Yorum göreve dönüştürülüyor…', {type:'info'});
+      setTimeout(function(){ location.href = 'crm-gorev-form.html?kaynak=bildirim&bil=' + id; }, 700);
+    } else if(kind === 'duzenle'){
+      var yeni = window.prompt('Yorumu düzenle:', c.text);
+      if(yeni !== null && yeni.trim()){
+        c.text = yeni.trim(); c.edited = true;
+        renderComments();
+        gvToast('Yorum güncellendi.');
+      }
+    } else if(kind === 'sil'){
+      gvConfirm({
+        danger:true, icon:'fa-trash', title:'Yorum silinsin mi?', message:'Bu yorum kalıcı olarak silinecek.',
+        ok:'Sil', cancel:'Vazgeç',
+        onConfirm:function(){
+          comments.splice(idx, 1);
+          renderComments();
+          gvToast('Yorum silindi.', {type:'danger'});
+        }
+      });
+    }
+  });
+
+  var cmtTypeGroup = document.getElementById('cmtTypeGroup');
+  var curType = 'genel';
+  if(cmtTypeGroup){
+    cmtTypeGroup.addEventListener('click', function(e){
+      var opt = e.target.closest('.tip-opt'); if(!opt) return;
+      cmtTypeGroup.querySelectorAll('.tip-opt').forEach(function(o){ o.classList.remove('is-on'); });
+      opt.classList.add('is-on');
+      curType = opt.getAttribute('data-t');
+    });
+  }
+
+  var meAva = document.getElementById('cmtMeAva');
+  if(meAva && GV.R) meAva.textContent = GV.R.ini;
+
+  /* @kişi / #departman etiketleme — küçük seçilebilir popover (yazarken otomatik algılama
+     yerine açık tetikleyici buton; daha az kırılgan, aynı derecede gerçek etkileşim) */
+  var PEOPLE_LIST = ['Hasan Demirci','İbrahim Sönmez','Aylin Koç','Şükrü Aslan','Ömer Taşkın','Recep Yaman','Metin Çetin','Ramazan Kılıç','Murat Denizli','Elif Sarıkaya','Nesrin Aydın','Seda Karaca','Baran Yıldız','Kemal Yapıcıoğlu'];
+  var DEPT_LIST = ['Muhasebe','İK','Satın Alma','Teknik Ofis','Şantiye Ekibi','Saha Ekibi','Yönetim','Satış Ekibi','İSG Ekibi','Depo/Lojistik'];
+  var pendingKisi = [], pendingDept = [], pendingAttach = null, pendingVerRef = null;
+
+  function closeAllPops(){ document.querySelectorAll('.cmt-mentions').forEach(function(p){ p.remove(); }); }
+  function openPop(anchor, items, onPick){
+    closeAllPops();
+    var pop = document.createElement('div');
+    pop.className = 'cmt-mentions';
+    pop.innerHTML = items.map(function(it){ return '<button type="button">' + it + '</button>'; }).join('');
+    anchor.parentElement.appendChild(pop);
+    pop.addEventListener('click', function(e){
+      var b = e.target.closest('button'); if(!b) return;
+      onPick(b.textContent);
+      closeAllPops();
+    });
+    setTimeout(function(){
+      document.addEventListener('click', function h(ev){
+        if(!pop.contains(ev.target) && ev.target !== anchor){ closeAllPops(); document.removeEventListener('click', h); }
+      });
+    }, 0);
+  }
+  function syncPendingTags(){
+    var wrap = document.getElementById('cmtPendingTags');
+    var html = pendingKisi.map(function(n){ return '<span class="cmt-tag">@' + n + '</span>'; })
+      .concat(pendingDept.map(function(n){ return '<span class="cmt-tag">#' + n + '</span>'; })).join(' ');
+    wrap.innerHTML = html;
+    wrap.hidden = !html;
+  }
+  var btnTagKisi = document.getElementById('cmtTagKisi');
+  if(btnTagKisi) btnTagKisi.addEventListener('click', function(){
+    openPop(btnTagKisi, PEOPLE_LIST, function(name){
+      if(pendingKisi.indexOf(name) === -1) pendingKisi.push(name);
+      syncPendingTags();
+    });
+  });
+  var btnTagDept = document.getElementById('cmtTagDept');
+  if(btnTagDept) btnTagDept.addEventListener('click', function(){
+    openPop(btnTagDept, DEPT_LIST, function(name){
+      if(pendingDept.indexOf(name) === -1) pendingDept.push(name);
+      syncPendingTags();
+    });
+  });
+  var btnVerAttach = document.getElementById('cmtVerAttach');
+  if(btnVerAttach) btnVerAttach.addEventListener('click', function(){
+    if(!curVersions.length){ gvToast('Henüz revize versiyonu yok — önce bir görseli işaretleyip kaydedin.', {type:'info'}); return; }
+    openPop(btnVerAttach, curVersions.map(function(v){ return 'v' + v.n; }), function(lbl){
+      var v = curVersions[parseInt(lbl.slice(1), 10) - 1];
+      pendingVerRef = { label:lbl, dataUrl:v.dataUrl };
+      gvToast(lbl + ' yoruma eklendi.', {type:'info'});
+    });
+  });
+
+  var cmtFile = document.getElementById('cmtFile');
+  var cmtFilePending = document.getElementById('cmtFilePending');
+  var cmtFileName = document.getElementById('cmtFileName');
+  if(cmtFile){
+    cmtFile.addEventListener('change', function(){
+      var f = cmtFile.files && cmtFile.files[0];
+      if(!f) return;
+      var isImg = /^image\//.test(f.type);
+      pendingAttach = { name:f.name, size:(f.size/1024/1024).toFixed(1) + ' MB', ic: isImg ? 'fa-image' : 'fa-file-pdf' };
+      cmtFileName.textContent = f.name;
+      cmtFilePending.hidden = false;
+    });
+  }
+  var cmtFileRemove = document.getElementById('cmtFileRemove');
+  if(cmtFileRemove) cmtFileRemove.addEventListener('click', function(){
+    pendingAttach = null; if(cmtFile) cmtFile.value = ''; cmtFilePending.hidden = true;
+  });
+
+  var cmtSend = document.getElementById('cmtSend'), cmtInput = document.getElementById('cmtInput');
+  if(cmtSend && cmtInput){
+    cmtSend.addEventListener('click', function(){
+      var text = cmtInput.value.trim();
+      if(!text && !pendingAttach && !pendingVerRef){ gvToast('Yorum boş olamaz.', {type:'danger'}); cmtInput.focus(); return; }
+      var ben = (GV.R && GV.R.name) ? GV.R.name : 'Siz';
+      var hasTag = pendingKisi.length || pendingDept.length;
+      comments.push({
+        who: ben, date:'şimdi', type: curType, text: text || '(yalnız ek paylaşıldı)',
+        kisiEtiket: pendingKisi.slice(), departmanEtiket: pendingDept.slice(),
+        attach: pendingAttach, versionRef: pendingVerRef, gordu: 0
+      });
+      cmtInput.value = ''; pendingAttach = null; pendingVerRef = null; pendingKisi = []; pendingDept = [];
+      if(cmtFile) cmtFile.value = ''; cmtFilePending.hidden = true;
+      syncPendingTags();
+      renderComments();
+      gvToast(hasTag ? 'Yorumunuz eklendi — etiketlenenlere bildirim gönderildi.' : 'Yorumunuz eklendi.');
+    });
+  }
+
+  /* ============ İÇ NOTLAR — §14 koruma: crm-gorev-detay.html'deki AYNI rol seti/mimari
+     (ayrı kart, ayrı liste, yorumla karışmaz) — yeniden tasarlanmadı, devralındı. ============ */
+  var IC_NOT_ROLES = ['superadmin','sahip','yonetim','teknik'];
+  var isIcNot = IC_NOT_ROLES.indexOf(GV.role) !== -1;
+  document.querySelectorAll('[data-view="ic-not"]').forEach(function(el){ el.hidden = !isIcNot; });
+
+  var icNotes = rec.icNotes || (rec.icNotes = []);
+  function renderIcNotes(){
+    var wrap = document.getElementById('icNotList');
+    if(!icNotes.length){ wrap.innerHTML = '<p style="font-size:12px;color:var(--muted)">Henüz iç not yok.</p>'; return; }
+    wrap.innerHTML = icNotes.map(function(n){
+      return '<div class="cmt-row"><div class="cmt-ava" style="background:var(--paper)">' + initials(n.who) + '</div>'
+        + '<div class="cmt-body" style="background:var(--paper)"><div class="cmt-head"><b>' + n.who + '</b><span>' + n.date + '</span></div>'
+        + '<div class="cmt-text">' + escapeHtml(n.text) + '</div></div></div>';
+    }).join('');
+  }
+  renderIcNotes();
+  var icAva = document.getElementById('icNotMeAva');
+  if(icAva && GV.R) icAva.textContent = GV.R.ini;
+  var icSend = document.getElementById('icNotSend'), icInp = document.getElementById('icNotInput');
+  if(icSend && icInp){
+    icSend.addEventListener('click', function(){
+      var text = icInp.value.trim();
+      if(!text){ gvToast('İç not boş olamaz.', {type:'danger'}); icInp.focus(); return; }
+      icNotes.push({ who:(GV.R && GV.R.name) || 'Siz', date:'şimdi', text:text });
+      icInp.value = '';
+      renderIcNotes();
+      gvToast('İç not eklendi — yalnız yönetim rolleri görür.', {type:'info'});
+    });
+  }
+
+  /* ============ GÖRSEL ÜZERİNDE İŞARETLE — §9.2, gerçek <canvas> editörü ============
+     Mouse VE dokunmatik Pointer Events ile birleşik yönetilir. Kaydedince orijinal
+     KORUNUR, işaretli görsel yeni bir versiyon (dataURL) olarak versiyon listesine düşer. */
+  var MARK_ROLES = ['superadmin','sahip','yonetim','teknik','sef'];
+  var canMark = MARK_ROLES.indexOf(GV.role) !== -1;
+  var markBtn = document.getElementById('markBtn');
+  if(markBtn){
+    markBtn.hidden = !canMark;
+    markBtn.addEventListener('click', openEditor);
+  }
+
+  var CW = 640, CH = 360;
+  var COLORS = { ink:'#0A0E27', danger:'#D14343', warn:'#A97908', info:'#3B6FD4' };
+  var editorOv = null, ectx, ecanvas, curTool = 'draw', curColor = 'ink', drawingNow = false, startPt = null, snapshot = null, baseImageData = null, undoStack = [];
+
+  function openEditor(){
+    if(document.querySelector('.gv-modal-ov')) return;
+    editorOv = document.createElement('div'); editorOv.className = 'gv-modal-ov';
+    var m = document.createElement('div'); m.className = 'editor-modal';
+    m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
+    m.innerHTML = ''
+      + '<div class="editor-head"><h3><i class="fa-solid fa-pen-ruler"></i> Görseli İşaretle — ' + rec.no + '</h3><button type="button" class="editor-close" data-no-confirm aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button></div>'
+      + '<div class="editor-toolbar">'
+      +   '<div class="et-group">'
+      +     '<button type="button" class="et-btn is-on" data-tool="draw" data-tip="Kalem — üzerine çizim" data-no-confirm><i class="fa-solid fa-pen"></i></button>'
+      +     '<button type="button" class="et-btn" data-tool="arrow" data-tip="Ok işareti" data-no-confirm><i class="fa-solid fa-arrow-right-long"></i></button>'
+      +     '<button type="button" class="et-btn" data-tool="area" data-tip="Alan işaretle" data-no-confirm><i class="fa-solid fa-highlighter"></i></button>'
+      +     '<button type="button" class="et-btn" data-tool="rect" data-tip="Kutu" data-no-confirm><i class="fa-regular fa-square"></i></button>'
+      +     '<button type="button" class="et-btn" data-tool="circle" data-tip="Daire" data-no-confirm><i class="fa-regular fa-circle"></i></button>'
+      +     '<button type="button" class="et-btn" data-tool="text" data-tip="Metin notu" data-no-confirm><i class="fa-solid fa-font"></i></button>'
+      +     '<button type="button" class="et-btn" data-tool="problem" data-tip="Problemli alanı belirt" data-no-confirm><i class="fa-solid fa-circle-exclamation"></i></button>'
+      +     '<button type="button" class="et-btn" data-tool="revize" data-tip="Revize gerektiren nokta" data-no-confirm><i class="fa-solid fa-flag"></i></button>'
+      +   '</div>'
+      +   '<div class="et-group">'
+      +     '<button type="button" class="et-color is-on" data-color="ink" style="background:#0A0E27" data-tip="Koyu" data-no-confirm></button>'
+      +     '<button type="button" class="et-color" data-color="danger" style="background:#D14343" data-tip="Kırmızı" data-no-confirm></button>'
+      +     '<button type="button" class="et-color" data-color="warn" style="background:#A97908" data-tip="Amber" data-no-confirm></button>'
+      +     '<button type="button" class="et-color" data-color="info" style="background:#3B6FD4" data-tip="Mavi" data-no-confirm></button>'
+      +   '</div>'
+      +   '<div class="et-group">'
+      +     '<button type="button" class="et-btn" id="etUndo" data-tip="Geri al" data-no-confirm><i class="fa-solid fa-rotate-left"></i></button>'
+      +     '<button type="button" class="et-btn" id="etClear" data-tip="Temizle" data-no-confirm><i class="fa-solid fa-eraser"></i></button>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="editor-canvas-wrap"><canvas id="editorCanvas" width="' + CW + '" height="' + CH + '"></canvas></div>'
+      + '<div class="editor-note"><i class="fa-solid fa-shield-halved"></i> Orijinal görsel korunur — bu işlem ayrı bir versiyon olarak kaydedilir.</div>'
+      + '<div class="editor-foot"><button type="button" class="btn btn-ghost btn-sm" id="etCancel" data-no-confirm>Vazgeç</button><button type="button" class="btn btn-acc btn-sm" id="etSave" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Kaydet (Yeni Versiyon)</button></div>';
+    editorOv.appendChild(m);
+    document.body.appendChild(editorOv);
+
+    ecanvas = m.querySelector('#editorCanvas');
+    ectx = ecanvas.getContext('2d');
+    paintBase();
+
+    m.querySelectorAll('[data-tool]').forEach(function(b){
+      b.addEventListener('click', function(){
+        m.querySelectorAll('[data-tool]').forEach(function(x){ x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        curTool = b.getAttribute('data-tool');
+      });
+    });
+    m.querySelectorAll('[data-color]').forEach(function(b){
+      b.addEventListener('click', function(){
+        m.querySelectorAll('[data-color]').forEach(function(x){ x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        curColor = b.getAttribute('data-color');
+      });
+    });
+    m.querySelector('#etUndo').addEventListener('click', undoStroke);
+    m.querySelector('#etClear').addEventListener('click', clearCanvas);
+    m.querySelector('#etCancel').addEventListener('click', closeEditor);
+    m.querySelector('.editor-close').addEventListener('click', closeEditor);
+    editorOv.addEventListener('click', function(e){ if(e.target === editorOv) closeEditor(); });
+    m.querySelector('#etSave').addEventListener('click', saveVersion);
+
+    wireCanvasEvents();
+    requestAnimationFrame(function(){ editorOv.classList.add('open'); });
+  }
+  function closeEditor(){
+    if(!editorOv) return;
+    editorOv.classList.remove('open');
+    setTimeout(function(){ if(editorOv){ editorOv.remove(); editorOv = null; } }, 220);
+  }
+  function paintBase(){
+    var TONES = { vadi:['#3FD5AD','#0A0E27'], liman:['#3B6FD4','#0A0E27'], merkez:['#A97908','#0A0E27'] };
+    var t = TONES[rec.siteKey] || TONES.vadi;
+    ectx.fillStyle = t[1]; ectx.fillRect(0, 0, CW, CH);
+    var grad = ectx.createLinearGradient(0, 0, CW, CH);
+    grad.addColorStop(0, t[0]); grad.addColorStop(1, t[1]);
+    ectx.globalAlpha = .5; ectx.fillStyle = grad; ectx.fillRect(0, 0, CW, CH); ectx.globalAlpha = 1;
+    ectx.strokeStyle = 'rgba(255,255,255,.85)'; ectx.lineWidth = 4;
+    ectx.strokeRect(CW/2 - 46, CH/2 - 30, 92, 60);
+    ectx.beginPath(); ectx.arc(CW/2, CH/2, 20, 0, Math.PI*2); ectx.stroke();
+    baseImageData = ectx.getImageData(0, 0, CW, CH);
+    undoStack = [baseImageData];
+  }
+  function pushUndo(){ undoStack.push(ectx.getImageData(0, 0, CW, CH)); }
+  function undoStroke(){ if(undoStack.length <= 1) return; undoStack.pop(); ectx.putImageData(undoStack[undoStack.length - 1], 0, 0); }
+  function clearCanvas(){ ectx.putImageData(baseImageData, 0, 0); undoStack = [baseImageData]; }
+  function getPos(e){
+    var r = ecanvas.getBoundingClientRect();
+    return { x:(e.clientX - r.left) * (CW / r.width), y:(e.clientY - r.top) * (CH / r.height) };
+  }
+  function drawArrow(a, b){
+    ectx.beginPath(); ectx.moveTo(a.x, a.y); ectx.lineTo(b.x, b.y); ectx.stroke();
+    var ang = Math.atan2(b.y - a.y, b.x - a.x), len = 12;
+    ectx.beginPath();
+    ectx.moveTo(b.x, b.y);
+    ectx.lineTo(b.x - len*Math.cos(ang - Math.PI/7), b.y - len*Math.sin(ang - Math.PI/7));
+    ectx.lineTo(b.x - len*Math.cos(ang + Math.PI/7), b.y - len*Math.sin(ang + Math.PI/7));
+    ectx.closePath(); ectx.fillStyle = ectx.strokeStyle; ectx.fill();
+  }
+  function wireCanvasEvents(){
+    ecanvas.addEventListener('pointerdown', function(e){
+      ecanvas.setPointerCapture(e.pointerId);
+      var p = getPos(e);
+      if(curTool === 'text'){
+        var txt = window.prompt('Not metni:');
+        if(txt){ ectx.fillStyle = COLORS[curColor]; ectx.font = '700 16px Manrope, sans-serif'; ectx.fillText(txt, p.x, p.y); pushUndo(); }
+        return;
+      }
+      if(curTool === 'problem' || curTool === 'revize'){
+        var pc = curTool === 'problem' ? COLORS.danger : COLORS.warn;
+        ectx.fillStyle = pc; ectx.beginPath(); ectx.arc(p.x, p.y, 11, 0, Math.PI*2); ectx.fill();
+        ectx.fillStyle = '#fff'; ectx.font = '800 13px Manrope, sans-serif'; ectx.textAlign = 'center'; ectx.textBaseline = 'middle';
+        ectx.fillText('!', p.x, p.y + 1);
+        ectx.textAlign = 'start'; ectx.textBaseline = 'alphabetic';
+        window.prompt(curTool === 'problem' ? 'Sorunlu alan notu (isteğe bağlı):' : 'Revize notu (isteğe bağlı):');
+        pushUndo();
+        return;
+      }
+      drawingNow = true; startPt = p; snapshot = ectx.getImageData(0, 0, CW, CH);
+      if(curTool === 'draw'){
+        ectx.strokeStyle = COLORS[curColor]; ectx.lineWidth = 3; ectx.lineJoin = 'round'; ectx.lineCap = 'round';
+        ectx.beginPath(); ectx.moveTo(p.x, p.y);
+      }
+    });
+    ecanvas.addEventListener('pointermove', function(e){
+      if(!drawingNow) return;
+      var p = getPos(e);
+      if(curTool === 'draw'){ ectx.lineTo(p.x, p.y); ectx.stroke(); }
+      else if(curTool === 'arrow' || curTool === 'rect' || curTool === 'circle' || curTool === 'area'){
+        ectx.putImageData(snapshot, 0, 0);
+        ectx.strokeStyle = COLORS[curColor]; ectx.lineWidth = 3;
+        if(curTool === 'arrow') drawArrow(startPt, p);
+        else if(curTool === 'rect') ectx.strokeRect(Math.min(startPt.x,p.x), Math.min(startPt.y,p.y), Math.abs(p.x-startPt.x), Math.abs(p.y-startPt.y));
+        else if(curTool === 'circle'){ var rr = Math.hypot(p.x-startPt.x, p.y-startPt.y); ectx.beginPath(); ectx.arc(startPt.x, startPt.y, rr, 0, Math.PI*2); ectx.stroke(); }
+        else if(curTool === 'area'){ ectx.globalAlpha = .35; ectx.fillStyle = COLORS[curColor]; ectx.fillRect(Math.min(startPt.x,p.x), Math.min(startPt.y,p.y), Math.abs(p.x-startPt.x), Math.abs(p.y-startPt.y)); ectx.globalAlpha = 1; }
+      }
+    });
+    ecanvas.addEventListener('pointerup', function(){ if(!drawingNow) return; drawingNow = false; pushUndo(); });
+    ecanvas.addEventListener('pointercancel', function(){ drawingNow = false; });
+  }
+  function saveVersion(){
+    var dataUrl = ecanvas.toDataURL('image/png');
+    var n = curVersions.length + 1;
+    curVersions.push({ n:n, dataUrl:dataUrl, ts:'şimdi', author:(GV.R && GV.R.name) || 'Siz' });
+    renderVersions();
+    closeEditor();
+    gvToast('İşaretli görsel v' + n + ' olarak kaydedildi — orijinal korunuyor.');
+  }
+
+  /* ============ REVİZE EDİLMİŞ GÖRSEL DETAYI — §12.3, karşılaştırma lightbox ============ */
+  function openCompare(v){
+    if(document.querySelector('.gv-modal-ov')) return;
+    var ov = document.createElement('div'); ov.className = 'gv-modal-ov';
+    var m = document.createElement('div'); m.className = 'compare-modal';
+    m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
+    m.innerHTML = ''
+      + '<div class="editor-head"><h3><i class="fa-solid fa-clone"></i> Revize Edilmiş Görsel Detayı — v' + v.n + '</h3><button type="button" class="editor-close" data-no-confirm aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button></div>'
+      + '<div class="compare-grid">'
+      +   '<div class="compare-col"><b>Orijinal</b><div class="compare-img photo-' + rec.siteKey + '"></div></div>'
+      +   '<div class="compare-col"><b>İşaretli — v' + v.n + ' · ' + v.author + '</b><div class="compare-img" style="background-image:url(' + v.dataUrl + ')"></div></div>'
+      + '</div>';
+    ov.appendChild(m); document.body.appendChild(ov);
+    requestAnimationFrame(function(){ ov.classList.add('open'); });
+    function close(){ ov.classList.remove('open'); setTimeout(function(){ ov.remove(); }, 220); }
+    m.querySelector('.editor-close').addEventListener('click', close);
+    ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  }
+})();
+</script>
+</body>
+</html>

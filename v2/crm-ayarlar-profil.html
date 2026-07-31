@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Profil — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — kişisel profil (aktif personadan beslenir) ============ */
+.prf-cols{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1100px){.prf-cols{grid-template-columns:minmax(0,1fr)}}
+.prf-stack{display:flex;flex-direction:column;gap:16px}
+
+/* kimlik kartı — koyu marka yüzeyi, persona chip'inin büyütülmüş hali */
+.prf-id{
+  position:relative;overflow:hidden;border-radius:var(--r-lg);
+  background:linear-gradient(155deg,var(--gv-deep) 0%,var(--gv-night) 100%);
+  border:1px solid var(--gv-border-dark);box-shadow:var(--sh-md);
+  padding:26px 24px;text-align:center;
+}
+.prf-id::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(300px 160px at 50% -20%, var(--gv-mint-glow), transparent 70%);
+}
+.prf-id>*{position:relative;z-index:1}
+.prf-ava{
+  width:84px;height:84px;margin:0 auto 14px;border-radius:24px;
+  background:linear-gradient(155deg,var(--gv-mint),var(--gv-mint-bright));
+  display:grid;place-items:center;font-size:29px;font-weight:800;color:var(--gv-deep);letter-spacing:-.02em;
+}
+.prf-name{font-size:19px;font-weight:800;color:#fff;letter-spacing:-.01em}
+.prf-role{margin-top:5px;font-size:12.5px;font-weight:700;color:var(--gv-mint)}
+.prf-firm{margin-top:3px;font-size:12px;color:var(--on-dark-mut)}
+.prf-id-meta{
+  display:flex;flex-direction:column;gap:9px;margin-top:18px;padding-top:16px;
+  border-top:1px solid var(--hair);text-align:left;
+}
+.prf-id-meta .pm-row{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--on-dark)}
+.prf-id-meta .pm-row i{width:16px;text-align:center;color:var(--gv-mint);font-size:12px;flex:none}
+.prf-id-acts{margin-top:18px;display:flex;justify-content:center}
+.prf-id-acts .btn{background:transparent;color:var(--gv-on-dark);border:1px solid var(--gv-border-dark)}
+.prf-id-acts .btn:hover{border-color:rgba(63,213,173,.5);color:#fff;transform:translateY(-2px)}
+
+/* bölüm erişim çipleri — shell ROLES.secs'ten JS ile çizilir */
+.acc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.acc-chip{
+  display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-2);
+  background:var(--bg);border:1px solid var(--line);padding:6px 12px;border-radius:var(--r-pill);
+}
+.acc-chip i{font-size:11px;color:var(--acc-ink)}
+.acc-note{margin-top:14px;font-size:12px;color:var(--muted);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.acc-note i{color:var(--acc-ink);flex:none;margin-top:2px}
+</style>
+</head>
+<body data-sec="hesap" data-screen="profil">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Hesabım</div>
+        <h1>Profil</h1>
+        <div class="ph-sub">Kişisel bilgileriniz ve sistemdeki görünümünüz</div>
+      </div>
+    </div>
+
+    <div class="prf-cols">
+      <div class="prf-stack">
+        <!-- kimlik kartı — JS aktif personadan doldurur -->
+        <div class="prf-id">
+          <div class="prf-ava" id="prfAva">·</div>
+          <div class="prf-name" id="prfName">—</div>
+          <div class="prf-role" id="prfRole">—</div>
+          <div class="prf-firm">Yapıtaş İnşaat A.Ş.</div>
+          <div class="prf-id-meta">
+            <div class="pm-row"><i class="fa-solid fa-envelope"></i><span id="prfMail">—</span></div>
+            <div class="pm-row"><i class="fa-solid fa-phone"></i><span id="prfTel">—</span></div>
+            <div class="pm-row"><i class="fa-solid fa-calendar-check"></i><span>Son giriş: bugün 07:58 · Chrome, macOS</span></div>
+          </div>
+          <div class="prf-id-acts">
+            <a class="btn btn-sm" href="index.html"><i class="fa-solid fa-repeat"></i> Rol Değiştir</a>
+          </div>
+        </div>
+
+        <!-- bölüm erişimi — rolün secs listesi -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-user-shield"></i> Bölüm Erişimim</div></div>
+          <div class="gc-body">
+            <!-- statik bake — DEFAULT/superadmin rol-agnostic bölüm çipleri; JS yüklenince
+                 aktif personanın secs listesiyle aynı mount innerHTML ile ezilir — D18-B2 -->
+            <div class="acc-chips" id="prfSecs"><span class="acc-chip"><i class="fa-solid fa-gauge-high"></i> Panel</span><span class="acc-chip"><i class="fa-solid fa-helmet-safety"></i> Şantiye</span><span class="acc-chip"><i class="fa-solid fa-list-check"></i> Görev</span><span class="acc-chip"><i class="fa-solid fa-users"></i> Personel</span><span class="acc-chip"><i class="fa-solid fa-clipboard-list"></i> Operasyon</span><span class="acc-chip"><i class="fa-solid fa-cart-flatbed"></i> Satın Alma</span><span class="acc-chip"><i class="fa-solid fa-address-book"></i> Cari</span><span class="acc-chip"><i class="fa-solid fa-file-signature"></i> Finans</span><span class="acc-chip"><i class="fa-solid fa-sliders"></i> Ayarlar</span></div>
+            <div class="acc-note"><i class="fa-solid fa-circle-info"></i> Erişim yetkileri rolünüz üzerinden tanımlanır; değişiklik talebi için firma yöneticinize başvurun.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prf-stack">
+        <!-- kişisel bilgiler formu -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-regular fa-id-card"></i> Kişisel Bilgiler</div></div>
+          <div class="gc-body">
+            <form class="gform" onsubmit="event.preventDefault(); gvToast('Profil bilgileriniz kaydedildi.')">
+              <div class="gfield">
+                <label for="pAd">Ad soyad</label>
+                <input id="pAd" type="text" value="">
+              </div>
+              <div class="gfield">
+                <label for="pUnvan">Unvan</label>
+                <input id="pUnvan" type="text" value="" readonly style="background:var(--bg);color:var(--muted)">
+                <span class="gf-hint">Unvan, rol tanımınızdan gelir.</span>
+              </div>
+              <div class="gfield">
+                <label for="pMail">E-posta</label>
+                <input id="pMail" type="email" value="">
+              </div>
+              <div class="gfield">
+                <label for="pTel">Telefon</label>
+                <input id="pTel" type="tel" value="">
+              </div>
+              <div class="gfield full">
+                <label for="pImza">Bildirimlerde görünen ad</label>
+                <input id="pImza" type="text" value="">
+                <span class="gf-hint">Görev atamaları ve onay bildirimlerinde bu ad kullanılır.</span>
+              </div>
+              <div class="gfield full" style="flex-direction:row;justify-content:flex-end;gap:10px">
+                <button type="button" class="btn btn-ghost btn-sm" data-no-confirm onclick="gvToast('Değişiklikler geri alındı.',{type:'info'})">Vazgeç</button>
+                <button type="submit" class="btn btn-acc btn-sm"><i class="fa-solid fa-check"></i> Kaydet</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- profil fotoğrafı — div+background-image kuralı -->
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-regular fa-image"></i> Profil Fotoğrafı</div></div>
+          <div class="gc-body" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+            <div id="prfFoto" aria-label="Profil fotoğrafı alanı" style="width:72px;height:72px;flex:none;border-radius:var(--r-md);background:rgba(var(--acc-rgb),.12);background-size:cover;background-position:center;display:grid;place-items:center;font-size:22px;font-weight:800;color:var(--acc-ink)">·</div>
+            <div style="flex:1;min-width:220px;font-size:12.5px;color:var(--muted);line-height:1.5">Fotoğraf yüklenmediğinde ad-soyad baş harfleriniz gösterilir. Kare, en az 200×200 piksel görsel önerilir.</div>
+            <button class="btn btn-ghost btn-sm" data-no-confirm onclick="gvToast('Fotoğraf yükleme bu demo ortamında simüle edilir.',{type:'info'})"><i class="fa-solid fa-upload"></i> Fotoğraf Yükle</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+/* aktif personadan profil doldurma — shell ROLES tek kaynak (D10 1.13) */
+(function(){
+  if(!window.GV) return;
+  var R = GV.R;
+  /* kurgusal iletişim idiyomu: ad.soyad@yapitas.example · superadmin Gavia personeli */
+  var TR_MAP = {'ç':'c','ğ':'g','ı':'i','i':'i','ö':'o','ş':'s','ü':'u','â':'a'};
+  function slug(s){
+    return s.toLocaleLowerCase('tr').replace(/[çğıöşüâ]/g, function(c){ return TR_MAP[c] || c; })
+            .replace(/[^a-z ]/g,'').trim().replace(/ +/g,'.');
+  }
+  var mail = GV.role === 'superadmin' ? slug(R.name) + '@gavia.example' : slug(R.name) + '@yapitas.example';
+  var TELS = {superadmin:'0850 000 00 10', sahip:'0532 000 00 01', yonetim:'0532 000 00 02',
+              teknik:'0532 000 00 03', sef:'0532 000 00 04', muhasebe:'0532 000 00 05',
+              satinalma:'0532 000 00 06', ik:'0532 000 00 07', personel:'0532 000 00 08'};
+  var tel = TELS[GV.role] || '0532 000 00 00';
+
+  document.getElementById('prfAva').textContent = R.ini;
+  document.getElementById('prfName').textContent = R.name;
+  document.getElementById('prfRole').textContent = R.role;
+  document.getElementById('prfMail').textContent = mail;
+  document.getElementById('prfTel').textContent = tel;
+  document.getElementById('prfFoto').textContent = R.ini;
+  document.getElementById('pAd').value = R.name;
+  document.getElementById('pUnvan').value = R.role;
+  document.getElementById('pMail').value = mail;
+  document.getElementById('pTel').value = tel;
+  document.getElementById('pImza').value = R.name;
+  /* superadmin firma bağı: platform personeli — firma satırı Gavia olur */
+  if(GV.role === 'superadmin'){
+    document.querySelector('.prf-firm').textContent = 'Gaviaworks — Platform';
+  }
+
+  /* bölüm erişim çipleri — ROLES.secs sırasıyla */
+  var LBL = {panel:['fa-gauge-high','Panel'], santiye:['fa-helmet-safety','Şantiye'],
+             gorev:['fa-list-check','Görev'], personel:['fa-users','Personel'],
+             operasyon:['fa-clipboard-list','Operasyon'], satinalma:['fa-cart-flatbed','Satın Alma'],
+             cari:['fa-address-book','Cari'], finans:['fa-file-signature','Finans'],
+             ayarlar:['fa-sliders','Ayarlar']};
+  var wrap = document.getElementById('prfSecs'), h = '';
+  R.secs.forEach(function(k){
+    var v = LBL[k]; if(!v) return;
+    h += '<span class="acc-chip"><i class="fa-solid ' + v[0] + '"></i> ' + v[1] + '</span>';
+  });
+  wrap.innerHTML = h;
+})();
+</script>
+</body>
+</html>

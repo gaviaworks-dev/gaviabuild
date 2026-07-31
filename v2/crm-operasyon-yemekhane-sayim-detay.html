@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>YMK-2026-004 — Sayım Kaydı Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: sayım kaydı detay kompozisyonu (crm-santiye-isg-detay.html ile aynı iskelet dili) */
+.gd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.gd-head h1{font-size:22px;letter-spacing:-.015em;margin-bottom:9px;max-width:600px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:8px}
+
+.gd-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.gd-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.gd-desc{font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:13px}
+.ctx-row:not(:last-child){border-bottom:1px solid var(--line)}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+.ctx-link{display:flex;align-items:center;gap:11px;padding:6px 0}
+.ctx-link .who-mark{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800}
+.ctx-link a{font-size:13.5px;font-weight:700;color:var(--ink)}
+.ctx-link a:hover{color:var(--acc-ink)}
+.ctx-link span{display:block;font-size:11.5px;color:var(--muted)}
+
+.gv-side-stack{display:flex;flex-direction:column;gap:16px}
+
+/* düzenleme geçmişi — crm-operasyon-demirbas-detay.html ile aynı zaman çizelgesi deseni */
+.ml-timeline{list-style:none;padding:22px 22px 4px;display:flex;flex-direction:column}
+.ml-item{position:relative;padding-left:34px;padding-bottom:26px}
+.ml-item:last-child{padding-bottom:2px}
+.ml-item::before{content:"";position:absolute;left:9px;top:22px;bottom:-6px;width:2px;background:var(--line)}
+.ml-item:last-child::before{display:none}
+.ml-dot{position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:var(--r-circle);background:var(--paper);border:2px solid var(--line-2);display:grid;place-items:center;font-size:9px;color:var(--muted)}
+.ml-item.done .ml-dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.ml-item.active .ml-dot{border-color:var(--acc-ink);box-shadow:0 0 0 4px rgba(var(--acc-rgb),.16)}
+.ml-item.active .ml-dot::after{content:"";width:8px;height:8px;border-radius:var(--r-circle);background:var(--acc-ink)}
+.ml-body b{display:block;font-size:13.5px;font-weight:700;color:var(--ink)}
+.ml-body span{font-size:12px;color:var(--muted)}
+
+.dm-acts{display:flex;flex-direction:column;gap:8px;padding:18px 22px 22px}
+.dm-acts .btn{justify-content:flex-start}
+.dm-acts-note{font-size:12px;color:var(--muted);line-height:1.6;padding:0 22px 20px}
+</style>
+</head>
+<body data-sec="personel" data-screen="yemekhane">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <!-- D18 ?ymk= MAP dönüşümü: lokal .gv-crumb kaldırıldı — kırıntı shell'den (GV.crumb
+         ile kayıt segmenti). Kayıt kaynağı: crm-operasyon-yemekhane.html SAYIMLAR/HAFTA
+         dizileri (001-004, toplam 218/225/220/223, bkz. o dosyanın satır ~355-360). 004
+         DEFAULT olup öğün kırılımı (K 84 / Ö 93 / A 46 / genel 223) ve düzenleme geçmişi
+         BİREBİR korunan mevcut hardcode içeriktir; 001-003 temsili-derinlik kuralına göre
+         yalnız günlük genel toplamla açılır (kaynakta öğün kırılımı yok — uydurulmadı). -->
+    <div id="ymkMain">
+    <div class="gd-head">
+      <div>
+        <div class="gd-eyebrow" id="gdEyebrow">—</div>
+        <h1 id="gdTitle">—</h1>
+        <div class="gd-badges">
+          <span class="gtag"><i class="fa-solid fa-utensils"></i> Günlük Sayım</span>
+          <span class="gstat ok" id="durumBadge">Tamamlandı</span>
+        </div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-operasyon-yemekhane.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a>
+      </div>
+    </div>
+
+    <div class="gd-grid">
+      <!-- ============ SOL: içerik ============ -->
+      <div class="gv-side-stack">
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">Açıklama</div>
+            <p class="gd-desc" id="descText">—</p>
+          </div>
+          <div class="gd-block">
+            <div class="gd-label">Öğün Kırılımı</div>
+            <!-- statik bake — DEFAULT ?ymk=004 kaydı (rol-agnostik); JS yüklenince aynı
+                 mount innerHTML ile ezilir (kaynak: bu dosyanın DATA['004'] kaydı) — D18-B2 -->
+            <div id="ogunRows"><div class="ctx-row"><span class="ctx-lbl">Kahvaltı</span><span class="ctx-val">84 kişi</span></div><div class="ctx-row"><span class="ctx-lbl">Öğle</span><span class="ctx-val">93 kişi</span></div><div class="ctx-row"><span class="ctx-lbl">Akşam</span><span class="ctx-val">46 kişi</span></div><div class="ctx-row"><span class="ctx-lbl">Misafir</span><span class="ctx-val">0 kişi</span></div><div class="ctx-row"><span class="ctx-lbl">Genel Toplam</span><span class="ctx-val" style="color:var(--acc-ink)">223 kişi</span></div><div class="ctx-row"><span class="ctx-lbl">Öğle — Öz Kadro / Taşeron</span><span class="ctx-val">69 öz + 24 taşeron</span></div><div class="ctx-row"><span class="ctx-lbl">Taşeron Dağılımı</span><span class="ctx-val" style="font-weight:600;font-size:12px">Demir-Beton 10 · ElektroMek 6 · Yalıtım Kardeşler 8</span></div></div>
+          </div>
+          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Taşeron kişi bazlı puantaj durumu için taşeron puantajına bakın.</span><a class="gc-link" href="crm-operasyon-taseron-puantaj.html"><i class="fa-solid fa-people-arrows"></i> Taşeron Puantajı <i class="fa-solid fa-arrow-right"></i></a></div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Düzenleme Geçmişi</div></div>
+          <!-- statik bake — DEFAULT ?ymk=004 kaydı; JS yüklenince aynı mount innerHTML
+               ile ezilir (kaynak: bu dosyanın DATA['004'].gecmis dizisi) — D18-B2 -->
+          <div id="gecmisBody"><ol class="ml-timeline"><li class="ml-item done"><span class="ml-dot"><i class="fa-solid fa-check"></i></span><div class="ml-body"><b>Sabah sayımı girildi</b><span>2 Temmuz 2026 · 08:20 — kahvaltı kırılımı</span></div></li><li class="ml-item done"><span class="ml-dot"><i class="fa-solid fa-check"></i></span><div class="ml-body"><b>Öğle güncellendi</b><span>2 Temmuz 2026 · 13:45 — öğle kırılımı eklendi</span></div></li><li class="ml-item done"><span class="ml-dot"><i class="fa-solid fa-check"></i></span><div class="ml-body"><b>Akşam kapandı</b><span>2 Temmuz 2026 · 19:10 — akşam kırılımı eklendi, kayıt kapatıldı</span></div></li></ol></div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> İşlemler</div></div>
+          <div class="dm-acts">
+            <a class="btn btn-ghost btn-sm" href="crm-operasyon-yemekhane-sayim-form.html"><i class="fa-solid fa-pen"></i> Düzenle</a>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnRaporla"><i class="fa-solid fa-file-export"></i> Raporla</button>
+            <button type="button" class="btn btn-danger btn-sm" id="btnSil"><i class="fa-solid fa-trash"></i> Sil</button>
+          </div>
+          <p class="dm-acts-note"><i class="fa-solid fa-circle-info"></i> Bu prototipte Düzenle/Sil/Raporla aksiyonları yalnızca ekran üzerinde simüle edilir; kalıcı bir kayıt değişikliği oluşturmaz.</p>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bağlam ============ -->
+      <div class="gv-side-stack">
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">Sayım Bilgileri</div>
+            <div class="ctx-row"><span class="ctx-lbl">Tarih</span><span class="ctx-val" id="ctxTarih">—</span></div>
+            <div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val">Firma Geneli · 3 şantiye</span></div>
+            <div class="ctx-row"><span class="ctx-lbl">Öğün</span><span class="ctx-val" id="ctxOgun">—</span></div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">Kaydı Oluşturan</div>
+            <!-- Seda Karaca — İK Uzmanı: yemekhane sayımı idari kayıt olarak İK tarafından
+                 girilir (bkz. shell.js kanonik kişi listesi); TÜM kayıtlarda aynı — HAFTA/
+                 SAYIMLAR dizisinde aksini gösteren bir bilgi yok. -->
+            <div class="ctx-link">
+              <div class="who-mark" style="background:var(--info-tint);color:var(--info)">SK</div>
+              <div>
+                <a href="crm-personel-detay.html">Seda Karaca</a>
+                <span>İK Uzmanı</span>
+              </div>
+            </div>
+          </div>
+          <div class="gd-block">
+            <div class="ctx-row"><span class="ctx-lbl">Oluşturulma</span><span class="ctx-val" id="ctxOlusturulma">—</span></div>
+            <div class="ctx-row"><span class="ctx-lbl">Kayıt türü</span><span class="ctx-val">Günlük sayım</span></div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">Not</div>
+            <p style="font-size:12.5px;color:var(--ink-2);line-height:1.7" id="notText">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ---- D18 ?ymk= MAP (kaynak: crm-operasyon-yemekhane.html SAYIMLAR/HAFTA dizileri) ----
+     004 = DEFAULT, mevcut hardcode İÇERİK BİREBİR (öğün kırılımı 84/93/46/223, 3 adımlı
+     düzenleme geçmişi, "2 Tem 2026 · 19:15" oluşturulma zamanı). 001-003 TEMSİLİ-DERİNLİK:
+     kaynakta yalnız günlük GENEL TOPLAM var (öğün kırılımı yok) — bu yüzden öğün kırılımı
+     ve düzenleme geçmişi zaman çizelgesi UYDURULMAZ; ogun:null / gecmis:null bayrağıyla
+     render() bu kayıtlarda sade görünüme (genel toplam satırı + boş-durum notu) düşer. ---- */
+  var DATA = {
+    '001':{
+      kod:'YMK-2026-001', tarihUzun:'29 Haziran 2026 Pazartesi', tarihKisa:'29 Haz 2026', gunAdi:'Pazartesi',
+      toplam:218, ogun:null,
+      aciklama:'29 Haziran 2026 Pazartesi günü üç şantiyede (Vadi Konakları, Liman Lojistik Merkezi, Merkez Şantiye) yapılan günlük yemekhane sayımıdır. Toplam 218 kişilik yemek çıkışı kaydedilmiştir. Sayım İK tarafından günün sonunda gözden geçirilip kapatılmıştır.',
+      gecmis:null,
+      olusturulma:'29 Haz 2026',
+      not:'Bu tarihe ait öğün kırılımı ve düzenleme geçmişi bu prototipte detaylandırılmamıştır; zengin içerikle örneklenen tek kayıt YMK-2026-004\'tür.'
+    },
+    '002':{
+      kod:'YMK-2026-002', tarihUzun:'30 Haziran 2026 Salı', tarihKisa:'30 Haz 2026', gunAdi:'Salı',
+      toplam:225, ogun:null,
+      aciklama:'30 Haziran 2026 Salı günü üç şantiyede (Vadi Konakları, Liman Lojistik Merkezi, Merkez Şantiye) yapılan günlük yemekhane sayımıdır. Toplam 225 kişilik yemek çıkışı kaydedilmiştir. Sayım İK tarafından günün sonunda gözden geçirilip kapatılmıştır.',
+      gecmis:null,
+      olusturulma:'30 Haz 2026',
+      not:'Bu tarihe ait öğün kırılımı ve düzenleme geçmişi bu prototipte detaylandırılmamıştır; zengin içerikle örneklenen tek kayıt YMK-2026-004\'tür.'
+    },
+    '003':{
+      kod:'YMK-2026-003', tarihUzun:'1 Temmuz 2026 Çarşamba', tarihKisa:'1 Tem 2026', gunAdi:'Çarşamba',
+      toplam:220, ogun:null,
+      aciklama:'1 Temmuz 2026 Çarşamba günü üç şantiyede (Vadi Konakları, Liman Lojistik Merkezi, Merkez Şantiye) yapılan günlük yemekhane sayımıdır. Toplam 220 kişilik yemek çıkışı kaydedilmiştir. Sayım İK tarafından günün sonunda gözden geçirilip kapatılmıştır.',
+      gecmis:null,
+      olusturulma:'1 Tem 2026',
+      not:'Bu tarihe ait öğün kırılımı ve düzenleme geçmişi bu prototipte detaylandırılmamıştır; zengin içerikle örneklenen tek kayıt YMK-2026-004\'tür.'
+    },
+    '004':{
+      kod:'YMK-2026-004', tarihUzun:'2 Temmuz 2026 Perşembe', tarihKisa:'2 Tem 2026', gunAdi:'Perşembe',
+      toplam:223,
+      ogun:{kahvalti:84, ogle:93, aksam:46, misafir:0},
+      /* §7.3/§13.2 — öğle kırılımının öz kadro/taşeron ayrımı; crm-operasyon-yemekhane.html
+         YERLER dizisiyle BİREBİR (69 öz + 24 taşeron = 93, firma 10/6/8) — TÜKETİR, değiştirmez */
+      ozTas:{oz:69, tas:24, firma:'Demir-Beton 10 · ElektroMek 6 · Yalıtım Kardeşler 8'},
+      aciklama:'2 Temmuz 2026 Perşembe günü üç şantiyede (Vadi Konakları, Liman Lojistik Merkezi, Merkez Şantiye) yapılan günlük yemekhane sayımıdır. Kahvaltı, öğle ve akşam öğünleri ayrı ayrı sayılmış; öz kadro ve taşeron ekipleri birlikte izlenmiştir. Bu günde misafir girişi kaydedilmemiştir. Sayım İK tarafından günün sonunda gözden geçirilip kapatılmıştır.',
+      gecmis:[
+        {b:'Sabah sayımı girildi', s:'2 Temmuz 2026 · 08:20 — kahvaltı kırılımı'},
+        {b:'Öğle güncellendi', s:'2 Temmuz 2026 · 13:45 — öğle kırılımı eklendi'},
+        {b:'Akşam kapandı', s:'2 Temmuz 2026 · 19:10 — akşam kırılımı eklendi, kayıt kapatıldı'}
+      ],
+      olusturulma:'2 Tem 2026 · 19:15',
+      not:'Bu kayıt, dört sayım kaydı içinde öğün kırılımı ve düzenleme geçmişiyle detaylandırılan tek temsili kayıttır; diğer kayıtlar (001-003) yalnızca günlük genel toplamla görüntülenir.'
+    }
+  };
+
+  var q = new URLSearchParams(location.search);
+  var rawYmk = q.get('ymk');
+  var ymkKey = rawYmk === null ? '004' : rawYmk;
+  var D = DATA[ymkKey];
+
+  if(!D){
+    /* tanınmayan ?ymk= → gvNotFound (D18 ?ymk= MAP kuralı) */
+    GV.crumb('Kayıt bulunamadı');
+    gvNotFound({
+      mount: '#ymkMain',
+      code: rawYmk ? rawYmk.toUpperCase() : null,
+      tur: 'sayım kaydı',
+      listHref: 'crm-operasyon-yemekhane.html', listLbl: 'Yemekhane listesine dön',
+      defHref: 'crm-operasyon-yemekhane-sayim-detay.html', defLbl: 'YMK-2026-004\'ü aç'
+    });
+    return;
+  }
+
+  GV.crumb(D.kod);
+  document.title = D.kod + ' — Sayım Kaydı Detayı — Gavia CRM';
+  document.getElementById('gdEyebrow').textContent = 'Firma Geneli · Sayım Kaydı #' + D.kod;
+  document.getElementById('gdTitle').textContent = 'Günlük Yemekhane Sayımı — ' + D.tarihUzun;
+  document.getElementById('descText').textContent = D.aciklama;
+  document.getElementById('ctxTarih').textContent = D.tarihKisa + ', ' + D.gunAdi;
+  document.getElementById('ctxOlusturulma').textContent = D.olusturulma;
+  document.getElementById('notText').textContent = D.not;
+
+  if(D.ogun){
+    document.getElementById('ctxOgun').textContent = 'Kahvaltı · Öğle · Akşam';
+    document.getElementById('ogunRows').innerHTML =
+        '<div class="ctx-row"><span class="ctx-lbl">Kahvaltı</span><span class="ctx-val">'+D.ogun.kahvalti+' kişi</span></div>'
+      + '<div class="ctx-row"><span class="ctx-lbl">Öğle</span><span class="ctx-val">'+D.ogun.ogle+' kişi</span></div>'
+      + '<div class="ctx-row"><span class="ctx-lbl">Akşam</span><span class="ctx-val">'+D.ogun.aksam+' kişi</span></div>'
+      + '<div class="ctx-row"><span class="ctx-lbl">Misafir</span><span class="ctx-val">'+D.ogun.misafir+' kişi</span></div>'
+      + '<div class="ctx-row"><span class="ctx-lbl">Genel Toplam</span><span class="ctx-val" style="color:var(--acc-ink)">'+D.toplam+' kişi</span></div>'
+      + (D.ozTas
+          ? '<div class="ctx-row"><span class="ctx-lbl">Öğle — Öz Kadro / Taşeron</span><span class="ctx-val">'+D.ozTas.oz+' öz + '+D.ozTas.tas+' taşeron</span></div>'
+            + '<div class="ctx-row"><span class="ctx-lbl">Taşeron Dağılımı</span><span class="ctx-val" style="font-weight:600;font-size:12px">'+D.ozTas.firma+'</span></div>'
+          : '');
+  } else {
+    document.getElementById('ctxOgun').textContent = 'Kırılım detaylandırılmadı';
+    document.getElementById('ogunRows').innerHTML =
+        '<div class="ctx-row"><span class="ctx-lbl">Genel Toplam</span><span class="ctx-val" style="color:var(--acc-ink)">'+D.toplam+' kişi</span></div>'
+      + '<p style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px"><i class="fa-solid fa-circle-info"></i> Öğün bazlı kırılım bu prototipte yalnızca YMK-2026-004 için detaylandırılmıştır.</p>';
+  }
+
+  if(D.gecmis){
+    var gh = '<ol class="ml-timeline">';
+    D.gecmis.forEach(function(g){
+      gh += '<li class="ml-item done"><span class="ml-dot"><i class="fa-solid fa-check"></i></span>'
+          + '<div class="ml-body"><b>'+g.b+'</b><span>'+g.s+'</span></div></li>';
+    });
+    gh += '</ol>';
+    document.getElementById('gecmisBody').innerHTML = gh;
+  } else {
+    document.getElementById('gecmisBody').innerHTML =
+        '<div class="gv-empty">'
+      + '<div class="ge-ico"><i class="fa-solid fa-clock-rotate-left"></i></div>'
+      + '<h4>Düzenleme geçmişi girilmedi</h4>'
+      + '<p>Bu kayıt için düzenleme geçmişi detayı bu prototipte girilmedi.</p>'
+      + '</div>';
+  }
+
+  document.getElementById('btnRaporla').addEventListener('click', function(){
+    gvToast('Sayım kaydı raporu oluşturuldu (demo).', {type:'info'});
+  });
+
+  /* "Sil" butonu — ui.js'teki genel yıkıcı-aksiyon yakalayıcısı (DESTR.sil) metni ve
+     fa-trash ikonunu tanıyıp otomatik onay modalı açar; ekstra JS gerekmez. */
+})();
+</script>
+</body>
+</html>

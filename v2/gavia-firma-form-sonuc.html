@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){
+  try{
+    var q = new URLSearchParams(location.search);
+    var role = q.get('role');
+    if(role){ localStorage.setItem('gv_crm_role', role); }
+    else { role = localStorage.getItem('gv_crm_role'); }
+    if(role !== 'superadmin'){ location.replace('index.html'); }
+  }catch(e){ location.replace('index.html'); }
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Platform Konsolu — Deneme Hesabı Oluşturuldu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ PLATFORM KONSOLU — ortak kabuk (bkz. gavia-panel.html) ============ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--font);color:var(--on-dark)}
+.pc-app{min-height:100vh;display:flex;flex-direction:column;background:var(--gv-deep);
+  background-image:radial-gradient(1100px 620px at 100% -10%, rgba(63,213,173,.10), transparent 60%),
+    radial-gradient(900px 520px at -10% 110%, rgba(63,213,173,.06), transparent 55%);
+  background-repeat:no-repeat;}
+.pc-top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:16px;
+  padding:0 clamp(18px,3vw,40px);height:66px;border-bottom:1px solid var(--gv-border-dark);
+  background:rgba(2,8,55,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.pc-mark{width:38px;height:38px;flex:none;border-radius:11px;background:linear-gradient(155deg,#3FD5AD,#4FE5BD);
+  display:grid;place-items:center;font-weight:800;font-size:17px;color:#020837;letter-spacing:-.5px}
+.pc-brand{display:flex;flex-direction:column;line-height:1.2}
+.pc-brand b{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.pc-brand span{font-size:10px;font-weight:700;color:var(--on-dark-mut);letter-spacing:.06em;text-transform:uppercase}
+.pc-div{width:1px;height:26px;background:var(--gv-border-dark);flex:none}
+.pc-nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.pc-nav::-webkit-scrollbar{display:none}
+.pc-nav a{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--r-pill);
+  font-size:13px;font-weight:700;color:var(--on-dark-mut);text-decoration:none;transition:.18s var(--ease);white-space:nowrap}
+.pc-nav a:hover{color:#fff;background:rgba(255,255,255,.05)}
+.pc-nav a.is-on{color:var(--gv-deep);background:var(--gv-mint)}
+.pc-top-r{margin-left:auto;display:flex;align-items:center;gap:12px;flex:none}
+.pc-persona{display:flex;align-items:center;gap:10px}
+.pc-ava{width:32px;height:32px;border-radius:50%;flex:none;background:var(--gv-mint-glow);color:var(--gv-mint-bright);
+  display:grid;place-items:center;font-size:12px;font-weight:800}
+.pc-persona-id{line-height:1.25;display:none}
+.pc-persona-id b{display:block;font-size:12.5px;font-weight:700;color:#fff}
+.pc-persona-id span{font-size:10.5px;color:var(--on-dark-mut)}
+@media(min-width:860px){.pc-persona-id{display:block}}
+.pc-back{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:var(--r-md);
+  border:1px solid var(--gv-border-dark);color:var(--on-dark);font-size:13px;font-weight:700;
+  text-decoration:none;transition:.18s var(--ease);white-space:nowrap;font-family:inherit}
+.pc-back:hover{border-color:var(--gv-mint);background:rgba(255,255,255,.04)}
+.pc-back i{color:var(--gv-mint);font-size:11px}
+@media(max-width:720px){.pc-back span{display:none}}
+.pc-main{flex:1;width:100%;max-width:820px;margin:0 auto;padding:clamp(24px,3vw,40px) clamp(18px,3vw,40px) 60px}
+.btn-mint{background:var(--gv-mint);color:var(--gv-deep)}
+.btn-mint:hover{background:var(--gv-mint-bright);transform:translateY(-2px)}
+.btn-ghost-dk{background:transparent;color:var(--on-dark);border:1px solid var(--gv-border-dark)}
+.btn-ghost-dk:hover{border-color:var(--gv-mint);color:#fff;transform:translateY(-2px)}
+.pc-card{background:var(--gv-night);border:1px solid var(--gv-border-dark);border-radius:var(--r-lg)}
+.pc-card-head{display:flex;align-items:center;gap:10px;padding:17px 22px;border-bottom:1px solid var(--gv-border-dark);flex-wrap:wrap}
+.pc-card-title{font-size:14.5px;font-weight:800;color:#fff;display:flex;align-items:center;gap:9px;letter-spacing:-.01em}
+.pc-card-title i{color:var(--gv-mint);font-size:13px}
+.pc-card-body{padding:20px 22px}
+.pc-card-foot{padding:13px 22px;border-top:1px solid var(--gv-border-dark);font-size:12px;color:var(--on-dark-faint);display:flex;align-items:center;gap:8px}
+.pc-card-foot i{color:var(--gv-mint)}
+.pc-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 22px}
+@media(max-width:560px){.pc-fields{grid-template-columns:minmax(0,1fr)}}
+.pc-fitem{min-width:0}
+.pc-fitem b{display:block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--on-dark-faint);margin-bottom:5px}
+.pc-fitem span{font-size:13.5px;color:#fff;font-weight:600;line-height:1.4}
+
+/* ---- sonuç hero ---- */
+.fr-hero{padding:44px 32px 36px;text-align:center}
+.fr-ico{width:76px;height:76px;margin:0 auto 20px;border-radius:50%;background:var(--gv-mint-glow);
+  color:var(--gv-mint-bright);display:flex;align-items:center;justify-content:center;font-size:30px}
+.fr-title{font-size:23px;font-weight:800;color:#fff;margin:0 0 9px;letter-spacing:-.01em}
+.fr-desc{font-size:14px;color:var(--on-dark-mut);max-width:480px;margin:0 auto 22px;line-height:1.6}
+.fr-cta-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+
+/* ---- giriş linki kutusu ---- */
+.fr-link-box{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);
+  border:1px solid var(--gv-border-dark);border-radius:var(--r-md);padding:12px 14px}
+.fr-link-box i{color:var(--gv-mint);font-size:13px;flex:none}
+.fr-link-box span{flex:1;min-width:0;font-size:13px;color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.fr-copy-btn{flex:none;width:32px;height:32px;border-radius:8px;border:1px solid var(--gv-border-dark);
+  background:transparent;color:var(--on-dark-mut);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.18s var(--ease)}
+.fr-copy-btn:hover{border-color:var(--gv-mint);color:var(--gv-mint-bright)}
+.fr-copy-btn.is-done{color:var(--gv-mint-bright);border-color:var(--gv-mint)}
+
+/* ---- sonraki adım listesi ---- */
+.fr-next{padding:6px 22px 18px;display:flex;flex-direction:column;gap:0}
+.fr-next-item{display:flex;gap:12px;align-items:flex-start;padding:12px 0}
+.fr-next-item+.fr-next-item{border-top:1px dashed var(--gv-border-dark)}
+.fr-next-ico{width:24px;height:24px;flex:none;border-radius:7px;background:var(--gv-mint-glow);color:var(--gv-mint-bright);
+  display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:1px}
+.fr-next-txt{font-size:13px;color:var(--on-dark);line-height:1.55;padding-top:2px}
+
+@media(max-width:640px){
+  .fr-hero{padding:32px 18px 28px}
+  .fr-cta-row{flex-direction:column;align-items:stretch}
+  .fr-cta-row .btn{width:100%;justify-content:center}
+  .pc-card-body{padding:16px}
+  .pc-card-head{padding:14px 16px}
+}
+</style>
+</head>
+<body>
+<div class="pc-app">
+  <header class="pc-top">
+    <div class="pc-mark">G</div>
+    <div class="pc-brand"><b>Gaviaworks</b><span>Platform Konsolu</span></div>
+    <div class="pc-div"></div>
+    <nav class="pc-nav" aria-label="Konsol sekmeleri">
+      <a href="gavia-panel.html"><i class="fa-solid fa-gauge-high"></i> Genel Bakış</a>
+      <a href="gavia-firmalar.html" class="is-on"><i class="fa-solid fa-building"></i> Firmalar</a>
+      <a href="gavia-paketler.html"><i class="fa-solid fa-box-open"></i> Paketler</a>
+      <a href="gavia-mrr-raporu.html"><i class="fa-solid fa-chart-line"></i> MRR Raporu</a>
+      <a href="gavia-churn-riski.html"><i class="fa-solid fa-triangle-exclamation"></i> Churn Riski</a>
+    </nav>
+    <div class="pc-top-r">
+      <div class="pc-persona">
+        <div class="pc-ava">DA</div>
+        <div class="pc-persona-id"><b>Deniz Aksoy</b><span>Gavia Platform Yöneticisi</span></div>
+      </div>
+      <a class="pc-back" href="crm-panel.html?role=superadmin"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span>CRM'e Dön</span></a>
+    </div>
+  </header>
+
+  <main class="pc-main">
+    <!-- statik bake: parametresiz/varsayılan durum — JS ?unvan=&paket=&yetkili=&eposta= varsa üzerine yazar -->
+    <div class="pc-card">
+      <div class="fr-hero">
+        <div class="fr-ico"><i class="fa-solid fa-hourglass-start"></i></div>
+        <h1 class="fr-title" id="frTitle">Deneme Hesabı Oluşturuldu</h1>
+        <p class="fr-desc" id="frDesc">Yeni firma platforma kaydedildi ve 14 günlük ücretsiz deneme süreci başlatıldı. Deneme sonunda ücretli pakete geçiş veya ücretsiz tier'a düşüş manuel onaylanır.</p>
+        <div class="fr-cta-row" id="frCtaRow">
+          <a class="btn btn-mint btn-sm" href="gavia-firmalar.html" id="frCtaPrimary"><i class="fa-solid fa-building"></i> Firmalar Listesine Dön</a>
+          <a class="btn btn-ghost-dk btn-sm" href="gavia-firma-form.html" id="frCtaSecondary"><i class="fa-solid fa-plus"></i> Yeni Firma Ekle</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="pc-card" style="margin-top:16px">
+      <div class="pc-card-head"><div class="pc-card-title"><i class="fa-solid fa-building-user"></i> Tenant Bilgisi</div></div>
+      <div class="pc-card-body">
+        <div class="pc-fields">
+          <div class="pc-fitem full" style="grid-column:1/-1"><b>Firma unvanı</b><span id="frUnvan">Yeni Firma A.Ş.</span></div>
+          <div class="pc-fitem"><b>Paket</b><span id="frPaket">Basic</span></div>
+          <div class="pc-fitem"><b>Birincil yetkili</b><span id="frYetkili">—</span></div>
+          <div class="pc-fitem"><b>Kurumsal e-posta</b><span id="frEposta">—</span></div>
+          <div class="pc-fitem"><b>Deneme başlangıcı</b><span id="frBaslangic">2 Temmuz 2026</span></div>
+          <div class="pc-fitem"><b>Deneme bitiş tarihi</b><span id="frBitis">16 Temmuz 2026 (14 gün)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pc-card" style="margin-top:16px">
+      <div class="pc-card-head"><div class="pc-card-title"><i class="fa-solid fa-link"></i> Giriş Linki</div></div>
+      <div class="pc-card-body">
+        <div class="fr-link-box">
+          <i class="fa-solid fa-globe"></i>
+          <span id="frGirisLink">crm.yeni-firma.example</span>
+          <button type="button" class="fr-copy-btn" id="frCopyBtn" aria-label="Linki kopyala"><i class="fa-regular fa-copy"></i></button>
+        </div>
+      </div>
+      <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> Bu prototipte alt alan adı gerçek bir ortama yönlendirmez — kopyalama simülasyondur.</div>
+    </div>
+
+    <div class="pc-card" style="margin-top:16px">
+      <div class="pc-card-head"><div class="pc-card-title"><i class="fa-solid fa-list-check"></i> Sonraki Adım</div></div>
+      <div class="fr-next" id="frNext">
+        <div class="fr-next-item"><span class="fr-next-ico"><i class="fa-solid fa-paper-plane"></i></span><span class="fr-next-txt">Giriş linki ve ilk şifre, birincil yetkiliye e-posta ile gönderildi (simülasyon).</span></div>
+        <div class="fr-next-item"><span class="fr-next-ico"><i class="fa-solid fa-hourglass-half"></i></span><span class="fr-next-txt">Deneme süresi boyunca kullanım Firma Detayı &gt; Kullanım Analitiği sekmesinden izlenebilir.</span></div>
+        <div class="fr-next-item"><span class="fr-next-ico"><i class="fa-solid fa-arrow-up-right-dots"></i></span><span class="fr-next-txt">Deneme bitiminde firma ücretli pakete geçmezse otomatik olarak Ücretsiz tier'a düşer.</span></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var unvan = q.get('unvan');
+  if(!unvan) return; /* parametresiz — statik bake aynen kalır */
+
+  var paket = q.get('paket') || 'Basic';
+  var yetkili = q.get('yetkili') || '—';
+  var eposta = q.get('eposta') || '—';
+
+  function slugify(s){
+    return s.toLocaleLowerCase('tr').replace(/ı/g,'i').replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ö/g,'o').replace(/ç/g,'c')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'yeni-firma';
+  }
+  var slug = slugify(unvan);
+  var girisLink = 'crm.' + slug + '.example';
+
+  var today = new Date(2026, 6, 2); // 2 Temmuz 2026 — kanonik "bugün" (shell.js ile tutarlı)
+  var bitis = new Date(today); bitis.setDate(bitis.getDate() + 14);
+  var AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  function fmt(d){ return d.getDate() + ' ' + AYLAR[d.getMonth()] + ' ' + d.getFullYear(); }
+
+  document.getElementById('frTitle').textContent = unvan + ' İçin Deneme Hesabı Oluşturuldu';
+  document.getElementById('frDesc').textContent = unvan + ' platforma kaydedildi ve "' + paket + '" paketini 14 gün ücretsiz deniyor. Deneme sonunda ücretli pakete geçiş veya ücretsiz tier\'a düşüş manuel onaylanır.';
+  document.getElementById('frUnvan').textContent = unvan;
+  document.getElementById('frPaket').textContent = paket;
+  document.getElementById('frYetkili').textContent = yetkili;
+  document.getElementById('frEposta').textContent = eposta;
+  document.getElementById('frBaslangic').textContent = fmt(today);
+  document.getElementById('frBitis').textContent = fmt(bitis) + ' (14 gün)';
+  document.getElementById('frGirisLink').textContent = girisLink;
+  document.getElementById('frNext').children[0].querySelector('.fr-next-txt').textContent =
+    'Giriş linki ve ilk şifre, ' + yetkili + ' adlı yetkiliye (' + eposta + ') e-posta ile gönderildi (simülasyon).';
+
+  document.getElementById('frCopyBtn').addEventListener('click', function(){
+    var btn = this;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(girisLink).catch(function(){});
+    }
+    btn.classList.add('is-done');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+    gvToast('Giriş linki kopyalandı.', {type:'ok'});
+    setTimeout(function(){ btn.classList.remove('is-done'); btn.innerHTML = '<i class="fa-regular fa-copy"></i>'; }, 1800);
+  });
+})();
+</script>
+</body>
+</html>

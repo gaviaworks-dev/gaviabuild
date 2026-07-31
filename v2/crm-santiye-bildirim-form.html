@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Saha Bildirimi Paylaş — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Saha Bildirimi Paylaşım Formu ============
+   Kaynak-transfer: crm-personel-avans-form.html (form-grid/gform/form-foot/gvChain-benzeri
+   önizleme deseni) + crm-satinalma-talep-form.html (Taslak Kaydet / Gönder ikili aksiyon).
+   Yeni form mimarisi icat edilmedi. */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+
+.file-drop{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.file-drop i{font-size:14px;color:var(--line-2)}
+
+/* aciliyet — crm-gorev-form.html'deki tip-group idiyomunun aynısı (yeni desen icat edilmedi) */
+.tip-group{display:flex;gap:8px;flex-wrap:wrap}
+.tip-opt{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
+.tip-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.tip-opt::before{content:"";width:7px;height:7px;border-radius:var(--r-circle);background:var(--muted)}
+.tip-opt[data-t="bilgi"]::before{background:var(--info)}
+.tip-opt[data-t="takip"]::before{background:var(--warn)}
+.tip-opt[data-t="acil"]::before{background:var(--danger)}
+.tip-opt.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+
+/* canlı önizleme — feed kartıyla (crm-santiye-bildirimler.html) AYNI görsel dil.
+   GÖRSEL KURAL: fotoğraf <img> DEĞİL, div + background-image (cover/center). */
+.prev-photo{aspect-ratio:16/9;background-size:cover;background-position:center;position:relative;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md) var(--r-md) 0 0}
+.prev-photo i{font-size:28px;color:rgba(255,255,255,.9)}
+.prev-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,8,55,0) 55%,rgba(2,8,55,.34) 100%)}
+.prev-tag{position:absolute;left:12px;bottom:10px;z-index:1;display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:var(--r-pill);background:rgba(255,255,255,.92);color:var(--ink)}
+.photo-vadi{background-image:linear-gradient(135deg, color-mix(in srgb, var(--acc) 55%, var(--gv-deep)) 0%, color-mix(in srgb, var(--acc) 18%, var(--gv-deep)) 100%)}
+.photo-liman{background-image:linear-gradient(135deg, color-mix(in srgb, var(--info) 60%, var(--gv-deep)) 0%, color-mix(in srgb, var(--info) 18%, var(--gv-deep)) 100%)}
+.photo-merkez{background-image:linear-gradient(135deg, color-mix(in srgb, var(--warn) 55%, var(--gv-deep)) 0%, color-mix(in srgb, var(--warn) 16%, var(--gv-deep)) 100%)}
+.prev-body{padding:14px 16px}
+.prev-body b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.prev-body span{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ============ MEDYA / BELGE EKİ — §9.1 video yükleme (D-Dalga20) ============
+   Gerçek File API akışı: seç → yükleniyor (gerçek %) → (video için) işleniyor →
+   hazır önizleme kartı; hata yolu dosya adı /hata|error|fail/ desenine göre tetiklenir
+   (yeniden dene ile ikinci denemede daima başarı — test edilebilir determinizm). */
+.media-drop{border:1.5px dashed var(--line-2);border-radius:var(--r-md);padding:16px;text-align:center;transition:.18s var(--ease)}
+.media-drop.is-drag{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.06)}
+.media-drop-btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--acc-ink);cursor:pointer}
+.media-drop-btn i{font-size:16px}
+.media-hint{display:block;margin-top:7px;font-size:11.5px;color:var(--muted);font-weight:500}
+
+.media-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.media-item{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);transition:.18s var(--ease)}
+.media-item[data-state="hata"]{border-color:color-mix(in srgb, var(--danger) 30%, var(--line));background:var(--danger-tint)}
+.media-thumb{width:52px;height:52px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:18px;color:#fff;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.media-thumb .mt-play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(2,8,55,.28);font-size:14px}
+.media-thumb .mt-dur{position:absolute;right:3px;bottom:2px;font-size:8.5px;font-weight:800;background:rgba(2,8,55,.75);padding:1px 4px;border-radius:4px;letter-spacing:.01em}
+.media-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.media-info b{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-meta{font-size:11.5px;color:var(--muted)}
+.media-status{font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.media-status.st-yukleniyor{color:var(--info)}
+.media-status.st-isleniyor{color:var(--warn)}
+.media-status.st-hazir{color:var(--ok)}
+.media-status.st-hata{color:var(--danger)}
+.media-acts{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;flex:none}
+.media-acts-row{display:flex;gap:6px}
+
+.media-cover-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.media-cover-opt{width:44px;height:44px;border-radius:7px;border:2px solid var(--line);cursor:pointer;position:relative;display:grid;place-items:center;font-size:8.5px;font-weight:800;color:#fff;overflow:hidden}
+.media-cover-opt.is-sel{border-color:var(--acc-ink);box-shadow:0 0 0 2px rgba(var(--acc-rgb),.25)}
+.media-cover-opt span{position:relative;z-index:1;background:rgba(2,8,55,.55);padding:1px 4px;border-radius:3px}
+</style>
+</head>
+<body data-sec="santiye" data-screen="bildirimler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-santiye-bildirimler.html">Saha Bildirimleri</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbNow">Bildirim Paylaş</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Saha</div>
+        <h1 id="pageTitle">Saha Bildirimi Paylaş</h1>
+        <div class="ph-sub" id="pageSub">Foto ve notunuz şantiye akışına düşer; ilgili ekip üyeleri bildirimden haberdar olur.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-camera"></i> Bildirim Bilgileri</div></div>
+        <div class="gc-body">
+          <form class="gform" id="bildirimForm">
+            <div class="gfield">
+              <label for="fSantiye">Şantiye</label>
+              <select id="fSantiye">
+                <option value="vadi">Vadi Konakları</option>
+                <option value="liman">Liman Lojistik Merkezi</option>
+                <option value="merkez">Merkez Şantiye</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fTur">Bildirim Türü</label>
+              <select id="fTur">
+                <option value="Yapı İlerlemesi" data-ic="fa-helmet-safety" data-slug="yapi" selected>Yapı İlerlemesi</option>
+                <option value="Şantiye İlerleme Kaydı" data-ic="fa-chart-line" data-slug="ilerleme-kaydi">Şantiye İlerleme Kaydı</option>
+                <option value="Beton Dökümü" data-ic="fa-trowel" data-slug="beton">Beton Dökümü</option>
+                <option value="Elektrik/Mekanik" data-ic="fa-bolt" data-slug="elektrik">Elektrik/Mekanik</option>
+                <option value="Malzeme Teslimatı" data-ic="fa-truck-pickup" data-slug="malzeme">Malzeme Teslimatı</option>
+                <option value="Atölye/Depo" data-ic="fa-warehouse" data-slug="atolye">Atölye/Depo</option>
+                <option value="Makine Arızası" data-ic="fa-gears" data-slug="makine-ariza">Makine Arızası</option>
+                <option value="Hasar/Arıza" data-ic="fa-house-crack" data-slug="hasar">Hasar/Arıza</option>
+                <option value="Taşeron Sahada" data-ic="fa-people-group" data-slug="taseron-sahada">Taşeron Sahada</option>
+                <option value="İş Tamamlandı" data-ic="fa-circle-check" data-slug="is-tamamlandi">İş Tamamlandı</option>
+                <option value="Revize Gerekiyor" data-ic="fa-rotate-left" data-slug="revize-gerekiyor">Revize Gerekiyor</option>
+                <option value="Kalite Kontrol" data-ic="fa-magnifying-glass" data-slug="kalite">Kalite Kontrol</option>
+                <option value="Denetim Notu" data-ic="fa-clipboard-check" data-slug="denetim">Denetim Notu</option>
+                <option value="İSG" data-ic="fa-shield-halved" data-slug="isg">İSG</option>
+                <option value="İSG Uygunsuzluğu" data-ic="fa-triangle-exclamation" data-slug="isg-uygunsuzluk">İSG Uygunsuzluğu</option>
+                <option value="Acil Durum" data-ic="fa-siren" data-slug="acil">Acil Durum</option>
+                <option value="Hava Koşulu Etkisi" data-ic="fa-cloud-rain" data-slug="hava">Hava Koşulu Etkisi</option>
+                <option value="Çevre" data-ic="fa-leaf" data-slug="cevre">Çevre</option>
+                <option value="Hakediş Kanıt Fotoğrafı" data-ic="fa-file-invoice-dollar" data-slug="hakedis-kanit">Hakediş Kanıt Fotoğrafı</option>
+                <option value="Öncesi/Sonrası Kaydı" data-ic="fa-images" data-slug="oncesi-sonrasi">Öncesi/Sonrası Kaydı</option>
+              </select>
+            </div>
+            <div class="gfield full">
+              <label>Aciliyet</label>
+              <div class="tip-group" id="aciliyetGroup">
+                <label class="tip-opt is-on" data-t="bilgi"><input type="radio" name="aciliyet" value="bilgi" checked> Bilgi Amaçlı</label>
+                <label class="tip-opt" data-t="takip"><input type="radio" name="aciliyet" value="takip"> Takip Gerekli</label>
+                <label class="tip-opt" data-t="acil"><input type="radio" name="aciliyet" value="acil"> Acil</label>
+              </div>
+            </div>
+            <div class="gfield full">
+              <label for="fKonum">Konum / Blok <span class="gf-hint">(isteğe bağlı)</span></label>
+              <input type="text" id="fKonum" placeholder="Örn. B Blok, 3. Kat">
+            </div>
+            <div class="gfield full">
+              <label for="fAciklama">Açıklama</label>
+              <textarea id="fAciklama" rows="4" placeholder="Ne oldu, nerede, kimler dahil — kısaca yazın…"></textarea>
+            </div>
+            <div class="gfield full">
+              <label for="fMedya">Medya / Belge Eki <span class="gf-hint">(isteğe bağlı)</span></label>
+              <div class="media-drop" id="mediaDrop">
+                <input type="file" id="fMedya" accept="image/*,video/*,.pdf,.dwg,.doc,.docx,.xls,.xlsx" multiple hidden>
+                <label for="fMedya" class="media-drop-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Dosya seç veya sürükleyip bırakın</label>
+                <span class="media-hint">Fotoğraf, video, PDF, teknik doküman, kısa saha klibi, öncesi/sonrası görseli — fotoğraf ≤15 MB · video ≤250 MB / 120 sn · belge ≤25 MB (demo sınırı)</span>
+              </div>
+              <div class="media-list" id="mediaList"></div>
+            </div>
+            <div class="gfield">
+              <label for="fBildiren">Bildiren</label>
+              <input type="text" id="fBildiren" readonly>
+            </div>
+            <div class="gfield">
+              <label for="fTarihSaat">Tarih / Saat</label>
+              <input type="text" id="fTarihSaat" readonly>
+            </div>
+          </form>
+        </div>
+        <div class="form-foot">
+          <a class="btn btn-ghost btn-sm" href="crm-santiye-bildirimler.html" data-no-confirm>Vazgeç</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnDraft" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Taslak Olarak Kaydet</button>
+          <button type="button" class="btn btn-acc btn-sm" id="btnGonder" data-no-confirm><i class="fa-solid fa-paper-plane"></i> Bildirimi Paylaş</button>
+        </div>
+      </div>
+
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-eye"></i> Önizleme</div></div>
+          <div class="prev-photo photo-vadi" id="prevPhoto"><i class="fa-solid fa-helmet-safety" id="prevIcon"></i><span class="prev-tag" id="prevTag"><i class="fa-solid fa-helmet-safety"></i> Yapı İlerlemesi</span></div>
+          <div class="prev-body">
+            <b id="prevBaslik">Açıklama girildikçe burada görünür…</b>
+            <span id="prevMeta">Bildiren · Şantiye · şimdi</span>
+          </div>
+          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Paylaşınca kayıt saha bildirimi akışında ve ilgili şantiye kartında görünür.</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var bildiren = document.getElementById('fBildiren');
+  if(bildiren) bildiren.value = (GV.R && GV.R.name ? GV.R.name : 'Oturum açan kullanıcı') + (GV.R && GV.R.role ? ' — ' + GV.R.role : '');
+
+  var MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var now = new Date();
+  var tarihSaat = document.getElementById('fTarihSaat');
+  if(tarihSaat){
+    tarihSaat.value = now.getDate() + ' ' + MONTHS[now.getMonth()] + ' ' + now.getFullYear() + ', '
+      + ('0'+now.getHours()).slice(-2) + ':' + ('0'+now.getMinutes()).slice(-2) + ' (şimdi)';
+  }
+
+  var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
+
+  var fSantiye = document.getElementById('fSantiye');
+  var fTur = document.getElementById('fTur');
+  var fAciklama = document.getElementById('fAciklama');
+  var prevPhoto = document.getElementById('prevPhoto');
+  var prevIcon = document.getElementById('prevIcon');
+  var prevTag = document.getElementById('prevTag');
+  var prevBaslik = document.getElementById('prevBaslik');
+  var prevMeta = document.getElementById('prevMeta');
+
+  function syncPreview(){
+    var site = fSantiye.value;
+    prevPhoto.className = 'prev-photo photo-' + site;
+    var opt = fTur.options[fTur.selectedIndex];
+    var ic = opt.getAttribute('data-ic') || 'fa-camera';
+    prevIcon.className = 'fa-solid ' + ic;
+    prevTag.innerHTML = '<i class="fa-solid ' + ic + '"></i> ' + opt.value;
+    var metin = fAciklama.value.trim();
+    prevBaslik.textContent = metin ? (metin.length > 78 ? metin.slice(0,78) + '…' : metin) : 'Açıklama girildikçe burada görünür…';
+    var ben = (GV.R && GV.R.name) ? GV.R.name : 'Siz';
+    prevMeta.textContent = ben + ' · ' + SANTIYE_ADI[site] + ' · şimdi';
+  }
+  [fSantiye, fTur, fAciklama].forEach(function(el){ el.addEventListener('input', syncPreview); el.addEventListener('change', syncPreview); });
+  syncPreview();
+
+  /* ============ §17 — Düzenle modu (?mod=duzenle&bil=NNN). Kaynak veri
+     crm-santiye-bildirimler.html feed kartlarıyla BİREBİR (22 kanonik bildirim). ============ */
+  var BIL_DATA = {
+    '001':{santiye:'vadi',tur:'yapi',aciklama:'B Blok temel betonu bugün tamamlandı, ekip 3. kat kalıp işine geçiyor. Döküm sırasında hava koşulları uygundu, numune küpleri laboratuvara gönderildi.'},
+    '002':{santiye:'vadi',tur:'elektrik',aciklama:'Zemin kat elektrik tesisatı döşemesi başladı, kablo kanalları B ve C aksında tamamlandı.'},
+    '003':{santiye:'liman',tur:'yapi',aciklama:'Çelik konstrüksiyon montajı 3. modülde tamamlandı; vinç operasyonu güvenlik çemberi kapatılarak yürütüldü, kaza/ramak kala kaydı yok.'},
+    '004':{santiye:'liman',tur:'isg',aciklama:'Haftalık İSG toplantısı yapıldı; baret, emniyet kemeri ve iş ayakkabısı kontrolü tüm ekipte tamamlandı, eksik ekipman yok.'},
+    '005':{santiye:'merkez',tur:'atolye',aciklama:'Atölye çatı kaplama işi yaklaşık %80 seviyesinde; kalan panel siparişi bu hafta içinde tamamlanacak.'},
+    '006':{santiye:'merkez',tur:'malzeme',aciklama:'Yeni gelen kalıp kerestesi sahaya indirildi ve depo alanında istiflendi; irsaliye Satın Alma\'ya iletildi.'},
+    '007':{santiye:'liman',tur:'kalite',aciklama:'Kaynak noktalarının kalite kontrolü tamamlandı; tutanak ve fotoğraflar ekte, revize gereken nokta çıkmadı.'},
+    '008':{santiye:'vadi',tur:'yapi',aciklama:'3. kat perde kalıbı kuruldu, demir donatı kontrolü için Teknik Müdür\'ün onayı bekleniyor.'},
+    '009':{santiye:'vadi',tur:'beton',aciklama:'C Blok perde betonu bugün döküldü, numune küpleri laboratuvara gönderildi.'},
+    '010':{santiye:'liman',tur:'hasar',aciklama:'Forklift hidrolik hortumunda sızıntı tespit edildi, ekipman geçici olarak devre dışı bırakıldı.'},
+    '011':{santiye:'vadi',tur:'isg-uygunsuzluk',aciklama:'3. kat kalıp iskelesinde iki işçinin emniyet kemeri takmadığı tespit edildi, uyarı yapıldı ve İSG sorumlusuna bildirildi.'},
+    '012':{santiye:'merkez',tur:'makine-ariza',aciklama:'Atölyedeki kompresörde arıza oluştu, yedek parça siparişi Satın Alma\'ya iletildi; iş bu süreçte mobil kompresörle sürdürülüyor.'},
+    '013':{santiye:'vadi',tur:'taseron-sahada',aciklama:'Demir-Beton İnş. Ltd. ekibi bugün 10 kişilik kadrosundan 8\'iyle sahada, B Blok demir donatı işine devam ediyor.'},
+    '014':{santiye:'liman',tur:'is-tamamlandi',aciklama:'3. modül çelik konstrüksiyon montajı tamamlandı, teslim tutanağı hazırlandı.'},
+    '015':{santiye:'vadi',tur:'revize-gerekiyor',aciklama:'B Blok 3. kat perde kalıbı ölçüsünde sapma tespit edildi, teknik ofisten revize onayı bekleniyor.'},
+    '016':{santiye:'liman',tur:'acil',aciklama:'Vinç operasyonu sırasında ani rüzgar nedeniyle çalışma durduruldu, ekip güvenli alana çekildi; acil durum protokolü uygulandı.'},
+    '017':{santiye:'merkez',tur:'hava',aciklama:'Beklenmeyen sağanak nedeniyle atölye çatı işi bugün durduruldu, program bir gün ötelendi.'},
+    '018':{santiye:'liman',tur:'denetim',aciklama:'Haftalık kalite denetiminde temel kalıp toleransları kontrol edildi, iki noktada küçük sapma raporlandı.'},
+    '019':{santiye:'vadi',tur:'hakedis-kanit',aciklama:'Haziran dönemi hakediş kanıtı için B Blok temel imalatının fotoğrafları çekildi, muhasebeye iletildi.'},
+    '020':{santiye:'merkez',tur:'oncesi-sonrasi',aciklama:'Atölye çatı kaplaması öncesi/sonrası karşılaştırma kaydı alındı, %80 tamamlanma net görülüyor.'},
+    '021':{santiye:'liman',tur:'cevre',aciklama:'Şantiye çevresine yağmur suyu drenaj hattı için geçici toprak set çekildi, çevre etkisi azaltıldı.'},
+    '022':{santiye:'vadi',tur:'ilerleme-kaydi',aciklama:'Haftalık şantiye ilerleme kaydı: 3. kat kalıp %60 tamamlandı, malzeme akışı planlandığı gibi.'}
+  };
+  var q = new URLSearchParams(location.search);
+  var mod = q.get('mod');
+  var bilNo = q.get('bil');
+  var isEdit = mod === 'duzenle' && bilNo && BIL_DATA[bilNo];
+  if(isEdit){
+    var rec = BIL_DATA[bilNo];
+    document.getElementById('crumbNow').textContent = 'SBL-2026-' + bilNo + ' — Düzenle';
+    document.getElementById('pageTitle').textContent = 'Bildirimi Düzenle — SBL-2026-' + bilNo;
+    document.getElementById('pageSub').textContent = 'Mevcut saha bildirimi üzerinde değişiklik yapın; değişiklikler işlem kayıtlarına yazılır.';
+    fSantiye.value = rec.santiye;
+    Array.prototype.forEach.call(fTur.options, function(o){ if(o.getAttribute('data-slug') === rec.tur) fTur.value = o.value; });
+    fAciklama.value = rec.aciklama;
+    document.getElementById('btnGonder').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet';
+    syncPreview();
+  }
+
+  /* ============ MEDYA / BELGE EKİ — §9.1 video yükleme (D-Dalga20) ============
+     Gerçek File API akışı: dosya boyutu ve (video için) süre GERÇEKTEN File/Video API'siyle
+     ölçülür (uydurma değil). Akış: yukleniyor(gerçek %) → (video) isleniyor → hazir | hata.
+     Determinizm: dosya adı /hata|error|fail/ desenine uyarsa İLK denemede hata üretir,
+     "Yeniden Dene" ikinci denemede DAİMA başarıya döner — QA'nın uçtan uca doğrulayabilmesi için. */
+  var mediaList = document.getElementById('mediaList');
+  var fMedya = document.getElementById('fMedya');
+  var mediaDrop = document.getElementById('mediaDrop');
+  var mediaItems = [];
+  var mediaSeq = 0;
+  var replaceTarget = null;
+  var MEDIA_LIMIT = { image: 15*1024*1024, video: 250*1024*1024, doc: 25*1024*1024 };
+  var MAX_VIDEO_SEC = 120;
+
+  function mediaKind(file){
+    if(/^image\//.test(file.type)) return 'image';
+    if(/^video\//.test(file.type)) return 'video';
+    return 'doc';
+  }
+  function humanSize(bytes){
+    if(bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes/1024)) + ' KB';
+  }
+  function docIcon(name){
+    if(/\.pdf$/i.test(name)) return 'fa-file-pdf';
+    if(/\.dwg$/i.test(name)) return 'fa-drafting-compass';
+    if(/\.(doc|docx)$/i.test(name)) return 'fa-file-word';
+    if(/\.(xls|xlsx)$/i.test(name)) return 'fa-file-excel';
+    return 'fa-file-lines';
+  }
+  var COVER_TONES = ['rgba(63,213,173,.7)','rgba(59,111,212,.7)','rgba(169,121,8,.7)'];
+  var COVER_LABELS = ['00:02','00:06','00:10'];
+
+  function renderCoverRow(item){
+    var html = '<div class="media-cover-row">';
+    for(var i=0;i<3;i++){
+      html += '<div class="media-cover-opt' + (item.coverIdx===i?' is-sel':'') + '" data-cover-idx="' + i + '" style="background:linear-gradient(135deg,' + COVER_TONES[i] + ', var(--gv-deep))" data-tip="Bu kareyi kapak yap"><span>' + COVER_LABELS[i] + '</span></div>';
+    }
+    return html + '</div>';
+  }
+
+  function renderItem(item){
+    var el = item.el;
+    el.setAttribute('data-state', item.state);
+    var thumbBg, thumbHtml;
+    if(item.kind === 'image'){
+      thumbBg = 'linear-gradient(135deg, rgba(var(--acc-rgb),.55), var(--gv-deep))';
+      thumbHtml = '<i class="fa-solid fa-image"></i>';
+    } else if(item.kind === 'video'){
+      thumbBg = 'linear-gradient(135deg,' + COVER_TONES[item.coverIdx] + ', var(--gv-deep))';
+      thumbHtml = '<div class="mt-play"><i class="fa-solid fa-play"></i></div>' + (item.durLbl ? '<span class="mt-dur">' + item.durLbl + '</span>' : '');
+    } else {
+      thumbBg = 'var(--gv-night)';
+      thumbHtml = '<i class="fa-solid ' + docIcon(item.name) + '"></i>';
+    }
+
+    var statusHtml = '';
+    if(item.state === 'yukleniyor'){
+      statusHtml = '<div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:' + item.progress + '%"></div></div><span class="gbar-val">%' + item.progress + '</span></div>';
+    } else if(item.state === 'isleniyor'){
+      statusHtml = '<span class="media-status st-isleniyor"><i class="fa-solid fa-gear fa-spin"></i> Video işleniyor…</span>';
+    } else if(item.state === 'hazir'){
+      statusHtml = '<span class="media-status st-hazir"><i class="fa-solid fa-circle-check"></i> Yüklendi' + (item.kind==='video' ? ' · kapak: ' + COVER_LABELS[item.coverIdx] : '') + '</span>';
+    } else if(item.state === 'hata'){
+      statusHtml = '<span class="media-status st-hata"><i class="fa-solid fa-triangle-exclamation"></i> ' + item.errMsg + '</span>';
+    }
+
+    var acts = '';
+    if(item.state === 'hata') acts += '<button type="button" class="ia-btn" data-act="retry" data-tip="Yeniden dene" aria-label="Yeniden dene"><i class="fa-solid fa-rotate-right"></i></button>';
+    if(item.kind === 'video' && item.state === 'hazir') acts += '<button type="button" class="ia-btn" data-act="cover" data-tip="Kapak seç" aria-label="Kapak seç"><i class="fa-solid fa-image"></i></button>';
+    if(item.state === 'hazir' || item.state === 'hata') acts += '<button type="button" class="ia-btn" data-act="replace" data-tip="Değiştir" aria-label="Değiştir"><i class="fa-solid fa-rotate"></i></button>';
+    acts += '<button type="button" class="ia-btn danger" data-act="remove" data-no-confirm data-tip="Kaldır" aria-label="Kaldır"><i class="fa-solid fa-trash"></i></button>';
+
+    el.innerHTML = '<div class="media-thumb" style="background:' + thumbBg + '">' + thumbHtml + '</div>'
+      + '<div class="media-info"><b>' + item.name + '</b><span class="media-meta">' + humanSize(item.size) + ' · ' + item.kindLbl + '</span>' + statusHtml
+      + (item.kind === 'video' && item.coverOpen ? renderCoverRow(item) : '') + '</div>'
+      + '<div class="media-acts"><div class="media-acts-row">' + acts + '</div></div>';
+  }
+
+  function startUpload(item){
+    item.progress = 0;
+    item.state = 'yukleniyor';
+    renderItem(item);
+    var forceError = /hata|error|fail/i.test(item.name) && (item.attempt || 0) === 0;
+    var tick = setInterval(function(){
+      item.progress = Math.min(100, item.progress + Math.round(8 + Math.random()*16));
+      renderItem(item);
+      if(item.progress >= 100){
+        clearInterval(tick);
+        setTimeout(function(){ finishUpload(item, forceError); }, 200);
+      }
+    }, 140);
+  }
+
+  function finishUpload(item, forceError){
+    item.attempt = (item.attempt || 0) + 1;
+    if(forceError){
+      item.state = 'hata';
+      item.errMsg = 'Yükleme başarısız oldu — bağlantı kesildi (demo).';
+      renderItem(item);
+      gvToast(item.name + ' yüklenemedi.', {type:'danger'});
+      return;
+    }
+    if(item.kind === 'video'){
+      item.state = 'isleniyor';
+      renderItem(item);
+      setTimeout(function(){ item.state = 'hazir'; renderItem(item); }, 1100);
+    } else {
+      item.state = 'hazir';
+      renderItem(item);
+    }
+  }
+
+  function addFile(file){
+    mediaSeq++;
+    var kind = mediaKind(file);
+    var limit = MEDIA_LIMIT[kind];
+    var item = {
+      id:'m'+mediaSeq, name:file.name, size:file.size, kind:kind,
+      kindLbl: kind==='image' ? 'Fotoğraf' : kind==='video' ? 'Video' : 'Belge',
+      state:'yukleniyor', progress:0, attempt:0, coverIdx:0, coverOpen:false, durLbl:''
+    };
+    var el = document.createElement('div');
+    el.className = 'media-item';
+    el.dataset.id = item.id;
+    item.el = el;
+    mediaList.appendChild(el);
+    mediaItems.push(item);
+
+    if(file.size > limit){
+      item.state = 'hata';
+      item.errMsg = (kind==='image'?'Fotoğraf 15 MB':kind==='video'?'Video 250 MB':'Belge 25 MB') + ' sınırını aşıyor (demo kısıtı).';
+      renderItem(item);
+      gvToast(item.name + ' — dosya boyutu sınırı aşıldı.', {type:'danger'});
+      return;
+    }
+
+    if(kind === 'video'){
+      var url = URL.createObjectURL(file);
+      var probe = document.createElement('video');
+      probe.preload = 'metadata';
+      probe.onloadedmetadata = function(){
+        var dur = probe.duration || 0;
+        var mm = Math.floor(dur/60), ss = Math.round(dur%60);
+        item.durLbl = ('0'+mm).slice(-2) + ':' + ('0'+ss).slice(-2);
+        URL.revokeObjectURL(url);
+        if(dur > MAX_VIDEO_SEC){
+          item.state = 'hata';
+          item.errMsg = 'Video süresi 120 saniye sınırını aşıyor (demo kısıtı).';
+          renderItem(item);
+          gvToast(item.name + ' — video süresi sınırı aşıldı.', {type:'danger'});
+          return;
+        }
+        startUpload(item);
+      };
+      probe.onerror = function(){ URL.revokeObjectURL(url); startUpload(item); };
+      probe.src = url;
+    } else {
+      startUpload(item);
+    }
+  }
+
+  fMedya.addEventListener('change', function(){
+    var files = Array.prototype.slice.call(fMedya.files);
+    if(replaceTarget && files.length){
+      var oldItem = replaceTarget;
+      replaceTarget = null;
+      mediaItems = mediaItems.filter(function(m){ return m.id !== oldItem.id; });
+      oldItem.el.remove();
+    }
+    files.forEach(addFile);
+    fMedya.value = '';
+  });
+
+  if(mediaDrop){
+    ['dragenter','dragover'].forEach(function(evt){
+      mediaDrop.addEventListener(evt, function(e){ e.preventDefault(); mediaDrop.classList.add('is-drag'); });
+    });
+    ['dragleave','drop'].forEach(function(evt){
+      mediaDrop.addEventListener(evt, function(e){ e.preventDefault(); mediaDrop.classList.remove('is-drag'); });
+    });
+    mediaDrop.addEventListener('drop', function(e){
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if(files && files.length) Array.prototype.forEach.call(files, addFile);
+    });
+  }
+
+  mediaList.addEventListener('click', function(e){
+    var itemEl = e.target.closest('.media-item');
+    if(!itemEl) return;
+    var item = mediaItems.filter(function(m){ return m.id === itemEl.dataset.id; })[0];
+    if(!item) return;
+
+    var coverOpt = e.target.closest('[data-cover-idx]');
+    if(coverOpt){
+      item.coverIdx = parseInt(coverOpt.getAttribute('data-cover-idx'), 10);
+      item.coverOpen = false;
+      renderItem(item);
+      gvToast('Kapak görseli güncellendi.', {type:'info'});
+      return;
+    }
+
+    var actBtn = e.target.closest('[data-act]');
+    if(!actBtn) return;
+    var act = actBtn.getAttribute('data-act');
+    if(act === 'retry'){
+      startUpload(item);
+    } else if(act === 'cover'){
+      item.coverOpen = !item.coverOpen;
+      renderItem(item);
+    } else if(act === 'replace'){
+      replaceTarget = item;
+      fMedya.click();
+    } else if(act === 'remove'){
+      gvConfirm({
+        danger:true, icon:'fa-trash', title:'Dosya kaldırılsın mı?', message:'"' + item.name + '" bildirimden kaldırılacak.',
+        ok:'Kaldır', cancel:'Vazgeç',
+        onConfirm:function(){
+          mediaItems = mediaItems.filter(function(m){ return m.id !== item.id; });
+          item.el.remove();
+          gvToast('Dosya kaldırıldı.', {type:'info'});
+        }
+      });
+    }
+  });
+
+  var aciliyetGroup = document.getElementById('aciliyetGroup');
+  if(aciliyetGroup){
+    aciliyetGroup.addEventListener('click', function(e){
+      var opt = e.target.closest('.tip-opt'); if(!opt) return;
+      aciliyetGroup.querySelectorAll('.tip-opt').forEach(function(o){ o.classList.remove('is-on'); });
+      opt.classList.add('is-on');
+    });
+  }
+
+  document.getElementById('btnDraft').addEventListener('click', function(){
+    gvToast('Bildirim taslak olarak kaydedildi.', {type:'info'});
+  });
+
+  document.getElementById('btnGonder').addEventListener('click', function(){
+    if(!fAciklama.value.trim()){
+      gvToast('Açıklama alanı zorunludur.', {type:'danger'});
+      fAciklama.focus();
+      return;
+    }
+    if(mediaItems.some(function(m){ return m.state === 'hata'; })){
+      gvToast('Hatalı yükleme(ler) var — yeniden deneyin veya kaldırın.', {type:'danger'});
+      return;
+    }
+    if(mediaItems.some(function(m){ return m.state === 'yukleniyor' || m.state === 'isleniyor'; })){
+      gvToast('Medya yüklemesi devam ediyor — tamamlanmasını bekleyin.', {type:'info'});
+      return;
+    }
+    if(isEdit){
+      gvToast('SBL-2026-' + bilNo + ' güncellendi — işlem kaydına eklendi.');
+      setTimeout(function(){ location.href = 'crm-santiye-bildirim-detay.html?bil=' + bilNo; }, 900);
+      return;
+    }
+    gvToast('Saha bildiriminiz paylaşıldı.');
+    setTimeout(function(){
+      location.href = 'crm-sistem-onay-durum.html?durum=onaya-gonderildi&islem=saha-bildirimi';
+    }, 900);
+  });
+
+  /* rol görünürlüğü: sef dahil saha rolleri + üst yönetim (crm-santiye-bildirimler.html
+     PAYLASABILIR dizisiyle BİREBİR) — burada erişim engeli değil, yalnız şef budaması */
+  if(GV.role === 'sef'){
+    fSantiye.value = 'vadi';
+    fSantiye.querySelectorAll('option').forEach(function(o){ if(o.value !== 'vadi') o.remove(); });
+    syncPreview();
+  }
+})();
+</script>
+</body>
+</html>

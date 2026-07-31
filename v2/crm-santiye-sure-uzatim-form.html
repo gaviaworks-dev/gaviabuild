@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Süre Uzatım Talebi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Süre Uzatım Talebi Formu (§16, §18-23)
+   Kaynak-transfer: crm-santiye-form.html (crumb/form-grid/flow-step) +
+   crm-ayarlar-imza-form.html (doc-drop gerçek dosya yükleme akışı, ver-mini geçmiş). ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+.left-stack{display:flex;flex-direction:column;gap:16px}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+
+.ctx-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;padding:16px 22px;background:var(--bg);border-radius:var(--r-md);margin:0 22px 4px}
+.ctx-panel dt{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.ctx-panel dd{font-size:13px;font-weight:700;color:var(--ink)}
+@media(max-width:640px){.ctx-panel{grid-template-columns:1fr;margin:0 16px 4px}}
+
+.ek-sure-row{display:grid;grid-template-columns:1fr 130px;gap:10px}
+@media(max-width:480px){.ek-sure-row{grid-template-columns:1fr}}
+
+.flow-step{display:flex;align-items:center;gap:11px;padding:10px 0}
+.flow-step .fs-ico{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.flow-step.is-active .fs-ico{background:rgba(var(--acc-rgb),.12);color:var(--acc-ink);border-color:rgba(var(--acc-rgb),.3)}
+.flow-step b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
+.flow-step span{font-size:11.5px;color:var(--muted)}
+.flow-arrow{padding-left:15px;color:var(--line-2);font-size:11px}
+
+/* dosya yükleme — crm-ayarlar-imza-form.html ile birebir dil */
+.doc-drop{border:1.5px dashed var(--line-2);border-radius:var(--r-md);padding:16px;text-align:center;transition:.18s var(--ease)}
+.doc-drop.is-drag{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.06)}
+.doc-drop-btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--acc-ink);cursor:pointer}
+.doc-drop-btn i{font-size:16px}
+.doc-hint{display:block;margin-top:7px;font-size:11.5px;color:var(--muted);font-weight:500}
+.doc-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.doc-item{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
+.doc-item[data-state="hata"]{border-color:color-mix(in srgb, var(--danger) 30%, var(--line));background:var(--danger-tint)}
+.doc-thumb{width:42px;height:42px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:15px;color:#fff;background:var(--gv-night)}
+.doc-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.doc-info b{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{font-size:11.5px;color:var(--muted)}
+.doc-status{font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.doc-status.st-yukleniyor{color:var(--info)}
+.doc-status.st-hazir{color:var(--ok)}
+.doc-status.st-hata{color:var(--danger)}
+.doc-acts{display:flex;align-items:center;justify-content:center;flex:none}
+
+.ver-mini{display:flex;align-items:center;gap:10px;padding:10px 22px;border-bottom:1px solid var(--line);font-size:12.5px}
+.ver-mini:last-child{border-bottom:none}
+.ver-mini b{font-weight:800;color:var(--ink)}
+.ver-mini span{color:var(--muted);flex:1;min-width:0}
+
+.gfield[hidden]{display:none}
+</style>
+</head>
+<body data-sec="santiye" data-screen="sure-uzatim-form">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-santiye.html">Şantiyeler</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="crm-santiye-detay.html" id="crumbSantiye">Şantiye Kartı</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Süre Uzatım Talebi</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Saha · Süre Uzatım</div>
+        <h1>Süre Uzatım Talebi Oluştur</h1>
+        <div class="ph-sub">Sözleşmeye göre bitiş tarihini ve güncel hedef teslim tarihini bu talep üzerinden güncelleyin.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="left-stack">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Süre Uzatım Bilgileri</div></div>
+          <div class="gc-body">
+            <form class="gform" id="suzForm">
+              <div class="gfield full">
+                <label for="fSantiye">Şantiye</label>
+                <select id="fSantiye">
+                  <option value="vadi">Vadi Konakları</option>
+                  <option value="liman">Liman Lojistik Merkezi</option>
+                  <option value="merkez">Merkez Şantiye</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <dl class="ctx-panel" id="ctxPanel"></dl>
+          <div class="gc-body">
+            <form class="gform" id="suzForm2">
+              <div class="gfield">
+                <label for="fTalepTarih">Süre Uzatım Talep Tarihi</label>
+                <input type="date" id="fTalepTarih" value="2026-07-02">
+              </div>
+              <div class="gfield">
+                <label for="fOnayDurum">Süre Uzatım Onay Durumu</label>
+                <select id="fOnayDurum">
+                  <option value="talep_edildi">Talep Edildi</option>
+                  <option value="onay_bekliyor">Onay Bekliyor</option>
+                  <option value="onaylandi">Onaylandı</option>
+                  <option value="reddedildi">Reddedildi</option>
+                  <option value="revize_edildi">Revize Edildi</option>
+                </select>
+              </div>
+              <div class="gfield full">
+                <label>Talep Edilen Ek Süre</label>
+                <div class="ek-sure-row">
+                  <input type="number" id="fEkSureSayi" min="1" value="30" placeholder="örn. 45">
+                  <select id="fEkSureBirim">
+                    <option value="gun">Gün</option>
+                    <option value="ay">Ay</option>
+                  </select>
+                </div>
+                <span class="gf-hint">Girildikçe aşağıdaki yeni hedef teslim tarihi otomatik hesaplanır — elle de düzeltilebilir.</span>
+              </div>
+              <div class="gfield full">
+                <label for="fYeniHedef">Yeni Hedef Teslim Tarihi</label>
+                <input type="date" id="fYeniHedef">
+              </div>
+              <div class="gfield full">
+                <label for="fNeden">Süre Uzatım Nedeni</label>
+                <textarea id="fNeden" rows="3" placeholder="örn. Belediye altyapı bağlantı ruhsatı gecikmesi nedeniyle…"></textarea>
+              </div>
+              <div class="gfield full" id="onaylayanField">
+                <label for="fOnaylayan">Onaylayan Kişi / Kurum</label>
+                <input type="text" id="fOnaylayan" placeholder="örn. Körfez GYO">
+              </div>
+              <div class="gfield full">
+                <label for="fAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label>
+                <textarea id="fAciklama" rows="2" placeholder="Ek not…"></textarea>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-paperclip"></i> Süre Uzatım Belge Eki</div></div>
+          <div class="gc-body">
+            <div class="doc-drop" id="docDrop">
+              <input type="file" id="fBelgeDosya" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple hidden>
+              <label for="fBelgeDosya" class="doc-drop-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Talep dilekçesi / onay yazısı seç veya sürükleyip bırakın</label>
+              <span class="doc-hint">PDF/JPG/PNG/DOC — ≤10 MB (demo sınırı)</span>
+            </div>
+            <div class="doc-list" id="docList"></div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="form-foot">
+            <a class="btn btn-ghost btn-sm" id="lnkVazgec" href="crm-santiye-detay.html">Vazgeç</a>
+            <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="suzDraft"><i class="fa-solid fa-file-pen"></i> Taslak Kaydet</button>
+            <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="suzSubmit"><i class="fa-solid fa-floppy-disk"></i> Talebi Kaydet</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-diagram-project"></i> Süre Uzatım Süreci</div></div>
+          <div class="gc-body" id="flowBody"></div>
+          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Durum, onay adımı ilerledikçe Şantiye Kartı &gt; İş Programı sekmesinde güncellenir.</span></div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head">
+            <div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Mevcut Kayıtlar</div>
+            <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="suzRevizyonEkle" data-tip="Mevcut talebe yeni bir revizyon satırı ekler"><i class="fa-solid fa-code-branch"></i> Revizyon Ekle</button>
+          </div>
+          <div id="gecmisBody"></div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-body"><span style="font-size:12px;color:var(--muted);display:flex;gap:8px"><i class="fa-solid fa-circle-info"></i> Bu bir prototip formudur; kayıt gerçek bir veritabanına yazılmaz.</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ============ §16 kanonik kurgu — SITES.<key>.suz ile birebir (crm-santiye-detay.html) ============ */
+  var SANTIYE_DATA = {
+    vadi:{
+      ad:'Vadi Konakları', sozBitisISO:'2026-09-30', sozBitisTarihi:'30 Eylül 2026',
+      hedefTeslimISO:'2026-12-31', hedefTeslimTarihi:'31 Aralık 2026', sozlesme:'SZL-2026-K01',
+      gecmis:[{no:'SUZ-2026-01', tarih:'3 Haziran 2026', sure:'92 gün (~3 ay)', durum:'onaylandi', onaylayan:'Körfez GYO'}]
+    },
+    liman:{
+      ad:'Liman Lojistik Merkezi', sozBitisISO:'2026-06-30', sozBitisTarihi:'30 Haziran 2026',
+      hedefTeslimISO:'2026-06-30', hedefTeslimTarihi:'30 Haziran 2026', sozlesme:'SZL-2026-K02',
+      gecmis:[{no:'SUZ-2026-02', tarih:'20 Haziran 2026', sure:'60 gün (2 ay)', durum:'onay_bekliyor', onaylayan:'Aliağa Liman İşletmeleri'}]
+    },
+    merkez:{
+      ad:'Merkez Şantiye', sozBitisISO:'2026-08-31', sozBitisTarihi:'31 Ağustos 2026',
+      hedefTeslimISO:'2026-08-31', hedefTeslimTarihi:'31 Ağustos 2026', sozlesme:null,
+      gecmis:[]
+    }
+  };
+  var SUZ_DURUM_LBL = {
+    yok:'Yok', talep_edildi:'Talep Edildi', onay_bekliyor:'Onay Bekliyor',
+    onaylandi:'Onaylandı', reddedildi:'Reddedildi', revize_edildi:'Revize Edildi', taslak:'Taslak'
+  };
+  var SUZ_DURUM_CLS = {
+    yok:'off', talep_edildi:'info', onay_bekliyor:'wait',
+    onaylandi:'ok', reddedildi:'danger', revize_edildi:'warn', taslak:'off'
+  };
+  var suzSeq = 2;
+  function durumBadge(d){ return '<span class="gstat ' + (SUZ_DURUM_CLS[d]||'off') + '" style="font-size:10.5px;padding:3px 8px">' + (SUZ_DURUM_LBL[d]||d) + '</span>'; }
+
+  var qs = new URLSearchParams(location.search);
+  var reqSantiye = qs.get('santiye');
+  var fSantiye = document.getElementById('fSantiye');
+  if(reqSantiye && SANTIYE_DATA[reqSantiye]) fSantiye.value = reqSantiye;
+
+  var fEkSureSayi = document.getElementById('fEkSureSayi');
+  var fEkSureBirim = document.getElementById('fEkSureBirim');
+  var fYeniHedef = document.getElementById('fYeniHedef');
+  var fOnayDurum = document.getElementById('fOnayDurum');
+  var onaylayanField = document.getElementById('onaylayanField');
+  var yeniHedefTouched = false;
+  fYeniHedef.addEventListener('input', function(){ yeniHedefTouched = true; });
+
+  function addDays(iso, days){
+    var d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0,10);
+  }
+  function recalcYeniHedef(){
+    var cur = SANTIYE_DATA[fSantiye.value];
+    if(!cur) return;
+    var sayi = parseInt(fEkSureSayi.value, 10) || 0;
+    var gun = fEkSureBirim.value === 'ay' ? sayi * 30 : sayi;
+    if(!yeniHedefTouched) fYeniHedef.value = addDays(cur.sozBitisISO, gun);
+  }
+  function syncOnaylayanVisibility(){
+    onaylayanField.hidden = fOnayDurum.value === 'talep_edildi';
+  }
+
+  function renderCtx(){
+    var cur = SANTIYE_DATA[fSantiye.value];
+    document.getElementById('crumbSantiye').href = 'crm-santiye-detay.html?santiye=' + fSantiye.value;
+    document.getElementById('crumbSantiye').textContent = cur.ad;
+    document.getElementById('lnkVazgec').href = 'crm-santiye-detay.html?santiye=' + fSantiye.value + '#program';
+    var son = cur.gecmis.length ? cur.gecmis[cur.gecmis.length - 1] : null;
+    document.getElementById('ctxPanel').innerHTML =
+        '<div><dt>Sözleşme</dt><dd>' + (cur.sozlesme || 'Kayıtlı sözleşme yok (iç yatırım)') + '</dd></div>'
+      + '<div><dt>Mevcut Durum</dt><dd>' + durumBadge(son ? son.durum : 'yok') + '</dd></div>'
+      + '<div><dt>Sözleşmeye Göre Bitiş</dt><dd>' + cur.sozBitisTarihi + '</dd></div>'
+      + '<div><dt>Güncel Hedef Teslim</dt><dd>' + cur.hedefTeslimTarihi + '</dd></div>';
+
+    var gecmisBody = document.getElementById('gecmisBody');
+    if(!cur.gecmis.length){
+      gecmisBody.innerHTML = '<div class="gc-body"><span style="font-size:12.5px;color:var(--muted)">Bu şantiye için henüz bir süre uzatım talebi girilmedi.</span></div>';
+    } else {
+      gecmisBody.innerHTML = cur.gecmis.map(function(g){
+        return '<div class="ver-mini"><b>' + g.no + '</b><span>' + g.tarih + ' · ' + g.sure + '</span>' + durumBadge(g.durum) + '</div>';
+      }).join('');
+    }
+
+    yeniHedefTouched = false;
+    fEkSureSayi.value = 30;
+    fEkSureBirim.value = 'gun';
+    recalcYeniHedef();
+  }
+
+  var FLOW_STEPS = [
+    {ico:'fa-paper-plane', b:'Talep Edildi', s:'Şantiye şefi veya proje sorumlusu ek süre talebini oluşturur'},
+    {ico:'fa-hourglass-half', b:'Onay Bekliyor', s:'İşveren / kurum onayına gönderilir'},
+    {ico:'fa-check', b:'Onaylandı', s:'Yeni hedef teslim tarihi Şantiye Kartı\'nda güncellenir'},
+    {ico:'fa-rotate-left', b:'Reddedildi / Revize Edildi', s:'Gerekçeyle birlikte talep sahibine geri döner'}
+  ];
+  document.getElementById('flowBody').innerHTML = FLOW_STEPS.map(function(f, i){
+    var arrow = i < FLOW_STEPS.length - 1 ? '<div class="flow-arrow"><i class="fa-solid fa-arrow-down"></i></div>' : '';
+    return '<div class="flow-step"><div class="fs-ico"><i class="fa-solid ' + f.ico + '"></i></div><div><b>' + f.b + '</b><span>' + f.s + '</span></div></div>' + arrow;
+  }).join('');
+
+  fSantiye.addEventListener('change', renderCtx);
+  fEkSureSayi.addEventListener('input', recalcYeniHedef);
+  fEkSureBirim.addEventListener('change', recalcYeniHedef);
+  fOnayDurum.addEventListener('change', syncOnaylayanVisibility);
+  syncOnaylayanVisibility();
+  renderCtx();
+
+  /* ============ DOSYA EKİ — gerçek File API akışı (crm-ayarlar-imza-form.html ile birebir) ============ */
+  var docList = document.getElementById('docList');
+  var fBelgeDosya = document.getElementById('fBelgeDosya');
+  var docDrop = document.getElementById('docDrop');
+  var docSeq = 0;
+  var DOC_LIMIT = 10 * 1024 * 1024;
+
+  function humanSize(bytes){
+    if(bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes/1024)) + ' KB';
+  }
+  function docIcon(name){
+    if(/\.pdf$/i.test(name)) return 'fa-file-pdf';
+    if(/\.(jpg|jpeg|png)$/i.test(name)) return 'fa-file-image';
+    if(/\.(doc|docx)$/i.test(name)) return 'fa-file-word';
+    return 'fa-file-lines';
+  }
+  function renderDoc(item){
+    var statusHtml = '';
+    if(item.state === 'yukleniyor'){
+      statusHtml = '<div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:' + item.progress + '%"></div></div><span class="gbar-val">%' + item.progress + '</span></div>';
+    } else if(item.state === 'hazir'){
+      statusHtml = '<span class="doc-status st-hazir"><i class="fa-solid fa-circle-check"></i> Yüklendi</span>';
+    } else if(item.state === 'hata'){
+      statusHtml = '<span class="doc-status st-hata"><i class="fa-solid fa-triangle-exclamation"></i> ' + item.errMsg + '</span>';
+    }
+    var acts = item.state === 'hata'
+      ? '<button type="button" class="ia-btn" data-act="retry" data-tip="Yeniden dene" aria-label="Yeniden dene"><i class="fa-solid fa-rotate-right"></i></button>'
+      : '<button type="button" class="ia-btn danger" data-act="kaldir" data-no-confirm data-tip="Kaldır" aria-label="Kaldır"><i class="fa-solid fa-trash"></i></button>';
+    item.el.setAttribute('data-state', item.state);
+    item.el.innerHTML = '<div class="doc-thumb"><i class="fa-solid ' + docIcon(item.name) + '"></i></div>'
+      + '<div class="doc-info"><b>' + item.name + '</b><span class="doc-meta">' + humanSize(item.size) + '</span>' + statusHtml + '</div>'
+      + '<div class="doc-acts">' + acts + '</div>';
+  }
+  function addDocChip(name, size){
+    docSeq++;
+    var item = {id:'d'+docSeq, name:name, size:size, state:'yukleniyor', progress:0, attempt:0};
+    var el = document.createElement('div'); el.className = 'doc-item'; el.dataset.id = item.id;
+    item.el = el; docList.appendChild(el); renderDoc(item);
+    return item;
+  }
+  function startUpload(item){
+    var forceError = /hata|error|fail/i.test(item.name) && (item.attempt || 0) === 0;
+    var tick = setInterval(function(){
+      item.progress = Math.min(100, item.progress + Math.round(10 + Math.random()*18));
+      renderDoc(item);
+      if(item.progress >= 100){
+        clearInterval(tick);
+        item.attempt = (item.attempt || 0) + 1;
+        setTimeout(function(){
+          if(forceError){ item.state = 'hata'; item.errMsg = 'Yükleme başarısız oldu (demo).'; renderDoc(item); gvToast(item.name + ' yüklenemedi.', {type:'danger'}); }
+          else { item.state = 'hazir'; renderDoc(item); gvToast(item.name + ' yüklendi.'); }
+        }, 180);
+      }
+    }, 130);
+  }
+  function addFile(file){
+    if(file.size > DOC_LIMIT){ gvToast(file.name + ' — 10 MB sınırını aşıyor (demo kısıtı).', {type:'danger'}); return; }
+    startUpload(addDocChip(file.name, file.size));
+  }
+  fBelgeDosya.addEventListener('change', function(){ Array.prototype.slice.call(fBelgeDosya.files).forEach(addFile); fBelgeDosya.value = ''; });
+  ['dragenter','dragover'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.add('is-drag'); }); });
+  ['dragleave','drop'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.remove('is-drag'); }); });
+  docDrop.addEventListener('drop', function(e){ var files = e.dataTransfer && e.dataTransfer.files; if(files && files.length) Array.prototype.forEach.call(files, addFile); });
+  docList.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act]'); if(!btn) return;
+    var itemEl = btn.closest('.doc-item');
+    if(btn.getAttribute('data-act') === 'kaldir'){ itemEl.remove(); return; }
+    if(btn.getAttribute('data-act') === 'retry'){ itemEl.remove(); }
+  });
+
+  /* ---- ortak kayıt oluşturma — Taslak Kaydet / Talebi Kaydet / Revizyon Ekle
+     üçü de aynı SANTIYE_DATA[key].gecmis dizisine gerçek bir satır ekler (§17: her
+     kayıt düzenlenebilir/izlenebilir olmalı — bu form artık kendi geçmişini GERÇEKTEN
+     günceller, önceden yalnız toast gösterip veri mutasyonu yapmıyordu). ---- */
+  function buildRecord(durumOverride){
+    var cur = SANTIYE_DATA[fSantiye.value];
+    var sayi = parseInt(fEkSureSayi.value, 10) || 0;
+    var birimLbl = fEkSureBirim.value === 'ay' ? 'ay' : 'gün';
+    suzSeq++;
+    return {
+      no: 'SUZ-2026-' + ('0' + suzSeq).slice(-2),
+      tarih: new Date(document.getElementById('fTalepTarih').value + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'}),
+      sure: sayi + ' ' + birimLbl,
+      durum: durumOverride || fOnayDurum.value,
+      onaylayan: document.getElementById('fOnaylayan').value.trim() || undefined
+    };
+  }
+
+  document.getElementById('suzDraft').addEventListener('click', function(){
+    var cur = SANTIYE_DATA[fSantiye.value];
+    var rec = buildRecord('taslak');
+    cur.gecmis.push(rec);
+    renderCtx();
+    gvToast('"' + cur.ad + '" için süre uzatım talebi taslak olarak kaydedildi — ' + rec.no + '.', {type:'info'});
+  });
+
+  document.getElementById('suzRevizyonEkle').addEventListener('click', function(){
+    var cur = SANTIYE_DATA[fSantiye.value];
+    if(!cur.gecmis.length){
+      gvToast('Bu şantiye için revizyon eklenecek bir talep bulunmuyor — önce "Talebi Kaydet" ile ilk talebi oluşturun.', {type:'danger'});
+      return;
+    }
+    var neden = document.getElementById('fNeden').value.trim();
+    if(!neden){ gvToast('Revizyon için süre uzatım nedenini girin.', {type:'danger'}); document.getElementById('fNeden').focus(); return; }
+    var rec = buildRecord('revize_edildi');
+    cur.gecmis.push(rec);
+    renderCtx();
+    gvToast('"' + cur.ad + '" talebine yeni bir revizyon eklendi — ' + rec.no + '. Onay durumu akışı etkilenmez.', {type:'ok'});
+  });
+
+  /* ---- kaydet ---- */
+  document.getElementById('suzSubmit').addEventListener('click', function(){
+    var neden = document.getElementById('fNeden').value.trim();
+    if(!neden){ gvToast('Süre uzatım nedenini girin.', {type:'danger'}); document.getElementById('fNeden').focus(); return; }
+    var sayi = parseInt(fEkSureSayi.value, 10) || 0;
+    if(sayi <= 0){ gvToast('Talep edilen ek süreyi girin.', {type:'danger'}); fEkSureSayi.focus(); return; }
+    if(!onaylayanField.hidden && !document.getElementById('fOnaylayan').value.trim()){
+      gvToast('Onaylayan kişi/kurumu girin.', {type:'danger'}); document.getElementById('fOnaylayan').focus(); return;
+    }
+    var cur = SANTIYE_DATA[fSantiye.value];
+    var uploading = docList.querySelector('.doc-item[data-state="yukleniyor"]');
+    if(uploading){ gvToast('Belge yüklemesi tamamlanana kadar bekleyin.', {type:'danger'}); return; }
+    var durumTxt = SUZ_DURUM_LBL[fOnayDurum.value];
+    cur.gecmis.push(buildRecord());
+    gvToast('"' + cur.ad + '" için süre uzatım talebi kaydedildi (' + durumTxt + ') — yeni hedef teslim ' + new Date(fYeniHedef.value + 'T00:00:00').toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'}) + '.');
+    setTimeout(function(){ location.href = 'crm-santiye-detay.html?santiye=' + fSantiye.value + '#program'; }, 1000);
+  });
+})();
+</script>
+</body>
+</html>

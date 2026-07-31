@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Satış Sonrası Talep Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: satış sonrası talep detay kompozisyonu (görev-detay yorum akışı +
+   demirbaş ?param şablonu idiyomlarının birleşimi) */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.gd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.gd-head h1{font-size:21px;letter-spacing:-.015em;margin-bottom:9px;max-width:640px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:8px}
+
+.gtag.tur-eksik{background:var(--warn-tint);color:var(--warn);border-color:transparent}
+.gtag.tur-garanti{background:var(--info-tint);color:var(--info);border-color:transparent}
+.gtag.tur-bakim{background:var(--bg);color:var(--ink-2);border-color:var(--line)}
+.gtag.tur-sikayet{background:var(--danger-tint);color:var(--danger);border-color:transparent}
+.gtag.tur-bilgi{background:rgba(var(--acc-rgb),.1);color:var(--acc-ink);border-color:rgba(var(--acc-rgb),.25)}
+.gtag.tur-teslimat{background:var(--danger-tint);color:var(--danger);border-color:transparent}
+
+.gd-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.gd-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.gd-desc{font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:13px}
+.ctx-row:not(:last-child){border-bottom:1px solid var(--line)}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+.ctx-link{display:flex;align-items:center;gap:11px;padding:6px 0}
+.ctx-link .who-mark{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800}
+.ctx-link a{font-size:13.5px;font-weight:700;color:var(--ink)}
+.ctx-link a:hover{color:var(--acc-ink)}
+.ctx-link span{display:block;font-size:11.5px;color:var(--muted)}
+
+/* yorum akışı — görev-detay ile aynı dil, Portal rozeti eklenmiş */
+.cmt-row{display:flex;gap:12px;padding:14px 0}
+.cmt-row:first-child{padding-top:0}
+.cmt-ava{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:800;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)}
+.cmt-ava.portal{background:var(--info-tint);color:var(--info)}
+.cmt-body{flex:1;min-width:0;background:var(--bg);border-radius:var(--r-md);padding:11px 14px}
+.cmt-head{display:flex;align-items:baseline;gap:9px;margin-bottom:4px;flex-wrap:wrap}
+.cmt-head b{font-size:12.5px;font-weight:700;color:var(--ink)}
+.cmt-head span{font-size:11px;color:var(--muted)}
+.cmt-head .cmt-portal-tag{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--info);background:var(--info-tint);padding:1px 7px;border-radius:6px}
+.cmt-text{font-size:13px;color:var(--ink-2);line-height:1.55}
+.cmt-text a{color:var(--acc-ink);font-weight:700}
+.cmt-compose{display:flex;gap:12px;padding-top:16px;margin-top:6px;border-top:1px solid var(--line)}
+.cmt-compose .cmt-ava{background:var(--bg);color:var(--muted)}
+.cmt-compose-field{flex:1;display:flex;gap:10px}
+.cmt-compose-field input{flex:1}
+
+.sla-pri{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:7px;white-space:nowrap}
+.sla-pri::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.sla-pri.high{background:var(--danger-tint);color:var(--danger)}
+.sla-pri.med{background:var(--warn-tint);color:var(--warn)}
+.sla-pri.low{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+
+.gv-side-stack{display:flex;flex-direction:column;gap:16px}
+.kanal-portal{background:var(--info-tint);color:var(--info);border-color:transparent}
+</style>
+</head>
+<body data-sec="satis" data-screen="talepler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-satis-talepler.html">Satış Sonrası Talepler</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbNo">SST-2026-007</span>
+    </div>
+
+    <div class="gd-head">
+      <div>
+        <!-- statik bake — DEFAULT (SST-2026-007, ?sst= yok); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+        <div class="gd-eyebrow" id="gdEyebrow">Selçuk Onaran · Satış Sonrası Talep #SST-2026-007</div>
+        <h1 id="gdTitle">Klima drenaj sızıntısı</h1>
+        <div class="gd-badges" id="gdBadges"><span class="gtag tur-garanti">Garanti</span><span class="gstat warn">İşlemde</span><span class="gstat info kanal-portal"><i class="fa-solid fa-globe"></i> Portal</span></div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-satis-talepler.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a>
+      </div>
+    </div>
+
+    <div class="gd-grid">
+      <!-- ============ SOL: içerik ============ -->
+      <div class="gv-side-stack">
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">Açıklama</div>
+            <!-- statik bake — DEFAULT (SST-2026-007); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+            <p class="gd-desc" id="aciklamaText">Salon klimasının drenaj hortumunda sızıntı bildirildi; tavanda hafif nem lekesi oluşmaya başladı. Garanti kapsamında değerlendirilip saha ziyareti planlandı.</p>
+          </div>
+          <div class="gd-block">
+            <div class="gd-label">Yorumlar</div>
+            <!-- statik bake — DEFAULT (SST-2026-007 yorumlar); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+            <div id="cmtList"><div class="cmt-row"><div class="cmt-ava portal">SO</div><div class="cmt-body"><div class="cmt-head"><b>Selçuk Onaran</b><span class="cmt-portal-tag">Portal</span><span>30 Haziran 2026, 11:20</span></div><div class="cmt-text">Salonun klimasının drenaj hortumundan su damlıyor, tavanda hafif bir leke oluşmaya başladı. Fotoğrafları ekledim, en kısa sürede bakabilir misiniz?</div></div></div><div class="cmt-row"><div class="cmt-ava">ES</div><div class="cmt-body"><div class="cmt-head"><b>Elif Sarıkaya</b><span>1 Temmuz 2026, 09:40</span></div><div class="cmt-text">Merhaba Selçuk Bey, fotoğraflar için teşekkürler. Garanti kapsamında değerlendiriyoruz, saha ekibimiz yerinde inceleme yapacak.</div></div></div><div class="cmt-row"><div class="cmt-ava">ES</div><div class="cmt-body"><div class="cmt-head"><b>Elif Sarıkaya</b><span>2 Temmuz 2026, 09:50</span></div><div class="cmt-text">Servis randevusu 8 Temmuz Çarşamba 10:00 için planlandı; teknik ekip drenaj hattını kontrol edip gerekirse değişecek.</div></div></div></div>
+            <div class="cmt-compose">
+              <div class="cmt-ava" id="cmtMeAva">·</div>
+              <div class="cmt-compose-field">
+                <input type="text" placeholder="Yorum yazın…" id="cmtInput">
+                <button class="btn btn-acc btn-sm" data-no-confirm id="cmtSend"><i class="fa-solid fa-paper-plane"></i> Gönder</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-timeline"></i> Durum Geçmişi</div></div>
+          <!-- statik bake — DEFAULT (SST-2026-007 durum geçmişi); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+          <div class="gc-body"><div id="chainEl"><ol class="gv-chain"><li class="chain-step info"><span class="cs-node"><i class="fa-solid fa-paper-plane"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Selçuk Onaran</b><span>Müşteri (Portal)</span></div><div class="cs-when"><span class="cs-act">Oluşturdu</span><span class="cs-date">30 Haziran 2026 11:20</span></div></div></div></li><li class="chain-step ok"><span class="cs-node"><i class="fa-solid fa-check"></i></span><div class="cs-body"><div class="cs-top"><div class="cs-who"><b>Elif Sarıkaya</b><span>Teknik Müdür</span></div><div class="cs-when"><span class="cs-act">Onayladı</span><span class="cs-date">1 Temmuz 2026 09:40</span></div></div><div class="cs-note">Garanti kapsamında kabul edildi, saha ziyareti planlandı.</div></div></li></ol></div></div>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bağlam ============ -->
+      <div class="gv-side-stack">
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">Müşteri</div>
+            <!-- statik bake — DEFAULT (SST-2026-007 → Selçuk Onaran); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+            <div class="ctx-link" id="musteriBlock"><div class="who-mark" style="background:var(--info-tint);color:var(--info)">SO</div><div><a href="crm-satis-musteri-detay.html?mst=001">Selçuk Onaran</a><span>Kurumsal · Referans</span></div></div>
+          </div>
+          <div class="gd-block">
+            <div class="gd-label">Birim</div>
+            <!-- statik bake — DEFAULT (SST-2026-007 → KO-B-304 + kaynak sözleşme); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+            <div class="ctx-link" id="birimBlock"><div class="who-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-door-closed"></i></div><div><a href="crm-satis-birim-detay.html?birim=KO-B-304">KO-B-304</a><span>Kule Ofis B Blok · 3. kat</span></div></div>
+            <div id="kaynakRow"><div class="ctx-row" style="border-top:1px dashed var(--line);margin-top:8px;padding-top:12px"><span class="ctx-lbl">Sözleşme</span><span class="ctx-val"><a href="crm-satis-sozlesme-detay.html?ssz=2025-042" style="color:var(--acc-ink)">SSZ-2025-042 · İmzalı, teslim edildi</a></span></div></div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">SLA / Termin</div>
+            <!-- statik bake — DEFAULT (SST-2026-007); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+            <div class="ctx-row"><span class="ctx-lbl">Öncelik</span><span class="ctx-val" id="slaOncelik"><span class="sla-pri med">Orta</span></span></div>
+            <div class="ctx-row"><span class="ctx-lbl" id="slaTarihLbl">Açılış tarihi</span><span class="ctx-val" id="slaTarih">30 Haziran 2026</span></div>
+            <div class="ctx-row" id="slaEkRow"><span class="ctx-lbl" id="slaEkLbl">Garanti bitiş</span><span class="ctx-val" id="slaEkVal">15 Mart 2028</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var TUR = {
+    eksik:{cls:'tur-eksik', lbl:'Eksik İş'}, garanti:{cls:'tur-garanti', lbl:'Garanti'},
+    bakim:{cls:'tur-bakim', lbl:'Bakım'}, sikayet:{cls:'tur-sikayet', lbl:'Şikayet'},
+    bilgi:{cls:'tur-bilgi', lbl:'Bilgi'}, teslimat:{cls:'tur-teslimat', lbl:'Teslimat Problemi'}
+  };
+  var DURUM = {
+    acik:{cls:'info', lbl:'Açık'}, islemde:{cls:'warn', lbl:'İşlemde'},
+    tamam:{cls:'ok', lbl:'Tamamlandı'}, red:{cls:'danger', lbl:'Reddedildi'}
+  };
+
+  /* ---- ?sst= param-driven detay — kanonik 11 kayıt (bkz. shell.js DALGA 11
+     SATIŞ SONRASI bloğu). demirbaş ?zmt= idiyomunun aynısı. ---- */
+  var ITEMS = {
+    '001':{
+      no:'SST-2026-001', title:'Mutfak dolabı kapak ayarı', tur:'eksik', durum:'acik', portal:false,
+      musteri:{name:'Rıza Kalkan', href:null, tur:'Bireysel · Arşiv kayıt', ini:'RK'},
+      birim:{lbl:'KO-B-311', href:'crm-satis-birim-detay.html?birim=KO-B-311', not:'Kule Ofis B Blok · 3. kat'},
+      kaynak:{lbl:'Teslim checklist’i', href:'crm-satis-sozlesme-detay.html?ssz=2025-051', sub:'SSZ-2025-051 · 12 kalemlik kontrol listesi'},
+      aciklama:'Teslim kontrolü sırasında mutfak alt dolabının kapağının düzgün kapanmadığı tespit edildi; menteşe ayarı gerekiyor.',
+      acilis:'28 Haziran 2026', kapanis:null, oncelik:'high',
+      comments:[
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'28 Haziran 2026, 16:10', text:'Teslim kontrol listesinde tespit edildi, usta ataması yapılıyor.'},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'30 Haziran 2026, 10:00', text:'İlyas Kurt (marangoz) atandı, 9 Temmuz’da yerinde ayar yapacak.'}
+      ],
+      chain:[
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'olusturdu', tarih:'28 Haziran 2026 16:10', not:'Teslim kontrol listesinde tespit edildi.'},
+        {rol:'Marangoz', kisi:'İlyas Kurt', durum:'sirada', tarih:'9 Temmuz 2026 (planlanan)'}
+      ]
+    },
+    '002':{
+      no:'SST-2026-002', title:'Banyo silikon derz yenileme', tur:'eksik', durum:'islemde', portal:false,
+      musteri:{name:'Rıza Kalkan', href:null, tur:'Bireysel · Arşiv kayıt', ini:'RK'},
+      birim:{lbl:'KO-B-311', href:'crm-satis-birim-detay.html?birim=KO-B-311', not:'Kule Ofis B Blok · 3. kat'},
+      kaynak:{lbl:'Teslim checklist’i', href:'crm-satis-sozlesme-detay.html?ssz=2025-051', sub:'SSZ-2025-051 · 12 kalemlik kontrol listesi'},
+      aciklama:'Banyo ıslak hacim derzlerinde silikon dökülmesi tespit edildi; yenileme işi taşeron ekibine verildi.',
+      acilis:'28 Haziran 2026', kapanis:null, oncelik:'high',
+      comments:[
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'28 Haziran 2026, 16:15', text:'Teslim kontrolünde tespit edildi, silikon yenileme işi Yalıtım Kardeşler’e verildi.'},
+        {ini:'CB', name:'Cemal Boz · Yalıtım Kardeşler', tarih:'1 Temmuz 2026, 08:50', text:'İş takvimimize aldık, 8 Temmuz’da tamamlarız.'}
+      ],
+      chain:[
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'olusturdu', tarih:'28 Haziran 2026 16:15'},
+        {rol:'Taşeron', kisi:'Cemal Boz — Yalıtım Kardeşler', durum:'onaylandi', tarih:'1 Temmuz 2026 08:50', not:'İş takvimine alındı, 8 Temmuz’da tamamlanacak.'}
+      ]
+    },
+    '003':{
+      no:'SST-2026-003', title:'Süpürgelik eksikliği', tur:'eksik', durum:'tamam', portal:false,
+      musteri:{name:'Ejder Balcı', href:null, tur:'Bireysel · Arşiv kayıt', ini:'EB'},
+      birim:{lbl:'KO-B-107', href:'crm-satis-birim-detay.html?birim=KO-B-107', not:'Kule Ofis B Blok · 1. kat'},
+      kaynak:{lbl:'Teslim tutanağı', href:null, sub:'TSL-2026-002 · arşiv teslimat kaydı'},
+      aciklama:'Salon-koridor geçişinde bir bölüm süpürgelik eksik bırakılmıştı; müşteri bildirimi üzerine tamamlandı.',
+      acilis:'29 Haziran 2026', kapanis:'1 Temmuz 2026', oncelik:'med',
+      comments:[
+        {ini:'EB', name:'Ejder Balcı', tarih:'29 Haziran 2026, 10:00', text:'Salonda süpürgelik bir kısımda eksik kalmış, kontrol edebilir misiniz?'},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'1 Temmuz 2026, 17:30', text:'İnceledik, saha ekibi süpürgelik montajını tamamladı.'}
+      ],
+      chain:[
+        {rol:'Müşteri', kisi:'Ejder Balcı', durum:'olusturdu', tarih:'29 Haziran 2026 10:00'},
+        {rol:'Saha Teknik Ekibi', kisi:'—', durum:'onaylandi', tarih:'1 Temmuz 2026 17:30', not:'Süpürgelik montajı tamamlandı, talep kapatıldı.'}
+      ]
+    },
+    '004':{
+      no:'SST-2026-004', title:'Kapı zili arızası', tur:'eksik', durum:'tamam', portal:false,
+      musteri:{name:'Seray Ünal', href:null, tur:'Bireysel · Arşiv kayıt', ini:'SÜ'},
+      birim:{lbl:'KO-B-212', href:'crm-satis-birim-detay.html?birim=KO-B-212', not:'Kule Ofis B Blok · 2. kat'},
+      kaynak:{lbl:'Teslim tutanağı', href:null, sub:'TSL-2026-003 · arşiv teslimat kaydı'},
+      aciklama:'Daire giriş kapısı zili çalışmıyor bildirildi; buton değişimiyle giderildi.',
+      acilis:'29 Haziran 2026', kapanis:'1 Temmuz 2026', oncelik:'med',
+      comments:[
+        {ini:'SÜ', name:'Seray Ünal', tarih:'29 Haziran 2026, 09:15', text:'Kapı zili çalışmıyor, bakabilir misiniz?'},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'1 Temmuz 2026, 14:00', text:'Buton arızalıymış, değiştirdik. İşlem tamamlandı.'}
+      ],
+      chain:[
+        {rol:'Müşteri', kisi:'Seray Ünal', durum:'olusturdu', tarih:'29 Haziran 2026 09:15'},
+        {rol:'Saha Teknik Ekibi', kisi:'—', durum:'onaylandi', tarih:'1 Temmuz 2026 14:00', not:'Zil butonu değiştirildi, talep kapatıldı.'}
+      ]
+    },
+    '005':{
+      no:'SST-2026-005', title:'Pencere contası garantisi', tur:'garanti', durum:'tamam', portal:false,
+      musteri:{name:'Seray Ünal', href:null, tur:'Bireysel · Arşiv kayıt', ini:'SÜ'},
+      birim:{lbl:'KO-B-212', href:'crm-satis-birim-detay.html?birim=KO-B-212', not:'Kule Ofis B Blok · 2. kat'},
+      kaynak:null,
+      aciklama:'Salon penceresinde hava sızdırma şikayeti; conta garanti kapsamında yenilendi.',
+      acilis:'30 Haziran 2026', kapanis:'2 Temmuz 2026', oncelik:'med', garantiBitis:'25 Mart 2028',
+      comments:[
+        {ini:'SÜ', name:'Seray Ünal', tarih:'30 Haziran 2026, 11:00', text:'Salon penceresinden hava geliyor gibi, kontrol edilebilir mi?'},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'2 Temmuz 2026, 09:20', text:'Conta aşınmış, garanti kapsamında yenilendi. İşlem tamamlandı.'}
+      ],
+      chain:[
+        {rol:'Müşteri', kisi:'Seray Ünal', durum:'olusturdu', tarih:'30 Haziran 2026 11:00'},
+        {rol:'Saha Teknik Ekibi', kisi:'—', durum:'onaylandi', tarih:'2 Temmuz 2026 09:20', not:'Pencere contası garanti kapsamında yenilendi.'}
+      ]
+    },
+    '006':{
+      no:'SST-2026-006', title:'Ortak alan klima periyodik bakımı', tur:'bakim', durum:'islemde', portal:false,
+      musteri:{name:'Site Yönetimi', href:null, tur:'Kule Ofis B Blok · Ortak Alan', ini:'SY'},
+      birim:{lbl:'Kule Ofis B Blok', href:null, not:'Ortak alan — bağımsız bölüm değil'},
+      kaynak:null,
+      aciklama:'Kule Ofis B Blok ortak alan klimalarının yıllık yaz periyodik bakımı başlatıldı; bakım ekibi sahada.',
+      acilis:'1 Temmuz 2026', kapanis:null, oncelik:'low',
+      comments:[
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'1 Temmuz 2026, 09:00', text:'Yıllık periyodik bakım planı başlatıldı, 3 ortak alan klima ünitesi kontrol edilecek.'}
+      ],
+      chain:[
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'olusturdu', tarih:'1 Temmuz 2026 09:00'},
+        {rol:'Bakım Ekibi', kisi:'—', durum:'sirada', tarih:'15 Temmuz 2026 (hedef bitiş)'}
+      ]
+    },
+    '007':{
+      no:'SST-2026-007', title:'Klima drenaj sızıntısı', tur:'garanti', durum:'islemde', portal:true,
+      musteri:{name:'Selçuk Onaran', href:'crm-satis-musteri-detay.html?mst=001', tur:'Kurumsal · Referans', ini:'SO'},
+      birim:{lbl:'KO-B-304', href:'crm-satis-birim-detay.html?birim=KO-B-304', not:'Kule Ofis B Blok · 3. kat'},
+      kaynak:{lbl:'Sözleşme', href:'crm-satis-sozlesme-detay.html?ssz=2025-042', sub:'SSZ-2025-042 · İmzalı, teslim edildi'},
+      aciklama:'Salon klimasının drenaj hortumunda sızıntı bildirildi; tavanda hafif nem lekesi oluşmaya başladı. Garanti kapsamında değerlendirilip saha ziyareti planlandı.',
+      acilis:'30 Haziran 2026', kapanis:null, oncelik:'med', garantiBitis:'15 Mart 2028',
+      comments:[
+        {ini:'SO', name:'Selçuk Onaran', tarih:'30 Haziran 2026, 11:20', text:'Salonun klimasının drenaj hortumundan su damlıyor, tavanda hafif bir leke oluşmaya başladı. Fotoğrafları ekledim, en kısa sürede bakabilir misiniz?', portal:true},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'1 Temmuz 2026, 09:40', text:'Merhaba Selçuk Bey, fotoğraflar için teşekkürler. Garanti kapsamında değerlendiriyoruz, saha ekibimiz yerinde inceleme yapacak.'},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'2 Temmuz 2026, 09:50', text:'Servis randevusu 8 Temmuz Çarşamba 10:00 için planlandı; teknik ekip drenaj hattını kontrol edip gerekirse değişecek.'}
+      ],
+      chain:[
+        {rol:'Müşteri (Portal)', kisi:'Selçuk Onaran', durum:'olusturdu', tarih:'30 Haziran 2026 11:20'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'1 Temmuz 2026 09:40', not:'Garanti kapsamında kabul edildi, saha ziyareti planlandı.'}
+      ]
+    },
+    '008':{
+      no:'SST-2026-008', title:'Asansör periyodik bakım talebi', tur:'bakim', durum:'red', portal:false,
+      musteri:{name:'Site Yönetimi', href:null, tur:'Kule Ofis B Blok · Ortak Alan', ini:'SY'},
+      birim:{lbl:'Kule Ofis B Blok', href:null, not:'Ortak alan — bağımsız bölüm değil'},
+      kaynak:null,
+      aciklama:'Sahibi olmayan ortak alan asansörü için periyodik bakım talebi; site yönetimi sözleşmesi kapsamında yürütüldüğü gerekçesiyle satış sonrası destek modülü dışında değerlendirilip reddedildi.',
+      acilis:'1 Temmuz 2026', kapanis:'2 Temmuz 2026', oncelik:'low',
+      comments:[
+        {ini:'SY', name:'Site Yönetimi', tarih:'1 Temmuz 2026, 10:30', text:'Asansör periyodik bakımı bu ay yapılabilir mi?'},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'2 Temmuz 2026, 09:15', text:'Asansör bakımı site yönetimi sözleşmesi kapsamında yürütülüyor, satış sonrası destek modülü dışında. İlgili yüklenici firmayla iletişime geçmenizi rica ederiz.'}
+      ],
+      chain:[
+        {rol:'Site Yönetimi', kisi:'—', durum:'olusturdu', tarih:'1 Temmuz 2026 10:30'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'reddedildi', tarih:'2 Temmuz 2026 09:15', not:'Site yönetimi kapsamında; satış sonrası destek modülü dışı.'}
+      ]
+    },
+    '009':{
+      no:'SST-2026-009', title:'Otopark su birikintisi', tur:'sikayet', durum:'acik', portal:false,
+      musteri:{name:'Meltem Işık', href:null, tur:'Bireysel · Arşiv kayıt', ini:'MI'},
+      birim:{lbl:'KO-B-406', href:'crm-satis-birim-detay.html?birim=KO-B-406', not:'Kule Ofis B Blok · 4. kat'},
+      kaynak:{lbl:'Sözleşme', href:'crm-satis-sozlesme-detay.html?ssz=2025-058', sub:'SSZ-2025-058 · Teslim sürecinde'},
+      aciklama:'Kapalı otopark girişinde yağmur sonrası su birikintisi oluştuğu bildirildi; saha incelemesi bekleniyor.',
+      acilis:'1 Temmuz 2026', kapanis:null, oncelik:'high',
+      comments:[
+        {ini:'MI', name:'Meltem Işık', tarih:'1 Temmuz 2026, 13:40', text:'Kapalı otoparkın girişinde yağmurdan sonra su birikiyor, aracımı zor park ediyorum.'}
+      ],
+      chain:[
+        {rol:'Müşteri', kisi:'Meltem Işık', durum:'olusturdu', tarih:'1 Temmuz 2026 13:40'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'sirada', tarih:'—'}
+      ]
+    },
+    '010':{
+      no:'SST-2026-010', title:'Taksit planı bilgi talebi', tur:'bilgi', durum:'tamam', portal:true,
+      musteri:{name:'Selçuk Onaran', href:'crm-satis-musteri-detay.html?mst=001', tur:'Kurumsal · Referans', ini:'SO'},
+      birim:{lbl:'VK-C-18', href:'crm-satis-birim-detay.html?birim=VK-C-18', not:'Vadi Konakları · C Blok, 5. kat'},
+      kaynak:{lbl:'Ödeme planı', href:'crm-satis-sozlesme-detay.html?ssz=2026-003', sub:'SSZ-2026-003 · 14/36 taksit ödendi'},
+      aciklama:'Müşteri, güncel ödeme planındaki kalan taksit sayısını ve tutarını sordu; satış ekibi güncel bilgiyi paylaştı.',
+      acilis:'2 Temmuz 2026', kapanis:'2 Temmuz 2026', oncelik:'low',
+      comments:[
+        {ini:'SO', name:'Selçuk Onaran', tarih:'2 Temmuz 2026, 09:10', text:'36 taksitlik ödeme planımda kalan taksit sayısını ve toplam kalan tutarı öğrenebilir miyim?', portal:true},
+        {ini:'OE', name:'Okan Eren', tarih:'2 Temmuz 2026, 10:00', text:'Merhaba Selçuk Bey, SSZ-2026-003 sözleşmeniz kapsamında 14 taksit ödendi, kalan tutar ₺3.592.000. Güncel ödeme planını <a href="crm-satis-sozlesme-detay.html?ssz=2026-003">sözleşme sayfanızdan</a> inceleyebilirsiniz.'}
+      ],
+      chain:[
+        {rol:'Müşteri (Portal)', kisi:'Selçuk Onaran', durum:'olusturdu', tarih:'2 Temmuz 2026 09:10'},
+        {rol:'Satış Müdürü', kisi:'Okan Eren', durum:'onaylandi', tarih:'2 Temmuz 2026 10:00', not:'Güncel ödeme planı bilgisi paylaşıldı, talep kapatıldı.'}
+      ]
+    },
+    '011':{
+      no:'SST-2026-011', title:'Teslimat randevusu ertelenmesi', tur:'teslimat', durum:'acik', portal:false,
+      musteri:{name:'Meltem Işık', href:null, tur:'Bireysel · Arşiv kayıt', ini:'MI'},
+      birim:{lbl:'KO-B-406', href:'crm-satis-birim-detay.html?birim=KO-B-406', not:'Kule Ofis B Blok · 4. kat'},
+      kaynak:{lbl:'Sözleşme', href:'crm-satis-sozlesme-detay.html?ssz=2025-058', sub:'SSZ-2025-058 · Teslim sürecinde'},
+      aciklama:'Planlanan teslim randevusu müşteri talebiyle ertelendi; yeni tarih için saha ekibiyle koordinasyon sürüyor.',
+      acilis:'2 Temmuz 2026', kapanis:null, oncelik:'high',
+      comments:[
+        {ini:'MI', name:'Meltem Işık', tarih:'2 Temmuz 2026, 10:05', text:'Bu hafta şehir dışındayım, teslim randevusunu ileri bir tarihe alabilir miyiz?'},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'2 Temmuz 2026, 10:20', text:'Elbette, yeni tarihi netleştirip dönüş yapacağız.'}
+      ],
+      chain:[
+        {rol:'Müşteri', kisi:'Meltem Işık', durum:'olusturdu', tarih:'2 Temmuz 2026 10:05'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'sirada', tarih:'Yeni tarih planlanıyor'}
+      ]
+    },
+    '012':{
+      no:'SST-2026-012', title:'Mutfak dolap kapağı hizası', tur:'eksik', durum:'islemde', portal:true,
+      musteri:{name:'Selçuk Onaran', href:'crm-satis-musteri-detay.html?mst=001', tur:'Kurumsal · Referans', ini:'SO'},
+      birim:{lbl:'VK-C-18', href:'crm-satis-birim-detay.html?birim=VK-C-18', not:'Vadi Konakları · C Blok, 5. kat'},
+      kaynak:{lbl:'Sözleşme', href:'crm-satis-sozlesme-detay.html?ssz=2026-003', sub:'SSZ-2026-003 · Taksitli, inşaat sürüyor'},
+      aciklama:'Mutfak alt dolap kapaklarından biri tam kapanmıyor, menteşe hizası kaymış görünüyor. Müşteri portalı üzerinden bildirildi, teslim öncesi son kontrol listesine eklenmesi istendi.',
+      acilis:'20 Temmuz 2026', kapanis:null, oncelik:'med',
+      comments:[
+        {ini:'SO', name:'Selçuk Onaran', tarih:'20 Temmuz 2026, 14:05', text:'Mutfak dolap kapaklarından biri düzgün kapanmıyor, menteşe ayarı bozuk olabilir. Teslimden önce düzeltilmesini rica ederim.', portal:true},
+        {ini:'ES', name:'Elif Sarıkaya', tarih:'21 Temmuz 2026, 10:15', text:'Notunuz alındı, eksik iş listesine eklendi — teslim öncesi son kontrolde marangoz ekibi hizayı düzeltecek.'}
+      ],
+      chain:[
+        {rol:'Müşteri (Portal)', kisi:'Selçuk Onaran', durum:'olusturdu', tarih:'20 Temmuz 2026 14:05'},
+        {rol:'Teknik Müdür', kisi:'Elif Sarıkaya', durum:'onaylandi', tarih:'21 Temmuz 2026 10:15', not:'Eksik iş listesine eklendi, teslim öncesi son kontrolde marangoz ekibi hizayı düzeltecek.'}
+      ]
+    }
+  };
+
+  var q = new URLSearchParams(location.search);
+  var rawSst = q.get('sst');
+  var key = rawSst;
+  if(!ITEMS[key]) key = rawSst ? null : '007';
+  var item = key && ITEMS[key];
+
+  if(!item){
+    gvNotFound({
+      code: rawSst ? rawSst.toUpperCase() : null,
+      tur: 'talep',
+      listHref: 'crm-satis-talepler.html', listLbl: 'Taleplere dön',
+      defHref: 'crm-satis-talep-detay.html', defLbl: 'Varsayılan kaydı aç'
+    });
+    return;
+  }
+
+  function renderComments(){
+    var wrap = document.getElementById('cmtList');
+    wrap.innerHTML = '';
+    item.comments.forEach(function(c){
+      var row = document.createElement('div');
+      row.className = 'cmt-row';
+      var portalTag = c.portal ? '<span class="cmt-portal-tag">Portal</span>' : '';
+      row.innerHTML =
+          '<div class="cmt-ava'+(c.portal ? ' portal' : '')+'">'+c.ini+'</div>'
+        + '<div class="cmt-body"><div class="cmt-head"><b>'+c.name+'</b>'+portalTag+'<span>'+c.tarih+'</span></div>'
+        + '<div class="cmt-text">'+c.text+'</div></div>';
+      wrap.appendChild(row);
+    });
+  }
+
+  function render(){
+    document.title = item.no + ' — Satış Sonrası Talep Detayı — Gavia CRM';
+    document.getElementById('crumbNo').textContent = item.no;
+
+    var T = TUR[item.tur], D = DURUM[item.durum];
+    document.getElementById('gdEyebrow').innerHTML = (item.musteri.name === 'Site Yönetimi' ? 'Kule Ofis B Blok' : item.musteri.name) + ' · Satış Sonrası Talep #' + item.no;
+    document.getElementById('gdTitle').textContent = item.title;
+
+    var badges = '<span class="gtag '+T.cls+'">'+T.lbl+'</span><span class="gstat '+D.cls+'">'+D.lbl+'</span>';
+    if(item.portal) badges += '<span class="gstat info kanal-portal"><i class="fa-solid fa-globe"></i> Portal</span>';
+    document.getElementById('gdBadges').innerHTML = badges;
+
+    document.getElementById('aciklamaText').textContent = item.aciklama;
+    renderComments();
+
+    gvChain(document.getElementById('chainEl'), {steps:item.chain});
+
+    var m = item.musteri;
+    document.getElementById('musteriBlock').innerHTML =
+        '<div class="who-mark" style="background:var(--info-tint);color:var(--info)">'+m.ini+'</div>'
+      + '<div>'+(m.href ? '<a href="'+m.href+'">'+m.name+'</a>' : '<b style="font-size:13.5px;color:var(--ink)">'+m.name+'</b>')+'<span>'+m.tur+'</span></div>';
+
+    var b = item.birim;
+    document.getElementById('birimBlock').innerHTML =
+        '<div class="who-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-door-closed"></i></div>'
+      + '<div>'+(b.href ? '<a href="'+b.href+'">'+b.lbl+'</a>' : '<b style="font-size:13.5px;color:var(--ink)">'+b.lbl+'</b>')+'<span>'+b.not+'</span></div>';
+
+    var kaynakEl = document.getElementById('kaynakRow');
+    if(item.kaynak){
+      kaynakEl.innerHTML = '<div class="ctx-row" style="border-top:1px dashed var(--line);margin-top:8px;padding-top:12px">'
+        + '<span class="ctx-lbl">'+item.kaynak.lbl+'</span>'
+        + '<span class="ctx-val">'+(item.kaynak.href ? '<a href="'+item.kaynak.href+'" style="color:var(--acc-ink)">'+item.kaynak.sub+'</a>' : item.kaynak.sub)+'</span></div>';
+    } else {
+      kaynakEl.innerHTML = '';
+    }
+
+    var priMap = {high:{cls:'high', lbl:'Yüksek'}, med:{cls:'med', lbl:'Orta'}, low:{cls:'low', lbl:'Düşük'}};
+    var pri = priMap[item.oncelik];
+    document.getElementById('slaOncelik').innerHTML = '<span class="sla-pri '+pri.cls+'">'+pri.lbl+'</span>';
+
+    if(item.kapanis){
+      document.getElementById('slaTarihLbl').textContent = 'Açılış → Kapanış';
+      document.getElementById('slaTarih').textContent = item.acilis + ' → ' + item.kapanis;
+    } else {
+      document.getElementById('slaTarihLbl').textContent = 'Açılış tarihi';
+      document.getElementById('slaTarih').textContent = item.acilis;
+    }
+
+    if(item.garantiBitis){
+      document.getElementById('slaEkRow').hidden = false;
+      document.getElementById('slaEkLbl').textContent = 'Garanti bitiş';
+      document.getElementById('slaEkVal').textContent = item.garantiBitis;
+    } else {
+      document.getElementById('slaEkRow').hidden = true;
+    }
+  }
+
+  render();
+
+  var meAva = document.getElementById('cmtMeAva');
+  if(meAva) meAva.textContent = GV.R.ini;
+  var send = document.getElementById('cmtSend'), inp = document.getElementById('cmtInput');
+  if(send && inp){
+    send.addEventListener('click', function(){
+      if(!inp.value.trim()) return;
+      gvToast('Yorumunuz eklendi.');
+      inp.value = '';
+    });
+  }
+})();
+</script>
+</body>
+</html>

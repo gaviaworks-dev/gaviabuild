@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>İcmal Çıktısı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+/* =====================================================================
+   İCMAL ÇIKTISI — SAT-2026-018 xlsx İCMAL karşılığı (D9 / 1.5)
+   Shell'siz, kendi kendine yeten çıktı ekranı — crm-operasyon-kasa-cikti.html
+   emsalinin BİREBİR pattern'ı (ck-bar + .paper + print CSS içeride, yalnız
+   tokens.css yüklenir). Tek fark: A4 YATAY (5 tedarikçi × M-İ-T geniş tablo).
+   Yapı: logo bandı → form kimlik satırı → ana icmal tablosu (9 kalem +
+   GENEL TOPLAM satırı) → tedarikçi NOT/TERMİN/ÖDEME blokları → imza üçlüsü.
+   Rakamlar screen (crm-satinalma-form-detay.html) ile BİREBİR — toplamlar
+   JS'te hesaplanır (elle kopyalanmaz), sürüklenme riski ortadan kalkar.
+   ===================================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:#525659;min-height:100vh;padding:88px 16px 40px;
+  -webkit-font-smoothing:antialiased}
+
+/* ---- ekran-only araç çubuğu ---- */
+.ck-bar{position:fixed;inset:0 0 auto 0;height:60px;background:var(--gv-deep);color:var(--on-dark);
+  display:flex;align-items:center;gap:14px;padding:0 22px;z-index:10;box-shadow:0 2px 14px rgba(0,0,0,.35)}
+.ck-bar .cb-brand{font-weight:800;font-size:15px;letter-spacing:-.01em;color:#fff;display:flex;align-items:center;gap:10px}
+.ck-bar .cb-brand .g{width:28px;height:28px;border-radius:8px;background:var(--gv-mint);color:var(--gv-deep);
+  display:grid;place-items:center;font-size:14px;font-weight:800}
+.ck-bar .cb-sub{font-size:12px;color:var(--on-dark-mut,#9aa3b2)}
+.ck-bar .cb-spacer{flex:1}
+.ck-bar .cb-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.18);color:#fff;background:transparent;
+  cursor:pointer;text-decoration:none;transition:.2s var(--ease)}
+.ck-bar .cb-btn:hover{background:rgba(255,255,255,.08)}
+.ck-bar .cb-btn.acc{background:var(--gv-mint);border-color:var(--gv-mint);color:var(--gv-deep)}
+.ck-bar .cb-btn.acc:hover{background:var(--gv-mint-bright)}
+
+/* ---- A4 kâğıt — YATAY ---- */
+.paper{width:297mm;min-height:210mm;margin:0 auto;background:#fff;color:#111;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);padding:12mm 12mm 10mm}
+
+/* logo bandı */
+.pp-band{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:7px;margin-bottom:0}
+.pp-band .pb-firm{display:flex;align-items:center;gap:10px}
+.pp-band .pb-g{width:32px;height:32px;border:2px solid #111;display:grid;place-items:center;font-weight:800;font-size:16px}
+.pp-band .pb-name{font-weight:800;font-size:14px;letter-spacing:.02em}
+.pp-band .pb-name span{display:block;font-weight:600;font-size:9px;letter-spacing:.07em;color:#444}
+.pp-band .pb-doc{font-size:9px;font-weight:700;color:#444;text-align:right;line-height:1.5}
+
+/* form kimlik satırı */
+.pi-title{display:grid;grid-template-columns:1fr 62mm;border:1.5px solid #111;border-top:none}
+.pi-title .pt-name{padding:10px 13px;font-size:13.5px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center}
+.pi-title .pt-name b{color:#444;font-weight:800;margin-right:6px}
+.pi-title .pt-side{border-left:1.5px solid #111;display:flex;flex-direction:column}
+.pi-title .pt-side b{flex:1;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;letter-spacing:.02em;padding:5px}
+.pi-title .pt-side span{border-top:1px solid #111;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:.08em;padding:3px;background:#f2f2f2}
+
+/* ana icmal tablosu */
+table.pi-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-top:none;font-size:7.6px;table-layout:fixed}
+.pi-tbl th,.pi-tbl td{border:1px solid #666;padding:3px 3px;vertical-align:middle}
+.pi-tbl thead th{background:#f2f2f2;font-weight:800;letter-spacing:.02em;text-transform:uppercase;text-align:center;line-height:1.35}
+.pi-tbl thead tr.r-sup th{font-size:7.4px;padding:4px 2px}
+.pi-tbl thead tr.r-sub th{font-size:6.6px;padding:2.5px 2px}
+.pi-tbl th.c-no,.pi-tbl td.c-no{width:5mm;text-align:center;color:#444;font-weight:700}
+.pi-tbl th.c-ad,.pi-tbl td.c-ad{width:34mm;text-align:left;padding-left:4px}
+.pi-tbl td.c-ad b{display:block;font-weight:700;font-size:7.8px;line-height:1.25}
+.pi-tbl td.c-ad span{display:block;font-size:6.8px;color:#555;margin-top:1px}
+.pi-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-right:4px}
+.pi-tbl td.yok{text-align:center;color:#888;font-style:italic;font-size:7px}
+.pi-tbl th.sel,.pi-tbl td.sel{background:#e3f7f0}
+.pi-tbl td.best{background:#d3f0e6;font-weight:800}
+.pi-tbl tr.r-tot td{background:#f2f2f2;font-weight:800;border-top:2px solid #111}
+.pi-tbl tr.r-tot td.sel{background:#c3ead9}
+.pi-tbl tr.r-tot td.best{background:#c3ead9}
+.pi-tbl td .parti{font-size:6px;display:block;font-weight:600;color:#666;margin-top:1px}
+
+/* tedarikçi not/termin/ödeme blokları */
+.pi-notes{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pi-notes .nc{border-right:1px solid #111;padding:6px 7px;font-size:7.6px;line-height:1.45}
+.pi-notes .nc:last-child{border-right:none}
+.pi-notes .nc.sel{background:#eefaf5}
+.pi-notes .nc h6{font-size:8px;font-weight:800;margin-bottom:4px;letter-spacing:.01em}
+.pi-notes .nc .kv{display:flex;gap:4px;margin-bottom:2px}
+.pi-notes .nc .kv b{flex:none;font-weight:800;color:#444;width:26px}
+.pi-notes .nc .kv span{color:#222}
+
+/* imza bloğu — ÜÇLÜ */
+.pi-sign{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pi-sign .sg{border-right:1px solid #111;padding:8px 8px 4px;min-height:26mm;display:flex;flex-direction:column}
+.pi-sign .sg:last-child{border-right:none}
+.pi-sign .sg-role{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#333;margin-bottom:3px}
+.pi-sign .sg-name{font-size:10.5px;font-weight:800}
+.pi-sign .sg-title{font-size:9px;font-weight:600;color:#444}
+.pi-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
+.pp-note{font-size:8px;color:#555;padding-top:5px;line-height:1.55}
+
+@media print{
+  body{background:#fff;padding:0}
+  .ck-bar{display:none}
+  .paper{width:auto;min-height:0;margin:0;box-shadow:none;padding:6mm 6mm}
+  @page{size:A4 landscape;margin:6mm}
+}
+@media (max-width:1100px){
+  body{padding:76px 8px 24px}
+  .paper{width:100%;min-height:0;padding:14px 10px;overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="ck-bar">
+  <div class="cb-brand"><span class="g">G</span> Gavia CRM <span class="cb-sub">· İcmal Çıktısı — imzaya hazır döküm</span></div>
+  <div class="cb-spacer"></div>
+  <a class="cb-btn" href="crm-satinalma-form-detay.html" id="piBack"><i class="fa-solid fa-arrow-left"></i> Form Detayı</a>
+  <button class="cb-btn acc" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır</button>
+</div>
+
+<div class="paper">
+  <div class="pp-band">
+    <div class="pb-firm">
+      <div class="pb-g">Y</div>
+      <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>SATIN ALMA İCMALİ DÖKÜMÜ</span></div>
+    </div>
+    <div class="pb-doc">Form No: SAİ-01 · Rev.01<br>Düzenleme: 02.07.2026</div>
+  </div>
+
+  <div class="pi-title">
+    <div class="pt-name"><b>SAT-2026-018</b> Vadi Konakları · Mekanik Tesisat Paketi Teklif İcmali</div>
+    <div class="pt-side">
+      <b>MLZ-2026-030</b>
+      <span>KAYNAK TALEP</span>
+    </div>
+  </div>
+
+  <!-- statik bake — DEFAULT icmal verisi (SAT-2026-018, kanonik dizi VERBATIM) JS'siz görünüm için; JS yüklenince aynı mount'lar innerHTML ile ezilir — D18-B2 -->
+  <table class="pi-tbl" id="piTbl">
+    <thead id="piThead"><tr class="r-sup"><th class="c-no" rowspan="2"></th><th class="c-ad" rowspan="2">Açıklama</th><th colspan="3">1 · Ege Hazır Beton</th><th colspan="3">2 · Trakya Beton</th><th colspan="3">3 · Marmara Yapı Market</th><th colspan="3" class="sel">4 · Deta Demir Çelik ★ SEÇİLİ</th><th colspan="3">5 · Nokta Hırdavat</th><th colspan="3" rowspan="1">EN İYİ FİYAT</th></tr><tr class="r-sub"><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th class="sel">Malzeme</th><th class="sel">İşçilik</th><th class="sel">Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th></tr></thead>
+    <tbody id="piRows"><tr><td class="c-no">1</td><td class="c-ad"><b>PPR boru ve fitting takımı (Ø20–32 mm)</b><span>1 takım</span></td><td class="num best">84.600</td><td class="num best">17.800</td><td class="num best">102.400</td><td class="num">91.200</td><td class="num">19.600</td><td class="num">110.800</td><td class="num">88.400</td><td class="num">18.900</td><td class="num">107.300</td><td class="num sel">89.500</td><td class="num sel">21.800</td><td class="num sel">111.300</td><td class="num">93.800</td><td class="num">20.400</td><td class="num">114.200</td><td class="num best">84.600</td><td class="num best">17.800</td><td class="num best">102.400</td></tr><tr><td class="c-no">2</td><td class="c-ad"><b>Kolektör grubu (6 çıkışlı, pirinç)</b><span>4 adet</span></td><td class="num best">12.600</td><td class="num best">2.800</td><td class="num best">15.400</td><td class="num">14.800</td><td class="num">3.200</td><td class="num">18.000</td><td class="num">13.900</td><td class="num">3.000</td><td class="num">16.900</td><td class="num sel">14.200</td><td class="num sel">3.600</td><td class="num sel">17.800</td><td class="num">15.200</td><td class="num">3.400</td><td class="num">18.600</td><td class="num best">12.600</td><td class="num best">2.800</td><td class="num best">15.400</td></tr><tr><td class="c-no">3</td><td class="c-ad"><b>Sirkülasyon pompası (Wilo tipi, 3 hız)</b><span>2 adet</span></td><td class="num">24.600</td><td class="num">5.200</td><td class="num">29.800</td><td class="num">25.400</td><td class="num">5.600</td><td class="num">31.000</td><td class="yok" colspan="3">— teklif yok</td><td class="num sel">23.400</td><td class="num sel">5.500</td><td class="num sel">28.900</td><td class="num best">21.200</td><td class="num best">4.600</td><td class="num best">25.800</td><td class="num best">21.200</td><td class="num best">4.600</td><td class="num best">25.800</td></tr><tr><td class="c-no">4</td><td class="c-ad"><b>Vana grubu (küresel vana + çek valf)</b><span>1 takım</span></td><td class="num">33.600</td><td class="num">7.200</td><td class="num">40.800</td><td class="num">35.900</td><td class="num">7.600</td><td class="num">43.500</td><td class="num best">30.800</td><td class="num best">6.400</td><td class="num best">37.200</td><td class="num sel">36.000</td><td class="num sel">8.600</td><td class="num sel">44.600</td><td class="num">37.200</td><td class="num">8.100</td><td class="num">45.300</td><td class="num best">30.800</td><td class="num best">6.400</td><td class="num best">37.200</td></tr><tr><td class="c-no">5</td><td class="c-ad"><b>Boru izolasyonu (kauçuk köpük, 6 mm)</b><span>340 m</span></td><td class="num">29.800</td><td class="num">9.900</td><td class="num">39.700</td><td class="num">31.200</td><td class="num">10.400</td><td class="num">41.600</td><td class="num best">27.600</td><td class="num best">9.200</td><td class="num best">36.800</td><td class="num sel">32.900</td><td class="num sel">10.800</td><td class="num sel">43.700</td><td class="num">33.600</td><td class="num">11.100</td><td class="num">44.700</td><td class="num best">27.600</td><td class="num best">9.200</td><td class="num best">36.800</td></tr><tr><td class="c-no">6</td><td class="c-ad"><b>Çelik konsol / askı takımı</b><span>220 adet</span></td><td class="num best">30.800</td><td class="num best">9.800</td><td class="num best">40.600</td><td class="num">33.400</td><td class="num">10.600</td><td class="num">44.000</td><td class="num">32.200</td><td class="num">10.200</td><td class="num">42.400</td><td class="num sel">35.600</td><td class="num sel">11.600</td><td class="num sel">47.200</td><td class="num">34.800</td><td class="num">11.000</td><td class="num">45.800</td><td class="num best">30.800</td><td class="num best">9.800</td><td class="num best">40.600</td></tr><tr><td class="c-no">7</td><td class="c-ad"><b>Panel radyatör (600×1200 mm, çift sıra)</b><span>48 adet</span></td><td class="num">248.600</td><td class="num">64.800</td><td class="num">313.400</td><td class="num">252.400</td><td class="num">66.200</td><td class="num">318.600</td><td class="yok" colspan="3">— teklif yok</td><td class="num sel">258.000</td><td class="num sel">67.500</td><td class="num sel">325.500</td><td class="num best">236.800</td><td class="num best">61.400</td><td class="num best">298.200</td><td class="num best">236.800</td><td class="num best">61.400</td><td class="num best">298.200</td></tr><tr><td class="c-no">8</td><td class="c-ad"><b>Sayaç kutusu (daire kalorimetre)</b><span>34 adet</span></td><td class="num">80.600</td><td class="num">19.000</td><td class="num">99.600</td><td class="num">82.400</td><td class="num">19.600</td><td class="num">102.000</td><td class="num">79.800</td><td class="num">18.800</td><td class="num">98.600</td><td class="num sel">84.600</td><td class="num sel">20.000</td><td class="num sel">104.600</td><td class="num best">76.400</td><td class="num best">18.200</td><td class="num best">94.600</td><td class="num best">76.400</td><td class="num best">18.200</td><td class="num best">94.600</td></tr><tr><td class="c-no">9</td><td class="c-ad"><b>Sarf malzeme paketi (teflon bant, conta, lehim)</b><span>1 paket</span></td><td class="num">14.800</td><td class="num">2.600</td><td class="num">17.400</td><td class="num">15.600</td><td class="num">2.800</td><td class="num">18.400</td><td class="num">14.200</td><td class="num">2.500</td><td class="num">16.700</td><td class="num sel">15.900</td><td class="num sel">2.800</td><td class="num sel">18.700</td><td class="num best">13.600</td><td class="num best">2.400</td><td class="num best">16.000</td><td class="num best">13.600</td><td class="num best">2.400</td><td class="num best">16.000</td></tr></tbody>
+    <tfoot id="piFoot"><tr class="r-tot"><td class="c-no"></td><td class="c-ad">GENEL TOPLAM</td><td class="num" colspan="3">699.100</td><td class="num" colspan="3">727.900</td><td class="num" colspan="3">355.900<span class="parti">7/9 kalem — kısmi</span></td><td class="num sel" colspan="3">742.300</td><td class="num" colspan="3">703.200</td><td class="num best" colspan="3">667.000</td></tr></tfoot>
+  </table>
+
+  <div class="pi-notes" id="piNotes"><div class="nc"><h6>1 · Ege Hazır Beton</h6><div class="kv"><b>Not</b><span>Radyatör + sayaç kalemlerinde 6 hafta ek teslim istedi</span></div><div class="kv"><b>Termin</b><span>8 hafta (tüm kalemler)</span></div><div class="kv"><b>Ödeme</b><span>45 gün vade</span></div></div><div class="nc"><h6>2 · Trakya Beton</h6><div class="kv"><b>Not</b><span>Tüm kalemlerde rakiplerin üzerinde fiyat</span></div><div class="kv"><b>Termin</b><span>6 hafta</span></div><div class="kv"><b>Ödeme</b><span>Peşin %30 + 30 gün</span></div></div><div class="nc"><h6>3 · Marmara Yapı Market</h6><div class="kv"><b>Not</b><span>Pompa ve radyatörde teklif vermedi (stoğu dışı)</span></div><div class="kv"><b>Termin</b><span>4 hafta (7 kalem)</span></div><div class="kv"><b>Ödeme</b><span>30 gün vade</span></div></div><div class="nc sel"><h6>4 · Deta Demir Çelik ★</h6><div class="kv"><b>Not</b><span>Tek tedarikçiden tam paket; montaj koordinasyonu + 2 yıl garanti dahil</span></div><div class="kv"><b>Termin</b><span>5 hafta (tüm kalemler)</span></div><div class="kv"><b>Ödeme</b><span>60 gün vade</span></div></div><div class="nc"><h6>5 · Nokta Hırdavat</h6><div class="kv"><b>Not</b><span>En düşük birim fiyatlar; büyük hacimde stok garantisi sınırlı</span></div><div class="kv"><b>Termin</b><span>7 hafta (stok gecikebilir)</span></div><div class="kv"><b>Ödeme</b><span>Peşin</span></div></div></div>
+
+  <div class="pi-sign">
+    <div class="sg"><div class="sg-role">Hazırlayan</div><div class="sg-name">Baran Yıldız</div><div class="sg-title">Satın Alma Sorumlusu</div><div class="sg-line">İMZA</div></div>
+    <div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Elif Sarıkaya</div><div class="sg-title">Teknik Müdür</div><div class="sg-line">İMZA</div></div>
+    <div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>
+  </div>
+  <p class="pp-note">Bu döküm, Gavia CRM satın alma icmalindeki tüm teklif karşılaştırmasını içerir; el ile eklenen kayıt geçersizdir.
+  Seçili tedarikçi (Deta Demir Çelik) hücreleri koyu vurguludur; en iyi fiyat kolonu satır bazında en düşük teklifi gösterir. İmzalar tamamlanmadan sipariş verilmez.</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  /* Kanonik D9 icmal verisi — crm-satinalma-form-detay.html karşılaştırma tablosuyla
+     BİREBİR aynı kaynak rakamlar; toplamlar burada hesaplanır (elle kopya YOK). */
+  function tl(n){ return n.toLocaleString('tr-TR'); }
+
+  var SUP = [
+    {key:'ege',     no:1, ad:'Ege Hazır Beton'},
+    {key:'trakya',  no:2, ad:'Trakya Beton'},
+    {key:'marmara', no:3, ad:'Marmara Yapı Market'},
+    {key:'deta',    no:4, ad:'Deta Demir Çelik', sel:true},
+    {key:'nokta',   no:5, ad:'Nokta Hırdavat'}
+  ];
+
+  var KALEMLER = [
+    {ad:'PPR boru ve fitting takımı (Ø20–32 mm)', mik:'1 takım',
+      ege:[84600,17800], trakya:[91200,19600], marmara:[88400,18900], deta:[89500,21800], nokta:[93800,20400]},
+    {ad:'Kolektör grubu (6 çıkışlı, pirinç)', mik:'4 adet',
+      ege:[12600,2800], trakya:[14800,3200], marmara:[13900,3000], deta:[14200,3600], nokta:[15200,3400]},
+    {ad:'Sirkülasyon pompası (Wilo tipi, 3 hız)', mik:'2 adet',
+      ege:[24600,5200], trakya:[25400,5600], marmara:null, deta:[23400,5500], nokta:[21200,4600]},
+    {ad:'Vana grubu (küresel vana + çek valf)', mik:'1 takım',
+      ege:[33600,7200], trakya:[35900,7600], marmara:[30800,6400], deta:[36000,8600], nokta:[37200,8100]},
+    {ad:'Boru izolasyonu (kauçuk köpük, 6 mm)', mik:'340 m',
+      ege:[29800,9900], trakya:[31200,10400], marmara:[27600,9200], deta:[32900,10800], nokta:[33600,11100]},
+    {ad:'Çelik konsol / askı takımı', mik:'220 adet',
+      ege:[30800,9800], trakya:[33400,10600], marmara:[32200,10200], deta:[35600,11600], nokta:[34800,11000]},
+    {ad:'Panel radyatör (600×1200 mm, çift sıra)', mik:'48 adet',
+      ege:[248600,64800], trakya:[252400,66200], marmara:null, deta:[258000,67500], nokta:[236800,61400]},
+    {ad:'Sayaç kutusu (daire kalorimetre)', mik:'34 adet',
+      ege:[80600,19000], trakya:[82400,19600], marmara:[79800,18800], deta:[84600,20000], nokta:[76400,18200]},
+    {ad:'Sarf malzeme paketi (teflon bant, conta, lehim)', mik:'1 paket',
+      ege:[14800,2600], trakya:[15600,2800], marmara:[14200,2500], deta:[15900,2800], nokta:[13600,2400]}
+  ];
+
+  var NOTLAR = {
+    ege:    {not_:'Radyatör + sayaç kalemlerinde 6 hafta ek teslim istedi', termin:'8 hafta (tüm kalemler)', odeme:'45 gün vade'},
+    trakya: {not_:'Tüm kalemlerde rakiplerin üzerinde fiyat', termin:'6 hafta', odeme:'Peşin %30 + 30 gün'},
+    marmara:{not_:'Pompa ve radyatörde teklif vermedi (stoğu dışı)', termin:'4 hafta (7 kalem)', odeme:'30 gün vade'},
+    deta:   {not_:'Tek tedarikçiden tam paket; montaj koordinasyonu + 2 yıl garanti dahil', termin:'5 hafta (tüm kalemler)', odeme:'60 gün vade'},
+    nokta:  {not_:'En düşük birim fiyatlar; büyük hacimde stok garantisi sınırlı', termin:'7 hafta (stok gecikebilir)', odeme:'Peşin'}
+  };
+
+  /* ---- başlık (thead) ---- */
+  var h = '<tr class="r-sup"><th class="c-no" rowspan="2"></th><th class="c-ad" rowspan="2">Açıklama</th>';
+  SUP.forEach(function(s){
+    h += '<th colspan="3"' + (s.sel ? ' class="sel"' : '') + '>' + s.no + ' · ' + s.ad + (s.sel ? ' ★ SEÇİLİ' : '') + '</th>';
+  });
+  h += '<th colspan="3" rowspan="1">EN İYİ FİYAT</th></tr>';
+  h += '<tr class="r-sub">';
+  SUP.forEach(function(s){
+    h += '<th' + (s.sel ? ' class="sel"' : '') + '>Malzeme</th><th' + (s.sel ? ' class="sel"' : '') + '>İşçilik</th><th' + (s.sel ? ' class="sel"' : '') + '>Toplam</th>';
+  });
+  h += '<th>Malzeme</th><th>İşçilik</th><th>Toplam</th></tr>';
+  document.getElementById('piThead').innerHTML = h;
+
+  /* ---- gövde (tbody) + GENEL TOPLAM hesap ---- */
+  var colTot = {}; SUP.forEach(function(s){ colTot[s.key] = 0; });
+  var colCount = {}; SUP.forEach(function(s){ colCount[s.key] = 0; });
+  var bestTot = 0;
+  var rows = '';
+
+  KALEMLER.forEach(function(K, idx){
+    /* satır bazında minimum toplamı bul */
+    var minKey = null, minVal = Infinity;
+    SUP.forEach(function(s){
+      var v = K[s.key];
+      if(v){ var t = v[0] + v[1]; if(t < minVal){ minVal = t; minKey = s.key; } }
+    });
+    bestTot += minVal;
+
+    rows += '<tr><td class="c-no">' + (idx + 1) + '</td>'
+          + '<td class="c-ad"><b>' + K.ad + '</b><span>' + K.mik + '</span></td>';
+
+    SUP.forEach(function(s){
+      var v = K[s.key];
+      var selCls = s.sel ? ' sel' : '';
+      var bestCls = (s.key === minKey) ? ' best' : '';
+      if(!v){
+        rows += '<td class="yok"' + (selCls ? ' style="background:#e3f7f0"' : '') + ' colspan="3">— teklif yok</td>';
+      } else {
+        var t = v[0] + v[1];
+        colTot[s.key] += t; colCount[s.key]++;
+        rows += '<td class="num' + selCls + bestCls + '">' + tl(v[0]) + '</td>'
+              + '<td class="num' + selCls + bestCls + '">' + tl(v[1]) + '</td>'
+              + '<td class="num' + selCls + bestCls + '">' + tl(t) + '</td>';
+      }
+    });
+
+    var bv = K[minKey];
+    rows += '<td class="num best">' + tl(bv[0]) + '</td><td class="num best">' + tl(bv[1]) + '</td><td class="num best">' + tl(bv[0] + bv[1]) + '</td>';
+    rows += '</tr>';
+  });
+  document.getElementById('piRows').innerHTML = rows;
+
+  /* ---- GENEL TOPLAM satırı ---- */
+  var f = '<tr class="r-tot"><td class="c-no"></td><td class="c-ad">GENEL TOPLAM</td>';
+  SUP.forEach(function(s){
+    var selCls = s.sel ? ' sel' : '';
+    var partial = colCount[s.key] < KALEMLER.length ? '<span class="parti">' + colCount[s.key] + '/' + KALEMLER.length + ' kalem — kısmi</span>' : '';
+    f += '<td class="num' + selCls + '" colspan="3">' + tl(colTot[s.key]) + partial + '</td>';
+  });
+  f += '<td class="num best" colspan="3">' + tl(bestTot) + '</td></tr>';
+  document.getElementById('piFoot').innerHTML = f;
+
+  /* ---- tedarikçi not/termin/ödeme blokları ---- */
+  var n = '';
+  SUP.forEach(function(s){
+    var N = NOTLAR[s.key];
+    n += '<div class="nc' + (s.sel ? ' sel' : '') + '"><h6>' + s.no + ' · ' + s.ad + (s.sel ? ' ★' : '') + '</h6>'
+       + '<div class="kv"><b>Not</b><span>' + N.not_ + '</span></div>'
+       + '<div class="kv"><b>Termin</b><span>' + N.termin + '</span></div>'
+       + '<div class="kv"><b>Ödeme</b><span>' + N.odeme + '</span></div></div>';
+  });
+  document.getElementById('piNotes').innerHTML = n;
+
+  /* ---- ?form= param oku — tek form var, farklı param SAT-2026-018'e düşer ---- */
+  var q = new URLSearchParams(location.search);
+  var formNo = q.get('form');
+  if(formNo && formNo !== 'SAT-2026-018'){
+    history.replaceState(null, '', 'crm-satinalma-icmal-cikti.html?form=SAT-2026-018');
+  }
+})();
+</script>
+</body>
+</html>

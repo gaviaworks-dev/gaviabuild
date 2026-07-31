@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Bağımsız Bölümler — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Bağımsız Bölümler (birim stoku) ============ */
+.kpi-grid.k5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1180px){.kpi-grid.k5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:640px){.kpi-grid.k5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* durum ek tonları — gstat 5 semantik tona (ok/warn/danger/info/off) uymayan
+   2 ek durum (Teslim Edildi=mint accent, Kiralandı=dashed ok) buradan türer */
+.gstat.acc{background:rgba(var(--acc-rgb),.16);color:var(--acc-deep)}
+.gstat.ok.dash{background:transparent;border:1px dashed var(--ok);color:var(--ok)}
+.gstat.warndeep{background:color-mix(in srgb, var(--warn) 26%, var(--warn-tint));color:color-mix(in srgb, var(--warn) 74%, #000)}
+.gstat.off.dash{background:transparent;border:1px dashed var(--line-2);color:var(--muted)}
+
+/* proje seçici + görünüm toggle şeridi */
+.brm-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 22px;border-bottom:1px solid var(--line)}
+.brm-projects{display:flex;gap:8px;flex-wrap:wrap}
+.brm-proj{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;padding:9px 15px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;background:var(--paper);transition:.18s var(--ease)}
+.brm-proj:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
+.brm-proj.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+.brm-proj b{font-weight:800}
+.brm-proj span{font-size:11px;color:var(--muted);font-weight:600}
+.brm-proj.is-on span{color:var(--acc-deep)}
+.brm-view{display:inline-flex;padding:3px;border-radius:var(--r-pill);background:var(--bg);border:1px solid var(--line);flex:none}
+.brm-view button{border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);padding:8px 16px;border-radius:var(--r-pill);cursor:pointer;transition:.18s var(--ease);display:inline-flex;align-items:center;gap:7px}
+.brm-view button.is-on{background:var(--paper);color:var(--acc-ink);box-shadow:var(--sh-sm)}
+
+/* tablo görünümü — uyarı rozeti + müşteri linki */
+.col-kod{width:110px}
+.col-loc{width:140px}
+.col-tip{width:100px}
+.col-fiyat{width:150px}
+.col-durum{width:170px}
+.birim-kod{display:flex;align-items:center;gap:7px}
+.birim-kod .odue{color:var(--danger);font-size:11px}
+.mus-link{color:var(--ink);font-weight:700}
+.mus-link:hover{color:var(--acc-ink)}
+.mus-plain{color:var(--muted);font-style:italic}
+.mus-sub{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px}
+
+/* matris görünümü */
+.brm-matrix-wrap{padding:20px 22px 22px}
+.brm-legend{display:flex;flex-wrap:wrap;gap:14px 20px;padding:0 0 18px;font-size:11.5px;color:var(--ink-2)}
+.brm-legend .lg-item{display:inline-flex;align-items:center;gap:7px}
+.brm-legend .lg-sw{width:16px;height:16px;border-radius:5px;flex:none}
+.brm-blocktabs{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.brm-blocktabs button{border:1px solid var(--line);background:var(--paper);color:var(--ink-2);font-family:inherit;font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:var(--r-sm);cursor:pointer;transition:.18s var(--ease)}
+.brm-blocktabs button.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+.brm-grid-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.brm-grid{display:flex;flex-direction:column;gap:6px;min-width:max-content}
+.brm-row{display:flex;align-items:center;gap:6px}
+.brm-row-lbl{width:56px;flex:none;font-size:11px;font-weight:700;color:var(--muted);text-align:right;padding-right:8px}
+.brm-cell{
+  width:64px;height:52px;flex:none;border-radius:9px;border:1px solid transparent;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  cursor:pointer;position:relative;transition:.15s var(--ease);
+}
+.brm-cell:hover{transform:translateY(-2px);box-shadow:var(--sh-sm);z-index:3}
+.brm-cell b{font-size:11.5px;font-weight:800;line-height:1.1}
+.brm-cell span{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;opacity:.85}
+.brm-cell.st-satista{background:var(--info-tint);color:var(--info)}
+.brm-cell.st-opsiyonlu{background:var(--warn-tint);color:var(--warn)}
+.brm-cell.st-rezerve{background:color-mix(in srgb, var(--warn) 26%, var(--warn-tint));color:color-mix(in srgb, var(--warn) 74%, #000)}
+.brm-cell.st-satildi{background:var(--ok-tint);color:var(--ok)}
+.brm-cell.st-teslim{background:rgba(var(--acc-rgb),.18);color:var(--acc-deep)}
+.brm-cell.st-kiralandi{background:transparent;border:1px dashed var(--ok);color:var(--ok)}
+.brm-cell.st-arsa{background:var(--bg);color:var(--muted);border-color:var(--line-2)}
+.brm-cell.st-kapali{background:transparent;border:1px dashed var(--line-2);color:var(--muted)}
+.brm-cell .brm-warn{position:absolute;top:-5px;right:-5px;width:15px;height:15px;border-radius:var(--r-circle);background:var(--danger);color:#fff;display:grid;place-items:center;font-size:7.5px;box-shadow:var(--sh-sm)}
+.brm-cell[data-tip]::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%) translateY(3px);
+  background:var(--ink);color:#fff;font-size:11px;font-weight:600;white-space:pre-line;text-align:center;line-height:1.5;
+  padding:8px 11px;border-radius:9px;box-shadow:var(--sh-md);width:max-content;max-width:220px;
+  opacity:0;pointer-events:none;transition:opacity .15s var(--ease),transform .15s var(--ease);z-index:20;
+}
+.brm-cell[data-tip]:hover::after,.brm-cell[data-tip]:focus-visible::after{opacity:1;transform:translateX(-50%) translateY(0)}
+.brm-col-hdr{display:flex;align-items:center;gap:6px;padding-left:62px;margin-bottom:2px}
+.brm-col-hdr span{width:64px;flex:none;text-align:center;font-size:10px;font-weight:700;color:var(--muted)}
+
+/* KPI'da opsiyon uyarısı satırı */
+.kpi-warn-list{display:flex;align-items:center;gap:8px;padding:14px 22px;background:var(--danger-tint);border-top:1px solid var(--line);font-size:12.5px;color:var(--danger);flex-wrap:wrap}
+.kpi-warn-list b{font-weight:800}
+.kpi-warn-list a{color:var(--danger);text-decoration:underline;text-underline-offset:2px}
+
+@media(max-width:640px){
+  .brm-toolbar{flex-direction:column;align-items:stretch}
+  .brm-view{align-self:flex-start}
+  .brm-cell{width:52px;height:46px}
+  .brm-row-lbl{width:40px}
+  .brm-col-hdr{padding-left:46px}
+  .brm-col-hdr span{width:52px}
+}
+</style>
+</head>
+<body data-sec="satis" data-screen="birimler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Satış</div>
+        <h1>Bağımsız Bölümler</h1>
+        <div class="ph-sub">196 birim · 3 proje — Vadi Konakları · Göl Evleri 2. Etap · Kule Ofis B Blok</div>
+      </div>
+    </div>
+
+    <!-- statik bake — DEFAULT (proje=VK, görünüm=tablo, blok=A) rol-agnostik veri; JS yüklenince aynı mount innerHTML ile ezilir (crm-satis-birimler.html kaynak script'i, VK/GE2/KO dizileri) — D18-B2 -->
+    <div class="kpi-grid k5" id="kpiGrid"><div class="kpi-card"><div class="kpi-ico"><i class="fa-solid fa-building-circle-check"></i></div><div><div class="kpi-num num">196</div><div class="kpi-lbl">Toplam birim</div><div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 3 proje</div></div></div><div class="kpi-card" style="--kpi-ok:1"><div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-key"></i></div><div><div class="kpi-num num">96</div><div class="kpi-lbl">Satılan</div><div class="kpi-delta flat">VK 44 + KO 52</div></div></div><div class="kpi-card warn"><div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div><div><div class="kpi-num num">18</div><div class="kpi-lbl">Opsiyonlu</div><div class="kpi-delta flat">VK 6 + GE2 12</div></div></div><div class="kpi-card warn"><div class="kpi-ico"><i class="fa-solid fa-hand-holding-dollar"></i></div><div><div class="kpi-num num">3</div><div class="kpi-lbl">Rezerve</div><div class="kpi-delta flat">Vadi Konakları</div></div></div><div class="kpi-card info"><div class="kpi-ico"><i class="fa-solid fa-tag"></i></div><div><div class="kpi-num num">67</div><div class="kpi-lbl">Satışta</div><div class="kpi-delta flat">VK 39 + GE2 28</div></div></div></div>
+
+    <div class="gv-card">
+      <div class="brm-toolbar">
+        <div class="brm-projects" id="projChips"><button type="button" class="brm-proj is-on" data-proj="VK"><b>Vadi Konakları</b><span>96 birim</span></button><button type="button" class="brm-proj" data-proj="GE2"><b>Göl Evleri 2. Etap</b><span>40 birim</span></button><button type="button" class="brm-proj" data-proj="KO"><b>Kule Ofis B Blok</b><span>60 birim</span></button></div>
+        <div class="brm-view">
+          <button type="button" class="is-on" data-view="tablo"><i class="fa-solid fa-table-list"></i> Tablo</button>
+          <button type="button" data-view="matris"><i class="fa-solid fa-border-all"></i> Blok/Kat Matrisi</button>
+        </div>
+      </div>
+
+      <!-- ============ TABLO GÖRÜNÜMÜ ============ -->
+      <div id="viewTablo">
+        <div class="filter-bar">
+          <div class="fb-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Birim kodu veya müşteri ara" data-table-search="#tblBirim">
+          </div>
+          <div class="chips" data-target="#tblBirim" id="durumChips"><button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">96</span></button><button class="chip" data-filter="satista">Satışta <span class="ch-cnt">39</span></button><button class="chip" data-filter="opsiyonlu">Opsiyonlu <span class="ch-cnt">6</span></button><button class="chip" data-filter="rezerve">Rezerve <span class="ch-cnt">3</span></button><button class="chip" data-filter="satildi">Satıldı <span class="ch-cnt">44</span></button><button class="chip" data-filter="arsa">Arsa Sahibi <span class="ch-cnt">2</span></button><button class="chip" data-filter="kapali">Satışa Kapalı <span class="ch-cnt">2</span></button></div>
+        </div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblBirim" data-paginate="25">
+            <thead>
+              <tr>
+                <th class="col-kod">Kod</th>
+                <th class="col-loc">Blok / Kat</th>
+                <th class="col-tip">Tip</th>
+                <th class="num col-fiyat">Liste Fiyatı</th>
+                <th class="col-durum">Durum</th>
+                <th>İlgili Müşteri</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tblBirimBody"><tr data-f="arsa"><td><div class="birim-kod t-strong">VK-A-01</div></td><td>A Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat off"><i class="fa-solid fa-user-tie" style="font-size:9px"></i> Arsa Sahibi</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=007">Halil Sancak</a><span class="mus-sub">Halil Sancak — arsa sahibi kat karşılığı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-01" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="arsa"><td><div class="birim-kod t-strong">VK-A-02</div></td><td>A Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat off"><i class="fa-solid fa-user-tie" style="font-size:9px"></i> Arsa Sahibi</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=007">Halil Sancak</a><span class="mus-sub">Halil Sancak — arsa sahibi kat karşılığı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-02" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-03</div></td><td>A Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=002">Derya Toprak</a><span class="mus-sub">3 daire paketi · SSZ-2026-004</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-03" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-04</div></td><td>A Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-04" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-05</div></td><td>A Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-05" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-06</div></td><td>A Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-06" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-07</div></td><td>A Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-07" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-08</div></td><td>A Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-08" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-09</div></td><td>A Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=002">Derya Toprak</a><span class="mus-sub">3 daire paketi · SSZ-2026-004</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-09" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-10</div></td><td>A Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-10" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista"><td><div class="birim-kod t-strong">VK-A-11</div></td><td>A Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=006">Nova Gayrimenkul</a><span class="mus-sub">Teklif taslak · TKF-2026-008</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-11" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista"><td><div class="birim-kod t-strong">VK-A-12</div></td><td>A Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=006">Nova Gayrimenkul</a><span class="mus-sub">Teklif taslak · TKF-2026-008</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-12" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-13</div></td><td>A Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-13" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista"><td><div class="birim-kod t-strong">VK-A-14</div></td><td>A Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=006">Nova Gayrimenkul</a><span class="mus-sub">Teklif taslak · TKF-2026-008</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-14" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-15</div></td><td>A Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-15" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="opsiyonlu"><td><div class="birim-kod t-strong">VK-A-16</div></td><td>A Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat warn"><i class="fa-solid fa-hourglass-half" style="font-size:9px"></i> Opsiyonlu</span></td><td><span class="mus-sub" style="margin-top:0">Görüşme sürüyor — kart açılmadı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-16" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-17</div></td><td>A Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-17" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-18</div></td><td>A Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-18" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-19</div></td><td>A Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-19" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-20</div></td><td>A Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-20" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-21</div></td><td>A Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-21" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="opsiyonlu"><td><div class="birim-kod t-strong">VK-A-22</div></td><td>A Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat warn"><i class="fa-solid fa-hourglass-half" style="font-size:9px"></i> Opsiyonlu</span></td><td><span class="mus-sub" style="margin-top:0">Görüşme sürüyor — kart açılmadı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-22" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-23</div></td><td>A Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-23" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-A-24</div></td><td>A Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-A-24" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi"><td><div class="birim-kod t-strong">VK-B-01</div></td><td>B Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-01" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-02</div></td><td>B Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-02" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-03</div></td><td>B Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-03" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-04</div></td><td>B Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-04" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-05</div></td><td>B Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-05" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-06</div></td><td>B Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-06" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-07</div></td><td>B Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=009">Tuncay Ilgaz</a><span class="mus-sub">Teklif reddedildi (%12) · TKF-2026-004</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-07" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-08</div></td><td>B Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-08" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-09</div></td><td>B Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-09" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-10</div></td><td>B Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-10" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="opsiyonlu" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-11 <i class="fa-solid fa-triangle-exclamation odue" data-tip="Opsiyon bitişi 14 Temmuz'da — 12 gün kaldı"></i></div></td><td>B Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat warn"><i class="fa-solid fa-hourglass-half" style="font-size:9px"></i> Opsiyonlu</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=003">Aylin Şahinoğlu</a><span class="mus-sub">Opsiyon bitiş 14 Temmuz · TKF-2026-003</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-11" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-12</div></td><td>B Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=003">Aylin Şahinoğlu</a><span class="mus-sub">Sunum yapıldı · FRS-2026-018</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-12" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-13</div></td><td>B Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-13" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-14</div></td><td>B Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-14" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-15</div></td><td>B Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-15" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-16</div></td><td>B Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-16" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-17</div></td><td>B Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-17" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-18</div></td><td>B Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-18" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="rezerve" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-19</div></td><td>B Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat warndeep"><i class="fa-solid fa-hand-holding-dollar" style="font-size:9px"></i> Rezerve</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=004">Mert Kavukçu</a><span class="mus-sub">Teklif müdür onayında · TKF-2026-006</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-19" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-20</div></td><td>B Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-20" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-21</div></td><td>B Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-21" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-22</div></td><td>B Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-22" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-23</div></td><td>B Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-23" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="kapali" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-B-24</div></td><td>B Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat off dash"><i class="fa-solid fa-ban" style="font-size:9px"></i> Satışa Kapalı</span></td><td><span class="mus-sub" style="margin-top:0">Satış ofisi — proje künyesi</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-B-24" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-01</div></td><td>C Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-01" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-02</div></td><td>C Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-02" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-03</div></td><td>C Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-03" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-04</div></td><td>C Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-04" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-05</div></td><td>C Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-05" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-06</div></td><td>C Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-06" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-07</div></td><td>C Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-07" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="opsiyonlu" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-08</div></td><td>C Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat warn"><i class="fa-solid fa-hourglass-half" style="font-size:9px"></i> Opsiyonlu</span></td><td><span class="mus-sub" style="margin-top:0">Görüşme sürüyor — kart açılmadı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-08" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-09</div></td><td>C Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-09" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-10</div></td><td>C Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-10" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-11</div></td><td>C Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-11" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-12</div></td><td>C Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-12" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="opsiyonlu" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-13</div></td><td>C Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat warn"><i class="fa-solid fa-hourglass-half" style="font-size:9px"></i> Opsiyonlu</span></td><td><span class="mus-sub" style="margin-top:0">Görüşme sürüyor — kart açılmadı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-13" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-14</div></td><td>C Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-14" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-15</div></td><td>C Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-15" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-16</div></td><td>C Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-16" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-17</div></td><td>C Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-17" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-18</div></td><td>C Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=001">Selçuk Onaran</a><span class="mus-sub">SSZ-2026-003 · 14/36 taksit ödendi</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-18" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-19</div></td><td>C Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-19" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-20</div></td><td>C Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-20" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-21</div></td><td>C Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=002">Derya Toprak</a><span class="mus-sub">3 daire paketi · SSZ-2026-004</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-21" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-22</div></td><td>C Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-22" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-23</div></td><td>C Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-23" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="rezerve" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-C-24</div></td><td>C Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat warndeep"><i class="fa-solid fa-hand-holding-dollar" style="font-size:9px"></i> Rezerve</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=002">Derya Toprak</a><span class="mus-sub">Kapora alındı · FRS-2026-011</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-C-24" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-01</div></td><td>D Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-01" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-02</div></td><td>D Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-02" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-03</div></td><td>D Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-03" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-04</div></td><td>D Blok · Kat 1</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-04" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="rezerve" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-05</div></td><td>D Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat warndeep"><i class="fa-solid fa-hand-holding-dollar" style="font-size:9px"></i> Rezerve</span></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=005">Baha &amp; Zeynep Korkut</a><span class="mus-sub">Sözleşme imzada · SSZ-2026-007</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-05" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-06</div></td><td>D Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-06" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-07</div></td><td>D Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-07" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-08</div></td><td>D Blok · Kat 2</td><td>2+1</td><td class="num">₺4.200.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-08" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-09</div></td><td>D Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-09" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-10</div></td><td>D Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-10" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-11</div></td><td>D Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-11" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-12</div></td><td>D Blok · Kat 3</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-12" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-13</div></td><td>D Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-13" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satildi" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-14</div></td><td>D Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat ok"><i class="fa-solid fa-check" style="font-size:9px"></i> Satıldı</span></td><td><span class="mus-plain">Volkan Demirel</span><span class="mus-sub">Arşiv kaydı — 90 gün içinde kazanıldı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-14" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-15</div></td><td>D Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-15" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-16</div></td><td>D Blok · Kat 4</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-16" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-17</div></td><td>D Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-17" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-18</div></td><td>D Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-18" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="opsiyonlu" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-19</div></td><td>D Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat warn"><i class="fa-solid fa-hourglass-half" style="font-size:9px"></i> Opsiyonlu</span></td><td><span class="mus-sub" style="margin-top:0">Görüşme sürüyor — kart açılmadı</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-19" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-20</div></td><td>D Blok · Kat 5</td><td>3+1</td><td class="num">₺6.120.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-20" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-21</div></td><td>D Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-21" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-22</div></td><td>D Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td>—</td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-22" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="satista" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-23</div></td><td>D Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat info"><i class="fa-solid fa-tag" style="font-size:9px"></i> Satışta</span></td><td><span class="mus-plain">İlker Baysal</span><span class="mus-sub">Dubleks gezisi yapıldı · FRS-2026-014 (ham lead)</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-23" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr><tr data-f="kapali" class="gv-pg-hide"><td><div class="birim-kod t-strong">VK-D-24</div></td><td>D Blok · Kat 6</td><td>Dubleks</td><td class="num">₺9.800.000</td><td><span class="gstat off dash"><i class="fa-solid fa-ban" style="font-size:9px"></i> Satışa Kapalı</span></td><td><span class="mus-sub" style="margin-top:0">Numune daire — satış ekibi kullanımında</span></td><td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=VK-D-24" data-no-confirm="" aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td></tr></tbody>
+          </table>
+          <div class="gv-empty" data-table-empty hidden>
+            <div class="ge-ico"><i class="fa-solid fa-building-circle-check"></i></div>
+            <h4>Eşleşen birim yok</h4>
+            <p>Aramayı temizleyin veya farklı bir durum filtresi seçin.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ MATRİS GÖRÜNÜMÜ ============ -->
+      <div id="viewMatris" hidden>
+        <div class="brm-matrix-wrap">
+          <div class="brm-legend" id="brmLegend"><span class="lg-item"><span class="lg-sw" style="background:var(--info)"></span>Satışta</span><span class="lg-item"><span class="lg-sw" style="background:var(--warn)"></span>Opsiyonlu</span><span class="lg-item"><span class="lg-sw" style="background:color-mix(in srgb, var(--warn) 74%, #000)"></span>Rezerve</span><span class="lg-item"><span class="lg-sw" style="background:var(--ok)"></span>Satıldı</span><span class="lg-item"><span class="lg-sw" style="background:var(--acc-deep)"></span>Teslim Edildi</span><span class="lg-item"><span class="lg-sw" style="background:var(--ok);background:transparent;border:1.5px dashed var(--ok)"></span>Kiralandı</span><span class="lg-item"><span class="lg-sw" style="background:var(--muted)"></span>Arsa Sahibi</span><span class="lg-item"><span class="lg-sw" style="background:var(--muted);background:transparent;border:1.5px dashed var(--muted)"></span>Satışa Kapalı</span></div>
+          <div id="brmBlockTabs"><div class="brm-blocktabs"><button type="button" class="is-on" data-block="A">A Blok</button><button type="button" class="" data-block="B">B Blok</button><button type="button" class="" data-block="C">C Blok</button><button type="button" class="" data-block="D">D Blok</button></div></div>
+          <div class="brm-grid-scroll">
+            <div id="brmColHdr"><div class="brm-col-hdr"><span>1</span><span>2</span><span>3</span><span>4</span></div></div>
+            <div class="brm-grid" id="brmGrid"><div class="brm-row"><div class="brm-row-lbl">Kat 6</div><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-21" data-tip="VK-A-21 — Dubleks
+₺9.800.000
+Satıldı"><b>21</b><span>Dubleks</span></a><a class="brm-cell st-opsiyonlu" href="crm-satis-birim-detay.html?birim=VK-A-22" data-tip="VK-A-22 — Dubleks
+₺9.800.000
+Opsiyonlu"><b>22</b><span>Dubleks</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-23" data-tip="VK-A-23 — Dubleks
+₺9.800.000
+Satıldı"><b>23</b><span>Dubleks</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-24" data-tip="VK-A-24 — Dubleks
+₺9.800.000
+Satıldı"><b>24</b><span>Dubleks</span></a></div><div class="brm-row"><div class="brm-row-lbl">Kat 5</div><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-17" data-tip="VK-A-17 — 3+1
+₺6.120.000
+Satıldı"><b>17</b><span>3+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-18" data-tip="VK-A-18 — 3+1
+₺6.120.000
+Satıldı"><b>18</b><span>3+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-19" data-tip="VK-A-19 — 3+1
+₺6.120.000
+Satıldı"><b>19</b><span>3+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-20" data-tip="VK-A-20 — 3+1
+₺6.120.000
+Satıldı"><b>20</b><span>3+1</span></a></div><div class="brm-row"><div class="brm-row-lbl">Kat 4</div><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-13" data-tip="VK-A-13 — 3+1
+₺6.120.000
+Satıldı"><b>13</b><span>3+1</span></a><a class="brm-cell st-satista" href="crm-satis-birim-detay.html?birim=VK-A-14" data-tip="VK-A-14 — 3+1
+₺6.120.000
+Satışta
+Nova Gayrimenkul"><b>14</b><span>3+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-15" data-tip="VK-A-15 — 3+1
+₺6.120.000
+Satıldı"><b>15</b><span>3+1</span></a><a class="brm-cell st-opsiyonlu" href="crm-satis-birim-detay.html?birim=VK-A-16" data-tip="VK-A-16 — 3+1
+₺6.120.000
+Opsiyonlu"><b>16</b><span>3+1</span></a></div><div class="brm-row"><div class="brm-row-lbl">Kat 3</div><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-09" data-tip="VK-A-09 — 3+1
+₺6.120.000
+Satıldı
+Derya Toprak"><b>09</b><span>3+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-10" data-tip="VK-A-10 — 3+1
+₺6.120.000
+Satıldı"><b>10</b><span>3+1</span></a><a class="brm-cell st-satista" href="crm-satis-birim-detay.html?birim=VK-A-11" data-tip="VK-A-11 — 3+1
+₺6.120.000
+Satışta
+Nova Gayrimenkul"><b>11</b><span>3+1</span></a><a class="brm-cell st-satista" href="crm-satis-birim-detay.html?birim=VK-A-12" data-tip="VK-A-12 — 3+1
+₺6.120.000
+Satışta
+Nova Gayrimenkul"><b>12</b><span>3+1</span></a></div><div class="brm-row"><div class="brm-row-lbl">Kat 2</div><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-05" data-tip="VK-A-05 — 2+1
+₺4.200.000
+Satıldı"><b>05</b><span>2+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-06" data-tip="VK-A-06 — 2+1
+₺4.200.000
+Satıldı"><b>06</b><span>2+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-07" data-tip="VK-A-07 — 2+1
+₺4.200.000
+Satıldı"><b>07</b><span>2+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-08" data-tip="VK-A-08 — 2+1
+₺4.200.000
+Satıldı"><b>08</b><span>2+1</span></a></div><div class="brm-row"><div class="brm-row-lbl">Kat 1</div><a class="brm-cell st-arsa" href="crm-satis-birim-detay.html?birim=VK-A-01" data-tip="VK-A-01 — 2+1
+₺4.200.000
+Arsa Sahibi
+Halil Sancak"><b>01</b><span>2+1</span></a><a class="brm-cell st-arsa" href="crm-satis-birim-detay.html?birim=VK-A-02" data-tip="VK-A-02 — 2+1
+₺4.200.000
+Arsa Sahibi
+Halil Sancak"><b>02</b><span>2+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-03" data-tip="VK-A-03 — 2+1
+₺4.200.000
+Satıldı
+Derya Toprak"><b>03</b><span>2+1</span></a><a class="brm-cell st-satildi" href="crm-satis-birim-detay.html?birim=VK-A-04" data-tip="VK-A-04 — 2+1
+₺4.200.000
+Satıldı"><b>04</b><span>2+1</span></a></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* =====================================================================
+     BİRİM STOKU ÜRETİCİ — Dalga 11 kanonik sayılara BİREBİR (shell.js üst
+     yorum bloğu, "SATIŞ EVRENİ"). Her proje: sabit-kod anchor birimleri
+     (zengin senaryo / çapraz link) + geri kalan havuzu program kanonik
+     TOPLAM/durum sayılarını tutturacak şekilde deterministik doldurur.
+     ===================================================================== */
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+  function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+
+  var DURUM = {
+    satista:  {lbl:'Satışta',        tone:'info',     ic:'fa-tag',                  sw:'var(--info)'},
+    opsiyonlu:{lbl:'Opsiyonlu',      tone:'warn',      ic:'fa-hourglass-half',       sw:'var(--warn)'},
+    rezerve:  {lbl:'Rezerve',        tone:'warndeep',  ic:'fa-hand-holding-dollar',  sw:'color-mix(in srgb, var(--warn) 74%, #000)'},
+    satildi:  {lbl:'Satıldı',        tone:'ok',        ic:'fa-check',                sw:'var(--ok)'},
+    teslim:   {lbl:'Teslim Edildi',  tone:'acc',       ic:'fa-key',                  sw:'var(--acc-deep)'},
+    kiralandi:{lbl:'Kiralandı',      tone:'ok dash',   ic:'fa-house-chimney-user',   sw:'var(--ok)'},
+    arsa:     {lbl:'Arsa Sahibi',    tone:'off',       ic:'fa-user-tie',             sw:'var(--muted)'},
+    kapali:   {lbl:'Satışa Kapalı',  tone:'off dash',  ic:'fa-ban',                  sw:'var(--muted)'}
+  };
+  function gstat(durum){ return '<span class="gstat ' + DURUM[durum].tone + '"><i class="fa-solid ' + DURUM[durum].ic + '" style="font-size:9px"></i> ' + DURUM[durum].lbl + '</span>'; }
+
+  /* ---- VADİ KONAKLARI — 4 blok A–D × 6 kat × 4 daire = 96 ---- */
+  var VK_FLOORS = [
+    {kat:1, doors:[1,2,3,4],     tip:'2+1',      fiyat:4200000, brut:110, net:92},
+    {kat:2, doors:[5,6,7,8],     tip:'2+1',      fiyat:4200000, brut:110, net:92},
+    {kat:3, doors:[9,10,11,12],  tip:'3+1',      fiyat:6120000, brut:145, net:122},
+    {kat:4, doors:[13,14,15,16], tip:'3+1',      fiyat:6120000, brut:145, net:122},
+    {kat:5, doors:[17,18,19,20], tip:'3+1',      fiyat:6120000, brut:145, net:122},
+    {kat:6, doors:[21,22,23,24], tip:'Dubleks',  fiyat:9800000, brut:210, net:178}
+  ];
+  var VK_BLOCKS = ['A','B','C','D'];
+  var VK_ANCHOR = {
+    'A-01':{durum:'arsa', ozel:'Halil Sancak — arsa sahibi kat karşılığı', href:'crm-satis-musteri-detay.html?mst=007', mus:'Halil Sancak'},
+    'A-02':{durum:'arsa', ozel:'Halil Sancak — arsa sahibi kat karşılığı', href:'crm-satis-musteri-detay.html?mst=007', mus:'Halil Sancak'},
+    'A-03':{durum:'satildi', mus:'Derya Toprak', href:'crm-satis-musteri-detay.html?mst=002', ozel:'3 daire paketi · SSZ-2026-004'},
+    'A-09':{durum:'satildi', mus:'Derya Toprak', href:'crm-satis-musteri-detay.html?mst=002', ozel:'3 daire paketi · SSZ-2026-004'},
+    'A-11':{durum:'satista', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Teklif taslak · TKF-2026-008'},
+    'A-12':{durum:'satista', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Teklif taslak · TKF-2026-008'},
+    'A-14':{durum:'satista', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Teklif taslak · TKF-2026-008'},
+    'A-16':{durum:'opsiyonlu', mus:null, ozel:'Görüşme sürüyor — kart açılmadı'},
+    'A-22':{durum:'opsiyonlu', mus:null, ozel:'Görüşme sürüyor — kart açılmadı'},
+    'B-07':{durum:'satista', mus:'Tuncay Ilgaz', href:'crm-satis-musteri-detay.html?mst=009', ozel:'Teklif reddedildi (%12) · TKF-2026-004'},
+    'B-11':{durum:'opsiyonlu', mus:'Aylin Şahinoğlu', href:'crm-satis-musteri-detay.html?mst=003', ozel:'Opsiyon bitiş 14 Temmuz · TKF-2026-003', uyari:'Opsiyon bitişi 14 Temmuz\'da — 12 gün kaldı', tkf:'003'},
+    'B-12':{durum:'satista', mus:'Aylin Şahinoğlu', href:'crm-satis-musteri-detay.html?mst=003', ozel:'Sunum yapıldı · FRS-2026-018'},
+    'B-19':{durum:'rezerve', mus:'Mert Kavukçu', href:'crm-satis-musteri-detay.html?mst=004', ozel:'Teklif müdür onayında · TKF-2026-006'},
+    'B-24':{durum:'kapali', mus:null, ozel:'Satış ofisi — proje künyesi'},
+    'C-08':{durum:'opsiyonlu', mus:null, ozel:'Görüşme sürüyor — kart açılmadı'},
+    'C-13':{durum:'opsiyonlu', mus:null, ozel:'Görüşme sürüyor — kart açılmadı'},
+    'C-18':{durum:'satildi', mus:'Selçuk Onaran', href:'crm-satis-musteri-detay.html?mst=001', ozel:'SSZ-2026-003 · 14/36 taksit ödendi', cari:'crm-cari-detay.html?cari=onaran'},
+    'C-21':{durum:'satildi', mus:'Derya Toprak', href:'crm-satis-musteri-detay.html?mst=002', ozel:'3 daire paketi · SSZ-2026-004'},
+    'C-24':{durum:'rezerve', mus:'Derya Toprak', href:'crm-satis-musteri-detay.html?mst=002', ozel:'Kapora alındı · FRS-2026-011'},
+    'D-05':{durum:'rezerve', mus:'Baha &amp; Zeynep Korkut', href:'crm-satis-musteri-detay.html?mst=005', ozel:'Sözleşme imzada · SSZ-2026-007'},
+    'D-14':{durum:'satildi', mus:'Volkan Demirel', href:null, ozel:'Arşiv kaydı — 90 gün içinde kazanıldı'},
+    'D-19':{durum:'opsiyonlu', mus:null, ozel:'Görüşme sürüyor — kart açılmadı'},
+    'D-23':{durum:'satista', mus:'İlker Baysal', href:null, ozel:'Dubleks gezisi yapıldı · FRS-2026-014 (ham lead)'},
+    'D-24':{durum:'kapali', mus:null, ozel:'Numune daire — satış ekibi kullanımında'}
+  };
+
+  function buildVK(){
+    var floorOf = {}; VK_FLOORS.forEach(function(f){ f.doors.forEach(function(d){ floorOf[d] = f; }); });
+    var codes = [];
+    VK_BLOCKS.forEach(function(bl){ VK_FLOORS.forEach(function(f){ f.doors.forEach(function(d){ codes.push(bl + '-' + pad2(d)); }); }); });
+    var fillOrder = codes.filter(function(c){ return !VK_ANCHOR[c]; });
+    var satildiFillN = 39, satistaFillN = 33; // 44-5 anchors, 39-6 anchors
+    var fillStatus = {};
+    fillOrder.forEach(function(c, i){ fillStatus[c] = i < satildiFillN ? 'satildi' : 'satista'; });
+
+    return codes.map(function(c){
+      var parts = c.split('-'); var bl = parts[0]; var door = parseInt(parts[1], 10);
+      var f = floorOf[door];
+      var a = VK_ANCHOR[c];
+      var durum = a ? a.durum : fillStatus[c];
+      return {
+        kod:'VK-' + c, proje:'VK', projeAd:'Vadi Konakları', blok:bl, kat:f.kat,
+        loc:bl + ' Blok · Kat ' + f.kat, tip:f.tip, brut:f.brut, net:f.net, fiyat:f.fiyat,
+        durum:durum, mus:a ? a.mus : null, href:a ? a.href : null, ozel:a ? a.ozel : null,
+        uyari:a ? a.uyari : null, cari:a ? a.cari : null
+      };
+    });
+  }
+
+  /* ---- GÖL EVLERİ 2. ETAP — 40 villa, V-01..V-40, 5 sıra × 8 parsel ---- */
+  var GE2_ANCHOR = {
+    5:{durum:'opsiyonlu', mus:'Selçuk Onaran', href:'crm-satis-musteri-detay.html?mst=001', ozel:'Ön-talep · FRS-2026-008 müzakerede'},
+    7:{durum:'opsiyonlu', mus:'Nihat Karaduman', href:'crm-satis-musteri-detay.html?mst=010', ozel:'Ön-talep · FRS-2026-016 (Yeni)'},
+    12:{durum:'opsiyonlu', mus:'Pınar Us', href:null, ozel:'Ön-talep · FRS-2026-006 (ham lead)', uyari:'Opsiyon bitişi 13 Temmuz\'da — 11 gün kaldı'},
+    21:{durum:'opsiyonlu', mus:'Derya Toprak', href:'crm-satis-musteri-detay.html?mst=002', ozel:'Ön-talep · FRS-2026-015'},
+    22:{durum:'opsiyonlu', mus:'Derya Toprak', href:'crm-satis-musteri-detay.html?mst=002', ozel:'Ön-talep · FRS-2026-015'},
+    25:{durum:'opsiyonlu', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Bayi ön-talebi · FRS-2026-007'},
+    26:{durum:'opsiyonlu', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Bayi ön-talebi · FRS-2026-007'},
+    27:{durum:'opsiyonlu', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Bayi ön-talebi · FRS-2026-007'},
+    28:{durum:'opsiyonlu', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Bayi ön-talebi · FRS-2026-007'},
+    29:{durum:'opsiyonlu', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Bayi ön-talebi · FRS-2026-007'},
+    30:{durum:'opsiyonlu', mus:'Nova Gayrimenkul', href:'crm-satis-musteri-detay.html?mst=006', ozel:'Bayi ön-talebi · FRS-2026-007'},
+    33:{durum:'opsiyonlu', mus:null, ozel:'Bağımsız ön-talep — kart açılmadı'}
+  };
+  function buildGE2(){
+    var out = [];
+    for(var n = 1; n <= 40; n++){
+      var fiyat = 12800000 + Math.round((16400000 - 12800000) * (n - 1) / 39 / 10000) * 10000;
+      var a = GE2_ANCHOR[n];
+      out.push({
+        kod:'GE2-V' + pad2(n), proje:'GE2', projeAd:'Göl Evleri 2. Etap', blok:null, kat:null,
+        loc:'Parsel ' + Math.ceil(n / 8) + ' sıra', tip:'Villa (bahçeli)', brut:235, net:205, fiyat:fiyat,
+        durum: a ? a.durum : 'satista', mus:a ? a.mus : null, href:a ? a.href : null, ozel:a ? a.ozel : null, uyari:a ? a.uyari : null
+      });
+    }
+    return out;
+  }
+
+  /* ---- KULE OFİS B BLOK — 5 kat × 12 ofis = 60, KO-B-{kat}{no} ---- */
+  var KO_ANCHOR = {
+    '304':{durum:'satildi', mus:'Selçuk Onaran', href:'crm-satis-musteri-detay.html?mst=001', ozel:'Teslim edildi · TSL-2026-001', teslimEdildiBadge:true},
+    '311':{durum:'satildi', mus:'Rıza Kalkan', href:null, ozel:'Teslim sürecinde · SSZ-2025-051 (9/12 kalem tamam)'},
+    '406':{durum:'satildi', mus:'Meltem Işık', href:null, ozel:'Teslim sürecinde · SSZ-2025-058'},
+    '107':{durum:'teslim', mus:'Ejder Balcı', href:null, ozel:'Teslim edildi · TSL-2026-002'},
+    '212':{durum:'teslim', mus:'Seray Ünal', href:null, ozel:'Teslim edildi · TSL-2026-003'},
+    '207':{durum:'kiralandi', mus:'Ferda Yücel', href:'crm-satis-musteri-detay.html?mst=008', ozel:'Kira bitişi 31 Temmuz — yeni kiracı adayı görüşmede'}
+  };
+  function buildKO(){
+    var codes = [];
+    for(var kat = 1; kat <= 5; kat++){ for(var no = 1; no <= 12; no++){ codes.push(kat + '' + pad2(no)); } }
+    var fillOrder = codes.filter(function(c){ return !KO_ANCHOR[c]; });
+    var teslimFillN = 47, kiralandiFillN = 7;
+    var fillStatus = {};
+    fillOrder.forEach(function(c, i){ fillStatus[c] = i < teslimFillN ? 'teslim' : 'kiralandi'; });
+    /* 304 teslim edildi anchor'ı durum alanında 'satildi' değil 'teslim' — düzelt */
+    KO_ANCHOR['304'].durum = 'teslim';
+
+    return codes.map(function(c){
+      var kat = parseInt(c.slice(0, 1), 10); var no = parseInt(c.slice(1), 10);
+      var a = KO_ANCHOR[c];
+      var durum = a ? a.durum : fillStatus[c];
+      return {
+        kod:'KO-B-' + c, proje:'KO', projeAd:'Kule Ofis B Blok', blok:'B', kat:kat,
+        loc:'B Blok · Kat ' + kat, tip:'Ofis (açık plan)', brut:105, net:92, fiyat:2650000 + kat * 60000,
+        durum:durum, mus:a ? a.mus : null, href:a ? a.href : null, ozel:a ? a.ozel : null
+      };
+    });
+  }
+
+  var VK = buildVK(), GE2 = buildGE2(), KO = buildKO();
+  var ALL = VK.concat(GE2).concat(KO);
+
+  /* ---- KPI (portföy genelinde — proje sekmesinden bağımsız) ---- */
+  function isSold(u){ return u.durum === 'satildi' || u.durum === 'teslim'; }
+  var kToplam = ALL.length;
+  var kSatilan = ALL.filter(isSold).length;
+  var kOpsiyon = ALL.filter(function(u){ return u.durum === 'opsiyonlu'; }).length;
+  var kRezerve = ALL.filter(function(u){ return u.durum === 'rezerve'; }).length;
+  var kSatista = ALL.filter(function(u){ return u.durum === 'satista'; }).length;
+  var uyariList = ALL.filter(function(u){ return u.uyari; });
+
+  document.getElementById('kpiGrid').innerHTML =
+      '<div class="kpi-card"><div class="kpi-ico"><i class="fa-solid fa-building-circle-check"></i></div>'
+    + '<div><div class="kpi-num num">' + kToplam + '</div><div class="kpi-lbl">Toplam birim</div>'
+    + '<div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 3 proje</div></div></div>'
+    + '<div class="kpi-card" style="--kpi-ok:1"><div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-key"></i></div>'
+    + '<div><div class="kpi-num num">' + kSatilan + '</div><div class="kpi-lbl">Satılan</div>'
+    + '<div class="kpi-delta flat">VK 44 + KO 52</div></div></div>'
+    + '<div class="kpi-card warn"><div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>'
+    + '<div><div class="kpi-num num">' + kOpsiyon + '</div><div class="kpi-lbl">Opsiyonlu</div>'
+    + '<div class="kpi-delta flat">VK 6 + GE2 12</div></div></div>'
+    + '<div class="kpi-card warn"><div class="kpi-ico"><i class="fa-solid fa-hand-holding-dollar"></i></div>'
+    + '<div><div class="kpi-num num">' + kRezerve + '</div><div class="kpi-lbl">Rezerve</div>'
+    + '<div class="kpi-delta flat">Vadi Konakları</div></div></div>'
+    + '<div class="kpi-card info"><div class="kpi-ico"><i class="fa-solid fa-tag"></i></div>'
+    + '<div><div class="kpi-num num">' + kSatista + '</div><div class="kpi-lbl">Satışta</div>'
+    + '<div class="kpi-delta flat">VK 39 + GE2 28</div></div></div>';
+
+  var kpiWarnHtml = '<i class="fa-solid fa-triangle-exclamation"></i> <b>Opsiyon süresi yaklaşıyor:</b> ';
+  kpiWarnHtml += uyariList.map(function(u){ return u.kod + ' (' + u.mus + ')'; }).join(' · ');
+  kpiWarnHtml += ' — süre dolduğunda birim otomatik olarak Satışta durumuna döner.';
+  var warnEl = document.createElement('div');
+  warnEl.className = 'kpi-warn-list';
+  warnEl.innerHTML = kpiWarnHtml;
+  document.getElementById('kpiGrid').after(warnEl);
+
+  /* ---- proje sekmeleri ---- */
+  var PROJECTS = [
+    {key:'VK', ad:'Vadi Konakları', n:96, data:VK},
+    {key:'GE2', ad:'Göl Evleri 2. Etap', n:40, data:GE2},
+    {key:'KO', ad:'Kule Ofis B Blok', n:60, data:KO}
+  ];
+  var activeProj = 'VK', activeView = 'tablo', activeBlock = 'A';
+
+  document.getElementById('projChips').innerHTML = PROJECTS.map(function(p){
+    return '<button type="button" class="brm-proj' + (p.key === activeProj ? ' is-on' : '') + '" data-proj="' + p.key + '"><b>' + p.ad + '</b><span>' + p.n + ' birim</span></button>';
+  }).join('');
+
+  var DURUM_CHIP_ORDER = ['satista','opsiyonlu','rezerve','satildi','teslim','kiralandi','arsa','kapali'];
+
+  function renderDurumChips(data){
+    var counts = {};
+    data.forEach(function(u){ counts[u.durum] = (counts[u.durum] || 0) + 1; });
+    var html = '<button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">' + data.length + '</span></button>';
+    DURUM_CHIP_ORDER.forEach(function(d){
+      if(!counts[d]) return;
+      html += '<button class="chip" data-filter="' + d + '">' + DURUM[d].lbl + ' <span class="ch-cnt">' + counts[d] + '</span></button>';
+    });
+    document.getElementById('durumChips').innerHTML = html;
+    /* proje sekmesi değişince çipler yeniden basılır (eski DOM node'ları ve ui.js'in
+       DOMContentLoaded'da onlara bağladığı tıklama dinleyicileri düşer) — D17 pager
+       pilotuyla ortaya çıkan bulgu: T0'a rapor edilecek, bu sayfada yerel olarak
+       yeniden bağlanıyor (ui.js'e dokunulmadı). */
+    document.querySelectorAll('#durumChips .chip[data-filter]').forEach(function(ch){
+      ch.addEventListener('click', function(){
+        document.querySelectorAll('#durumChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+        ch.classList.add('is-on');
+        syncTblBirim(true);
+      });
+    });
+  }
+
+  /* arama + durum çipi birlikte uygulanır, sayaç güncellenir, pager tazelenir
+     (ui.js applyFilters ile aynı sözleşme — proje sekmesi değişiminde de çağrılır
+     ki pager sayımı YENİ veri setine göre doğru kalsın, bkz. yukarıdaki not) */
+  function syncTblBirim(isChange){
+    var tbl = document.getElementById('tblBirim');
+    var card = tbl.closest('.gv-card') || document;
+    var inp = card.querySelector('input[data-table-search]');
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var on = document.querySelector('#durumChips .chip.is-on[data-filter]');
+    var f = on ? on.getAttribute('data-filter') : 'hepsi';
+    var shown = 0;
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var okF = (f === 'hepsi') || (tr.getAttribute('data-f') === f);
+      var okT = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okF && okT;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    var cnt = card.querySelector('[data-table-count]') || document.querySelector('[data-table-count]');
+    if(cnt) cnt.textContent = shown;
+    /* D18 fix: İLK render URL'e yazmaz — ?page=/?f= deep-link restorasyonu wireTables'a
+       kalır (önceki koşulsuz page:null yazımı ?page=N restore'unu siliyordu, pre-existing) */
+    if(window.gvUrlState && isChange !== false) gvUrlState.set({ f: f !== 'hepsi' ? f : null, page: null });
+    if(window.gvPagerRefresh) gvPagerRefresh(tbl, isChange !== false);
+  }
+
+  function renderTable(data, isInit){
+    document.getElementById('tblBirimBody').innerHTML = data.map(function(u){
+      var musCell = '—';
+      if(u.mus){
+        var link = u.href ? '<a class="mus-link" href="' + u.href + '">' + u.mus + '</a>' : '<span class="mus-plain">' + u.mus + '</span>';
+        musCell = link + (u.ozel ? '<span class="mus-sub">' + u.ozel + '</span>' : '');
+      } else if(u.ozel){
+        musCell = '<span class="mus-sub" style="margin-top:0">' + u.ozel + '</span>';
+      }
+      return '<tr data-f="' + u.durum + '">'
+        + '<td><div class="birim-kod t-strong">' + u.kod + (u.uyari ? ' <i class="fa-solid fa-triangle-exclamation odue" data-tip="' + u.uyari + '"></i>' : '') + '</div></td>'
+        + '<td>' + u.loc + '</td>'
+        + '<td>' + u.tip + '</td>'
+        + '<td class="num">' + tl(u.fiyat) + '</td>'
+        + '<td>' + gstat(u.durum) + '</td>'
+        + '<td>' + musCell + '</td>'
+        + '<td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=' + u.kod + '" data-no-confirm aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>'
+        + '</tr>';
+    }).join('');
+    renderDurumChips(data);
+    /* proje değişince filtre "Tümü"ye döner, arama kutusu ise kasıtlı olarak KORUNUR
+       (proje geçişinde arama bağlamı sıfırlanmaz) — syncTblBirim mevcut arama terimini
+       yeni veri setine karşı yeniden uygular */
+    syncTblBirim(!isInit);
+  }
+
+  document.getElementById('brmLegend').innerHTML = DURUM_CHIP_ORDER.map(function(d){
+    return '<span class="lg-item"><span class="lg-sw" style="background:' + DURUM[d].sw + (DURUM[d].tone.indexOf('dash') > -1 ? ';background:transparent;border:1.5px dashed ' + DURUM[d].sw : '') + '"></span>' + DURUM[d].lbl + '</span>';
+  }).join('');
+
+  function cellTip(u){
+    var lines = [u.kod + ' — ' + u.tip, tl(u.fiyat), DURUM[u.durum].lbl];
+    if(u.mus) lines.push(u.mus);
+    if(u.uyari) lines.push('⚠ ' + u.uyari);
+    return lines.join('\n');
+  }
+  function cellHtml(u, shortLbl){
+    var warn = u.uyari ? '<span class="brm-warn"><i class="fa-solid fa-exclamation"></i></span>' : '';
+    return '<a class="brm-cell st-' + u.durum + '" href="crm-satis-birim-detay.html?birim=' + u.kod + '" data-tip="' + cellTip(u).replace(/"/g,'&quot;') + '">' + warn + '<b>' + shortLbl + '</b><span>' + u.tip.split(' ')[0] + '</span></a>';
+  }
+
+  function renderMatrixVK(){
+    var byBlock = {}; VK_BLOCKS.forEach(function(b){ byBlock[b] = VK.filter(function(u){ return u.blok === b; }); });
+    document.getElementById('brmBlockTabs').innerHTML = '<div class="brm-blocktabs">' + VK_BLOCKS.map(function(b){
+      return '<button type="button" class="' + (b === activeBlock ? 'is-on' : '') + '" data-block="' + b + '">' + b + ' Blok</button>';
+    }).join('') + '</div>';
+    document.querySelectorAll('#brmBlockTabs button').forEach(function(btn){
+      btn.addEventListener('click', function(){ activeBlock = btn.getAttribute('data-block'); renderMatrixVK(); });
+    });
+    var units = byBlock[activeBlock];
+    document.getElementById('brmColHdr').innerHTML = '<div class="brm-col-hdr"><span>1</span><span>2</span><span>3</span><span>4</span></div>';
+    var rowsHtml = '';
+    for(var k = 6; k >= 1; k--){
+      var floorUnits = units.filter(function(u){ return u.kat === k; }).sort(function(a,b){ return a.kod < b.kod ? -1 : 1; });
+      rowsHtml += '<div class="brm-row"><div class="brm-row-lbl">Kat ' + k + '</div>' + floorUnits.map(function(u){ return cellHtml(u, u.kod.split('-')[2]); }).join('') + '</div>';
+    }
+    document.getElementById('brmGrid').innerHTML = rowsHtml;
+  }
+
+  function renderMatrixGE2(){
+    document.getElementById('brmBlockTabs').innerHTML = '';
+    document.getElementById('brmColHdr').innerHTML = '<div class="brm-col-hdr"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>';
+    var rowsHtml = '';
+    for(var r = 0; r < 5; r++){
+      var rowUnits = GE2.slice(r * 8, r * 8 + 8);
+      rowsHtml += '<div class="brm-row"><div class="brm-row-lbl">Sıra ' + (r + 1) + '</div>' + rowUnits.map(function(u){ return cellHtml(u, u.kod.replace('GE2-','')); }).join('') + '</div>';
+    }
+    document.getElementById('brmGrid').innerHTML = rowsHtml;
+  }
+
+  function renderMatrixKO(){
+    document.getElementById('brmBlockTabs').innerHTML = '';
+    var hdr = '<div class="brm-col-hdr">'; for(var c = 1; c <= 12; c++){ hdr += '<span>' + c + '</span>'; } hdr += '</div>';
+    document.getElementById('brmColHdr').innerHTML = hdr;
+    var rowsHtml = '';
+    for(var k = 5; k >= 1; k--){
+      var floorUnits = KO.filter(function(u){ return u.kat === k; }).sort(function(a,b){ return a.kod < b.kod ? -1 : 1; });
+      rowsHtml += '<div class="brm-row"><div class="brm-row-lbl">Kat ' + k + '</div>' + floorUnits.map(function(u){ return cellHtml(u, u.kod.slice(-2)); }).join('') + '</div>';
+    }
+    document.getElementById('brmGrid').innerHTML = rowsHtml;
+  }
+
+  function renderMatrix(){
+    if(activeProj === 'VK') renderMatrixVK();
+    else if(activeProj === 'GE2') renderMatrixGE2();
+    else renderMatrixKO();
+  }
+
+  function renderAll(isInit){
+    var proj = PROJECTS.filter(function(p){ return p.key === activeProj; })[0];
+    renderTable(proj.data, isInit);
+    renderMatrix();
+  }
+
+  document.getElementById('projChips').addEventListener('click', function(e){
+    var btn = e.target.closest('.brm-proj'); if(!btn) return;
+    activeProj = btn.getAttribute('data-proj');
+    activeBlock = 'A';
+    document.querySelectorAll('.brm-proj').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
+    renderAll();
+  });
+
+  document.querySelectorAll('.brm-view button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      activeView = btn.getAttribute('data-view');
+      document.querySelectorAll('.brm-view button').forEach(function(b){ b.classList.toggle('is-on', b === btn); });
+      document.getElementById('viewTablo').hidden = activeView !== 'tablo';
+      document.getElementById('viewMatris').hidden = activeView !== 'matris';
+    });
+  });
+
+  renderAll(true);
+})();
+</script>
+</body>
+</html>

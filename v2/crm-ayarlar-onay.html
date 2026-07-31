@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Onay Akışları — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — onay akışı tanımı (statik stepper, SAYFA-LOKAL) ============ */
+.flow-stack{display:flex;flex-direction:column;gap:16px}
+
+.flow{display:flex;align-items:center;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 10px}
+.fnode{flex:none;width:174px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;display:flex;gap:11px;align-items:flex-start}
+.fnode.start{border-color:rgba(var(--acc-rgb),.4);background:rgba(var(--acc-rgb),.06)}
+.fn-ico{width:33px;height:33px;flex:none;border-radius:var(--r-circle);display:grid;place-items:center;font-size:13px;background:var(--paper);border:1px solid var(--line);color:var(--ink-2)}
+.fnode.start .fn-ico{background:var(--acc-ink);color:#fff;border-color:transparent}
+.fn-b{min-width:0}
+.fn-b b{display:block;font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3}
+.fn-b .act{display:inline-block;margin-top:6px;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.fn-b .act.ap{color:var(--acc-ink)}
+.fn-b .act.fin{color:var(--ok)}
+.farrow{flex:none;color:var(--line-2);font-size:14px}
+
+/* koşullu onay dalı (izin / avans) */
+.fbranch{flex:none;width:244px;display:flex;flex-direction:column;gap:8px;background:var(--bg);border:1px dashed var(--line-2);border-radius:var(--r-md);padding:11px 12px}
+.fbranch-h{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:7px}
+.fbranch-h i{color:var(--acc-ink)}
+.fbopt{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 11px}
+.fbopt .cond{font-size:10.5px;color:var(--muted);line-height:1.35;display:block;margin-bottom:4px}
+.fbopt .who{font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px}
+.fbopt .who i{color:var(--acc-ink);font-size:11px}
+
+/* akış notu (eşik/kural — YALNIZ mevcut sayfalarda gerçekten varsa) */
+.flow-note{display:flex;align-items:flex-start;gap:9px;margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.55;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 13px}
+.flow-note i{color:var(--acc-ink);flex:none;margin-top:2px}
+
+.flow-head-r{display:flex;align-items:center;gap:10px}
+
+/* genel dipnot */
+.foot-note{display:flex;align-items:flex-start;gap:12px;background:var(--info-tint);border:1px solid color-mix(in srgb,var(--info) 20%,var(--paper));border-radius:var(--r-md);padding:14px 16px;margin-top:18px;font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.foot-note i{color:var(--info);font-size:15px;flex:none;margin-top:1px}
+.foot-note b{color:var(--ink);font-weight:700}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="onay">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Yönetim</div>
+        <h1>Onay Akışları</h1>
+        <div class="ph-sub">Yapıtaş İnşaat A.Ş. — belge onay zincirlerinin tanımı</div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="crm-ayarlar-onay-form.html"><i class="fa-solid fa-plus"></i> Yeni onay akışı</a>
+    </div>
+
+    <div class="flow-stack">
+
+      <!-- KASA -->
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-cash-register"></i> Kasa Raporu</div>
+          <div class="flow-head-r">
+            <span class="gtag">KSA-2026-###</span>
+            <button class="btn btn-ghost btn-sm" data-demo="Akış düzenleme bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</button>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="flow">
+            <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-helmet-safety"></i></div><div class="fn-b"><b>Şantiye Şefi</b><span class="act">Başlatır</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-compass-drafting"></i></div><div class="fn-b"><b>Teknik Müdür</b><span class="act ap">Onaylar</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-user-tie"></i></div><div class="fn-b"><b>Genel Müdür</b><span class="act ap">Onaylar</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-calculator"></i></div><div class="fn-b"><b>Muhasebe</b><span class="act fin">Kayda işler</span></div></div>
+          </div>
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> İki kademeli yönetim onayı — kasa raporu teknik müdür ve genel müdür onayından sırayla geçer, muhasebe kayda işler.</div>
+        </div>
+      </div>
+
+      <!-- MALZEME TALEBİ -->
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-boxes-stacked"></i> Malzeme Talebi</div>
+          <div class="flow-head-r">
+            <span class="gtag">MLZ-2026-###</span>
+            <button class="btn btn-ghost btn-sm" data-demo="Akış düzenleme bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</button>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="flow">
+            <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-helmet-safety"></i></div><div class="fn-b"><b>Şantiye Şefi</b><span class="act">Başlatır</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-cart-flatbed"></i></div><div class="fn-b"><b>Satın Alma Sorumlusu</b><span class="act ap">Onaylar</span></div></div>
+          </div>
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> Tek kademeli onay — onaylanan talep satın alma formuna dönüşür.</div>
+        </div>
+      </div>
+
+      <!-- PUANTAJ GÜNLÜK ONAYI -->
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-user-clock"></i> Puantaj Günlük Onayı</div>
+          <div class="flow-head-r">
+            <button class="btn btn-ghost btn-sm" data-demo="Akış düzenleme bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</button>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="flow">
+            <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-helmet-safety"></i></div><div class="fn-b"><b>Şantiye Şefi</b><span class="act">Girer / Gönderir</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-id-badge"></i></div><div class="fn-b"><b>İK Uzmanı</b><span class="act ap">Onaylar</span></div></div>
+          </div>
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> Tek kademeli onay — Şantiye Şefi günlük vardiya durumlarını girip İK onayına gönderir, İK Uzmanı onaylar veya reddeder; reddedilen giriş şefe geri döner.</div>
+        </div>
+      </div>
+
+      <!-- İZİN -->
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-umbrella-beach"></i> İzin Talebi</div>
+          <div class="flow-head-r">
+            <span class="gtag">İZN-2026-###</span>
+            <button class="btn btn-ghost btn-sm" data-demo="Akış düzenleme bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</button>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="flow">
+            <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-user"></i></div><div class="fn-b"><b>Personel</b><span class="act">Başlatır</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fbranch">
+              <div class="fbranch-h"><i class="fa-solid fa-code-branch"></i> Koşullu onay</div>
+              <div class="fbopt"><span class="cond">Başlatan saha personeli ise</span><span class="who"><i class="fa-solid fa-helmet-safety"></i> Şantiye Şefi onaylar</span></div>
+              <div class="fbopt"><span class="cond">Başlatan şef ve üstü ise</span><span class="who"><i class="fa-solid fa-user-tie"></i> Genel Müdür onaylar</span></div>
+              <div class="fbopt"><span class="cond">Başlatan ofis / idari kadro ise</span><span class="who"><i class="fa-solid fa-building-user"></i> Genel Müdür onaylar</span></div>
+            </div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-id-badge"></i></div><div class="fn-b"><b>İK Uzmanı</b><span class="act fin">İşler / bakiye</span></div></div>
+          </div>
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> Onay kademesi başlatanın görevine göre belirlenir. İK Uzmanı her akışta son halkadır — izin bakiyesi ve puantaja işlenir.</div>
+        </div>
+      </div>
+
+      <!-- AVANS -->
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-hand-holding-dollar"></i> Avans Talebi</div>
+          <div class="flow-head-r">
+            <span class="gtag">AVN-2026-###</span>
+            <button class="btn btn-ghost btn-sm" data-demo="Akış düzenleme bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</button>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="flow">
+            <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-user"></i></div><div class="fn-b"><b>Personel</b><span class="act">Başlatır</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fbranch">
+              <div class="fbranch-h"><i class="fa-solid fa-code-branch"></i> Koşullu onay</div>
+              <div class="fbopt"><span class="cond">Başlatan saha personeli ise</span><span class="who"><i class="fa-solid fa-helmet-safety"></i> Şantiye Şefi onaylar</span></div>
+              <div class="fbopt"><span class="cond">Başlatan şef ve üstü ise</span><span class="who"><i class="fa-solid fa-user-tie"></i> Genel Müdür onaylar</span></div>
+              <div class="fbopt"><span class="cond">Başlatan ofis / idari kadro ise</span><span class="who"><i class="fa-solid fa-building-user"></i> Genel Müdür onaylar</span></div>
+            </div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-calculator"></i></div><div class="fn-b"><b>Muhasebe</b><span class="act fin">Öder</span></div></div>
+          </div>
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> Onay kademesi başlatanın görevine göre değişir. Muhasebe her akışta son halkadır — banka listesine eklenir ve ödenir.</div>
+        </div>
+      </div>
+
+      <!-- TAŞERON HAKEDİŞ -->
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-people-arrows"></i> Taşeron Hakedişi</div>
+          <div class="flow-head-r">
+            <span class="gtag">TH-2026-###</span>
+            <button class="btn btn-ghost btn-sm" data-demo="Akış düzenleme bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</button>
+          </div>
+        </div>
+        <div class="gc-body">
+          <div class="flow">
+            <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-helmet-safety"></i></div><div class="fn-b"><b>Şantiye Şefi</b><span class="act">Başlatır</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-compass-drafting"></i></div><div class="fn-b"><b>Teknik Müdür</b><span class="act ap">Metraj onayı</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-calculator"></i></div><div class="fn-b"><b>Muhasebe</b><span class="act ap">Onaylar</span></div></div>
+            <i class="fa-solid fa-chevron-right farrow"></i>
+            <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-user-tie"></i></div><div class="fn-b"><b>Genel Müdür</b><span class="act fin">Son onay</span></div></div>
+          </div>
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> Metraj teknik müdür onayından geçer; muhasebe onayının ardından genel müdür imzalar.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- genel dipnot — akış TANIMININ parçası değil, yetki hatırlatması -->
+    <div class="foot-note">
+      <i class="fa-solid fa-circle-info"></i>
+      <div><b>Firma Sahibi ve Gavia platform yöneticisi tüm onay akışlarında tam yetkilidir.</b> Yukarıdaki adımlar operasyonel onay zincirini tanımlar; eşik ve adım değişiklikleri yalnız yetkili roller tarafından yapılır.</div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+</body>
+</html>

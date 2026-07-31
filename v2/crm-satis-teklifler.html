@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Teklifler — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Teklifler ============ */
+.gstat.warndeep{background:color-mix(in srgb, var(--warn) 26%, var(--warn-tint));color:color-mix(in srgb, var(--warn) 74%, #000)}
+
+.col-tkf{width:110px}
+.col-birim{width:150px}
+.col-fiyat{width:130px}
+.col-ind{width:80px}
+.col-net{width:130px}
+.col-durum{width:170px}
+.col-tems{width:130px}
+#tblTeklif td.num,#tblTeklif td.num-ind{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ind-badge{display:inline-flex;align-items:center;gap:5px;font-weight:800}
+.ind-badge.b-lo{color:var(--acc-deep)}
+.ind-badge.b-mid{color:var(--warn)}
+.ind-badge.b-hi{color:var(--danger)}
+.tems-cell{display:flex;align-items:center;gap:8px}
+.tems-mark{width:26px;height:26px;flex:none;border-radius:var(--r-circle);display:grid;place-items:center;font-size:10px;font-weight:800;background:var(--info-tint);color:var(--info)}
+.tems-mark.o{background:rgba(var(--acc-rgb),.14);color:var(--acc-deep)}
+
+/* indirim eşik bilgi kartı */
+.esik-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-bottom:22px;overflow:hidden}
+.esik-item{padding:18px 22px;display:flex;align-items:center;gap:13px;border-right:1px solid var(--line)}
+.esik-item:last-child{border-right:none}
+.esik-ico{width:38px;height:38px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:14px}
+.esik-item.lo .esik-ico{background:var(--ok-tint);color:var(--ok)}
+.esik-item.mid .esik-ico{background:var(--warn-tint);color:var(--warn)}
+.esik-item.hi .esik-ico{background:var(--danger-tint);color:var(--danger)}
+.esik-body b{display:block;font-size:13.5px;font-weight:800;color:var(--ink)}
+.esik-body span{font-size:12px;color:var(--muted)}
+@media(max-width:780px){.esik-card{grid-template-columns:1fr}.esik-item{border-right:none;border-bottom:1px solid var(--line)}.esik-item:last-child{border-bottom:none}}
+</style>
+</head>
+<body data-sec="satis" data-screen="teklifler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Satış</div>
+        <h1>Teklifler</h1>
+        <div class="ph-sub"><span data-table-count>9</span> teklif · indirim onay zinciriyle takip edilir</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-acc btn-sm" href="crm-satis-teklif-form.html"><i class="fa-solid fa-plus"></i> Yeni Teklif</a>
+      </div>
+    </div>
+
+    <!-- statik bake — DEFAULT (rol-agnostic, temsilci budaması yok) 9 kanonik teklif;
+         JS yüklenince aynı mount innerHTML ile ezilir (crm-satis-teklifler.html kaynak
+         script'i, TEKLIFLER dizisi) — D18-B1 -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card"><div class="kpi-ico"><i class="fa-solid fa-file-invoice-dollar"></i></div><div><div class="kpi-num num">9</div><div class="kpi-lbl">Toplam teklif</div><div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> Tüm ekip</div></div></div>
+      <div class="kpi-card warn"><div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div><div><div class="kpi-num num">2</div><div class="kpi-lbl">Onay bekleyen</div><div class="kpi-delta flat">Müdür + GM bandı</div></div></div>
+      <div class="kpi-card" style="--kpi-ok:1"><div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-check"></i></div><div><div class="kpi-num num">3</div><div class="kpi-lbl">Onaylı</div><div class="kpi-delta flat">Sözleşmeye taşınabilir</div></div></div>
+      <div class="kpi-card info"><div class="kpi-ico"><i class="fa-solid fa-percent"></i></div><div><div class="kpi-num num">%5,3</div><div class="kpi-lbl">Ortalama indirim</div><div class="kpi-delta flat">7 teklif üzerinden</div></div></div>
+    </div>
+
+    <div class="gv-card esik-card">
+      <div class="esik-item lo"><div class="esik-ico"><i class="fa-solid fa-user-check"></i></div><div class="esik-body"><b>%0 – %3</b><span>Temsilci kendi yetkisiyle onaylar</span></div></div>
+      <div class="esik-item mid"><div class="esik-ico"><i class="fa-solid fa-user-tie"></i></div><div class="esik-body"><b>%3 – %7</b><span>Satış Müdürü onayına gider</span></div></div>
+      <div class="esik-item hi"><div class="esik-ico"><i class="fa-solid fa-crown"></i></div><div class="esik-body"><b>%7 ve üzeri</b><span>Genel Müdür onayına gider</span></div></div>
+    </div>
+
+    <div class="gv-card">
+      <div class="filter-bar">
+        <div class="fb-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Teklif no, müşteri veya birim ara" id="tekSearch">
+        </div>
+        <div class="chips" id="durumChips">
+          <button class="chip is-on" data-df="hepsi">Tümü <span class="ch-cnt">9</span></button>
+          <button class="chip" data-df="onayli">Onaylı <span class="ch-cnt">3</span></button>
+          <button class="chip" data-df="muduronay">Müdür Onayında <span class="ch-cnt">1</span></button>
+          <button class="chip" data-df="gmonay">GM Onayında <span class="ch-cnt">1</span></button>
+          <button class="chip" data-df="taslak">Taslak <span class="ch-cnt">2</span></button>
+          <button class="chip" data-df="red">Red <span class="ch-cnt">1</span></button>
+          <button class="chip" data-df="suresidoldu">Süresi Doldu <span class="ch-cnt">1</span></button>
+        </div>
+        <div class="chips" id="temsChips">
+          <button class="chip is-on" data-tf="hepsi">Tüm Temsilciler</button>
+          <button class="chip" data-tf="selin">Selin Acar <span class="ch-cnt">5</span></button>
+          <button class="chip" data-tf="okan">Okan Eren <span class="ch-cnt">4</span></button>
+        </div>
+      </div>
+      <div class="gc-body flush">
+        <table class="gtable" id="tblTeklif">
+          <thead>
+            <tr>
+              <th class="col-tkf">Teklif</th>
+              <th>Müşteri</th>
+              <th class="col-birim">Birim / Paket</th>
+              <th class="num col-fiyat">Liste Fiyatı</th>
+              <th class="num col-ind">İndirim</th>
+              <th class="num col-net">Net Tutar</th>
+              <th class="col-durum">Durum</th>
+              <th class="col-tems">Temsilci</th>
+            </tr>
+          </thead>
+          <tbody id="tblTeklifBody">
+          <tr data-f="onayli" data-tems="okan"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=001" style="color:var(--acc-ink)">TKF-2026-001</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=001" style="font-weight:700;color:var(--ink)">Selçuk Onaran</a></td><td><a href="crm-satis-birim-detay.html?birim=VK-C-18" style="color:var(--ink);font-weight:600">VK-C-18</a></td><td class="num">₺6.245.000</td><td class="num"><span class="ind-badge b-lo">%2</span></td><td class="num t-strong">₺6.120.000</td><td><span class="gstat ok">Onaylı</span></td><td><div class="tems-cell"><div class="tems-mark o">OE</div>Okan Eren</div></td></tr>
+          <tr data-f="onayli" data-tems="okan"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=002" style="color:var(--acc-ink)">TKF-2026-002</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=002" style="font-weight:700;color:var(--ink)">Derya Toprak</a></td><td><a href="crm-satis-musteri-detay.html?mst=002" style="color:var(--ink);font-weight:600">VK 3 daire paketi</a></td><td class="num">₺14.537.000</td><td class="num"><span class="ind-badge b-mid">%6</span></td><td class="num t-strong">₺13.665.000</td><td><span class="gstat ok">Onaylı</span></td><td><div class="tems-cell"><div class="tems-mark o">OE</div>Okan Eren</div></td></tr>
+          <tr data-f="onayli" data-tems="selin"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=003" style="color:var(--acc-ink)">TKF-2026-003</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=003" style="font-weight:700;color:var(--ink)">Aylin Şahinoğlu</a></td><td><a href="crm-satis-birim-detay.html?birim=VK-B-11" style="color:var(--ink);font-weight:600">VK-B-11</a></td><td class="num">₺6.120.000</td><td class="num"><span class="ind-badge b-lo">%3</span></td><td class="num t-strong">₺5.940.000</td><td><span class="gstat ok">Onaylı</span></td><td><div class="tems-cell"><div class="tems-mark">SA</div>Selin Acar</div></td></tr>
+          <tr data-f="red" data-tems="selin"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=004" style="color:var(--acc-ink)">TKF-2026-004</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=009" style="font-weight:700;color:var(--ink)">Tuncay Ilgaz</a></td><td><a href="crm-satis-birim-detay.html?birim=VK-B-07" style="color:var(--ink);font-weight:600">VK-B-07</a></td><td class="num">₺4.200.000</td><td class="num"><span class="ind-badge b-hi">%12</span></td><td class="num t-strong">₺3.696.000</td><td><span class="gstat danger">Red</span></td><td><div class="tems-cell"><div class="tems-mark">SA</div>Selin Acar</div></td></tr>
+          <tr data-f="suresidoldu" data-tems="selin"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=005" style="color:var(--acc-ink)">TKF-2026-005</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=008" style="font-weight:700;color:var(--ink)">Ferda Yücel</a></td><td><a href="crm-satis-birim-detay.html?birim=KO-B-207" style="color:var(--ink);font-weight:600">KO-B-207 (kira)</a></td><td class="num">₺28.000</td><td class="num"><span class="ind-badge b-lo">%0</span></td><td class="num t-strong">₺28.000</td><td><span class="gstat off">Süresi Doldu</span></td><td><div class="tems-cell"><div class="tems-mark">SA</div>Selin Acar</div></td></tr>
+          <tr data-f="muduronay" data-tems="selin"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=006" style="color:var(--acc-ink)">TKF-2026-006</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=004" style="font-weight:700;color:var(--ink)">Mert Kavukçu</a></td><td><a href="crm-satis-birim-detay.html?birim=VK-B-19" style="color:var(--ink);font-weight:600">VK-B-19</a></td><td class="num">₺6.120.000</td><td class="num"><span class="ind-badge b-mid">%5</span></td><td class="num t-strong">₺5.814.000</td><td><span class="gstat wait">Müdür Onayında</span></td><td><div class="tems-cell"><div class="tems-mark">SA</div>Selin Acar</div></td></tr>
+          <tr data-f="gmonay" data-tems="okan"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=007" style="color:var(--acc-ink)">TKF-2026-007</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=006" style="font-weight:700;color:var(--ink)">Nova Gayrimenkul</a></td><td><a href="crm-satis-musteri-detay.html?mst=006" style="color:var(--ink);font-weight:600">GE2 6 villa</a></td><td class="num">₺91.480.000</td><td class="num"><span class="ind-badge b-hi">%9</span></td><td class="num t-strong">₺83.246.800</td><td><span class="gstat wait">GM Onayında</span></td><td><div class="tems-cell"><div class="tems-mark o">OE</div>Okan Eren</div></td></tr>
+          <tr data-f="taslak" data-tems="okan"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=008" style="color:var(--acc-ink)">TKF-2026-008</a></td><td><a class="mus-link" href="crm-satis-musteri-detay.html?mst=006" style="font-weight:700;color:var(--ink)">Nova Gayrimenkul</a></td><td><a href="crm-satis-musteri-detay.html?mst=006" style="color:var(--ink);font-weight:600">VK 3 daire (taslak)</a></td><td class="num">₺18.360.000</td><td class="num"><span class="muted">—</span></td><td class="num t-strong">—</td><td><span class="gstat off">Taslak</span></td><td><div class="tems-cell"><div class="tems-mark o">OE</div>Okan Eren</div></td></tr>
+          <tr data-f="taslak" data-tems="selin"><td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=009" style="color:var(--acc-ink)">TKF-2026-009</a></td><td><span style="font-weight:700;color:var(--ink)">İlker Baysal</span></td><td><a href="crm-satis-birim-detay.html?birim=VK-D-23" style="color:var(--ink);font-weight:600">VK-D-23 (taslak)</a></td><td class="num">₺9.800.000</td><td class="num"><span class="muted">—</span></td><td class="num t-strong">—</td><td><span class="gstat off">Taslak</span></td><td><div class="tems-cell"><div class="tems-mark">SA</div>Selin Acar</div></td></tr>
+          </tbody>
+        </table>
+        <div class="gv-empty" data-table-empty hidden>
+          <div class="ge-ico"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+          <h4>Eşleşen teklif yok</h4>
+          <p>Aramayı temizleyin veya farklı bir filtre seçin.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  function tl(n){ return n == null ? '—' : '₺' + Math.round(n).toLocaleString('tr-TR'); }
+
+  var DURUM = {
+    onayli:      {lbl:'Onaylı',           tone:'ok'},
+    muduronay:   {lbl:'Müdür Onayında',   tone:'wait'},
+    gmonay:      {lbl:'GM Onayında',      tone:'wait'},
+    taslak:      {lbl:'Taslak',           tone:'off'},
+    red:         {lbl:'Red',              tone:'danger'},
+    suresidoldu: {lbl:'Süresi Doldu',     tone:'off'}
+  };
+
+  /* ============ KANONİK 9 TEKLİF (shell.js "TEKLİFLER" bloğu BİREBİR) ============ */
+  var TEKLIFLER = [
+    {no:'001', mst:'001', musteri:'Selçuk Onaran', birim:'VK-C-18', birimHref:'crm-satis-birim-detay.html?birim=VK-C-18',
+     liste:6245000, indirim:2, net:6120000, durum:'onayli', tems:'okan', temsAd:'Okan Eren',
+     not:'Sözleşme SSZ-2026-003 ile bağlantılı — nihai bedel indirim sonrası nettir.'},
+    {no:'002', mst:'002', musteri:'Derya Toprak', birim:'VK 3 daire paketi', birimHref:'crm-satis-musteri-detay.html?mst=002',
+     liste:14537000, indirim:6, net:13665000, durum:'onayli', tems:'okan', temsAd:'Okan Eren',
+     not:'A-03 / A-09 / C-21 paket teklifi — Sözleşme SSZ-2026-004 ile bağlantılı.'},
+    {no:'003', mst:'003', musteri:'Aylin Şahinoğlu', birim:'VK-B-11', birimHref:'crm-satis-birim-detay.html?birim=VK-B-11',
+     liste:6120000, indirim:3, net:5940000, durum:'onayli', tems:'selin', temsAd:'Selin Acar',
+     not:'ODP-2026-001 ödeme planına bağlı — 36 taksitli.'},
+    {no:'004', mst:'009', musteri:'Tuncay Ilgaz', birim:'VK-B-07', birimHref:'crm-satis-birim-detay.html?birim=VK-B-07',
+     liste:4200000, indirim:12, net:3696000, durum:'red', tems:'selin', temsAd:'Selin Acar',
+     not:'Genel Müdür reddetti — indirim politikası üstü talep. Fırsat Kaybedildi (Fiyat).'},
+    {no:'005', mst:'008', musteri:'Ferda Yücel', birim:'KO-B-207 (kira)', birimHref:'crm-satis-birim-detay.html?birim=KO-B-207',
+     liste:28000, indirim:0, net:28000, durum:'suresidoldu', tems:'selin', temsAd:'Selin Acar',
+     not:'Aylık kira teklifi — geçerlilik süresi doldu, yeniden görüşme bekleniyor.'},
+    {no:'006', mst:'004', musteri:'Mert Kavukçu', birim:'VK-B-19', birimHref:'crm-satis-birim-detay.html?birim=VK-B-19',
+     liste:6120000, indirim:5, net:5814000, durum:'muduronay', tems:'selin', temsAd:'Selin Acar',
+     not:'%3–7 bandı — Satış Müdürü Okan Eren onayı bekliyor.'},
+    {no:'007', mst:'006', musteri:'Nova Gayrimenkul', birim:'GE2 6 villa', birimHref:'crm-satis-musteri-detay.html?mst=006',
+     liste:91480000, indirim:9, net:83246800, durum:'gmonay', tems:'okan', temsAd:'Okan Eren',
+     not:'%7+ bandı — Genel Müdür Murat Denizli onayı bekliyor. Bayi toplu alımı.'},
+    {no:'008', mst:'006', musteri:'Nova Gayrimenkul', birim:'VK 3 daire (taslak)', birimHref:'crm-satis-musteri-detay.html?mst=006',
+     liste:18360000, indirim:null, net:null, durum:'taslak', tems:'okan', temsAd:'Okan Eren',
+     not:'A-11 / A-12 / A-14 — indirim oranı henüz belirlenmedi.'},
+    {no:'009', mst:null, musteri:'İlker Baysal', birim:'VK-D-23 (taslak)', birimHref:'crm-satis-birim-detay.html?birim=VK-D-23',
+     liste:9800000, indirim:null, net:null, durum:'taslak', tems:'selin', temsAd:'Selin Acar',
+     not:'Ham lead — dubleks gezisi sonrası taslak teklif hazırlandı.'}
+  ];
+
+  /* D11 temsilci budaması — satistemsilci yalnız kendi kayıtlarını görür
+     (kanonik: TKF-003/004/005/006/009, onay bekleyen 1 = TKF-006) */
+  var isTemsilci = GV.role === 'satistemsilci';
+  var DATA = isTemsilci ? TEKLIFLER.filter(function(t){ return t.tems === 'selin'; }) : TEKLIFLER;
+
+  var kToplam = DATA.length;
+  var kBekleyen = DATA.filter(function(t){ return t.durum === 'muduronay' || t.durum === 'gmonay'; }).length;
+  var kOnayli = DATA.filter(function(t){ return t.durum === 'onayli'; }).length;
+  var indirimli = DATA.filter(function(t){ return t.indirim != null; });
+  var ortInd = indirimli.length ? (indirimli.reduce(function(s,t){ return s + t.indirim; }, 0) / indirimli.length) : 0;
+
+  document.getElementById('kpiGrid').innerHTML =
+      '<div class="kpi-card"><div class="kpi-ico"><i class="fa-solid fa-file-invoice-dollar"></i></div>'
+    + '<div><div class="kpi-num num">' + kToplam + '</div><div class="kpi-lbl">Toplam teklif</div>'
+    + '<div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> ' + (isTemsilci ? 'Kendi kayıtların' : 'Tüm ekip') + '</div></div></div>'
+    + '<div class="kpi-card warn"><div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>'
+    + '<div><div class="kpi-num num">' + kBekleyen + '</div><div class="kpi-lbl">Onay bekleyen</div>'
+    + '<div class="kpi-delta flat">Müdür + GM bandı</div></div></div>'
+    + '<div class="kpi-card" style="--kpi-ok:1"><div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-check"></i></div>'
+    + '<div><div class="kpi-num num">' + kOnayli + '</div><div class="kpi-lbl">Onaylı</div>'
+    + '<div class="kpi-delta flat">Sözleşmeye taşınabilir</div></div></div>'
+    + '<div class="kpi-card info"><div class="kpi-ico"><i class="fa-solid fa-percent"></i></div>'
+    + '<div><div class="kpi-num num">%' + ortInd.toLocaleString('tr-TR', {maximumFractionDigits:1}) + '</div><div class="kpi-lbl">Ortalama indirim</div>'
+    + '<div class="kpi-delta flat">' + indirimli.length + ' teklif üzerinden</div></div></div>';
+
+  function indBadge(t){
+    if(t.indirim == null) return '<span class="muted">—</span>';
+    var cls = t.indirim <= 3 ? 'b-lo' : (t.indirim <= 7 ? 'b-mid' : 'b-hi');
+    return '<span class="ind-badge ' + cls + '">%' + t.indirim.toLocaleString('tr-TR') + '</span>';
+  }
+
+  document.getElementById('tblTeklifBody').innerHTML = DATA.map(function(t){
+    var musCell = t.mst ? '<a class="mus-link" href="crm-satis-musteri-detay.html?mst=' + t.mst + '" style="font-weight:700;color:var(--ink)">' + t.musteri + '</a>' : '<span style="font-weight:700;color:var(--ink)">' + t.musteri + '</span>';
+    return '<tr data-f="' + t.durum + '" data-tems="' + t.tems + '">'
+      + '<td><a class="t-strong" href="crm-satis-teklif-detay.html?tkf=' + t.no + '" style="color:var(--acc-ink)">TKF-2026-' + t.no + '</a></td>'
+      + '<td>' + musCell + '</td>'
+      + '<td><a href="' + t.birimHref + '" style="color:var(--ink);font-weight:600">' + t.birim + '</a></td>'
+      + '<td class="num">' + tl(t.liste) + '</td>'
+      + '<td class="num">' + indBadge(t) + '</td>'
+      + '<td class="num t-strong">' + tl(t.net) + '</td>'
+      + '<td><span class="gstat ' + DURUM[t.durum].tone + '">' + DURUM[t.durum].lbl + '</span></td>'
+      + '<td><div class="tems-cell"><div class="tems-mark' + (t.tems === 'okan' ? ' o' : '') + '">' + (t.tems === 'okan' ? 'OE' : 'SA') + '</div>' + t.temsAd + '</div></td>'
+      + '</tr>';
+  }).join('');
+
+  /* durum + temsilci çiftli filtre — ui.js'in tekil-aktif-çip varsayımı iki bağımsız
+     çip grubunu aynı anda desteklemediği için burada kendi birleşik filtre motoru
+     kullanılır (arama + durum + temsilci AND birleşir). */
+  var durumCounts = {};
+  DATA.forEach(function(t){ durumCounts[t.durum] = (durumCounts[t.durum] || 0) + 1; });
+  var durumOrder = ['onayli','muduronay','gmonay','taslak','red','suresidoldu'];
+  var dhtml = '<button class="chip is-on" data-df="hepsi">Tümü <span class="ch-cnt">' + DATA.length + '</span></button>';
+  durumOrder.forEach(function(d){ if(durumCounts[d]) dhtml += '<button class="chip" data-df="' + d + '">' + DURUM[d].lbl + ' <span class="ch-cnt">' + durumCounts[d] + '</span></button>'; });
+  document.getElementById('durumChips').innerHTML = dhtml;
+
+  if(!isTemsilci){
+    var selinN = DATA.filter(function(t){ return t.tems === 'selin'; }).length;
+    var okanN = DATA.filter(function(t){ return t.tems === 'okan'; }).length;
+    document.getElementById('temsChips').innerHTML =
+        '<button class="chip is-on" data-tf="hepsi">Tüm Temsilciler</button>'
+      + '<button class="chip" data-tf="selin">Selin Acar <span class="ch-cnt">' + selinN + '</span></button>'
+      + '<button class="chip" data-tf="okan">Okan Eren <span class="ch-cnt">' + okanN + '</span></button>';
+  } else {
+    document.getElementById('temsChips').hidden = true;
+  }
+
+  function applyAll(){
+    var term = document.getElementById('tekSearch').value.trim().toLocaleLowerCase('tr');
+    var dOn = document.querySelector('#durumChips .chip.is-on');
+    var tOn = document.querySelector('#temsChips .chip.is-on');
+    var df = dOn ? dOn.getAttribute('data-df') : 'hepsi';
+    var tf = tOn ? tOn.getAttribute('data-tf') : 'hepsi';
+    var shown = 0;
+    document.querySelectorAll('#tblTeklif tbody tr').forEach(function(tr){
+      var okD = df === 'hepsi' || tr.getAttribute('data-f') === df;
+      var okT = tf === 'hepsi' || tr.getAttribute('data-tems') === tf;
+      var okS = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okD && okT && okS;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    document.querySelector('[data-table-empty]').hidden = shown !== 0;
+    document.querySelector('[data-table-count]').textContent = shown;
+  }
+
+  document.getElementById('tekSearch').addEventListener('input', applyAll);
+  document.getElementById('durumChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip'); if(!ch) return;
+    document.querySelectorAll('#durumChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on'); applyAll();
+  });
+  document.getElementById('temsChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip'); if(!ch) return;
+    document.querySelectorAll('#temsChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on'); applyAll();
+  });
+
+  applyAll();
+})();
+</script>
+</body>
+</html>

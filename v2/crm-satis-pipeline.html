@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Pipeline — Satış CRM — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Pipeline (kanban) ============ */
+
+/* özet şerit — Sözleşme / Kazanıldı / Kaybedildi (7 aktif kolonun dışında) */
+.pipe-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-bottom:22px}
+.pipe-seg{padding:18px 22px;display:flex;flex-direction:column;gap:10px}
+.pipe-seg + .pipe-seg{border-left:1px solid var(--line)}
+.pipe-seg-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pipe-seg-lbl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+.pipe-seg-lbl i{font-size:12px}
+.pipe-seg.sozlesme .pipe-seg-lbl i{color:var(--acc-ink)}
+.pipe-seg.kazanildi .pipe-seg-lbl i{color:var(--ok)}
+.pipe-seg.kaybedildi .pipe-seg-lbl i{color:var(--danger)}
+.pipe-seg-num{font-size:22px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pipe-seg.sozlesme .pipe-seg-num{color:var(--acc-ink)}
+.pipe-seg.kazanildi .pipe-seg-num{color:var(--ok)}
+.pipe-seg.kaybedildi .pipe-seg-num{color:var(--danger)}
+.pipe-seg-sum{font-size:11.5px;color:var(--muted);font-weight:600}
+.pipe-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pipe-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:var(--r-pill);background:var(--bg);color:var(--ink-2);border:1px solid var(--line)}
+.pipe-chip.reason{color:var(--danger);background:var(--danger-tint);border-color:transparent}
+a.pipe-chip{transition:.18s var(--ease)}
+a.pipe-chip:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
+.pipe-empty{font-size:12.5px;color:var(--muted);font-style:italic;display:flex;align-items:center;gap:7px}
+.pipe-empty i{color:var(--line-2)}
+@media(max-width:760px){.pipe-strip{grid-template-columns:1fr}.pipe-seg + .pipe-seg{border-left:none;border-top:1px solid var(--line)}}
+
+/* kanban board */
+.kanban-wrap{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.kanban-board{display:flex;gap:14px;min-width:1960px}
+.kanban-col{flex:0 0 270px;display:flex;flex-direction:column;gap:10px}
+.kcol-head{padding:12px 14px;border-radius:var(--r-md);background:var(--paper);border:1px solid var(--line)}
+.kcol-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.kcol-name{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.005em}
+.kcol-cnt{font-size:10.5px;font-weight:700;background:var(--bg);color:var(--ink-2);padding:2px 8px;border-radius:var(--r-pill)}
+.kcol-total{font-size:12px;font-weight:700;color:var(--acc-ink);font-variant-numeric:tabular-nums}
+.kcol-total.mut{color:var(--muted);font-weight:600}
+.kcol-body{display:flex;flex-direction:column;gap:10px;min-height:60px}
+
+.kcard{display:block;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;transition:.2s var(--ease);color:inherit}
+.kcard:hover{transform:translateY(-2px);box-shadow:var(--sh-sm);border-color:var(--acc-ink)}
+.kcard-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.kcard-no{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.kcard-ava{width:22px;height:22px;border-radius:var(--r-circle);display:grid;place-items:center;font-size:9px;font-weight:800;flex:none}
+.kcard-ava.selin{background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)}
+.kcard-ava.okan{background:var(--info-tint);color:var(--info)}
+.kcard-name{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:2px;line-height:1.3}
+.kcard-unit{font-size:12px;color:var(--muted);margin-bottom:9px;line-height:1.4}
+.kcard-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+.kcard-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:9px;border-top:1px solid var(--line)}
+.kcard-amt{font-size:13px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.kcard-amt.mut{color:var(--muted);font-weight:600;font-size:11.5px}
+.kcard-days{font-size:11px;font-weight:700;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.kcard-days i{font-size:9.5px}
+.kcard-warn{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--warn);background:var(--warn-tint);padding:3px 8px;border-radius:6px;margin-bottom:9px}
+.kcard-lead{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--muted);background:var(--bg);border:1px dashed var(--line-2);padding:3px 8px;border-radius:6px;margin-bottom:9px}
+.kcard.is-lost{opacity:.85}
+
+@media(max-width:640px){
+  .kpi-num{font-size:19px}
+  .pipe-seg-num{font-size:19px}
+}
+</style>
+</head>
+<body data-sec="satis" data-screen="pipeline">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Satış</div>
+        <h1>Pipeline</h1>
+        <div class="ph-sub" id="phSub">7 aşamalı satış hunisi · Vadi Konakları, Göl Evleri 2. Etap, Kule Ofis B Blok</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-satis-musteriler.html"><i class="fa-solid fa-address-card"></i> Müşteriler</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card info">
+        <div class="kpi-ico"><i class="fa-solid fa-table-columns"></i></div>
+        <div><div class="kpi-num num" id="kpiAcik">14</div><div class="kpi-lbl">Açık fırsat</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 7 aşama</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div><div class="kpi-num num" id="kpiDeger">₺198.694.000</div><div class="kpi-lbl">Pipeline değeri</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-circle-info"></i> Kira ve kat karşılığı hariç</div></div>
+      </div>
+      <div class="kpi-card" style="--kpi-ok:1">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-trophy"></i></div>
+        <div><div class="kpi-num num" id="kpiKazanilan">5</div><div class="kpi-lbl">Kazanılan (90 gün)</div>
+        <div class="kpi-delta up" id="kpiKazanilanSub"><i class="fa-solid fa-arrow-trend-up"></i> ₺25.905.000 toplam</div></div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-ico"><i class="fa-solid fa-arrow-trend-down"></i></div>
+        <div><div class="kpi-num num" id="kpiKayip">%37,5</div><div class="kpi-lbl">Kayıp oranı</div>
+        <div class="kpi-delta down" id="kpiKayipSub"><i class="fa-solid fa-xmark"></i> 3 kayıp / 8 kapanan</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card pipe-strip">
+      <div class="pipe-seg sozlesme">
+        <div class="pipe-seg-head">
+          <span class="pipe-seg-lbl"><i class="fa-solid fa-file-signature"></i> Sözleşme</span>
+          <span class="pipe-seg-num" id="szNum">1</span>
+        </div>
+        <div class="pipe-seg-sum">İmza aşamasında — kanban dışı</div>
+        <div class="pipe-chips" id="szChips">
+          <a class="pipe-chip" href="crm-satis-firsat-detay.html?frs=002" data-tems="selin">Korkut · VK-D-05</a>
+        </div>
+      </div>
+      <div class="pipe-seg kazanildi">
+        <div class="pipe-seg-head">
+          <span class="pipe-seg-lbl"><i class="fa-solid fa-trophy"></i> Kazanıldı</span>
+          <span class="pipe-seg-num" id="kzNum">5</span>
+        </div>
+        <div class="pipe-seg-sum" id="kzSum">Son 90 gün · ₺25.905.000</div>
+        <div class="pipe-chips" id="kzChips">
+          <a class="pipe-chip" href="crm-satis-firsat-detay.html?frs=001" data-tems="okan">Onaran · VK-C-18</a>
+          <span class="pipe-chip" data-tems="okan">Toprak · A-03</span>
+          <span class="pipe-chip" data-tems="okan">Toprak · A-09</span>
+          <span class="pipe-chip" data-tems="okan">Toprak · C-21</span>
+          <span class="pipe-chip" data-tems="okan">Demirel · VK-D-14</span>
+        </div>
+      </div>
+      <div class="pipe-seg kaybedildi">
+        <div class="pipe-seg-head">
+          <span class="pipe-seg-lbl"><i class="fa-solid fa-circle-xmark"></i> Kaybedildi</span>
+          <span class="pipe-seg-num" id="kbNum">3</span>
+        </div>
+        <div class="pipe-seg-sum">Son 90 gün — neden rozetli</div>
+        <div class="pipe-chips" id="kbChips">
+          <a class="pipe-chip reason" href="crm-satis-firsat-detay.html?frs=004" data-tems="selin">Ilgaz · VK-B-07 — Fiyat</a>
+          <span class="pipe-chip reason" data-tems="selin">Kavukçu · GE2-V15 — Finansman</span>
+          <span class="pipe-chip reason" data-tems="okan">Tokgöz · VK-A-21 — Rakip proje</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="kanban-wrap">
+      <div class="kanban-board" id="kanbanBoard">
+
+        <!-- ============ YENİ ============ -->
+        <div class="kanban-col" data-col="yeni">
+          <div class="kcol-head">
+            <div class="kcol-title"><span class="kcol-name">Yeni</span><span class="kcol-cnt">2</span></div>
+            <span class="kcol-total">₺17.800.000</span>
+          </div>
+          <div class="kcol-body">
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=016" data-tems="okan" data-tutar="13600000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-016</span><span class="kcard-ava okan">OE</span></div>
+              <div class="kcard-name">Nihat Karaduman</div>
+              <div class="kcard-unit">GE2-V07 · villa</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺13.600.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 1 gün</span></div>
+            </a>
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=017" data-tems="selin" data-tutar="4200000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-017</span><span class="kcard-ava selin">SA</span></div>
+              <span class="kcard-lead"><i class="fa-solid fa-user-clock"></i> Kart açılmadı</span>
+              <div class="kcard-name">Gökhan Sepetçi</div>
+              <div class="kcard-unit">VK · 2+1 daire</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺4.200.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 2 gün</span></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- ============ GÖRÜŞME ============ -->
+        <div class="kanban-col" data-col="gorusme">
+          <div class="kcol-head">
+            <div class="kcol-title"><span class="kcol-name">Görüşme</span><span class="kcol-cnt">2</span></div>
+            <span class="kcol-total mut">Nakit dışı</span>
+          </div>
+          <div class="kcol-body">
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=012" data-tems="selin" data-tutar="0" data-cash="0">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-012</span><span class="kcard-ava selin">SA</span></div>
+              <div class="kcard-name">Ferda Yücel</div>
+              <div class="kcard-unit">KO-B-207 · kiralama</div>
+              <div class="kcard-foot"><span class="kcard-amt mut">₺32.000 / ay</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 8 gün</span></div>
+            </a>
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=013" data-tems="okan" data-tutar="0" data-cash="0">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-013</span><span class="kcard-ava okan">OE</span></div>
+              <div class="kcard-name">Halil Sancak</div>
+              <div class="kcard-unit">GE2 3. Etap · arsa</div>
+              <div class="kcard-foot"><span class="kcard-amt mut">Kat karşılığı</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 5 gün</span></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- ============ SUNUM / GEZİ ============ -->
+        <div class="kanban-col" data-col="sunum">
+          <div class="kcol-head">
+            <div class="kcol-title"><span class="kcol-name">Sunum / Gezi</span><span class="kcol-cnt">3</span></div>
+            <span class="kcol-total">₺42.720.000</span>
+          </div>
+          <div class="kcol-body">
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=014" data-tems="selin" data-tutar="9800000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-014</span><span class="kcard-ava selin">SA</span></div>
+              <span class="kcard-lead"><i class="fa-solid fa-user-clock"></i> Kart açılmadı</span>
+              <div class="kcard-name">İlker Baysal</div>
+              <div class="kcard-unit">VK-D-23 · dubleks gezisi</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺9.800.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 3 gün</span></div>
+            </a>
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=015" data-tems="okan" data-tutar="26800000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-015</span><span class="kcard-ava okan">OE</span></div>
+              <div class="kcard-name">Derya Toprak</div>
+              <div class="kcard-unit">GE2-V21 + GE2-V22 · 2 villa</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺26.800.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 6 gün</span></div>
+            </a>
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=018" data-tems="selin" data-tutar="6120000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-018</span><span class="kcard-ava selin">SA</span></div>
+              <div class="kcard-name">Aylin Şahinoğlu</div>
+              <div class="kcard-unit">VK-B-12 · 3+1 daire</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺6.120.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 2 gün</span></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- ============ TEKLİF ============ -->
+        <div class="kanban-col" data-col="teklif">
+          <div class="kcol-head">
+            <div class="kcol-title"><span class="kcol-name">Teklif</span><span class="kcol-cnt">2</span></div>
+            <span class="kcol-total">₺24.174.000</span>
+          </div>
+          <div class="kcol-body">
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=009" data-tems="selin" data-tutar="5814000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-009</span><span class="kcard-ava selin">SA</span></div>
+              <div class="kcard-name">Mert Kavukçu</div>
+              <div class="kcard-unit">VK-B-19 · 3+1 daire</div>
+              <span class="gtag" style="margin-bottom:9px;background:var(--warn-tint);color:var(--warn);border-color:transparent">TKF-006 · müdür onayında</span>
+              <div class="kcard-foot"><span class="kcard-amt">₺5.814.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 11 gün</span></div>
+            </a>
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=010" data-tems="okan" data-tutar="18360000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-010</span><span class="kcard-ava okan">OE</span></div>
+              <div class="kcard-name">Nova Gayrimenkul</div>
+              <div class="kcard-unit">VK A-11/A-12/A-14 · 3 daire</div>
+              <span class="gtag" style="margin-bottom:9px">TKF-008 · taslak</span>
+              <div class="kcard-foot"><span class="kcard-amt">₺18.360.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 9 gün</span></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- ============ MÜZAKERE ============ -->
+        <div class="kanban-col" data-col="muzakere">
+          <div class="kcol-head">
+            <div class="kcol-title"><span class="kcol-name">Müzakere</span><span class="kcol-cnt">2</span></div>
+            <span class="kcol-total">₺84.180.000</span>
+          </div>
+          <div class="kcol-body">
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=007" data-tems="okan" data-tutar="70980000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-007</span><span class="kcard-ava okan">OE</span></div>
+              <div class="kcard-name">Nova Gayrimenkul</div>
+              <div class="kcard-unit">GE2-V25..V30 · 6 villa (bayi)</div>
+              <span class="gtag" style="margin-bottom:9px;background:var(--warn-tint);color:var(--warn);border-color:transparent">TKF-007 · %9 GM onayında</span>
+              <div class="kcard-foot"><span class="kcard-amt">₺70.980.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 14 gün</span></div>
+            </a>
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=008" data-tems="okan" data-tutar="13200000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-008</span><span class="kcard-ava okan">OE</span></div>
+              <div class="kcard-name">Selçuk Onaran</div>
+              <div class="kcard-unit">GE2-V05 · villa</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺13.200.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 7 gün</span></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- ============ OPSİYON ============ -->
+        <div class="kanban-col" data-col="opsiyon">
+          <div class="kcol-head">
+            <div class="kcol-title"><span class="kcol-name">Opsiyon</span><span class="kcol-cnt">2</span></div>
+            <span class="kcol-total">₺20.020.000</span>
+          </div>
+          <div class="kcol-body">
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=005" data-tems="selin" data-tutar="6120000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-005</span><span class="kcard-ava selin">SA</span></div>
+              <span class="kcard-warn"><i class="fa-solid fa-hourglass-half"></i> Bitiş 14 Tem</span>
+              <div class="kcard-name">Aylin Şahinoğlu</div>
+              <div class="kcard-unit">VK-B-11 · 3+1 daire</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺6.120.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 18 gün</span></div>
+            </a>
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=006" data-tems="okan" data-tutar="13900000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-006</span><span class="kcard-ava okan">OE</span></div>
+              <span class="kcard-warn"><i class="fa-solid fa-hourglass-half"></i> Bitiş 13 Tem</span>
+              <div class="kcard-name">Pınar Us</div>
+              <div class="kcard-unit">GE2-V12 · villa</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺13.900.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 16 gün</span></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- ============ KAPORA ============ -->
+        <div class="kanban-col" data-col="kapora">
+          <div class="kcol-head">
+            <div class="kcol-title"><span class="kcol-name">Kapora</span><span class="kcol-cnt">1</span></div>
+            <span class="kcol-total">₺9.800.000</span>
+          </div>
+          <div class="kcol-body">
+            <a class="kcard" href="crm-satis-firsat-detay.html?frs=011" data-tems="okan" data-tutar="9800000">
+              <div class="kcard-top"><span class="kcard-no">FRS-2026-011</span><span class="kcard-ava okan">OE</span></div>
+              <div class="kcard-name">Derya Toprak</div>
+              <div class="kcard-unit">VK-C-24 · dubleks</div>
+              <div class="kcard-foot"><span class="kcard-amt">₺9.800.000</span><span class="kcard-days"><i class="fa-regular fa-clock"></i> 10 gün</span></div>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+
+  var isTemsilci = GV.role === 'satistemsilci';
+  if(isTemsilci){
+    /* D11 temsilci budaması — Okan Eren'e ait kanban kartları ve özet şerit
+       chip'leri kaldırılır; kolon başlıkları ve KPI'lar kalan sete göre
+       DOM'dan yeniden hesaplanır (uydurma sabit ikinci görünüm yazılmaz). */
+    document.querySelectorAll('.kcard[data-tems="okan"]').forEach(function(el){ el.remove(); });
+    document.querySelectorAll('.pipe-chip[data-tems="okan"]').forEach(function(el){ el.remove(); });
+
+    document.querySelectorAll('.kanban-col').forEach(function(col){
+      var cards = Array.prototype.slice.call(col.querySelectorAll('.kcard'));
+      col.querySelector('.kcol-cnt').textContent = cards.length;
+      var cashCards = cards.filter(function(c){ return c.getAttribute('data-cash') !== '0'; });
+      var total = cashCards.reduce(function(s,c){ return s + parseInt(c.getAttribute('data-tutar') || '0', 10); }, 0);
+      var totalEl = col.querySelector('.kcol-total');
+      if(cashCards.length === 0){ totalEl.textContent = 'Nakit dışı'; totalEl.classList.add('mut'); }
+      else { totalEl.textContent = tl(total); totalEl.classList.remove('mut'); }
+    });
+
+    var acikCards = document.querySelectorAll('.kcard');
+    var acikCash = Array.prototype.slice.call(acikCards).filter(function(c){ return c.getAttribute('data-cash') !== '0'; });
+    var acikToplam = acikCash.reduce(function(s,c){ return s + parseInt(c.getAttribute('data-tutar') || '0', 10); }, 0);
+    document.getElementById('kpiAcik').textContent = acikCards.length;
+    document.getElementById('kpiDeger').textContent = tl(acikToplam);
+
+    function recomputeSeg(segClass, numId){
+      var seg = document.querySelector('.pipe-seg.' + segClass);
+      var chips = seg.querySelectorAll('.pipe-chip');
+      document.getElementById(numId).textContent = chips.length;
+      return chips.length;
+    }
+    var szN = recomputeSeg('sozlesme', 'szNum');
+    var kzN = recomputeSeg('kazanildi', 'kzNum');
+    var kbN = recomputeSeg('kaybedildi', 'kbNum');
+
+    document.getElementById('kpiKazanilan').textContent = kzN;
+    var kzSumEl = document.getElementById('kzSum');
+    var kzSubEl = document.getElementById('kpiKazanilanSub');
+    if(kzN === 0){
+      var kzWrap = document.getElementById('kzChips');
+      kzWrap.innerHTML = '<span class="pipe-empty"><i class="fa-solid fa-circle-info"></i> Son 90 günde kazanılan fırsatınız yok</span>';
+      kzSumEl.textContent = 'Son 90 gün · henüz kazanım yok';
+      kzSubEl.innerHTML = '<i class="fa-solid fa-minus"></i> Bu dönemde kazanım yok';
+      kzSubEl.className = 'kpi-delta flat';
+    }
+
+    document.getElementById('kpiKayip').textContent = (kzN + kbN) ? ('%' + Math.round((kbN/(kzN+kbN))*1000)/10).replace('.', ',') : '—';
+    document.getElementById('kpiKayipSub').innerHTML = '<i class="fa-solid fa-xmark"></i> ' + kbN + ' kayıp / ' + (kzN+kbN) + ' kapanan';
+
+    document.getElementById('phSub').textContent = '7 aşamalı satış hunisi · yalnızca sizin sorumluluğunuzdaki fırsatlar gösteriliyor';
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Kullanıcı Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: kullanıcı detay kompozisyonu (izin/avans-detay ile aynı gd-head/gd-grid iskelet dili) */
+.gd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.gd-head h1{font-size:22px;letter-spacing:-.015em;margin-bottom:9px;max-width:600px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:8px}
+
+.gd-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.gd-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.gd-desc{font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+
+/* kimlik özet şeridi — e-posta / rol / kapsam / son giriş tek bakışta */
+.kd-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.kd-summary div{padding:18px 22px;border-right:1px solid var(--line)}
+.kd-summary div:last-child{border-right:none}
+.kd-summary .kd-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.kd-summary .kd-val{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:860px){.kd-summary{grid-template-columns:repeat(2,1fr)}.kd-summary div{border-right:none;border-bottom:1px solid var(--line)}.kd-summary div:nth-last-child(-n+2){border-bottom:none}}
+@media(max-width:520px){.kd-summary{grid-template-columns:1fr}.kd-summary div{border-bottom:1px solid var(--line)}.kd-summary div:last-child{border-bottom:none}}
+
+/* rol & yetki özeti — erişebildiği bölümler listesi */
+.acc-list{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.acc-row{display:flex;align-items:flex-start;gap:11px;padding:8px 0;border-bottom:1px solid var(--line)}
+.acc-row:last-child{border-bottom:none}
+.acc-row i{color:var(--ok);font-size:13px;margin-top:2px;flex:none;width:14px;text-align:center}
+.acc-row .acc-title{font-size:13px;font-weight:700;color:var(--ink)}
+.acc-row .acc-note{font-size:11.5px;color:var(--muted);margin-top:1px}
+
+/* kapsam hücresi — kullanicilar.html / davet.html ile birebir aynı idiyom */
+.scope{display:inline-flex;align-items:center;gap:7px;font-size:12.5px}
+.scope i{font-size:11px;color:var(--muted)}
+.scope.all{color:var(--acc-ink);font-weight:600}
+.scope.all i{color:var(--acc-ink)}
+.scope.site{color:var(--ink-2)}
+.role-tag{white-space:nowrap}
+
+/* koltuk bağlamı mini kart — seat-hero'nun (kullanicilar.html) sade karşılığı */
+.seat-mini{display:flex;align-items:center;gap:13px;padding:2px 0 12px}
+.seat-mini i{font-size:19px;color:var(--acc-ink);flex:none}
+.seat-mini b{font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.seat-mini span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.seat-track{height:8px;border-radius:var(--r-pill);background:var(--bg);border:1px solid var(--line);overflow:hidden;margin:0 0 12px}
+.seat-track>span{display:block;height:100%;border-radius:var(--r-pill);background:var(--acc-ink)}
+
+/* kimlik kartı — avatar + iletişim satırları */
+.ctx-link{display:flex;align-items:center;gap:11px;padding:6px 0 16px}
+.ctx-link .who-mark{width:44px;height:44px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:15px;font-weight:800;background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)}
+.ctx-link b{display:block;font-size:14.5px;font-weight:800;color:var(--ink)}
+.ctx-link span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:12.5px;border-top:1px solid var(--line)}
+.ctx-row:first-of-type{border-top:none}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+
+/* davet notu */
+.inv-block{display:flex;gap:12px}
+.inv-block i{color:var(--acc-ink);font-size:14px;margin-top:2px}
+.inv-block p{font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.inv-block a{color:var(--acc-ink);font-weight:700}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="kullanicilar">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <!-- statik bake — DEFAULT kayıt (kemal-yapicioglu, rol-agnostic); JS yüklenince
+         aynı mount innerHTML ile ezilir, ?u= varsa kendi kaydını devralır — D18-B2 -->
+    <div id="udRoot"><div class="gd-head"><div><div class="gd-eyebrow">Kullanıcılar · Tüm şantiyeler</div><h1>Kemal Yapıcıoğlu</h1><div class="gd-badges"><span class="gtag role-tag mint">Firma Sahibi</span><span class="gstat ok">Aktif</span></div></div><div class="ph-actions"><a class="btn btn-ghost btn-sm" href="crm-ayarlar-kullanicilar.html"><i class="fa-solid fa-arrow-left"></i> Kullanıcılara Dön</a></div></div><div class="gv-card" style="margin-bottom:18px"><div class="kd-summary"><div><div class="kd-lbl">E-posta</div><div class="kd-val" title="kemal.yapicioglu@yapitas.com.tr">kemal.yapicioglu@yapitas.com.tr</div></div><div><div class="kd-lbl">Rol</div><div class="kd-val">Firma Sahibi</div></div><div><div class="kd-lbl">Şantiye Kapsamı</div><div class="kd-val"><span class="scope all"><i class="fa-solid fa-globe"></i> Tüm şantiyeler</span></div></div><div><div class="kd-lbl">Son Giriş</div><div class="kd-val">10 dk önce</div></div></div></div><div class="gd-grid"><div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px"><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-user-shield"></i> Rol &amp; Yetki Özeti</div></div><div class="gd-block"><div class="gd-label">Erişebildiği Bölümler</div><div class="acc-list"><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Ana Panel</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Şantiyeler</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Görevler</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Personel &amp; İK</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Saha Kayıtları</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Satın Alma</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Cariler</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Hakediş &amp; Sözleşme</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Satış CRM</div></div></div><div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">Ayarlar</div></div></div></div><p class="gd-desc">Tüm bölümlere tam erişim; ekran bazlı kısıtlama yok.</p></div></div><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-user-clock"></i> Davet &amp; Hesap Geçmişi</div></div><div class="gd-block"><div class="inv-block"><i class="fa-solid fa-circle-info"></i><p>Bu kullanıcı Kullanıcılar ekranından <b style="color:var(--ink)">doğrudan eklendi</b>; davet süreci kullanılmadı.</p></div></div></div><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-pen-to-square"></i> Kullanıcıyı Düzenle <span class="gtag off" style="font-weight:600">demo</span></div></div><div class="gc-body"><form class="gform" onsubmit="return false"><div class="gfield"><label for="fAd">Ad Soyad</label><input type="text" id="fAd" value="Kemal Yapıcıoğlu"></div><div class="gfield"><label for="fMail">E-posta</label><input type="email" id="fMail" value="kemal.yapicioglu@yapitas.com.tr"></div><div class="gfield"><label for="fRol">Rol</label><select id="fRol"><option value="sahip" selected="">Firma Sahibi</option><option value="yonetim">Genel Müdür</option><option value="teknik">Teknik Müdür</option><option value="sef">Şantiye Şefi</option><option value="muhasebe">Muhasebe</option><option value="satinalma">Satın Alma Sorumlusu</option><option value="ik">İK Uzmanı</option><option value="personel">Saha Personeli</option></select></div><div class="gfield"><label for="fSantiye">Şantiye Kapsamı</label><select id="fSantiye"><option selected="">Tüm şantiyeler</option><option>Vadi Konakları</option><option>Liman Lojistik Merkezi</option><option>Merkez Şantiye</option><option>Merkez Ofis</option></select></div><div class="gfield"><label for="fDurum">Durum</label><select id="fDurum"><option value="aktif" selected="">Aktif</option><option value="beklemede">Beklemede</option></select></div></form></div><div class="form-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line)"><a class="btn btn-ghost btn-sm" href="crm-ayarlar-kullanicilar.html">Vazgeç</a><button type="button" class="btn btn-acc btn-sm" data-demo="Kullanıcı düzenleme bu prototipte simülasyondur (demo)." data-no-confirm=""><i class="fa-solid fa-floppy-disk"></i> Kaydet</button></div></div></div><div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px"><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-id-badge"></i> Kimlik</div></div><div class="gd-block"><div class="ctx-link"><div class="who-mark">KY</div><div><b>Kemal Yapıcıoğlu</b><span>Firma Sahibi</span></div></div><div class="ctx-row"><span class="ctx-lbl">E-posta</span><span class="ctx-val" style="word-break:break-word">kemal.yapicioglu@yapitas.com.tr</span></div><div class="ctx-row"><span class="ctx-lbl">Şantiye Kapsamı</span><span class="ctx-val">Tüm şantiyeler</span></div><div class="ctx-row"><span class="ctx-lbl">Son Giriş</span><span class="ctx-val">10 dk önce</span></div><div class="ctx-row"><span class="ctx-lbl">Durum</span><span class="ctx-val"><span class="gstat ok">Aktif</span></span></div></div></div><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chair"></i> Koltuk Bağlamı</div></div><div class="gd-block"><div class="seat-mini"><i class="fa-solid fa-users"></i><div><b>18<span style="font-size:13px;font-weight:600;color:var(--muted)"> / 25</span></b><span>koltuk kullanımda</span></div></div><div class="seat-track"><span style="width:72%"></span></div><p class="gd-desc" style="margin:0">17 Aktif + 1 Davet Bekliyor · 7 boş koltuk — Profesyonel Paket.</p></div></div></div></div></div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* bu ekran yalnız superadmin (Gavia Platform Yöneticisi) içindir — sahip dahil
+     hiçbir tenant rolü göremez; data-sec="ayarlar" guard'ı zaten sahibi de bölüme
+     sokuyor, bu yüzden ek bir sayfa-seviyesi guard gerekiyor (patron talimatı D18-?u=) */
+  if(GV.role !== 'superadmin'){ location.replace('crm-ayarlar-kullanicilar.html'); return; }
+
+  /* Kayıt kaynağı: crm-ayarlar-kullanicilar.html tablosu — DOM sırasıyla BİREBİR
+     (18 kayıt). Kebab-slug = ?u= değeri. */
+  var USERS = {
+    'kemal-yapicioglu': { ad:'Kemal Yapıcıoğlu', ini:'KY', email:'kemal.yapicioglu@yapitas.com.tr', rol:'Firma Sahibi', rolKod:'sahip', mint:true, santiye:'Tüm şantiyeler', scope:'all', sonGiris:'10 dk önce', durum:'aktif' },
+    'murat-denizli':    { ad:'Murat Denizli', ini:'MD', email:'murat.denizli@yapitas.com.tr', rol:'Genel Müdür', rolKod:'yonetim', mint:true, santiye:'Tüm şantiyeler', scope:'all', sonGiris:'1 saat önce', durum:'aktif' },
+    'elif-sarikaya':    { ad:'Elif Sarıkaya', ini:'ES', email:'elif.sarikaya@yapitas.com.tr', rol:'Teknik Müdür', rolKod:'teknik', santiye:'Tüm şantiyeler', scope:'all', sonGiris:'Bugün 09:20', durum:'aktif' },
+    'nesrin-aydin':     { ad:'Nesrin Aydın', ini:'NA', email:'nesrin.aydin@yapitas.com.tr', rol:'Muhasebe', rolKod:'muhasebe', santiye:'Tüm şantiyeler', scope:'all', sonGiris:'Bugün 08:45', durum:'aktif' },
+    'baran-yildiz':     { ad:'Baran Yıldız', ini:'BY', email:'baran.yildiz@yapitas.com.tr', rol:'Satın Alma Sorumlusu', rolKod:'satinalma', santiye:'Tüm şantiyeler', scope:'all', sonGiris:'Dün 17:30', durum:'aktif' },
+    'seda-karaca':      { ad:'Seda Karaca', ini:'SK', email:'seda.karaca@yapitas.com.tr', rol:'İK Uzmanı', rolKod:'ik', santiye:'Tüm şantiyeler', scope:'all', sonGiris:'Bugün 08:10', durum:'aktif' },
+    'hasan-demirci':    { ad:'Hasan Demirci', ini:'HD', email:'hasan.demirci@yapitas.com.tr', rol:'Şantiye Şefi', rolKod:'sef', santiye:'Vadi Konakları', scope:'site', sonGiris:'25 dk önce', durum:'aktif' },
+    'aylin-koc':        { ad:'Aylin Koç', ini:'AK', email:'aylin.koc@yapitas.com.tr', rol:'Şantiye Şefi', rolKod:'sef', santiye:'Liman Lojistik Merkezi', scope:'site', sonGiris:'2 saat önce', durum:'aktif' },
+    'omer-taskin':      { ad:'Ömer Taşkın', ini:'ÖT', email:'omer.taskin@yapitas.com.tr', rol:'Şantiye Şefi', rolKod:'sef', santiye:'Merkez Şantiye', scope:'site', sonGiris:'Bugün 07:50', durum:'aktif' },
+    'ibrahim-sonmez':   { ad:'İbrahim Sönmez', ini:'İS', email:'ibrahim.sonmez@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Vadi Konakları', scope:'site', sonGiris:'Bugün 07:40', durum:'aktif' },
+    'sukru-aslan':      { ad:'Şükrü Aslan', ini:'ŞA', email:'sukru.aslan@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Liman Lojistik Merkezi', scope:'site', sonGiris:'Dün 16:05', durum:'aktif' },
+    'recep-yaman':      { ad:'Recep Yaman', ini:'RY', email:'recep.yaman@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Merkez Şantiye', scope:'site', sonGiris:'Bugün 07:35', durum:'aktif' },
+    'ali-vural':        { ad:'Ali Vural', ini:'AV', email:'ali.vural@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Vadi Konakları', scope:'site', sonGiris:'Dün 17:55', durum:'aktif' },
+    'halil-gunes':      { ad:'Halil Güneş', ini:'HG', email:'halil.gunes@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Liman Lojistik Merkezi', scope:'site', sonGiris:'Bugün 08:00', durum:'aktif' },
+    'ramazan-kilic':    { ad:'Ramazan Kılıç', ini:'RK', email:'ramazan.kilic@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Vadi Konakları', scope:'site', sonGiris:'28 Haz', durum:'aktif' },
+    'selim-dogan':      { ad:'Selim Doğan', ini:'SD', email:'selim.dogan@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Vadi Konakları', scope:'site', sonGiris:'Davet gönderildi', durum:'beklemede',
+                          davet:{ tarih:'29 Haziran 2026', durum:'Bekliyor' } },
+    'musa-erdem':       { ad:'Musa Erdem', ini:'ME', email:'musa.erdem@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Vadi Konakları', scope:'site', sonGiris:'3 gün önce', durum:'aktif' },
+    'veli-simsek':      { ad:'Veli Şimşek', ini:'VŞ', email:'veli.simsek@yapitas.com.tr', rol:'Saha Personeli', rolKod:'personel', santiye:'Vadi Konakları', scope:'site', sonGiris:'Dün 12:20', durum:'aktif' }
+  };
+  var DEFAULT_SLUG = 'kemal-yapicioglu';
+
+  /* Rol → erişim özeti (assets/js/shell.js ROLES/SECTIONS config'inden BİREBİR türetildi,
+     SADECE OKUNDU — bölüm başlıkları SECTIONS[x].title, kısıtlar ROLES[rol].scr'den) */
+  var ROLE_ACCESS = {
+    sahip:    { bolumler:['Ana Panel','Şantiyeler','Görevler','Personel & İK','Saha Kayıtları','Satın Alma','Cariler','Hakediş & Sözleşme','Satış CRM','Ayarlar'],
+                not:'Tüm bölümlere tam erişim; ekran bazlı kısıtlama yok.' },
+    yonetim:  { bolumler:['Ana Panel','Şantiyeler','Görevler','Personel & İK','Saha Kayıtları','Satın Alma','Cariler','Hakediş & Sözleşme','Satış CRM'],
+                not:'Ayarlar bölümüne erişimi yok; diğer bölümlerde ekran kısıtlaması yok.' },
+    teknik:   { bolumler:['Ana Panel (Yönetici Paneli hariç)','Şantiyeler','Görevler','Saha Kayıtları','Satın Alma (yalnız Stok & Depo)','Hakediş & Sözleşme (Nakit Akışı hariç)','Satış CRM (yalnız Satış Sonrası)'],
+                not:'Personel & İK, Cariler ve Ayarlar bölümlerine erişimi yok.' },
+    muhasebe: { bolumler:['Ana Panel (Yönetici Paneli hariç)','Saha Kayıtları','Satın Alma (yalnız Siparişler, İrsaliye & Fatura, Stok & Depo, Tedarikçiler)','Cariler','Hakediş & Sözleşme','Personel & İK'],
+                not:'Şantiyeler, Görevler, Satış CRM ve Ayarlar bölümlerine erişimi yok.' },
+    satinalma:{ bolumler:['Ana Panel (Raporlar hariç)','Satın Alma','Cariler','Görevler'],
+                not:'Şantiyeler, Personel & İK, Saha Kayıtları, Hakediş & Sözleşme, Satış CRM ve Ayarlar bölümlerine erişimi yok.' },
+    ik:       { bolumler:['Ana Panel (Yönetici Paneli hariç)','Personel & İK','Görevler','Saha Kayıtları (yalnız Kasa Yönetimi, Pluxee Kart, Puantaj, Demirbaş, Araçlar)'],
+                not:'Şantiyeler, Satın Alma, Cariler, Hakediş & Sözleşme, Satış CRM ve Ayarlar bölümlerine erişimi yok.' },
+    sef:      { bolumler:['Ana Panel (Yönetici Paneli hariç)','Şantiyeler','Görevler','Personel & İK','Saha Kayıtları','Satın Alma (Tedarikçiler hariç)','Hakediş & Sözleşme (yalnız Taşeron Kartları)'],
+                not:'Cariler, Satış CRM ve Ayarlar bölümlerine erişimi yok; erişim kendi şantiyesiyle sınırlıdır.' },
+    personel: { bolumler:['Ana Panel (Raporlar hariç)','Görevler'],
+                not:'Diğer tüm bölümlere erişimi yok — yalnız Ana Panel ve Görevler görünür.' }
+  };
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var q = new URLSearchParams(location.search);
+  var raw = q.get('u');
+  var slug = raw === null ? DEFAULT_SLUG : raw;
+  var u = USERS[slug];
+
+  if(!u){
+    GV.crumb('Kayıt bulunamadı');
+    gvNotFound({
+      mount: '#udRoot',
+      code: raw ? raw.toUpperCase() : null,
+      tur: 'kullanıcı',
+      listHref: 'crm-ayarlar-kullanicilar.html', listLbl: 'Kullanıcılara dön',
+      defHref: 'crm-ayarlar-kullanici-detay.html', defLbl: 'Varsayılan kaydı aç'
+    });
+    return;
+  }
+
+  GV.crumb(u.ad);
+  document.title = u.ad + ' — Kullanıcı Detayı — Gavia CRM';
+
+  var access = ROLE_ACCESS[u.rolKod] || { bolumler:[], not:'' };
+  var accHtml = access.bolumler.map(function(b){
+    var parts = b.match(/^(.*?)(\s*\((.*)\))?$/);
+    var title = parts[1], note = parts[3];
+    return '<div class="acc-row"><i class="fa-solid fa-check"></i><div><div class="acc-title">' + esc(title) + '</div>'
+      + (note ? '<div class="acc-note">' + esc(note) + '</div>' : '') + '</div></div>';
+  }).join('');
+
+  var invHtml = u.davet
+    ? '<div class="inv-block"><i class="fa-solid fa-paper-plane"></i><p><b style="color:var(--ink)">Davet:</b> '
+      + esc(u.davet.tarih) + ' tarihinde gönderildi, durum <b style="color:var(--ink)">' + esc(u.davet.durum) + '</b>. '
+      + '<a href="crm-ayarlar-kullanici-davet.html">Davet kaydını görüntüle →</a></p></div>'
+    : '<div class="inv-block"><i class="fa-solid fa-circle-info"></i><p>Bu kullanıcı Kullanıcılar ekranından <b style="color:var(--ink)">doğrudan eklendi</b>; davet süreci kullanılmadı.</p></div>';
+
+  var scopeIco = u.scope === 'all' ? 'fa-globe' : 'fa-location-dot';
+  var durumBadge = u.durum === 'aktif' ? '<span class="gstat ok">Aktif</span>' : '<span class="gstat wait">Beklemede</span>';
+  var roleTagCls = 'gtag role-tag' + (u.mint ? ' mint' : '');
+
+  var santiyeOpts = ['Tüm şantiyeler','Vadi Konakları','Liman Lojistik Merkezi','Merkez Şantiye','Merkez Ofis']
+    .map(function(o){ return '<option' + (o === u.santiye ? ' selected' : '') + '>' + o + '</option>'; }).join('');
+  var rolOpts = [
+    ['sahip','Firma Sahibi'],['yonetim','Genel Müdür'],['teknik','Teknik Müdür'],['sef','Şantiye Şefi'],
+    ['muhasebe','Muhasebe'],['satinalma','Satın Alma Sorumlusu'],['ik','İK Uzmanı'],['personel','Saha Personeli']
+  ].map(function(r){ return '<option value="' + r[0] + '"' + (r[0] === u.rolKod ? ' selected' : '') + '>' + r[1] + '</option>'; }).join('');
+
+  var root = document.getElementById('udRoot');
+  var html = ''
+    + '<div class="gd-head">'
+    +   '<div>'
+    +     '<div class="gd-eyebrow">Kullanıcılar · ' + esc(u.santiye) + '</div>'
+    +     '<h1>' + esc(u.ad) + '</h1>'
+    +     '<div class="gd-badges"><span class="' + roleTagCls + '">' + esc(u.rol) + '</span>' + durumBadge + '</div>'
+    +   '</div>'
+    +   '<div class="ph-actions">'
+    +     '<a class="btn btn-ghost btn-sm" href="crm-ayarlar-kullanicilar.html"><i class="fa-solid fa-arrow-left"></i> Kullanıcılara Dön</a>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="gv-card" style="margin-bottom:18px">'
+    +   '<div class="kd-summary">'
+    +     '<div><div class="kd-lbl">E-posta</div><div class="kd-val" title="' + esc(u.email) + '">' + esc(u.email) + '</div></div>'
+    +     '<div><div class="kd-lbl">Rol</div><div class="kd-val">' + esc(u.rol) + '</div></div>'
+    +     '<div><div class="kd-lbl">Şantiye Kapsamı</div><div class="kd-val"><span class="scope ' + u.scope + '"><i class="fa-solid ' + scopeIco + '"></i> ' + esc(u.santiye) + '</span></div></div>'
+    +     '<div><div class="kd-lbl">Son Giriş</div><div class="kd-val">' + esc(u.sonGiris) + '</div></div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="gd-grid">'
+    +   '<div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-user-shield"></i> Rol &amp; Yetki Özeti</div></div>'
+    +       '<div class="gd-block">'
+    +         '<div class="gd-label">Erişebildiği Bölümler</div>'
+    +         '<div class="acc-list">' + accHtml + '</div>'
+    +         (access.not ? '<p class="gd-desc">' + esc(access.not) + '</p>' : '')
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-user-clock"></i> Davet &amp; Hesap Geçmişi</div></div>'
+    +       '<div class="gd-block">' + invHtml + '</div>'
+    +     '</div>'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-pen-to-square"></i> Kullanıcıyı Düzenle <span class="gtag off" style="font-weight:600">demo</span></div></div>'
+    +       '<div class="gc-body">'
+    +         '<form class="gform" onsubmit="return false">'
+    +           '<div class="gfield"><label for="fAd">Ad Soyad</label><input type="text" id="fAd" value="' + esc(u.ad) + '"></div>'
+    +           '<div class="gfield"><label for="fMail">E-posta</label><input type="email" id="fMail" value="' + esc(u.email) + '"></div>'
+    +           '<div class="gfield"><label for="fRol">Rol</label><select id="fRol">' + rolOpts + '</select></div>'
+    +           '<div class="gfield"><label for="fSantiye">Şantiye Kapsamı</label><select id="fSantiye">' + santiyeOpts + '</select></div>'
+    +           '<div class="gfield"><label for="fDurum">Durum</label><select id="fDurum">'
+    +             '<option value="aktif"' + (u.durum === 'aktif' ? ' selected' : '') + '>Aktif</option>'
+    +             '<option value="beklemede"' + (u.durum === 'beklemede' ? ' selected' : '') + '>Beklemede</option>'
+    +           '</select></div>'
+    +         '</form>'
+    +       '</div>'
+    +       '<div class="form-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--line)">'
+    +         '<a class="btn btn-ghost btn-sm" href="crm-ayarlar-kullanicilar.html">Vazgeç</a>'
+    +         '<button type="button" class="btn btn-acc btn-sm" data-demo="Kullanıcı düzenleme bu prototipte simülasyondur (demo)." data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>'
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-id-badge"></i> Kimlik</div></div>'
+    +       '<div class="gd-block">'
+    +         '<div class="ctx-link"><div class="who-mark">' + esc(u.ini) + '</div><div><b>' + esc(u.ad) + '</b><span>' + esc(u.rol) + '</span></div></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">E-posta</span><span class="ctx-val" style="word-break:break-word">' + esc(u.email) + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Şantiye Kapsamı</span><span class="ctx-val">' + esc(u.santiye) + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Son Giriş</span><span class="ctx-val">' + esc(u.sonGiris) + '</span></div>'
+    +         '<div class="ctx-row"><span class="ctx-lbl">Durum</span><span class="ctx-val">' + durumBadge + '</span></div>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div class="gv-card">'
+    +       '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chair"></i> Koltuk Bağlamı</div></div>'
+    +       '<div class="gd-block">'
+    +         '<div class="seat-mini"><i class="fa-solid fa-users"></i><div><b>18<span style="font-size:13px;font-weight:600;color:var(--muted)"> / 25</span></b><span>koltuk kullanımda</span></div></div>'
+    +         '<div class="seat-track"><span style="width:72%"></span></div>'
+    +         '<p class="gd-desc" style="margin:0">17 Aktif + 1 Davet Bekliyor · 7 boş koltuk — Profesyonel Paket.</p>'
+    +       '</div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+  root.innerHTML = html;
+})();
+</script>
+</body>
+</html>

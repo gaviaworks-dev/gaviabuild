@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>İşlem Kaydı Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — İşlem Kaydı Detayı (§5, yeni ekran — en kritik madde) ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.ld-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.ld-grid{grid-template-columns:minmax(0,1fr)}}
+.ld-stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+.ld-hero{display:flex;align-items:flex-start;gap:14px;padding:20px 22px}
+.ld-ico{width:44px;height:44px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:16px;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.ld-ico.danger{background:var(--danger-tint);color:var(--danger)}
+.ld-ico.ok{background:var(--ok-tint);color:var(--ok)}
+.ld-ico.info{background:var(--info-tint);color:var(--info)}
+.ld-hero-body{min-width:0}
+.ld-hero-body h2{font-size:16px;font-weight:700;color:var(--ink);line-height:1.45}
+.ld-hero-body h2 b{font-weight:800}
+.ld-hero-meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;padding:20px 22px}
+@media(max-width:560px){.field-grid{grid-template-columns:1fr}}
+.field-grid dt{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field-grid dd{font-size:13.5px;font-weight:600;color:var(--ink)}
+.field-grid dd a{color:var(--acc-ink);font-weight:700}
+.field-grid dd.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px}
+
+/* eski/yeni değer karşılaştırma tablosu — §5'in EN KRİTİK maddesi */
+.cmp-table{width:100%;border-collapse:collapse}
+.cmp-table th{padding:10px 22px;text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);background:var(--paper)}
+.cmp-table td{padding:13px 22px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table tr.changed td{background:rgba(var(--warn-rgb,245 158 11)/.06)}
+.cmp-alan{font-weight:700;color:var(--ink)}
+.cmp-eski{color:var(--danger);text-decoration:line-through;text-decoration-thickness:1.5px}
+.cmp-yeni{color:var(--ok);font-weight:700}
+.cmp-arrow{color:var(--muted);margin:0 4px}
+@media(max-width:640px){
+  .cmp-table thead{display:none}
+  .cmp-table, .cmp-table tbody, .cmp-table tr, .cmp-table td{display:block;width:100%}
+  .cmp-table tr{padding:12px 22px;border-bottom:1px solid var(--line)}
+  .cmp-table td{padding:3px 0;border-bottom:none}
+  .cmp-table td::before{content:attr(data-label);display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+}
+
+.nc-note{display:flex;align-items:flex-start;gap:12px;padding:16px 22px;background:var(--bg);font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.nc-note i{color:var(--acc-ink);font-size:14px;margin-top:2px;flex:none}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="log">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-ayarlar-log.html">İşlem Kayıtları</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbTail">Kayıt Detayı</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Yönetim</div>
+        <h1 id="pageH1">İşlem Kaydı Detayı</h1>
+        <div class="ph-sub" id="pageSub">Yapıtaş İnşaat A.Ş. — denetim izi kaydı</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-ayarlar-log.html"><i class="fa-solid fa-arrow-left"></i> İşlem Kayıtlarına Dön</a>
+      </div>
+    </div>
+
+    <div id="ldNotFound" class="gv-card" hidden>
+      <div class="gv-empty">
+        <div class="ge-ico"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <h4>Kayıt bulunamadı</h4>
+        <p>Bu bağlantıya ait bir işlem kaydı bulunamadı. İşlem Kayıtları listesinden tekrar deneyin.</p>
+        <a class="btn btn-acc btn-sm ge-clear" href="crm-ayarlar-log.html"><i class="fa-solid fa-arrow-left"></i> Listeye dön</a>
+      </div>
+    </div>
+
+    <div class="ld-grid" id="ldContent" hidden>
+      <div class="ld-stack">
+        <div class="gv-card">
+          <div class="ld-hero" id="ldHero">
+            <div class="ld-ico" id="ldIco"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <div class="ld-hero-body">
+              <h2 id="ldSentence">—</h2>
+              <div class="ld-hero-meta">
+                <span class="gtag" id="ldTypeTag">—</span>
+                <span class="gstat ok" id="ldDurumTag">Başarılı</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-id-badge"></i> İşlem Üstbilgisi</div></div>
+          <dl class="field-grid" id="ldFields"></dl>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-code-compare"></i> Eski / Yeni Değer Karşılaştırması</div></div>
+          <div class="gc-body flush" id="ldCmpWrap">
+            <table class="cmp-table" id="ldCmpTable" hidden>
+              <thead><tr><th>Alan Adı</th><th>Eski Değer</th><th>Yeni Değer</th></tr></thead>
+              <tbody id="ldCmpBody"></tbody>
+            </table>
+            <div class="nc-note" id="ldNoChange" hidden>
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Bu işlem bir alan değeri değişikliği içermiyor (görüntüleme, oluşturma, onay veya dosya işlemi). Karşılaştırılacak eski/yeni değer çifti yok.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Notlar</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-lock"></i><span>İşlem kayıtları salt-okunurdur, düzenlenemez veya silinemez.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-clock"></i><span>Kayıtlar 24 ay saklanır; bu süre sonunda otomatik arşivlenir.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-shield-halved"></i><span>Bu ekranı yalnız Gavia Platform Yöneticisi ve Firma Sahibi görüntüler.</span></div>
+            <div class="side-tip" id="ldIlgiliWrap" hidden><i class="fa-solid fa-arrow-up-right-from-square"></i><span>İlgili kayıt: <a id="ldIlgiliLink" href="#">—</a></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+/* ============ İşlem Kaydı Detayı — §5'in en kritik maddesi: eski/yeni karşılaştırma ============
+   Üstbilgi crm-ayarlar-log.html'in Detay bağlantısından geçirilen query param'lardan
+   kurulur (satırın kendi DOM'undan türetildiği için senkronsuzluk riski yok — MPA'da
+   50 satırın tam kopyasını burada TUTMAK yerine referans linkin taşıdığı veriyi okur).
+   Eski/yeni değer çiftleri, gerçek bir alan değişikliği temsil eden kayıtlar için
+   BURADA küratörlü bir haritada (FIELD_MAP) tutulur — sadece "X → Y" biçiminde metin
+   ayrıştırmaya güvenmek yanlış pozitif üretebiliyordu (ör. "işledi → Vadi Konakları"
+   yön belirten bir cümle, alan değişikliği DEĞİL); bu yüzden değer çifti olmayan
+   kayıtlarda dürüstçe "değişiklik yok" notu gösterilir. */
+(function(){
+  if(!window.GV) return;
+
+  var TYPE_META = {
+    kritik: {ico:'ld-ico danger', lbl:'Kritik Değişiklik', tag:'gstat danger'},
+    onay:   {ico:'ld-ico ok',     lbl:'Onay',              tag:'gstat ok'},
+    red:    {ico:'ld-ico danger', lbl:'Red / Revize',      tag:'gstat warn'},
+    kayit:  {ico:'ld-ico info',   lbl:'Kayıt / Güncelleme',tag:'gstat info'}
+  };
+
+  /* alan adı | eski değer | yeni değer — kayıt ID'sine (LOG-2026-####'in son 4 hanesi) göre */
+  var FIELD_MAP = {
+    '0840': [{alan:'Abonelik Otomatik Yenileme', eski:'Kapalı', yeni:'Açık'}],
+    '0842': [{alan:'Ana Marka Rengi', eski:'#3FD5AD', yeni:'#2FBE9C'}],
+    '0844': [{alan:'Ana Marka Rengi', eski:'#2FBE9C', yeni:'#3FD5AD (varsayılan)'}, {alan:'Vurgu/Aksiyon Rengi', eski:'Silinmiş', yeni:'#3FD5AD (varsayılan)'}],
+    '0845': [{alan:'Varsayılan Banka Hesabı', eski:'Garanti BBVA — Ana Hesap', yeni:'Akbank — Hakediş Tahsilat Hesabı'}],
+    '0846': [{alan:'Ziraat Bankası — Maaş Ödeme Hesabı Durumu', eski:'Pasif', yeni:'Aktif'}],
+    '0839': [{alan:'Paket', eski:'Professional', yeni:'CRM + Sales'}],
+    '0833': [{alan:'Kasa Onay Eşiği', eski:'₺25.000', yeni:'₺40.000'}],
+    '0829': [{alan:'Çıkış Saati — İbrahim Sönmez', eski:'18:00', yeni:'21:00'}, {alan:'Fazla Mesai (aynı gün)', eski:'0 saat', yeni:'3 saat'}],
+    '0818': [{alan:'Pluxee Kart Modülü', eski:'Kapalı', yeni:'Açık (Saha Kayıtları kapsamına eklendi)'}],
+    '0808': [{alan:'İK Uzmanı — Operasyon Ekran Kapsamı', eski:'Yalnız Görev', yeni:'Kasa (okuma) + Pluxee + Puantaj + Demirbaş'}],
+    '0799': [{alan:'BNK-02 Durumu', eski:'Aktif', yeni:'Pasif'}],
+    '0800': [{alan:'Varsayılan Banka Hesabı', eski:'BNK-01', yeni:'BNK-04 (Garanti BBVA)'}, {alan:'Banka Hesabı Sayısı', eski:'3', yeni:'4'}],
+    '0801': [{alan:'İmza Sirküleri Versiyonu', eski:'v2 (2025, noter tasdikli)', yeni:'v3 — IMZ-2026-003 (geçerlilik 31.12.2027)'}],
+    '0802': [{alan:'Elif Sarıkaya — Yetki Türü', eski:'Tanımsız', yeni:'Sözleşme Yetkilisi'}, {alan:'Sözleşme İmza Yetkisi', eski:'Yok', yeni:'Var'}],
+    '0795': [{alan:'Baran Yıldız — Onaylama İzni (Satın Alma)', eski:'Kapalı', yeni:'Açık'}],
+    '0796': [{alan:'SZL-2025-T04 Ödeme Vadesi', eski:'30 gün', yeni:'45 gün'}],
+    '0854': [{alan:'Baran Yıldız — Satın Alma Yetkilisi Durumu (YTK-06)', eski:'Aktif', yeni:'Pasif'}],
+    '0855': [{alan:'Elif Sarıkaya — İmza Sirküleri Durumu (IMZ-2026-009)', eski:'Geçerli', yeni:'Geçersiz'}],
+    '0856': [{alan:'Nesrin Aydın — İmza Sirküleri Durumu (IMZ-2026-011)', eski:'Süresi Doldu', yeni:'Arşivlendi'}],
+    '0859': [{alan:'ARC-10 Araç Durumu', eski:'Aktif', yeni:'Hurdaya Ayrıldı'}],
+    '0860': [{alan:'ARC-07 Araç Durumu', eski:'Aktif', yeni:'Satıldı'}],
+    '0861': [{alan:'ARC-09 Araç Durumu', eski:'Aktif', yeni:'Kiralama Bitti'}],
+    '0862': [{alan:'Vadi Konakları — Proje Türü', eski:'Tanımsız', yeni:'Yapsat'}],
+    '0863': [{alan:'Vadi Konakları — Hedef Teslim Tarihi', eski:'30.09.2026', yeni:'31.12.2026'}, {alan:'Süre Uzatım Durumu', eski:'Talep Edildi', yeni:'Onaylandı'}],
+    '0864': [{alan:'Liman Lojistik Merkezi — Süre Uzatım Durumu', eski:'Yok', yeni:'Onay Bekliyor'}],
+    '0865': [{alan:'AVN-2026-004 Durumu', eski:'Ödendi', yeni:'Arşivlendi'}],
+    '0867': [{alan:'SZL-2025-T01 Sözleşme Durumu', eski:'Aktif', yeni:'Arşivlendi'}],
+    '0868': [{alan:'KSA-2026-009 Kasa Kaydı Durumu', eski:'Kayıtlı', yeni:'Arşivlendi'}],
+    '0869': [{alan:'KSG-2026-003 Kasa Kaydı Durumu', eski:'Onay Bekliyor', yeni:'İptal Edildi'}],
+    '0870': [{alan:'MLZ-2026-014 Malzeme Talebi Durumu', eski:'Aktif', yeni:'Arşivlendi'}],
+    /* ---- T-LOG / Dalga 3 — araç ve demirbaş modüllerinin bu turda doğan akışları ---- */
+    '0847': [{alan:'ARC-08 Trafik Sigortası Bitiş Tarihi', eski:'10.07.2026', yeni:'10.07.2027'}],
+    '0848': [{alan:'ZMT-2026-043 Marka', eski:'Muhtelif', yeni:'3M'}],
+    '0877': [{alan:'ARC-05 Operasyonel Durum', eski:'Kullanımda', yeni:'Arızalı'}],
+    '0881': [{alan:'Demirbaş Bildirim Eşiği', eski:'30 gün', yeni:'15 gün'}],
+    '0873': [{alan:'Araç Bildirim Eşiği', eski:'30 gün', yeni:'15 gün'}],
+    '0884': [{alan:'ZMT-2025-009 Durumu', eski:'Depoda', yeni:'Hurda'}],
+    '0885': [{alan:'ZMT-2026-045 Zimmetli Kişi', eski:'(depoda, zimmetsiz)', yeni:'Aylin Koç'}],
+    '0887': [{alan:'ARC-01 Trafik Sigortası Poliçe No / Prim', eski:'TS-2025-661120 (₺7.600)', yeni:'TS-2026-778340 (₺8.400)'}]
+  };
+
+  function esc(t){ var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+
+  var q = new URLSearchParams(location.search);
+  var logid = q.get('log');
+  if(!logid || !q.get('u')){
+    document.getElementById('ldNotFound').hidden = false;
+    return;
+  }
+  document.getElementById('ldContent').hidden = false;
+
+  var user = q.get('u') || '—';
+  var rol = q.get('r') || '—';
+  var mod = q.get('m') || '—';
+  var tarih = q.get('t') || '—';
+  var saat = q.get('sa') || '';
+  var ip = q.get('ip') || '—';
+  var cihaz = q.get('cz') || '—';
+  var kayit = q.get('k') || '—';
+  var tip = q.get('tip') || 'kayit';
+  var durum = q.get('du') || 'basarili';
+  var desc = q.get('d') || '';
+
+  var meta = TYPE_META[tip] || TYPE_META.kayit;
+
+  document.title = 'LOG-2026-' + logid + ' — İşlem Kaydı Detayı — Gavia CRM';
+  document.getElementById('crumbTail').textContent = 'LOG-2026-' + logid;
+  document.getElementById('pageH1').textContent = 'İşlem Kaydı — LOG-2026-' + logid;
+  document.getElementById('pageSub').textContent = 'Yapıtaş İnşaat A.Ş. — ' + mod + ' · ' + tarih + ' ' + saat;
+
+  document.getElementById('ldIco').className = meta.ico;
+  document.getElementById('ldIco').innerHTML = '<i class="fa-solid ' + (tip === 'onay' ? 'fa-check' : tip === 'kritik' ? 'fa-triangle-exclamation' : 'fa-clock-rotate-left') + '"></i>';
+  document.getElementById('ldSentence').innerHTML = '<b>' + esc(user) + '</b> ' + esc(desc.replace(user, '').trim()).replace(/^—\s*/, '');
+  document.getElementById('ldTypeTag').textContent = meta.lbl;
+  document.getElementById('ldTypeTag').className = 'gtag';
+  var durumTag = document.getElementById('ldDurumTag');
+  durumTag.textContent = durum === 'basarili' ? 'Başarılı' : 'Başarısız';
+  durumTag.className = durum === 'basarili' ? 'gstat ok' : 'gstat danger';
+
+  document.getElementById('ldFields').innerHTML =
+      '<div><dt>Kullanıcı</dt><dd>' + esc(user) + '</dd></div>'
+    + '<div><dt>Rol</dt><dd>' + esc(rol) + '</dd></div>'
+    + '<div><dt>Modül</dt><dd>' + esc(mod) + '</dd></div>'
+    + '<div><dt>Tarih / Saat</dt><dd>' + esc(tarih) + ' · ' + esc(saat) + '</dd></div>'
+    + '<div><dt>IP Adresi</dt><dd class="mono">' + esc(ip) + '</dd></div>'
+    + '<div><dt>Cihaz</dt><dd>' + esc(cihaz) + '</dd></div>'
+    + '<div><dt>Kayıt ID</dt><dd class="mono">' + esc(kayit) + '</dd></div>'
+    + '<div><dt>Kayıt Numarası</dt><dd class="mono">LOG-2026-' + esc(logid) + '</dd></div>';
+
+  var rows = FIELD_MAP[logid];
+  if(rows && rows.length){
+    document.getElementById('ldCmpTable').hidden = false;
+    document.getElementById('ldCmpBody').innerHTML = rows.map(function(r){
+      return '<tr class="changed">'
+        + '<td class="cmp-alan" data-label="Alan Adı">' + esc(r.alan) + '</td>'
+        + '<td data-label="Eski Değer"><span class="cmp-eski">' + esc(r.eski) + '</span></td>'
+        + '<td data-label="Yeni Değer"><span class="cmp-yeni">' + esc(r.yeni) + '</span></td>'
+        + '</tr>';
+    }).join('');
+  } else {
+    document.getElementById('ldNoChange').hidden = false;
+  }
+
+  if(kayit && kayit !== '—'){
+    document.getElementById('ldIlgiliWrap').hidden = false;
+    document.getElementById('ldIlgiliLink').textContent = kayit;
+    document.getElementById('ldIlgiliLink').href = 'crm-ayarlar-log.html?log=' + logid;
+  }
+})();
+</script>
+</body>
+</html>

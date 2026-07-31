@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Teklif — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Yeni Teklif Formu ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+
+.gfield.ro input{background:var(--bg);color:var(--ink-2);font-weight:700}
+
+/* indirim slider */
+.slider-wrap{padding:6px 2px 2px}
+.slider-row{display:flex;align-items:center;gap:16px}
+.slider-row input[type=range]{flex:1;accent-color:var(--acc-ink);height:6px;cursor:pointer}
+.slider-val{font-size:22px;font-weight:800;color:var(--ink);min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.slider-scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:6px;padding:0 2px}
+.esik-badge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:var(--r-md);margin-top:14px;transition:.2s var(--ease)}
+.esik-badge.ok{background:var(--ok-tint);color:var(--ok)}
+.esik-badge.warn{background:var(--warn-tint);color:var(--warn)}
+.esik-badge.danger{background:var(--danger-tint);color:var(--danger)}
+.esik-badge i{font-size:14px}
+
+/* net tutar özet şeridi */
+.net-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;background:var(--bg);border-radius:var(--r-md);margin-top:16px}
+.net-strip .ns-lbl{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.net-strip .ns-val{font-size:20px;font-weight:800;color:var(--acc-deep);font-variant-numeric:tabular-nums}
+
+/* ödeme planı kurucu */
+.odp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:640px){.odp-grid{grid-template-columns:1fr}}
+.odp-summary{margin-top:16px}
+.odp-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.odp-row:last-child{border-bottom:none}
+.odp-row span{color:var(--muted)}
+.odp-row b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:800}
+.odp-row.tot{margin-top:4px;padding-top:12px;border-top:1px dashed var(--line-2)}
+.odp-row.tot b{color:var(--acc-deep);font-size:15px}
+.odp-warn{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--danger);margin-top:10px}
+
+/* önizleme kartı — sağ kolon */
+.tsum-row{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.tsum-row:last-child{border-bottom:none}
+.tsum-ico{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:12px;background:var(--bg);color:var(--muted);border:1px solid var(--line);margin-top:1px}
+.tsum-body{min-width:0}
+.tsum-lbl{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+.tsum-val{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
+.tsum-val.muted{color:var(--muted);font-weight:600}
+</style>
+</head>
+<body data-sec="satis" data-screen="teklifler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-satis-teklifler.html">Teklifler</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Yeni Teklif</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Satış</div>
+        <h1>Yeni Teklif</h1>
+        <div class="ph-sub">Müşteri ve birim seçin; indirim oranına göre onay bandı ve ödeme planı otomatik hesaplanır.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="gv-side-stack">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Teklif Bilgileri</div></div>
+          <div class="gc-body">
+            <form class="gform" id="tekForm">
+              <div class="gfield">
+                <label for="fMusteri">Müşteri</label>
+                <select id="fMusteri">
+                  <option value="001" data-mst="001">Selçuk Onaran</option>
+                  <option value="002" data-mst="002">Derya Toprak</option>
+                  <option value="003" data-mst="003" selected>Aylin Şahinoğlu</option>
+                  <option value="004" data-mst="004">Mert Kavukçu</option>
+                  <option value="005" data-mst="005">Baha &amp; Zeynep Korkut</option>
+                  <option value="006" data-mst="006">Nova Gayrimenkul</option>
+                  <option value="007" data-mst="007">Halil Sancak</option>
+                  <option value="008" data-mst="008">Ferda Yücel</option>
+                  <option value="009" data-mst="009">Tuncay Ilgaz</option>
+                  <option value="010" data-mst="010">Nihat Karaduman</option>
+                </select>
+              </div>
+              <div class="gfield">
+                <label for="fBirim">Bağımsız Bölüm</label>
+                <select id="fBirim"></select>
+              </div>
+              <div class="gfield ro">
+                <label for="fListe">Liste Fiyatı</label>
+                <input type="text" id="fListe" readonly>
+              </div>
+              <div class="gfield full">
+                <label for="fGecerlilik">Geçerlilik Tarihi</label>
+                <input type="text" id="fGecerlilik" value="25 Temmuz 2026" placeholder="örn. 25 Temmuz 2026">
+              </div>
+
+              <div class="gfield full">
+                <label>İndirim Oranı</label>
+                <div class="slider-wrap">
+                  <div class="slider-row">
+                    <input type="range" id="fIndirim" min="0" max="12" step="0.5" value="3">
+                    <div class="slider-val" id="indVal">%3,0</div>
+                  </div>
+                  <div class="slider-scale"><span>%0</span><span>%3</span><span>%7</span><span>%12</span></div>
+                  <!-- statik bake — DEFAULT (Aylin Şahinoğlu / VK-A-11, %3 indirim slider varsayılanı); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+                  <div class="esik-badge ok" id="esikBadge"><i class="fa-solid fa-user-check"></i> Temsilci yetkisinde — ek onay gerekmez.</div>
+                  <div class="net-strip">
+                    <span class="ns-lbl">Net Tutar</span>
+                    <span class="ns-val" id="netVal">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="gfield full">
+                <label style="margin-bottom:2px">Ödeme Planı Kurucu</label>
+                <span class="gf-hint" style="display:block;margin-bottom:10px">Peşinat, taksit sayısı ve teslim ödemesini belirleyin — özet otomatik hesaplanır.</span>
+                <div class="odp-grid">
+                  <div>
+                    <label for="fPesinat" style="font-size:12px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:6px">Peşinat (%)</label>
+                    <input type="number" id="fPesinat" min="0" max="100" step="1" value="25">
+                  </div>
+                  <div>
+                    <label for="fTaksitSayi" style="font-size:12px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:6px">Taksit Sayısı</label>
+                    <input type="number" id="fTaksitSayi" min="1" max="60" step="1" value="36">
+                  </div>
+                  <div>
+                    <label for="fTeslim" style="font-size:12px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:6px">Teslim Ödemesi (%)</label>
+                    <input type="number" id="fTeslim" min="0" max="100" step="1" value="12">
+                  </div>
+                </div>
+                <!-- statik bake — DEFAULT (VK-A-11 fiyatı, %25 peşin / 36 taksit / %12 teslim varsayılanları); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+                <div class="odp-summary" id="odpSummary"><div class="odp-row"><span>Peşinat tutarı</span><b>₺1.484.100</b></div><div class="odp-row"><span>Aylık taksit × 36</span><b>₺103.887</b></div><div class="odp-row"><span>Teslim ödemesi</span><b>₺712.368</b></div><div class="odp-row tot"><span>Net Tutar (kontrol)</span><b>₺5.936.400</b></div></div>
+              </div>
+
+              <div class="gfield full">
+                <label for="fNot">Not <span class="gf-hint">(isteğe bağlı)</span></label>
+                <textarea id="fNot" rows="3" placeholder="Onay makamına iletilecek açıklama…"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="form-foot">
+            <a class="btn btn-ghost btn-sm" href="crm-satis-teklifler.html" data-no-confirm>Vazgeç</a>
+            <button type="button" class="btn btn-acc btn-sm" id="tekSubmit" data-no-confirm><i class="fa-solid fa-plus"></i> Teklifi Kaydet</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="gv-side-stack">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-eye"></i> Teklif Önizleme</div></div>
+          <div class="gc-body">
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-id-card"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">Müşteri</div><div class="tsum-val" id="pMusteri">—</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-building-circle-check"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">Bağımsız Bölüm</div><div class="tsum-val" id="pBirim">—</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-tag"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">Liste Fiyatı</div><div class="tsum-val" id="pListe">—</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-percent"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">İndirim / Onay Bandı</div><div class="tsum-val" id="pInd">—</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">Net Tutar</div><div class="tsum-val" id="pNet" style="color:var(--acc-deep);font-size:15px">—</div></div>
+            </div>
+          </div>
+          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Kayıt oluşturulduğunda teklif, ilgili onay bandına otomatik yönlenir.</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+
+  /* ---- örnek stok — yalnız Satışta/Opsiyonlu birimler (satılmış birim teklife kapalı) ---- */
+  var BIRIMLER = [
+    {kod:'VK-A-11', proje:'Vadi Konakları', tip:'3+1', fiyat:6120000, durum:'Satışta'},
+    {kod:'VK-B-07', proje:'Vadi Konakları', tip:'2+1', fiyat:4200000, durum:'Satışta'},
+    {kod:'VK-B-12', proje:'Vadi Konakları', tip:'3+1', fiyat:6120000, durum:'Satışta'},
+    {kod:'VK-A-16', proje:'Vadi Konakları', tip:'3+1', fiyat:6120000, durum:'Opsiyonlu'},
+    {kod:'VK-D-23', proje:'Vadi Konakları', tip:'Dubleks', fiyat:9800000, durum:'Satışta'},
+    {kod:'GE2-V01', proje:'Göl Evleri 2. Etap', tip:'Villa', fiyat:12800000, durum:'Satışta'},
+    {kod:'GE2-V33', proje:'Göl Evleri 2. Etap', tip:'Villa', fiyat:15390000, durum:'Opsiyonlu'}
+  ];
+
+  /* ?birim= ile birim-detay'dan gelinirse; listede yoksa türetilip eklenir (ölü seçim olmaz) */
+  var q = new URLSearchParams(location.search);
+  var pre = (q.get('birim') || '').toUpperCase();
+  if(pre && !BIRIMLER.some(function(b){ return b.kod === pre; })){
+    var m, fiyat = 6120000, tip = '3+1', proje = 'Vadi Konakları';
+    if((m = pre.match(/^GE2-V(\d{2})$/))){ proje = 'Göl Evleri 2. Etap'; tip = 'Villa'; var n = parseInt(m[1],10); fiyat = 12800000 + Math.round((16400000-12800000)*(n-1)/39/10000)*10000; }
+    else if((m = pre.match(/^KO-B-(\d)(\d{2})$/))){ proje = 'Kule Ofis B Blok'; tip = 'Ofis'; fiyat = 2650000 + parseInt(m[1],10) * 60000; }
+    else if((m = pre.match(/^VK-([A-D])-(\d{2})$/))){ var door = parseInt(m[2],10); var tier = Math.min(5, Math.floor((door-1)/4));
+      var TIERS = [{t:'2+1',f:4200000},{t:'2+1',f:4200000},{t:'3+1',f:6120000},{t:'3+1',f:6120000},{t:'3+1',f:6120000},{t:'Dubleks',f:9800000}];
+      tip = TIERS[tier].t; fiyat = TIERS[tier].f; }
+    BIRIMLER.unshift({kod:pre, proje:proje, tip:tip, fiyat:fiyat, durum:'Satışta'});
+  }
+
+  var selBirim = document.getElementById('fBirim');
+  selBirim.innerHTML = BIRIMLER.map(function(b){
+    return '<option value="' + b.kod + '" data-fiyat="' + b.fiyat + '">' + b.kod + ' — ' + b.tip + ' (' + b.durum + ')</option>';
+  }).join('');
+  if(pre) selBirim.value = pre;
+
+  var MUS_NAME = {};
+  document.querySelectorAll('#fMusteri option').forEach(function(o){ MUS_NAME[o.value] = o.textContent; });
+
+  function currentBirim(){ return BIRIMLER.filter(function(b){ return b.kod === selBirim.value; })[0] || BIRIMLER[0]; }
+
+  function esikInfo(ind){
+    if(ind <= 3) return {cls:'ok', ic:'fa-user-check', lbl:'Temsilci yetkisinde — ek onay gerekmez.'};
+    if(ind <= 7) return {cls:'warn', ic:'fa-user-tie', lbl:'Satış Müdürü onayına gider.'};
+    return {cls:'danger', ic:'fa-crown', lbl:'Genel Müdür onayına gider.'};
+  }
+
+  function sync(){
+    var b = currentBirim();
+    document.getElementById('fListe').value = tl(b.fiyat);
+
+    var ind = parseFloat(document.getElementById('fIndirim').value);
+    document.getElementById('indVal').textContent = '%' + ind.toLocaleString('tr-TR', {minimumFractionDigits:1});
+    var net = b.fiyat * (1 - ind / 100);
+    document.getElementById('netVal').textContent = tl(net);
+
+    var esik = esikInfo(ind);
+    var badge = document.getElementById('esikBadge');
+    badge.className = 'esik-badge ' + esik.cls;
+    badge.innerHTML = '<i class="fa-solid ' + esik.ic + '"></i> ' + esik.lbl;
+
+    var pesinatPct = parseFloat(document.getElementById('fPesinat').value) || 0;
+    var teslimPct = parseFloat(document.getElementById('fTeslim').value) || 0;
+    var taksitSayi = parseInt(document.getElementById('fTaksitSayi').value, 10) || 1;
+    var pesinatTutar = net * pesinatPct / 100;
+    var teslimTutar = net * teslimPct / 100;
+    var kalan = net - pesinatTutar - teslimTutar;
+    var aylik = kalan > 0 ? kalan / taksitSayi : 0;
+
+    var warnHtml = '';
+    if(pesinatPct + teslimPct > 100){
+      warnHtml = '<div class="odp-warn"><i class="fa-solid fa-triangle-exclamation"></i> Peşinat + teslim ödemesi net tutarı aşıyor.</div>';
+    }
+    document.getElementById('odpSummary').innerHTML =
+        '<div class="odp-row"><span>Peşinat tutarı</span><b>' + tl(pesinatTutar) + '</b></div>'
+      + '<div class="odp-row"><span>Aylık taksit × ' + taksitSayi + '</span><b>' + tl(aylik) + '</b></div>'
+      + '<div class="odp-row"><span>Teslim ödemesi</span><b>' + tl(teslimTutar) + '</b></div>'
+      + '<div class="odp-row tot"><span>Net Tutar (kontrol)</span><b>' + tl(net) + '</b></div>'
+      + warnHtml;
+
+    var musAd = MUS_NAME[document.getElementById('fMusteri').value] || '—';
+    document.getElementById('pMusteri').textContent = musAd;
+    document.getElementById('pBirim').textContent = b.kod + ' — ' + b.tip;
+    document.getElementById('pListe').textContent = tl(b.fiyat);
+    document.getElementById('pInd').textContent = '%' + ind.toLocaleString('tr-TR', {minimumFractionDigits:1}) + ' · ' + esik.lbl.replace(' onayına gider.', ' onayı').replace(' — ek onay gerekmez.', ' yetkisi');
+    document.getElementById('pNet').textContent = tl(net);
+  }
+
+  ['fMusteri','fBirim','fIndirim','fPesinat','fTaksitSayi','fTeslim'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', sync);
+    document.getElementById(id).addEventListener('change', sync);
+  });
+  sync();
+
+  document.getElementById('tekSubmit').addEventListener('click', function(){
+    var musAd = MUS_NAME[document.getElementById('fMusteri').value];
+    var b = currentBirim();
+    var ind = parseFloat(document.getElementById('fIndirim').value);
+    var esik = esikInfo(ind);
+    var yon = esik.cls === 'ok' ? 'kaydedildi — ek onay gerekmedi.' : (esik.cls === 'warn' ? 'Satış Müdürü onayına gönderildi.' : 'Genel Müdür onayına gönderildi.');
+    gvToast(musAd + ' için ' + b.kod + ' teklifi ' + yon);
+    setTimeout(function(){ location.href = 'crm-satis-teklifler.html'; }, 1000);
+  });
+})();
+</script>
+</body>
+</html>

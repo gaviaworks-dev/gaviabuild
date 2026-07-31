@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Abonelik İptali — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — abonelik iptal / yeniden başlat [D4/§21-8]
+   İki state, aynı sayfada: #aiAktif (iptal formu) ↔ #aiIptal (yeniden başlat).
+   ?durum=iptal-edildi ile doğrudan ikinci state önizlenebilir; aksi halde JS akışı
+   (iptal onayı) da aynı geçişi client-side tetikler — sayfa yenilenmez. ============ */
+.ai-plan{
+  position:relative;overflow:hidden;border-radius:var(--r-lg);
+  background:var(--gv-deep);color:var(--gv-on-dark);border:1px solid var(--gv-border-dark);
+  padding:22px 24px;box-shadow:var(--sh-md);margin-bottom:22px;
+}
+.ai-plan::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(300px 180px at 100% 0%, rgba(63,213,173,.14), transparent 70%);}
+.ai-plan>*{position:relative;z-index:1}
+.ai-plan-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ai-eyebrow{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gv-mint);margin-bottom:8px}
+.ai-name{font-size:19px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.ai-price{margin-top:4px;font-size:13px;color:var(--on-dark-mut)}
+.ai-price b{font-size:20px;font-weight:800;color:#fff}
+.ai-meta{text-align:right;line-height:1.3}
+.ai-meta b{display:block;font-size:14px;font-weight:800;color:#fff}
+.ai-meta span{font-size:11px;color:var(--on-dark-faint)}
+
+.ai-reasons{display:flex;flex-direction:column;gap:2px}
+.ai-reason{display:flex;align-items:flex-start;gap:11px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.ai-reason:last-child{border-bottom:none}
+.ai-reason input{margin-top:3px}
+.ai-reason span{font-size:13px;color:var(--ink-2)}
+
+.ai-warn{border:1px solid color-mix(in srgb,var(--danger) 28%,var(--paper));background:var(--danger-tint);border-radius:var(--r-lg);padding:16px 18px;margin-top:18px}
+.ai-warn-h{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:800;color:var(--danger);margin-bottom:10px}
+.ai-warn ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ai-warn li{display:flex;gap:9px;font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.ai-warn li i{color:var(--danger);font-size:11px;margin-top:4px;flex:none}
+
+.ai-cancelled-ico{width:64px;height:64px;border-radius:50%;background:var(--danger-tint);color:var(--danger);display:grid;place-items:center;font-size:26px;margin:0 auto 18px}
+.ai-cancelled{max-width:520px;margin:24px auto;text-align:center}
+.ai-cancelled h2{font-size:19px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.01em}
+.ai-cancelled p{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:6px}
+.ai-cancelled .cd-date{font-weight:800;color:var(--ink)}
+.ai-cancelled .btn{margin-top:20px}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="abonelik-iptal">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Ayarlar · SaaS</div>
+        <h1>Abonelik İptali</h1>
+        <div class="ph-sub">Yapıtaş İnşaat A.Ş. — abonelik iptal ve yeniden başlatma</div>
+      </div>
+    </div>
+
+    <!-- ============ AKTİF STATE — iptal formu (varsayılan) ============ -->
+    <div id="aiAktif">
+      <div class="ai-plan">
+        <div class="ai-plan-top">
+          <div>
+            <div class="ai-eyebrow">Aktif Abonelik</div>
+            <div class="ai-name">Profesyonel Paket</div>
+            <div class="ai-price"><b>₺14.900</b> / ay</div>
+          </div>
+          <div class="ai-meta"><b>1 Ağu 2026</b><span>Sonraki fatura</span></div>
+        </div>
+      </div>
+
+      <div class="set-cols" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-comment-dots"></i> İptal Nedeni</div></div>
+          <div class="gc-body">
+            <div class="ai-reasons" id="aiReasons">
+              <label class="ai-reason"><input type="radio" name="aiNeden" value="pahali"><span>Çok pahalı — bütçemize uygun değil</span></label>
+              <label class="ai-reason"><input type="radio" name="aiNeden" value="ihtiyac"><span>İhtiyacımız kalmadı</span></label>
+              <label class="ai-reason"><input type="radio" name="aiNeden" value="baska"><span>Başka bir yazılıma geçtik</span></label>
+              <label class="ai-reason"><input type="radio" name="aiNeden" value="teknik"><span>Teknik sorunlar yaşadık</span></label>
+              <label class="ai-reason"><input type="radio" name="aiNeden" value="diger"><span>Diğer</span></label>
+            </div>
+            <div class="gfield full" style="margin-top:14px">
+              <label for="aiDetay">Eklemek istediğiniz not (opsiyonel)</label>
+              <textarea id="aiDetay" rows="3" placeholder="Bize nedeninizi kısaca anlatın, ürünü geliştirmemize yardımcı olur."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> İptal Ettiğinizde Ne Olur</div></div>
+          <div class="gc-body">
+            <div class="ai-warn">
+              <div class="ai-warn-h"><i class="fa-solid fa-triangle-exclamation"></i> Kaybedecekleriniz</div>
+              <ul>
+                <li><i class="fa-solid fa-xmark"></i> 1 Ağu 2026'dan itibaren tüm modüller kapanır, yeni kayıt girişi yapılamaz.</li>
+                <li><i class="fa-solid fa-xmark"></i> 18 kullanıcınızın oturumu kapatılır, yalnız Firma Sahibi hesabı görüntüleme amacıyla açık kalır.</li>
+                <li><i class="fa-solid fa-xmark"></i> Mevcut verileriniz 90 gün boyunca salt-okunur saklanır, ardından kalıcı olarak silinir.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="gc-foot"><span class="inv-note"><i class="fa-solid fa-circle-info"></i> İptal işlemi 1 Ağu 2026'daki dönem sonunda yürürlüğe girer; kalan süre boyunca erişiminiz devam eder.</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px">
+        <a class="btn btn-ghost" href="crm-ayarlar-firma.html#paket">Vazgeç</a>
+        <button type="button" class="btn btn-danger" data-no-confirm onclick="aiIptalEt()"><i class="fa-solid fa-ban"></i> Aboneliği İptal Et</button>
+      </div>
+    </div>
+
+    <!-- ============ İPTAL EDİLMİŞ STATE — yeniden başlat ============ -->
+    <div id="aiIptal" hidden>
+      <div class="ai-cancelled">
+        <div class="ai-cancelled-ico"><i class="fa-solid fa-ban"></i></div>
+        <h2>Aboneliğiniz iptal edildi</h2>
+        <p>İptal talebiniz <span class="cd-date" id="aiIptalTarih">30 Tem 2026</span> tarihinde alındı.</p>
+        <p>Mevcut dönem sonuna (<span class="cd-date">1 Ağu 2026</span>) kadar tüm özelliklere erişiminiz devam eder; sonrasında hesabınız salt-okunur moda geçer ve verileriniz 90 gün saklanır.</p>
+        <button type="button" class="btn btn-acc" data-no-confirm onclick="aiYenidenBaslat()"><i class="fa-solid fa-arrow-rotate-right"></i> Aboneliği Yeniden Başlat</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+function aiIptalEt(){
+  var secili = document.querySelector('input[name="aiNeden"]:checked');
+  var nedenTxt = secili ? secili.parentElement.querySelector('span').textContent : 'belirtilmedi';
+  gvConfirm({
+    danger:true, icon:'fa-ban', ok:'Aboneliği İptal Et', cancel:'Vazgeç',
+    title:'Abonelik iptal edilsin mi?',
+    message:'İptal nedeni: ' + nedenTxt + '. 1 Ağu 2026 dönem sonunda tüm modülleriniz kapanır ve 18 kullanıcının erişimi kesilir. Bu işlemi "Aboneliği Yeniden Başlat" ile geri alabilirsiniz.',
+    onConfirm:function(){
+      document.getElementById('aiAktif').hidden = true;
+      document.getElementById('aiIptal').hidden = false;
+      gvToast('Abonelik iptal talebiniz alındı.', {type:'danger'});
+    }
+  });
+}
+function aiYenidenBaslat(){
+  gvConfirm({
+    icon:'fa-arrow-rotate-right', ok:'Yeniden Başlat', cancel:'Vazgeç',
+    title:'Abonelik yeniden başlatılsın mı?',
+    message:'Profesyonel Paket kesintisiz devam eder, iptal talebiniz iptal edilir.',
+    onConfirm:function(){
+      document.getElementById('aiIptal').hidden = true;
+      document.getElementById('aiAktif').hidden = false;
+      document.querySelectorAll('input[name="aiNeden"]').forEach(function(r){ r.checked = false; });
+      document.getElementById('aiDetay').value = '';
+      gvToast('Aboneliğiniz yeniden etkinleştirildi.');
+    }
+  });
+}
+(function(){
+  var q = new URLSearchParams(location.search);
+  if(q.get('durum') === 'iptal-edildi'){
+    document.getElementById('aiAktif').hidden = true;
+    document.getElementById('aiIptal').hidden = false;
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Cari Durum Sorgusu — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Cari Durum Sorgusu ============ */
+
+/* seçici kartı */
+.picker-card .gc-body{padding:20px 22px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.picker-field{flex:1;min-width:260px;max-width:460px}
+.picker-field label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);letter-spacing:.02em;margin-bottom:6px}
+.picker-field select{
+  font-family:inherit;font-size:14px;font-weight:700;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:12px 14px;outline:none;transition:.2s var(--ease);width:100%;
+  -webkit-appearance:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2369708A' stroke-width='1.6' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;
+}
+.picker-field select:focus{border-color:var(--acc);background-color:var(--paper);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+.picker-hint{font-size:12px;color:var(--muted);flex:none}
+@media(max-width:640px){.picker-card .gc-body{padding:18px 16px}.picker-field{max-width:none;width:100%}}
+
+/* seçili cari özet kartı */
+.acct-head{display:flex;align-items:center;gap:16px;padding:22px;flex-wrap:wrap}
+.acct-mark{width:52px;height:52px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:17px;font-weight:800}
+.acct-id{flex:1;min-width:200px}
+.acct-id h2{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;margin-bottom:5px}
+.acct-meta{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted)}
+.acct-meta span{display:inline-flex;align-items:center;gap:6px}
+.acct-meta i{font-size:11px;color:var(--acc-ink);width:12px;text-align:center}
+@media(max-width:640px){.acct-head{padding:18px 16px}}
+
+/* KPI 3-kolon (Borç / Alacak / Net) */
+.kpi-grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:760px){.kpi-grid.cols-3{grid-template-columns:minmax(0,1fr)}}
+
+/* ekstre tablosu */
+.col-tarih{width:100px}
+.col-tutar{width:130px}
+#tblEkstre td.num{font-variant-numeric:tabular-nums}
+.ekstre-empty{padding:44px 24px;text-align:center;color:var(--muted);font-size:13px}
+.ekstre-empty i{font-size:20px;color:var(--acc-ink);margin-bottom:10px;display:block}
+
+/* seçim öncesi boş durum */
+#emptyPick{display:none}
+#emptyPick.show{display:block}
+#acctDetail{display:none}
+#acctDetail.show{display:block}
+
+/* kritik cariler triage listesi — bakiye büyüklüğüne göre sıralı */
+.crit-list{display:flex;flex-direction:column}
+.crit-row{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  padding:14px 22px;background:none;border:none;border-top:1px solid var(--line);
+  font-family:inherit;cursor:pointer;transition:.18s var(--ease);position:relative;
+}
+/* ---- §13 — Hareket Ekstresi tarih aralığı + §9 hareket türü hızlı filtresi ---- */
+.ekstre-filter-bar{border-bottom:1px solid var(--line)}
+#tblEkstre tbody tr[hidden],#tblEkstre tbody tr.gv-fp-hide{display:none}
+.crit-row:first-child{border-top:none}
+.crit-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:.18s var(--ease)}
+.crit-row:hover{background:var(--bg)}
+.crit-row.is-active{background:rgba(var(--acc-rgb),.06)}
+.crit-row.is-active::before{background:var(--acc)}
+.crit-row:focus-visible{outline:none;box-shadow:inset 0 0 0 2px rgba(var(--acc-rgb),.45)}
+.crit-mark{width:40px;height:40px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:13px;font-weight:800}
+.crit-main{flex:1;min-width:0}
+.crit-name{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-.01em;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crit-sub{font-size:11.5px;color:var(--muted);display:block;margin:1px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crit-bar{display:block;height:4px;border-radius:var(--r-circle);background:var(--line);overflow:hidden;max-width:240px}
+.crit-bar-fill{display:block;height:100%;border-radius:inherit}
+.crit-amt{flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.crit-val{font-size:14.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+@media(max-width:640px){
+  .crit-row{padding:14px 16px;gap:12px}
+  .crit-mark{width:36px;height:36px}
+  .crit-bar{max-width:120px}
+}
+</style>
+</head>
+<body data-sec="cari" data-screen="durum">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Rehber &amp; Hesap</div>
+        <h1>Cari Durum Sorgusu</h1>
+        <div class="ph-sub">Seçili cari için bakiye özeti ve hareket ekstresi</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-cari.html"><i class="fa-solid fa-address-book"></i> Firma Rehberi</a>
+        <a class="btn btn-acc btn-sm" href="#" data-export="Cari durum raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+      </div>
+    </div>
+
+    <div class="gv-card picker-card">
+      <div class="gc-body">
+        <div class="picker-field">
+          <label for="cariSelect">Cari seç</label>
+          <select id="cariSelect">
+            <option value="">— Cari seçin —</option>
+            <optgroup label="Müşteri / Kurum">
+              <option value="korfez-gyo">Körfez GYO</option>
+              <option value="aliaga-liman">Aliağa Liman İşletmeleri</option>
+              <option value="sapanca-belediyesi">Sapanca Belediyesi</option>
+            </optgroup>
+            <optgroup label="Müşteri · Satış">
+              <option value="onaran">Selçuk Onaran — CAR-2026-021</option>
+              <option value="toprak" selected>Derya Toprak — CAR-2026-022</option>
+            </optgroup>
+            <optgroup label="Taşeron">
+              <option value="demir-beton">Demir-Beton İnş. Ltd.</option>
+              <option value="yalitim-kardesler">Yalıtım Kardeşler</option>
+              <option value="elektromek">ElektroMek Taahhüt</option>
+            </optgroup>
+            <optgroup label="Tedarikçi">
+              <option value="ege-hazir-beton">Ege Hazır Beton</option>
+              <option value="marmara-demir-celik">Marmara Demir Çelik</option>
+              <option value="anadolu-hirdavat">Anadolu Hırdavat</option>
+              <option value="bogazici-yapi-market">Boğaziçi Yapı Market</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="picker-hint"><i class="fa-solid fa-circle-info"></i> Firma Rehberi'ndeki 12 cari burada listelenir.</div>
+      </div>
+    </div>
+
+    <!-- kritik cariler — bakiye büyüklüğüne göre triage -->
+    <!-- statik bake — kritik cariler (bakiyeye göre ilk 5, CARI havuzundan
+         balanceOf() ile hesaplanan sıralama) VERBATIM; JS yüklenince aynı mount
+         innerHTML ile ezilir — D18-B2 -->
+    <div class="gv-card" id="critCard" style="margin-bottom:16px">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Cariler</div>
+        <span class="gc-link" style="color:var(--muted);cursor:default">Bakiye büyüklüğüne göre · en yüksek 5</span>
+      </div>
+      <div class="gc-body flush">
+        <div class="crit-list" id="critList"><button type="button" class="crit-row is-active" data-key="toprak"><span class="crit-mark" style="background:rgba(63,213,173,.12);color:var(--acc-ink)">DT</span><span class="crit-main"><span class="crit-name">Derya Toprak</span><span class="crit-sub">Müşteri · Satış · Vadi Konakları</span><span class="crit-bar"><span class="crit-bar-fill" style="width:100%;background:var(--ok)"></span></span></span><span class="crit-amt"><span class="crit-val">₺4.560.000</span><span class="gstat ok">Alacak</span></span></button><button type="button" class="crit-row" data-key="onaran"><span class="crit-mark" style="background:rgba(63,213,173,.12);color:var(--acc-ink)">SO</span><span class="crit-main"><span class="crit-name">Selçuk Onaran</span><span class="crit-sub">Müşteri · Satış · Kule Ofis B Blok · Vadi Konakları</span><span class="crit-bar"><span class="crit-bar-fill" style="width:79%;background:var(--ok)"></span></span></span><span class="crit-amt"><span class="crit-val">₺3.592.000</span><span class="gstat ok">Alacak</span></span></button><button type="button" class="crit-row" data-key="korfez-gyo"><span class="crit-mark" style="background:rgba(63,213,173,.12);color:var(--acc-ink)">KG</span><span class="crit-main"><span class="crit-name">Körfez GYO</span><span class="crit-sub">Müşteri-Kurum · Vadi Konakları</span><span class="crit-bar"><span class="crit-bar-fill" style="width:41%;background:var(--ok)"></span></span></span><span class="crit-amt"><span class="crit-val">₺1.850.000</span><span class="gstat ok">Alacak</span></span></button><button type="button" class="crit-row" data-key="aliaga-liman"><span class="crit-mark" style="background:rgba(63,213,173,.12);color:var(--acc-ink)">AL</span><span class="crit-main"><span class="crit-name">Aliağa Liman İşletmeleri</span><span class="crit-sub">Müşteri-Kurum · Liman Lojistik Merkezi</span><span class="crit-bar"><span class="crit-bar-fill" style="width:21%;background:var(--ok)"></span></span></span><span class="crit-amt"><span class="crit-val">₺980.000</span><span class="gstat ok">Alacak</span></span></button><button type="button" class="crit-row" data-key="bogazici-yapi-market"><span class="crit-mark" style="background:var(--warn-tint);color:var(--warn)">BY</span><span class="crit-main"><span class="crit-name">Boğaziçi Yapı Market</span><span class="crit-sub">Tedarikçi · Vadi Konakları</span><span class="crit-bar"><span class="crit-bar-fill" style="width:9%;background:var(--danger)"></span></span></span><span class="crit-amt"><span class="crit-val">₺418.200</span><span class="gstat danger">Borç</span></span></button></div>
+      </div>
+    </div>
+
+    <!-- seçim öncesi boş durum -->
+    <div class="gv-card" id="emptyPick">
+      <div class="gv-empty">
+        <div class="ge-ico"><i class="fa-solid fa-scale-balanced"></i></div>
+        <h4>Bir cari seçin</h4>
+        <p>Bakiye özetini ve hareket ekstresini görüntülemek için yukarıdan bir cari seçin.</p>
+      </div>
+    </div>
+
+    <!-- statik bake — DEFAULT seçili cari (en yüksek bakiyeli: Derya Toprak, JS'nin
+         "?cari= yoksa critTop[0]" davranışıyla BİREBİR — balanceOf() sıralamasında en
+         yüksek); acctDetail JS'siz kabukta da "show" sınıfıyla açık gelir, JS yüklenince
+         render('toprak') aynı mount'ları innerHTML ile ezer — D18-B2 -->
+    <div id="acctDetail" class="show">
+      <div class="gv-card" style="margin-bottom:16px">
+        <div class="acct-head">
+          <div class="acct-mark" id="acctMark" style="background: rgba(63, 213, 173, 0.12); color: var(--acc-ink);">DT</div>
+          <div class="acct-id">
+            <h2 id="acctName">Derya Toprak</h2>
+            <div class="acct-meta">
+              <span id="acctTur"><i class="fa-solid fa-house-circle-check"></i> Müşteri · Satış</span>
+              <span><i class="fa-solid fa-id-card"></i> <span id="acctKisi">CAR-2026-022 · CRM MST-2026-002</span></span>
+              <span><i class="fa-solid fa-phone"></i> <span id="acctTel">0532 000 47 82</span></span>
+              <span><i class="fa-solid fa-helmet-safety"></i> <span id="acctSantiye">Vadi Konakları</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid cols-3">
+        <div class="kpi-card" id="kpiBorc">
+          <div class="kpi-ico"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <div><div class="kpi-num num" id="kpiBorcVal">₺0</div><div class="kpi-lbl">Borç (biz borçluyuz)</div></div>
+        </div>
+        <div class="kpi-card" id="kpiAlacak">
+          <div class="kpi-ico" style="background: var(--ok-tint); color: var(--ok);"><i class="fa-solid fa-file-signature"></i></div>
+          <div><div class="kpi-num num" id="kpiAlacakVal">₺4.560.000</div><div class="kpi-lbl">Alacak (bize borçlu)</div></div>
+        </div>
+        <div class="kpi-card" id="kpiNet">
+          <div class="kpi-ico" style="background: var(--ok-tint); color: var(--ok);"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div><div class="kpi-num num" id="kpiNetVal">₺4.560.000</div><div class="kpi-lbl" id="kpiNetLbl">Net bakiye — bizim alacağımız</div></div>
+        </div>
+      </div>
+
+      <div class="gv-card">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-receipt"></i> Hareket Ekstresi</div>
+          <span class="gc-link" id="acctPeriod" style="color:var(--muted);cursor:default">Temmuz 2026</span>
+        </div>
+        <!-- ============ §9 (hızlı filtre: hareket türü) + §13 (tarih aralığı) ============ -->
+        <div class="filter-bar ekstre-filter-bar">
+          <div class="chips" data-target="#tblEkstre" id="ekstreChips">
+            <button class="chip is-on" data-filter="hepsi">Tümü</button>
+            <button class="chip" data-filter="borc">Borç</button>
+            <button class="chip" data-filter="alacak">Alacak</button>
+          </div>
+          <div id="ekstreDr"></div>
+        </div>
+        <div class="gc-body flush">
+          <table class="gtable" id="tblEkstre">
+            <thead>
+              <tr>
+                <th class="col-tarih">Tarih</th>
+                <th>Açıklama</th>
+                <th class="num col-tutar">Borç</th>
+                <th class="num col-tutar">Alacak</th>
+                <th class="num col-tutar">Yürüyen Bakiye</th>
+              </tr>
+            </thead>
+            <tbody id="ekstreBody"><tr data-f="alacak" data-tarih="2026-02-20"><td class="muted">20 Şub 2026</td><td class="t-strong">SSZ-2026-004 paket satış tahakkuku (A-03 · A-09 · C-21)</td><td class="num">₺13.665.000</td><td class="num">—</td><td class="num" style="font-weight:800;color:var(--ok)">₺13.665.000 Alacak</td></tr><tr data-f="alacak" data-tarih="2026-02-20"><td class="muted">20 Şub 2026</td><td class="t-strong">Peşin ödeme tahsilatı (%50)</td><td class="num">—</td><td class="num">₺6.825.000</td><td class="num" style="font-weight:800;color:var(--ok)">₺6.840.000 Alacak</td></tr><tr data-f="alacak" data-tarih="2026-05-20"><td class="muted">20 May 2026</td><td class="t-strong">Taksit tahsilatları 1–4</td><td class="num">—</td><td class="num">₺2.280.000</td><td class="num" style="font-weight:800;color:var(--ok)">₺4.560.000 Alacak</td></tr></tbody>
+          </table>
+          <div class="gv-empty" data-table-empty hidden>
+            <div class="ge-ico"><i class="fa-solid fa-filter-circle-xmark"></i></div>
+            <h4>Eşleşen hareket yok</h4>
+            <p>Seçili tarih aralığı veya hareket türü filtresini temizleyin.</p>
+          </div>
+          <div class="ekstre-empty" id="ekstreEmpty" hidden>
+            <i class="fa-solid fa-inbox"></i>
+            Bu cari için henüz hareket kaydı yok — proje planlama aşamasında.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+/* =====================================================================
+   Mock cari veri seti — crm-cari.html ile BİREBİR tutarlı (aynı firma,
+   aynı bakiye). Yalnız 3 cari (biri her tür) tam çok satırlı ekstreyle
+   modellenmiştir; diğerleri rehberdeki tek "son hareket" satırından türetilir.
+   ===================================================================== */
+(function(){
+  var TUR_LBL = {musteri:'Müşteri-Kurum', satis:'Müşteri · Satış', taseron:'Taşeron', tedarikci:'Tedarikçi'};
+  var TUR_ICON = {musteri:'fa-building-columns', satis:'fa-house-circle-check', taseron:'fa-helmet-safety', tedarikci:'fa-truck-ramp-box'};
+  var TUR_STYLE = {
+    musteri:  {bg:'rgba(63,213,173,.12)', fg:'var(--acc-ink)'},
+    satis:    {bg:'rgba(63,213,173,.12)', fg:'var(--acc-ink)'},
+    taseron:  {bg:'var(--info-tint)',     fg:'var(--info)'},
+    tedarikci:{bg:'var(--warn-tint)',     fg:'var(--warn)'}
+  };
+
+  var CARI = {
+    'korfez-gyo': {
+      ad:'Körfez GYO', ini:'KG', tur:'musteri', kisi:'Selin Aydemir · Proje Müdürü',
+      tel:'0532 240 18 55', santiye:'Vadi Konakları',
+      hareketler:[
+        {tarih:'01 Haz 2026', aciklama:'Ara hakediş #5 faturası', borc:620000, alacak:0},
+        {tarih:'12 Haz 2026', aciklama:'Tahsilat (banka havalesi)', borc:0, alacak:400000},
+        {tarih:'20 Haz 2026', aciklama:'Hakediş #6 faturası (gönderildi)', borc:1630000, alacak:0}
+      ]
+    },
+    'aliaga-liman': {
+      ad:'Aliağa Liman İşletmeleri', ini:'AL', tur:'musteri', kisi:'Erhan Kaya · Yatırım Md.',
+      tel:'0232 618 44 09', santiye:'Liman Lojistik Merkezi',
+      hareketler:[
+        {tarih:'18 Haz 2026', aciklama:'Ara hakediş faturası', borc:980000, alacak:0}
+      ]
+    },
+    'sapanca-belediyesi': {
+      ad:'Sapanca Belediyesi', ini:'SB', tur:'musteri', kisi:'Zeynep Ulusoy · Fen İşleri Md.',
+      tel:'0264 582 11 30', santiye:'Göl Evleri 2. Etap',
+      hareketler:[]
+    },
+    /* D11 — satış müşterisi cari hesapları (CAR- serisi; SSZ ödeme planlarıyla BİREBİR) */
+    'onaran': {
+      ad:'Selçuk Onaran', ini:'SO', tur:'satis', kisi:'CAR-2026-021 · CRM MST-2026-001',
+      tel:'0533 000 21 04', santiye:'Kule Ofis B Blok · Vadi Konakları',
+      hareketler:[
+        {tarih:'12 Nis 2026', aciklama:'SSZ-2026-003 satış bedeli tahakkuku (VK-C-18)', borc:6120000, alacak:0},
+        {tarih:'12 Nis 2026', aciklama:'Peşinat tahsilatı (%15)', borc:0, alacak:918000},
+        {tarih:'15 May 2026', aciklama:'Taksit tahsilatları 1–12 (dönem özeti)', borc:0, alacak:1380000},
+        {tarih:'15 Haz 2026', aciklama:'13.–14. taksit tahsilatı', borc:0, alacak:230000}
+      ]
+    },
+    'toprak': {
+      ad:'Derya Toprak', ini:'DT', tur:'satis', kisi:'CAR-2026-022 · CRM MST-2026-002',
+      tel:'0532 000 47 82', santiye:'Vadi Konakları',
+      hareketler:[
+        {tarih:'20 Şub 2026', aciklama:'SSZ-2026-004 paket satış tahakkuku (A-03 · A-09 · C-21)', borc:13665000, alacak:0},
+        {tarih:'20 Şub 2026', aciklama:'Peşin ödeme tahsilatı (%50)', borc:0, alacak:6825000},
+        {tarih:'20 May 2026', aciklama:'Taksit tahsilatları 1–4', borc:0, alacak:2280000}
+      ]
+    },
+    'demir-beton': {
+      ad:'Demir-Beton İnş. Ltd.', ini:'DB', tur:'taseron', kisi:'Yusuf Ergin',
+      tel:'0532 411 27 63', santiye:'Vadi Konakları',
+      hareketler:[
+        {tarih:'02 Haz 2026', aciklama:'Hakediş #1 tahakkuku', borc:0, alacak:210000},
+        {tarih:'10 Haz 2026', aciklama:'Ödeme (banka havalesi)', borc:90000, alacak:0},
+        {tarih:'22 Haz 2026', aciklama:'Malzeme yansıtma faturası', borc:0, alacak:132000},
+        {tarih:'28 Haz 2026', aciklama:'Hakediş #2 tahakkuku (onayda)', borc:0, alacak:90000}
+      ]
+    },
+    'yalitim-kardesler': {
+      ad:'Yalıtım Kardeşler', ini:'YK', tur:'taseron', kisi:'Cemal Boz',
+      tel:'0505 322 90 14', santiye:'Liman Lojistik Merkezi',
+      hareketler:[
+        {tarih:'30 Haz 2026', aciklama:'Malzeme faturası girişi', borc:0, alacak:128500}
+      ]
+    },
+    'elektromek': {
+      ad:'ElektroMek Taahhüt', ini:'EM', tur:'taseron', kisi:'Tolga Şener',
+      tel:'0533 765 42 08', santiye:'Vadi Konakları',
+      hareketler:[
+        {tarih:'01 Tem 2026', aciklama:'Elektrik şaft iş kalemi (hakediş)', borc:0, alacak:76200}
+      ]
+    },
+    'ege-hazir-beton': {
+      ad:'Ege Hazır Beton', ini:'EB', tur:'tedarikci', kisi:'Kadir Solmaz',
+      tel:'0536 218 77 41', santiye:'Vadi Konakları',
+      hareketler:[
+        {tarih:'05 Haz 2026', aciklama:'Beton irsaliyesi (C30, 30 m³)', borc:0, alacak:39000},
+        {tarih:'18 Haz 2026', aciklama:'Ödeme (kısmi)', borc:20000, alacak:0},
+        {tarih:'02 Tem 2026', aciklama:'Beton irsaliyesi (4. mikser)', borc:0, alacak:35900}
+      ]
+    },
+    'marmara-demir-celik': {
+      ad:'Marmara Demir Çelik', ini:'MD', tur:'tedarikci', kisi:'Burcu İnan',
+      tel:'0212 466 90 23', santiye:'Liman Lojistik Merkezi',
+      hareketler:[
+        {tarih:'15 Haz 2026', aciklama:'Demir sevkiyatı faturası', borc:0, alacak:211000}
+      ]
+    },
+    'anadolu-hirdavat': {
+      ad:'Anadolu Hırdavat', ini:'AH', tur:'tedarikci', kisi:'Fatih Coşkun',
+      tel:'0216 349 82 17', santiye:'Merkez Şantiye',
+      hareketler:[
+        {tarih:'29 Haz 2026', aciklama:'Hırdavat malzeme alımı', borc:0, alacak:9850}
+      ]
+    },
+    'bogazici-yapi-market': {
+      ad:'Boğaziçi Yapı Market', ini:'BY', tur:'tedarikci', kisi:'Cem Aydoğan',
+      tel:'0212 000 45 61', santiye:'Vadi Konakları',
+      hareketler:[
+        {tarih:'12 Haz 2026', aciklama:'PVC doğrama faturası (FTR-2026-06 · vade 15 Tem)', borc:0, alacak:418200}
+      ]
+    }
+  };
+
+  function fmt(n){ return '₺' + n.toLocaleString('tr-TR'); }
+
+  /* §13 — TR kısa tarih ("20 Şub 2026") → ISO ("2026-02-20"); gvDateRange
+     karşılaştırması ve data-tarih özniteliği için. Aylar ui.js DR_AY dizisiyle
+     BİREBİR (aynı kısaltmalar) — yeni bir sözlük icat edilmedi. */
+  var AY_IDX = {Oca:0,Şub:1,Mar:2,Nis:3,May:4,Haz:5,Tem:6,Ağu:7,Eyl:8,Eki:9,Kas:10,Ara:11};
+  function trTarihToIso(s){
+    var m = /(\d{1,2})\s+([A-Za-zÇĞİÖŞÜçğıöşü]+)\s+(\d{4})/.exec(s);
+    if(!m || AY_IDX[m[2]] === undefined) return '';
+    var d = new Date(parseInt(m[3],10), AY_IDX[m[2]], parseInt(m[1],10));
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  /* Kanonik net bakiye — ekstredeki running mantığının BİREBİR aynısı
+     (drift olmasın diye tek kaynak). Dönüş: {amount, dir}
+     dir: 'alacak' = bize borçlu · 'borc' = biz borçluyuz · 'sifir' = kapalı */
+  function balanceOf(C){
+    var running = 0;
+    var musteriTur = (C.tur === 'musteri' || C.tur === 'satis');
+    C.hareketler.forEach(function(h){
+      if(musteriTur) running += h.borc - h.alacak;
+      else running += h.alacak - h.borc;
+    });
+    var dir = running === 0 ? 'sifir'
+      : (musteriTur ? (running > 0 ? 'alacak' : 'borc')
+                    : (running > 0 ? 'borc'   : 'alacak'));
+    return { amount: Math.abs(running), dir: dir };
+  }
+
+  var sel = document.getElementById('cariSelect');
+  var emptyPick = document.getElementById('emptyPick');
+  var detail = document.getElementById('acctDetail');
+  var ekBody = document.getElementById('ekstreBody');
+  var ekEmpty = document.getElementById('ekstreEmpty');
+  var tbl = document.getElementById('tblEkstre');
+  var critList = document.getElementById('critList');
+
+  function setActive(key){
+    Array.prototype.forEach.call(critList.querySelectorAll('.crit-row'), function(r){
+      r.classList.toggle('is-active', r.dataset.key === key);
+    });
+  }
+
+  function render(key){
+    if(!key){
+      emptyPick.classList.add('show'); detail.classList.remove('show');
+      setActive('');
+      return;
+    }
+    var C = CARI[key];
+    emptyPick.classList.remove('show'); detail.classList.add('show');
+
+    document.getElementById('acctMark').textContent = C.ini;
+    document.getElementById('acctMark').style.background = TUR_STYLE[C.tur].bg;
+    document.getElementById('acctMark').style.color = TUR_STYLE[C.tur].fg;
+    document.getElementById('acctName').textContent = C.ad;
+    document.getElementById('acctTur').innerHTML = '<i class="fa-solid ' + TUR_ICON[C.tur] + '"></i> ' + TUR_LBL[C.tur];
+    document.getElementById('acctKisi').textContent = C.kisi;
+    document.getElementById('acctTel').textContent = C.tel;
+    document.getElementById('acctSantiye').textContent = C.santiye;
+
+    /* yürüyen bakiye + ekstre satırları — çift taraflı defter mantığı:
+       müşteri/kurum: borç sütunu hakediş/fatura artışı, alacak sütunu tahsilat azalışı
+       taşeron/tedarikçi: alacak sütunu onların faturası artışı, borç sütunu ödemelerimiz azalışı */
+    var running = 0, rows = '';
+    var mTur = (C.tur === 'musteri' || C.tur === 'satis');   /* D11: satış müşterisi de alacaklı defter tarafı */
+    C.hareketler.forEach(function(h){
+      if(mTur) running += h.borc - h.alacak;
+      else running += h.alacak - h.borc;
+      var yon = running > 0 ? (mTur ? 'alacak' : 'borc') : (running < 0 ? (mTur ? 'borc' : 'alacak') : 'sifir');
+      var yonLbl = yon === 'borc' ? 'Borç' : (yon === 'alacak' ? 'Alacak' : '—');
+      var yonColor = yon === 'borc' ? 'var(--danger)' : (yon === 'alacak' ? 'var(--ok)' : 'var(--muted)');
+      /* §9 hızlı filtre anahtarı: hangi sütun doluysa (borç girişi mi alacak girişi mi) — h.borc/h.alacak zaten birbirini dışlar (mock veri) */
+      var hf = h.borc ? 'borc' : (h.alacak ? 'alacak' : 'hepsi');
+      rows += '<tr data-f="' + hf + '" data-tarih="' + trTarihToIso(h.tarih) + '">'
+        + '<td class="muted">' + h.tarih + '</td>'
+        + '<td class="t-strong">' + h.aciklama + '</td>'
+        + '<td class="num">' + (h.borc ? fmt(h.borc) : '—') + '</td>'
+        + '<td class="num">' + (h.alacak ? fmt(h.alacak) : '—') + '</td>'
+        + '<td class="num" style="font-weight:800;color:' + yonColor + '">' + (running === 0 ? '—' : fmt(Math.abs(running)) + ' ' + yonLbl) + '</td>'
+        + '</tr>';
+    });
+
+    if(C.hareketler.length === 0){
+      tbl.hidden = true; ekEmpty.hidden = false;
+    } else {
+      tbl.hidden = false; ekEmpty.hidden = true;
+      ekBody.innerHTML = rows;
+    }
+
+    /* cari değişince §9/§13 filtreleri sıfırlanır — önceki carinin filtre
+       durumu yeni carinin farklı tutarlarıyla yanıltıcı olabilir */
+    resetEkstreFilters();
+
+    var borcTotal = running > 0 && !mTur ? running : (running < 0 && mTur ? -running : 0);
+    var alacakTotal = running > 0 && mTur ? running : (running < 0 && !mTur ? -running : 0);
+    var net = alacakTotal - borcTotal;
+
+    document.getElementById('kpiBorcVal').textContent = fmt(borcTotal);
+    document.getElementById('kpiAlacakVal').textContent = fmt(alacakTotal);
+    document.getElementById('kpiNetVal').textContent = (net === 0 ? '₺0' : fmt(Math.abs(net)));
+    document.getElementById('kpiNetLbl').textContent = net > 0 ? 'Net bakiye — bizim alacağımız' : (net < 0 ? 'Net bakiye — bizim borcumuz' : 'Net bakiye — kapalı');
+
+    var kBorc = document.getElementById('kpiBorc'), kAlacak = document.getElementById('kpiAlacak'), kNet = document.getElementById('kpiNet');
+    kBorc.className = 'kpi-card' + (borcTotal > 0 ? ' danger' : '');
+    kAlacak.querySelector('.kpi-ico').style.background = alacakTotal > 0 ? 'var(--ok-tint)' : '';
+    kAlacak.querySelector('.kpi-ico').style.color = alacakTotal > 0 ? 'var(--ok)' : '';
+    kNet.className = 'kpi-card' + (net < 0 ? ' danger' : '');
+    kNet.querySelector('.kpi-ico').style.background = net > 0 ? 'var(--ok-tint)' : '';
+    kNet.querySelector('.kpi-ico').style.color = net > 0 ? 'var(--ok)' : '';
+
+    setActive(key);
+  }
+
+  /* Kritik cariler listesi — havuzu kanonik bakiyeye göre sırala, en büyük 5'i göster.
+     "Vadesi geçmiş" gibi bir etiket YOK: mock'ta gerçek vade tarihi olmadığından
+     kriticklik, bakiye büyüklüğü + yön (borç/alacak) ile gösterilir. */
+  var ranked = Object.keys(CARI)
+    .map(function(k){ return { key:k, C:CARI[k], b:balanceOf(CARI[k]) }; })
+    .filter(function(x){ return x.b.amount > 0; })
+    .sort(function(a,b){ return b.b.amount - a.b.amount; });
+  var critTop = ranked.slice(0, 5);
+  var maxAmt = critTop.length ? critTop[0].b.amount : 1;
+
+  critList.innerHTML = critTop.map(function(x){
+    var C = x.C, b = x.b, st = TUR_STYLE[C.tur];
+    var badgeCls = b.dir === 'borc' ? 'danger' : 'ok';
+    var badgeLbl = b.dir === 'borc' ? 'Borç' : 'Alacak';
+    var barCol   = b.dir === 'borc' ? 'var(--danger)' : 'var(--ok)';
+    var w = Math.max(6, Math.round(b.amount / maxAmt * 100));
+    return '<button type="button" class="crit-row" data-key="' + x.key + '">'
+      + '<span class="crit-mark" style="background:' + st.bg + ';color:' + st.fg + '">' + C.ini + '</span>'
+      + '<span class="crit-main">'
+        + '<span class="crit-name">' + C.ad + '</span>'
+        + '<span class="crit-sub">' + TUR_LBL[C.tur] + ' · ' + C.santiye + '</span>'
+        + '<span class="crit-bar"><span class="crit-bar-fill" style="width:' + w + '%;background:' + barCol + '"></span></span>'
+      + '</span>'
+      + '<span class="crit-amt">'
+        + '<span class="crit-val">' + fmt(b.amount) + '</span>'
+        + '<span class="gstat ' + badgeCls + '">' + badgeLbl + '</span>'
+      + '</span>'
+    + '</button>';
+  }).join('');
+
+  critList.addEventListener('click', function(e){
+    var row = e.target.closest('.crit-row');
+    if(!row) return;
+    sel.value = row.dataset.key;
+    render(row.dataset.key);
+    if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      detail.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  });
+
+  sel.addEventListener('change', function(){ render(sel.value); });
+
+  /* ============ §13 — Hareket Ekstresi tarih aralığı (gvDateRange, imperatif
+     kullanım — bkz. tasks/spec-filtre-tarih.md §4B: panel dışı, bağımsız tarih
+     seçici). §9 — hızlı hareket türü çipleri (Tümü/Borç/Alacak) mevcut generic
+     .chip[data-filter] motorunu (ui.js) kullanır, yeni bileşen İCAT EDİLMEDİ. ============ */
+  var ekstreEmptyBox = document.querySelector('#tblEkstre').closest('.gc-body').querySelector('[data-table-empty]');
+  function syncEkstreEmpty(){
+    if(tbl.hidden){ if(ekstreEmptyBox) ekstreEmptyBox.hidden = true; return; }   /* hareket kaydı hiç yoksa ekstre-empty zaten devrede */
+    var anyShown = false;
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      if(!tr.hidden && !tr.classList.contains('gv-fp-hide')) anyShown = true;
+    });
+    if(ekstreEmptyBox) ekstreEmptyBox.hidden = anyShown;
+  }
+  function applyEkstreDateFilter(val){
+    tbl.querySelectorAll('tbody tr[data-tarih]').forEach(function(tr){
+      if(!val){ tr.classList.remove('gv-fp-hide'); return; }
+      var ds = tr.getAttribute('data-tarih');
+      var d = ds ? new Date(ds + 'T00:00:00') : null;
+      tr.classList.toggle('gv-fp-hide', !d || d < val.from || d > val.to);
+    });
+    syncEkstreEmpty();
+  }
+  var ekstreDr = window.gvDateRange('#ekstreDr', { emptyLabel:'Tüm zamanlar', onChange: applyEkstreDateFilter });
+  document.getElementById('ekstreChips').querySelectorAll('.chip[data-filter]').forEach(function(ch){
+    ch.addEventListener('click', function(){ syncEkstreEmpty(); });
+  });
+  function resetEkstreFilters(){
+    if(ekstreDr) ekstreDr.clear();
+    var chips = document.getElementById('ekstreChips');
+    if(chips){
+      chips.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('is-on'); });
+      var hepsi = chips.querySelector('.chip[data-filter="hepsi"]');
+      if(hepsi) hepsi.classList.add('is-on');
+    }
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){ tr.hidden = false; tr.classList.remove('gv-fp-hide'); });
+    syncEkstreEmpty();
+  }
+
+  /* Açılış: ekran boş açılmasın → en yüksek bakiyeli cari önseçili (Faz 2 satış
+     carileri evrene girince bu kural doğal olarak Derya Toprak'ı seçer oldu —
+     Beyar kararı 2026-07-15: kural korunur, pin YOK).
+     URL ?cari= varsa (rehber/cari-detay çapraz gezinmesi) o cari default'u ezer. */
+  var qCari = new URLSearchParams(location.search).get('cari');
+  var initial = (qCari && CARI[qCari]) ? qCari
+              : (critTop.length ? critTop[0].key : '');
+  sel.value = initial;
+  render(initial);
+})();
+</script>
+</body>
+</html>

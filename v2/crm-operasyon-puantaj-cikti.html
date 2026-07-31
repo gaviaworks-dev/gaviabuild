@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Haftalık Puantaj Çıktısı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+/* =====================================================================
+   HAFTALIK PUANTAJ ÇIKTISI — xlsx "HAFTALIK PUANTAJ TABLOSU" birebir HTML
+   karşılığı (D9 / 1.7). Shell'siz, kendi kendine yeten çıktı ekranı —
+   crm-operasyon-kasa-cikti.html emsali (ck-bar, .paper A4 dikey, print CSS
+   sayfa içinde). ui.css/shell.css YÜKLENMEZ, yalnız tokens.css.
+   Tablo uzun (51/30/12 satır — D19 revizesi: taşeron artık kişi bazlı ADLI satır,
+   öz kadro + taşeron toplamı Vadi'de 35+16=51) — çok sayfaya taşması SERBEST: thead
+   her sayfada tekrarlanır, satırlar bölünmez, imza bloğu bölünmez.
+   ===================================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:#525659;min-height:100vh;padding:88px 16px 40px;
+  -webkit-font-smoothing:antialiased}
+
+/* ---- ekran-only araç çubuğu ---- */
+.ck-bar{position:fixed;inset:0 0 auto 0;height:60px;background:var(--gv-deep);color:var(--on-dark);
+  display:flex;align-items:center;gap:14px;padding:0 22px;z-index:10;box-shadow:0 2px 14px rgba(0,0,0,.35)}
+.ck-bar .cb-brand{font-weight:800;font-size:15px;letter-spacing:-.01em;color:#fff;display:flex;align-items:center;gap:10px}
+.ck-bar .cb-brand .g{width:28px;height:28px;border-radius:8px;background:var(--gv-mint);color:var(--gv-deep);
+  display:grid;place-items:center;font-size:14px;font-weight:800}
+.ck-bar .cb-sub{font-size:12px;color:var(--on-dark-mut,#9aa3b2)}
+.ck-bar .cb-spacer{flex:1}
+.ck-bar select{font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:8px 10px;outline:none;cursor:pointer}
+.ck-bar .cb-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.18);color:#fff;background:transparent;
+  cursor:pointer;text-decoration:none;transition:.2s var(--ease)}
+.ck-bar .cb-btn:hover{background:rgba(255,255,255,.08)}
+.ck-bar .cb-btn.acc{background:var(--gv-mint);border-color:var(--gv-mint);color:var(--gv-deep)}
+.ck-bar .cb-btn.acc:hover{background:var(--gv-mint-bright)}
+
+/* ---- A4 kâğıt ---- */
+.paper{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#111;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);padding:12mm 10mm 10mm}
+
+/* logo bandı */
+.pp-band{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:0}
+.pp-band .pb-firm{display:flex;align-items:center;gap:10px}
+.pp-band .pb-g{width:34px;height:34px;border:2px solid #111;display:grid;place-items:center;font-weight:800;font-size:17px}
+.pp-band .pb-name{font-weight:800;font-size:15px;letter-spacing:.02em}
+.pp-band .pb-name span{display:block;font-weight:600;font-size:9.5px;letter-spacing:.08em;color:#444}
+.pp-band .pb-doc{font-size:9.5px;font-weight:700;color:#444;text-align:right;line-height:1.5}
+
+/* iş yeri sicil no + resmi proje adı bilgi kutusu */
+.pp-info{border:1.5px solid #111;border-top:none;font-size:9.5px}
+.pp-info .pi-row{display:flex;border-bottom:1px solid #111}
+.pp-info .pi-row:last-child{border-bottom:none}
+.pp-info .pi-lbl{flex:none;width:44mm;padding:6px 8px;font-weight:800;letter-spacing:.05em;background:#f2f2f2;
+  border-right:1px solid #111;text-transform:uppercase}
+.pp-info .pi-val{flex:1;padding:6px 8px;font-weight:700;letter-spacing:.01em}
+
+/* başlık bloğu */
+.pp-title{display:grid;grid-template-columns:1fr 58mm;border:1.5px solid #111;border-top:none}
+.pp-title .pt-name{padding:10px 14px;font-size:13px;font-weight:800;letter-spacing:.02em;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.pp-title .pt-name b{font-size:15px}
+.pp-title .pt-name span{font-size:9.5px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.06em}
+.pp-title .pt-range{border-left:1.5px solid #111;display:flex;flex-direction:column}
+.pp-title .pt-range b{flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;letter-spacing:.02em;padding:6px;text-align:center}
+.pp-title .pt-range span{border-top:1px solid #111;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:.08em;padding:4px;background:#f2f2f2}
+
+/* puantaj tablosu */
+.pp-scroll{overflow-x:auto}
+table.pp-tbl{width:100%;min-width:170mm;border-collapse:collapse;border:1.5px solid #111;border-top:none;font-size:8px}
+.pp-tbl thead{display:table-header-group}
+.pp-tbl th{background:#f2f2f2;border:1px solid #111;font-size:6.8px;font-weight:800;letter-spacing:.03em;
+  padding:5px 3px;text-transform:uppercase;line-height:1.3;text-align:center}
+.pp-tbl td{border:1px solid #777;padding:3px 4px;height:16px;vertical-align:middle;page-break-inside:avoid}
+.pp-tbl tbody tr{page-break-inside:avoid}
+.pp-tbl .c-no{width:6mm;text-align:center;color:#444;font-weight:600}
+.pp-tbl .c-ad{width:32mm;font-weight:700}
+.pp-tbl .c-gorev{width:21mm}
+.pp-tbl .c-firma{width:24mm;font-size:7.5px;color:#333}
+.pp-tbl .c-gun{width:8mm;text-align:center;font-variant-numeric:tabular-nums;font-weight:700}
+.pp-tbl .c-gun.ht{color:#999;font-weight:600}
+.pp-tbl .c-top{width:11mm;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.pp-tbl .c-imza{width:20mm;min-width:18mm}
+
+/* ============ §11.1 revizesi — taşeron/tedarikçi ayrımı ağır satır boyamasından
+   (eski .r-taseron: tam satır gri dolgu + kalın yazı) İNCE grup başlığına çevrildi.
+   Kişi satırının kendisi öz kadro ile AYNI ağırlıkta kalır; ayrım yalnız bloklar
+   arası ayırıcı başlık satırında görünür (ince üst çizgi + hafif zemin + rozet). ============ */
+.pp-grp-row td{background:#f2f2f2;border-top:1.5px solid #111;border-bottom:1px solid #111;
+  padding:5px 8px;page-break-inside:avoid;page-break-after:avoid}
+.pp-grp-row .pgr-lbl{font-size:8.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#111}
+.pp-grp-row .pgr-badge{margin-left:8px;font-size:7.3px;font-weight:700;color:#444;border:1px solid #999;
+  border-radius:8px;padding:1px 7px;background:#fff}
+
+/* mini lejant */
+.pp-legend{display:flex;flex-wrap:wrap;gap:12px;border:1.5px solid #111;border-top:none;padding:6px 10px;font-size:8px;font-weight:600;color:#333}
+.pp-legend b{font-weight:800}
+
+/* kapsam bilgi şeridi (D-TE §11.2 — seçili/taşeron/tümü çıktılarında görünür, varsayılan
+   şantiye-bazlı modda gizli) */
+.pp-kapsam{border:1.5px solid #111;border-top:none;padding:6px 10px;font-size:9px;font-weight:700;
+  color:#333;background:#fafafa;letter-spacing:.02em}
+.pp-kapsam b{color:#111}
+.pp-kapsam-note{display:block;margin-top:2px;font-weight:600;color:#555;font-size:8.3px}
+
+/* firma özet tablosu */
+.pp-ozet-title{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin:10px 0 4px;color:#222}
+table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-size:8.5px}
+.pp-ozet th{background:#f2f2f2;border:1px solid #111;font-size:7px;font-weight:800;letter-spacing:.03em;padding:5px 4px;text-transform:uppercase;text-align:center}
+.pp-ozet td{border:1px solid #777;padding:5px 4px;text-align:center;font-variant-numeric:tabular-nums;font-weight:700}
+.pp-ozet td.c-ofirma{text-align:left;font-weight:800}
+.pp-ozet td.c-oimza{font-style:italic;color:#888;font-weight:600;min-width:22mm}
+.pp-ozet tr.r-genel td{background:#e8e8e8;font-weight:800;border-top:2px solid #111}
+
+/* imza bloğu */
+.pp-sign{display:grid;grid-template-columns:repeat(2,1fr);border:1.5px solid #111;border-top:none;page-break-inside:avoid;margin-top:10px}
+.pp-sign .sg{border-right:1px solid #111;padding:8px 8px 4px;min-height:26mm;display:flex;flex-direction:column}
+.pp-sign .sg:last-child{border-right:none}
+.pp-sign .sg-role{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#333;margin-bottom:3px}
+.pp-sign .sg-name{font-size:10.5px;font-weight:800}
+.pp-sign .sg-title{font-size:9px;font-weight:600;color:#444}
+.pp-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
+.pp-note{font-size:8.5px;color:#555;padding-top:8px;line-height:1.6}
+
+@media print{
+  body{background:#fff;padding:0}
+  .ck-bar{display:none}
+  .paper{width:auto;min-height:0;margin:0;box-shadow:none;padding:6mm 5mm}
+  @page{size:A4 portrait;margin:7mm}
+}
+@media (max-width:900px){
+  .paper{width:100%;min-height:0;padding:16px 12px}
+  .pp-title{grid-template-columns:1fr}
+  .pp-title .pt-range{border-left:none;border-top:1.5px solid #111;flex-direction:row}
+  .pp-title .pt-range b{padding:8px}
+  .pp-title .pt-range span{border-top:none;border-left:1px solid #111;display:flex;align-items:center;padding:0 10px}
+  .pp-info .pi-row{flex-direction:column}
+  .pp-info .pi-lbl{width:auto;border-right:none;border-bottom:1px solid #111}
+  .pp-sign{grid-template-columns:1fr}
+  .pp-sign .sg{border-right:none;border-bottom:1px solid #111}
+  .pp-sign .sg:last-child{border-bottom:none}
+}
+</style>
+</head>
+<body>
+
+<div class="ck-bar">
+  <div class="cb-brand"><span class="g">G</span> Gavia CRM <span class="cb-sub">· Haftalık Puantaj Çıktısı — imzaya hazır döküm</span></div>
+  <div class="cb-spacer"></div>
+  <select id="ckSantiye" aria-label="Şantiye seç">
+    <option value="vadi">Vadi Konakları</option>
+    <option value="liman">Liman Lojistik Merkezi</option>
+    <option value="merkez">Merkez Şantiye</option>
+  </select>
+  <a class="cb-btn" href="crm-operasyon-puantaj.html" id="ckBack"><i class="fa-solid fa-arrow-left"></i> Puantaj</a>
+  <button class="cb-btn" type="button" id="ckExcel"><i class="fa-solid fa-file-excel"></i> Excel İndir</button>
+  <button class="cb-btn acc" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır</button>
+</div>
+
+<div class="paper">
+  <div class="pp-band">
+    <div class="pb-firm">
+      <div class="pb-g">Y</div>
+      <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>HAFTALIK PUANTAJ TABLOSU</span></div>
+    </div>
+    <div class="pb-doc">Form No: PUF-01 · Rev.01<br>Düzenleme: <span id="ppBugun">02.07.2026</span></div>
+  </div>
+
+  <div class="pp-info">
+    <div class="pi-row"><div class="pi-lbl">İş Yeri Sicil No</div><div class="pi-val" id="ppSicil">2-3401-02-01-0248671-034-56-77</div></div>
+    <div class="pi-row"><div class="pi-lbl">İşyeri / Proje Adı</div><div class="pi-val" id="ppProje">İSTANBUL İLİ ÇEKMEKÖY İLÇESİ VADİ KONAKLARI 214 KONUT VE ÇEVRE DÜZENLEMESİ İNŞAATI</div></div>
+  </div>
+
+  <!-- §11.2 kapsam şeridi — yalnız şantiye-bazlı DIŞI modlarda görünür (seçili/taşeron/tümü) -->
+  <div class="pp-kapsam" id="ppKapsamBar" hidden></div>
+
+  <div class="pp-title">
+    <div class="pt-name"><b id="ppSantiyeAdi">VADİ KONAKLARI ŞANTİYESİ</b><span id="ppAltBaslik">Haftalık Puantaj Tablosu</span></div>
+    <div class="pt-range">
+      <b id="ppDonem">29.06.2026 - 05.07.2026</b>
+      <span id="ppDonemAlt">AİT OLDUĞU ÇALIŞMA DÖNEMİ</span>
+    </div>
+  </div>
+
+  <div class="pp-scroll">
+    <table class="pp-tbl">
+      <thead>
+        <tr>
+          <th class="c-no">Sıra<br>No</th>
+          <th class="c-ad">Adı Soyadı</th>
+          <th class="c-gorev">Görev</th>
+          <th class="c-firma">Çalıştığı Firma /<br>Taşeron</th>
+          <th class="c-gun">Pzt</th>
+          <th class="c-gun">Sal</th>
+          <th class="c-gun">Çar</th>
+          <th class="c-gun">Per</th>
+          <th class="c-gun">Cum</th>
+          <th class="c-gun">Cmt</th>
+          <th class="c-gun">Paz</th>
+          <th class="c-top">Çalıştığı<br>Top. Gün</th>
+          <th class="c-imza">Personel<br>İmza</th>
+        </tr>
+      </thead>
+      <!-- statik bake — DEFAULT vadi kanonik 35 öz kadro + 16 taşeron (SANTIYELER.vadi VERBATIM); JS devralır — D18-B2.
+           §11.1 revizesi: ağır satır boyaması yerine ince grup başlığı satırı (.pp-grp-row) — JS-kapalı ikizde de aynı. -->
+      <tbody id="ppRows"><tr class="pp-grp-row"><td colspan="13"><span class="pgr-lbl">Öz Kadro</span><span class="pgr-badge">35 kişi</span></td></tr><tr><td class="c-no">1</td><td class="c-ad">Ali Vural</td><td class="c-gorev">Saha Personeli</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">2</td><td class="c-ad">İbrahim Sönmez</td><td class="c-gorev">Formen</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">½</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5,5</td><td class="c-imza"></td></tr><tr><td class="c-no">3</td><td class="c-ad">Ramazan Kılıç</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">İ</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun ht">HT</td><td class="c-top">4</td><td class="c-imza"></td></tr><tr><td class="c-no">4</td><td class="c-ad">Selim Doğan</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">5</td><td class="c-ad">Musa Erdem</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">İ</td><td class="c-gun">İ</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">4</td><td class="c-imza"></td></tr><tr><td class="c-no">6</td><td class="c-ad">Veli Şimşek</td><td class="c-gorev">Elektrik Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">R</td><td class="c-gun">R</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">4</td><td class="c-imza"></td></tr><tr><td class="c-no">7</td><td class="c-ad">Fikret Akyürek</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">8</td><td class="c-ad">Cengiz Bulut</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">9</td><td class="c-ad">Yavuz Karataş</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">İ</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">10</td><td class="c-ad">Turgay Kaymak</td><td class="c-gorev">Sıvacı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">11</td><td class="c-ad">Bülent Özkan</td><td class="c-gorev">Elektrik Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">½</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5,5</td><td class="c-imza"></td></tr><tr><td class="c-no">12</td><td class="c-ad">Erol Turan</td><td class="c-gorev">Boyacı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">13</td><td class="c-ad">Kadir Yücel</td><td class="c-gorev">Sıhhi Tesisatçı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">14</td><td class="c-ad">Nurettin Çakır</td><td class="c-gorev">Kaynakçı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">15</td><td class="c-ad">Sabri Değirmenci</td><td class="c-gorev">Vinç Operatörü</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">R</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">16</td><td class="c-ad">Tahsin Tanrıkulu</td><td class="c-gorev">Forklift Operatörü</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">17</td><td class="c-ad">İsmet Kesici</td><td class="c-gorev">Marangoz</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">½</td><td class="c-gun ht">HT</td><td class="c-top">5,5</td><td class="c-imza"></td></tr><tr><td class="c-no">18</td><td class="c-ad">Rıza Bozdağ</td><td class="c-gorev">Çelik Konstrüksiyon Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">19</td><td class="c-ad">Adnan Sarıtaş</td><td class="c-gorev">Seramikçi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">İ</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">20</td><td class="c-ad">Necati Güngör</td><td class="c-gorev">Alçıpancı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">21</td><td class="c-ad">Hakkı Yalçınkaya</td><td class="c-gorev">Yalıtım Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">22</td><td class="c-ad">Şeref Baysal</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">23</td><td class="c-ad">Vahit Kurtoğlu</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">24</td><td class="c-ad">Kazım Aktaş</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">İ</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">25</td><td class="c-ad">Zafer Gündoğdu</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">26</td><td class="c-ad">Cemil Çilingir</td><td class="c-gorev">Sıvacı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">½</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5,5</td><td class="c-imza"></td></tr><tr><td class="c-no">27</td><td class="c-ad">Orhan Karadeniz</td><td class="c-gorev">Elektrik Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">28</td><td class="c-ad">Naci Ekinci</td><td class="c-gorev">Boyacı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">29</td><td class="c-ad">Kenan Toprak</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">30</td><td class="c-ad">Muzaffer Bayraktar</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">R</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">31</td><td class="c-ad">Sait Sezer</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">32</td><td class="c-ad">Yaşar Uçar</td><td class="c-gorev">Ambar Memuru</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">½</td><td class="c-gun ht">HT</td><td class="c-top">5,5</td><td class="c-imza"></td></tr><tr><td class="c-no">33</td><td class="c-ad">Hüsnü Yardımcı</td><td class="c-gorev">Şoför</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">34</td><td class="c-ad">İhsan Demirtaş</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">İ</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">35</td><td class="c-ad">Rasim Aygün</td><td class="c-gorev">Saha Güvenlik Görevlisi</td><td class="c-firma">Yapıtaş İnşaat A.Ş.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr class="pp-grp-row"><td colspan="13"><span class="pgr-lbl">Taşeron Personeli</span><span class="pgr-badge">16 kişi</span></td></tr><tr><td class="c-no">36</td><td class="c-ad">Hüseyin Palabıyık</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">37</td><td class="c-ad">Mehmet Sarıkuş</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">38</td><td class="c-ad">Süleyman Akbulut</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">39</td><td class="c-ad">Hamza Dinçer</td><td class="c-gorev">Kalıpçı</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">40</td><td class="c-ad">Ünal Yavuzer</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">5</td><td class="c-imza"></td></tr><tr><td class="c-no">41</td><td class="c-ad">Bekir Sarıoğlu</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">42</td><td class="c-ad">Yakup Tosun</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">43</td><td class="c-ad">Enver Kılıçarslan</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">44</td><td class="c-ad">Ayhan Böke</td><td class="c-gorev">Demir Ustası</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun"></td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun ht">HT</td><td class="c-top">4</td><td class="c-imza"></td></tr><tr><td class="c-no">45</td><td class="c-ad">Cevdet Şahinkaya</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">İ</td><td class="c-gun">+</td><td class="c-gun">İ</td><td class="c-gun">İ</td><td class="c-gun ht">HT</td><td class="c-top">3</td><td class="c-imza"></td></tr><tr><td class="c-no">46</td><td class="c-ad">Mustafa Doğanay</td><td class="c-gorev">Elektrik Ustası</td><td class="c-firma">ElektroMek Taahhüt</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">47</td><td class="c-ad">Serkan Ünlüer</td><td class="c-gorev">Elektrik Ustası</td><td class="c-firma">ElektroMek Taahhüt</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">48</td><td class="c-ad">Barış Yetkin</td><td class="c-gorev">Elektrik Ustası</td><td class="c-firma">ElektroMek Taahhüt</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">49</td><td class="c-ad">Tuncay Özdemirci</td><td class="c-gorev">Elektrik Ustası</td><td class="c-firma">ElektroMek Taahhüt</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">50</td><td class="c-ad">Ferhat Sarpkaya</td><td class="c-gorev">Kaynakçı</td><td class="c-firma">ElektroMek Taahhüt</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun ht">HT</td><td class="c-top">6</td><td class="c-imza"></td></tr><tr><td class="c-no">51</td><td class="c-ad">Uğur Beyazıt</td><td class="c-gorev">Düz İşçi</td><td class="c-firma">ElektroMek Taahhüt</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun">+</td><td class="c-gun"></td><td class="c-gun ht">HT</td><td class="c-top">4</td><td class="c-imza"></td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="pp-legend">
+    <b>Lejant:</b>
+    <span>+ Çalışıldı</span><span>½ Yarım gün</span><span>İ İzinli</span><span>R Raporlu</span>
+    <span>(boş) Gelmedi</span><span>HT Hafta Tatili (Pazar)</span>
+  </div>
+
+  <div class="pp-ozet-title">Firma Bazlı Haftalık Özet</div>
+  <div class="pp-scroll">
+  <table class="pp-ozet">
+    <thead>
+      <tr>
+        <th style="text-align:left">Firma</th>
+        <th>Personel<br>Sayısı</th>
+        <th>Pzt</th><th>Sal</th><th>Çar</th><th>Per</th><th>Cum</th><th>Cmt</th><th>Paz</th>
+        <th>Haftalık<br>Adam-Gün</th>
+        <th>Firma Yetkilisi<br>İmza</th>
+      </tr>
+    </thead>
+    <!-- statik bake — D18-B2 (D19 revizesi: Firma Yetkilisi İmza kolonu eklendi — kişi
+         satırlarındaki imza artık kişi ıslak imzası, firma yetkilisi imzası bu blokta) -->
+    <tbody id="ppOzetRows"><tr><td class="c-ofirma">Yapıtaş İnşaat A.Ş. (öz kadro)</td><td>35</td><td>32</td><td>32</td><td>31,5</td><td>31</td><td>33</td><td>33</td><td>0</td><td>192,5</td><td class="c-oimza">—</td></tr><tr><td class="c-ofirma">Demir-Beton İnş. Ltd.</td><td>10</td><td>9</td><td>10</td><td>8</td><td>10</td><td>9</td><td>8</td><td>0</td><td>54</td><td class="c-oimza"></td></tr><tr><td class="c-ofirma">ElektroMek Taahhüt</td><td>6</td><td>6</td><td>5</td><td>6</td><td>6</td><td>6</td><td>5</td><td>0</td><td>34</td><td class="c-oimza"></td></tr><tr class="r-genel"><td class="c-ofirma">TOPLAM</td><td>51</td><td>47</td><td>47</td><td>45,5</td><td>47</td><td>48</td><td>46</td><td>0</td><td>280,5</td><td class="c-oimza">—</td></tr></tbody>
+  </table>
+  </div>
+
+  <!-- statik bake — D18-B2 -->
+  <div class="pp-sign" id="ppSign"><div class="sg"><div class="sg-role">Hazırlayan</div><div class="sg-name">İbrahim Sönmez</div><div class="sg-title">Formen</div><div class="sg-line">İMZA</div></div><div class="sg"><div class="sg-role">Şantiye Şefi</div><div class="sg-name">Hasan Demirci</div><div class="sg-title">Şantiye Şefi</div><div class="sg-line">İMZA</div></div></div>
+  <p class="pp-note">Bu döküm, ilgili çalışma dönemine ait Gavia CRM puantaj kayıtlarının tamamını içerir; el ile eklenen kayıt geçersizdir.
+  Taşeron puantajı kişi bazında tutulur; kişi satırlarındaki imza kolonu ıslak imza içindir. Firma yetkilisi imzası "Firma Bazlı Haftalık Özet" bloğunda, adam-gün toplamlarının yanında alınır. İmzalar tamamlanmadan dönem kapatılmaz.</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  /* Kanonik D9 puantaj çıktısı verisi (shell.js DALGA 9 bloğu + crm-santiye-detay.html
+     Puantaj sekmesi ile birebir — Vadi'nin 6 kanonik saha işçisinin gün işaretleri
+     oradaki grid'le senkron: Ali Vural Çar = EM, İbrahim Sönmez Per = FM dahil.
+     Kağıt idiyomu: + çalışıldı (tam/fm/em) · ½ yarım gün · İ izinli · R raporlu ·
+     '' gelmedi · HT hafta tatili (Pazar). Liman/Merkez'in kanonik 5+4 kişisi
+     crm-operasyon-puantaj.html PERSONEL dizisinin Pzt–Per işaretleriyle senkron;
+     Cum/Cmt bu çıktı için makul tamamlama ile üretildi (o günler ana puantaj
+     sayfasında henüz "gelecek" — girişe kapalı değil, yalnız tamamlanmadı).
+     TAŞERON kişi kadrosunun Cum/Cmt işaretleri bunun dışında — D19 TAŞERON GÜNLÜK SAYIM
+     KORDONU'nda deterministik yazılı (eksik-gün ekip sırasının SONUNDAN düşürülür),
+     uydurma tamamlama DEĞİL; bkz. SANTIYELER.*.taseronlar. */
+
+  function tg(gun){
+    var t = 0;
+    gun.forEach(function(g){ if(g === '+') t += 1; else if(g === '½') t += .5; });
+    return t;
+  }
+  function fmtGun(n){ return (n % 1 === 0) ? String(n) : n.toString().replace('.', ','); }
+
+  /* ---- temsili isim havuzları döngüsü — 35/22/12 öz kadroyu tamamlayan adlar,
+     kanonik 15 isimle (Vadi 6, Liman 5, Merkez 4) veya birbirleriyle ÇAKIŞMAZ. ---- */
+  var PATTERNS = [
+    ['+','+','+','+','+','+','HT'],
+    ['+','+','+','+','+','+','HT'],
+    ['+','+','İ','+','+','+','HT'],
+    ['+','+','+','+','+','+','HT'],
+    ['+','½','+','+','+','+','HT'],
+    ['+','+','+','+','+','+','HT'],
+    ['+','+','+','+','','+','HT'],
+    ['+','+','+','+','+','+','HT'],
+    ['+','+','+','R','+','+','HT'],
+    ['+','+','+','+','+','+','HT'],
+    ['+','+','+','+','+','½','HT'],
+    ['+','+','+','+','+','+','HT'],
+    ['İ','+','+','+','+','+','HT'],
+    ['+','+','+','+','+','+','HT'],
+    ['+','+','+','+','+','+','HT']
+  ];
+  function buildRep(list, offset){
+    return list.map(function(n, i){ return {ad:n[0], gorev:n[1], gun:PATTERNS[(i + offset) % PATTERNS.length].slice()}; });
+  }
+
+  var VADI_KANONIK = [
+    {ad:'Ali Vural',      gorev:'Saha Personeli',  gun:['+','+','+','+','+','+','HT']},
+    {ad:'İbrahim Sönmez', gorev:'Formen',           gun:['+','+','½','+','+','+','HT']},
+    {ad:'Ramazan Kılıç',  gorev:'Kalıpçı',          gun:['+','+','+','İ','+','','HT']},
+    {ad:'Selim Doğan',    gorev:'Demir Ustası',     gun:['+','','+','+','+','+','HT']},
+    {ad:'Musa Erdem',     gorev:'Düz İşçi',         gun:['İ','İ','+','+','+','+','HT']},
+    {ad:'Veli Şimşek',    gorev:'Elektrik Ustası',  gun:['+','+','R','R','+','+','HT']}
+  ];
+  var VADI_REP = buildRep([
+    ['Fikret Akyürek','Kalıpçı'], ['Cengiz Bulut','Demir Ustası'], ['Yavuz Karataş','Düz İşçi'],
+    ['Turgay Kaymak','Sıvacı'], ['Bülent Özkan','Elektrik Ustası'], ['Erol Turan','Boyacı'],
+    ['Kadir Yücel','Sıhhi Tesisatçı'], ['Nurettin Çakır','Kaynakçı'], ['Sabri Değirmenci','Vinç Operatörü'],
+    ['Tahsin Tanrıkulu','Forklift Operatörü'], ['İsmet Kesici','Marangoz'], ['Rıza Bozdağ','Çelik Konstrüksiyon Ustası'],
+    ['Adnan Sarıtaş','Seramikçi'], ['Necati Güngör','Alçıpancı'], ['Hakkı Yalçınkaya','Yalıtım Ustası'],
+    ['Şeref Baysal','Kalıpçı'], ['Vahit Kurtoğlu','Demir Ustası'], ['Kazım Aktaş','Düz İşçi'],
+    ['Zafer Gündoğdu','Düz İşçi'], ['Cemil Çilingir','Sıvacı'], ['Orhan Karadeniz','Elektrik Ustası'],
+    ['Naci Ekinci','Boyacı'], ['Kenan Toprak','Düz İşçi'], ['Muzaffer Bayraktar','Kalıpçı'],
+    ['Sait Sezer','Demir Ustası'], ['Yaşar Uçar','Ambar Memuru'], ['Hüsnü Yardımcı','Şoför'],
+    ['İhsan Demirtaş','Düz İşçi'], ['Rasim Aygün','Saha Güvenlik Görevlisi']
+  ], 0);
+
+  var LIMAN_KANONIK = [
+    {ad:'Aylin Koç',   gorev:'Şantiye Şefi', gun:['İ','İ','İ','İ','+','+','HT']},
+    {ad:'Şükrü Aslan', gorev:'Formen',       gun:['+','+','+','+','+','+','HT']},
+    {ad:'Halil Güneş', gorev:'Operatör',     gun:['+','½','+','+','+','+','HT']},
+    {ad:'Metin Çetin', gorev:'Kaynakçı',     gun:['+','+','İ','İ','+','+','HT']},
+    {ad:'Osman Polat', gorev:'Düz İşçi',     gun:['','+','+','+','+','+','HT']}
+  ];
+  var LIMAN_REP = buildRep([
+    ['Turan Bilgiç','Formen Yardımcısı'], ['Salih Ergün','Kaynakçı'], ['Mesut Kaplan','Vinç Operatörü'],
+    ['Ertan Sancak','Forklift Operatörü'], ['Reşat Övünç','Depo Görevlisi'], ['Kaan Dinçer','Elektrik Ustası'],
+    ['Ozan Turgut','Boyacı'], ['Bora Süzer','Düz İşçi'], ['Cavit Yılmazer','Düz İşçi'],
+    ['Serhat Konuk','Sıvacı'], ['Halis Berkant','Kalıpçı'], ['Enver Doğaner','Demir Ustası'],
+    ['Kutay Karasu','İskele Ustası'], ['Fahri Kutlu','Sıhhi Tesisatçı'], ['Nihat Sungur','Ambar Memuru'],
+    ['Aziz Kurtulan','Saha Güvenlik Görevlisi'], ['Doğukan Erim','Düz İşçi']
+  ], 5);
+
+  var MERKEZ_KANONIK = [
+    {ad:'Ömer Taşkın', gorev:'Şantiye Şefi', gun:['+','+','+','+','+','+','HT']},
+    {ad:'Recep Yaman', gorev:'Formen',       gun:['+','+','+','+','+','+','HT']},
+    {ad:'İlyas Kurt',  gorev:'Marangoz',     gun:['+','+','+','R','+','+','HT']},
+    {ad:'Sadık Öz',    gorev:'Düz İşçi',     gun:['½','+','+','+','+','+','HT']}
+  ];
+  var MERKEZ_REP = buildRep([
+    ['Metehan Sarpkaya','Kaynakçı'], ['Burak Ilıcalı','Elektrik Ustası'], ['Volkan Er','Forklift Operatörü'],
+    ['Tolunay Gökçen','Depo Görevlisi'], ['Selahattin Barut','Düz İşçi'], ['Erkan Tez','Düz İşçi'],
+    ['Coşkun Alagöz','Kalıpçı'], ['Fuat Kocabıyık','Ambar Memuru']
+  ], 9);
+
+  var SANTIYELER = {
+    vadi:{
+      ad:'Vadi Konakları', unvan:'VADİ KONAKLARI ŞANTİYESİ',
+      sicil:'2-3401-02-01-0248671-034-56-77',
+      proje:'İSTANBUL İLİ ÇEKMEKÖY İLÇESİ VADİ KONAKLARI 214 KONUT VE ÇEVRE DÜZENLEMESİ İNŞAATI',
+      kisiler: VADI_KANONIK.concat(VADI_REP),
+      /* ---- taşeron kişi kadrosu (D19 revizesi — madde 5+6, kalfa-kordon turu düzeltmesi).
+         Kalfalar eksik-gün atamasına GİRMEZ (ekip başı 6 günün tamamında sahada). Eksik-gün
+         ataması shell.js DALGA 19 TAŞERON GÜNLÜK SAYIM KORDONU ile birebir — işlenen 4 gün
+         (Pzt–Per) crm-operasyon-puantaj.html taşeron grid'iyle, Cum/Cmt yalnız bu çıktıda
+         hesaplanmış hâliyle senkron. Firma haftalık toplamı (54/34) bu satırlardan türetilir
+         (bkz. render() firma özet bloğu) — ayrı sabit değer DEĞİL. ---- */
+      taseronlar:[
+        {ad:'Hüseyin Palabıyık', poz:'Kalıpçı',         firma:'Demir-Beton İnş. Ltd.', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Mehmet Sarıkuş',    poz:'Kalıpçı',         firma:'Demir-Beton İnş. Ltd.', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Süleyman Akbulut',  poz:'Kalıpçı',         firma:'Demir-Beton İnş. Ltd.', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Hamza Dinçer',      poz:'Kalıpçı',         firma:'Demir-Beton İnş. Ltd.', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Ünal Yavuzer',      poz:'Düz İşçi',        firma:'Demir-Beton İnş. Ltd.', gun:['+','+','','+','+','+','HT']},
+        {ad:'Bekir Sarıoğlu',    poz:'Demir Ustası',    firma:'Demir-Beton İnş. Ltd.', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Yakup Tosun',       poz:'Demir Ustası',    firma:'Demir-Beton İnş. Ltd.', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Enver Kılıçarslan', poz:'Demir Ustası',    firma:'Demir-Beton İnş. Ltd.', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Ayhan Böke',        poz:'Demir Ustası',    firma:'Demir-Beton İnş. Ltd.', gun:['','+','+','+','+','','HT']},
+        {ad:'Cevdet Şahinkaya',  poz:'Düz İşçi',        firma:'Demir-Beton İnş. Ltd.', gun:['+','+','İ','+','İ','İ','HT']},
+        {ad:'Mustafa Doğanay',   poz:'Elektrik Ustası', firma:'ElektroMek Taahhüt',    gun:['+','+','+','+','+','+','HT']},
+        {ad:'Serkan Ünlüer',     poz:'Elektrik Ustası', firma:'ElektroMek Taahhüt',    gun:['+','+','+','+','+','+','HT']},
+        {ad:'Barış Yetkin',      poz:'Elektrik Ustası', firma:'ElektroMek Taahhüt',    gun:['+','+','+','+','+','+','HT']},
+        {ad:'Tuncay Özdemirci',  poz:'Elektrik Ustası', firma:'ElektroMek Taahhüt',    gun:['+','+','+','+','+','+','HT']},
+        {ad:'Ferhat Sarpkaya',   poz:'Kaynakçı',        firma:'ElektroMek Taahhüt',    gun:['+','+','+','+','+','+','HT']},
+        {ad:'Uğur Beyazıt',      poz:'Düz İşçi',        firma:'ElektroMek Taahhüt',    gun:['+','','+','+','+','','HT']}
+      ],
+      hazirlayan:{name:'İbrahim Sönmez', title:'Formen'},
+      sef:{name:'Hasan Demirci', title:'Şantiye Şefi'}
+    },
+    liman:{
+      ad:'Liman Lojistik Merkezi', unvan:'LİMAN LOJİSTİK MERKEZİ ŞANTİYESİ',
+      sicil:'1-3501-01-01-0193845-041-18-92',
+      proje:'İZMİR İLİ ALİAĞA İLÇESİ LİMAN LOJİSTİK MERKEZİ DEPOLAMA VE DAĞITIM TESİSİ İNŞAATI',
+      kisiler: LIMAN_KANONIK.concat(LIMAN_REP),
+      /* ---- Yalıtım Kardeşler kişi kadrosu (D19) — Cmt değeri kalfa-kordon turunda 6→7
+         düzeltildi: yalnız Okan Sarıgül eksik (Cum+Cmt), haftalık 44 (7+8+7+8+7+7). ---- */
+      taseronlar:[
+        {ad:'Salih Bingöl',   poz:'Yalıtım Ustası', firma:'Yalıtım Kardeşler', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Sinan Tuncel',   poz:'Yalıtım Ustası', firma:'Yalıtım Kardeşler', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Erkan Doğruel',  poz:'Yalıtım Ustası', firma:'Yalıtım Kardeşler', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Kâmil Bozkır',   poz:'Yalıtım Ustası', firma:'Yalıtım Kardeşler', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Ercan Kavaklı',  poz:'Yalıtım Ustası', firma:'Yalıtım Kardeşler', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Levent Akçay',   poz:'Yalıtım Ustası', firma:'Yalıtım Kardeşler', gun:['+','+','+','+','+','+','HT']},
+        {ad:'Gökhan Efeoğlu', poz:'Yalıtım Ustası', firma:'Yalıtım Kardeşler', gun:['+','+','İ','+','+','+','HT']},
+        {ad:'Okan Sarıgül',   poz:'Düz İşçi',       firma:'Yalıtım Kardeşler', gun:['','+','+','+','','','HT']}
+      ],
+      hazirlayan:{name:'Şükrü Aslan', title:'Formen'},
+      sef:{name:'Aylin Koç', title:'Şantiye Şefi'}
+    },
+    merkez:{
+      ad:'Merkez Şantiye', unvan:'MERKEZ ŞANTİYE',
+      sicil:'3-4102-01-01-0287410-019-63-45',
+      proje:'KOCAELİ İLİ GEBZE İLÇESİ MERKEZ ŞANTİYE DEPO VE ATÖLYE TESİSİ İNŞAATI',
+      kisiler: MERKEZ_KANONIK.concat(MERKEZ_REP),
+      taseronlar:[],
+      hazirlayan:{name:'Recep Yaman', title:'Formen'},
+      sef:{name:'Ömer Taşkın', title:'Şantiye Şefi'}
+    }
+  };
+
+  var DAY_LBL = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+
+  function fmtDate(d){
+    var dd = String(d.getDate()).padStart(2,'0'), mm = String(d.getMonth()+1).padStart(2,'0');
+    return dd + '.' + mm + '.' + d.getFullYear();
+  }
+  function donemLabel(haftaStr){
+    var p = (haftaStr || '2026-06-29').split('-').map(Number);
+    var start = new Date(p[0], p[1]-1, p[2]);
+    var end = new Date(start); end.setDate(end.getDate() + 6);
+    return fmtDate(start) + ' - ' + fmtDate(end);
+  }
+
+  /* ============ §11.2 revizesi — toplu ÇIKTI yerine kapsam/dönem/format destekli
+     genel motor. Geriye dönük UYUM: eski link (?santiye=X&hafta=Y, kapsam parametresi
+     YOK) kapsam=santiye + donem=haftalik varsayılanına düşer — davranış BİREBİR aynı
+     kalır. Yeni kapsamlar (secili/taseron/tumu) crm-operasyon-puantaj.html'deki
+     "Puantaj Çıktısı Al" modalından üretilir; bu sayfa yalnız TÜKETİR, kanonik
+     kişi/gun verisine (SANTIYELER) DOKUNMAZ — yalnız süzer/gruplar. ============ */
+  var q = new URLSearchParams(location.search);
+  var ks = q.get('santiye');
+  if(!SANTIYELER[ks]) ks = 'vadi';
+  var hafta = q.get('hafta') || '2026-06-29';
+  var kapsam = q.get('kapsam') || 'santiye';
+  if(['santiye','secili','taseron','tumu'].indexOf(kapsam) === -1) kapsam = 'santiye';
+  var kisilerParam = (q.get('kisiler') || '').split('|').filter(Boolean);
+  var firmaParam = q.get('firma') || '';
+  var donem = q.get('donem') || 'haftalik';
+  if(['haftalik','gunluk','aylik','aralik'].indexOf(donem) === -1) donem = 'haftalik';
+  var basParam = q.get('bas') || '';
+  var bitParam = q.get('bit') || '';
+
+  var DAY_LBL_FULL = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  var TASERON_FIRMA_MAP = {
+    'demir-beton':        {ad:'Demir-Beton İnş. Ltd.', santiye:'vadi'},
+    'elektromek':         {ad:'ElektroMek Taahhüt',    santiye:'vadi'},
+    'yalitim-kardesler':  {ad:'Yalıtım Kardeşler',     santiye:'liman'}
+  };
+
+  function dayIdxListOf(tip){ return tip === 'gunluk' ? [3] : [0,1,2,3,4,5,6]; }
+  function fmtDateIso(iso){
+    var p = (iso || '').split('-');
+    return p.length === 3 ? (p[2] + '.' + p[1] + '.' + p[0]) : iso;
+  }
+
+  /* ---- kapsam süzgeci — kanonik SANTIYELER kişi/gun verisini FİLTRELER/GRUPLAR,
+     yeni kişi/sayı ÜRETMEZ (kanonik kilit korunur; bkz. tasks/kararlar.md D-TE-1). ---- */
+  function buildScope(){
+    var out = {kisiler:[], taseronlar:[], baslik:'', altBaslik:'', kapsamText:'', tumu:false, santiyeKey:ks};
+    if(kapsam === 'tumu'){
+      out.tumu = true;
+      ['vadi','liman','merkez'].forEach(function(sk){
+        var S = SANTIYELER[sk];
+        S.kisiler.forEach(function(k){ out.kisiler.push({ad:k.ad, gorev:k.gorev, gun:k.gun, _santiye:S.ad}); });
+        S.taseronlar.forEach(function(k){ out.taseronlar.push({ad:k.ad, poz:k.poz, firma:k.firma, gun:k.gun, _santiye:S.ad}); });
+      });
+      out.baslik = 'TÜM ŞANTİYELER';
+      out.altBaslik = 'Tüm Şantiyeler Puantaj Tablosu';
+      out.kapsamText = 'Kapsam: <b>Tüm Puantaj</b> — 3 şantiye · ' + (out.kisiler.length + out.taseronlar.length) + ' personel ('
+        + out.kisiler.length + ' öz kadro + ' + out.taseronlar.length + ' taşeron)';
+      out.sicil = 'Tüm Şantiyeler (3 işyeri)';
+      out.proje = 'VADİ KONAKLARI, LİMAN LOJİSTİK MERKEZİ VE MERKEZ ŞANTİYE — KONSOLİDE PUANTAJ DÖKÜMÜ';
+      out.hazirlayan = {name:'Murat Denizli', title:'Genel Müdür'};
+      out.sef = {name:'Kemal Yapıcıoğlu', title:'Firma Sahibi'};
+    } else if(kapsam === 'taseron'){
+      var fm = TASERON_FIRMA_MAP[firmaParam];
+      var sk2 = fm ? fm.santiye : ks;
+      var S2 = SANTIYELER[sk2];
+      out.santiyeKey = sk2;
+      out.kisiler = [];
+      out.taseronlar = fm ? S2.taseronlar.filter(function(k){ return k.firma === fm.ad; }) : S2.taseronlar.slice();
+      out.baslik = S2.unvan;
+      out.altBaslik = (fm ? fm.ad : 'Taşeron') + ' — Taşeron Puantaj Tablosu';
+      out.kapsamText = 'Kapsam: <b>Taşeron Bazlı</b> — ' + (fm ? fm.ad : 'Taşeron') + ' · ' + S2.ad + ' · ' + out.taseronlar.length + ' kişi';
+      out.sicil = S2.sicil; out.proje = S2.proje;
+    } else if(kapsam === 'secili'){
+      var S3 = SANTIYELER[ks];
+      var set = {}; kisilerParam.forEach(function(n){ set[n] = true; });
+      out.kisiler = S3.kisiler.filter(function(k){ return set[k.ad]; });
+      out.taseronlar = S3.taseronlar.filter(function(k){ return set[k.ad]; });
+      var n = out.kisiler.length + out.taseronlar.length;
+      out.baslik = S3.unvan;
+      out.altBaslik = (n === 1 ? 'Tek Personel Puantaj Tablosu' : 'Seçili Personel Puantaj Tablosu');
+      var adlar = out.kisiler.concat(out.taseronlar).map(function(k){ return k.ad; }).join(', ');
+      out.kapsamText = 'Kapsam: <b>' + (n === 1 ? 'Tek Personel Çıktısı' : 'Seçili Personellerin Çıktısı') + '</b> — '
+        + n + ' kişi (' + (adlar || '—') + ')';
+      /* ---- eşleşmeyen isim uyarısı — şantiye şefi/yönetim kaydı bu resmi puantaj
+         tablosunun "sahada çalışan" satır setinde AYRICA yer almaz (bkz. tasks/kararlar.md
+         D-TE-2); bu kişiler sessizce düşürülmez, kapsam şeridinde NOT olarak belirtilir. ---- */
+      var bulunanlar = {}; out.kisiler.concat(out.taseronlar).forEach(function(k){ bulunanlar[k.ad] = true; });
+      var eksik = kisilerParam.filter(function(nm){ return !bulunanlar[nm]; });
+      if(eksik.length){
+        out.kapsamText += ' · <span class="pp-kapsam-note">Not: ' + eksik.join(', ')
+          + ' bu resmi puantaj tablosunda ayrı satır olarak yer almaz (şeflik/yönetim kaydı — sahada çalışan headcount’una dahil değildir).</span>';
+      }
+      out.sicil = S3.sicil; out.proje = S3.proje;
+    } else {
+      var S4 = SANTIYELER[ks];
+      out.kisiler = S4.kisiler.slice();
+      out.taseronlar = S4.taseronlar.slice();
+      out.baslik = S4.unvan;
+      out.altBaslik = 'Haftalık Puantaj Tablosu';
+      out.sicil = S4.sicil; out.proje = S4.proje;
+    }
+    return out;
+  }
+
+  function renderAll(){
+    var scope = buildScope();
+    var dayIdx = dayIdxListOf(donem);
+    var siteForSign = SANTIYELER[scope.santiyeKey || ks];
+
+    document.title = 'Puantaj Çıktısı — ' + scope.baslik + ' — Gavia CRM';
+    var ckSel = document.getElementById('ckSantiye');
+    ckSel.value = scope.santiyeKey || ks;
+    ckSel.disabled = (kapsam !== 'santiye');
+    document.getElementById('ckBack').href = 'crm-operasyon-puantaj.html' + (scope.santiyeKey ? ('?santiye=' + scope.santiyeKey) : '');
+    document.getElementById('ppSicil').textContent = scope.sicil;
+    document.getElementById('ppProje').textContent = scope.proje;
+    document.getElementById('ppSantiyeAdi').textContent = scope.baslik;
+    document.getElementById('ppAltBaslik').textContent = scope.altBaslik;
+
+    var kapsamBar = document.getElementById('ppKapsamBar');
+    if(scope.kapsamText){ kapsamBar.hidden = false; kapsamBar.innerHTML = scope.kapsamText; }
+    else { kapsamBar.hidden = true; kapsamBar.innerHTML = ''; }
+
+    var donemAltEl = document.getElementById('ppDonemAlt');
+    var donemValEl = document.getElementById('ppDonem');
+    var donemNote = '';
+    if(donem === 'gunluk'){
+      donemValEl.textContent = '02.07.2026';
+      donemAltEl.textContent = 'GÜNLÜK ÇALIŞMA KAYDI — PERŞEMBE';
+    } else if(donem === 'aylik'){
+      donemValEl.textContent = 'TEMMUZ 2026';
+      donemAltEl.textContent = 'AYLIK ÇALIŞMA DÖNEMİ';
+      donemNote = ' Ay içindeki veri kapsamı, mock veri setinde işlenmiş tek hafta olan 29 Haziran – 5 Temmuz aralığıyla sınırlıdır.';
+    } else if(donem === 'aralik' && basParam && bitParam){
+      donemValEl.textContent = fmtDateIso(basParam) + ' - ' + fmtDateIso(bitParam);
+      donemAltEl.textContent = 'ÖZEL TARİH ARALIĞI';
+      donemNote = ' Seçilen aralıktaki günlük veri, mock veri setinde işlenmiş 29 Haziran – 5 Temmuz haftasından derlenmiştir.';
+    } else {
+      donemValEl.textContent = donemLabel(hafta);
+      donemAltEl.textContent = 'AİT OLDUĞU ÇALIŞMA DÖNEMİ';
+    }
+
+    /* gün kolonu başlıkları — yalnız "günlük" dönemde 1 koloma daralır */
+    var theadRow = document.querySelector('.pp-tbl thead tr');
+    var headCells = ['<th class="c-no">Sıra<br>No</th>', '<th class="c-ad">Adı Soyadı</th>', '<th class="c-gorev">Görev</th>',
+      '<th class="c-firma">Çalıştığı Firma /<br>Taşeron</th>'];
+    dayIdx.forEach(function(i){ headCells.push('<th class="c-gun">' + DAY_LBL_FULL[i] + '</th>'); });
+    headCells.push('<th class="c-top">Çalıştığı<br>Top. Gün</th>', '<th class="c-imza">Personel<br>İmza</th>');
+    theadRow.innerHTML = headCells.join('');
+
+    var colTotal = 4 + dayIdx.length + 2;
+    var no = 0, rows = '';
+    function personRow(k, taseron){
+      no++;
+      var firmaTxt = taseron ? k.firma : 'Yapıtaş İnşaat A.Ş.';
+      if(scope.tumu) firmaTxt = k._santiye + ' — ' + firmaTxt;
+      var cells = dayIdx.map(function(i){
+        var g = k.gun[i];
+        return '<td class="c-gun' + (g === 'HT' ? ' ht' : '') + '">' + g + '</td>';
+      }).join('');
+      var top = dayIdx.reduce(function(a, i){ var g = k.gun[i]; return a + (g === '+' ? 1 : (g === '½' ? .5 : 0)); }, 0);
+      /* §11.1 revizesi — satır artık öz kadro/taşeron ayırt etmeksizin AYNI ağırlıkta
+         (r-taseron gri+kalın dolgu kaldırıldı); ayrım grupRow() başlığında görünür. */
+      return '<tr><td class="c-no">' + no + '</td><td class="c-ad">' + k.ad + '</td>'
+        + '<td class="c-gorev">' + (taseron ? k.poz : k.gorev) + '</td><td class="c-firma">' + firmaTxt + '</td>'
+        + cells + '<td class="c-top">' + fmtGun(top) + '</td><td class="c-imza"></td></tr>';
+    }
+    /* ---- §11.1 — grup başlığı satırı: ince üst çizgi + hafif zemin + kişi sayısı rozeti.
+       Boş grup BASILMAZ (ör. kapsam=taseron'da Öz Kadro grubu hiç yok, Merkez Şantiye'de
+       Taşeron Personeli grubu hiç yok) — kanonik kilit gereği sayı UYDURULMAZ. ---- */
+    function grupRow(etiket, sayi){
+      return '<tr class="pp-grp-row"><td colspan="' + colTotal + '"><span class="pgr-lbl">' + etiket + '</span>'
+        + '<span class="pgr-badge">' + sayi + ' kişi</span></td></tr>';
+    }
+    if(scope.kisiler.length) rows += grupRow('Öz Kadro', scope.kisiler.length);
+    scope.kisiler.forEach(function(k){ rows += personRow(k, false); });
+    if(scope.taseronlar.length) rows += grupRow('Taşeron Personeli', scope.taseronlar.length);
+    scope.taseronlar.forEach(function(k){ rows += personRow(k, true); });
+    document.getElementById('ppRows').innerHTML = rows
+      || ('<tr><td colspan="' + colTotal + '" style="text-align:center;padding:14px;color:#777">Seçilen kapsamda kayıt bulunamadı.</td></tr>');
+
+    /* ---- firma bazlı özet: kanonik kişi/gun verisinden TÜRETİLİR — ayrı sabit veri
+       DEĞİL. Öz kadro satırı yalnız kapsamda öz kadro kişisi VARSA basılır. ---- */
+    function gunSayisi(list, i){
+      var t = 0; list.forEach(function(k){ var g = k.gun[i]; if(g === '+') t += 1; else if(g === '½') t += .5; });
+      return t;
+    }
+    var ozetSatirlari = [];
+    if(scope.kisiler.length){
+      ozetSatirlari.push({ad:'Yapıtaş İnşaat A.Ş. (öz kadro)', sayi:scope.kisiler.length,
+        gun: dayIdx.map(function(i){ return gunSayisi(scope.kisiler, i); })});
+    }
+    var firmaSirasi = [], firmaKisileri = {};
+    scope.taseronlar.forEach(function(k){
+      if(!firmaKisileri[k.firma]){ firmaKisileri[k.firma] = []; firmaSirasi.push(k.firma); }
+      firmaKisileri[k.firma].push(k);
+    });
+    firmaSirasi.forEach(function(fad){
+      var list = firmaKisileri[fad];
+      ozetSatirlari.push({ad:fad, sayi:list.length, gun: dayIdx.map(function(i){ return gunSayisi(list, i); }), tas:true});
+    });
+
+    var ozetThead = document.querySelector('.pp-ozet thead tr');
+    ozetThead.innerHTML = '<th style="text-align:left">Firma</th><th>Personel<br>Sayısı</th>'
+      + dayIdx.map(function(i){ return '<th>' + DAY_LBL_FULL[i] + '</th>'; }).join('')
+      + '<th>' + (dayIdx.length > 1 ? 'Haftalık<br>' : '') + 'Adam-Gün</th><th>Firma Yetkilisi<br>İmza</th>';
+
+    var toplamSayi = 0, toplamGun = dayIdx.map(function(){ return 0; }), genelToplam = 0, oh = '';
+    if(!ozetSatirlari.length){
+      oh = '<tr><td colspan="' + (3 + dayIdx.length) + '" style="text-align:center;padding:8px;color:#777">Kayıt yok</td></tr>';
+    }
+    ozetSatirlari.forEach(function(r){
+      var toplam = r.gun.reduce(function(a, b){ return a + b; }, 0);
+      toplamSayi += r.sayi; genelToplam += toplam;
+      r.gun.forEach(function(g, i){ toplamGun[i] += g; });
+      oh += '<tr><td class="c-ofirma">' + r.ad + '</td><td>' + r.sayi + '</td>'
+        + r.gun.map(function(g){ return '<td>' + (g % 1 === 0 ? g : g.toString().replace('.', ',')) + '</td>'; }).join('')
+        + '<td>' + fmtGun(toplam) + '</td><td class="c-oimza">' + (r.tas ? '' : '—') + '</td></tr>';
+    });
+    if(ozetSatirlari.length > 1){
+      oh += '<tr class="r-genel"><td class="c-ofirma">TOPLAM</td><td>' + toplamSayi + '</td>'
+        + toplamGun.map(function(g){ return '<td>' + fmtGun(g) + '</td>'; }).join('')
+        + '<td>' + fmtGun(genelToplam) + '</td><td class="c-oimza">—</td></tr>';
+    }
+    document.getElementById('ppOzetRows').innerHTML = oh;
+    document.querySelector('.pp-ozet-title').textContent = scope.tumu
+      ? 'Şantiye + Firma Bazlı Özet (Tüm Şantiyeler)'
+      : (kapsam === 'taseron' ? 'Taşeron Firma Özeti' : 'Firma Bazlı Haftalık Özet');
+
+    var signName1 = scope.hazirlayan || siteForSign.hazirlayan;
+    var signName2 = scope.sef || siteForSign.sef;
+    document.getElementById('ppSign').innerHTML =
+      '<div class="sg"><div class="sg-role">Hazırlayan</div><div class="sg-name">' + signName1.name + '</div><div class="sg-title">' + signName1.title + '</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Şantiye Şefi</div><div class="sg-name">' + signName2.name + '</div><div class="sg-title">' + signName2.title + '</div><div class="sg-line">İMZA</div></div>';
+
+    document.querySelector('.pp-note').textContent = 'Bu döküm, ilgili çalışma dönemine ait Gavia CRM puantaj kayıtlarının tamamını içerir; '
+      + 'el ile eklenen kayıt geçersizdir. Taşeron puantajı kişi bazında tutulur; kişi satırlarındaki imza kolonu ıslak imza içindir. '
+      + 'Firma yetkilisi imzası özet bloğunda, adam-gün toplamlarının yanında alınır. İmzalar tamamlanmadan dönem kapatılmaz.' + donemNote;
+  }
+
+  /* ---- Excel (CSV) çıktısı — gerçek Blob+indirme, ölü buton DEĞİL. Ekranda görünen
+     kapsam/dönem süzgeciyle BİREBİR aynı veriyi üretir (buildScope/dayIdxListOf paylaşılır). ---- */
+  function toCsvCell(v){
+    v = (v === null || v === undefined) ? '' : String(v);
+    if(/[",;\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+  function exportExcel(){
+    var scope = buildScope();
+    var dayIdx = dayIdxListOf(donem);
+    var lines = [];
+    lines.push(['Sıra No', 'Adı Soyadı', 'Görev', 'Firma / Taşeron'].concat(dayIdx.map(function(i){ return DAY_LBL_FULL[i]; }))
+      .concat(['Toplam Gün']).map(toCsvCell).join(';'));
+    var no = 0;
+    function pushRow(k, taseron){
+      no++;
+      var firmaTxt = taseron ? k.firma : 'Yapıtaş İnşaat A.Ş.';
+      if(scope.tumu) firmaTxt = k._santiye + ' — ' + firmaTxt;
+      var top = dayIdx.reduce(function(a, i){ var g = k.gun[i]; return a + (g === '+' ? 1 : (g === '½' ? .5 : 0)); }, 0);
+      var row = [no, k.ad, (taseron ? k.poz : k.gorev), firmaTxt].concat(dayIdx.map(function(i){ return k.gun[i]; })).concat([fmtGun(top)]);
+      lines.push(row.map(toCsvCell).join(';'));
+    }
+    scope.kisiler.forEach(function(k){ pushRow(k, false); });
+    scope.taseronlar.forEach(function(k){ pushRow(k, true); });
+    var csv = '﻿' + lines.join('\r\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'puantaj-cikti-' + (scope.santiyeKey || 'tum-santiyeler') + '-' + kapsam + '-' + donem + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+  document.getElementById('ckExcel').addEventListener('click', exportExcel);
+
+  renderAll();
+  /* crm-operasyon-puantaj.html çıktı modalından format=excel ile gelinirse (bkz. §11.2)
+     bu sayfanın kendi kanonik SANTIYELER verisinden ÜRETİLEN CSV otomatik indirilir —
+     kaynak sayfada (puantaj.html) yalnız 40 adı geçen kişi var, tam 93 kişilik kanonik
+     roster yalnız burada; bu yüzden Excel üretimi HER ZAMAN bu sayfadan yapılır. */
+  if(q.get('format') === 'excel') exportExcel();
+  document.getElementById('ckSantiye').addEventListener('change', function(){
+    ks = this.value; kapsam = 'santiye';
+    history.replaceState(null, '', 'crm-operasyon-puantaj-cikti.html?santiye=' + ks + '&hafta=' + hafta);
+    renderAll();
+  });
+})();
+</script>
+</body>
+</html>

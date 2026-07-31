@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Nakit Akışı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Nakit Akışı (KPI + likidite + haftalık tablo + takvim kartları) ============ */
+.toggle-pair{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.toggle-pair button{padding:9px 16px;font-size:12.5px;font-weight:700;color:var(--ink-2);background:#fff;border:none;cursor:pointer;font-family:inherit}
+.toggle-pair button.is-on{background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.toggle-pair button + button{border-left:1px solid var(--line)}
+
+.kpi-card.kpi-danger .kpi-num{color:var(--danger)}
+.kpi-card.kpi-warn .kpi-num{color:var(--warn)}
+.kpi-card.kpi-ok .kpi-num{color:var(--ok)}
+
+.liq-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px}
+@media(max-width:780px){.liq-grid{grid-template-columns:minmax(0,1fr)}}
+.liq-rows{display:flex;flex-direction:column}
+.liq-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}
+.liq-row:last-child{border-bottom:none}
+.liq-ico{width:32px;height:32px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:12px;background:var(--info-tint);color:var(--info)}
+.liq-ico.kasa{background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.liq-name{flex:1;font-weight:700;color:var(--ink)}
+.liq-val{font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.liq-total{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-radius:var(--r-md);background:rgba(var(--acc-rgb),.08);margin-top:14px}
+.liq-total b{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--acc-ink)}
+.liq-total span{font-size:19px;font-weight:800;color:var(--ink)}
+
+#tblAkis{min-width:760px}
+#tblAkis td.num,#tblAkis th.num{text-align:right}
+#tblAkis td.negatif{color:var(--danger);font-weight:800}
+#tblAkis tr.is-checkpoint td{background:var(--bg)}
+.hafta-cell{display:flex;align-items:center;gap:8px}
+.hafta-cell .chk-badge{font-size:9.5px;font-weight:800;letter-spacing:.03em;padding:2px 7px;border-radius:var(--r-pill);background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)}
+.hafta-cell .chk-badge.danger{background:var(--danger-tint);color:var(--danger)}
+.hafta-cell .chk-badge.warn{background:var(--warn-tint);color:var(--warn)}
+.tbl-note{padding:12px 22px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);display:flex;gap:7px;align-items:flex-start}
+.tbl-note i{margin-top:2px;flex:none}
+
+.sched-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:980px){.sched-grid{grid-template-columns:minmax(0,1fr)}}
+.sched-list{display:flex;flex-direction:column}
+.sched-row{display:flex;align-items:flex-start;gap:12px;padding:13px 22px;border-bottom:1px solid var(--line)}
+.sched-row:last-child{border-bottom:none}
+.sched-mark{width:34px;height:34px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:12px;background:var(--ok-tint);color:var(--ok)}
+.sched-row.is-danger .sched-mark{background:var(--danger-tint);color:var(--danger)}
+.sched-row.is-blocked .sched-mark{background:var(--bg);color:var(--muted)}
+.sched-info{flex:1;min-width:0}
+.sched-info b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.sched-info a{color:inherit;text-decoration:none}
+.sched-info a:hover{color:var(--acc-ink)}
+.sched-info span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.sched-right{flex:none;text-align:right}
+.sched-right b{display:block;font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.sched-right .gstat{margin-top:5px}
+
+.gv-empty{padding:36px 20px;text-align:center}
+.ge-ico{width:48px;height:48px;border-radius:50%;background:var(--bg);display:grid;place-items:center;margin:0 auto 12px;color:var(--muted);font-size:17px}
+.gv-empty h4{font-size:13.5px;color:var(--ink);margin-bottom:5px}
+.gv-empty p{font-size:12px;color:var(--muted);margin:0}
+
+@media(max-width:640px){
+  /* 2-kolon mobil kpi-grid'de yedi haneli ₺ tutarları kart genişliğini taşırıyor —
+     crm-finans-kurum.html'deki .kpi-num.compact deseni (bkz. o dosyanın stil bloğu) */
+  .kpi-num.compact{font-size:16px !important}
+}
+</style>
+</head>
+<body data-sec="finans" data-screen="nakit">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Finans</div>
+        <h1>Nakit Akışı</h1>
+        <div class="ph-sub">2 Temmuz 2026 itibarıyla · 90 günlük projeksiyon</div>
+      </div>
+      <div class="ph-actions">
+        <div class="toggle-pair" id="projeToggle">
+          <button data-p="genel" class="is-on">Şirket Geneli</button>
+          <button data-p="vk">Vadi Konakları</button>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="#" data-export="Nakit akışı"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-ok">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        <div><div class="kpi-num num compact">+₺670.000</div><div class="kpi-lbl">7 gün kümülatif net</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar"></i> 9 Temmuz'a kadar</div></div>
+      </div>
+      <div class="kpi-card kpi-ok">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        <div><div class="kpi-num num compact">+₺710.000</div><div class="kpi-lbl">30 gün kümülatif net</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar"></i> 1 Ağustos'a kadar</div></div>
+      </div>
+      <div class="kpi-card kpi-danger danger">
+        <div class="kpi-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div><div class="kpi-num num compact">−₺2.990.000</div><div class="kpi-lbl">60 gün kümülatif net</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-file-invoice-dollar"></i> FTR-2026-09 + 28 Ağu bordrosu</div></div>
+      </div>
+      <div class="kpi-card kpi-warn warn">
+        <div class="kpi-ico"><i class="fa-solid fa-arrow-trend-down"></i></div>
+        <div><div class="kpi-num num compact">−₺465.000</div><div class="kpi-lbl">90 gün kümülatif net</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-rocket"></i> GE2 lansman kaporasıyla toparlanma</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-bottom:20px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-wallet"></i> Mevcut Likidite</div><span class="ph-sub" style="margin:0">2 Temmuz 2026</span></div>
+      <div class="gc-body">
+        <div class="liq-grid">
+          <div class="liq-rows">
+            <div class="liq-row"><span class="liq-ico"><i class="fa-solid fa-building-columns"></i></span><span class="liq-name">Garanti BBVA</span><span class="liq-val">₺2.980.000</span></div>
+            <div class="liq-row"><span class="liq-ico"><i class="fa-solid fa-building-columns"></i></span><span class="liq-name">Akbank</span><span class="liq-val">₺1.640.000</span></div>
+            <div class="liq-row"><span class="liq-ico"><i class="fa-solid fa-building-columns"></i></span><span class="liq-name">Ziraat Bankası</span><span class="liq-val">₺645.000</span></div>
+            <div class="liq-row"><span class="liq-ico kasa"><i class="fa-solid fa-cash-register"></i></span><span class="liq-name">Şantiye Kasaları (3)</span><span class="liq-val">₺165.130</span></div>
+          </div>
+          <div>
+            <div class="liq-total"><b>Toplam Likidite</b><span>₺5.430.130</span></div>
+            <p style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.6">Şantiye kasaları toplamı <a href="crm-operasyon-kasa.html" style="color:var(--acc-ink);font-weight:700">Kasa Yönetimi</a> ile birebir — Vadi ₺81.920 · Liman ₺18.520 · Merkez ₺64.690.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-bottom:20px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-line"></i> Haftalık Nakit Akışı</div><span class="ph-sub" style="margin:0">13 hafta · 2 Tem – 1 Eki 2026</span></div>
+      <div class="gc-body flush">
+        <table class="gtable" id="tblAkis">
+          <thead>
+            <tr><th>Hafta</th><th class="num">Giren</th><th class="num">Çıkan</th><th class="num">Net</th><th class="num">Kümülatif</th></tr>
+          </thead>
+          <!-- statik bake — 13 haftalık kanonik akış (AKIS dizisi) VERBATIM; JS
+               yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
+          <tbody id="tblAkisBody"><tr class="is-checkpoint"><td><div class="hafta-cell"><b>1. Hafta</b><span class="muted" style="font-size:11.5px">3–9 Tem</span><span class="chk-badge ">7g</span></div></td><td class="num">₺1.005.000</td><td class="num">₺335.000</td><td class="num">+₺670.000</td><td class="num">+₺670.000</td></tr><tr><td><div class="hafta-cell"><b>2. Hafta</b><span class="muted" style="font-size:11.5px">10–16 Tem</span></div></td><td class="num">₺685.000</td><td class="num">₺671.700</td><td class="num">+₺13.300</td><td class="num">+₺683.300</td></tr><tr><td><div class="hafta-cell"><b>3. Hafta</b><span class="muted" style="font-size:11.5px">17–23 Tem</span></div></td><td class="num">₺570.000</td><td class="num">₺133.300</td><td class="num">+₺436.700</td><td class="num">+₺1.120.000</td></tr><tr class="is-checkpoint"><td><div class="hafta-cell"><b>4. Hafta</b><span class="muted" style="font-size:11.5px">24–30 Tem</span><span class="chk-badge ">30g</span></div></td><td class="num">₺3.115.000</td><td class="num">₺3.525.000</td><td class="num">−₺410.000</td><td class="num">+₺710.000</td></tr><tr><td><div class="hafta-cell"><b>5. Hafta</b><span class="muted" style="font-size:11.5px">31 Tem–6 Ağu</span></div></td><td class="num">₺80.000</td><td class="num">₺125.000</td><td class="num">−₺45.000</td><td class="num">+₺665.000</td></tr><tr><td><div class="hafta-cell"><b>6. Hafta</b><span class="muted" style="font-size:11.5px">7–13 Ağu</span></div></td><td class="num">₺80.000</td><td class="num">₺125.000</td><td class="num">−₺45.000</td><td class="num">+₺620.000</td></tr><tr><td><div class="hafta-cell"><b>7. Hafta</b><span class="muted" style="font-size:11.5px">14–20 Ağu</span></div></td><td class="num">₺2.830.000</td><td class="num">₺125.000</td><td class="num">+₺2.705.000</td><td class="num">+₺3.325.000</td></tr><tr><td><div class="hafta-cell"><b>8. Hafta</b><span class="muted" style="font-size:11.5px">21–27 Ağu</span></div></td><td class="num">₺80.000</td><td class="num">₺2.965.000</td><td class="num">−₺2.885.000</td><td class="num">+₺440.000</td></tr><tr class="is-checkpoint"><td><div class="hafta-cell"><b>9. Hafta</b><span class="muted" style="font-size:11.5px">28 Ağu–3 Eyl</span><span class="chk-badge danger">60g</span></div></td><td class="num">₺95.000</td><td class="num">₺3.525.000</td><td class="num">−₺3.430.000</td><td class="num negatif">−₺2.990.000</td></tr><tr><td><div class="hafta-cell"><b>10. Hafta</b><span class="muted" style="font-size:11.5px">4–10 Eyl</span></div></td><td class="num">₺70.000</td><td class="num">₺125.000</td><td class="num">−₺55.000</td><td class="num negatif">−₺3.045.000</td></tr><tr><td><div class="hafta-cell"><b>11. Hafta</b><span class="muted" style="font-size:11.5px">11–17 Eyl</span></div></td><td class="num">₺70.000</td><td class="num">₺923.000</td><td class="num">−₺853.000</td><td class="num negatif">−₺3.898.000</td></tr><tr><td><div class="hafta-cell"><b>12. Hafta</b><span class="muted" style="font-size:11.5px">18–24 Eyl</span></div></td><td class="num">₺2.820.000</td><td class="num">₺125.000</td><td class="num">+₺2.695.000</td><td class="num negatif">−₺1.203.000</td></tr><tr class="is-checkpoint"><td><div class="hafta-cell"><b>13. Hafta</b><span class="muted" style="font-size:11.5px">25 Eyl–1 Eki</span><span class="chk-badge warn">90g</span></div></td><td class="num">₺4.263.000</td><td class="num">₺3.525.000</td><td class="num">+₺738.000</td><td class="num negatif">−₺465.000</td></tr></tbody>
+        </table>
+      </div>
+      <div class="tbl-note"><i class="fa-solid fa-circle-info"></i> Tablo şirket geneli konsolide nakit pozisyonunu gösterir; kümülatif kırmızı hücreler negatif nakit pozisyonunu işaret eder. Proje bazlı haftalık kırılım kapsam dışıdır — proje/şirket geneli görünümü aşağıdaki tahsilat ve ödeme takvimi kartlarında uygulanır.</div>
+    </div>
+
+    <!-- statik bake — DEFAULT görünüm (curProje='genel', tüm kayıtlar) tahsilat/ödeme
+         listeleri VERBATIM; JS yüklenince aynı mount innerHTML ile ezilir (renderSched())
+         — D18-B2 -->
+    <div class="sched-grid">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hand-holding-dollar"></i> Beklenen Tahsilatlar</div></div>
+        <div class="sched-list" id="tahsilatList"><div class="sched-row is-danger"><div class="sched-mark"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="sched-info"><b><a href="crm-satis-sozlesme-detay.html?ssz=2026-004">Toprak — SSZ-2026-004 5. taksit</a></b><span>GECİKMİŞ · vade 20 Haz, 12 gündür · tahsilat girişimi 10 Tem</span></div><div class="sched-right"><b>₺570.000</b><span class="gstat danger">12 gün gecikme</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-building-columns"></i></div><div class="sched-info"><b><a href="crm-finans-hakedis-detay.html?hkd=003">HKD-2026-003 — Aliağa Liman İşletmeleri</a></b><span>8 Tem · onaylandı, ödeme bildirimi alındı</span></div><div class="sched-right"><b>₺980.000</b></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-file-signature"></i></div><div class="sched-info"><b><a href="crm-satis-sozlesme-detay.html?ssz=2026-003">Onaran — SSZ-2026-003 15. taksit</a></b><span>15 Tem · aylık seri (15 Ağu, 15 Eyl…)</span></div><div class="sched-right"><b>₺115.000</b></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-file-signature"></i></div><div class="sched-info"><b><a href="crm-satis-sozlesme-detay.html?ssz=2026-004">Toprak — SSZ-2026-004 6. taksit</a></b><span>20 Tem · aylık seri (20 Ağu, 20 Eyl…)</span></div><div class="sched-right"><b>₺570.000</b></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-house"></i></div><div class="sched-info"><b><a href="crm-satis-teklif-detay.html?tkf=003">Şahinoğlu — ODP-2026-001 peşinat</a></b><span>25 Tem · opsiyon → sözleşme geçişi</span></div><div class="sched-right"><b>₺1.485.000</b><span class="gstat info">Beklenen</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-building-columns"></i></div><div class="sched-info"><b><a href="crm-finans-hakedis-detay.html?hkd=006">HKD-2026-006 — Körfez GYO</a></b><span>28 Tem · gönderildi, onay+tahsilat bekleniyor</span></div><div class="sched-right"><b>₺1.630.000</b><span class="gstat info">Beklenen</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-building-columns"></i></div><div class="sched-info"><b><a href="crm-finans-kurum.html">Aliağa Liman İşletmeleri — Temmuz hakedişi</a></b><span>18 Ağu</span></div><div class="sched-right"><b>₺1.050.000</b><span class="gstat info">Beklenen</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-building-columns"></i></div><div class="sched-info"><b><a href="crm-finans-kurum.html">Körfez GYO — Temmuz hakedişi</a></b><span>20 Ağu</span></div><div class="sched-right"><b>₺1.700.000</b><span class="gstat info">Beklenen</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-building-columns"></i></div><div class="sched-info"><b><a href="crm-finans-kurum.html">Körfez GYO + Aliağa Liman — Ağustos hakedişleri</a></b><span>Eylül · iki kurum birlikte</span></div><div class="sched-right"><b>₺2.750.000</b><span class="gstat info">Beklenen</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-rocket"></i></div><div class="sched-info"><b><a href="crm-satis-pipeline.html">GE2 lansman kaporası</a></b><span>Eylül sonu · 12 opsiyonlu ön-talep</span></div><div class="sched-right"><b>₺4.200.000</b><span class="gstat info">Beklenen</span></div></div></div>
+      </div>
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Planlı Ödemeler</div></div>
+        <div class="sched-list" id="odemeList"><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="sched-info"><b><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013 — Demir-Beton İnş. Ltd.</a></b><span>8 Tem · onaylandı</span></div><div class="sched-right"><b>₺210.000</b></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-people-arrows"></i></div><div class="sched-info"><b><a href="crm-finans-hakedis-detay.html?th=008">TH-2026-008 — Yalıtım Kardeşler</a></b><span>10 Tem · onaylandı, malzeme mahsuplu</span></div><div class="sched-right"><b>₺128.500</b></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="sched-info"><b><a href="crm-satinalma-irsaliye-fatura.html">FTR-2026-06 — Boğaziçi Yapı Market</a></b><span>15 Tem · vade</span></div><div class="sched-right"><b>₺418.200</b></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-users"></i></div><div class="sched-info"><b><a href="crm-operasyon-puantaj.html">Bordro</a></b><span>28 Tem · 28 Ağu · 28 Eyl (idari 22 + öz saha 69)</span></div><div class="sched-right"><b>₺3.400.000</b><span class="gstat info">Her ayın 28'i</span></div></div><div class="sched-row is-danger"><div class="sched-mark"><i class="fa-solid fa-file-invoice-dollar"></i></div><div class="sched-info"><b><a href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">FTR-2026-09 — Marmara Demir Çelik</a></b><span>27 Ağu · 60 gün dip sürücüsü</span></div><div class="sched-right"><b>₺2.840.000</b><span class="gstat danger">Vade riski</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-file-invoice"></i></div><div class="sched-info"><b><a href="crm-satinalma-siparis-detay.html?sip=SIP-2026-06">Trakya Beton Santrali — SIP-2026-06 faturası</a></b><span>Eylül ortası · teslim sonrası beklenen vade</span></div><div class="sched-right"><b>₺798.000</b><span class="gstat info">Beklenen</span></div></div><div class="sched-row is-blocked"><div class="sched-mark"><i class="fa-solid fa-ban"></i></div><div class="sched-info"><b><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014 — Demir-Beton İnş. Ltd.</a></b><span>Metraj itirazı görüşülüyor — ödeme bloke, tarih atanmadı</span></div><div class="sched-right"><b>₺90.000</b><span class="gstat off">İhtilaflı · bloke</span></div></div><div class="sched-row "><div class="sched-mark"><i class="fa-solid fa-cash-register"></i></div><div class="sched-info"><b><a href="crm-operasyon-kasa.html">Haftalık şantiye kasa beslemeleri</a></b><span>Her hafta · planlı, ~₺100.000–150.000</span></div><div class="sched-right"><span class="gstat info">Planlı</span></div></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+
+  var AKIS = [
+    {hafta:'1. Hafta', tarih:'3–9 Tem', giren:1005000, cikan:335000, kum:670000, chk:'7g'},
+    {hafta:'2. Hafta', tarih:'10–16 Tem', giren:685000, cikan:671700, kum:683300},
+    {hafta:'3. Hafta', tarih:'17–23 Tem', giren:570000, cikan:133300, kum:1120000},
+    {hafta:'4. Hafta', tarih:'24–30 Tem', giren:3115000, cikan:3525000, kum:710000, chk:'30g'},
+    {hafta:'5. Hafta', tarih:'31 Tem–6 Ağu', giren:80000, cikan:125000, kum:665000},
+    {hafta:'6. Hafta', tarih:'7–13 Ağu', giren:80000, cikan:125000, kum:620000},
+    {hafta:'7. Hafta', tarih:'14–20 Ağu', giren:2830000, cikan:125000, kum:3325000},
+    {hafta:'8. Hafta', tarih:'21–27 Ağu', giren:80000, cikan:2965000, kum:440000},
+    {hafta:'9. Hafta', tarih:'28 Ağu–3 Eyl', giren:95000, cikan:3525000, kum:-2990000, chk:'60g'},
+    {hafta:'10. Hafta', tarih:'4–10 Eyl', giren:70000, cikan:125000, kum:-3045000},
+    {hafta:'11. Hafta', tarih:'11–17 Eyl', giren:70000, cikan:923000, kum:-3898000},
+    {hafta:'12. Hafta', tarih:'18–24 Eyl', giren:2820000, cikan:125000, kum:-1203000},
+    {hafta:'13. Hafta', tarih:'25 Eyl–1 Eki', giren:4263000, cikan:3525000, kum:-465000, chk:'90g'}
+  ];
+  var CHK_CLS = {'7g':'', '30g':'', '60g':'danger', '90g':'warn'};
+
+  var rows = '';
+  AKIS.forEach(function(a){
+    var neg = a.kum < 0;
+    rows += '<tr'+(a.chk?' class="is-checkpoint"':'')+'>'
+      + '<td><div class="hafta-cell"><b>'+a.hafta+'</b><span class="muted" style="font-size:11.5px">'+a.tarih+'</span>'+(a.chk?'<span class="chk-badge '+CHK_CLS[a.chk]+'">'+a.chk+'</span>':'')+'</div></td>'
+      + '<td class="num">'+tl(a.giren)+'</td>'
+      + '<td class="num">'+tl(a.cikan)+'</td>'
+      + '<td class="num">'+(a.giren-a.cikan>=0?'+':'−')+tl(Math.abs(a.giren-a.cikan))+'</td>'
+      + '<td class="num'+(neg?' negatif':'')+'">'+(neg?'−':'+')+tl(Math.abs(a.kum))+'</td>'
+      + '</tr>';
+  });
+  document.getElementById('tblAkisBody').innerHTML = rows;
+
+  var TAHSILAT = [
+    {proje:'vk', durum:'danger', ic:'fa-triangle-exclamation', baslik:'Toprak — SSZ-2026-004 5. taksit', link:'crm-satis-sozlesme-detay.html?ssz=2026-004', alt:'GECİKMİŞ · vade 20 Haz, 12 gündür · tahsilat girişimi 10 Tem', tutar:570000, badge:{cls:'danger', lbl:'12 gün gecikme'}},
+    {proje:'liman', durum:'ok', ic:'fa-building-columns', baslik:'HKD-2026-003 — Aliağa Liman İşletmeleri', link:'crm-finans-hakedis-detay.html?hkd=003', alt:'8 Tem · onaylandı, ödeme bildirimi alındı', tutar:980000, badge:null},
+    {proje:'vk', durum:'ok', ic:'fa-file-signature', baslik:'Onaran — SSZ-2026-003 15. taksit', link:'crm-satis-sozlesme-detay.html?ssz=2026-003', alt:'15 Tem · aylık seri (15 Ağu, 15 Eyl…)', tutar:115000, badge:null},
+    {proje:'vk', durum:'ok', ic:'fa-file-signature', baslik:'Toprak — SSZ-2026-004 6. taksit', link:'crm-satis-sozlesme-detay.html?ssz=2026-004', alt:'20 Tem · aylık seri (20 Ağu, 20 Eyl…)', tutar:570000, badge:null},
+    {proje:'vk', durum:'ok', ic:'fa-house', baslik:'Şahinoğlu — ODP-2026-001 peşinat', link:'crm-satis-teklif-detay.html?tkf=003', alt:'25 Tem · opsiyon → sözleşme geçişi', tutar:1485000, badge:{cls:'info', lbl:'Beklenen'}},
+    {proje:'vk', durum:'ok', ic:'fa-building-columns', baslik:'HKD-2026-006 — Körfez GYO', link:'crm-finans-hakedis-detay.html?hkd=006', alt:'28 Tem · gönderildi, onay+tahsilat bekleniyor', tutar:1630000, badge:{cls:'info', lbl:'Beklenen'}},
+    {proje:'liman', durum:'ok', ic:'fa-building-columns', baslik:'Aliağa Liman İşletmeleri — Temmuz hakedişi', link:'crm-finans-kurum.html', alt:'18 Ağu', tutar:1050000, badge:{cls:'info', lbl:'Beklenen'}},
+    {proje:'vk', durum:'ok', ic:'fa-building-columns', baslik:'Körfez GYO — Temmuz hakedişi', link:'crm-finans-kurum.html', alt:'20 Ağu', tutar:1700000, badge:{cls:'info', lbl:'Beklenen'}},
+    {proje:'genel', durum:'ok', ic:'fa-building-columns', baslik:'Körfez GYO + Aliağa Liman — Ağustos hakedişleri', link:'crm-finans-kurum.html', alt:'Eylül · iki kurum birlikte', tutar:2750000, badge:{cls:'info', lbl:'Beklenen'}},
+    {proje:'genel', durum:'ok', ic:'fa-rocket', baslik:'GE2 lansman kaporası', link:'crm-satis-pipeline.html', alt:'Eylül sonu · 12 opsiyonlu ön-talep', tutar:4200000, badge:{cls:'info', lbl:'Beklenen'}}
+  ];
+
+  var ODEME = [
+    {proje:'vk', durum:'ok', ic:'fa-people-arrows', baslik:'TH-2026-013 — Demir-Beton İnş. Ltd.', link:'crm-finans-hakedis-detay.html?th=013', alt:'8 Tem · onaylandı', tutar:210000, badge:null},
+    {proje:'liman', durum:'ok', ic:'fa-people-arrows', baslik:'TH-2026-008 — Yalıtım Kardeşler', link:'crm-finans-hakedis-detay.html?th=008', alt:'10 Tem · onaylandı, malzeme mahsuplu', tutar:128500, badge:null},
+    {proje:'vk', durum:'ok', ic:'fa-file-invoice', baslik:'FTR-2026-06 — Boğaziçi Yapı Market', link:'crm-satinalma-irsaliye-fatura.html', alt:'15 Tem · vade', tutar:418200, badge:null},
+    {proje:'genel', durum:'ok', ic:'fa-users', baslik:'Bordro', link:'crm-operasyon-puantaj.html', alt:'28 Tem · 28 Ağu · 28 Eyl (idari 22 + öz saha 69)', tutar:3400000, badge:{cls:'info', lbl:'Her ayın 28\'i'}},
+    {proje:'vk', durum:'danger', ic:'fa-file-invoice-dollar', baslik:'FTR-2026-09 — Marmara Demir Çelik', link:'crm-satinalma-siparis-detay.html?sip=SIP-2026-05', alt:'27 Ağu · 60 gün dip sürücüsü', tutar:2840000, badge:{cls:'danger', lbl:'Vade riski'}},
+    {proje:'liman', durum:'ok', ic:'fa-file-invoice', baslik:'Trakya Beton Santrali — SIP-2026-06 faturası', link:'crm-satinalma-siparis-detay.html?sip=SIP-2026-06', alt:'Eylül ortası · teslim sonrası beklenen vade', tutar:798000, badge:{cls:'info', lbl:'Beklenen'}},
+    {proje:'vk', durum:'blocked', ic:'fa-ban', baslik:'TH-2026-014 — Demir-Beton İnş. Ltd.', link:'crm-finans-hakedis-detay.html?th=014', alt:'Metraj itirazı görüşülüyor — ödeme bloke, tarih atanmadı', tutar:90000, badge:{cls:'off', lbl:'İhtilaflı · bloke'}},
+    {proje:'genel', durum:'ok', ic:'fa-cash-register', baslik:'Haftalık şantiye kasa beslemeleri', link:'crm-operasyon-kasa.html', alt:'Her hafta · planlı, ~₺100.000–150.000', tutar:null, badge:{cls:'info', lbl:'Planlı'}}
+  ];
+
+  function markCls(d){ return d==='danger' ? 'is-danger' : (d==='blocked' ? 'is-blocked' : ''); }
+
+  function renderSched(el, list, proje){
+    var vis = list.filter(function(r){ return proje === 'genel' || r.proje === 'vk'; });
+    if(!vis.length){
+      el.innerHTML = '<div class="gv-empty"><div class="ge-ico"><i class="fa-solid fa-filter-circle-xmark"></i></div><h4>Bu görünümde kayıt yok</h4><p>Vadi Konakları\'na ait tahsilat/ödeme bulunmuyor.</p></div>';
+      return;
+    }
+    var h = '';
+    vis.forEach(function(r){
+      h += '<div class="sched-row '+markCls(r.durum)+'">'
+        + '<div class="sched-mark"><i class="fa-solid '+r.ic+'"></i></div>'
+        + '<div class="sched-info"><b><a href="'+r.link+'">'+r.baslik+'</a></b><span>'+r.alt+'</span></div>'
+        + '<div class="sched-right">'+(r.tutar!==null?'<b>'+tl(r.tutar)+'</b>':'')+(r.badge?'<span class="gstat '+r.badge.cls+'">'+r.badge.lbl+'</span>':'')+'</div>'
+        + '</div>';
+    });
+    el.innerHTML = h;
+  }
+
+  var curProje = 'genel';
+  function render(){
+    renderSched(document.getElementById('tahsilatList'), TAHSILAT, curProje);
+    renderSched(document.getElementById('odemeList'), ODEME, curProje);
+  }
+  render();
+
+  document.querySelectorAll('#projeToggle button').forEach(function(b){
+    b.addEventListener('click', function(){
+      curProje = b.getAttribute('data-p');
+      document.querySelectorAll('#projeToggle button').forEach(function(x){ x.classList.toggle('is-on', x===b); });
+      render();
+    });
+  });
+})();
+</script>
+</body>
+</html>

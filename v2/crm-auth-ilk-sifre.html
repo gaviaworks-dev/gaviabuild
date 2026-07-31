@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>İlk Şifrenizi Belirleyin — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* AUTH KABUK — bkz. tasks/spec/auth-kabuk.md — crm-auth-sifre-sifirla.html ile aynı yapı
+   (§6.5 kararı: "sifre-sifirla ile aynı UI, farklı bağlam metni") */
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:40px 20px;background:var(--gv-deep);color:var(--gv-on-dark);
+  font-family:var(--font);font-weight:500;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(rgba(63,213,173,.07) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--gv-mint);outline-offset:2px}
+
+.auth-wrap{width:100%;max-width:420px}
+.mark{width:56px;height:56px;margin:0 auto 20px;border-radius:15px;background:var(--gv-mint-glow);border:1px solid rgba(63,213,173,.3);display:grid;place-items:center;color:var(--gv-mint);font-weight:800;font-size:23px;letter-spacing:-.03em}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gv-mint);margin-bottom:10px}
+
+.auth-head{text-align:center;margin-bottom:26px}
+.auth-head h1{font-size:25px;font-weight:800;letter-spacing:-.02em;color:#fff;margin-bottom:9px}
+.auth-head .sub{font-size:13.5px;line-height:1.6;color:var(--on-dark-mut);max-width:380px;margin:0 auto}
+
+.auth-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-lg);overflow:hidden}
+.auth-body{padding:28px 30px 8px}
+.auth-card .gform{grid-template-columns:1fr;gap:16px}
+.auth-foot-bar{padding:18px 30px 26px}
+.btn:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+
+.pw-field{position:relative}
+.pw-field input{padding-right:40px}
+.pw-toggle{position:absolute;right:2px;top:27px;width:34px;height:34px;display:grid;place-items:center;color:var(--muted);background:none;border:none;cursor:pointer;border-radius:var(--r-sm);transition:.18s var(--ease)}
+.pw-toggle:hover{color:var(--acc-ink);background:var(--bg)}
+
+.pw-check{display:flex;flex-direction:column;gap:6px;margin:2px 0 18px;padding:13px 14px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md)}
+.pw-check .pc-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);transition:.18s var(--ease)}
+.pw-check .pc-item i{width:14px;font-size:11px;color:var(--line-2)}
+.pw-check .pc-item.ok{color:var(--ok)}
+.pw-check .pc-item.ok i{color:var(--ok)}
+
+.a-banner{display:flex;gap:11px;align-items:flex-start;padding:13px 15px;border-radius:var(--r-md);font-size:12.5px;line-height:1.55;margin-bottom:16px;border:1px solid transparent}
+.a-banner i{flex:none;font-size:14px;margin-top:2px}
+.a-banner b{display:block;margin-bottom:2px;font-weight:800;font-size:13px}
+.a-banner p{margin:0}
+.a-banner.info{background:var(--info-tint);color:#2A4E96}
+.a-banner.info i,.a-banner.info b{color:var(--info)}
+
+.auth-foot{margin-top:26px;text-align:center;font-size:12px;color:var(--on-dark-faint);line-height:1.7}
+.auth-foot a{color:var(--on-dark-mut);font-weight:700}
+.auth-foot a:hover{color:var(--gv-mint)}
+.auth-foot .sep{margin:0 6px}
+
+@media(max-width:480px){ .auth-body{padding:24px 18px 4px} .auth-foot-bar{padding:16px 18px 22px} }
+@media(prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body data-sec="auth" data-screen="ilk-sifre">
+<main class="auth-wrap">
+  <div class="auth-head">
+    <div class="mark">G</div>
+    <div class="eyebrow">Gavia CRM</div>
+    <h1>İlk Şifrenizi Belirleyin</h1>
+    <p class="sub">Hesabınız firma yöneticiniz tarafından oluşturuldu. Devam etmeden önce kendi şifrenizi belirleyin.</p>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-body">
+      <div class="a-banner info">
+        <i class="fa-solid fa-circle-info"></i>
+        <div><b>İlk giriş</b><p>Bu, hesabınıza tanımlanan geçici şifrenin yerine geçecek. Bir daha bu ekranı görmeyeceksiniz.</p></div>
+      </div>
+      <form class="gform" id="firstPwForm" onsubmit="return false">
+        <div class="gfield full pw-field">
+          <label for="fPw1">Yeni şifre</label>
+          <input type="password" id="fPw1" placeholder="••••••••" autocomplete="new-password">
+          <button type="button" class="pw-toggle" aria-label="Şifreyi göster" data-target="fPw1"><i class="fa-solid fa-eye"></i></button>
+        </div>
+        <div class="gfield full pw-field">
+          <label for="fPw2">Yeni şifre (tekrar)</label>
+          <input type="password" id="fPw2" placeholder="••••••••" autocomplete="new-password">
+          <button type="button" class="pw-toggle" aria-label="Şifreyi göster" data-target="fPw2"><i class="fa-solid fa-eye"></i></button>
+        </div>
+      </form>
+      <div class="pw-check" id="pwCheck">
+        <div class="pc-item" data-rule="len"><i class="fa-solid fa-circle"></i> En az 8 karakter</div>
+        <div class="pc-item" data-rule="upper"><i class="fa-solid fa-circle"></i> En az 1 büyük harf</div>
+        <div class="pc-item" data-rule="digit"><i class="fa-solid fa-circle"></i> En az 1 rakam</div>
+        <div class="pc-item" data-rule="match"><i class="fa-solid fa-circle"></i> Şifreler eşleşiyor</div>
+      </div>
+    </div>
+    <div class="auth-foot-bar">
+      <button type="button" class="btn btn-acc" style="width:100%" id="firstPwSubmit" disabled><i class="fa-solid fa-check"></i> Şifreyi Oluştur ve Devam Et</button>
+    </div>
+  </div>
+
+  <p class="auth-foot">
+    Gavia CRM — tıklanabilir arayüz prototipi, veriler kurgusaldır.<br>
+    <a href="https://gaviaworks.com" target="_blank" rel="noopener">Gaviaworks</a> tarafından geliştirilmektedir.
+    <span class="sep">·</span><a href="crm-dizin.html">Ekran Dizini</a>
+  </p>
+</main>
+
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  document.querySelectorAll('.pw-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var inp = document.getElementById(btn.getAttribute('data-target'));
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.innerHTML = '<i class="fa-solid ' + (show ? 'fa-eye-slash' : 'fa-eye') + '"></i>';
+    });
+  });
+
+  var pw1 = document.getElementById('fPw1'), pw2 = document.getElementById('fPw2');
+  var submitBtn = document.getElementById('firstPwSubmit');
+  function evalRules(){
+    var v = pw1.value, v2 = pw2.value;
+    var rules = {
+      len: v.length >= 8,
+      upper: /[A-ZÇĞİÖŞÜ]/.test(v),
+      digit: /[0-9]/.test(v),
+      match: v.length > 0 && v === v2
+    };
+    Object.keys(rules).forEach(function(k){
+      var el = document.querySelector('.pc-item[data-rule="' + k + '"]');
+      el.classList.toggle('ok', rules[k]);
+      el.querySelector('i').className = 'fa-solid ' + (rules[k] ? 'fa-circle-check' : 'fa-circle');
+    });
+    var allOk = Object.keys(rules).every(function(k){ return rules[k]; });
+    submitBtn.disabled = !allOk;
+    return allOk;
+  }
+  pw1.addEventListener('input', evalRules);
+  pw2.addEventListener('input', evalRules);
+
+  submitBtn.addEventListener('click', function(){
+    if(!evalRules()) return;
+    location.href = 'crm-sistem-basarili.html?baslik=' + encodeURIComponent('Şifreniz oluşturuldu') +
+      '&mesaj=' + encodeURIComponent('Artık Gavia CRM’e bu şifreyle giriş yapabilirsiniz.') +
+      '&donus=' + encodeURIComponent('crm-auth-giris.html');
+  });
+})();
+</script>
+</body>
+</html>

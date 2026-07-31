@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Müşteri — Satış CRM — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Yeni Müşteri Formu ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+
+/* tür seçici — cari-form.html tip-group dilinin aynısı, 6 seçenekli */
+.tip-group{display:flex;gap:8px;flex-wrap:wrap}
+.tip-opt{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
+.tip-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.tip-opt::before{content:"";width:7px;height:7px;border-radius:var(--r-circle);background:var(--muted)}
+.tip-opt[data-t="bireysel"]::before{background:var(--acc-ink)}
+.tip-opt[data-t="kurumsal"]::before{background:var(--info)}
+.tip-opt[data-t="yatirimci"]::before{background:var(--ok)}
+.tip-opt[data-t="arsa"]::before{background:var(--warn)}
+.tip-opt[data-t="bayi"]::before{background:var(--info)}
+.tip-opt[data-t="kiraci"]::before{background:var(--muted)}
+.tip-opt.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+
+.butce-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.butce-row{grid-template-columns:1fr}}
+
+.gfield .chk-line{display:flex;align-items:flex-start;gap:9px;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0;cursor:pointer;line-height:1.4}
+.gfield .chk-line input{width:16px;height:16px;flex:none;margin-top:1px;accent-color:var(--acc-ink);cursor:pointer}
+
+/* canlı önizleme */
+.fh-preview{display:flex;align-items:center;gap:14px;padding:20px 22px}
+.fh-mark{width:46px;height:46px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:15px;font-weight:800;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink);transition:.2s var(--ease)}
+.fh-info{min-width:0}
+.fh-info b{display:block;font-size:14.5px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.tsum-row{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.tsum-row:last-child{border-bottom:none}
+.tsum-ico{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:12px;background:var(--bg);color:var(--muted);border:1px solid var(--line);margin-top:1px}
+.tsum-body{min-width:0}
+.tsum-lbl{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+.tsum-val{font-size:13px;font-weight:700;color:var(--ink);line-height:1.4}
+.tsum-val.muted{color:var(--muted);font-weight:600}
+</style>
+</head>
+<body data-sec="satis" data-screen="musteriler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-satis-musteriler.html">Müşteriler</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Yeni Müşteri</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Satış</div>
+        <h1>Yeni Müşteri</h1>
+        <div class="ph-sub">Müşteri kartını açın; pipeline'a fırsat eklemek için bu kayıt gerekir.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-address-card"></i> Müşteri Bilgileri</div></div>
+        <div class="gc-body">
+          <form class="gform" id="mstForm">
+            <div class="gfield full">
+              <label>Müşteri Türü</label>
+              <div class="tip-group" id="turGroup">
+                <label class="tip-opt is-on" data-t="bireysel"><input type="radio" name="tur" value="bireysel" checked> Bireysel</label>
+                <label class="tip-opt" data-t="kurumsal"><input type="radio" name="tur" value="kurumsal"> Kurumsal</label>
+                <label class="tip-opt" data-t="yatirimci"><input type="radio" name="tur" value="yatirimci"> Yatırımcı</label>
+                <label class="tip-opt" data-t="arsa"><input type="radio" name="tur" value="arsa"> Arsa Sahibi</label>
+                <label class="tip-opt" data-t="bayi"><input type="radio" name="tur" value="bayi"> Bayi</label>
+                <label class="tip-opt" data-t="kiraci"><input type="radio" name="tur" value="kiraci"> Kiracı Adayı</label>
+              </div>
+            </div>
+            <div class="gfield full">
+              <label for="fAd" id="lblAd">Ad Soyad</label>
+              <input type="text" id="fAd" placeholder="örn. Aylin Şahinoğlu">
+            </div>
+            <div class="gfield">
+              <label for="fTel">Telefon</label>
+              <input type="tel" id="fTel" placeholder="05xx xxx xx xx">
+            </div>
+            <div class="gfield">
+              <label for="fEposta">E-posta</label>
+              <input type="email" id="fEposta" placeholder="ad.soyad@ornek.example">
+            </div>
+            <div class="gfield">
+              <label for="fKaynak">Kaynak</label>
+              <select id="fKaynak">
+                <option value="">Seçiniz</option>
+                <option>Web</option>
+                <option>Referans</option>
+                <option>Satış Ofisi</option>
+                <option>Sosyal Medya</option>
+                <option>WhatsApp</option>
+                <option>Fuar</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fTemsilci">Temsilci Ataması</label>
+              <select id="fTemsilci">
+                <option value="">Atanmadı — havuzda kalsın</option>
+                <option>Selin Acar</option>
+                <option>Okan Eren</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fProje">İlgilendiği Proje</label>
+              <select id="fProje">
+                <option value="">Seçiniz</option>
+                <option>Vadi Konakları</option>
+                <option>Göl Evleri 2. Etap</option>
+                <option>Kule Ofis B Blok</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fBirimTip">Birim Tipi</label>
+              <select id="fBirimTip">
+                <option value="">Seçiniz</option>
+                <option>2+1 Daire</option>
+                <option>3+1 Daire</option>
+                <option>Dubleks</option>
+                <option>Villa</option>
+                <option>Ofis (satış)</option>
+                <option>Ofis (kiralama)</option>
+                <option>Arsa</option>
+              </select>
+            </div>
+            <div class="gfield full">
+              <label>Bütçe Aralığı</label>
+              <div class="butce-row">
+                <input type="text" id="fButceMin" placeholder="Min — örn. ₺5.000.000">
+                <input type="text" id="fButceMax" placeholder="Maks — örn. ₺6.500.000">
+              </div>
+            </div>
+            <div class="gfield">
+              <label for="fIletisim">İletişim Tercihi</label>
+              <select id="fIletisim">
+                <option value="">Seçiniz</option>
+                <option>Telefon</option>
+                <option>E-posta</option>
+                <option>WhatsApp</option>
+                <option>SMS</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fSonrakiAdim">Sonraki Adım</label>
+              <input type="text" id="fSonrakiAdim" placeholder="örn. Saha gezisi planla">
+            </div>
+            <div class="gfield full">
+              <label class="chk-line"><input type="checkbox" id="fKvkk"> Açık rıza metni okundu, KVKK onayı alındı</label>
+              <span class="gf-hint">Onay alınmadan müşteri kartı pipeline'a fırsat ekleyemez.</span>
+            </div>
+            <div class="gfield full">
+              <label for="fNot">Not <span class="gf-hint">(isteğe bağlı)</span></label>
+              <textarea id="fNot" rows="3" placeholder="Görüşme özeti veya ekip için hatırlatma…"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="form-foot">
+          <a class="btn btn-ghost btn-sm" href="crm-satis-musteriler.html" data-no-confirm>Vazgeç</a>
+          <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="mstSubmit"><i class="fa-solid fa-plus"></i> Müşteri Kartı Oluştur</button>
+        </div>
+      </div>
+
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-eye"></i> Müşteri Önizleme</div></div>
+          <div class="fh-preview">
+            <div class="fh-mark" id="pMark">MÜ</div>
+            <div class="fh-info"><b id="pAd">Yeni Müşteri</b><span class="muted" style="font-size:12px" id="pTur">Bireysel</span></div>
+          </div>
+          <div class="gc-body" style="padding-top:0">
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-signal"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">Kaynak</div><div class="tsum-val muted" id="sumKaynak">Seçilmedi</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-user-tie"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">Temsilci</div><div class="tsum-val muted" id="sumTemsilci">Atanmadı — havuzda</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-building-circle-check"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">İlgi</div><div class="tsum-val muted" id="sumIlgi">Girilmedi</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">Bütçe Aralığı</div><div class="tsum-val muted" id="sumButce">Girilmedi</div></div>
+            </div>
+            <div class="tsum-row">
+              <div class="tsum-ico"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="tsum-body"><div class="tsum-lbl">KVKK</div><div class="tsum-val muted" id="sumKvkk">Onay bekliyor</div></div>
+            </div>
+          </div>
+          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Kayıt oluşturulduğunda müşteri, Müşteriler listesinde görünür.</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var TUR_LBL = {bireysel:'Bireysel', kurumsal:'Kurumsal', yatirimci:'Yatırımcı', arsa:'Arsa Sahibi', bayi:'Bayi', kiraci:'Kiracı Adayı'};
+  var KURUMSAL_TIP = ['kurumsal','bayi'];
+  var turSecili = 'bireysel';
+
+  function initials(name){
+    var parts = name.trim().split(/\s+/).filter(Boolean);
+    if(!parts.length) return 'MÜ';
+    if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  }
+
+  function applyTur(t){
+    turSecili = t;
+    var kurumsalMod = KURUMSAL_TIP.indexOf(t) !== -1;
+    document.getElementById('lblAd').textContent = kurumsalMod ? 'Firma Adı' : 'Ad Soyad';
+    document.getElementById('fAd').placeholder = kurumsalMod ? 'örn. Nova Gayrimenkul' : 'örn. Aylin Şahinoğlu';
+    syncPreview();
+  }
+
+  document.getElementById('turGroup').addEventListener('click', function(e){
+    var opt = e.target.closest('.tip-opt'); if(!opt) return;
+    document.querySelectorAll('#turGroup .tip-opt').forEach(function(o){ o.classList.remove('is-on'); });
+    opt.classList.add('is-on');
+    applyTur(opt.getAttribute('data-t'));
+  });
+
+  function syncPreview(){
+    var ad = document.getElementById('fAd').value.trim();
+    document.getElementById('pAd').textContent = ad || 'Yeni Müşteri';
+    document.getElementById('pMark').textContent = initials(ad || 'Yeni Müşteri');
+    document.getElementById('pTur').textContent = TUR_LBL[turSecili];
+
+    var kaynak = document.getElementById('fKaynak').value;
+    var kEl = document.getElementById('sumKaynak');
+    kEl.textContent = kaynak || 'Seçilmedi';
+    kEl.classList.toggle('muted', !kaynak);
+
+    var temsilci = document.getElementById('fTemsilci').value;
+    var tEl = document.getElementById('sumTemsilci');
+    tEl.textContent = temsilci || 'Atanmadı — havuzda';
+    tEl.classList.toggle('muted', !temsilci);
+
+    var proje = document.getElementById('fProje').value;
+    var birimTip = document.getElementById('fBirimTip').value;
+    var ilgiParts = [];
+    if(proje) ilgiParts.push(proje);
+    if(birimTip) ilgiParts.push(birimTip);
+    var iEl = document.getElementById('sumIlgi');
+    iEl.textContent = ilgiParts.length ? ilgiParts.join(' — ') : 'Girilmedi';
+    iEl.classList.toggle('muted', !ilgiParts.length);
+
+    var bMin = document.getElementById('fButceMin').value.trim();
+    var bMax = document.getElementById('fButceMax').value.trim();
+    var bEl = document.getElementById('sumButce');
+    if(bMin || bMax){ bEl.textContent = (bMin || '—') + ' – ' + (bMax || '—'); bEl.classList.remove('muted'); }
+    else { bEl.textContent = 'Girilmedi'; bEl.classList.add('muted'); }
+
+    var kvkkEl = document.getElementById('sumKvkk');
+    var kvkkOn = document.getElementById('fKvkk').checked;
+    kvkkEl.textContent = kvkkOn ? 'Onaylandı' : 'Onay bekliyor';
+    kvkkEl.classList.toggle('muted', !kvkkOn);
+    kvkkEl.style.color = kvkkOn ? 'var(--ok)' : '';
+  }
+
+  ['fAd','fButceMin','fButceMax'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', syncPreview);
+  });
+  ['fKaynak','fTemsilci','fProje','fBirimTip','fKvkk'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', syncPreview);
+  });
+
+  document.getElementById('mstSubmit').addEventListener('click', function(){
+    var ad = document.getElementById('fAd').value.trim();
+    if(!ad){ gvToast(turSecili === 'kurumsal' || turSecili === 'bayi' ? 'Firma adını girin.' : 'Ad Soyad girin.', {type:'danger'}); document.getElementById('fAd').focus(); return; }
+    if(!document.getElementById('fKvkk').checked){ gvToast('KVKK onayı olmadan müşteri kartı oluşturulamaz.', {type:'danger'}); return; }
+    gvToast('Müşteri kartı oluşturuldu');
+    setTimeout(function(){ location.href = 'crm-satis-musteriler.html'; }, 900);
+  });
+
+  applyTur('bireysel');
+  syncPreview();
+})();
+</script>
+</body>
+</html>

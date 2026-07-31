@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Araç Ekle — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Araç Ekle/Düzenle Formu (§12)
+   Kaynak-transfer: crm-operasyon-demirbas-form.html (form iskeleti) + crm-ayarlar-imza-form.html
+   (gerçek File API doc-drop yükleme deseni, birebir dil). ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+/* minmax(0,1fr) — düz "1fr" bir grid item'ının otomatik minimum genişliği içeriğinin
+   min-content'i olur (kararlar.md madde 1 emsali); 8 sekmeli yoğun formda bu taşmaya
+   yol açtığı için burada minmax(0,1fr) ile açıkça sıfırlandı (sayfa-lokal stil, ortak
+   ui.css'e dokunulmadı). */
+.form-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+.left-stack{display:flex;flex-direction:column;gap:16px}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.form-foot .foot-left{margin-right:auto;display:flex;gap:10px;flex-wrap:wrap}
+
+.role-note{display:flex;align-items:flex-start;gap:13px;background:var(--bg);border:1px dashed var(--line-2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px}
+.role-note.warn{background:var(--warn-tint);border-color:rgba(var(--warn-rgb,245,158,11),.4)}
+.role-note .rn-ico{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--paper);border:1px solid var(--line);color:var(--acc-ink);font-size:14px}
+.role-note.warn .rn-ico{color:var(--warn)}
+.role-note .rn-b{min-width:0;line-height:1.5}
+.role-note .rn-b b{font-size:13px;color:var(--ink-2);font-weight:700}
+.role-note .rn-b p{font-size:12.5px;color:var(--muted);margin-top:3px}
+
+.stat-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-top:1px solid var(--line);margin-top:4px}
+.stat-row b{font-size:13px;font-weight:700;color:var(--ink)}
+.stat-row span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* dosya yükleme — imza-form.html ile birebir dil */
+.doc-drop{border:1.5px dashed var(--line-2);border-radius:var(--r-md);padding:16px;text-align:center;transition:.18s var(--ease)}
+.doc-drop.is-drag{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.06)}
+.doc-drop-btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--acc-ink);cursor:pointer}
+.doc-drop-btn i{font-size:16px}
+.doc-hint{display:block;margin-top:7px;font-size:11.5px;color:var(--muted);font-weight:500}
+.doc-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.doc-item{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
+.doc-item[data-state="hata"]{border-color:color-mix(in srgb, var(--danger) 30%, var(--line));background:var(--danger-tint)}
+.doc-thumb{width:42px;height:42px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:15px;color:#fff;background:var(--gv-night)}
+.doc-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.doc-info b{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{font-size:11.5px;color:var(--muted)}
+.doc-status{font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.doc-status.st-yukleniyor{color:var(--info)}
+.doc-status.st-hazir{color:var(--ok)}
+.doc-status.st-hata{color:var(--danger)}
+.doc-acts{display:flex;align-items:center;justify-content:center;flex:none}
+.doc-type-sel{margin-bottom:10px}
+.doc-type-sel select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r-sm);font-family:inherit;font-size:12.5px;background:var(--paper);color:var(--ink)}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;font-size:13px}
+.ctx-row:not(:last-child){border-bottom:1px solid var(--line)}
+.ctx-row .ctx-lbl{color:var(--muted)}
+.ctx-row .ctx-val{color:var(--ink);font-weight:700;text-align:right}
+
+/* ============ SEKME MOTORU (§1.2, 8 sekme) — crm-operasyon-arac-detay.html /
+   crm-santiye-detay.html ile BİREBİR aynı dil (kaynak-transfer, sayfa-lokal kopya,
+   motor tekrar icat edilmedi). ============ */
+.gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 4px;margin-right:22px;flex:none;
+  font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tab i{font-size:12.5px}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+.tab-panel{animation:tabIn .22s var(--ease)}
+@keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* poliçe/versiyonlu belge alt-bloğu (Muayene/Kasko/Trafik sekmeleri) —
+   crm-operasyon-arac-evrak.html'in append-only versiyon dizisi diliyle birebir */
+.pol-doc-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.pol-doc-head b{font-size:12.5px;font-weight:700;color:var(--ink-2);letter-spacing:.02em}
+.pol-doc-row{display:flex;align-items:flex-start;gap:14px;padding:12px 0}
+.pol-doc-ico{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:14px;background:var(--bg);color:var(--ink-2)}
+.pol-doc-info{flex:1;min-width:0}
+.pol-doc-info b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.pol-doc-info span{font-size:11.5px;color:var(--muted)}
+.ev-hist{margin-top:8px;padding-left:52px}
+.ev-hist-item{font-size:11.5px;color:var(--muted);padding:4px 0;display:flex;align-items:center;gap:8px}
+.ev-hist-item .gtag{font-size:9.5px;padding:1px 6px}
+.ev-hist-toggle{font-size:11px;font-weight:700;color:var(--acc-ink);cursor:pointer;background:none;border:none;padding:4px 0 0;font-family:inherit}
+
+/* özet/link kartları — Yakıt/Bakım/Diğer Giderler/Belgeler sekmeleri (§1.2 Sekme
+   5/6/7/8 — ayrı ekranlara "özet + link" deseni, detay.html:185-190 emsali) */
+.sub-link-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.sub-link-card span{font-size:12.5px;color:var(--muted)}
+.mini-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.mini-row:last-child{border-bottom:none}
+.mini-row b{color:var(--ink)}
+.mini-row .mr-r{margin-left:auto;flex:none;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* araç görseli — kare, div+background-image (CLAUDE.md görsel kuralı — <img> DEĞİL) */
+.gorsel-wrap{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.gorsel-drop{width:96px;height:96px;border-radius:var(--r-md);border:1.5px dashed var(--line-2);display:grid;place-items:center;
+  cursor:pointer;background-size:cover;background-position:center;color:var(--muted);font-size:20px;flex:none;position:relative;overflow:hidden;transition:.18s var(--ease)}
+.gorsel-drop:hover{border-color:var(--acc-ink)}
+.gorsel-drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.gorsel-drop.has-img{border-style:solid;border-color:var(--line)}
+.gorsel-drop.has-img i{display:none}
+.gorsel-hint{font-size:11.5px;color:var(--muted);line-height:1.5;max-width:360px}
+
+/* taslak banner */
+.taslak-note{display:flex;align-items:center;gap:12px;background:var(--info-tint,var(--bg));border:1px dashed var(--line-2);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;flex-wrap:wrap}
+.taslak-note span{font-size:12.5px;color:var(--ink-2);flex:1;min-width:200px}
+</style>
+</head>
+<body data-sec="varlik" data-screen="arac-form">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-operasyon-arac.html">Araçlar</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbLbl">Yeni Araç Ekle</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Günlük Kayıt</div>
+        <h1 id="pageTitle">Yeni Araç Ekle</h1>
+        <div class="ph-sub" id="pageSub">Filoya yeni bir araç kaydedin; muayene/sigorta/bakım tarihleri girildikten sonra otomatik uyarı takibine alınır.</div>
+      </div>
+      <div class="ph-actions" id="editActsTop" hidden>
+        <a class="btn btn-ghost btn-sm" id="lnkDetayaDon" href="crm-operasyon-arac-detay.html"><i class="fa-solid fa-arrow-left"></i> Araç Dosyasına Dön</a>
+      </div>
+    </div>
+
+    <div class="role-note warn" id="arsivUyari" hidden>
+      <div class="rn-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="rn-b">
+        <b>Bu araç arşivlenmiş görünüyor</b>
+        <p>Bilgileri yine de düzenleyebilirsiniz; durumu yeniden "Aktif" yapmak için Araç Dosyası'ndaki <b>"Aktife Al"</b> akışını kullanın (crm-operasyon-arac-arsiv.html).</p>
+      </div>
+    </div>
+
+    <div class="taslak-note" id="taslakNote" hidden>
+      <i class="fa-solid fa-file-pen" style="color:var(--acc-ink)"></i>
+      <span>Kaydedilmemiş bir taslağınız var.</span>
+      <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="taslakDoldur">Taslağı Doldur</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="taslakSil">Taslağı Sil</button>
+    </div>
+
+    <div class="form-grid">
+      <!-- ============ SOL: 8 sekmeli form (§1.2) ============ -->
+      <div class="left-stack">
+        <div class="gv-tabs" role="tablist" aria-label="Araç formu sekmeleri">
+          <button type="button" class="gv-tab is-active" data-tab="genel" role="tab" aria-selected="true"><i class="fa-solid fa-circle-info"></i> Genel Bilgiler</button>
+          <button type="button" class="gv-tab" data-tab="muayene" role="tab" aria-selected="false"><i class="fa-solid fa-clipboard-check"></i> Araç Muayenesi</button>
+          <button type="button" class="gv-tab" data-tab="kasko" role="tab" aria-selected="false"><i class="fa-solid fa-shield-halved"></i> Kasko Bilgileri</button>
+          <button type="button" class="gv-tab" data-tab="trafik" role="tab" aria-selected="false"><i class="fa-solid fa-file-shield"></i> Trafik Sigortası</button>
+          <button type="button" class="gv-tab" data-tab="yakit" role="tab" aria-selected="false"><i class="fa-solid fa-gas-pump"></i> Yakıt ve Enerji</button>
+          <button type="button" class="gv-tab" data-tab="bakim" role="tab" aria-selected="false"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım ve Onarım</button>
+          <button type="button" class="gv-tab" data-tab="gider" role="tab" aria-selected="false"><i class="fa-solid fa-sack-dollar"></i> Diğer Giderler</button>
+          <button type="button" class="gv-tab" data-tab="belge" role="tab" aria-selected="false"><i class="fa-solid fa-paperclip"></i> Belgeler</button>
+        </div>
+
+        <form id="aracForm" onsubmit="return false">
+        <!-- ============ SEKME 1 — GENEL BİLGİLER ============ -->
+        <section class="tab-panel" data-tab-panel="genel">
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-car-side"></i> Araç Bilgileri</div></div>
+            <div class="gc-body">
+              <div class="gorsel-wrap">
+                <label class="gorsel-drop" id="gorselDrop" for="fGorsel"><i class="fa-solid fa-image"></i><input type="file" id="fGorsel" accept=".jpg,.jpeg,.png"></label>
+                <span class="gorsel-hint">Araç görseli — kare oranlı JPG/PNG. Araç dosyasında ve listede gösterilir.</span>
+              </div>
+              <div class="gform">
+                <div class="gfield">
+                  <label for="fAracKodu">Araç Kodu</label>
+                  <input type="text" id="fAracKodu" disabled>
+                </div>
+                <div class="gfield">
+                  <label for="fPlaka">Plaka</label>
+                  <input type="text" id="fPlaka" placeholder="ör. 34 ABC 123">
+                </div>
+                <div class="gfield">
+                  <label for="fAracTipi">Araç Tipi</label>
+                  <select id="fAracTipi">
+                    <option value="binek">Binek Araç</option>
+                    <option value="kamyonet" selected>Kamyonet</option>
+                    <option value="kamyon">Kamyon</option>
+                    <option value="ismakinesi">İş Makinesi</option>
+                    <option value="servis">Servis Aracı</option>
+                    <option value="forklift">Forklift</option>
+                    <option value="vinc">Vinç</option>
+                    <option value="diger">Diğer</option>
+                  </select>
+                  <span class="gf-hint" id="ismakinesiHint" hidden>İş makinesi zaten Makine Parkı'nda kayıtlıysa burada tekrar OLUŞTURMAYIN — <a href="crm-operasyon-makine.html" style="color:var(--acc-ink);font-weight:700">Makine Parkı'na</a> gidip mevcut kaydı kullanın.</span>
+                </div>
+                <div class="gfield">
+                  <label for="fMarka">Marka</label>
+                  <input type="text" id="fMarka" placeholder="ör. Ford">
+                </div>
+                <div class="gfield">
+                  <label for="fModel">Model</label>
+                  <input type="text" id="fModel" placeholder="ör. Ranger 4x4 Pikap">
+                </div>
+                <div class="gfield">
+                  <label for="fModelYili">Model Yılı</label>
+                  <input type="number" id="fModelYili" min="1990" max="2027" placeholder="ör. 2023">
+                </div>
+                <div class="gfield">
+                  <label for="fPaket">Paket / Versiyon <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fPaket" placeholder="ör. XLT 4x4">
+                </div>
+                <div class="gfield">
+                  <label for="fRenk">Renk</label>
+                  <input type="text" id="fRenk" placeholder="ör. Beyaz">
+                </div>
+                <div class="gfield">
+                  <label for="fSasiNo">Şasi No</label>
+                  <input type="text" id="fSasiNo" placeholder="17 haneli şasi no">
+                </div>
+                <div class="gfield">
+                  <label for="fMotorNo">Motor No</label>
+                  <input type="text" id="fMotorNo">
+                </div>
+                <div class="gfield">
+                  <label for="fRuhsatSeri">Ruhsat Seri No</label>
+                  <input type="text" id="fRuhsatSeri" placeholder="ör. AE 123456">
+                </div>
+                <div class="gfield">
+                  <label for="fYakit">Yakıt Tipi</label>
+                  <select id="fYakit">
+                    <option value="benzin">Benzin</option>
+                    <option value="dizel" selected>Motorin (Dizel)</option>
+                    <option value="lpg">LPG</option>
+                    <option value="elektrik">Elektrik</option>
+                    <option value="hibrit">Hibrit</option>
+                    <option value="adblue">AdBlue</option>
+                    <option value="diger">Diğer</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fVites">Vites Türü</label>
+                  <select id="fVites">
+                    <option value="manuel">Manuel</option>
+                    <option value="otomatik">Otomatik</option>
+                    <option value="yariotomatik">Yarı Otomatik</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fMotorHacmi">Motor Hacmi <span class="gf-hint">(cc)</span></label>
+                  <input type="number" id="fMotorHacmi" min="0" placeholder="ör. 2000">
+                </div>
+                <div class="gfield">
+                  <label for="fIlkTescil">İlk Tescil Tarihi</label>
+                  <input type="date" id="fIlkTescil">
+                </div>
+                <div class="gfield">
+                  <label for="fGirisTarihi">Şirkete Giriş Tarihi</label>
+                  <input type="date" id="fGirisTarihi">
+                </div>
+                <div class="gfield">
+                  <label for="fMulkiyet">Mülkiyet Türü</label>
+                  <select id="fMulkiyet">
+                    <option value="sirket">Şirkete ait</option>
+                    <option value="kiralik">Kiralık</option>
+                    <option value="leasing">Leasing</option>
+                    <option value="personel">Personel aracı</option>
+                    <option value="taseron">Taşeron aracı</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fSatinAlmaBilgi">Satın Alma / Kiralama Bilgisi <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fSatinAlmaBilgi" placeholder="ör. Tedarikçi / kiralama firması">
+                </div>
+                <div class="gfield">
+                  <label for="fSatinAlmaBedeli">Satın Alma Bedeli <span class="gf-hint">(₺, isteğe bağlı)</span></label>
+                  <input type="number" id="fSatinAlmaBedeli" min="0">
+                </div>
+                <div class="gfield full">
+                  <label for="fRuhsat">Ruhsat Sahibi</label>
+                  <input type="text" id="fRuhsat" placeholder="ör. Yapıtaş İnşaat A.Ş." value="Yapıtaş İnşaat A.Ş.">
+                </div>
+                <div class="gfield">
+                  <label for="fKm">Güncel Kilometre</label>
+                  <input type="number" id="fKm" min="0" placeholder="ör. 42300">
+                </div>
+                <div class="gfield">
+                  <label for="fKmTarihi">Km Son Güncelleme Tarihi</label>
+                  <input type="date" id="fKmTarihi">
+                </div>
+                <div class="gfield">
+                  <label for="fBagliFirma">Bağlı Firma</label>
+                  <input type="text" id="fBagliFirma" value="Yapıtaş İnşaat A.Ş." disabled>
+                </div>
+                <div class="gfield">
+                  <label for="fSantiye">Bağlı Şantiye / Birim <span class="gf-hint">(bu prototipte proje=şantiye)</span></label>
+                  <select id="fSantiye">
+                    <option value="vadi">Vadi Konakları</option>
+                    <option value="liman">Liman Lojistik Merkezi</option>
+                    <option value="merkez" selected>Merkez Şantiye</option>
+                    <option value="genelmerkez">Genel Merkez</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fAracSorumlusu">Araç Sorumlusu <span class="gf-hint">(filo yöneticisi — zimmetli kişiden ayrı)</span></label>
+                  <select id="fAracSorumlusu">
+                    <option value="">Atanmadı</option>
+                    <option>Elif Sarıkaya</option>
+                    <option>Baran Yıldız</option>
+                    <option>Murat Denizli</option>
+                    <option>Nesrin Aydın</option>
+                    <option>Hasan Demirci</option>
+                    <option>Aylin Koç</option>
+                    <option>Ömer Taşkın</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fZimmet">Zimmetli Personel</label>
+                  <select id="fZimmet">
+                    <option value="">Zimmetsiz — depo havuz aracı</option>
+                    <optgroup label="Şantiye Şefleri">
+                      <option>Hasan Demirci</option>
+                      <option>Aylin Koç</option>
+                      <option>Ömer Taşkın</option>
+                    </optgroup>
+                    <optgroup label="Yönetim">
+                      <option>Murat Denizli</option>
+                      <option>Elif Sarıkaya</option>
+                      <option>Baran Yıldız</option>
+                      <option>Seda Karaca</option>
+                      <option>Nesrin Aydın</option>
+                    </optgroup>
+                    <optgroup label="Vadi Ekibi">
+                      <option>Ali Vural</option>
+                      <option>İbrahim Sönmez</option>
+                      <option>Ramazan Kılıç</option>
+                      <option>Selim Doğan</option>
+                      <option>Musa Erdem</option>
+                      <option>Veli Şimşek</option>
+                    </optgroup>
+                    <optgroup label="Liman Ekibi">
+                      <option>Şükrü Aslan</option>
+                      <option>Halil Güneş</option>
+                      <option>Metin Çetin</option>
+                      <option>Osman Polat</option>
+                    </optgroup>
+                    <optgroup label="Merkez Ekibi">
+                      <option>Recep Yaman</option>
+                      <option>İlyas Kurt</option>
+                      <option>Sadık Öz</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div class="gfield full">
+                  <label for="fAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <textarea id="fAciklama" rows="2" placeholder="Araçla ilgili not…"></textarea>
+                </div>
+              </div>
+            </div>
+            <div class="stat-row" style="padding:13px 22px">
+              <div><b>Aktif</b><span>Kapatırsanız araç "Pasif" durumuna alınır — kayıt silinmez, listede filtreyle görünür kalır.</span></div>
+              <label class="gv-toggle"><input type="checkbox" id="fAktif" checked><span class="tg-track"></span></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 2 — ARAÇ MUAYENESİ ============ -->
+        <section class="tab-panel" data-tab-panel="muayene" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clipboard-check"></i> Araç Muayenesi</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield"><label for="fSonMuayeneTarihi">Son Muayene Tarihi</label><input type="date" id="fSonMuayeneTarihi"></div>
+                <div class="gfield"><label for="fMuayene">Geçerlilik Bitiş Tarihi</label><input type="date" id="fMuayene"></div>
+                <div class="gfield"><label for="fMuayeneIstasyon">İstasyon</label><input type="text" id="fMuayeneIstasyon" placeholder="ör. TÜVTÜRK Ümraniye"></div>
+                <div class="gfield"><label for="fMuayeneRaporNo">Rapor No</label><input type="text" id="fMuayeneRaporNo"></div>
+                <div class="gfield">
+                  <label for="fMuayeneSonuc">Sonuç</label>
+                  <select id="fMuayeneSonuc">
+                    <option>Geçti</option><option>Hafif kusurlu</option><option>Ağır kusurlu</option>
+                    <option>Emniyetsiz</option><option>Muayene tekrarı gerekli</option>
+                  </select>
+                </div>
+                <div class="gfield"><label for="fMuayeneUcret">Ücret <span class="gf-hint">(₺)</span></label><input type="number" id="fMuayeneUcret" min="0"></div>
+                <div class="gfield"><label for="fSonrakiMuayene">Sonraki Muayene Tarihi</label><input type="date" id="fSonrakiMuayene"></div>
+                <div class="gfield">
+                  <label for="fMuayeneHatirlatma">Hatırlatma Oluştur</label>
+                  <select id="fMuayeneHatirlatma">
+                    <option value="60">60 gün önce</option><option value="30" selected>30 gün önce</option>
+                    <option value="15">15 gün önce</option><option value="7">7 gün önce</option>
+                    <option value="0">Son gün</option><option value="ozel">Özel gün sayısı…</option>
+                  </select>
+                </div>
+                <div class="gfield" id="muayeneOzelGunWrap" hidden><label for="fMuayeneOzelGun">Özel Gün Sayısı</label><input type="number" id="fMuayeneOzelGun" min="1" placeholder="ör. 45"></div>
+                <div class="gfield full"><label for="fMuayeneAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label><textarea id="fMuayeneAciklama" rows="2"></textarea></div>
+              </div>
+              <div id="muayeneDocWrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 3 — KASKO BİLGİLERİ ============ -->
+        <section class="tab-panel" data-tab-panel="kasko" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-shield-halved"></i> Kasko Bilgileri</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield"><label for="fKaskoSirket">Sigorta Şirketi</label><input type="text" id="fKaskoSirket"></div>
+                <div class="gfield"><label for="fKaskoAcente">Acente</label><input type="text" id="fKaskoAcente"></div>
+                <div class="gfield"><label for="fKaskoPoliceNo">Poliçe No</label><input type="text" id="fKaskoPoliceNo"></div>
+                <div class="gfield">
+                  <label for="fKaskoTuru">Kasko Türü</label>
+                  <select id="fKaskoTuru"><option>Dar kasko</option><option>Kasko</option><option>Genişletilmiş kasko</option><option>Tam kasko</option><option>Filo kaskosu</option></select>
+                </div>
+                <div class="gfield"><label for="fKaskoBaslangic">Başlangıç Tarihi</label><input type="date" id="fKaskoBaslangic"></div>
+                <div class="gfield"><label for="fKasko">Bitiş Tarihi</label><input type="date" id="fKasko"></div>
+                <div class="gfield"><label for="fKaskoBedel">Poliçe Bedeli <span class="gf-hint">(₺)</span></label><input type="number" id="fKaskoBedel" min="0"></div>
+                <div class="gfield"><label for="fKaskoTeminat">Teminat Tutarı <span class="gf-hint">(₺)</span></label><input type="number" id="fKaskoTeminat" min="0"></div>
+                <div class="gfield">
+                  <label for="fKaskoOdeme">Ödeme Şekli</label>
+                  <select id="fKaskoOdeme"><option>Peşin</option><option>Taksitli</option></select>
+                </div>
+                <div class="gfield"><label for="fKaskoTaksit">Taksit Sayısı</label><input type="number" id="fKaskoTaksit" min="1" max="12"></div>
+                <div class="gfield"><label for="fKaskoHasarsizlik">Hasarsızlık Oranı <span class="gf-hint">(%)</span></label><input type="number" id="fKaskoHasarsizlik" min="0" max="60"></div>
+                <div class="gfield full"><label for="fKaskoKapsam">Kapsam</label><input type="text" id="fKaskoKapsam"></div>
+                <div class="gfield"><label for="fKaskoYetkili">Acente Yetkilisi</label><input type="text" id="fKaskoYetkili"></div>
+                <div class="gfield"><label for="fKaskoTelefon">Yetkili Telefon</label><input type="text" id="fKaskoTelefon"></div>
+                <div class="gfield full"><label for="fKaskoEposta">Yetkili E-posta</label><input type="text" id="fKaskoEposta"></div>
+                <div class="gfield full"><label for="fKaskoAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label><textarea id="fKaskoAciklama" rows="2"></textarea></div>
+              </div>
+              <div id="kaskoDocWrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 4 — TRAFİK SİGORTASI ============ -->
+        <section class="tab-panel" data-tab-panel="trafik" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-shield"></i> Trafik Sigortası</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield"><label for="fTrafikSirket">Sigorta Şirketi</label><input type="text" id="fTrafikSirket"></div>
+                <div class="gfield"><label for="fTrafikAcente">Acente</label><input type="text" id="fTrafikAcente"></div>
+                <div class="gfield"><label for="fTrafikPoliceNo">Poliçe No</label><input type="text" id="fTrafikPoliceNo"></div>
+                <div class="gfield"><label for="fTrafikBaslangic">Başlangıç Tarihi</label><input type="date" id="fTrafikBaslangic"></div>
+                <div class="gfield"><label for="fSigorta">Bitiş Tarihi</label><input type="date" id="fSigorta"></div>
+                <div class="gfield"><label for="fTrafikBedel">Poliçe Bedeli <span class="gf-hint">(₺)</span></label><input type="number" id="fTrafikBedel" min="0"></div>
+                <div class="gfield"><label for="fTrafikTeminat">Teminat Tutarı <span class="gf-hint">(₺)</span></label><input type="number" id="fTrafikTeminat" min="0"></div>
+                <div class="gfield">
+                  <label for="fTrafikOdeme">Ödeme Şekli</label>
+                  <select id="fTrafikOdeme"><option>Peşin</option><option>Taksitli</option></select>
+                </div>
+                <div class="gfield"><label for="fTrafikTaksit">Taksit Sayısı</label><input type="number" id="fTrafikTaksit" min="1" max="12"></div>
+                <div class="gfield full"><label for="fTrafikYetkili">Acente Yetkilisi</label><input type="text" id="fTrafikYetkili"></div>
+                <div class="gfield"><label for="fTrafikTelefon">Yetkili Telefon</label><input type="text" id="fTrafikTelefon"></div>
+                <div class="gfield"><label for="fTrafikEposta">Yetkili E-posta</label><input type="text" id="fTrafikEposta"></div>
+                <div class="gfield full"><label for="fTrafikAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label><textarea id="fTrafikAciklama" rows="2"></textarea></div>
+              </div>
+              <div id="trafikDocWrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 5 — YAKIT VE ENERJİ GİDERLERİ ============ -->
+        <section class="tab-panel" data-tab-panel="yakit" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-gas-pump"></i> Yakıt ve Enerji Giderleri</div></div>
+            <div class="gc-body" id="yakitOzetWrap"></div>
+            <div class="sub-link-card">
+              <span>Tüm yakıt hareketleri, litre/kWh, birim fiyat ve anormal tüketim tespiti ayrı ekranda tutulur.</span>
+              <a class="gc-link" id="lnkYakitTam" href="crm-operasyon-arac-yakit.html">Tüm Yakıt Kayıtları <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 6 — BAKIM VE ONARIM ============ -->
+        <section class="tab-panel" data-tab-panel="bakim" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım ve Onarım</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield"><label for="fBakim">Sonraki Bakım Tarihi <span class="gf-hint">(isteğe bağlı)</span></label><input type="date" id="fBakim"></div>
+              </div>
+              <div id="bakimOzetWrap"></div>
+            </div>
+            <div class="sub-link-card">
+              <span>Bakım türü (periyodik/lastik/fren/motor arızası vb.), parça/işçilik tutarı ve garanti kapsamı ayrı ekranda tutulur.</span>
+              <a class="gc-link" id="lnkBakimTam2" href="crm-operasyon-arac-bakim.html">Bakım Geçmişini Yönet <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 7 — DİĞER GİDERLER ============ -->
+        <section class="tab-panel" data-tab-panel="gider" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-sack-dollar"></i> Diğer Giderler</div></div>
+            <div class="gc-body" id="giderOzetWrap"></div>
+            <div class="sub-link-card">
+              <span>MTV / HGS / OGS / otopark / trafik cezası / lastik / servis vb. kalemler ayrı ekranda tutulur.</span>
+              <a class="gc-link" id="lnkGiderTam" href="crm-operasyon-arac-gider.html">Tüm Gider Kayıtları <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 8 — BELGELER ============ -->
+        <section class="tab-panel" data-tab-panel="belge" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-paperclip"></i> Evrak Dosyaları</div></div>
+            <div class="gc-body">
+              <div class="doc-type-sel">
+                <select id="fEvrakTuru" aria-label="Evrak türü">
+                  <option value="Ruhsat">Ruhsat</option>
+                  <option value="Sigorta Poliçesi">Sigorta Poliçesi</option>
+                  <option value="Kasko Poliçesi">Kasko Poliçesi</option>
+                  <option value="Muayene Raporu">Muayene Raporu</option>
+                  <option value="Bakım Fişi">Bakım Fişi</option>
+                  <option value="Kiralama Sözleşmesi">Kiralama Sözleşmesi</option>
+                  <option value="Hasar Tutanağı">Hasar Tutanağı</option>
+                  <option value="Servis Faturası">Servis Faturası</option>
+                  <option value="Satın Alma Faturası">Satın Alma Faturası</option>
+                  <option value="Ekspertiz Raporu">Ekspertiz Raporu</option>
+                  <option value="Diğer Belge">Diğer Belge</option>
+                </select>
+              </div>
+              <div class="doc-drop" id="docDrop">
+                <input type="file" id="fBelgeDosya" accept=".pdf,.jpg,.jpeg,.png" multiple hidden>
+                <label for="fBelgeDosya" class="doc-drop-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Evrak dosyası seç veya sürükleyip bırakın</label>
+                <span class="doc-hint">Seçili evrak türüyle ilişkilendirilir — PDF/JPG/PNG ≤10 MB (demo sınırı)</span>
+              </div>
+              <div class="doc-list" id="docList"></div>
+            </div>
+            <div class="sub-link-card">
+              <span>Versiyon geçmişi ve tüm evrak türleri araç dosyasında yönetilir.</span>
+              <a class="gc-link" id="lnkEvrakTam" href="crm-operasyon-arac-evrak.html">Tüm Evrakları Yönet <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </section>
+        </form>
+
+        <div class="gv-card">
+          <div class="form-foot">
+            <div class="foot-left" id="editActs" hidden>
+              <a class="btn btn-ghost btn-sm" id="lnkBakim" href="crm-operasyon-arac-bakim.html"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım Geçmişi</a>
+              <a class="btn btn-ghost btn-sm" id="lnkArsivleFoot" href="crm-operasyon-arac-arsiv.html"><i class="fa-solid fa-box-archive"></i> Arşivle</a>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="crm-operasyon-arac.html">Vazgeç</a>
+            <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="aracTaslak"><i class="fa-solid fa-file-pen"></i> Taslak Olarak Kaydet</button>
+            <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="aracSubmit"><i class="fa-solid fa-floppy-disk"></i> Aracı Kaydet</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bilgi notları ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hashtag"></i> Kayıt Özeti</div></div>
+          <div class="gc-body" id="ozetBody"></div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Kayıt Notları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-hashtag"></i><span>ARC takip numarası kayıt onaylandığında otomatik üretilir (ör. ARC-11).</span></div>
+            <div class="side-tip"><i class="fa-solid fa-ban"></i><span>Silme butonu yoktur — araç yalnız "arşivlenir" (satıldı/hurdaya ayrıldı/kiralama bitti/pasif), geçmiş kayıtlarda görünür kalır.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-triangle-exclamation"></i><span>Muayene/sigorta/kasko/bakım tarihine 30 gün veya daha az kaldığında liste ve detayda otomatik uyarı rozeti oluşur.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-file-pen"></i><span>"Taslak Olarak Kaydet" tarayıcı localStorage'ına yazar — sayfa yeniden açıldığında doldurma önerisi çıkar.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-flask"></i><span>Bu form simülasyondur; kayıt tarayıcı oturumunda tutulur, kalıcı veritabanına yazılmaz.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ============ KANONİK ARAÇ FİLOSU MİNİ KOPYASI — crm-operasyon-arac.html ile
+     SENKRON (düzenleme modunda prefill için). ARC-01..06 plaka/zimmet/tarih BİREBİR;
+     ARC-07..10 bu paketle eklenen satıldı/kiralama-bitti/hurda örnekleri. ============ */
+  var ARAC = {
+    'ARC-01':{plaka:'34 ABC 123', tip:'kamyonet', marka:'Ford', model:'Ranger 4x4 Pikap', yil:2023, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'vadi', zimmet:'Hasan Demirci', zimmetNo:'ZMT-2026-044', km:42300, sigorta:'2027-01-15', kasko:'2027-01-15', muayene:'2026-07-29', bakim:'2026-08-15', durum:'aktif', aciklama:'', paket:'XLT 4x4', mulkiyet:'sirket', aracSorumlusu:'Elif Sarıkaya'},
+    'ARC-02':{plaka:'34 SRV 641', tip:'servis', marka:'Mercedes', model:'Sprinter 316 Servis', yil:2022, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'vadi', zimmet:'İbrahim Sönmez', km:61200, sigorta:'2027-03-22', kasko:'2027-03-22', muayene:'2027-02-14', bakim:'2026-08-20', durum:'aktif', aciklama:'', paket:'', mulkiyet:'sirket', aracSorumlusu:'Elif Sarıkaya'},
+    'ARC-03':{plaka:'35 KLT 208', tip:'kamyonet', marka:'Toyota', model:'Hilux Pikap', yil:2021, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'liman', zimmet:'Aylin Koç', km:78450, sigorta:'2027-06-05', kasko:'2027-06-05', muayene:'2026-11-03', bakim:'2026-09-01', durum:'aktif', aciklama:'', paket:'', mulkiyet:'sirket', aracSorumlusu:'Baran Yıldız'},
+    'ARC-04':{plaka:'41 DBL 457', tip:'kamyonet', marka:'Fiat', model:'Doblo Cargo Panelvan', yil:2020, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'merkez', zimmet:'Recep Yaman', km:87400, sigorta:'2026-11-11', kasko:'2026-11-11', muayene:'2026-09-22', bakim:'2026-06-30', durum:'aktif', aciklama:'30 Haziran\'dan beri bakımda.', paket:'', mulkiyet:'sirket', aracSorumlusu:'Baran Yıldız'},
+    'ARC-05':{plaka:'34 GNL 310', tip:'binek', marka:'Renault', model:'Megane Sedan', yil:2024, yakit:'benzin', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'genelmerkez', zimmet:'Elif Sarıkaya', km:18900, sigorta:'2027-02-19', kasko:'2027-02-19', muayene:'2027-04-08', bakim:'2026-11-01', durum:'aktif', aciklama:'', paket:'Icon', mulkiyet:'sirket', aracSorumlusu:'Elif Sarıkaya'},
+    'ARC-06':{plaka:'41 FTR 118', tip:'kamyonet', marka:'Ford', model:'Transit 350L Kamyonet', yil:2019, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'merkez', zimmet:'', km:132600, sigorta:'2026-08-30', kasko:'2026-08-30', muayene:'2026-08-30', bakim:'2026-09-15', durum:'aktif', aciklama:'', paket:'', mulkiyet:'sirket', aracSorumlusu:'Baran Yıldız'},
+    'ARC-07':{plaka:'34 ESK 771', tip:'kamyonet', marka:'Renault', model:'Kangoo Van', yil:2015, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'merkez', zimmet:'', km:168400, sigorta:'2026-04-10', kasko:'2026-04-10', muayene:'2026-03-15', bakim:'', durum:'satildi', aciklama:'Satıldı — SF-2026-0512.', paket:'', mulkiyet:'sirket', aracSorumlusu:''},
+    'ARC-08':{plaka:'34 PLK 552', tip:'servis', marka:'Volkswagen', model:'Transporter T6', yil:2021, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'genelmerkez', zimmet:'Baran Yıldız', km:54200, sigorta:'2026-07-10', kasko:'2027-01-05', muayene:'2027-01-20', bakim:'2026-08-05', durum:'aktif', aciklama:'', paket:'', mulkiyet:'sirket', aracSorumlusu:'Baran Yıldız'},
+    'ARC-09':{plaka:'34 KRL 090', tip:'binek', marka:'Fiat', model:'Egea Sedan', yil:2023, yakit:'benzin', ruhsat:'Aktif Kiralama A.Ş. (kiralık)', santiye:'liman', zimmet:'Osman Polat', km:32100, sigorta:'2026-06-01', kasko:'2026-06-01', muayene:'2026-05-10', bakim:'', durum:'kiralamaBitti', aciklama:'Kiralama sözleşmesi bitti — iade edildi.', paket:'', mulkiyet:'kiralik', aracSorumlusu:'Baran Yıldız'},
+    'ARC-10':{plaka:'41 HRD 233', tip:'kamyon', marka:'Ford', model:'Cargo 1826 Kamyon', yil:2010, yakit:'dizel', ruhsat:'Yapıtaş İnşaat A.Ş.', santiye:'merkez', zimmet:'', km:310500, sigorta:'2026-01-20', kasko:'2026-01-20', muayene:'2026-02-01', bakim:'', durum:'hurda', aciklama:'Hurdaya ayrıldı — ağır kaza.', paket:'', mulkiyet:'sirket', aracSorumlusu:''}
+  };
+  var ARCHIVE_STATES = ['arsivlendi', 'satildi', 'hurda', 'kiralamaBitti'];
+
+  /* ============ §1.2 Sekme 2/3/4 — Muayene/Kasko/Trafik metaveri türetimi
+     (kararlar.md madde 115). Doküman poliçe şirketi/acente/rapor no gibi idari
+     metaveri için örnek vermiyor — kanonik ARC kaydı DEĞİL, bu yüzden plaka
+     tabanlı DETERMİNİSTİK bir türetme kullanıldı (rastgele değil, her yüklemede
+     AYNI sonuç). Yalnız muayene/kasko/trafik BİTİŞ tarihleri kanoniktir (ARAC
+     içinde zaten var) — geri kalan alanlar bu fonksiyonla türetilir. ============ */
+  var SIGORTA_SIRKETLERI = ['Allianz Sigorta','Anadolu Sigorta','Ray Sigorta','HDI Sigorta','Axa Sigorta','Türkiye Sigorta','Sompo Sigorta'];
+  var ACENTELER = ['Marmara Sigorta Acenteliği','Ege Sigorta Acenteliği','Anadolu Acente Ltd. Şti.','Boğaziçi Sigorta Acenteliği','Kuzey Acente A.Ş.'];
+  var YETKILILER = ['Serkan Aydemir','Buse Kartal','Emre Solak','Derya Yıldırım','Kaan Bozkurt','Gizem Aksoy'];
+  var MUAYENE_ISTASYONLARI = ['TÜVTÜRK Ümraniye','TÜVTÜRK Aliağa','TÜVTÜRK Gebze','TÜVTÜRK Kartal','TÜVTÜRK Bornova'];
+  var VITES_SECENEKLERI = ['manuel', 'otomatik', 'yariotomatik'];
+  var RENKLER = ['Beyaz', 'Gri', 'Füme', 'Lacivert', 'Kırmızı', 'Gümüş'];
+
+  function seed(str){ var h = 0; for(var i = 0; i < str.length; i++){ h = (h * 31 + str.charCodeAt(i)) >>> 0; } return h; }
+  /* s her zaman >>> 0 ile üretilse de sonraki >> kaydırmaları 32-bit işaretli
+     yorumlanabildiğinden negatif çıkabilir — modulo'yu daima pozitif normalize et */
+  function pick(arr, s){ var i = ((s % arr.length) + arr.length) % arr.length; return arr[i]; }
+  function addYearsIso(iso, n){ if(!iso) return ''; var d = new Date(iso + 'T00:00:00'); d.setFullYear(d.getFullYear() + n); return d.toISOString().slice(0, 10); }
+  function padNo(n, len){ return String(Math.abs(n)).padStart(len, '0'); }
+
+  function deriveDetay(rec){
+    var s = seed(rec.plaka);
+    var emailDomain = pick(ACENTELER, s >> 2).split(' ')[0].toLowerCase().replace(/[^a-zçğıöşü]/g, '');
+    var kaskoBedel = 6000 + (s % 40) * 420;
+    var trafikBedel = 2200 + (s % 20) * 180;
+    return {
+      /* Genel Bilgiler — yeni alanlar */
+      sasi: 'NM0' + rec.marka.slice(0,2).toUpperCase() + padNo(s % 99999999, 8),
+      motor: rec.marka.slice(0,3).toUpperCase() + '-' + padNo((s >> 3) % 999999, 6),
+      ruhsatSeri: pick(['AE','BF','CT','DK'], s) + ' ' + padNo((s >> 1) % 999999, 6),
+      renk: pick(RENKLER, s >> 1),
+      vites: pick(VITES_SECENEKLERI, s >> 2),
+      hacim: rec.tip === 'kamyon' ? 6700 + (s % 5) * 200 : (1600 + (s % 12) * 100),
+      ilkTescil: rec.yil + '-0' + (1 + (s % 8)) + '-1' + (s % 8),
+      girisTarihi: rec.yil + '-0' + (2 + (s % 7)) + '-0' + (1 + (s % 8)),
+      satinAlmaBedeli: rec.tip === 'kamyon' ? 1800000 + (s % 9) * 60000 : 900000 + (s % 20) * 45000,
+      satinAlmaBilgi: rec.mulkiyet === 'kiralik' ? 'Aktif Kiralama A.Ş. — aylık kiralama sözleşmesi' : pick(['Doğuş Otomotiv Yetkili Bayi', 'Borusan Oto', 'Otokoç Filo Satış'], s),
+      kmTarihi: '2026-07-0' + (1 + (s % 8)),
+      /* Muayene */
+      sonMuayeneTarihi: addYearsIso(rec.muayene, -1),
+      muayeneIstasyon: pick(MUAYENE_ISTASYONLARI, s),
+      muayeneRaporNo: 'TM-' + (2024 + (s % 3)) + '-' + padNo(100000 + (s % 89999), 6),
+      muayeneSonuc: 'Geçti',
+      muayeneUcret: 900 + (s % 6) * 35,
+      sonrakiMuayene: rec.muayene,
+      muayeneAciklama: '',
+      /* Kasko */
+      kaskoSirket: pick(SIGORTA_SIRKETLERI, s),
+      kaskoAcente: pick(ACENTELER, s >> 2),
+      kaskoPoliceNo: 'KSK-' + (2025 + (s % 2)) + '-' + padNo(400000 + (s % 89999), 6),
+      kaskoTuru: pick(['Dar kasko', 'Kasko', 'Genişletilmiş kasko', 'Tam kasko', 'Filo kaskosu'], s >> 1),
+      kaskoBaslangic: addYearsIso(rec.kasko, -1),
+      kaskoBedel: kaskoBedel,
+      kaskoTeminat: kaskoBedel * (12 + (s % 10)),
+      kaskoOdeme: (s % 3 === 0) ? 'Peşin' : 'Taksitli',
+      kaskoTaksit: (s % 3 === 0) ? 1 : pick([3, 6, 9, 12], s),
+      kaskoHasarsizlik: pick([0, 10, 20, 30, 40, 50, 60], s >> 2),
+      kaskoKapsam: 'Standart kapsam + cam/lastik/ferdi kaza teminatı',
+      kaskoYetkili: pick(YETKILILER, s >> 1),
+      kaskoTelefon: '0 5' + (30 + s % 9) + ' ' + padNo((s % 899) + 100, 3) + ' ' + padNo((s % 8999) + 1000, 4),
+      kaskoEposta: pick(YETKILILER, s >> 1).split(' ')[0].toLowerCase() + '@' + emailDomain + '.com.tr',
+      kaskoAciklama: '',
+      /* Trafik Sigortası */
+      trafikSirket: pick(SIGORTA_SIRKETLERI, s >> 3),
+      trafikAcente: pick(ACENTELER, s >> 1),
+      trafikPoliceNo: 'TRF-' + (2025 + (s % 2)) + '-' + padNo(200000 + (s % 89999), 6),
+      trafikBaslangic: addYearsIso(rec.sigorta, -1),
+      trafikBedel: trafikBedel,
+      trafikTeminat: trafikBedel * 60,
+      trafikOdeme: (s % 2 === 0) ? 'Peşin' : 'Taksitli',
+      trafikTaksit: (s % 2 === 0) ? 1 : pick([2, 4, 6], s),
+      trafikYetkili: pick(YETKILILER, s >> 3),
+      trafikTelefon: '0 5' + (30 + s % 9) + ' ' + padNo(((s >> 1) % 899) + 100, 3) + ' ' + padNo(((s >> 1) % 8999) + 1000, 4),
+      trafikEposta: pick(YETKILILER, s >> 3).split(' ')[0].toLowerCase() + '@' + pick(ACENTELER, s >> 1).split(' ')[0].toLowerCase().replace(/[^a-zçğıöşü]/g, '') + '.com.tr',
+      trafikAciklama: ''
+    };
+  }
+  Object.keys(ARAC).forEach(function(k){
+    var rec = ARAC[k];
+    var d = deriveDetay(rec);
+    Object.keys(d).forEach(function(f){ if(rec[f] === undefined) rec[f] = d[f]; });
+  });
+  /* ARC-01 zengin senaryo — bakım/muayene sekmesinde kanonik detay.html anlatısıyla
+     birebir tutarlı olsun diye birkaç alan elle netleştirildi (uydurma değil, mevcut
+     detay.html verisiyle hizalama). */
+  ARAC['ARC-01'].muayeneIstasyon = 'TÜVTÜRK Ümraniye';
+  ARAC['ARC-01'].sasi = 'NM0FR2023HD44120';
+  ARAC['ARC-01'].motor = 'FRD-224511';
+  ARAC['ARC-01'].ruhsatSeri = 'AE 402215';
+  ARAC['ARC-01'].renk = 'Beyaz';
+
+  function nextAracNo(){
+    var max = 0;
+    Object.keys(ARAC).forEach(function(k){ var n = parseInt(k.split('-')[1], 10); if(n > max) max = n; });
+    return 'ARC-' + String(max + 1).padStart(2, '0');
+  }
+
+  var q = new URLSearchParams(location.search);
+  var mod = q.get('mod') === 'duzenle' ? 'duzenle' : 'ekle';
+  var aracNo = q.get('arac');
+  var rec = (mod === 'duzenle' && aracNo && ARAC[aracNo]) ? ARAC[aracNo] : null;
+  if(mod === 'duzenle' && aracNo && !rec){
+    gvToast(aracNo + ' bulunamadı — yeni kayıt formu açıldı.', {type:'danger'});
+    mod = 'ekle'; aracNo = null;
+  }
+
+  if(rec){
+    document.title = aracNo + ' Düzenle — Gavia CRM';
+    document.getElementById('crumbLbl').textContent = 'Araç Düzenle';
+    document.getElementById('pageTitle').textContent = aracNo + ' — Aracı Düzenle';
+    document.getElementById('pageSub').textContent = rec.plaka + ' — ' + rec.marka + ' ' + rec.model + ' bilgilerini güncelleyin.';
+    document.getElementById('editActsTop').hidden = false;
+    document.getElementById('lnkDetayaDon').href = 'crm-operasyon-arac-detay.html?arac=' + aracNo;
+    document.getElementById('editActs').hidden = false;
+    document.getElementById('lnkBakim').href = 'crm-operasyon-arac-bakim.html?arac=' + aracNo;
+    document.getElementById('lnkArsivleFoot').href = 'crm-operasyon-arac-arsiv.html?arac=' + aracNo;
+    document.getElementById('aracSubmit').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet';
+    if(ARCHIVE_STATES.indexOf(rec.durum) !== -1){
+      document.getElementById('arsivUyari').hidden = false;
+      document.getElementById('lnkArsivleFoot').innerHTML = '<i class="fa-solid fa-rotate-left"></i> Aktife Al';
+    }
+    var ib = document.getElementById('fAracTipi'); var im = document.getElementById('ismakinesiHint');
+    ib.addEventListener('change', function(){ im.hidden = ib.value !== 'ismakinesi'; });
+  } else {
+    var ib2 = document.getElementById('fAracTipi'); var im2 = document.getElementById('ismakinesiHint');
+    ib2.addEventListener('change', function(){ im2.hidden = ib2.value !== 'ismakinesi'; });
+  }
+
+  function setVal(id, val){ var el = document.getElementById(id); if(el) el.value = (val === undefined || val === null) ? '' : val; }
+
+  function fill(){
+    var no = rec ? aracNo : nextAracNo();
+    document.getElementById('fAracKodu').value = no;
+    setVal('fPlaka', rec ? rec.plaka : '');
+    document.getElementById('fAracTipi').value = rec ? rec.tip : 'kamyonet';
+    setVal('fMarka', rec ? rec.marka : '');
+    setVal('fModel', rec ? rec.model : '');
+    setVal('fModelYili', rec ? rec.yil : '');
+    setVal('fPaket', rec ? rec.paket : '');
+    setVal('fRenk', rec ? rec.renk : '');
+    setVal('fSasiNo', rec ? rec.sasi : '');
+    setVal('fMotorNo', rec ? rec.motor : '');
+    setVal('fRuhsatSeri', rec ? rec.ruhsatSeri : '');
+    document.getElementById('fYakit').value = rec ? rec.yakit : 'dizel';
+    document.getElementById('fVites').value = rec ? rec.vites : 'manuel';
+    setVal('fMotorHacmi', rec ? rec.hacim : '');
+    setVal('fIlkTescil', rec ? rec.ilkTescil : '');
+    setVal('fGirisTarihi', rec ? rec.girisTarihi : '');
+    document.getElementById('fMulkiyet').value = rec ? rec.mulkiyet : 'sirket';
+    setVal('fSatinAlmaBilgi', rec ? rec.satinAlmaBilgi : '');
+    setVal('fSatinAlmaBedeli', rec ? rec.satinAlmaBedeli : '');
+    setVal('fRuhsat', rec ? rec.ruhsat : 'Yapıtaş İnşaat A.Ş.');
+    setVal('fKm', rec ? rec.km : '');
+    setVal('fKmTarihi', rec ? rec.kmTarihi : '');
+    document.getElementById('fSantiye').value = rec ? rec.santiye : 'merkez';
+    var arSel = document.getElementById('fAracSorumlusu');
+    if(rec && rec.aracSorumlusu && [].slice.call(arSel.options).some(function(o){ return o.value === rec.aracSorumlusu; })) arSel.value = rec.aracSorumlusu;
+    else arSel.value = '';
+    if(rec && rec.zimmet){
+      var zSel = document.getElementById('fZimmet');
+      if([].slice.call(zSel.options).some(function(o){ return o.value === rec.zimmet; })) zSel.value = rec.zimmet;
+    }
+    setVal('fAciklama', rec ? rec.aciklama : '');
+    document.getElementById('fAktif').checked = rec ? (rec.durum === 'aktif') : true;
+    document.getElementById('fAracTipi').dispatchEvent(new Event('change'));
+
+    /* Sekme 2 — Muayene */
+    setVal('fSonMuayeneTarihi', rec ? rec.sonMuayeneTarihi : '');
+    setVal('fMuayene', rec ? rec.muayene : '');
+    setVal('fMuayeneIstasyon', rec ? rec.muayeneIstasyon : '');
+    setVal('fMuayeneRaporNo', rec ? rec.muayeneRaporNo : '');
+    document.getElementById('fMuayeneSonuc').value = rec ? rec.muayeneSonuc : 'Geçti';
+    setVal('fMuayeneUcret', rec ? rec.muayeneUcret : '');
+    setVal('fSonrakiMuayene', rec ? rec.sonrakiMuayene : '');
+    setVal('fMuayeneAciklama', rec ? rec.muayeneAciklama : '');
+
+    /* Sekme 3 — Kasko */
+    setVal('fKaskoSirket', rec ? rec.kaskoSirket : '');
+    setVal('fKaskoAcente', rec ? rec.kaskoAcente : '');
+    setVal('fKaskoPoliceNo', rec ? rec.kaskoPoliceNo : '');
+    document.getElementById('fKaskoTuru').value = rec ? rec.kaskoTuru : 'Kasko';
+    setVal('fKaskoBaslangic', rec ? rec.kaskoBaslangic : '');
+    setVal('fKasko', rec ? rec.kasko : '');
+    setVal('fKaskoBedel', rec ? rec.kaskoBedel : '');
+    setVal('fKaskoTeminat', rec ? rec.kaskoTeminat : '');
+    document.getElementById('fKaskoOdeme').value = rec ? rec.kaskoOdeme : 'Peşin';
+    setVal('fKaskoTaksit', rec ? rec.kaskoTaksit : 1);
+    setVal('fKaskoHasarsizlik', rec ? rec.kaskoHasarsizlik : '');
+    setVal('fKaskoKapsam', rec ? rec.kaskoKapsam : '');
+    setVal('fKaskoYetkili', rec ? rec.kaskoYetkili : '');
+    setVal('fKaskoTelefon', rec ? rec.kaskoTelefon : '');
+    setVal('fKaskoEposta', rec ? rec.kaskoEposta : '');
+    setVal('fKaskoAciklama', rec ? rec.kaskoAciklama : '');
+
+    /* Sekme 4 — Trafik Sigortası */
+    setVal('fTrafikSirket', rec ? rec.trafikSirket : '');
+    setVal('fTrafikAcente', rec ? rec.trafikAcente : '');
+    setVal('fTrafikPoliceNo', rec ? rec.trafikPoliceNo : '');
+    setVal('fTrafikBaslangic', rec ? rec.trafikBaslangic : '');
+    setVal('fSigorta', rec ? rec.sigorta : '');
+    setVal('fTrafikBedel', rec ? rec.trafikBedel : '');
+    setVal('fTrafikTeminat', rec ? rec.trafikTeminat : '');
+    document.getElementById('fTrafikOdeme').value = rec ? rec.trafikOdeme : 'Peşin';
+    setVal('fTrafikTaksit', rec ? rec.trafikTaksit : 1);
+    setVal('fTrafikYetkili', rec ? rec.trafikYetkili : '');
+    setVal('fTrafikTelefon', rec ? rec.trafikTelefon : '');
+    setVal('fTrafikEposta', rec ? rec.trafikEposta : '');
+    setVal('fTrafikAciklama', rec ? rec.trafikAciklama : '');
+
+    /* Sekme 6 — Bakım */
+    setVal('fBakim', rec ? rec.bakim : '');
+
+    renderOzet();
+    renderPolicyDocs();
+    renderSubSummaries();
+    if(rec && rec.gorselDataUrl) setGorsel(rec.gorselDataUrl);
+  }
+
+  /* şef ise şantiye seçici kendi sahasına sabitlenir — crm-operasyon-kasa-form.html
+     ile aynı idiyom */
+  if(GV.role === 'sef' && !rec){ document.getElementById('fSantiye').value = 'vadi'; document.getElementById('fSantiye').disabled = true; }
+
+  function renderOzet(){
+    var no = rec ? aracNo : nextAracNo();
+    var html = '';
+    html += '<div class="ctx-row"><span class="ctx-lbl">Araç No</span><span class="ctx-val">' + no + '</span></div>';
+    html += '<div class="ctx-row"><span class="ctx-lbl">Kayıt Türü</span><span class="ctx-val">' + (rec ? 'Güncelleme' : 'Yeni Kayıt') + '</span></div>';
+    html += '<div class="ctx-row"><span class="ctx-lbl">Zimmet Kaydı</span><span class="ctx-val">' + (rec && rec.zimmetNo ? rec.zimmetNo : (rec ? 'Yok' : 'Kayıt sonrası oluşturulur')) + '</span></div>';
+    document.getElementById('ozetBody').innerHTML = html;
+  }
+
+  /* ============ SEKME MOTORU (8 sekme) — detay.html/santiye-detay.html ile birebir
+     aynı hash-tabanlı .gv-tab/data-tab-panel deseni (kaynak-transfer). ============ */
+  (function(){
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+    function activate(id){
+      tabs.forEach(function(t){
+        var on = t.getAttribute('data-tab') === id;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    }
+    tabs.forEach(function(t){
+      t.addEventListener('click', function(){
+        activate(t.getAttribute('data-tab'));
+        history.replaceState(null, '', location.pathname + location.search + '#' + t.getAttribute('data-tab'));
+      });
+    });
+    var initial = (location.hash || '').replace('#', '');
+    var valid = tabs.some(function(t){ return t.getAttribute('data-tab') === initial; });
+    activate(valid ? initial : 'genel');
+  })();
+
+  /* ============ MUAYENE — özel gün alanı ============ */
+  document.getElementById('fMuayeneHatirlatma').addEventListener('change', function(){
+    document.getElementById('muayeneOzelGunWrap').hidden = this.value !== 'ozel';
+  });
+
+  /* ============ ARAÇ GÖRSELİ — gerçek File API + FileReader önizleme (kare,
+     div+background-image — <img> KULLANILMADI, CLAUDE.md görsel kuralı) ============ */
+  var gorselDrop = document.getElementById('gorselDrop');
+  var fGorsel = document.getElementById('fGorsel');
+  var gorselDataUrl = null;
+  function setGorsel(dataUrl){
+    gorselDataUrl = dataUrl;
+    gorselDrop.style.backgroundImage = dataUrl ? 'url(' + dataUrl + ')' : '';
+    gorselDrop.classList.toggle('has-img', !!dataUrl);
+  }
+  fGorsel.addEventListener('change', function(){
+    var file = fGorsel.files && fGorsel.files[0];
+    if(!file) return;
+    if(!/^image\/(jpeg|png)$/.test(file.type)){ gvToast('Yalnız JPG/PNG kabul edilir.', {type:'danger'}); return; }
+    var reader = new FileReader();
+    reader.onload = function(e){ setGorsel(e.target.result); gvToast('Araç görseli seçildi.'); };
+    reader.readAsDataURL(file);
+  });
+
+  /* ============ POLİÇE BELGELERİ — Muayene/Kasko/Trafik sekmeleri, evrak.html'in
+     append-only versiyon dizisi diliyle BİREBİR (kararlar.md §3, arac-evrak.html
+     kaynak-transfer). Her poliçe alanı kendi versiyon dizisini oturum-içi tutar. ============ */
+  var POLICY_DOCS = {
+    muayene: {label: 'Muayene Raporu', icon: 'fa-file-circle-check', versions: rec ? [{dosya: 'muayene-' + aracNo.toLowerCase() + '-2024.pdf', tarih: rec.sonMuayeneTarihi ? rec.sonMuayeneTarihi.split('-').reverse().join('.') : '—', boyut: 184000}] : []},
+    kasko: {label: 'Kasko Poliçesi', icon: 'fa-file-shield', versions: rec ? [{dosya: 'kasko-' + aracNo.toLowerCase() + '-2026.pdf', tarih: rec.kaskoBaslangic ? rec.kaskoBaslangic.split('-').reverse().join('.') : '—', boyut: 305000}] : []},
+    trafik: {label: 'Trafik Sigortası Poliçesi', icon: 'fa-file-shield', versions: rec ? [{dosya: 'trafik-sigorta-' + aracNo.toLowerCase() + '-2026.pdf', tarih: rec.trafikBaslangic ? rec.trafikBaslangic.split('-').reverse().join('.') : '—', boyut: 298000}] : []}
+  };
+  function humanSizeP(bytes){ if(bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB'; return Math.max(1, Math.round(bytes/1024)) + ' KB'; }
+  function renderPolicyDocs(){
+    ['muayene', 'kasko', 'trafik'].forEach(function(key){
+      var wrap = document.getElementById(key + 'DocWrap');
+      if(!wrap) return;
+      var doc = POLICY_DOCS[key];
+      var latest = doc.versions[0];
+      var html = '<div class="pol-doc-head"><b>' + doc.label + (doc.versions.length > 1 ? ' — v' + doc.versions.length : '') + '</b>'
+        + '<label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="fa-solid fa-cloud-arrow-up"></i> Belge Yükle<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-poldoc="' + key + '" hidden></label></div>';
+      if(latest){
+        html += '<div class="pol-doc-row"><div class="pol-doc-ico"><i class="fa-solid ' + doc.icon + '"></i></div>'
+          + '<div class="pol-doc-info"><b>' + latest.dosya + '</b><span>' + humanSizeP(latest.boyut) + ' · yüklendi: ' + latest.tarih + '</span>'
+          + (doc.versions.length > 1 ? '<button type="button" class="ev-hist-toggle" data-histpol="' + key + '">Versiyon geçmişini gör (' + (doc.versions.length - 1) + ')</button>' : '')
+          + '<div class="ev-hist" id="hist-' + key + '" hidden>' + doc.versions.slice(1).map(function(v){ return '<div class="ev-hist-item"><span class="gtag">önceki</span>' + v.dosya + ' · yüklendi: ' + v.tarih + '</div>'; }).join('') + '</div>'
+          + '</div></div>';
+      } else {
+        html += '<div class="gv-empty" style="padding:24px 0"><div class="ge-ico"><i class="fa-solid ' + doc.icon + '"></i></div><h4 style="font-size:13.5px">Henüz belge yok</h4><p style="font-size:12px">' + doc.label + ' yüklendiğinde burada, versiyonlanarak listelenir.</p></div>';
+      }
+      wrap.innerHTML = html;
+    });
+  }
+  document.querySelectorAll('.left-stack').forEach(function(ls){
+    ls.addEventListener('click', function(e){
+      var t = e.target.closest('[data-histpol]');
+      if(t){ var el = document.getElementById('hist-' + t.getAttribute('data-histpol')); el.hidden = !el.hidden; return; }
+    });
+    ls.addEventListener('change', function(e){
+      var inp = e.target.closest('[data-poldoc]');
+      if(!inp) return;
+      var key = inp.getAttribute('data-poldoc');
+      var file = inp.files && inp.files[0];
+      if(!file) return;
+      if(!/\.(pdf|jpe?g|png)$/i.test(file.name)){ gvToast('Yalnız PDF/JPG/PNG kabul edilir.', {type:'danger'}); return; }
+      POLICY_DOCS[key].versions.unshift({dosya: file.name, tarih: '02.07.2026', boyut: file.size});
+      gvToast(POLICY_DOCS[key].label + ' — ' + file.name + ' yüklendi' + (POLICY_DOCS[key].versions.length > 1 ? ' (yeni versiyon, önceki korundu)' : '') + '.');
+      renderPolicyDocs();
+    });
+  });
+
+  /* ============ YAKIT / BAKIM / DİĞER GİDERLER — özet + link (§1.2 Sekme 5/6/7,
+     detay.html'in "özet + linkli-detay" deseni). arac-yakit.html / arac-gider.html
+     T-ARC3 tarafından bu dalgada ayrıca üretiliyor — link burada kurulur, veri
+     tamamlanınca hizalanır (tasks/devir-TARC2.md). ============ */
+  function renderSubSummaries(){
+    var no = rec ? aracNo : null;
+    ['lnkYakitTam', 'lnkGiderTam'].forEach(function(id){ var a = document.getElementById(id); if(no) a.href = a.href.split('?')[0] + '?arac=' + no; });
+    document.getElementById('lnkBakimTam2').href = 'crm-operasyon-arac-bakim.html' + (no ? '?arac=' + no : '');
+    document.getElementById('lnkEvrakTam').href = 'crm-operasyon-arac-evrak.html' + (no ? '?arac=' + no : '');
+
+    var yakitWrap = document.getElementById('yakitOzetWrap');
+    if(rec){
+      yakitWrap.innerHTML = '<div class="gv-empty" style="padding:28px 0"><div class="ge-ico"><i class="fa-solid fa-gas-pump"></i></div><h4 style="font-size:13.5px">' + no + ' için henüz ayrı yakıt kaydı yok</h4><p style="font-size:12px">Yakıt hareketi eklendiğinde bu araca ait son 3 kayıt burada özetlenir; km-bazlı yakıt bilgisi hâlen "Kullanım Kayıtları" ekranında tutuluyor.</p></div>';
+    } else {
+      yakitWrap.innerHTML = '<div class="gv-empty" style="padding:28px 0"><div class="ge-ico"><i class="fa-solid fa-gas-pump"></i></div><h4 style="font-size:13.5px">Kayıt sonrası izlenir</h4><p style="font-size:12px">Araç kaydedildikten sonra yakıt hareketleri bu sekmede özetlenecek.</p></div>';
+    }
+    var giderWrap = document.getElementById('giderOzetWrap');
+    giderWrap.innerHTML = '<div class="gv-empty" style="padding:28px 0"><div class="ge-ico"><i class="fa-solid fa-sack-dollar"></i></div><h4 style="font-size:13.5px">' + (rec ? no + ' için henüz ayrı gider kaydı yok' : 'Kayıt sonrası izlenir') + '</h4><p style="font-size:12px">HGS/MTV/OGS gibi giderler ayrı ekranda tutulur; mevcut HGS geçmişi araç dosyasının "Gider Geçmişi" sekmesinde görülebilir.</p></div>';
+    var bakimWrap = document.getElementById('bakimOzetWrap');
+    if(rec && rec.bakim){
+      bakimWrap.innerHTML = '<div class="mini-row"><b>Planlı sonraki bakım</b><span class="mr-r">' + rec.bakim.split('-').reverse().join('.') + '</span></div>';
+    } else {
+      bakimWrap.innerHTML = '<div class="gv-empty" style="padding:22px 0"><div class="ge-ico"><i class="fa-solid fa-screwdriver-wrench"></i></div><h4 style="font-size:13.5px">Planlı bakım tarihi girilmedi</h4><p style="font-size:12px">Ayrıntılı bakım geçmişi için Bakım Geçmişini Yönet bağlantısını kullanın.</p></div>';
+    }
+  }
+
+  fill();
+
+  /* ============ TASLAK OLARAK KAYDET — gerçek localStorage kalıcılığı (§6),
+     yalnız YENİ kayıt akışında anlamlı (düzenlemede mevcut kayıt zaten "taslak"
+     kavramının dışında). ============ */
+  var TASLAK_KEY = 'gv_arac_taslak_yeni';
+  var FIELD_IDS = ['fPlaka','fAracTipi','fMarka','fModel','fModelYili','fPaket','fRenk','fSasiNo','fMotorNo','fRuhsatSeri','fYakit','fVites','fMotorHacmi','fIlkTescil','fGirisTarihi','fMulkiyet','fSatinAlmaBilgi','fSatinAlmaBedeli','fRuhsat','fKm','fKmTarihi','fSantiye','fAracSorumlusu','fZimmet','fAciklama',
+    'fSonMuayeneTarihi','fMuayene','fMuayeneIstasyon','fMuayeneRaporNo','fMuayeneSonuc','fMuayeneUcret','fSonrakiMuayene','fMuayeneAciklama',
+    'fKaskoSirket','fKaskoAcente','fKaskoPoliceNo','fKaskoTuru','fKaskoBaslangic','fKasko','fKaskoBedel','fKaskoTeminat','fKaskoOdeme','fKaskoTaksit','fKaskoHasarsizlik','fKaskoKapsam','fKaskoYetkili','fKaskoTelefon','fKaskoEposta','fKaskoAciklama',
+    'fTrafikSirket','fTrafikAcente','fTrafikPoliceNo','fTrafikBaslangic','fSigorta','fTrafikBedel','fTrafikTeminat','fTrafikOdeme','fTrafikTaksit','fTrafikYetkili','fTrafikTelefon','fTrafikEposta','fTrafikAciklama','fBakim'];
+  if(!rec){
+    var taslakVar = null;
+    try { taslakVar = JSON.parse(localStorage.getItem(TASLAK_KEY) || 'null'); } catch(e){ taslakVar = null; }
+    if(taslakVar){ document.getElementById('taslakNote').hidden = false; }
+    document.getElementById('taslakDoldur').addEventListener('click', function(){
+      if(!taslakVar) return;
+      Object.keys(taslakVar).forEach(function(id){ setVal(id, taslakVar[id]); });
+      gvToast('Taslak dolduruldu.');
+      document.getElementById('taslakNote').hidden = true;
+    });
+    document.getElementById('taslakSil').addEventListener('click', function(){
+      localStorage.removeItem(TASLAK_KEY);
+      document.getElementById('taslakNote').hidden = true;
+      gvToast('Taslak silindi.');
+    });
+  } else {
+    document.getElementById('taslakDoldur').style.display = 'none';
+    document.getElementById('taslakSil').style.display = 'none';
+  }
+  document.getElementById('aracTaslak').addEventListener('click', function(){
+    if(rec){ gvToast('Düzenleme modunda taslak kaydına gerek yok — doğrudan kaydedin.', {type:'danger'}); return; }
+    var data = {};
+    FIELD_IDS.forEach(function(id){ var el = document.getElementById(id); if(el) data[id] = el.value; });
+    localStorage.setItem(TASLAK_KEY, JSON.stringify(data));
+    gvToast('Taslak kaydedildi — bu tarayıcıda saklanır.');
+  });
+
+  /* ============ EVRAK DOSYALARI — gerçek File API akışı (imza-form.html ile birebir dil) ============ */
+  var docList = document.getElementById('docList');
+  var fBelgeDosya = document.getElementById('fBelgeDosya');
+  var docDrop = document.getElementById('docDrop');
+  var fEvrakTuru = document.getElementById('fEvrakTuru');
+  var docSeq = 0;
+  var DOC_LIMIT = 10 * 1024 * 1024;
+  var ACCEPT_RE = /\.(pdf|jpe?g|png)$/i;
+
+  function humanSize(bytes){
+    if(bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes/1024)) + ' KB';
+  }
+  function docIcon(name){
+    if(/\.pdf$/i.test(name)) return 'fa-file-pdf';
+    if(/\.(jpg|jpeg|png)$/i.test(name)) return 'fa-file-image';
+    return 'fa-file-lines';
+  }
+  function renderDoc(item){
+    var statusHtml = '';
+    if(item.state === 'yukleniyor'){
+      statusHtml = '<div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:' + item.progress + '%"></div></div><span class="gbar-val">%' + item.progress + '</span></div>';
+    } else if(item.state === 'hazir'){
+      statusHtml = '<span class="doc-status st-hazir"><i class="fa-solid fa-circle-check"></i> Yüklendi — ' + item.tur + '</span>';
+    } else if(item.state === 'hata'){
+      statusHtml = '<span class="doc-status st-hata"><i class="fa-solid fa-triangle-exclamation"></i> ' + item.errMsg + '</span>';
+    }
+    var acts = item.state === 'hata'
+      ? '<button type="button" class="ia-btn" data-act="retry" data-tip="Yeniden dene" aria-label="Yeniden dene"><i class="fa-solid fa-rotate-right"></i></button>'
+      : '<button type="button" class="ia-btn danger" data-act="kaldir" data-no-confirm data-tip="Kaldır" aria-label="Kaldır"><i class="fa-solid fa-trash"></i></button>';
+    item.el.setAttribute('data-state', item.state);
+    item.el.innerHTML = '<div class="doc-thumb"><i class="fa-solid ' + docIcon(item.name) + '"></i></div>'
+      + '<div class="doc-info"><b>' + item.name + '</b><span class="doc-meta">' + humanSize(item.size) + '</span>' + statusHtml + '</div>'
+      + '<div class="doc-acts">' + acts + '</div>';
+  }
+  function addDocChip(name, size, tur){
+    docSeq++;
+    var item = {id:'d'+docSeq, name:name, size:size, tur:tur, state:'yukleniyor', progress:0, attempt:0};
+    var el = document.createElement('div'); el.className = 'doc-item'; el.dataset.id = item.id;
+    item.el = el; docList.appendChild(el); renderDoc(item);
+    return item;
+  }
+  function startUpload(item){
+    item.progress = 0; item.state = 'yukleniyor'; renderDoc(item);
+    var forceError = /hata|error|fail/i.test(item.name) && (item.attempt || 0) === 0;
+    var tick = setInterval(function(){
+      item.progress = Math.min(100, item.progress + Math.round(10 + Math.random()*18));
+      renderDoc(item);
+      if(item.progress >= 100){
+        clearInterval(tick);
+        item.attempt = (item.attempt || 0) + 1;
+        setTimeout(function(){
+          if(forceError){ item.state = 'hata'; item.errMsg = 'Yükleme başarısız oldu (demo).'; renderDoc(item); gvToast(item.name + ' yüklenemedi.', {type:'danger'}); }
+          else { item.state = 'hazir'; renderDoc(item); gvToast(item.tur + ' — ' + item.name + ' yüklendi.'); }
+        }, 180);
+      }
+    }, 130);
+  }
+  function addFile(file){
+    if(!ACCEPT_RE.test(file.name)){ gvToast(file.name + ' — desteklenmeyen dosya türü (yalnız PDF/JPG/PNG).', {type:'danger'}); return; }
+    if(file.size > DOC_LIMIT){ gvToast(file.name + ' — 10 MB sınırını aşıyor (demo kısıtı).', {type:'danger'}); return; }
+    startUpload(addDocChip(file.name, file.size, fEvrakTuru.value));
+  }
+  fBelgeDosya.addEventListener('change', function(){ Array.prototype.slice.call(fBelgeDosya.files).forEach(addFile); fBelgeDosya.value = ''; });
+  ['dragenter','dragover'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.add('is-drag'); }); });
+  ['dragleave','drop'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.remove('is-drag'); }); });
+  docDrop.addEventListener('drop', function(e){ var files = e.dataTransfer && e.dataTransfer.files; if(files && files.length) Array.prototype.forEach.call(files, addFile); });
+  docList.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act]'); if(!btn) return;
+    var itemEl = btn.closest('.doc-item');
+    if(btn.getAttribute('data-act') === 'kaldir'){ itemEl.remove(); return; }
+    if(btn.getAttribute('data-act') === 'retry'){ itemEl.remove(); }
+  });
+
+  /* ---- kaydet ---- */
+  document.getElementById('aracSubmit').addEventListener('click', function(){
+    var plaka = document.getElementById('fPlaka').value.trim();
+    if(!plaka){ gvToast('Plaka girin.', {type:'danger'}); return; }
+    var marka = document.getElementById('fMarka').value.trim();
+    var model = document.getElementById('fModel').value.trim();
+    if(!marka || !model){ gvToast('Marka ve model girin.', {type:'danger'}); return; }
+    if(!document.getElementById('fMuayene').value){ gvToast('Muayene tarihini girin.', {type:'danger'}); return; }
+    var no = rec ? aracNo : nextAracNo();
+    if(!rec) localStorage.removeItem(TASLAK_KEY);
+    gvToast(mod === 'duzenle' ? no + ' — ' + plaka + ' güncellendi.' : no + ' — ' + plaka + ' filoya eklendi.');
+    setTimeout(function(){ location.href = rec ? 'crm-operasyon-arac-detay.html?arac=' + no : 'crm-operasyon-arac.html'; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Rol Yetki Matrisi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Rol Yetki Matrisi (§4, yeni ekran — 12 yetki × modül) ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.rolsw{font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 12px;outline:none}
+
+.pm-legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.lg-item{display:inline-flex;align-items:center;gap:7px}
+.lg-yes{color:var(--acc-ink)}
+
+.pm-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pm{width:100%;border-collapse:separate;border-spacing:0;min-width:1180px}
+.pm thead th{background:var(--paper);vertical-align:bottom;padding:10px 8px;text-align:center;border-bottom:1px solid var(--line);font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.pm-modhead{position:sticky;left:0;z-index:3;background:var(--paper);text-align:left!important;padding:12px 16px!important;border-right:1px solid var(--line);min-width:200px}
+.pm-modcell{position:sticky;left:0;z-index:1;background:var(--paper);text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
+.pm tbody tr:hover td{background:var(--bg)}
+.pm tbody tr:hover .pm-modcell{background:var(--bg)}
+.pm-mod-in{display:flex;align-items:center;gap:10px}
+.pm-mod-ico{width:32px;height:32px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--bg);color:var(--ink-2);font-size:12.5px}
+.pm-mod-info{min-width:0;line-height:1.3}
+.pm-mod-info b{display:block;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap}
+.pm-mod-info span{font-size:11px;color:var(--muted)}
+.pm-cell{text-align:center;border-bottom:1px solid var(--line);padding:11px 8px}
+.pm-cell input[type=checkbox]{width:16px;height:16px;accent-color:var(--acc-ink);cursor:pointer}
+.pm-cell input[type=checkbox]:disabled{cursor:not-allowed;opacity:.35}
+tr.pm-no-access .pm-mod-info b{color:var(--muted)}
+tr.pm-no-access td:not(.pm-modcell){background:var(--bg)}
+
+.pm-foot-note{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="roller">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-ayarlar-roller.html">Roller &amp; Yetkiler</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="#" id="crumbRol">Rol</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Yetki Matrisi</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Yönetim</div>
+        <h1 id="pageH1">Rol Yetki Matrisi</h1>
+        <div class="ph-sub" id="pageSub">Yapıtaş İnşaat A.Ş. — modül bazında 12 ayrı yetki</div>
+      </div>
+      <div class="ph-actions">
+        <select class="rolsw" id="rolSwitch" aria-label="Rol seç"></select>
+        <a class="btn btn-ghost btn-sm" id="rdBackBtn" href="#"><i class="fa-solid fa-arrow-left"></i> Rol Detayı</a>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-sliders"></i> Yetki Matrisi <span class="gtag" id="pmModTag">— modül</span></div>
+        <div class="pm-legend">
+          <span class="lg-item"><i class="fa-solid fa-check lg-yes"></i> İşaretli = yetki açık</span>
+          <span class="lg-item"><i class="fa-solid fa-ban" style="color:var(--muted)"></i> Erişim yok = tüm yetkiler kapalı</span>
+        </div>
+      </div>
+      <div class="gc-body flush pm-wrap">
+        <table class="pm" id="pmTable">
+          <thead>
+            <tr id="pmHead">
+              <th class="pm-modhead">Modül</th>
+              <th>Görüntüleme</th><th>Ekleme</th><th>Düzenleme</th><th>Silme</th>
+              <th>Onaylama</th><th>Raporlama</th><th>Dışa Aktarma</th>
+              <th>Dosya Yükleme</th><th>Dosya İndirme</th>
+              <th>Gizli Belge</th><th>Finansal Veri</th><th>Yönetim Verisi</th>
+            </tr>
+          </thead>
+          <tbody id="pmBody"></tbody>
+        </table>
+      </div>
+      <div class="gc-foot">
+        <span class="pm-foot-note"><i class="fa-solid fa-circle-info" style="color:var(--acc-ink)"></i> Değerler bölüm erişimi ve rol tanımından türetilen öneridir; kaydetmeden önce gözden geçirin.</span>
+        <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="pmSaveBtn"><i class="fa-solid fa-floppy-disk"></i> Yetkileri Kaydet</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+/* ============ Rol Yetki Matrisi — modül × 12 yetki (§4) ============
+   crm-ayarlar-rol-detay.html / crm-ayarlar-roller.html ile aynı 10 modül + rol seti (MPA,
+   JS paylaşımı yok — veri seti burada tekrar tanımlanır, senkron tutulur).
+   12 yetkinin ilk değerleri DOKÜMANDA örnek verilmemiş — kararlar.md'ye yazılan sabit bir
+   TÜRETME kuralına göre hesaplanır (yönetim rolleri tam yetkili, modül kısmi ise kısıtlı,
+   modül dışıysa hepsi kapalı); tüm hücreler kaydetmeden önce elle değiştirilebilir. */
+(function(){
+  if(!window.GV) return;
+
+  /* [TRol/Dalga 6] operasyon KALDIRILDI (Dalga 2'de dağıtıldı); varlik + raporlar
+     EKLENDİ — tasks/rol-matris-bolum.cjs ile shell.js'ten programatik türetildi
+     (bkz. crm-ayarlar-roller.html üstündeki BİREBİR kaynak, aynı 11 rol × 11 bölüm). */
+  var SECS = [
+    {k:'panel',     ic:'fa-gauge-high',     lbl:'Panel'},
+    {k:'santiye',   ic:'fa-helmet-safety',  lbl:'Şantiye'},
+    {k:'gorev',     ic:'fa-list-check',     lbl:'Görev'},
+    {k:'personel',  ic:'fa-users',          lbl:'Personel'},
+    {k:'finans',    ic:'fa-file-signature', lbl:'Finans'},
+    {k:'satinalma', ic:'fa-cart-flatbed',   lbl:'Satın Alma'},
+    {k:'varlik',    ic:'fa-cubes',          lbl:'Varlık'},
+    {k:'cari',      ic:'fa-address-book',   lbl:'Cari'},
+    {k:'raporlar',  ic:'fa-chart-column',   lbl:'Raporlar'},
+    {k:'satis',     ic:'fa-chart-line',     lbl:'Satış'},
+    {k:'ayarlar',   ic:'fa-sliders',        lbl:'Ayarlar'}
+  ];
+  var PERMS = ['goruntule','ekle','duzenle','sil','onayla','raporla','disaAktar','dosyaYukle','dosyaIndir','gizliBelge','finansalVeri','yonetimVerisi'];
+
+  var ROLES = {
+    superadmin:{ad:'Gavia Platform Yöneticisi', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis','ayarlar'], part:{}},
+    sahip:{ad:'Firma Sahibi', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis','ayarlar'], part:{}},
+    yonetim:{ad:'Genel Müdür', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','cari','raporlar','satis'], part:{}},
+    teknik:{ad:'Teknik Müdür', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','raporlar','satis'], part:{panel:1,personel:1,finans:1,satinalma:1,satis:1}},
+    sef:{ad:'Şantiye Şefi', secs:['panel','santiye','gorev','personel','finans','satinalma','varlik','raporlar'], part:{panel:1,finans:1,satinalma:1}},
+    muhasebe:{ad:'Muhasebe', secs:['panel','gorev','personel','finans','satinalma','varlik','cari','raporlar'], part:{panel:1,satinalma:1}},
+    satinalma:{ad:'Satın Alma Sorumlusu', secs:['panel','gorev','satinalma','cari'], part:{panel:1}},
+    ik:{ad:'İK Uzmanı', secs:['panel','gorev','personel','finans','varlik','raporlar'], part:{panel:1,personel:1,finans:1,varlik:1}},
+    personel:{ad:'Saha Personeli', secs:['panel','gorev'], part:{panel:1}},
+    satismudur:{ad:'Satış Müdürü', secs:['panel','gorev','cari','satis'], part:{panel:1}},
+    satistemsilci:{ad:'Satış Temsilcisi', secs:['panel','gorev','satis'], part:{panel:1}},
+    'ozel-santiye-muhasebe':{ad:'Şantiye Muhasebe Sorumlusu', secs:['panel','finans'], part:{panel:1}}
+  };
+
+  var q = new URLSearchParams(location.search);
+  var key = q.get('rol');
+  if(!ROLES[key]) key = 'sef';
+  var role = ROLES[key];
+  var mgmt = ['superadmin','sahip','yonetim'].indexOf(key) !== -1;
+
+  document.title = role.ad + ' — Yetki Matrisi — Gavia CRM';
+  document.getElementById('pageH1').textContent = role.ad + ' — Yetki Matrisi';
+  document.getElementById('pageSub').textContent = 'Yapıtaş İnşaat A.Ş. — ' + role.ad + ' rolünün modül bazlı 12 yetkisi';
+  document.getElementById('crumbRol').textContent = role.ad;
+  document.getElementById('crumbRol').href = 'crm-ayarlar-rol-detay.html?rol=' + key;
+  document.getElementById('rdBackBtn').href = 'crm-ayarlar-rol-detay.html?rol=' + key;
+  document.getElementById('pmModTag').textContent = role.secs.length + ' / ' + SECS.length + ' modül';
+
+  var sw = document.getElementById('rolSwitch');
+  sw.innerHTML = Object.keys(ROLES).map(function(k){
+    return '<option value="' + k + '"' + (k === key ? ' selected' : '') + '>' + ROLES[k].ad + '</option>';
+  }).join('');
+  sw.addEventListener('change', function(){ location.href = 'crm-ayarlar-rol-matris.html?rol=' + sw.value; });
+
+  /* ---- türetme kuralı — kararlar.md'de belgelenmiştir ----
+     goruntule    : modül erişimi varsa her zaman açık
+     ekle/duzenle : yönetim rolleri VEYA modül "tam" ise açık; "kısmi" ise kapalı
+     sil          : yalnız yönetim rolleri (superadmin/sahip/yonetim) — §17 arşivleme ilkesiyle uyumlu
+     onayla       : yönetim rolleri HER ZAMAN; diğerlerinde yalnız varlik/satinalma/finans/personel/santiye
+                    modüllerinde VE modül "tam" ise (onay akışı olan modüller — operasyon'un yerini
+                    Dalga 2'de dağıldığı 3 bölümden onay-akışlı olanı, varlik, aldı)
+     raporla/disaAktar : ayarlar modülü hariç açık (ayarlar'da yalnız yönetim)
+     dosyaYukle/dosyaIndir : panel/gorev hariç açık (bu ikisi belge barındırmaz)
+     gizliBelge   : yalnız yönetim rolleri + teknik müdürün finans kısmi erişimi
+     yonetimVerisi: yalnız yönetim rolleri (Yönetici Paneli scr kısıtıyla birebir) */
+  function derive(sec){
+    var has = role.secs.indexOf(sec) !== -1;
+    if(!has) return null;
+    var kismi = !!role.part[sec];
+    var tam = !kismi;
+    var onayModul = ['varlik','satinalma','finans','personel','santiye'].indexOf(sec) !== -1;
+    return {
+      goruntule:true,
+      ekle: mgmt || tam,
+      duzenle: mgmt || tam,
+      sil: mgmt,
+      onayla: mgmt || (tam && onayModul),
+      raporla: sec !== 'ayarlar' || mgmt,
+      disaAktar: sec !== 'ayarlar' || mgmt,
+      dosyaYukle: ['panel','gorev'].indexOf(sec) === -1,
+      dosyaIndir: ['panel','gorev'].indexOf(sec) === -1 || mgmt,
+      gizliBelge: mgmt || (key === 'teknik' && sec === 'finans'),
+      finansalVeri: mgmt || sec === 'finans',
+      yonetimVerisi: mgmt
+    };
+  }
+
+  var body = document.getElementById('pmBody');
+  body.innerHTML = SECS.map(function(s){
+    var p = derive(s.k);
+    var noAccess = !p;
+    var kismi = !noAccess && role.part[s.k];
+    var badge = noAccess ? '<span class="gtag" style="margin-left:8px"><i class="fa-solid fa-ban"></i> Erişim Yok</span>'
+      : (kismi ? '<span class="gtag mint" style="margin-left:8px"><i class="fa-solid fa-circle-half-stroke"></i> Kısmi</span>' : '');
+    var cells = PERMS.map(function(perm){
+      var checked = p && p[perm];
+      var disabled = noAccess;
+      return '<td class="pm-cell"><input type="checkbox" data-sec="' + s.k + '" data-perm="' + perm + '"' + (checked ? ' checked' : '') + (disabled ? ' disabled' : '') + '></td>';
+    }).join('');
+    return '<tr' + (noAccess ? ' class="pm-no-access"' : '') + '>'
+      + '<td class="pm-modcell"><div class="pm-mod-in"><span class="pm-mod-ico"><i class="fa-solid ' + s.ic + '"></i></span>'
+      +   '<div class="pm-mod-info"><b>' + s.lbl + badge + '</b><span>' + (noAccess ? 'Önce Rolü Düzenle\'de bölüm erişimi verin' : '12 yetki ayrı yönetilir') + '</span></div></div></td>'
+      + cells + '</tr>';
+  }).join('');
+
+  document.getElementById('pmSaveBtn').addEventListener('click', function(){
+    gvToast('"' + role.ad + '" rolünün yetki matrisi kaydedildi — işlem kaydına eklendi.', {type:'ok'});
+  });
+})();
+</script>
+</body>
+</html>

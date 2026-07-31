@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Proje Bütçesi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Proje Bütçesi (3 proje özet kartı) ============ */
+.butce-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media(max-width:980px){.butce-grid{grid-template-columns:minmax(0,1fr)}}
+
+.pb-card{display:flex;flex-direction:column;height:100%}
+.pb-head{display:flex;align-items:flex-start;gap:13px;padding:20px 20px 16px}
+.pb-mark{width:44px;height:44px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:15px;font-weight:800;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.pb-id{min-width:0;flex:1}
+.pb-id h3{font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;margin-bottom:5px}
+.pb-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+.pb-amounts{padding:0 20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.pb-amounts dt{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.pb-amounts dd{font-size:14.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.pb-amounts dd.rem{color:var(--acc-ink)}
+
+.pb-prog{padding:0 20px 18px}
+.pb-prog-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.pb-prog-row .gbar{flex:1}
+.pb-prog-note{font-size:11px;color:var(--muted)}
+
+.pb-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pb-foot a{font-size:12.5px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
+.pb-foot a i{font-size:11px;transition:.25s var(--ease)}
+.pb-foot a:hover i{transform:translateX(3px)}
+.pb-foot span{font-size:11.5px;color:var(--muted)}
+
+.pb-card.is-danger .pb-mark{background:var(--danger-tint);color:var(--danger)}
+
+.cross-link{
+  display:flex;align-items:center;gap:12px;padding:15px 22px;
+  font-size:12.5px;color:var(--muted);
+}
+.cross-link i.lead{color:var(--acc-ink);font-size:14px}
+.cross-link a{margin-left:auto;flex:none;font-size:12.5px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
+.cross-link a i{font-size:11px;transition:.25s var(--ease)}
+.cross-link a:hover i{transform:translateX(3px)}
+@media(max-width:640px){
+  .cross-link{flex-wrap:wrap;padding:14px 16px}
+  .cross-link a{margin-left:0}
+  /* 2-kolon mobil kpi-grid'de yedi haneli ₺ tutarları kart genişliğini taşırıyor — crm-finans-kurum.html deseni */
+  .kpi-num.compact{font-size:16px !important}
+}
+</style>
+</head>
+<body data-sec="finans" data-screen="butce">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Finans</div>
+        <h1>Proje Bütçesi</h1>
+        <div class="ph-sub">3 proje · orijinal, revize ve gerçekleşen bütçe karşılaştırması</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="#" data-export="Proje bütçesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div><div class="kpi-num num compact" style="font-size:19px">₺342.000.000</div><div class="kpi-lbl">Toplam revize bütçe</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 3 proje</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-coins"></i></div>
+        <div><div class="kpi-num num compact" style="font-size:19px">₺221.200.000</div><div class="kpi-lbl">Toplam gerçekleşen</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-percent"></i> Revizenin %65'i</div></div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div><div class="kpi-num num">1</div><div class="kpi-lbl">Aşımdaki kategori</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-trowel-bricks"></i> Betonarme — Vadi Konakları %104</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-file-pen"></i></div>
+        <div><div class="kpi-num num">2</div><div class="kpi-lbl">Bütçe revizyonu</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-clock-rotate-left"></i> BTC-2026-R1 · BTC-2026-R2</div></div>
+      </div>
+    </div>
+
+    <div class="butce-grid">
+      <div class="gv-card pb-card is-danger">
+        <div class="pb-head">
+          <div class="pb-mark">VK</div>
+          <div class="pb-id">
+            <h3>Vadi Konakları</h3>
+            <div class="pb-tags">
+              <span class="gtag mint">Konut · Çekmeköy</span>
+              <span class="gstat warn">R2 revize</span>
+            </div>
+          </div>
+        </div>
+        <dl class="pb-amounts">
+          <div><dt>Orijinal</dt><dd>₺176.500.000</dd></div>
+          <div><dt>Revize</dt><dd>₺184.000.000</dd></div>
+          <div><dt>Gerçekleşen</dt><dd>₺127.400.000</dd></div>
+          <div><dt>Kalan</dt><dd class="rem">₺56.600.000</dd></div>
+        </dl>
+        <div class="pb-prog">
+          <div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:69%"></div></div></div><span class="gbar-val">%69</span></div>
+          <div class="pb-prog-note">Fiziksel ilerleme %68 ile tutarlı · 1 kategori aşımda (Betonarme %104)</div>
+        </div>
+        <div class="pb-foot">
+          <span><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> Betonarme aşımda</span>
+          <a href="crm-finans-butce-detay.html?proje=vadi">Detaya git <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="gv-card pb-card">
+        <div class="pb-head">
+          <div class="pb-mark">LL</div>
+          <div class="pb-id">
+            <h3>Liman Lojistik Merkezi</h3>
+            <div class="pb-tags">
+              <span class="gtag">Ticari · Aliağa</span>
+              <span class="gstat off">Revizyon yok</span>
+            </div>
+          </div>
+        </div>
+        <dl class="pb-amounts">
+          <div><dt>Orijinal</dt><dd>₺97.000.000</dd></div>
+          <div><dt>Revize</dt><dd>₺97.000.000</dd></div>
+          <div><dt>Gerçekleşen</dt><dd>₺40.700.000</dd></div>
+          <div><dt>Kalan</dt><dd class="rem">₺56.300.000</dd></div>
+        </dl>
+        <div class="pb-prog">
+          <div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:42%"></div></div></div><span class="gbar-val">%42</span></div>
+          <div class="pb-prog-note">Fiziksel ilerleme %41 ile tutarlı</div>
+        </div>
+        <div class="pb-foot">
+          <span></span>
+          <a href="crm-finans-butce-detay.html?proje=liman">Detaya git <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="gv-card pb-card">
+        <div class="pb-head">
+          <div class="pb-mark">MS</div>
+          <div class="pb-id">
+            <h3>Merkez Şantiye</h3>
+            <div class="pb-tags">
+              <span class="gtag">Depo &amp; Atölye · Gebze</span>
+              <span class="gstat off">Revizyon yok</span>
+            </div>
+          </div>
+        </div>
+        <dl class="pb-amounts">
+          <div><dt>Orijinal</dt><dd>₺61.000.000</dd></div>
+          <div><dt>Revize</dt><dd>₺61.000.000</dd></div>
+          <div><dt>Gerçekleşen</dt><dd>₺53.100.000</dd></div>
+          <div><dt>Kalan</dt><dd class="rem">₺7.900.000</dd></div>
+        </dl>
+        <div class="pb-prog">
+          <div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:87%"></div></div></div><span class="gbar-val">%87</span></div>
+          <div class="pb-prog-note">Fiziksel ilerleme %86 ile tutarlı</div>
+        </div>
+        <div class="pb-foot">
+          <span></span>
+          <a href="crm-finans-butce-detay.html?proje=merkez">Detaya git <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-top:20px">
+      <div class="cross-link" style="border-top:none">
+        <i class="fa-solid fa-chart-line lead" style="color:var(--acc-ink)"></i>
+        <span>Kategori bazlı harcama kırılımı ve kaynak dağılımı için:</span>
+        <a href="crm-finans-maliyet.html">Gerçekleşen Maliyet <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+})();
+</script>
+</body>
+</html>

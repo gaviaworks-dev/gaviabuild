@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Çoklu Firma Yönetimi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Çoklu Firma Yönetimi kilitli modül önizlemesi [D5, §24]
+   crm-ayarlar-modul-kilitli.html?modul=coklu-firma'nın (generic kapı) DERİNLEŞTİRİLMİŞ
+   hâli — o sayfaya buradan gerçek href gelir/gider, ikisi çelişmez. Kabuk
+   crm-ayarlar-firma.html'den birebir devralındı (topbar/rail/ikinci sidebar).
+   Tenant geçişi ÇALIŞAN mockup: seçim değiştikçe #tenantPreview verisi değişir,
+   JS kapalıyken Yapıtaş İnşaat (gerçek/aktif tenant) varsayılan görünür kalır. ============ */
+
+.lkm-hero{display:flex;gap:18px;align-items:flex-start;margin-bottom:24px}
+.lkm-hero-ico{
+  width:56px;height:56px;flex:none;border-radius:var(--r-lg);
+  background:var(--gv-deep);display:grid;place-items:center;font-size:22px;color:var(--gv-mint);
+  box-shadow:var(--sh-md);
+}
+.lkm-hero-txt{min-width:0}
+.lkm-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:7px}
+.lkm-hero-txt h1{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin:0}
+.lkm-value{margin-top:7px;font-size:14px;color:var(--ink-2);line-height:1.55;max-width:640px}
+
+.lkm-cols{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start}
+@media(max-width:1080px){.lkm-cols{grid-template-columns:minmax(0,1fr)}}
+.lkm-main{display:flex;flex-direction:column;gap:16px;min-width:0}
+.lkm-side{display:flex;flex-direction:column;gap:16px;position:sticky;top:calc(var(--top-h) + 28px)}
+@media(max-width:1080px){.lkm-side{position:static}}
+
+.lkm-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.lkm-list li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.lkm-list li i{color:var(--acc-ink);font-size:12px;margin-top:4px;flex:none}
+.lkm-list.benefit li i{color:var(--ok)}
+
+.lkm-cmp th:first-child,.lkm-cmp td:first-child{text-align:left}
+.lkm-cmp th,.lkm-cmp td{text-align:center}
+.lkm-cmp .gtag{margin-left:6px}
+
+.lkm-cta{display:flex;flex-direction:column;gap:10px;padding:20px}
+.lkm-cta .btn{width:100%;justify-content:center}
+
+/* ---- tenant seçici — çalışan mockup ---- */
+.tn-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.tn-opt{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  font-family:inherit;cursor:pointer;transition:.18s var(--ease);
+}
+.tn-opt:hover{border-color:rgba(var(--acc-rgb),.4)}
+.tn-opt.is-on{border-color:rgba(var(--acc-rgb),.45);background:rgba(var(--acc-rgb),.06)}
+.tn-ico{width:32px;height:32px;flex:none;border-radius:8px;background:var(--gv-deep);color:var(--gv-mint);display:grid;place-items:center;font-size:12.5px;font-weight:800}
+.tn-body{flex:1;min-width:0}
+.tn-body b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
+.tn-body span{font-size:11px;color:var(--muted)}
+.tn-opt.is-on .tn-body span{color:var(--acc-ink);font-weight:700}
+.tn-check{width:16px;flex:none;color:var(--acc-ink);font-size:13px;opacity:0;transition:.18s var(--ease)}
+.tn-opt.is-on .tn-check{opacity:1}
+
+.tp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.tp-mark{width:38px;height:38px;flex:none;border-radius:10px;background:var(--gv-deep);color:var(--gv-mint);display:grid;place-items:center;font-size:14px;font-weight:800}
+.tp-name{min-width:0}
+.tp-name b{display:block;font-size:14px;font-weight:800;color:var(--ink)}
+.tp-name span{font-size:11.5px;color:var(--muted)}
+.tp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tp-stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.tp-stat b{display:block;font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tp-stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+
+.grp-total{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.grp-total i{font-size:18px;color:var(--acc-ink)}
+.grp-total b{display:block;font-size:16px;font-weight:800;color:var(--ink)}
+.grp-total span{font-size:11.5px;color:var(--muted)}
+
+.lkm-roadmap{
+  border:1px dashed var(--line-2);border-radius:var(--r-lg);background:var(--bg);
+  padding:16px 18px;display:flex;gap:12px;align-items:flex-start;font-size:12.5px;color:var(--muted);line-height:1.55;
+}
+.lkm-roadmap i{color:var(--acc-ink);font-size:14px;margin-top:2px;flex:none}
+.lkm-roadmap b{color:var(--ink-2)}
+.inv-note{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.inv-note i{color:var(--acc-ink)}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="coklu-firma">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Ayarlar · SaaS</div>
+        <h1 style="font-size:15px;font-weight:700;color:var(--muted)">Kilitli Modül Önizlemesi</h1>
+        <div class="ph-sub">Topbar'daki firma çipinin hedefi — Yapıtaş İnşaat A.Ş. şu an tek firmalı çalışıyor</div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="crm-ayarlar-modul-kilitli.html?modul=coklu-firma"><i class="fa-solid fa-circle-info"></i> Kısa Kilit Ekranı</a>
+    </div>
+
+    <div class="lkm-hero">
+      <div class="lkm-hero-ico"><i class="fa-solid fa-shuffle"></i></div>
+      <div class="lkm-hero-txt">
+        <div class="lkm-eyebrow"><i class="fa-solid fa-lock"></i> Kilitli modül · Enterprise pakette açılır</div>
+        <h1>Çoklu Firma Yönetimi</h1>
+        <p class="lkm-value">Aynı grup/holding çatısı altındaki birden fazla firmayı tek Gavia CRM hesabından, kayıtları birbirinden ayrı tutarak yönetin. Aşağıdaki tenant seçici, bu geçişin gerçekte nasıl çalışacağını gösteren canlı bir mockup'tır.</p>
+      </div>
+    </div>
+
+    <div class="lkm-cols">
+      <div class="lkm-main">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> Bu modül ne yapar</div></div>
+          <div class="gc-body">
+            <ul class="lkm-list">
+              <li><i class="fa-solid fa-check"></i> Tek oturum açma ile topbar'daki firma çipinden birden fazla firma (tenant) arasında saniyeler içinde geçiş yapılmasını sağlar.</li>
+              <li><i class="fa-solid fa-check"></i> Her firmanın kasa, personel, şantiye ve sözleşme kayıtlarını birbirinden tamamen izole tutar — bir firmadaki kullanıcı diğerinin verisini göremez.</li>
+              <li><i class="fa-solid fa-check"></i> Kullanıcı ve rol tanımlarını firmalar arasında paylaşılabilir yapar (ör. aynı muhasebeci iki firmayı da yönetebilir).</li>
+              <li><i class="fa-solid fa-check"></i> Grup/holding seviyesinde konsolide rapor sunar — tek ekranda tüm firmaların toplam kasa, personel ve şantiye özeti.</li>
+              <li><i class="fa-solid fa-check"></i> Faturalama tek merkezden yönetilir; her firma için ayrı abonelik açma derdi ortadan kalkar.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-arrow-trend-up"></i> İşletmenize faydası</div></div>
+          <div class="gc-body">
+            <ul class="lkm-list benefit">
+              <li><i class="fa-solid fa-circle-check"></i> Her yeni grup şirketi için ayrı lisans/hesap açma ve kullanıcı yeniden tanımlama derdini ortadan kaldırır.</li>
+              <li><i class="fa-solid fa-circle-check"></i> Grup şirketlerinin şantiye, personel ve kasa performansını tek panelden karşılaştırma imkânı verir.</li>
+              <li><i class="fa-solid fa-circle-check"></i> Firma bazlı yetki izolasyonuyla veri karışma/sızma riskini engeller.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Paket karşılaştırması</div></div>
+          <div class="gc-body flush">
+            <table class="gtable lkm-cmp">
+              <thead><tr><th>Kapsam</th><th>Professional <span class="gtag">Mevcut</span></th><th>Enterprise <span class="gtag mint">Hedef</span></th></tr></thead>
+              <tbody>
+                <tr><td>Çoklu Firma Yönetimi</td><td><i class="fa-solid fa-xmark" style="color:var(--muted)"></i></td><td><i class="fa-solid fa-check" style="color:var(--ok)"></i></td></tr>
+                <tr><td>Kullanıcı limiti</td><td>25</td><td>Sınırsız</td></tr>
+                <tr><td>Aktif şantiye</td><td>5</td><td>Sınırsız</td></tr>
+                <tr><td>Aylık ücret</td><td>₺14.900</td><td>₺34.900</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="gc-foot">
+            <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Paket adları ve limitleri Firma Ayarları &gt; Paket &amp; Kullanım sekmesiyle birebirdir.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lkm-side">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-regular fa-eye"></i> Tenant Geçişi</div><span class="gtag">Demo — çalışan mockup</span></div>
+          <div class="gc-body">
+            <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">Bir firma seçin, önizleme paneli o firmanın özet verisine dönüşsün.</p>
+            <ul class="tn-list" id="tnList" role="radiogroup" aria-label="Firma seç">
+              <li>
+                <button type="button" class="tn-opt is-on" data-tenant="yapitas" role="radio" aria-checked="true">
+                  <span class="tn-ico">Y</span>
+                  <span class="tn-body"><b>Yapıtaş İnşaat A.Ş.</b><span>Aktif oturum</span></span>
+                  <i class="fa-solid fa-check tn-check"></i>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="tn-opt" data-tenant="gokce" role="radio" aria-checked="false">
+                  <span class="tn-ico">G</span>
+                  <span class="tn-body"><b>Gökçe Yapı Ltd.</b><span>Geçiş yap</span></span>
+                  <i class="fa-solid fa-check tn-check"></i>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="tn-opt" data-tenant="boran" role="radio" aria-checked="false">
+                  <span class="tn-ico">B</span>
+                  <span class="tn-body"><b>Boran Grup A.Ş.</b><span>Geçiş yap</span></span>
+                  <i class="fa-solid fa-check tn-check"></i>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Firma Özeti</div><span class="gtag mint" id="tpBadge">Yapıtaş</span></div>
+          <div class="gc-body" id="tenantPreview">
+            <div class="tp-head">
+              <div class="tp-mark" id="tpMark">Y</div>
+              <div class="tp-name"><b id="tpName">Yapıtaş İnşaat A.Ş.</b><span id="tpPaket">Professional paket</span></div>
+            </div>
+            <div class="tp-stats">
+              <div class="tp-stat"><b id="tpSantiye">3 / 5</b><span>Aktif şantiye</span></div>
+              <div class="tp-stat"><b id="tpPersonel">93</b><span>Sahadaki personel</span></div>
+              <div class="tp-stat"><b id="tpKasa">₺165.130</b><span>Toplam kasa bakiyesi</span></div>
+              <div class="tp-stat"><b id="tpKullanici">18 / 25</b><span>Kullanıcı</span></div>
+            </div>
+          </div>
+          <div class="gc-foot">
+            <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Örnek veridir; gerçek konsolide rapor Enterprise pakette canlı verilerle üretilir.</span>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="grp-total">
+            <i class="fa-solid fa-sitemap"></i>
+            <div><b>3 firma · ₺636.420</b><span>Grup toplam kasa bakiyesi (konsolide rapor önizlemesi)</span></div>
+          </div>
+        </div>
+
+        <div class="gv-card lkm-cta">
+          <a class="btn btn-acc" href="crm-ayarlar-paket-degistir.html?hedef=enterprise"><i class="fa-solid fa-arrow-up"></i> Paketi Yükselt</a>
+          <button type="button" class="btn btn-ghost" data-no-confirm onclick="gvContactSales()"><i class="fa-solid fa-headset"></i> Satış Ekibiyle Görüş</button>
+          <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Yükseltme talebi anında uygulanır, ek taahhüt yoktur.</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+/* ---- Tenant geçiş mockup — [MOCK-SİM] gerçek tenant izolasyonu yok, statik
+   örnek veri değişimi. Yapıtaş rakamları kanonik (crm-santiye.html "3 aktif ·
+   93 personel sahada", crm-operasyon-kasa.html "₺165.130 toplam kasa bakiyesi",
+   crm-ayarlar-firma.html "18/25 kullanıcı"); diğer iki firma tamamen kurgusal. ---- */
+(function(){
+  var TENANT = {
+    yapitas:{ ico:'Y', name:'Yapıtaş İnşaat A.Ş.', paket:'Professional paket', santiye:'3 / 5', personel:'93', kasa:'₺165.130', kullanici:'18 / 25', badge:'Yapıtaş' },
+    gokce:  { ico:'G', name:'Gökçe Yapı Ltd.',      paket:'Basic paket',        santiye:'2 / 3', personel:'41', kasa:'₺58.400',  kullanici:'9 / 10',  badge:'Gökçe' },
+    boran:  { ico:'B', name:'Boran Grup A.Ş.',      paket:'Enterprise paket',   santiye:'6 / ∞',  personel:'214', kasa:'₺412.900', kullanici:'52 / ∞', badge:'Boran' }
+  };
+  var btns = Array.prototype.slice.call(document.querySelectorAll('.tn-opt'));
+  var els = {
+    mark:document.getElementById('tpMark'), name:document.getElementById('tpName'),
+    paket:document.getElementById('tpPaket'), santiye:document.getElementById('tpSantiye'),
+    personel:document.getElementById('tpPersonel'), kasa:document.getElementById('tpKasa'),
+    kullanici:document.getElementById('tpKullanici'), badge:document.getElementById('tpBadge')
+  };
+  function apply(key){
+    var t = TENANT[key]; if(!t) return;
+    els.mark.textContent = t.ico; els.name.textContent = t.name; els.paket.textContent = t.paket;
+    els.santiye.textContent = t.santiye; els.personel.textContent = t.personel;
+    els.kasa.textContent = t.kasa; els.kullanici.textContent = t.kullanici; els.badge.textContent = t.badge;
+    btns.forEach(function(b){
+      var on = b.getAttribute('data-tenant') === key;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.querySelector('.tn-body span').textContent = on ? 'Aktif oturum' : 'Geçiş yap';
+    });
+  }
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var key = b.getAttribute('data-tenant');
+      apply(key);
+      if(key !== 'yapitas') gvToast(TENANT[key].name + ' firmasına geçiş simülasyonu — bu prototipte gerçek oturum değişmez (demo).', {type:'info'});
+    });
+  });
+})();
+
+function gvContactSales(){
+  gvToast('Satış ekibi: satis@gaviaworks.com · 0850 000 00 00 — 1 iş günü içinde dönüş yapılır.', {type:'info', ms:4200});
+}
+</script>
+</body>
+</html>

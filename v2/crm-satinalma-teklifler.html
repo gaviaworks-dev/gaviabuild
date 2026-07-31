@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Tedarikçi Teklifleri — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Tedarikçi Teklifleri / teklif toplama (§16 Faz 2) ============
+   KÖKEN: crm-satinalma-icmal-cikti.html YALNIZ bir A4 yazdırma çıktısıydı (interaktif
+   toplama/seçim yok); crm-satinalma-form-detay.html'in .icmal-tbl'i de zaten VERİLMİŞ bir
+   kararın salt-okunur özetiydi. Bu sayfa doğrudan doküman §16'nın "tedarikçi teklif
+   toplama" alanını karşılar: hangi tedarikçilerden teklif istendi, gelen/bekleyen durumu,
+   teklif GİRİŞİ (gerçek form), son tarih. Kanonik veri: SAT-2026-014 (crm-satinalma-
+   formlar.html:138 "teklif toplanıyor" notu + crm-satinalma-form-detay.html:443-445 taslak
+   kaydı) BİREBİR devralındı — uydurulmadı. SAT-2026-018 tamamlanmış süreç olarak, mevcut
+   5-tedarikçili icmal verisiyle (form-detay.html/icmal-cikti.html) BİREBİR bağlandı.
+   SAT-2026-019 tek YENİ/illüstratif kayıt — kordon'da kilitli bir SAT numarası değil. */
+.tk-card{margin-bottom:16px}
+.tk-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;flex-wrap:wrap}
+.tk-head-l{min-width:0}
+.tk-eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:6px}
+.tk-title{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.tk-sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.tk-head-r{flex:none;text-align:right}
+.tk-deadline{font-size:11.5px;color:var(--muted);margin-top:6px}
+.tk-deadline b{color:var(--ink)}
+.tk-deadline.gecti b{color:var(--danger)}
+
+.tk-progress{padding:0 22px 16px}
+.tk-pbar-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.tk-pbar-row b{font-size:12.5px;color:var(--ink);font-weight:700}
+.tk-pbar-row span{font-size:12px;color:var(--muted)}
+
+.tk-sup-list{padding:0 22px 20px;display:flex;flex-direction:column;gap:0}
+.tk-sup-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.tk-sup-row:last-child{border-bottom:none}
+.tk-sup-ico{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px}
+.tk-sup-ico.yanitladi{background:var(--ok-tint);color:var(--ok)}
+.tk-sup-ico.bekliyor{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.tk-sup-ico.vermedi{background:var(--danger-tint);color:var(--danger)}
+.tk-sup-info{flex:1;min-width:0;line-height:1.35}
+.tk-sup-info b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.tk-sup-info span{font-size:11.5px;color:var(--muted)}
+.tk-sup-fiyat{flex:none;text-align:right;font-size:13px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.tk-sup-acts{flex:none}
+
+.tk-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+.tk-closed-note{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ok);background:var(--ok-tint);border-radius:var(--r-sm);padding:10px 14px;margin:0 22px 18px}
+.tk-closed-note i{font-size:14px}
+
+.tk-foot .btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
+</style>
+</head>
+<body data-sec="satinalma" data-screen="teklifler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Tedarik</div>
+        <h1>Tedarikçi Teklifleri</h1>
+        <div class="ph-sub" id="tkSub">3 satın alma formu · teklif toplama süreci</div>
+      </div>
+      <div class="ph-actions">
+        <div id="tkDateRange"></div>
+        <label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px">
+          <input type="checkbox" id="chkArsivTeklif" style="margin:0"> Arşivlenenleri Göster
+        </label>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div><div class="kpi-num num" id="kpiAktif">2</div><div class="kpi-lbl">Devam eden süreç</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+        <div><div class="kpi-num num" id="kpiTamam">1</div><div class="kpi-lbl">Tamamlanan</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-inbox"></i></div>
+        <div><div class="kpi-num num" id="kpiGelen">8</div><div class="kpi-lbl">Toplam gelen teklif</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-calendar-day"></i></div>
+        <div><div class="kpi-num num" id="kpiSonTarih">5 Temmuz</div><div class="kpi-lbl">En yakın son tarih</div></div>
+      </div>
+    </div>
+
+    <!-- statik bake (D18-B2 idiyomu) — JS'in render()'ı ÜRETTİĞİ NİHAİ HTML ile
+         byte-identical; JS yüklendiğinde aynı mount'u AYNI içerikle ezer (idempotent) -->
+    <div id="tkList"><div class="gv-card tk-card" data-form="014"><div class="tk-head"><div class="tk-head-l"><div class="tk-eyebrow">Vadi Konakları · SAT-2026-014</div><div class="tk-title">Hazır beton C30 — 30 m³</div><div class="tk-sub">Kaynak: <a href="crm-satinalma-talep-detay.html?mlz=046">MLZ-2026-046</a></div></div><div class="tk-head-r"><span class="gstat wait">Teklif Toplanıyor</span><div class="tk-deadline">Son tarih: <b>5 Temmuz 2026</b></div></div></div><div class="tk-progress"><div class="tk-pbar-row"><b>2 / 5 teklif alındı</b><span>40%</span></div><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:40%"></div></div></div></div><div class="tk-sup-list"><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Ege Hazır Beton</b><span>2 gün içinde teslim</span></div><div class="tk-sup-fiyat">₺142.500</div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Trakya Beton Santrali</b><span>3 gün içinde teslim</span></div><div class="tk-sup-fiyat">₺158.000</div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico vermedi"><i class="fa-solid fa-xmark"></i></div><div class="tk-sup-info"><b>Marmara Yapı Market</b><span>"Bu ürün grubunda teklif vermiyoruz" yanıtı verdi</span></div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico bekliyor"><i class="fa-solid fa-clock"></i></div><div class="tk-sup-info"><b>Boğaziçi Yapı Market</b><span>Teklif bekleniyor</span></div><div class="tk-sup-acts"><button type="button" class="btn btn-ghost btn-sm" data-tk-gir="014" data-sup="bogazici" data-no-confirm=""><i class="fa-solid fa-pen"></i> Teklif Gir</button></div></div><div class="tk-sup-row"><div class="tk-sup-ico bekliyor"><i class="fa-solid fa-clock"></i></div><div class="tk-sup-info"><b>Anadolu Hırdavat</b><span>Teklif bekleniyor</span></div><div class="tk-sup-acts"><button type="button" class="btn btn-ghost btn-sm" data-tk-gir="014" data-sup="anadolu" data-no-confirm=""><i class="fa-solid fa-pen"></i> Teklif Gir</button></div></div></div><div class="tk-foot"><button type="button" class="btn btn-ghost btn-sm" data-tk-davet="014" data-no-confirm=""><i class="fa-regular fa-paper-plane"></i> Yanıt Vermeyenlere Hatırlatma Gönder</button><a class="btn btn-acc btn-sm" href="crm-satinalma-teklif-karsilastir.html?form=014"><i class="fa-solid fa-scale-balanced"></i> Teklifleri Karşılaştır</a></div></div><div class="gv-card tk-card" data-form="018"><div class="tk-head"><div class="tk-head-l"><div class="tk-eyebrow">Vadi Konakları · SAT-2026-018</div><div class="tk-title">Mekanik Tesisat Paketi — 9 kalem</div><div class="tk-sub">Kaynak: <a href="crm-satinalma-talep-detay.html?mlz=030">MLZ-2026-030</a></div></div><div class="tk-head-r"><span class="gstat off">Tamamlandı</span><div class="tk-deadline">Son tarih: <b>28 Haziran 2026 (tamamlandı)</b></div></div></div><div class="tk-closed-note"><i class="fa-solid fa-circle-check"></i> Teklif toplama tamamlandı — Deta Demir Çelik seçildi. <a href="crm-satinalma-teklif-karsilastir.html?form=018" style="margin-left:4px;font-weight:700">Karşılaştırma dökümünü aç →</a></div><div class="tk-progress"><div class="tk-pbar-row"><b>5 / 5 teklif alındı</b><span>100%</span></div><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div></div><div class="tk-sup-list"><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Ege Hazır Beton</b><span>Teklif alındı</span></div><div class="tk-sup-fiyat">₺699.100</div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Trakya Beton Santrali</b><span>Teklif alındı</span></div><div class="tk-sup-fiyat">₺727.900</div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Marmara Yapı Market</b><span>7/9 kalem — kısmi teklif</span></div><div class="tk-sup-fiyat">₺355.900</div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Deta Demir Çelik</b><span>Teklif alındı</span></div><div class="tk-sup-fiyat">₺742.300 <span class="gtag mint" style="margin-left:6px">Seçili</span></div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Nokta Hırdavat</b><span>Teklif alındı</span></div><div class="tk-sup-fiyat">₺703.200</div><div class="tk-sup-acts"></div></div></div><div class="tk-foot"><span class="inv-note"><i class="fa-solid fa-circle-info"></i> Bu süreç kapandı, yeni teklif eklenemez.</span></div></div><div class="gv-card tk-card" data-form="019"><div class="tk-head"><div class="tk-head-l"><div class="tk-eyebrow">Liman Lojistik Merkezi · SAT-2026-019</div><div class="tk-title">Kompresör Bakım Seti</div><div class="tk-sub">Doğrudan teklif toplama (kaynak talep yok)</div></div><div class="tk-head-r"><span class="gstat wait">Teklif Toplanıyor</span><div class="tk-deadline">Son tarih: <b>8 Temmuz 2026</b></div></div></div><div class="tk-progress"><div class="tk-pbar-row"><b>1 / 4 teklif alındı</b><span>25%</span></div><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:25%"></div></div></div></div><div class="tk-sup-list"><div class="tk-sup-row"><div class="tk-sup-ico yanitladi"><i class="fa-solid fa-check"></i></div><div class="tk-sup-info"><b>Anadolu Hırdavat</b><span>1 hafta içinde teslim</span></div><div class="tk-sup-fiyat">₺18.400</div><div class="tk-sup-acts"></div></div><div class="tk-sup-row"><div class="tk-sup-ico bekliyor"><i class="fa-solid fa-clock"></i></div><div class="tk-sup-info"><b>Boğaziçi Yapı Market</b><span>Teklif bekleniyor</span></div><div class="tk-sup-acts"><button type="button" class="btn btn-ghost btn-sm" data-tk-gir="019" data-sup="bogazici" data-no-confirm=""><i class="fa-solid fa-pen"></i> Teklif Gir</button></div></div><div class="tk-sup-row"><div class="tk-sup-ico bekliyor"><i class="fa-solid fa-clock"></i></div><div class="tk-sup-info"><b>Marmara Yapı Market</b><span>Teklif bekleniyor</span></div><div class="tk-sup-acts"><button type="button" class="btn btn-ghost btn-sm" data-tk-gir="019" data-sup="marmara" data-no-confirm=""><i class="fa-solid fa-pen"></i> Teklif Gir</button></div></div><div class="tk-sup-row"><div class="tk-sup-ico bekliyor"><i class="fa-solid fa-clock"></i></div><div class="tk-sup-info"><b>Trakya Beton Santrali</b><span>Teklif bekleniyor</span></div><div class="tk-sup-acts"><button type="button" class="btn btn-ghost btn-sm" data-tk-gir="019" data-sup="trakya" data-no-confirm=""><i class="fa-solid fa-pen"></i> Teklif Gir</button></div></div></div><div class="tk-foot"><button type="button" class="btn btn-ghost btn-sm" data-tk-davet="019" data-no-confirm=""><i class="fa-regular fa-paper-plane"></i> Yanıt Vermeyenlere Hatırlatma Gönder</button><a class="btn btn-acc btn-sm is-disabled" href="crm-satinalma-teklif-karsilastir.html?form=019" aria-disabled="true" tabindex="-1" onclick="return false;" title="Karşılaştırmak için en az 2 teklif gerekir"><i class="fa-solid fa-scale-balanced"></i> Teklifleri Karşılaştır</a></div></div></div>
+  </main>
+
+  <!-- ============ TEKLİF GİR modalı (§16: teklif girişi) ============ -->
+  <div class="gv-modal-ov" id="tkModalOv">
+    <div class="gv-modal" style="width:min(420px,100%)" role="dialog" aria-modal="true" aria-labelledby="tkModalTitle">
+      <h3 id="tkModalTitle">Teklif Gir</h3>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px" id="tkModalSub"></p>
+      <div class="gform">
+        <div class="gfield full">
+          <label for="tkFiyat">Teklif tutarı (₺)</label>
+          <input type="text" id="tkFiyat" placeholder="Örn. 148.000">
+        </div>
+        <div class="gfield full">
+          <label for="tkTermin">Termin</label>
+          <input type="text" id="tkTermin" placeholder="Örn. 3 gün içinde teslim">
+        </div>
+        <div class="gfield full">
+          <label for="tkNot">Not (opsiyonel)</label>
+          <input type="text" id="tkNot" placeholder="Ödeme koşulu, ek bilgi…">
+        </div>
+      </div>
+      <div class="gv-modal-acts" style="margin-top:18px">
+        <button type="button" class="btn btn-ghost btn-sm" id="tkModalCancel">Vazgeç</button>
+        <button type="button" class="btn btn-acc btn-sm" id="tkModalSave"><i class="fa-solid fa-check"></i> Teklifi Kaydet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var SUP_NAME = {ege:'Ege Hazır Beton', trakya:'Trakya Beton Santrali', marmara:'Marmara Yapı Market', bogazici:'Boğaziçi Yapı Market', anadolu:'Anadolu Hırdavat', deta:'Deta Demir Çelik', nokta:'Nokta Hırdavat'};
+  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
+
+  /* SAT-2026-014 — crm-satinalma-formlar.html:138 + form-detay.html:443-445 BİREBİR
+     ("2 Temmuz 2026 · teklif toplanıyor", ₺142.500, Ege Hazır Beton, Hazır beton C30,
+     MLZ-2026-046, taslak). Beton tedarikçi havuzu (Ege/Trakya) + davet edilip yanıt
+     vermeyen/vermeyi bekleyen 3 tedarikçi — bu 5'li havuz kanonik değil, illüstratif. */
+  var FORMS = [
+    {
+      key:'014', no:'SAT-2026-014', kalem:'Hazır beton C30 — 30 m³', santiye:'Vadi Konakları',
+      mlz:'MLZ-2026-046', mlzHref:'crm-satinalma-talep-detay.html?mlz=046',
+      formHref:'crm-satinalma-form-detay.html?form=014',
+      sonTarih:'5 Temmuz 2026', closed:false,
+      suppliers:[
+        {key:'ege', durum:'yanitladi', fiyat:142500, termin:'2 gün içinde teslim'},
+        {key:'trakya', durum:'yanitladi', fiyat:158000, termin:'3 gün içinde teslim'},
+        {key:'marmara', durum:'vermedi', not:'"Bu ürün grubunda teklif vermiyoruz" yanıtı verdi'},
+        {key:'bogazici', durum:'bekliyor'},
+        {key:'anadolu', durum:'bekliyor'}
+      ]
+    },
+    {
+      key:'018', no:'SAT-2026-018', kalem:'Mekanik Tesisat Paketi — 9 kalem', santiye:'Vadi Konakları',
+      mlz:'MLZ-2026-030', mlzHref:'crm-satinalma-talep-detay.html?mlz=030',
+      formHref:'crm-satinalma-form-detay.html?form=018',
+      karsilastirHref:'crm-satinalma-teklif-karsilastir.html?form=018',
+      sonTarih:'28 Haziran 2026 (tamamlandı)', closed:true, arsiv:false,
+      suppliers:[
+        {key:'ege', durum:'yanitladi', fiyat:699100},
+        {key:'trakya', durum:'yanitladi', fiyat:727900},
+        {key:'marmara', durum:'yanitladi', fiyat:355900, not:'7/9 kalem — kısmi teklif'},
+        {key:'deta', durum:'yanitladi', fiyat:742300, secili:true},
+        {key:'nokta', durum:'yanitladi', fiyat:703200}
+      ]
+    },
+    {
+      key:'019', no:'SAT-2026-019', kalem:'Kompresör Bakım Seti', santiye:'Liman Lojistik Merkezi',
+      mlz:null, formHref:null,
+      sonTarih:'8 Temmuz 2026', closed:false,
+      suppliers:[
+        {key:'anadolu', durum:'yanitladi', fiyat:18400, termin:'1 hafta içinde teslim'},
+        {key:'bogazici', durum:'bekliyor'},
+        {key:'marmara', durum:'bekliyor'},
+        {key:'trakya', durum:'bekliyor'}
+      ]
+    }
+  ];
+
+  var SUP_ICO = {yanitladi:'fa-check', bekliyor:'fa-clock', vermedi:'fa-xmark'};
+  var SUP_LBL = {yanitladi:'Teklif alındı', bekliyor:'Teklif bekleniyor', vermedi:'Teklif vermedi'};
+
+  /* ============ §17 — süreç bazlı arşivleme ============
+     Bu sayfa kart-tabanlı (her kart = bir SAT formunun teklif toplama süreci),
+     satır/tablo yapısı YOK — bu yüzden standart gvFilterPanel/off-canvas paneli
+     yerine tek bir "Arşivlenenleri Göster" çipiyle basitleştirilmiş mekanizma
+     kullanıldı (bkz. tasks/kararlar.md Dalga 3/T-M madde 46 emsali). Yalnız
+     KAPANMIŞ (F.closed) süreçler arşivlenebilir — devam eden bir teklif toplama
+     sürecini arşivlemek iş mantığı olarak anlamsız olurdu. ---- */
+  var showArsiv = false;
+  document.getElementById('chkArsivTeklif').addEventListener('change', function(){ showArsiv = this.checked; render(); });
+
+  /* ============ §13 — Tarih Aralığı. Bu sayfa kart-tabanlı (satır/tablo yok), bu
+     yüzden standart panel yerine BAĞIMSIZ gvDateRange kullanıldı (madde 46 emsali,
+     yukarıdaki §17 notuyla AYNI gerekçe). Anlamlı tarih ekseni bu modülde "son tarih"
+     (teklif toplama son teslim tarihi) — kart başına tek gerçek tarih alanı budur.
+     F.sonTarih TR biçiminde ("5 Temmuz 2026", tamamlanan süreçte "… (tamamlandı)"
+     son eki de olabilir) — ilk 3 jetonu (gün/ay/yıl) ayrıştırıp ISO'ya çevrilir. ============ */
+  var TK_AY = {Ocak:'01',Şubat:'02',Mart:'03',Nisan:'04',Mayıs:'05',Haziran:'06',Temmuz:'07',Ağustos:'08',Eylül:'09',Ekim:'10',Kasım:'11',Aralık:'12'};
+  function tkIso(sonTarih){
+    var p = sonTarih.trim().split(/\s+/);
+    if(p.length < 3 || !TK_AY[p[1]]) return '';
+    return p[2].replace(/\D/g, '') + '-' + TK_AY[p[1]] + '-' + ('0' + p[0]).slice(-2);
+  }
+  var curTarih = null;
+  window.gvDateRange('#tkDateRange', {
+    emptyLabel: 'Tüm zamanlar',
+    onChange: function(val){ curTarih = val; render(); }
+  });
+
+  function render(){
+    var listEl = document.getElementById('tkList');
+    var html = '';
+    var aktif = 0, tamam = 0, gelenToplam = 0;
+
+    FORMS.forEach(function(F){
+      if(F.arsiv && !showArsiv) return;
+      if(curTarih && curTarih.from){
+        var fIso = tkIso(F.sonTarih);
+        if(fIso){ var fd = new Date(fIso + 'T00:00:00'); if(fd < curTarih.from || fd > curTarih.to) return; }
+      }
+      if(F.closed) tamam++; else aktif++;
+      var yanitlayan = F.suppliers.filter(function(s){ return s.durum === 'yanitladi'; }).length;
+      gelenToplam += yanitlayan;
+      var toplam = F.suppliers.length;
+
+      html += '<div class="gv-card tk-card" data-form="' + F.key + '" data-tarih="' + tkIso(F.sonTarih) + '">'
+        + '<div class="tk-head">'
+        +   '<div class="tk-head-l"><div class="tk-eyebrow">' + F.santiye + ' · ' + F.no + '</div>'
+        +   '<div class="tk-title">' + F.kalem + '</div>'
+        +   (F.mlz ? '<div class="tk-sub">Kaynak: <a href="' + F.mlzHref + '">' + F.mlz + '</a></div>' : '<div class="tk-sub">Doğrudan teklif toplama (kaynak talep yok)</div>')
+        +   '</div>'
+        +   '<div class="tk-head-r">'
+        +     '<span class="gstat ' + (F.closed ? 'off' : 'wait') + '">' + (F.closed ? 'Tamamlandı' : 'Teklif Toplanıyor') + '</span>'
+        +     (F.arsiv ? ' <span class="gtag"><i class="fa-solid fa-box-archive"></i> Arşivlendi</span>' : '')
+        +     '<div class="tk-deadline' + (F.closed ? '' : '') + '">Son tarih: <b>' + F.sonTarih + '</b></div>'
+        +   '</div>'
+        + '</div>';
+
+      if(F.closed){
+        html += '<div class="tk-closed-note"><i class="fa-solid fa-circle-check"></i> Teklif toplama tamamlandı — '
+          + SUP_NAME[F.suppliers.filter(function(s){return s.secili;})[0].key] + ' seçildi. '
+          + (F.karsilastirHref ? '<a href="' + F.karsilastirHref + '" style="margin-left:4px;font-weight:700">Karşılaştırma dökümünü aç →</a>' : '') + '</div>';
+      }
+
+      html += '<div class="tk-progress"><div class="tk-pbar-row"><b>' + yanitlayan + ' / ' + toplam + ' teklif alındı</b>'
+        + '<span>' + Math.round(yanitlayan / toplam * 100) + '%</span></div>'
+        + '<div class="gbar"><div class="gbar-track"><div class="gbar-fill' + (F.closed ? '' : '') + '" style="width:' + Math.round(yanitlayan / toplam * 100) + '%"></div></div></div></div>';
+
+      html += '<div class="tk-sup-list">';
+      F.suppliers.forEach(function(s){
+        html += '<div class="tk-sup-row">'
+          + '<div class="tk-sup-ico ' + s.durum + '"><i class="fa-solid ' + SUP_ICO[s.durum] + '"></i></div>'
+          + '<div class="tk-sup-info"><b>' + SUP_NAME[s.key] + '</b><span>' + (s.not || s.termin || SUP_LBL[s.durum]) + '</span></div>'
+          + (s.fiyat ? '<div class="tk-sup-fiyat">' + tl(s.fiyat) + (s.secili ? ' <span class="gtag mint" style="margin-left:6px">Seçili</span>' : '') + '</div>' : '')
+          + '<div class="tk-sup-acts">'
+          + (s.durum === 'bekliyor' && !F.closed
+              ? '<button type="button" class="btn btn-ghost btn-sm" data-tk-gir="' + F.key + '" data-sup="' + s.key + '" data-no-confirm><i class="fa-solid fa-pen"></i> Teklif Gir</button>'
+              : (s.durum === 'bekliyor' ? '' : ''))
+          + '</div></div>';
+      });
+      html += '</div>';
+
+      html += '<div class="tk-foot">'
+        + (F.closed
+            ? '<span class="inv-note"><i class="fa-solid fa-circle-info"></i> Bu süreç kapandı, yeni teklif eklenemez.</span>'
+            : '<button type="button" class="btn btn-ghost btn-sm" data-tk-davet="' + F.key + '" data-no-confirm><i class="fa-regular fa-paper-plane"></i> Yanıt Vermeyenlere Hatırlatma Gönder</button>')
+        + (F.closed ? '' : '<a class="btn btn-acc btn-sm' + (yanitlayan < 2 ? ' is-disabled' : '') + '" href="crm-satinalma-teklif-karsilastir.html?form=' + F.key + '"' + (yanitlayan < 2 ? ' aria-disabled="true" tabindex="-1" onclick="return false;" title="Karşılaştırmak için en az 2 teklif gerekir"' : '') + '><i class="fa-solid fa-scale-balanced"></i> Teklifleri Karşılaştır</a>')
+        + (F.closed
+            ? (F.arsiv
+                ? '<button type="button" class="btn btn-ghost btn-sm" data-tk-aktif="' + F.key + '" data-no-confirm><i class="fa-solid fa-rotate-left"></i> Aktife Al</button>'
+                : '<button type="button" class="btn btn-ghost btn-sm" data-tk-arsivle="' + F.key + '" data-no-confirm><i class="fa-solid fa-box-archive"></i> Arşivle</button>')
+            : '')
+        + '</div>';
+
+      html += '</div>';
+    });
+
+    listEl.innerHTML = html;
+    document.getElementById('tkSub').textContent = FORMS.length + ' satın alma formu · teklif toplama süreci';
+    document.getElementById('kpiAktif').textContent = aktif;
+    document.getElementById('kpiTamam').textContent = tamam;
+    document.getElementById('kpiGelen').textContent = gelenToplam;
+    var acikSonTarihler = FORMS.filter(function(F){ return !F.closed; }).map(function(F){ return F.sonTarih; });
+    document.getElementById('kpiSonTarih').textContent = acikSonTarihler.length ? acikSonTarihler[0].replace(/(\d+) (\w+) 2026/, '$1 $2') : '—';
+  }
+  render();
+
+  /* ---- Teklif Gir modalı ---- */
+  var tkOv = document.getElementById('tkModalOv');
+  var curForm = null, curSup = null;
+  document.getElementById('tkList').addEventListener('click', function(e){
+    var girBtn = e.target.closest('[data-tk-gir]');
+    if(girBtn){
+      curForm = girBtn.getAttribute('data-tk-gir'); curSup = girBtn.getAttribute('data-sup');
+      document.getElementById('tkModalSub').textContent = SUP_NAME[curSup] + ' için gelen teklifi girin.';
+      document.getElementById('tkFiyat').value = ''; document.getElementById('tkTermin').value = ''; document.getElementById('tkNot').value = '';
+      tkOv.classList.add('open');
+      return;
+    }
+    var davetBtn = e.target.closest('[data-tk-davet]');
+    if(davetBtn){
+      gvToast('Yanıt vermeyen tedarikçilere hatırlatma gönderildi.', {icon:'fa-paper-plane', type:'info'});
+      return;
+    }
+    var arsivBtn = e.target.closest('[data-tk-arsivle]');
+    if(arsivBtn){
+      var F1 = FORMS.filter(function(f){ return f.key === arsivBtn.getAttribute('data-tk-arsivle'); })[0];
+      gvConfirm({
+        danger:true, icon:'fa-box-archive', ok:'Arşivle', cancel:'Vazgeç',
+        title: F1.no + ' teklif süreci arşivlensin mi?',
+        message: 'Süreç kalıcı silinmez; arşive alınır ve varsayılan listede görünmez olur. İşlem kaydına yazılır ve "Arşivlenenleri Göster" ile ya da Ayarlar > Arşiv Merkezi\'nden tekrar görüntülenebilir.',
+        onConfirm:function(){
+          F1.arsiv = true;
+          render();
+          gvToast(F1.no + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+        }
+      });
+      return;
+    }
+    var aktifBtn = e.target.closest('[data-tk-aktif]');
+    if(aktifBtn){
+      var F2 = FORMS.filter(function(f){ return f.key === aktifBtn.getAttribute('data-tk-aktif'); })[0];
+      gvConfirm({
+        icon:'fa-rotate-left', ok:'Aktife Al', cancel:'Vazgeç',
+        title: F2.no + ' yeniden aktif edilsin mi?',
+        message: 'Süreç arşivden çıkarılır, varsayılan listede yeniden görünür.',
+        onConfirm:function(){
+          F2.arsiv = false;
+          render();
+          gvToast(F2.no + ' yeniden aktif — varsayılan listede görünüyor.');
+        }
+      });
+    }
+  });
+  document.getElementById('tkModalCancel').addEventListener('click', function(){ tkOv.classList.remove('open'); });
+  tkOv.addEventListener('click', function(e){ if(e.target === tkOv) tkOv.classList.remove('open'); });
+  document.getElementById('tkModalSave').addEventListener('click', function(){
+    var fiyatRaw = parseFloat((document.getElementById('tkFiyat').value || '0').replace(/\./g, '').replace(',', '.'));
+    if(!fiyatRaw){ gvToast('Teklif tutarı girin.', {type:'danger', icon:'fa-triangle-exclamation'}); return; }
+    var F = FORMS.filter(function(f){ return f.key === curForm; })[0];
+    var s = F.suppliers.filter(function(x){ return x.key === curSup; })[0];
+    s.durum = 'yanitladi'; s.fiyat = fiyatRaw;
+    s.termin = document.getElementById('tkTermin').value.trim() || undefined;
+    s.not = document.getElementById('tkNot').value.trim() || undefined;
+    tkOv.classList.remove('open');
+    render();
+    gvToast(SUP_NAME[curSup] + ' teklifi kaydedildi.', {icon:'fa-check'});
+  });
+})();
+</script>
+</body>
+</html>

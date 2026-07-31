@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yönetici Paneli — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — yönetici paneli (D13 / 2.15, §6.15 10 panel) ============
+   Tüm sayılar kaynak ekranlarla BİREBİR (D11 satış + D12 tedarik-finans kanonikleri);
+   bu sayfada yeni tutar üretilmez, yalnız derlenir. */
+
+/* risk bandı — sayfanın imza öğesi */
+.risk-band{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:24px}
+.risk{
+  position:relative;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--danger);
+  border-radius:var(--r-lg);box-shadow:var(--sh-sm);padding:15px 17px;display:flex;flex-direction:column;gap:9px;
+  transition:.22s var(--ease);
+}
+.risk:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.risk.warn{border-left-color:var(--warn)}
+.risk-top{display:flex;align-items:center;gap:9px}
+.risk-top i{width:30px;height:30px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:12px;background:var(--danger-tint);color:var(--danger)}
+.risk.warn .risk-top i{background:var(--warn-tint);color:var(--warn)}
+.risk-top b{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
+.risk-body{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.risk-body .num{font-weight:800;color:var(--ink)}
+.risk-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:9px;border-top:1px solid var(--line)}
+.risk-foot .gstat{font-size:10.5px}
+.risk-foot a{font-size:12px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px}
+.risk-foot a:hover{gap:9px}
+.risk-foot a i{font-size:10px;transition:.2s var(--ease)}
+
+/* panel mozaiği */
+.yp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.yp-grid .gv-card{display:flex;flex-direction:column;margin:0}
+.yp-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;flex:1}
+.yp-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 18px;border-top:1px solid var(--line)}
+.yp-foot span{font-size:12px;color:var(--muted)}
+.yp-foot a{font-size:12.5px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.yp-foot a i{font-size:10px;transition:.2s var(--ease)}
+.yp-foot a:hover i{transform:translateX(3px)}
+
+/* panel içi büyük değer satırı */
+.yp-hero{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;line-height:1.05}
+.yp-hero b{font-size:23px;font-weight:800;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.yp-hero span{font-size:12.5px;color:var(--muted);font-weight:600}
+
+/* mini istatistik ikilisi/üçlüsü */
+.yp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.yp-stat{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;line-height:1.3}
+.yp-stat b{display:block;font-size:15px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.yp-stat span{font-size:11px;color:var(--muted);font-weight:600}
+.yp-stat.danger b{color:var(--danger)}
+.yp-stat.warn b{color:var(--warn)}
+.yp-stat.ok b{color:var(--ok)}
+
+/* satış hunisi çubukları */
+.fnl{display:flex;flex-direction:column;gap:7px}
+.fnl-row{display:grid;grid-template-columns:76px 1fr 22px;align-items:center;gap:10px;font-size:11.5px}
+.fnl-row .fl{color:var(--ink-2);font-weight:700;white-space:nowrap}
+.fnl-row .fb{height:9px;border-radius:5px;background:var(--bg);overflow:hidden}
+.fnl-row .fb i{display:block;height:100%;border-radius:5px;background:rgba(var(--acc-rgb),.8)}
+.fnl-row .fc{font-weight:800;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.fnl-sum{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+
+/* bağımsız bölüm stacked bar */
+.stk{display:flex;flex-direction:column;gap:12px}
+.stk-row{line-height:1.35}
+.stk-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.stk-top b{font-size:12.5px;font-weight:800;color:var(--ink)}
+.stk-top span{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stk-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--bg)}
+.stk-bar i{display:block;height:100%}
+.sk-sold{background:rgba(var(--acc-rgb),.85)}
+.sk-ops{background:var(--info)}
+.sk-rez{background:var(--warn)}
+.sk-open{background:var(--line-2)}
+.sk-off{background:var(--bg)}
+.stk-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:2px}
+.stk-legend em{font-style:normal;display:inline-flex;align-items:center;gap:6px}
+.stk-legend em::before{content:"";width:9px;height:9px;border-radius:3px;background:var(--line-2)}
+.stk-legend em.l-sold::before{background:rgba(var(--acc-rgb),.85)}
+.stk-legend em.l-ops::before{background:var(--info)}
+.stk-legend em.l-rez::before{background:var(--warn)}
+
+/* bütçe / proje ilerleme satırları */
+.prj{display:flex;flex-direction:column;gap:11px}
+.prj-row{display:grid;grid-template-columns:118px 1fr 44px;align-items:center;gap:10px;font-size:11.5px}
+.prj-row .pl{font-weight:700;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prj-row .gbar{margin:0}
+.prj-row .pv{font-weight:800;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+
+/* nakit projeksiyon mini serisi */
+.cash{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cash-cell{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;line-height:1.3}
+.cash-cell span{font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.cash-cell b{display:block;font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ok);margin-top:3px}
+.cash-cell.neg b{color:var(--danger)}
+.cash-cell.warn b{color:var(--warn)}
+
+/* liste-satır idiomu (hakediş / min-stok / taşeron) */
+.yp-list{display:flex;flex-direction:column}
+.yp-li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.4}
+.yp-li:last-child{border-bottom:none;padding-bottom:0}
+.yp-li:first-child{padding-top:0}
+.yp-li .t{flex:1;min-width:0;color:var(--ink-2)}
+.yp-li .t b{color:var(--ink);font-weight:700}
+.yp-li .v{font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+@media(max-width:1180px){ .risk-band{grid-template-columns:minmax(0,1fr)} }
+@media(max-width:980px){ .yp-grid{grid-template-columns:minmax(0,1fr)} }
+@media(max-width:640px){
+  .cash{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fnl-row{grid-template-columns:64px 1fr 20px}
+}
+</style>
+</head>
+<body data-sec="panel" data-screen="yonetici">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Analiz · 2 Temmuz 2026</div>
+        <h1>Yönetici Paneli</h1>
+        <div class="ph-sub">Şirket geneli tek bakış — satış, bütçe, nakit, tedarik ve hakediş; tüm sayılar kaynak ekranlarla birebir</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="#" data-export="Yönetici paneli özeti"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+      </div>
+    </div>
+
+    <!-- PANEL 10 · RİSK UYARILARI — üç kaynaktan derlenen açık riskler -->
+    <div class="risk-band" role="region" aria-label="Risk uyarıları">
+      <div class="risk">
+        <div class="risk-top"><i class="fa-solid fa-trowel-bricks" aria-hidden="true"></i><b>Bütçe aşımı — Betonarme (Kaba Yapı)</b></div>
+        <div class="risk-body">Vadi Konakları: revize <span class="num">₺41.500.000</span> → gerçekleşen <span class="num">₺43.160.000</span>. Kategori bütçesinin <span class="num">%104</span>'üne ulaşıldı.</div>
+        <div class="risk-foot"><span class="gstat danger">Aşımda</span><a href="crm-finans-maliyet.html">Gerçekleşen Maliyet <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+      <div class="risk">
+        <div class="risk-top"><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i><b>Tahsilat gecikmesi — Derya Toprak</b></div>
+        <div class="risk-body">SSZ-2026-004 5. taksit <span class="num">₺570.000</span> · vade 20 Haziran — <span class="num">12 gün</span> gecikti. Tahsilat girişimi 10 Temmuz'da planlı.</div>
+        <div class="risk-foot"><span class="gstat danger">Gecikmiş</span><a href="crm-finans-nakit.html">Nakit Akışı <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+      <div class="risk warn">
+        <div class="risk-top"><i class="fa-solid fa-truck-ramp-box" aria-hidden="true"></i><b>Termin gecikmesi — Delta Elektrik</b></div>
+        <div class="risk-body">SIP-2026-04 elektrik tesisat malzemesi <span class="num">₺734.600</span> · termin 24 Haziran — <span class="num">8 gün</span> geçti, teslimat yok.</div>
+        <div class="risk-foot"><span class="gstat warn">Termin geçti</span><a href="crm-satinalma-siparisler.html">Siparişler <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+    </div>
+
+    <!-- PANEL 1 · GENEL — operasyon çekirdeği göstergeleri -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-helmet-safety"></i></div>
+        <div><div class="kpi-num num">3</div><div class="kpi-lbl">Aktif şantiye</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-bars-progress"></i> Vadi %68 · Liman %41 · Merkez %86</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-users"></i></div>
+        <div><div class="kpi-num num">93</div><div class="kpi-lbl">Bugün sahada</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-people-group"></i> 69 öz kadro + 24 taşeron</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-stamp"></i></div>
+        <div><div class="kpi-num num">12</div><div class="kpi-lbl">Bekleyen onay</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-diagram-project"></i> Kasa, talep, izin, avans, hakediş</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div><div class="kpi-num num">3</div><div class="kpi-lbl">Geciken görev</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-list-check"></i> 6 görev de havuzda bekliyor</div></div>
+      </div>
+    </div>
+
+    <div class="yp-grid">
+
+      <!-- PANEL 2 · SATIŞ HUNİSİ -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-filter-circle-dollar"></i> Satış Hunisi</div><span class="gtag mint">14 açık fırsat</span></div>
+        <div class="yp-body">
+          <div class="yp-hero"><b>₺198.694.000</b><span>pipeline değeri</span></div>
+          <div class="fnl" role="img" aria-label="Aşama bazında açık fırsat dağılımı">
+            <div class="fnl-row"><span class="fl">Yeni</span><span class="fb"><i style="width:67%"></i></span><span class="fc">2</span></div>
+            <div class="fnl-row"><span class="fl">Görüşme</span><span class="fb"><i style="width:67%"></i></span><span class="fc">2</span></div>
+            <div class="fnl-row"><span class="fl">Sunum / Gezi</span><span class="fb"><i style="width:100%"></i></span><span class="fc">3</span></div>
+            <div class="fnl-row"><span class="fl">Teklif</span><span class="fb"><i style="width:67%"></i></span><span class="fc">2</span></div>
+            <div class="fnl-row"><span class="fl">Müzakere</span><span class="fb"><i style="width:67%"></i></span><span class="fc">2</span></div>
+            <div class="fnl-row"><span class="fl">Opsiyon</span><span class="fb"><i style="width:67%"></i></span><span class="fc">2</span></div>
+            <div class="fnl-row"><span class="fl">Kapora</span><span class="fb"><i style="width:33%"></i></span><span class="fc">1</span></div>
+          </div>
+          <div class="fnl-sum">
+            <span class="gstat info">Sözleşme 1</span>
+            <span class="gstat ok">Kazanıldı 5 · son 90 gün</span>
+            <span class="gstat danger">Kaybedildi 3</span>
+            <span class="gstat warn">2 opsiyon bitişe yakın — 13/14 Tem</span>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Satış › Pipeline</span><a href="crm-satis-pipeline.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+      <!-- PANEL 3 · BAĞIMSIZ BÖLÜM STOKU -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-building-circle-check"></i> Bağımsız Bölüm Stoku</div><span class="gtag mint">196 birim</span></div>
+        <div class="yp-body">
+          <div class="stk">
+            <div class="stk-row">
+              <div class="stk-top"><b>Vadi Konakları</b><span>96 birim — 44 satıldı · 39 satışta</span></div>
+              <div class="stk-bar"><i class="sk-sold" style="width:45.8%"></i><i class="sk-ops" style="width:6.3%"></i><i class="sk-rez" style="width:3.1%"></i><i class="sk-open" style="width:40.6%"></i><i class="sk-off" style="width:4.2%"></i></div>
+            </div>
+            <div class="stk-row">
+              <div class="stk-top"><b>Göl Evleri 2. Etap</b><span>40 villa — lansman öncesi, 12 opsiyonlu ön-talep</span></div>
+              <div class="stk-bar"><i class="sk-ops" style="width:30%"></i><i class="sk-open" style="width:70%"></i></div>
+            </div>
+            <div class="stk-row">
+              <div class="stk-top"><b>Kule Ofis B Blok</b><span>60 ofis — 52 satıldı · 8 kiralandı</span></div>
+              <div class="stk-bar"><i class="sk-sold" style="width:86.7%"></i><i class="sk-off" style="width:13.3%"></i></div>
+            </div>
+            <div class="stk-legend">
+              <em class="l-sold">Satıldı 96</em><em class="l-ops">Opsiyonlu 18</em><em class="l-rez">Rezerve 3</em><em>Satışta 67</em>
+            </div>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Satış › Bağımsız Bölümler</span><a href="crm-satis-birimler.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+      <!-- PANEL 4 · PROJE BÜTÇESİ -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-coins"></i> Proje Bütçesi</div><span class="gstat danger">1 kategori aşımda</span></div>
+        <div class="yp-body">
+          <div class="yp-hero"><b>₺342.000.000</b><span>revize bütçe · gerçekleşen ₺221.200.000 (%65)</span></div>
+          <div class="prj">
+            <div class="prj-row"><span class="pl">Vadi Konakları</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:69%"></div></div></div><span class="pv">%69</span></div>
+            <div class="prj-row"><span class="pl">Liman Lojistik</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:42%"></div></div></div><span class="pv">%42</span></div>
+            <div class="prj-row"><span class="pl">Merkez Şantiye</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:87%"></div></div></div><span class="pv">%87</span></div>
+          </div>
+          <div class="yp-stats">
+            <div class="yp-stat"><b>2</b><span>Bütçe revizyonu — BTC-2026-R1 · R2</span></div>
+            <div class="yp-stat danger"><b>%104</b><span>Betonarme — Vadi Konakları</span></div>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Finans › Proje Bütçesi</span><a href="crm-finans-butce.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+      <!-- PANEL 5 · FİNANS & NAKİT -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-money-bill-trend-up"></i> Finans &amp; Nakit</div><span class="gstat danger">60. günde negatif dip</span></div>
+        <div class="yp-body">
+          <div class="yp-hero"><b>₺5.430.130</b><span>bugünkü likidite — banka ₺5.265.000 + şantiye kasaları ₺165.130</span></div>
+          <div class="cash" role="img" aria-label="Kümülatif net nakit projeksiyonu">
+            <div class="cash-cell"><span>7 gün</span><b>+₺670.000</b></div>
+            <div class="cash-cell"><span>30 gün</span><b>+₺710.000</b></div>
+            <div class="cash-cell neg"><span>60 gün</span><b>−₺2.990.000</b></div>
+            <div class="cash-cell warn"><span>90 gün</span><b>−₺465.000</b></div>
+          </div>
+          <div class="yp-list">
+            <div class="yp-li"><span class="t">Dip sürücüsü: <b>FTR-2026-09</b> Marmara Demir Çelik — vade 27 Ağu + 28 Ağu bordro</span><span class="v">₺2.840.000</span></div>
+            <div class="yp-li"><span class="t">Gecikmiş tahsilat: <b>Derya Toprak</b> 5. taksit — 12 gün</span><span class="v" style="color:var(--danger)">₺570.000</span></div>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Finans › Nakit Akışı</span><a href="crm-finans-nakit.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+      <!-- PANEL 6 · SATIN ALMA -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-cart-shopping"></i> Satın Alma</div><span class="gtag mint">5 açık sipariş</span></div>
+        <div class="yp-body">
+          <div class="yp-hero"><b>₺4.671.350</b><span>açık sipariş tutarı</span></div>
+          <div class="yp-stats">
+            <div class="yp-stat warn"><b>1</b><span>Termin gecikmesi — Delta, 8 gün</span></div>
+            <div class="yp-stat warn"><b>1</b><span>Miktar uyuşmazlığı — Ø16, −0,4 t</span></div>
+            <div class="yp-stat"><b>2</b><span>Bu ay planlı teslimat</span></div>
+          </div>
+          <div class="yp-list">
+            <div class="yp-li"><span class="t">Vadeli fatura: <b>FTR-2026-06</b> Boğaziçi Yapı Market — vade 15 Tem</span><span class="v">₺418.200</span></div>
+            <div class="yp-li"><span class="t">Vadeli fatura: <b>FTR-2026-09</b> Marmara Demir Çelik — vade 27 Ağu, muhasebe kontrolünde</span><span class="v">₺2.840.000</span></div>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Satın Alma › Siparişler · İrsaliye &amp; Fatura</span><a href="crm-satinalma-siparisler.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+      <!-- PANEL 7 · STOK & DEPO -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-warehouse"></i> Stok &amp; Depo</div><span class="gstat warn">3 kalem min. altında</span></div>
+        <div class="yp-body">
+          <div class="yp-hero"><b>₺4.860.000</b><span>toplam stok değeri — 23 kalem · 4 depo</span></div>
+          <div class="yp-list">
+            <div class="yp-li"><span class="t"><b>Ø16 nervürlü demir</b> — Vadi Şantiye Deposu · SIP-2026-05 eksik teslimle bağlı</span><span class="v" style="color:var(--warn)">1,7 / 5 t</span></div>
+            <div class="yp-li"><span class="t"><b>İSG baret + yelek seti</b> — Merkez Ana Depo</span><span class="v" style="color:var(--warn)">9 / 25 ad</span></div>
+            <div class="yp-li"><span class="t"><b>NYM 3×2,5 kablo</b> — Liman Şantiye Deposu · Delta termin gecikmesi, ikmal bekliyor</span><span class="v" style="color:var(--warn)">180 / 500 m</span></div>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Satın Alma › Stok &amp; Depo</span><a href="crm-satinalma-stok.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+      <!-- PANEL 8 · HAKEDİŞ -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-signature"></i> Hakediş</div><span class="gtag mint">Kurum + taşeron</span></div>
+        <div class="yp-body">
+          <div class="yp-stats">
+            <div class="yp-stat"><b>₺1.630.000</b><span>Kurum — onay bekleyen (HKD-2026-006)</span></div>
+            <div class="yp-stat ok"><b>₺2.815.000</b><span>Kurum — onaylı / tahsil edilen</span></div>
+            <div class="yp-stat"><b>₺166.200</b><span>Taşeron — onay bekleyen</span></div>
+            <div class="yp-stat ok"><b>₺338.500</b><span>Taşeron — onaylanan, ödeme sırasında</span></div>
+          </div>
+          <div class="yp-list">
+            <div class="yp-li"><span class="t">Ödeme bildirimi alındı: <b>HKD-2026-003</b> Aliağa Liman İşletmeleri — 8 Tem</span><span class="v">₺980.000</span></div>
+            <div class="yp-li"><span class="t">İhtilaflı — ödeme bloke: <b>TH-2026-014</b> Demir-Beton, Haziran metraj itirazı</span><span class="v" style="color:var(--warn)">₺90.000</span></div>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Finans › Kurum · Taşeron Hakedişleri</span><a href="crm-finans-kurum.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+      <!-- PANEL 9 · TAŞERON -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-id-card-clip"></i> Taşeron Kartları</div><span class="gstat warn">1 uyarılı kart</span></div>
+        <div class="yp-body">
+          <div class="yp-stats">
+            <div class="yp-stat"><b>3</b><span>Aktif taşeron</span></div>
+            <div class="yp-stat"><b>24</b><span>Toplam taşeron personeli</span></div>
+            <div class="yp-stat"><b>4</b><span>Açık hakediş</span></div>
+          </div>
+          <div class="yp-list">
+            <div class="yp-li"><span class="t"><b>Demir-Beton İnş. Ltd.</b> — İSG-2026-008 iskele korkuluğu aksiyon bekliyor · TH-2026-014 ihtilaflı</span><span class="v"><span class="gstat warn">2 uyarı</span></span></div>
+            <div class="yp-li"><span class="t"><b>ElektroMek Taahhüt</b> — 6 performans kriteri temiz</span><span class="v"><span class="gstat ok">Temiz</span></span></div>
+            <div class="yp-li"><span class="t"><b>Yalıtım Kardeşler</b> — 6 kriter temiz, kalite yüksek</span><span class="v"><span class="gstat ok">Temiz</span></span></div>
+          </div>
+        </div>
+        <div class="yp-foot"><span>Kaynak: Finans › Taşeron Kartları</span><a href="crm-finans-taseronlar.html">Tümü <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+</body>
+</html>

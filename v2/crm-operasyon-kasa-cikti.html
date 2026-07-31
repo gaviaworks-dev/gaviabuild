@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Kasa Çıktısı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+/* =====================================================================
+   KASA ÇIKTISI — KASA_FORMATI.xlsx birebir HTML karşılığı (D8 / 1.2)
+   Shell'siz, kendi kendine yeten çıktı ekranı. Print CSS sayfa içinde —
+   ui.css/shell.css'e DOKUNULMAZ (ortak dosyalar). A4 dikey, imzaya hazır.
+   Yapı: logo bandı → başlık (ŞANTİYE KASA + TARİH ARALIĞI) → hareket
+   tablosu (ÖNCEKİ KASADAN DEVİR açılışı, numaralı satırlar) →
+   GİRİŞ-ÇIKIŞ + MEVCUT KASA toplamları → 4 gruplu imza bloğu.
+   ===================================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:#525659;min-height:100vh;padding:88px 16px 40px;
+  -webkit-font-smoothing:antialiased}
+
+/* ---- ekran-only araç çubuğu ---- */
+.ck-bar{position:fixed;inset:0 0 auto 0;height:60px;background:var(--gv-deep);color:var(--on-dark);
+  display:flex;align-items:center;gap:14px;padding:0 22px;z-index:10;box-shadow:0 2px 14px rgba(0,0,0,.35)}
+.ck-bar .cb-brand{font-weight:800;font-size:15px;letter-spacing:-.01em;color:#fff;display:flex;align-items:center;gap:10px}
+.ck-bar .cb-brand .g{width:28px;height:28px;border-radius:8px;background:var(--gv-mint);color:var(--gv-deep);
+  display:grid;place-items:center;font-size:14px;font-weight:800}
+.ck-bar .cb-sub{font-size:12px;color:var(--on-dark-mut,#9aa3b2)}
+.ck-bar .cb-spacer{flex:1}
+.ck-bar select{font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:8px 10px;outline:none;cursor:pointer}
+.ck-bar .cb-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:9px 16px;border-radius:9px;border:1px solid rgba(255,255,255,.18);color:#fff;background:transparent;
+  cursor:pointer;text-decoration:none;transition:.2s var(--ease)}
+.ck-bar .cb-btn:hover{background:rgba(255,255,255,.08)}
+.ck-bar .cb-btn.acc{background:var(--gv-mint);border-color:var(--gv-mint);color:var(--gv-deep)}
+.ck-bar .cb-btn.acc:hover{background:var(--gv-mint-bright)}
+
+/* ---- §13 tarih aralığı kontrol şeridi — normal akışta (fixed DEĞİL), .paper'ın üstünde;
+   emsal kredikarti-cikti/pluxee-cikti .ck-scope biriminin portrait A4 karşılığı ---- */
+.ck-scope{width:210mm;max-width:100%;margin:0 auto 14px;background:#2a2e45;border-radius:12px;
+  padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;color:#fff}
+.ck-scope .cs-field{display:flex;flex-direction:column;gap:5px;min-width:150px}
+.ck-scope .cs-field label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#aeb4c9}
+.ck-scope input[type="date"]{font-family:inherit;font-size:12.5px;font-weight:600;color:#fff;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 10px;outline:none}
+.ck-scope .cs-dates{display:flex;gap:8px;align-items:flex-end}
+.ck-scope .cs-note{font-size:11.5px;color:#aeb4c9;flex:1;min-width:200px}
+.ck-scope .cs-acts{display:flex;gap:8px;margin-left:auto}
+.ck-scope .cs-acts .cb-btn{padding:8px 14px}
+/* §12.1 — "Seçili Kayıtların Çıktısını Al" modu (kredikarti/pluxee-cikti emsali) */
+.ck-scope .cs-sel-banner{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;flex:1}
+.ck-scope .cs-sel-banner .gtag{display:inline-flex;align-items:center;background:var(--gv-mint);color:var(--gv-deep);font-weight:800;font-size:10.5px;padding:3px 9px;border-radius:20px;letter-spacing:.02em}
+@media(max-width:900px){ .ck-scope{padding:12px 14px} .ck-scope .cs-acts{margin-left:0;width:100%} }
+
+/* ---- A4 kâğıt ---- */
+.paper{width:210mm;min-height:297mm;margin:0 auto;background:#fff;color:#111;
+  box-shadow:0 8px 40px rgba(0,0,0,.4);padding:14mm 12mm 12mm}
+
+/* logo bandı (xlsx A1:G4 merged blok karşılığı) */
+.pp-band{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:0}
+.pp-band .pb-firm{display:flex;align-items:center;gap:10px}
+.pp-band .pb-g{width:34px;height:34px;border:2px solid #111;display:grid;place-items:center;font-weight:800;font-size:17px}
+.pp-band .pb-name{font-weight:800;font-size:15px;letter-spacing:.02em}
+.pp-band .pb-name span{display:block;font-weight:600;font-size:9.5px;letter-spacing:.08em;color:#444}
+.pp-band .pb-doc{font-size:9.5px;font-weight:700;color:#444;text-align:right;line-height:1.5}
+
+/* başlık bloğu (A5:E6 + F5:G6) */
+.pp-title{display:grid;grid-template-columns:1fr 58mm;border:1.5px solid #111;border-top:none}
+.pp-title .pt-name{padding:12px 14px;font-size:16px;font-weight:800;letter-spacing:.03em;display:flex;align-items:center}
+.pp-title .pt-range{border-left:1.5px solid #111;display:flex;flex-direction:column}
+.pp-title .pt-range b{flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:.02em;padding:6px}
+.pp-title .pt-range span{border-top:1px solid #111;text-align:center;font-size:9.5px;font-weight:700;letter-spacing:.1em;padding:4px;background:#f2f2f2}
+
+/* hareket tablosu */
+table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-top:none;font-size:10.5px}
+.pp-tbl th{background:#f2f2f2;border:1px solid #111;font-size:9px;font-weight:800;letter-spacing:.06em;
+  padding:6px 5px;text-transform:uppercase;line-height:1.4}
+.pp-tbl td{border:1px solid #555;padding:4.5px 6px;height:22px;vertical-align:middle}
+.pp-tbl .c-no{width:8mm;text-align:center;color:#444;font-weight:600}
+.pp-tbl .c-tarih{width:20mm;text-align:center;font-weight:600;white-space:nowrap}
+.pp-tbl .c-firma{width:46mm;font-weight:700}
+.pp-tbl .c-gelen,.pp-tbl .c-cikan,.pp-tbl .c-bakiye{width:25mm;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pp-tbl tr.r-devir td{background:#f2f2f2;font-weight:800;letter-spacing:.04em}
+.pp-tbl tr.r-total td{background:#f2f2f2;font-weight:800;border-top:2px solid #111}
+.pp-tbl tr.r-mevcut td{background:#e8e8e8;font-weight:800;font-size:11.5px}
+
+/* imza bloğu (xlsx 45-47 satır dörtlüsü) */
+.pp-sign{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pp-sign .sg{border-right:1px solid #111;padding:8px 8px 4px;min-height:34mm;display:flex;flex-direction:column}
+.pp-sign .sg:last-child{border-right:none}
+.pp-sign .sg-role{font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#333;margin-bottom:3px}
+.pp-sign .sg-name{font-size:10.5px;font-weight:800}
+.pp-sign .sg-title{font-size:9px;font-weight:600;color:#444}
+.pp-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
+.pp-note{font-size:8.5px;color:#555;padding-top:6px;line-height:1.6}
+
+@media print{
+  body{background:#fff;padding:0}
+  .ck-bar{display:none}
+  .ck-scope{display:none}
+  .paper{width:auto;min-height:0;margin:0;box-shadow:none;padding:8mm 6mm}
+  @page{size:A4 portrait;margin:8mm}
+}
+@media (max-width:900px){
+  .ck-scope,.paper{width:100%}
+  .paper{min-height:0;padding:16px 12px;overflow-x:auto}
+  .pp-title{grid-template-columns:1fr}
+  .pp-title .pt-range{border-left:none;border-top:1.5px solid #111;flex-direction:row}
+  .pp-title .pt-range b{padding:8px}
+  .pp-title .pt-range span{border-top:none;border-left:1px solid #111;display:flex;align-items:center;padding:0 10px}
+  .pp-sign{grid-template-columns:repeat(2,1fr)}
+  .pp-sign .sg:nth-child(2){border-right:none}
+  .pp-sign .sg:nth-child(1),.pp-sign .sg:nth-child(2){border-bottom:1px solid #111}
+}
+</style>
+</head>
+<body>
+
+<div class="ck-bar">
+  <div class="cb-brand"><span class="g">G</span> Gavia CRM <span class="cb-sub">· Kasa Çıktısı — imzaya hazır döküm</span></div>
+  <div class="cb-spacer"></div>
+  <select id="ckSantiye" aria-label="Şantiye seç">
+    <option value="vadi">Vadi Konakları</option>
+    <option value="liman">Liman Lojistik Merkezi</option>
+    <option value="merkez">Merkez Şantiye</option>
+  </select>
+  <a class="cb-btn" href="crm-operasyon-kasa.html" id="ckBack"><i class="fa-solid fa-arrow-left"></i> Kasa Yönetimi</a>
+  <button class="cb-btn acc" type="button" onclick="window.print()"><i class="fa-solid fa-print"></i> Yazdır</button>
+</div>
+
+<!-- §13 — tarih aralığı kontrol şeridi: kasa listesinden Çıktı Al ile taşınan aralık burada
+     okunur/gösterilir, ekranda da değiştirilebilir (emsal kredikarti/pluxee-cikti .ck-scope) -->
+<div class="ck-scope" id="ckScope">
+  <div class="cs-field"><label>Başlangıç</label><input type="date" id="csFrom"></div>
+  <div class="cs-field"><label>Bitiş</label><input type="date" id="csTo"></div>
+  <div class="cs-note" id="csNote"></div>
+  <div class="cs-acts">
+    <button type="button" class="cb-btn" id="csClear"><i class="fa-solid fa-filter-circle-xmark"></i> Temizle</button>
+    <button type="button" class="cb-btn acc" id="csApply"><i class="fa-solid fa-check"></i> Uygula</button>
+  </div>
+</div>
+
+<div class="paper">
+  <div class="pp-band">
+    <div class="pb-firm">
+      <div class="pb-g">Y</div>
+      <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>ŞANTİYE KASA DEFTERİ DÖKÜMÜ</span></div>
+    </div>
+    <div class="pb-doc">Form No: KSF-01 · Rev.02<br>Düzenleme: <span id="ppBugun">02.07.2026</span></div>
+  </div>
+
+  <div class="pp-title">
+    <div class="pt-name" id="ppKasaAdi">VADİ KONAKLARI ŞANTİYESİ KASA</div>
+    <div class="pt-range">
+      <b id="ppAralik">01.07.2026 - 15.07.2026</b>
+      <span>TARİH ARALIĞI</span>
+    </div>
+  </div>
+
+  <table class="pp-tbl">
+    <thead>
+      <tr>
+        <th class="c-no"></th>
+        <th class="c-tarih">Tarih</th>
+        <th class="c-firma">Ödeme Yapılacak<br>Firma / Kişi</th>
+        <th>Açıklama</th>
+        <th class="c-gelen">Kasaya<br>Gelen</th>
+        <th class="c-cikan">Kasadan<br>Çıkan</th>
+        <th class="c-bakiye">Bakiye</th>
+      </tr>
+    </thead>
+    <!-- statik bake (D18-B2): JS load'da aynı mount'u kanonik veriden yeniden basar -->
+    <tbody id="ppRows"><tr class="r-devir"><td class="c-no"></td><td colspan="3">ÖNCEKİ KASADAN DEVİR</td><td class="c-gelen"></td><td class="c-cikan"></td><td class="c-bakiye">48.250,00</td></tr><tr><td class="c-no">1</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Genel Merkez</td><td>Kasa beslemesi — KSG-2026-007</td><td class="c-gelen">120.000,00</td><td class="c-cikan"></td><td class="c-bakiye">168.250,00</td></tr><tr><td class="c-no">2</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Öz-Kaya Hafriyat Nakliyat</td><td>Hafriyat kamyon nakliyesi (6 sefer) — KSA-2026-023</td><td class="c-gelen"></td><td class="c-cikan">22.500,00</td><td class="c-bakiye">145.750,00</td></tr><tr><td class="c-no">3</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Petrol Ofisi bayii</td><td>Ekskavatör + jeneratör motorin — KSA-2026-024</td><td class="c-gelen"></td><td class="c-cikan">14.750,00</td><td class="c-bakiye">131.000,00</td></tr><tr><td class="c-no">4</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Gürsoy Gıda Toptan</td><td>Yemekhane haftalık yaş sebze-meyve — KSA-2026-025</td><td class="c-gelen"></td><td class="c-cikan">9.640,00</td><td class="c-bakiye">121.360,00</td></tr><tr><td class="c-no">5</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Demir-Beton İnş. Ltd.</td><td>Taşeron nakit avansı (TH mahsuben) — KSA-2026-026</td><td class="c-gelen"></td><td class="c-cikan">25.000,00</td><td class="c-bakiye">96.360,00</td></tr><tr><td class="c-no">6</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Anadolu Hırdavat</td><td>Kesme diski, elektrod, eldiven — KSA-2026-027</td><td class="c-gelen"></td><td class="c-cikan">6.480,00</td><td class="c-bakiye">89.880,00</td></tr><tr><td class="c-no">7</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Musa Erdem</td><td>Personel avansı — AVN-2026-008 / KSA-2026-028</td><td class="c-gelen"></td><td class="c-cikan">5.000,00</td><td class="c-bakiye">84.880,00</td></tr><tr><td class="c-no">8</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Çekmeköy Belediyesi</td><td>Hafriyat döküm kabul ücreti — KSA-2026-029</td><td class="c-gelen"></td><td class="c-cikan">8.900,00</td><td class="c-bakiye">75.980,00</td></tr><tr><td class="c-no">9</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Sönmezler Kereste</td><td>Kalıp azmanı + OSB takviye — KSA-2026-030</td><td class="c-gelen"></td><td class="c-cikan">12.300,00</td><td class="c-bakiye">63.680,00</td></tr><tr><td class="c-no">10</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Aden Su &amp; Tüp</td><td>Şantiye içme suyu + tüp dağıtımı — KSA-2026-031</td><td class="c-gelen"></td><td class="c-cikan">1.940,00</td><td class="c-bakiye">61.740,00</td></tr><tr><td class="c-no">11</td><td class="c-tarih">01.07.2026</td><td class="c-firma">Veli Şimşek</td><td>Elektrik pano sarf nakit — KSA-2026-032</td><td class="c-gelen"></td><td class="c-cikan">3.760,00</td><td class="c-bakiye">57.980,00</td></tr><tr><td class="c-no">12</td><td class="c-tarih">02.07.2026</td><td class="c-firma">Körfez GYO</td><td>Ek iş bedeli tahsilatı — KSG-2026-008</td><td class="c-gelen">66.400,00</td><td class="c-cikan"></td><td class="c-bakiye">124.380,00</td></tr><tr><td class="c-no">13</td><td class="c-tarih">02.07.2026</td><td class="c-firma">Öz-Kaya Hafriyat Nakliyat</td><td>Nakliye + işçilik avansı — KSA-2026-021</td><td class="c-gelen"></td><td class="c-cikan">18.400,00</td><td class="c-bakiye">105.980,00</td></tr><tr><td class="c-no">14</td><td class="c-tarih">02.07.2026</td><td class="c-firma">ElektroMek Taahhüt</td><td>Asansör şaft aydınlatma işçiliği — KSA-2026-033</td><td class="c-gelen"></td><td class="c-cikan">7.850,00</td><td class="c-bakiye">98.130,00</td></tr><tr><td class="c-no">15</td><td class="c-tarih">02.07.2026</td><td class="c-firma">Ege Hazır Beton</td><td>Pompa bekleme bedeli — KSA-2026-034</td><td class="c-gelen"></td><td class="c-cikan">4.200,00</td><td class="c-bakiye">93.930,00</td></tr><tr><td class="c-no">16</td><td class="c-tarih">02.07.2026</td><td class="c-firma">Ramazan Kılıç</td><td>Personel avansı — KSA-2026-035</td><td class="c-gelen"></td><td class="c-cikan">3.500,00</td><td class="c-bakiye">90.430,00</td></tr><tr><td class="c-no">17</td><td class="c-tarih">02.07.2026</td><td class="c-firma">Çekmeköy Noterliği</td><td>Evrak tasdik + kırtasiye — KSA-2026-036</td><td class="c-gelen"></td><td class="c-cikan">1.610,00</td><td class="c-bakiye">88.820,00</td></tr><tr><td class="c-no">18</td><td class="c-tarih">02.07.2026</td><td class="c-firma">İbrahim Sönmez</td><td>Kalıp ekibi fazla mesai yemek bedeli — KSA-2026-037</td><td class="c-gelen"></td><td class="c-cikan">6.900,00</td><td class="c-bakiye">81.920,00</td></tr><tr><td class="c-no">19</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td class="c-no">20</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td class="c-no">21</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td class="c-no">22</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr class="r-total"><td class="c-no"></td><td colspan="3">GİRİŞ - ÇIKIŞ</td><td class="c-gelen">186.400,00</td><td class="c-cikan">152.730,00</td><td class="c-bakiye">81.920,00</td></tr><tr class="r-mevcut"><td class="c-no"></td><td colspan="3">MEVCUT KASA</td><td class="c-gelen"></td><td class="c-cikan"></td><td class="c-bakiye">81.920,00</td></tr></tbody>
+  </table>
+
+  <!-- statik bake (D18-B2): JS load'da aynı mount'u kanonik veriden yeniden basar -->
+  <div class="pp-sign" id="ppSign"><div class="sg"><div class="sg-role">Kasa Tutan Personel</div><div class="sg-name">Hasan Demirci</div><div class="sg-title">Şantiye Şefi</div><div class="sg-line">İMZA</div></div><div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Nesrin Aydın</div><div class="sg-title">Muhasebe</div><div class="sg-line">İMZA</div></div><div class="sg"><div class="sg-role">Teknik Ofis</div><div class="sg-name">Elif Sarıkaya</div><div class="sg-title">Teknik Müdür</div><div class="sg-line">İMZA</div></div><div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div></div>
+  <p class="pp-note">Bu döküm, Gavia CRM kasa defterindeki tüm dönem hareketlerini içerir; el ile eklenen kayıt geçersizdir.
+  Devir tutarı bir önceki dönemin MEVCUT KASA satırıyla birebirdir. İmzalar tamamlanmadan dönem kapatılmaz.</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  /* Kanonik D8 kasa verisi (shell.js DALGA 8 bloğu ile birebir; kasa listesindeki
+     defter tablosuyla AYNI satırlar). Tutarlar excel sadakati için 0,00 formatında. */
+  function tl(n){ return n.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+  var KASALAR = {
+    vadi:{
+      ad:'VADİ KONAKLARI ŞANTİYESİ KASA', devir:48250,
+      tutan:{name:'Hasan Demirci', title:'Şantiye Şefi'},
+      rows:[
+        ['01.07.2026','Genel Merkez','Kasa beslemesi — KSG-2026-007',120000,0],
+        ['01.07.2026','Öz-Kaya Hafriyat Nakliyat','Hafriyat kamyon nakliyesi (6 sefer) — KSA-2026-023',0,22500],
+        ['01.07.2026','Petrol Ofisi bayii','Ekskavatör + jeneratör motorin — KSA-2026-024',0,14750],
+        ['01.07.2026','Gürsoy Gıda Toptan','Yemekhane haftalık yaş sebze-meyve — KSA-2026-025',0,9640],
+        ['01.07.2026','Demir-Beton İnş. Ltd.','Taşeron nakit avansı (TH mahsuben) — KSA-2026-026',0,25000],
+        ['01.07.2026','Anadolu Hırdavat','Kesme diski, elektrod, eldiven — KSA-2026-027',0,6480],
+        ['01.07.2026','Musa Erdem','Personel avansı — AVN-2026-008 / KSA-2026-028',0,5000],
+        ['01.07.2026','Çekmeköy Belediyesi','Hafriyat döküm kabul ücreti — KSA-2026-029',0,8900],
+        ['01.07.2026','Sönmezler Kereste','Kalıp azmanı + OSB takviye — KSA-2026-030',0,12300],
+        ['01.07.2026','Aden Su & Tüp','Şantiye içme suyu + tüp dağıtımı — KSA-2026-031',0,1940],
+        ['01.07.2026','Veli Şimşek','Elektrik pano sarf nakit — KSA-2026-032',0,3760],
+        ['02.07.2026','Körfez GYO','Ek iş bedeli tahsilatı — KSG-2026-008',66400,0],
+        ['02.07.2026','Öz-Kaya Hafriyat Nakliyat','Nakliye + işçilik avansı — KSA-2026-021',0,18400],
+        ['02.07.2026','ElektroMek Taahhüt','Asansör şaft aydınlatma işçiliği — KSA-2026-033',0,7850],
+        ['02.07.2026','Ege Hazır Beton','Pompa bekleme bedeli — KSA-2026-034',0,4200],
+        ['02.07.2026','Ramazan Kılıç','Personel avansı — KSA-2026-035',0,3500],
+        ['02.07.2026','Çekmeköy Noterliği','Evrak tasdik + kırtasiye — KSA-2026-036',0,1610],
+        ['02.07.2026','İbrahim Sönmez','Kalıp ekibi fazla mesai yemek bedeli — KSA-2026-037',0,6900]
+      ]
+    },
+    liman:{
+      ad:'LİMAN LOJİSTİK MERKEZİ ŞANTİYESİ KASA', devir:31750,
+      tutan:{name:'Aylin Koç', title:'Şantiye Şefi'},
+      rows:[
+        ['01.07.2026','Aliağa Yapı Malzemeleri','Malzeme nakit alımı — KSA-2026-020',0,9750],
+        ['02.07.2026','Ege Su Dağıtım','İçme suyu + temizlik sarfı — KSA-2026-038',0,3480]
+      ]
+    },
+    merkez:{
+      ad:'MERKEZ ŞANTİYE KASA', devir:12860,
+      tutan:{name:'Ömer Taşkın', title:'Şantiye Şefi'},
+      rows:[
+        ['01.07.2026','Genel Merkez','Kasa beslemesi — KSG-2026-006',60000,0],
+        ['01.07.2026','Gebze Rulman & Hidrolik','MKN-06 arıza: rulman + hidrolik hortum — KSA-2026-039',0,5490],
+        ['02.07.2026','Anadolu Hırdavat','Atölye sarf malzemesi — KSA-2026-040',0,2680]
+      ]
+    }
+  };
+  var KS_ADLAR_KISA = { vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye' };   /* §12.1 seçili-kayıt modu kısa etiketleri — crm-operasyon-kasa.html KS_ADLAR ile AYNI */
+  var BOS_SATIR_HEDEF = 22;   /* imzaya hazır görünüm — numaralı boş satırlarla grid tamamlanır (xlsx 32 satırlı grid idiyomu) */
+
+  /* ============ §13 — tarih aralığı: kasa listesinden query string ile taşınan (veya
+     bu ekranda seçilen) aralık gerçek filtreleme yapar. Sayfa ui.js/gvDateRange YÜKLEMEZ
+     (kasa-cikti standalone çıktı ekranıdır — kredikarti-cikti/pluxee-cikti emsali: basit
+     <input type="date"> + kendi query-string state'i, sayfa-içi bağımsız implementasyon). */
+  var AY_KISA = {'01':'Oca','02':'Şub','03':'Mar','04':'Nis','05':'May','06':'Haz','07':'Tem','08':'Ağu','09':'Eyl','10':'Eki','11':'Kas','12':'Ara'};
+  function ddmmToDate(s){ var p = s.split('.'); return new Date(p[2] + '-' + p[1] + '-' + p[0] + 'T00:00:00'); }
+  function isoKisa(iso){ var p = iso.split('-'); return parseInt(p[2],10) + ' ' + AY_KISA[p[1]]; }
+  function rangeLabel(from, to){
+    if(!from && !to) return '';
+    if(from && to){
+      var yf = from.slice(0,4), yt = to.slice(0,4);
+      return isoKisa(from) + (yf !== yt ? ' ' + yf : '') + ' – ' + isoKisa(to) + ' ' + yt;
+    }
+    return from ? (isoKisa(from) + ' ' + from.slice(0,4) + ' ve sonrası') : (isoKisa(to) + ' ' + to.slice(0,4) + ' ve öncesi');
+  }
+
+  var q = new URLSearchParams(location.search);
+  /* §12.1 — liste sayfası (crm-operasyon-kasa.html) "Seçili Kayıtların Çıktısını Al"
+     bulk bar'ından ids= ile gelir (kredikarti/pluxee-cikti ile AYNI query sözleşmesi). */
+  var selIds = q.get('ids') ? q.get('ids').split(',').filter(Boolean) : null;
+  var ks = q.get('santiye');
+  if(!KASALAR[ks]) ks = 'vadi';
+  var state = { from: q.get('from') || '', to: q.get('to') || '', dlabel: q.get('dlabel') || '' };
+
+  var fromInput = document.getElementById('csFrom');
+  var toInput = document.getElementById('csTo');
+  var csNote = document.getElementById('csNote');
+  fromInput.value = state.from;
+  toInput.value = state.to;
+
+  function syncUrl(){
+    var p = new URLSearchParams();
+    p.set('santiye', ks);
+    if(state.from) p.set('from', state.from);
+    if(state.to) p.set('to', state.to);
+    if(state.dlabel) p.set('dlabel', state.dlabel);
+    history.replaceState(null, '', 'crm-operasyon-kasa-cikti.html?' + p.toString());
+  }
+
+  /* ============ §12.1 — "Seçili Kayıtların Çıktısını Al" render modu — kredikarti/
+     pluxee-cikti emsali: kasa.html'deki İLE AYNI mantıkla açıklama hücresindeki (burada
+     satır dizisinin 3. elemanı) son KSA/KSG kod referansından rid türetilir; ayrı bir id
+     alanı İCAT EDİLMEZ, TEK kaynak açıklama metnidir — kasa.html ile senkron kalır.
+     Devir/mevcut kavramı bir DÖNEME aittir, keyfi bir seçim kümesinin devri yoktur (bu
+     ayrım kredikarti-cikti'nin "Seçili Kayıtlar Modu"nda da aynı, bkz o dosyanın render()
+     yorumu) — bu yüzden yalnız şantiye grup başlığı + gerçek satırlar (gerçek chainRun
+     bakiyesiyle) + grup alt toplamı basılır. ============ */
+  var KS_ORDER = ['vadi','liman','merkez'];
+  function rowId(desc){
+    var m = desc.match(/[A-Z]{2,4}-\d{4}-\d{3}/g);
+    return m ? m[m.length - 1].toLowerCase() : null;
+  }
+  function renderSelected(){
+    var rowsHtml = '', bulunanKs = [];
+    var genelGelen = 0, genelCikan = 0, no = 0;
+    KS_ORDER.forEach(function(key){
+      var K = KASALAR[key];
+      var run = K.devir, blokGelen = 0, blokCikan = 0, blokRows = '';
+      K.rows.forEach(function(r){
+        run += r[3] - r[4];
+        var rid = rowId(r[2]);
+        if(!rid || selIds.indexOf(rid) === -1) return;
+        no++;
+        blokGelen += r[3]; blokCikan += r[4];
+        genelGelen += r[3]; genelCikan += r[4];
+        blokRows += '<tr><td class="c-no">' + no + '</td><td class="c-tarih">' + r[0] + '</td>'
+          + '<td class="c-firma">' + r[1] + '</td><td>' + r[2] + '</td>'
+          + '<td class="c-gelen">' + (r[3] ? tl(r[3]) : '') + '</td>'
+          + '<td class="c-cikan">' + (r[4] ? tl(r[4]) : '') + '</td>'
+          + '<td class="c-bakiye">' + tl(run) + '</td></tr>';
+      });
+      if(!blokRows) return;
+      bulunanKs.push(KS_ADLAR_KISA[key]);
+      rowsHtml += '<tr class="r-devir"><td class="c-no"></td><td colspan="6">' + K.ad + '</td></tr>' + blokRows;
+      rowsHtml += '<tr class="r-total"><td class="c-no"></td><td colspan="3">SEÇİLİ ALT TOPLAM</td>'
+        + '<td class="c-gelen">' + tl(blokGelen) + '</td><td class="c-cikan">' + tl(blokCikan) + '</td><td class="c-bakiye"></td></tr>';
+    });
+    if(!no){
+      rowsHtml = '<tr><td class="c-no"></td><td colspan="6" style="text-align:center;color:#888;padding:16px 6px">Seçili kayıt bulunamadı.</td></tr>';
+    } else {
+      rowsHtml += '<tr class="r-mevcut"><td class="c-no"></td><td colspan="3">SEÇİLİ KAYITLAR TOPLAMI (' + no + ' kayıt)</td>'
+        + '<td class="c-gelen">' + tl(genelGelen) + '</td><td class="c-cikan">' + tl(genelCikan) + '</td><td class="c-bakiye"></td></tr>';
+    }
+    document.getElementById('ppRows').innerHTML = rowsHtml;
+    document.getElementById('ppKasaAdi').textContent = bulunanKs.length > 1
+      ? 'SEÇİLİ KAYITLAR — KARMA ŞANTİYE (' + bulunanKs.join(' · ') + ')'
+      : (bulunanKs[0] ? bulunanKs[0].toUpperCase() + ' — SEÇİLİ KAYITLAR' : 'SEÇİLİ KAYITLAR');
+    document.getElementById('ppAralik').textContent = 'Seçili Kayıtlar';
+    document.title = 'Kasa Çıktısı — Seçili Kayıtlar — Gavia CRM';
+    var sel = document.getElementById('ckSantiye'); if(sel) sel.hidden = true;
+    document.getElementById('ckBack').href = 'crm-operasyon-kasa.html';
+    var scope = document.getElementById('ckScope');
+    if(scope){
+      scope.innerHTML = '<div class="cs-sel-banner"><span class="gtag">Seçili Kayıtlar Modu</span>'
+        + '<span>' + no + ' kayıt listeden seçildi — tarih aralığı filtresi devre dışı</span></div>'
+        + '<div class="cs-acts"><a class="cb-btn" href="crm-operasyon-kasa.html"><i class="fa-solid fa-list"></i> Tüm Listeye Dön</a></div>';
+    }
+    /* imza dörtlüsü — birden çok şantiye karışıksa tek "kasa tutan" ismi verilemez */
+    var tutanAd = bulunanKs.length === 1 ? KASALAR[KS_ORDER.filter(function(k){ return KS_ADLAR_KISA[k] === bulunanKs[0]; })[0]].tutan.name : 'Şantiye şefleri (karma)';
+    var tutanTitle = bulunanKs.length === 1 ? 'Şantiye Şefi' : 'Bkz. ilgili kasa kaydı';
+    document.getElementById('ppSign').innerHTML =
+      '<div class="sg"><div class="sg-role">Kasa Tutan Personel</div><div class="sg-name">' + tutanAd + '</div><div class="sg-title">' + tutanTitle + '</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Nesrin Aydın</div><div class="sg-title">Muhasebe</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Teknik Ofis</div><div class="sg-name">Elif Sarıkaya</div><div class="sg-title">Teknik Müdür</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>';
+  }
+
+  function render(key){
+    var K = KASALAR[key];
+    document.getElementById('ppKasaAdi').textContent = K.ad;
+    document.getElementById('ckSantiye').value = key;
+    document.getElementById('ckBack').href = 'crm-operasyon-kasa.html?santiye=' + key;
+    document.title = 'Kasa Çıktısı — ' + K.ad + ' — Gavia CRM';
+
+    /* aralık filtresi: aralıktan önceki satırlar devre roll edilir (gerçek devir tutarı
+       aralık başına göre yeniden hesaplanır), aralıktan sonraki satırlar yalnız gizlenir —
+       yeni tutar İCAT EDİLMEZ, hepsi K.rows'un kendi değerlerinden derlenir. */
+    var fromD = state.from ? new Date(state.from + 'T00:00:00') : null;
+    var toD = state.to ? new Date(state.to + 'T00:00:00') : null;
+    var devir = K.devir;
+    var rows = [];
+    K.rows.forEach(function(r){
+      var d = ddmmToDate(r[0]);
+      if(fromD && d < fromD){ devir += r[3] - r[4]; return; }
+      if(toD && d > toD) return;
+      rows.push(r);
+    });
+
+    var aralikLbl = state.dlabel || rangeLabel(state.from, state.to) || '01 – 15 Temmuz 2026 · cari dönem';
+    document.getElementById('ppAralik').textContent = aralikLbl;
+    if(csNote){
+      csNote.textContent = (state.from || state.to)
+        ? ('Seçili aralık: ' + aralikLbl + ' — devir ve toplamlar bu aralığa göre yeniden hesaplandı.')
+        : 'Tüm dönem gösteriliyor — devir ve toplamlar tam kasa defterine göre hesaplanır.';
+    }
+
+    var h = '<tr class="r-devir"><td class="c-no"></td><td colspan="3">ÖNCEKİ KASADAN DEVİR</td>'
+          + '<td class="c-gelen"></td><td class="c-cikan"></td><td class="c-bakiye">' + tl(devir) + '</td></tr>';
+    var bak = devir, tGelen = 0, tCikan = 0;
+    if(!rows.length){
+      h += '<tr><td class="c-no"></td><td colspan="6" style="text-align:center;color:#888;padding:16px 6px">Seçilen tarih aralığında kasa hareketi bulunamadı.</td></tr>';
+    } else {
+      rows.forEach(function(r, i){
+        bak += r[3] - r[4]; tGelen += r[3]; tCikan += r[4];
+        h += '<tr><td class="c-no">' + (i+1) + '</td><td class="c-tarih">' + r[0] + '</td>'
+           + '<td class="c-firma">' + r[1] + '</td><td>' + r[2] + '</td>'
+           + '<td class="c-gelen">' + (r[3] ? tl(r[3]) : '') + '</td>'
+           + '<td class="c-cikan">' + (r[4] ? tl(r[4]) : '') + '</td>'
+           + '<td class="c-bakiye">' + tl(bak) + '</td></tr>';
+      });
+      for(var i = rows.length; i < BOS_SATIR_HEDEF; i++){
+        h += '<tr><td class="c-no">' + (i+1) + '</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+      }
+    }
+    h += '<tr class="r-total"><td class="c-no"></td><td colspan="3">GİRİŞ - ÇIKIŞ</td>'
+       + '<td class="c-gelen">' + tl(tGelen) + '</td><td class="c-cikan">' + tl(tCikan) + '</td>'
+       + '<td class="c-bakiye">' + tl(devir + tGelen - tCikan) + '</td></tr>';
+    h += '<tr class="r-mevcut"><td class="c-no"></td><td colspan="3">MEVCUT KASA</td>'
+       + '<td class="c-gelen"></td><td class="c-cikan"></td><td class="c-bakiye">' + tl(devir + tGelen - tCikan) + '</td></tr>';
+    document.getElementById('ppRows').innerHTML = h;
+
+    /* imza dörtlüsü — kanonik D8: kasa tutan (şantiye şefi) · kontrol (muhasebe) · teknik ofis · onaylayan (GM) */
+    document.getElementById('ppSign').innerHTML =
+      '<div class="sg"><div class="sg-role">Kasa Tutan Personel</div><div class="sg-name">' + K.tutan.name + '</div><div class="sg-title">' + K.tutan.title + '</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Nesrin Aydın</div><div class="sg-title">Muhasebe</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Teknik Ofis</div><div class="sg-name">Elif Sarıkaya</div><div class="sg-title">Teknik Müdür</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>';
+  }
+
+  if(selIds && selIds.length){
+    renderSelected();
+  } else {
+    render(ks);
+    document.getElementById('ckSantiye').addEventListener('change', function(){
+      ks = this.value;
+      syncUrl();
+      render(ks);
+    });
+    document.getElementById('csApply').addEventListener('click', function(){
+      state.from = fromInput.value;
+      state.to = toInput.value;
+      state.dlabel = '';   /* etiket her Uygula'da gerçek seçili tarihlerden yeniden türetilir */
+      syncUrl(); render(ks);
+    });
+    document.getElementById('csClear').addEventListener('click', function(){
+      state = { from:'', to:'', dlabel:'' };
+      fromInput.value = ''; toInput.value = '';
+      syncUrl(); render(ks);
+    });
+  }
+})();
+</script>
+</body>
+</html>

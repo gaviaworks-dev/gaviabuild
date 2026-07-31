@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Entegrasyonlar — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Entegrasyonlar (D6, "Menü Taramasından Çıkan Ek Madde") ============
+   Kabuk crm-ayarlar-firma.html'den DEVRALINDI (aynı rail/topbar/ikinci sidebar, data-sec
+   "ayarlar" — o dosya salt-okunur referans alındı, YAZILMADI). SMS Sağlayıcı kartı TEK
+   gerçek/tam-işlevli örnek: kullanım rakamı (2.400/5.000) crm-ayarlar-firma.html "Paket &
+   Kullanım" sekmesindeki "Aylık SMS bildirimi" limitiyle BİREBİR — uydurma sayı değil. */
+.int-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(max-width:980px){.int-grid{grid-template-columns:minmax(0,1fr)}}
+
+.int-card{overflow:hidden}
+.int-head{display:flex;align-items:flex-start;gap:14px;padding:20px 22px}
+.int-ico{width:44px;height:44px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:17px;background:rgba(var(--acc-rgb),.1);color:var(--acc-ink)}
+.int-card.is-soon .int-ico{background:var(--bg);color:var(--muted)}
+.int-info{flex:1;min-width:0;line-height:1.4}
+.int-info b{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--ink)}
+.int-info p{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:5px}
+
+.int-body{padding:0 22px 20px}
+.int-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* bağlı SMS kartı — kullanım çubuğu + ayar alanları + test gönderimi */
+.int-usage{padding:14px 16px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:16px}
+.int-usage .limit-top{margin-bottom:8px}
+.key-field{position:relative}
+.key-field input{padding-right:42px}
+.key-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px}
+.key-toggle:hover{color:var(--acc-ink)}
+.test-row{display:flex;gap:10px;align-items:flex-end;margin-top:14px}
+.test-row .gfield{flex:1;margin-bottom:0}
+.chk-row{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.chk-item{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-2)}
+.chk-item input{width:15px;height:15px;accent-color:var(--acc-ink)}
+
+.int-soon-note{font-size:12px;color:var(--muted);line-height:1.6;padding:12px 14px;background:var(--bg);border:1px dashed var(--line-2);border-radius:var(--r-sm)}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="entegrasyonlar">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Yönetim</div>
+        <h1>Entegrasyonlar</h1>
+        <div class="ph-sub">Gavia CRM'i dış sistemlere bağlayın — muhasebe, e-fatura, bankacılık ve bildirim sağlayıcıları</div>
+      </div>
+    </div>
+
+    <div class="int-grid">
+
+      <!-- ============ SMS SAĞLAYICI — TEK GERÇEK/TAM İŞLEVLİ ÖRNEK ============ -->
+      <div class="gv-card int-card" id="smsCard" style="grid-column:1/-1">
+        <div class="int-head">
+          <div class="int-ico"><i class="fa-solid fa-comment-sms"></i></div>
+          <div class="int-info">
+            <b>SMS Sağlayıcı <span class="gstat ok" id="smsDurum">Bağlı</span></b>
+            <p>Onay bekleyen talepler, termin uyarıları ve izin sonuçları için SMS bildirimi gönderir. Sağlayıcı: <b>NetGSM</b> · Yapıtaş İnşaat A.Ş. hesabına bağlı.</p>
+          </div>
+        </div>
+        <div class="int-body" id="smsBody">
+          <div class="int-usage">
+            <div class="limit-top"><b>Aylık SMS bildirimi</b><span><strong id="smsUsed">2.400</strong> / 5.000</span></div>
+            <div class="gbar"><div class="gbar-track"><div class="gbar-fill" id="smsBar" style="width:48%"></div></div></div>
+          </div>
+
+          <form class="gform" onsubmit="event.preventDefault(); gvToast('SMS ayarları kaydedildi.')">
+            <div class="gfield">
+              <label for="smsSaglayici">Sağlayıcı</label>
+              <select id="smsSaglayici"><option selected>NetGSM</option><option>İleti Merkezi</option><option>Verimor</option></select>
+            </div>
+            <div class="gfield">
+              <label for="smsGonderen">Gönderen adı (başlık)</label>
+              <input id="smsGonderen" type="text" value="YAPITAS">
+            </div>
+            <div class="gfield full key-field">
+              <label for="smsKey">API anahtarı</label>
+              <input id="smsKey" type="password" value="ntgsm_7f2a9c4e1b8d6053">
+              <button type="button" class="key-toggle" id="smsKeyToggle" aria-label="API anahtarını göster" data-no-confirm><i class="fa-regular fa-eye"></i></button>
+            </div>
+            <div class="gfield full">
+              <span class="gf-hint" style="display:block;margin-bottom:2px">Bildirim türleri</span>
+              <div class="chk-row">
+                <label class="chk-item"><input type="checkbox" checked> Onay bekleyen talepler (kasa, malzeme, izin, avans, hakediş)</label>
+                <label class="chk-item"><input type="checkbox" checked> Termin tarihi yaklaşan siparişler</label>
+                <label class="chk-item"><input type="checkbox"> Günlük özet (her sabah 08:00)</label>
+              </div>
+            </div>
+            <div class="gfield full" style="flex-direction:row;justify-content:flex-end;gap:10px">
+              <button type="submit" class="btn btn-acc btn-sm"><i class="fa-solid fa-check"></i> Kaydet</button>
+            </div>
+          </form>
+
+          <div class="test-row">
+            <div class="gfield">
+              <label for="smsTestTel">Test SMS gönder</label>
+              <input id="smsTestTel" type="tel" placeholder="05XX XXX XX XX">
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="smsTestBtn" data-no-confirm><i class="fa-solid fa-paper-plane"></i> Gönder</button>
+          </div>
+        </div>
+        <div class="int-foot">
+          <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Limit artışı Ayarlar &gt; Firma &gt; Paket &amp; Kullanım sekmesinden yönetilir.</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="smsDisconnectBtn" data-no-confirm><i class="fa-solid fa-link-slash"></i> Bağlantıyı Kes</button>
+        </div>
+      </div>
+
+      <!-- ============ YAKINDA — muhasebe, e-fatura, banka, takvim ============ -->
+      <div class="gv-card int-card is-soon">
+        <div class="int-head">
+          <div class="int-ico"><i class="fa-solid fa-calculator"></i></div>
+          <div class="int-info">
+            <b>Muhasebe Yazılımı <span class="gtag">Yakında</span></b>
+            <p>Logo, Netsis veya Mikro ile cari hesap ve fatura kayıtlarını iki yönlü senkronize eder — Ayarlar &gt; Firma'daki resmi bilgiler ve evrak önekleri otomatik eşlenir.</p>
+          </div>
+        </div>
+        <div class="int-body"><div class="int-soon-note"><i class="fa-solid fa-hourglass-half"></i> Bu entegrasyon geliştirme aşamasındadır; Faz 2'de aktifleşecektir.</div></div>
+        <div class="int-foot">
+          <span></span>
+          <button type="button" class="btn btn-ghost btn-sm" data-demo="Haberdar edilme listesine eklendi — bu entegrasyon yayınlandığında bilgilendirileceksiniz (demo)."><i class="fa-regular fa-bell"></i> Haberdar Et</button>
+        </div>
+      </div>
+
+      <div class="gv-card int-card is-soon">
+        <div class="int-head">
+          <div class="int-ico"><i class="fa-solid fa-file-invoice"></i></div>
+          <div class="int-info">
+            <b>E-Fatura &amp; E-Arşiv <span class="gtag">Yakında</span></b>
+            <p>GİB e-fatura/e-arşiv altyapısıyla hakediş ve satın alma faturalarının otomatik kesimi ve resmi arşivlenmesi.</p>
+          </div>
+        </div>
+        <div class="int-body"><div class="int-soon-note"><i class="fa-solid fa-hourglass-half"></i> Bu entegrasyon geliştirme aşamasındadır; Faz 2'de aktifleşecektir.</div></div>
+        <div class="int-foot">
+          <span></span>
+          <button type="button" class="btn btn-ghost btn-sm" data-demo="Haberdar edilme listesine eklendi — bu entegrasyon yayınlandığında bilgilendirileceksiniz (demo)."><i class="fa-regular fa-bell"></i> Haberdar Et</button>
+        </div>
+      </div>
+
+      <div class="gv-card int-card is-soon">
+        <div class="int-head">
+          <div class="int-ico"><i class="fa-solid fa-building-columns"></i></div>
+          <div class="int-info">
+            <b>Banka Entegrasyonu <span class="gtag">Yakında</span></b>
+            <p>Açık bankacılık ile IBAN hesap hareketlerini otomatik çekip kasa mutabakatına aktarır — Ayarlar &gt; Firma'daki banka hesaplarıyla eşleşir.</p>
+          </div>
+        </div>
+        <div class="int-body"><div class="int-soon-note"><i class="fa-solid fa-hourglass-half"></i> Bu entegrasyon geliştirme aşamasındadır; Faz 2'de aktifleşecektir.</div></div>
+        <div class="int-foot">
+          <span></span>
+          <button type="button" class="btn btn-ghost btn-sm" data-demo="Haberdar edilme listesine eklendi — bu entegrasyon yayınlandığında bilgilendirileceksiniz (demo)."><i class="fa-regular fa-bell"></i> Haberdar Et</button>
+        </div>
+      </div>
+
+      <div class="gv-card int-card is-soon">
+        <div class="int-head">
+          <div class="int-ico"><i class="fa-regular fa-calendar-days"></i></div>
+          <div class="int-info">
+            <b>Takvim Senkronizasyonu <span class="gtag">Yakında</span></b>
+            <p>Ajandanızdaki toplantı, izin ve teslim tarihi etkinliklerini Google Takvim veya Outlook ile iki yönlü senkronize eder.</p>
+          </div>
+        </div>
+        <div class="int-body"><div class="int-soon-note"><i class="fa-solid fa-hourglass-half"></i> Bu entegrasyon geliştirme aşamasındadır; Faz 2'de aktifleşecektir.</div></div>
+        <div class="int-foot">
+          <span></span>
+          <button type="button" class="btn btn-ghost btn-sm" data-demo="Haberdar edilme listesine eklendi — bu entegrasyon yayınlandığında bilgilendirileceksiniz (demo)."><i class="fa-regular fa-bell"></i> Haberdar Et</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* API anahtarı göster/gizle */
+  document.getElementById('smsKeyToggle').addEventListener('click', function(){
+    var inp = document.getElementById('smsKey');
+    var ic = this.querySelector('i');
+    var show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    ic.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+  });
+
+  /* test SMS gönderimi — gerçekten kullanım sayacını günceller (mock, ama tutarlı) */
+  document.getElementById('smsTestBtn').addEventListener('click', function(){
+    var tel = document.getElementById('smsTestTel').value.trim();
+    if(!tel){ gvToast('Test göndermek için bir telefon numarası girin.', {type:'danger', icon:'fa-triangle-exclamation'}); return; }
+    var usedEl = document.getElementById('smsUsed');
+    var used = parseInt(usedEl.textContent.replace(/\./g, ''), 10) + 1;
+    usedEl.textContent = used.toLocaleString('tr-TR');
+    document.getElementById('smsBar').style.width = Math.min(100, (used / 5000) * 100) + '%';
+    gvToast('Test SMS ' + tel + ' numarasına gönderildi.', {icon:'fa-paper-plane'});
+    document.getElementById('smsTestTel').value = '';
+  });
+
+  /* bağlantıyı kes — yıkıcı aksiyon, gerçek gvConfirm(danger:true) ile */
+  document.getElementById('smsDisconnectBtn').addEventListener('click', function(){
+    gvConfirm({
+      danger: true,
+      icon: 'fa-link-slash',
+      title: 'SMS bağlantısı kesilsin mi?',
+      message: 'NetGSM bağlantısı kesilecek; onay/termin bildirimleri SMS ile gönderilmeyecek. API anahtarınız saklanmaya devam eder, istediğiniz zaman yeniden bağlanabilirsiniz.',
+      ok: 'Bağlantıyı Kes',
+      cancel: 'Vazgeç',
+      onConfirm: function(){
+        document.getElementById('smsDurum').outerHTML = '<span class="gstat off" id="smsDurum">Bağlı Değil</span>';
+        document.getElementById('smsCard').classList.add('is-soon');
+        document.getElementById('smsBody').innerHTML = '<div class="int-soon-note"><i class="fa-solid fa-plug-circle-xmark"></i> Bağlantı kesildi. Bildirimler tekrar gönderilmeden önce yeniden bağlanmanız gerekir.</div>';
+        var foot = document.querySelector('#smsCard .int-foot');
+        foot.innerHTML = '<span class="inv-note"><i class="fa-solid fa-circle-info"></i> Ayarlarınız (sağlayıcı, gönderen adı, API anahtarı) korunuyor.</span>'
+          + '<button type="button" class="btn btn-acc btn-sm" id="smsReconnectBtn" data-no-confirm><i class="fa-solid fa-link"></i> Yeniden Bağlan</button>';
+        document.getElementById('smsReconnectBtn').addEventListener('click', function(){ location.reload(); });
+        gvToast('SMS bağlantısı kesildi', {type:'danger', icon:'fa-link-slash'});
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

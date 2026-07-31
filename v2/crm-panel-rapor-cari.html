@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Cari Raporu — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Cari Raporu (borç/alacak, tür kırılımı, ekstre özetleri) ============ */
+.rp-back{display:inline-flex;align-items:center;gap:7px}
+
+.filter-bar .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none}
+
+#tblCari{min-width:820px}
+#tblCari td.num,#tblCari th.num{text-align:right}
+.gcell{display:flex;align-items:center;gap:10px}
+.gcell-mark{width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:12.5px;font-weight:800}
+.gcell-info{line-height:1.3}
+.gcell-name{font-size:13.5px;font-weight:700;color:var(--ink)}
+.bal{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.bal b{font-size:13.5px;color:var(--ink)}
+.bal span{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+.bal.borc span{color:var(--danger)}
+.bal.alacak span{color:var(--ok)}
+.bal.sifir b,.bal.sifir span{color:var(--muted)}
+.odue-tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--danger)}
+.lastmove{font-size:12.5px;color:var(--ink-2)}
+.lastmove .lm-date{font-weight:700;color:var(--ink);margin-right:6px}
+.lastmove.empty{color:var(--muted)}
+
+.rp-sect-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:32px 0 12px}
+.rp-sect-head:first-of-type{margin-top:0}
+.rp-sect-head h2{font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.rp-sect-head h2 i{color:var(--acc-ink);font-size:13px}
+.rp-sect-head span{font-size:12.5px;color:var(--muted)}
+
+.tur-list{display:flex;flex-direction:column;gap:14px}
+.tur-row{display:flex;align-items:center;gap:14px}
+.tur-name{flex:none;width:150px;font-size:13px;font-weight:700;color:var(--ink)}
+.tur-row .gbar{flex:1;min-width:0}
+.tur-vals{flex:none;min-width:190px;text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tur-vals b{color:var(--ink)}
+
+.ext-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:980px){.ext-grid{grid-template-columns:1fr}}
+.ext-card{border:1px solid var(--line);border-radius:var(--r-md);padding:16px}
+.ext-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ext-mark{width:32px;height:32px;flex:none;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:800}
+.ext-head b{font-size:13.5px;color:var(--ink)}
+.ext-head span{display:block;font-size:11px;color:var(--muted)}
+.ext-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.ext-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:7px 0;border-bottom:1px solid var(--line)}
+.ext-line:last-child{border-bottom:none}
+.ext-line .el-desc{color:var(--ink-2)}
+.ext-line .el-date{color:var(--muted);font-size:10.5px;display:block}
+.ext-line .el-amt{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ext-line .el-amt.plus{color:var(--danger)}
+.ext-line .el-amt.minus{color:var(--ok)}
+.ext-total{display:flex;justify-content:space-between;padding-top:10px;border-top:2px solid var(--line-2);font-size:13px;font-weight:800;color:var(--ink)}
+
+.kn-table{width:100%;border-collapse:collapse}
+.kn-table td{padding:8px 0;font-size:12.5px;border-bottom:1px solid var(--line)}
+.kn-table td.num{text-align:right}
+.kn-table tr:last-child td{border-bottom:none}
+
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+.gc-foot{padding:14px 22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2);display:flex;align-items:flex-start;gap:8px}
+.gc-foot i{color:var(--acc-ink);margin-top:2px;flex:none}
+.gc-foot b{color:var(--ink)}
+
+/* mobilde 7-8 haneli TL tutarları 2 sütuna sığmıyor (kart kırpılması) — tek sütuna düşür */
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr}
+  .tur-row{flex-wrap:wrap}
+  .tur-name{width:auto}
+  .tur-row .gbar{flex:1 1 100%;order:3}
+  .tur-vals{min-width:0;text-align:left}
+}
+</style>
+</head>
+<body data-sec="raporlar" data-screen="raporlar">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Analiz</div>
+        <h1>Cari Raporu</h1>
+        <div class="ph-sub">10 cari · borç ₺1.240.650 · alacak ₺2.830.000 · satış carileri hariç</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
+        <button class="btn btn-ghost btn-sm" data-export="Cari raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+      </div>
+    </div>
+
+    <!-- ============ TÜR FİLTRESİ — chip [MOCK], görünür satırlardan CANLI KPI derlemesi ============ -->
+    <div class="gv-card" style="margin-bottom:20px">
+      <div class="filter-bar">
+        <span class="frow-lbl">Tür</span>
+        <div class="chips" id="turChips">
+          <button class="chip is-on" data-tur="tumu">Tümü <span class="ch-cnt">10</span></button>
+          <button class="chip" data-tur="musteri">Müşteri-Kurum <span class="ch-cnt">3</span></button>
+          <button class="chip" data-tur="taseron">Taşeron <span class="ch-cnt">3</span></button>
+          <button class="chip" data-tur="tedarikci">Tedarikçi <span class="ch-cnt">4</span></button>
+        </div>
+      </div>
+      <div class="filtre-ozet" style="padding:14px 22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2)" id="filtreOzet"><i class="fa-solid fa-circle-info"></i> <span>—</span></div>
+    </div>
+
+    <!-- statik bake — DEFAULT (tür=tümü) 10 kayıtlık kanonik setten CANLI hesaplanan
+         KPI'lar; JS yüklenince aynı mount'lar innerHTML ile ezilir — D18-B2 -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-address-book"></i></div>
+        <div><div class="kpi-num num" id="kpiSayiNum">10</div><div class="kpi-lbl">Cari sayısı</div>
+        <div class="kpi-delta flat" id="kpiSayiSub"><i class="fa-solid fa-layer-group"></i> 3 kategori</div></div>
+      </div>
+      <div class="kpi-card danger" id="kpiBorc">
+        <div class="kpi-ico"><i class="fa-solid fa-money-bill-wave"></i></div>
+        <div><div class="kpi-num num" id="kpiBorcNum">₺1.240.650</div><div class="kpi-lbl">Borç toplamı</div>
+        <div class="kpi-delta down" id="kpiBorcSub"><i class="fa-solid fa-arrow-trend-down"></i> 7 hesap</div></div>
+      </div>
+      <div class="kpi-card" id="kpiAlacak" style="--kpi-ok:1">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-file-signature"></i></div>
+        <div><div class="kpi-num num" id="kpiAlacakNum">₺2.830.000</div><div class="kpi-lbl">Alacak toplamı</div>
+        <div class="kpi-delta up" id="kpiAlacakSub"><i class="fa-solid fa-arrow-trend-up"></i> 2 kurumun açık bakiyesi</div></div>
+      </div>
+      <div class="kpi-card warn" id="kpiVadesi">
+        <div class="kpi-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div><div class="kpi-num num" id="kpiVadesiNum">2</div><div class="kpi-lbl">Vadesi geçen hesap</div>
+        <div class="kpi-delta down" id="kpiVadesiSub"><i class="fa-solid fa-clock"></i> ₺553.000 toplam</div></div>
+      </div>
+    </div>
+
+    <!-- kaynak: crm-cari.html tbody, 10 firma birebir (satış carileri kapsam dışı). Bakiye/vade etiketleri :161-303. -->
+    <div class="gv-card" style="margin-bottom:24px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-address-book"></i> Cari Listesi</div><span class="ph-sub" style="margin:0">crm-cari.html</span></div>
+      <div class="gc-body flush">
+        <table class="gtable" id="tblCari">
+          <thead>
+            <tr><th>Firma</th><th>Tür</th><th>Şantiye</th><th class="num">Bakiye</th><th>Son Hareket</th></tr>
+          </thead>
+          <tbody>
+            <tr data-tur="musteri" data-borc="0" data-alacak="1850000" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">KG</div><div class="gcell-info"><div class="gcell-name">Körfez GYO</div></div></div></td>
+              <td><span class="gtag mint">Müşteri-Kurum</span></td>
+              <td>Vadi Konakları</td>
+              <td class="num"><div class="bal alacak"><b>₺1.850.000</b><span>Alacak</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">20 Haz</span>Hakediş #6 gönderildi</div></td>
+            </tr>
+            <tr data-tur="musteri" data-borc="0" data-alacak="980000" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">AL</div><div class="gcell-info"><div class="gcell-name">Aliağa Liman İşletmeleri</div></div></div></td>
+              <td><span class="gtag mint">Müşteri-Kurum</span></td>
+              <td>Liman Lojistik Merkezi</td>
+              <td class="num"><div class="bal alacak"><b>₺980.000</b><span>Alacak</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">18 Haz</span>Ara hakediş onaylandı</div></td>
+            </tr>
+            <tr data-tur="musteri" data-borc="0" data-alacak="0" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SB</div><div class="gcell-info"><div class="gcell-name">Sapanca Belediyesi</div></div></div></td>
+              <td><span class="gtag mint">Müşteri-Kurum</span></td>
+              <td>Göl Evleri 2. Etap</td>
+              <td class="num"><div class="bal sifir"><b>—</b><span>Hareket yok</span></div></td>
+              <td><div class="lastmove empty">Planlama aşamasında</div></td>
+            </tr>
+            <tr data-tur="taseron" data-borc="342000" data-alacak="0" data-vadesi="342000">
+              <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">DB</div><div class="gcell-info"><div class="gcell-name">Demir-Beton İnş. Ltd.</div></div></div></td>
+              <td><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent">Taşeron</span></td>
+              <td>Vadi Konakları</td>
+              <td class="num"><div class="bal borc"><b>₺342.000</b><span><i class="fa-solid fa-triangle-exclamation"></i> Borç · 4 gün geçti</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">28 Haz</span>Hakediş #2 onayda</div></td>
+            </tr>
+            <tr data-tur="taseron" data-borc="128500" data-alacak="0" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">YK</div><div class="gcell-info"><div class="gcell-name">Yalıtım Kardeşler</div></div></div></td>
+              <td><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent">Taşeron</span></td>
+              <td>Liman Lojistik Merkezi</td>
+              <td class="num"><div class="bal borc"><b>₺128.500</b><span>Borç</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">30 Haz</span>Malzeme faturası girişi</div></td>
+            </tr>
+            <tr data-tur="taseron" data-borc="76200" data-alacak="0" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">EM</div><div class="gcell-info"><div class="gcell-name">ElektroMek Taahhüt</div></div></div></td>
+              <td><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent">Taşeron</span></td>
+              <td>Vadi Konakları</td>
+              <td class="num"><div class="bal borc"><b>₺76.200</b><span>Borç</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">1 Tem</span>Elektrik şaft iş kalemi</div></td>
+            </tr>
+            <tr data-tur="tedarikci" data-borc="54900" data-alacak="0" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">EB</div><div class="gcell-info"><div class="gcell-name">Ege Hazır Beton</div></div></div></td>
+              <td><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent">Tedarikçi</span></td>
+              <td>Vadi Konakları</td>
+              <td class="num"><div class="bal borc"><b>₺54.900</b><span>Borç</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">2 Tem</span>Beton irsaliyesi (4. mikser)</div></td>
+            </tr>
+            <tr data-tur="tedarikci" data-borc="211000" data-alacak="0" data-vadesi="211000">
+              <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">MD</div><div class="gcell-info"><div class="gcell-name">Marmara Demir Çelik</div></div></div></td>
+              <td><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent">Tedarikçi</span></td>
+              <td>Liman Lojistik Merkezi</td>
+              <td class="num"><div class="bal borc"><b>₺211.000</b><span><i class="fa-solid fa-triangle-exclamation"></i> Borç · 17 gün geçti</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">15 Haz</span>Demir sevkiyatı faturası</div></td>
+            </tr>
+            <tr data-tur="tedarikci" data-borc="9850" data-alacak="0" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">AH</div><div class="gcell-info"><div class="gcell-name">Anadolu Hırdavat</div></div></div></td>
+              <td><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent">Tedarikçi</span></td>
+              <td>Merkez Şantiye</td>
+              <td class="num"><div class="bal borc"><b>₺9.850</b><span>Borç</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">29 Haz</span>Hırdavat malzeme alımı</div></td>
+            </tr>
+            <tr data-tur="tedarikci" data-borc="418200" data-alacak="0" data-vadesi="0">
+              <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div><div class="gcell-info"><div class="gcell-name">Boğaziçi Yapı Market</div></div></div></td>
+              <td><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent">Tedarikçi</span></td>
+              <td>Vadi Konakları</td>
+              <td class="num"><div class="bal borc"><b>₺418.200</b><span>Borç</span></div></td>
+              <td><div class="lastmove"><span class="lm-date">12 Haz</span>PVC doğrama faturası · vade 15 Tem</div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="gv-empty" id="cariEmpty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-address-book"></i></div>
+          <h4>Bu türde cari yok</h4>
+          <p>Farklı bir tür seçin.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TÜR BAZLI KIRILIM — sabit (9=3+3+3), toplam görünürden bağımsız referans ============ -->
+    <div class="gv-card" style="margin-bottom:24px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-layer-group"></i> Tür Bazlı Kırılım</div></div>
+      <div class="gc-body">
+        <div class="tur-list">
+          <div class="tur-row"><span class="tur-name">Müşteri-Kurum</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div></div><span class="tur-vals"><b>₺2.830.000</b> alacak · 3 firma</span></div>
+          <div class="tur-row"><span class="tur-name">Taşeron</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:19%"></div></div></div><span class="tur-vals"><b>₺546.700</b> borç · 3 firma</span></div>
+          <div class="tur-row"><span class="tur-name">Tedarikçi</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill danger" style="width:25%"></div></div></div><span class="tur-vals"><b>₺693.950</b> borç · 4 firma</span></div>
+        </div>
+        <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Taşeron borcu 342.000+128.500+76.200=546.700 · Tedarikçi borcu 54.900+211.000+9.850+418.200=693.950 · toplam borç 1.240.650 (crm-cari.html KPI ile birebir). Kapsam: operasyon carileri — satış carilerinin alacakları (CAR- serisi) Satış modülü raporlarındadır.</div>
+      </div>
+    </div>
+
+    <!-- ============ EKSTRE ÖZETLERİ — yalnız çok-hareketli 3 cari; kalanı yukarıdaki tabloda tek "Son Hareket" ============ -->
+    <div class="rp-sect-head">
+      <h2><i class="fa-solid fa-receipt"></i> Ekstre Özetleri</h2>
+      <span>crm-cari-durum.html — Temmuz 2026 dönemi</span>
+    </div>
+    <div class="ext-grid" style="margin-bottom:24px">
+      <div class="ext-card">
+        <div class="ext-head"><div class="ext-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">KG</div><div><b>Körfez GYO</b><span>Müşteri-Kurum</span></div></div>
+        <div class="ext-rows">
+          <div class="ext-line"><span class="el-desc">Ara hakediş #5 faturası<span class="el-date">1 Haz 2026</span></span><span class="el-amt plus">+₺620.000</span></div>
+          <div class="ext-line"><span class="el-desc">Tahsilat (banka havalesi)<span class="el-date">12 Haz 2026</span></span><span class="el-amt minus">−₺400.000</span></div>
+          <div class="ext-line"><span class="el-desc">Hakediş #6 faturası (gönderildi)<span class="el-date">20 Haz 2026</span></span><span class="el-amt plus">+₺1.630.000</span></div>
+        </div>
+        <div class="ext-total"><span>Bakiye</span><span>₺1.850.000</span></div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-head"><div class="ext-mark" style="background:var(--info-tint);color:var(--info)">DB</div><div><b>Demir-Beton İnş.</b><span>Taşeron</span></div></div>
+        <div class="ext-rows">
+          <div class="ext-line"><span class="el-desc">Hakediş #1 tahakkuku<span class="el-date">2 Haz 2026</span></span><span class="el-amt plus">+₺210.000</span></div>
+          <div class="ext-line"><span class="el-desc">Ödeme (banka havalesi)<span class="el-date">10 Haz 2026</span></span><span class="el-amt minus">−₺90.000</span></div>
+          <div class="ext-line"><span class="el-desc">Malzeme yansıtma faturası<span class="el-date">22 Haz 2026</span></span><span class="el-amt plus">+₺132.000</span></div>
+          <div class="ext-line"><span class="el-desc">Hakediş #2 tahakkuku (onayda)<span class="el-date">28 Haz 2026</span></span><span class="el-amt plus">+₺90.000</span></div>
+        </div>
+        <div class="ext-total"><span>Bakiye</span><span>₺342.000</span></div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-head"><div class="ext-mark" style="background:var(--warn-tint);color:var(--warn)">EB</div><div><b>Ege Hazır Beton</b><span>Tedarikçi</span></div></div>
+        <div class="ext-rows">
+          <div class="ext-line"><span class="el-desc">Beton irsaliyesi (C30, 30 m³)<span class="el-date">5 Haz 2026</span></span><span class="el-amt plus">+₺39.000</span></div>
+          <div class="ext-line"><span class="el-desc">Ödeme (kısmi)<span class="el-date">18 Haz 2026</span></span><span class="el-amt minus">−₺20.000</span></div>
+          <div class="ext-line"><span class="el-desc">Beton irsaliyesi (4. mikser)<span class="el-date">2 Tem 2026</span></span><span class="el-amt plus">+₺35.900</span></div>
+        </div>
+        <div class="ext-total"><span>Bakiye</span><span>₺54.900</span></div>
+      </div>
+    </div>
+    <div class="rep-src" style="margin-bottom:24px"><i class="fa-solid fa-circle-info"></i> Kalan 6 carinin (Aliağa, Sapanca, Yalıtım Kardeşler, ElektroMek, Marmara Demir Çelik, Anadolu Hırdavat) kaynak sayfada çok satırlı ekstresi yok — bakiyeleri tek "son hareket" ile oluşuyor (yukarıdaki Cari Listesi tablosunda görünür). Ayrı bir yaşlandırma (aging) tablosu kaynakta bulunmadığı için raporda üretilmedi; vade bilgisi yalnız Demir-Beton (4 gün) ve Marmara Demir Çelik (17 gün) için etiketlenmiştir.</div>
+
+    <!-- ============ TAŞERON KÜNYE ÖRNEĞİ — Demir-Beton, cari-detay çapraz referansı ============ -->
+    <div class="gv-card" style="margin-bottom:24px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-building"></i> Taşeron Künye Örneği — Demir-Beton İnş. Ltd.</div><span class="ph-sub" style="margin:0">crm-cari-detay.html</span></div>
+      <div class="gc-body">
+        <div class="rep-src" style="margin:0 0 14px"><i class="fa-solid fa-circle-info"></i> Tuzla V.D. · 726 034 8841 · IBAN TR76 0011 1000 0000 1234 5678 91 · Sözleşme <a href="crm-finans-sozlesme-detay.html?szl=t05">SZL-2025-T05</a>, kümülatif imalat %66,7 (bkz. Hakediş Raporu).</div>
+        <table class="kn-table">
+          <thead><tr><th>Hakediş</th><th>Dönem</th><th class="num">Net Tutar</th><th>Durum</th></tr></thead>
+          <tbody>
+            <tr><td><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a></td><td>Haziran 2026</td><td class="num">₺90.000</td><td><span class="gstat wait">Onay Bekliyor</span></td></tr>
+            <tr><td><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013</a></td><td>Mayıs 2026</td><td class="num">₺210.000</td><td><span class="gstat ok">Onaylandı</span></td></tr>
+            <tr><td><a href="crm-finans-hakedis-detay.html?th=005">TH-2026-005</a></td><td>Nisan 2026</td><td class="num">₺185.000</td><td><span class="gstat ok">Ödendi</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ ÖNE ÇIKANLAR ============ -->
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-star"></i> Öne Çıkanlar</div></div>
+      <div class="gc-body">
+        <div class="hl-list">
+          <div class="hl-row"><i class="fa-solid fa-triangle-exclamation"></i><span><b>Marmara Demir Çelik</b> (₺211.000, 17 gün) ve <b>Demir-Beton İnş.</b> (₺342.000, 4 gün) vadesi geçmiş toplam ₺553.000 ile takip listesinin başında.</span></div>
+          <div class="hl-row"><i class="fa-solid fa-file-signature"></i><span>Alacak toplamı ₺2.830.000'in tamamı iki kurumdan (Körfez GYO, Aliağa Liman İşletmeleri) geliyor — bu iki kurumun açık bakiyesi var.</span></div>
+          <div class="hl-row"><i class="fa-solid fa-circle-info"></i><span>Bu rapor cari ekstre kanoniklerini kullanır (ör. Körfez ₺1.850.000); Hakediş Raporu'ndaki kurum ödeme durumlarıyla (HKD-004/005 "Ödendi") satır satır karşılaştırılmaz — iki kaynak farklı muhasebe anları yansıtır.</span></div>
+          <div class="hl-row"><i class="fa-solid fa-circle-info"></i><span><b>Ege Hazır Beton</b> aynı zamanda MKN-03 beton pompasının hizmet sağlayıcısıdır; bu raporda yalnız tedarikçi cari bakiyesi (₺54.900) kullanılır.</span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* RBAC KARARI: cari kaynak bölümü şefe tamamen kapalı (shell.js sef.secs'te
+     cari yok) — bu raporda "Vadi'ye daraltılmış görünüm" YETERSİZ, çünkü kaynak
+     veri şefin hiç göremediği veri. Şef bu sayfayı hiç göremez. */
+  if(GV.role === 'sef'){
+    location.replace(GV.R.land);
+    return;
+  }
+
+  var tbody = document.querySelector('#tblCari tbody');
+  function fmtTL(n){ return '₺' + n.toLocaleString('tr-TR'); }
+
+  function render(){
+    var turOn = document.querySelector('#turChips .chip.is-on');
+    var tur = turOn ? turOn.getAttribute('data-tur') : 'tumu';
+
+    var vis = [], borc = 0, alacak = 0, vadesiTutar = 0, vadesiSayi = 0;
+    tbody.querySelectorAll('tr').forEach(function(tr){
+      var show = tur === 'tumu' || tr.getAttribute('data-tur') === tur;
+      tr.hidden = !show;
+      if(!show) return;
+      vis.push(tr);
+      borc += +tr.getAttribute('data-borc');
+      alacak += +tr.getAttribute('data-alacak');
+      var v = +tr.getAttribute('data-vadesi');
+      if(v > 0){ vadesiTutar += v; vadesiSayi++; }
+    });
+    document.getElementById('cariEmpty').hidden = vis.length !== 0;
+
+    document.getElementById('kpiSayiNum').textContent = vis.length;
+    document.getElementById('kpiSayiSub').innerHTML = '<i class="fa-solid fa-layer-group"></i> ' + (tur === 'tumu' ? '3 kategori' : {musteri:'Müşteri-Kurum', taseron:'Taşeron', tedarikci:'Tedarikçi'}[tur]);
+    document.getElementById('kpiBorcNum').textContent = fmtTL(borc);
+    document.getElementById('kpiBorcSub').innerHTML = '<i class="fa-solid fa-arrow-trend-down"></i> ' + vis.filter(function(tr){return +tr.getAttribute('data-borc') > 0;}).length + ' hesap';
+    document.getElementById('kpiAlacakNum').textContent = fmtTL(alacak);
+    document.getElementById('kpiAlacakSub').innerHTML = alacak ? '<i class="fa-solid fa-arrow-trend-up"></i> ' + vis.filter(function(tr){return +tr.getAttribute('data-alacak') > 0;}).length + ' kurumun açık bakiyesi' : '<i class="fa-solid fa-circle-check"></i> Bu sette yok';
+    document.getElementById('kpiVadesiNum').textContent = vadesiSayi;
+    document.getElementById('kpiVadesiSub').innerHTML = vadesiSayi ? '<i class="fa-solid fa-clock"></i> ' + fmtTL(vadesiTutar) + ' toplam' : '<i class="fa-solid fa-circle-check"></i> Bu sette yok';
+
+    var scopeLbl = tur === 'tumu' ? 'tüm cariler' : {musteri:'Müşteri-Kurum', taseron:'Taşeron', tedarikci:'Tedarikçi'}[tur];
+    document.getElementById('filtreOzet').querySelector('span').innerHTML = '<b>' + vis.length + '</b> cari gösteriliyor (' + scopeLbl + ')';
+  }
+
+  document.getElementById('turChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-tur]'); if(!ch) return;
+    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

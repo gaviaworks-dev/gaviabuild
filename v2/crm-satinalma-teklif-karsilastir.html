@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Teklif Karşılaştırma — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Teklif Karşılaştırma (§16 Faz 2) ============
+   KOLON YAPISI + best/sel VURGUSU crm-satinalma-form-detay.html'in .icmal-tbl bloğundan
+   (satır 49-75) BİREBİR devralındı — yeniden yorumlanmadı, yalnız sınıf adları AYNEN
+   kopyalandı ve interaktif SEÇİM aksiyonu eklendi (o sayfada seçim zaten YAPILMIŞ bir
+   kararın salt-okunur özetiydi; burada ?form=014 gibi AÇIK süreçlerde gerçek "Bu Teklifi
+   Seç" aksiyonu var). SAT-2026-018 verisi form-detay.html + icmal-cikti.html ile BİREBİR
+   (9 kalem, 5 tedarikçi, Deta Demir Çelik seçili — kapalı/tarihi süreç, salt-okunur).
+   SAT-2026-014 verisi crm-satinalma-teklifler.html ile BİREBİR (Ege/Trakya yanıtladı,
+   3 tedarikçi bekliyor/vermedi) — AÇIK süreç, seçim CANLI. */
+.tk-summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.tk-stat{flex:1;min-width:150px;padding:13px 15px;border-radius:var(--r-md);background:var(--bg);border:1px solid var(--line)}
+.tk-stat b{display:block;font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
+.tk-stat span{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.tk-stat.acc{background:rgba(var(--acc-rgb),.08);border-color:rgba(var(--acc-rgb),.25)}
+.tk-stat.acc b{color:var(--acc-ink)}
+
+.icmal-wrap{overflow-x:auto;margin:0 0 4px;border:1px solid var(--line);border-radius:var(--r-md)}
+table.icmal-tbl{width:100%;min-width:900px;border-collapse:collapse;font-size:12px}
+.icmal-tbl th,.icmal-tbl td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.icmal-tbl th{font-size:9.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+.icmal-tbl thead tr.sup-row th{border-bottom:1px solid var(--line);padding-bottom:6px;text-align:center}
+.icmal-tbl thead tr.sub-row th{padding-top:5px;font-size:9px}
+.icmal-tbl .col-kalem{text-align:left;min-width:210px;white-space:normal;vertical-align:middle}
+.icmal-tbl th.col-kalem{background:var(--bg)}
+.icmal-tbl th.sup-sel{background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)}
+.icmal-tbl td.sup-sel{background:rgba(var(--acc-rgb),.06)}
+.icmal-tbl td.best{background:rgba(var(--acc-rgb),.12);color:var(--acc-ink);font-weight:800}
+.icmal-tbl td.mut{color:var(--muted);text-align:center;font-weight:500;font-style:italic}
+.icmal-tbl .kalem-ad{display:block;font-weight:600;color:var(--ink);white-space:normal;line-height:1.3}
+.icmal-tbl .kalem-mik{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+.icmal-tbl .win-name{display:block;font-weight:600;font-size:9.5px;color:var(--acc-deep);margin-top:1px}
+.icmal-tbl tr.tot td{border-top:2px solid var(--line-2);border-bottom:none;font-weight:800;color:var(--ink);background:var(--bg)}
+.icmal-tbl tr.tot td.best{background:rgba(var(--acc-rgb),.18)}
+.icmal-tbl tr.tot td.sup-sel{background:rgba(var(--acc-rgb),.18);color:var(--acc-ink)}
+.icmal-tbl .part-note{display:block;font-size:9.5px;font-weight:600;color:var(--muted);margin-top:2px}
+
+/* ============ YENİ — canlı seçim aksiyonu (bu sayfaya özgü, .icmal-tbl'e ek) ============ */
+.icmal-tbl th.sup-th{position:relative}
+.sup-seç-btn{all:unset;display:block;margin:6px auto 0;font-family:inherit;font-size:9.5px;font-weight:800;
+  color:var(--acc-ink);background:var(--paper);border:1px solid var(--acc-ink);border-radius:var(--r-pill);
+  padding:3px 10px;cursor:pointer;transition:.15s var(--ease);white-space:nowrap}
+.sup-seç-btn:hover{background:var(--acc-ink);color:#fff}
+.sup-seç-btn.is-sel{background:var(--acc-ink);color:#fff;cursor:default}
+
+.sup-notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px}
+.sup-note-card{padding:13px 15px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--bg)}
+.sup-note-card.sel{border-color:rgba(var(--acc-rgb),.4);background:rgba(var(--acc-rgb),.06)}
+.sup-note-card h5{font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sup-note-card h5 i{color:var(--acc-ink);font-size:11px}
+.sup-note-card dl{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:11.5px;line-height:1.4}
+.sup-note-card dt{color:var(--muted);font-weight:700}
+.sup-note-card dd{color:var(--ink-2)}
+
+.tk-closed-banner{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:18px}
+.tk-closed-banner i{color:var(--acc-ink)}
+.tk-open-banner{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#7A5C06;background:var(--warn-tint);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:18px}
+.tk-open-banner i{color:var(--warn)}
+
+.tk-sonuc-card{display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 20px;border-radius:var(--r-md);background:rgba(var(--acc-rgb),.08);border:1px solid rgba(var(--acc-rgb),.3);margin-top:18px}
+.tk-sonuc-card.show{display:flex}
+.tk-sonuc-card b{font-size:14px;color:var(--ink)}
+.tk-sonuc-card span{font-size:12px;color:var(--muted);display:block;margin-top:2px}
+
+/* §17 aksiyon çubuğu */
+.gv-page-head .ph-actions{flex-wrap:wrap}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* belge ekleme — crm-operasyon-arac-arsiv.html deseni BİREBİR (§17 Dosya Ekle; bu
+   sayfada Belgeler bloğu YOKTU, yeni açıldı) */
+.doc-drop{border:1.5px dashed var(--line-2);border-radius:var(--r-md);padding:16px;text-align:center;transition:.18s var(--ease);margin-top:12px}
+.doc-drop.is-drag{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.06)}
+.doc-drop-btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--acc-ink);cursor:pointer}
+.doc-drop-btn i{font-size:16px}
+.doc-hint{display:block;margin-top:7px;font-size:11.5px;color:var(--muted);font-weight:500}
+.doc-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.doc-item{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
+.doc-thumb{width:42px;height:42px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:15px;color:#fff;background:var(--gv-night)}
+.doc-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.doc-info b{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{font-size:11.5px;color:var(--muted)}
+.doc-status{font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.doc-status.st-hazir{color:var(--ok)}
+.doc-acts{display:flex;align-items:center;justify-content:center;flex:none}
+
+.ig-row{padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.ig-row:last-child{border-bottom:none}
+
+@media print{ .gv-rail,.gv-menu,.gv-divider,.gv-top,.ph-actions,.gv-fpanel-ov{display:none!important} }
+</style>
+</head>
+<body data-sec="satinalma" data-screen="teklifler">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb" style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px">
+      <a href="crm-satinalma-teklifler.html" style="color:var(--acc-ink);font-weight:700">Tedarikçi Teklifleri</a>
+      <i class="fa-solid fa-chevron-right" style="font-size:9px;color:var(--line-2)"></i>
+      <span id="crumbNo">SAT-2026-018</span>
+    </div>
+
+    <!-- statik bake (D18-B2 idiyomu) — JS'in renderTable() ürettiği nihai HTML ile
+         byte-identical (?form=018 varsayilani); JS yuklendiginde ayni mount'lari ayni
+         icerikle ezer (idempotent) -->
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow" id="phEyebrow">Vadi Konakları · Satın Alma Formu #SAT-2026-018</div>
+        <h1 id="phTitle">Mekanik Tesisat Paketi — Teklif Karşılaştırma</h1>
+        <div class="ph-sub" id="phSub">9 kalem · 5 tedarikçi davet edildi · 5 teklif alındı</div>
+        <div class="gd-badges" id="gdBadge"></div>
+      </div>
+      <div class="ph-actions">
+        <button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-arsivle-detay><i class="fa-solid fa-box-archive"></i> Arşivle</button>
+        <a class="btn btn-ghost btn-sm" id="btnIcmalCikti" href="crm-satinalma-icmal-cikti.html?form=SAT-2026-018"><i class="fa-solid fa-print"></i> İcmal Çıktısı Al</a>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnPrintCikti" data-no-confirm onclick="window.print()" hidden><i class="fa-solid fa-print"></i> Çıktı Al</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-no-confirm onclick="document.getElementById('islemGecmisi').scrollIntoView({behavior:'smooth'})"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişi</button>
+      </div>
+    </div>
+
+    <div id="bannerMount"><div class="tk-closed-banner"><i class="fa-solid fa-circle-check"></i> Bu süreç kapandı — <b>Deta Demir Çelik</b> seçildi ve Genel Müdür onayına gönderildi. <a href="crm-satinalma-form-detay.html?form=018" style="margin-left:4px;font-weight:700;color:inherit;text-decoration:underline">Form detayına git</a></div></div>
+
+    <div class="gv-card">
+      <div class="gd-block">
+        <div class="tk-summary" id="tkSummary"><div class="tk-stat acc"><b>742.300</b><span>Genel toplam — seçili teklif</span></div><div class="tk-stat"><b>667.000</b><span>En iyi fiyat kombinasyonu</span></div><div class="tk-stat"><b>Deta Demir Çelik</b><span>Seçili tedarikçi</span></div><div class="tk-stat"><b>9</b><span>Kalem sayısı</span></div></div>
+        <div class="icmal-wrap"><table class="icmal-tbl" id="icmalTbl"><thead><tr class="sup-row"><th class="col-kalem" rowspan="2">Kalem</th><th colspan="3" class="sup-th">1 · Ege Hazır Beton</th><th colspan="3" class="sup-th">2 · Trakya Beton</th><th colspan="3" class="sup-th">3 · Marmara Yapı Market</th><th colspan="3" class="sup-th sup-sel">4 · Deta Demir Çelik<div style="font-size:9px;font-weight:800;color:var(--acc-ink);margin-top:4px">★ SEÇİLİ</div></th><th colspan="3" class="sup-th">5 · Nokta Hırdavat</th><th rowspan="2">En İyi Fiyat</th></tr><tr class="sub-row"><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th class="sup-sel">Malzeme</th><th class="sup-sel">İşçilik</th><th class="sup-sel">Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th></tr></thead><tbody><tr><td class="col-kalem"><span class="kalem-ad">PPR boru ve fitting takımı (Ø20–32 mm)</span><span class="kalem-mik">1 takım</span></td><td class="best">84.600</td><td class="best">17.800</td><td class="best">102.400</td><td class="">91.200</td><td class="">19.600</td><td class="">110.800</td><td class="">88.400</td><td class="">18.900</td><td class="">107.300</td><td class="sup-sel">89.500</td><td class="sup-sel">21.800</td><td class="sup-sel">111.300</td><td class="">93.800</td><td class="">20.400</td><td class="">114.200</td><td class="best">₺102.400<span class="win-name">Ege Hazır Beton</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Kolektör grubu (6 çıkışlı, pirinç)</span><span class="kalem-mik">4 adet</span></td><td class="best">12.600</td><td class="best">2.800</td><td class="best">15.400</td><td class="">14.800</td><td class="">3.200</td><td class="">18.000</td><td class="">13.900</td><td class="">3.000</td><td class="">16.900</td><td class="sup-sel">14.200</td><td class="sup-sel">3.600</td><td class="sup-sel">17.800</td><td class="">15.200</td><td class="">3.400</td><td class="">18.600</td><td class="best">₺15.400<span class="win-name">Ege Hazır Beton</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Sirkülasyon pompası (Wilo tipi, 3 hız)</span><span class="kalem-mik">2 adet</span></td><td class="">24.600</td><td class="">5.200</td><td class="">29.800</td><td class="">25.400</td><td class="">5.600</td><td class="">31.000</td><td class="mut" colspan="3">— teklif yok</td><td class="sup-sel">23.400</td><td class="sup-sel">5.500</td><td class="sup-sel">28.900</td><td class="best">21.200</td><td class="best">4.600</td><td class="best">25.800</td><td class="best">₺25.800<span class="win-name">Nokta Hırdavat</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Vana grubu (küresel vana + çek valf)</span><span class="kalem-mik">1 takım</span></td><td class="">33.600</td><td class="">7.200</td><td class="">40.800</td><td class="">35.900</td><td class="">7.600</td><td class="">43.500</td><td class="best">30.800</td><td class="best">6.400</td><td class="best">37.200</td><td class="sup-sel">36.000</td><td class="sup-sel">8.600</td><td class="sup-sel">44.600</td><td class="">37.200</td><td class="">8.100</td><td class="">45.300</td><td class="best">₺37.200<span class="win-name">Marmara Yapı Market</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Boru izolasyonu (kauçuk köpük, 6 mm)</span><span class="kalem-mik">340 m</span></td><td class="">29.800</td><td class="">9.900</td><td class="">39.700</td><td class="">31.200</td><td class="">10.400</td><td class="">41.600</td><td class="best">27.600</td><td class="best">9.200</td><td class="best">36.800</td><td class="sup-sel">32.900</td><td class="sup-sel">10.800</td><td class="sup-sel">43.700</td><td class="">33.600</td><td class="">11.100</td><td class="">44.700</td><td class="best">₺36.800<span class="win-name">Marmara Yapı Market</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Çelik konsol / askı takımı</span><span class="kalem-mik">220 adet</span></td><td class="best">30.800</td><td class="best">9.800</td><td class="best">40.600</td><td class="">33.400</td><td class="">10.600</td><td class="">44.000</td><td class="">32.200</td><td class="">10.200</td><td class="">42.400</td><td class="sup-sel">35.600</td><td class="sup-sel">11.600</td><td class="sup-sel">47.200</td><td class="">34.800</td><td class="">11.000</td><td class="">45.800</td><td class="best">₺40.600<span class="win-name">Ege Hazır Beton</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Panel radyatör (600×1200 mm, çift sıra)</span><span class="kalem-mik">48 adet</span></td><td class="">248.600</td><td class="">64.800</td><td class="">313.400</td><td class="">252.400</td><td class="">66.200</td><td class="">318.600</td><td class="mut" colspan="3">— teklif yok</td><td class="sup-sel">258.000</td><td class="sup-sel">67.500</td><td class="sup-sel">325.500</td><td class="best">236.800</td><td class="best">61.400</td><td class="best">298.200</td><td class="best">₺298.200<span class="win-name">Nokta Hırdavat</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Sayaç kutusu (daire kalorimetre)</span><span class="kalem-mik">34 adet</span></td><td class="">80.600</td><td class="">19.000</td><td class="">99.600</td><td class="">82.400</td><td class="">19.600</td><td class="">102.000</td><td class="">79.800</td><td class="">18.800</td><td class="">98.600</td><td class="sup-sel">84.600</td><td class="sup-sel">20.000</td><td class="sup-sel">104.600</td><td class="best">76.400</td><td class="best">18.200</td><td class="best">94.600</td><td class="best">₺94.600<span class="win-name">Nokta Hırdavat</span></td></tr><tr><td class="col-kalem"><span class="kalem-ad">Sarf malzeme paketi (teflon bant, conta, lehim)</span><span class="kalem-mik">1 paket</span></td><td class="">14.800</td><td class="">2.600</td><td class="">17.400</td><td class="">15.600</td><td class="">2.800</td><td class="">18.400</td><td class="">14.200</td><td class="">2.500</td><td class="">16.700</td><td class="sup-sel">15.900</td><td class="sup-sel">2.800</td><td class="sup-sel">18.700</td><td class="best">13.600</td><td class="best">2.400</td><td class="best">16.000</td><td class="best">₺16.000<span class="win-name">Nokta Hırdavat</span></td></tr><tr class="tot"><td class="col-kalem">GENEL TOPLAM</td><td colspan="3" class="">699.100</td><td colspan="3" class="">727.900</td><td colspan="3" class="">355.900</td><td colspan="3" class="sup-sel">742.300</td><td colspan="3" class="">703.200</td><td class="best">667.000</td></tr></tbody></table></div>
+        <p class="teklif-note" style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:12px;display:flex;align-items:flex-start;gap:8px" id="teklifNote"><i class="fa-solid fa-circle-info" style="color:var(--acc-ink);margin-top:2px;flex:none"></i><span>Bu döküm Gavia CRM satın alma teklif karşılaştırmasını içerir. Seçili tedarikçi (Deta Demir Çelik) hücreleri koyu vurguludur; en iyi fiyat kolonu satır bazında en düşük teklifi gösterir.</span></p>
+        <div class="sup-notes" id="supNotes"><div class="sup-note-card"><h5><i class="fa-solid fa-truck-field"></i> Ege Hazır Beton</h5><dl><dt>Not</dt><dd>Radyatör + sayaç kalemlerinde 6 hafta ek teslim istedi</dd><dt>Termin</dt><dd>8 hafta (tüm kalemler)</dd><dt>Ödeme</dt><dd>45 gün vade</dd></dl></div><div class="sup-note-card"><h5><i class="fa-solid fa-truck-field"></i> Trakya Beton</h5><dl><dt>Not</dt><dd>Tüm kalemlerde rakiplerin üzerinde fiyat</dd><dt>Termin</dt><dd>6 hafta</dd><dt>Ödeme</dt><dd>Peşin %30 + 30 gün</dd></dl></div><div class="sup-note-card"><h5><i class="fa-solid fa-truck-field"></i> Marmara Yapı Market</h5><dl><dt>Not</dt><dd>Pompa ve radyatörde teklif vermedi (stoğu dışı)</dd><dt>Termin</dt><dd>4 hafta (7 kalem)</dd><dt>Ödeme</dt><dd>30 gün vade</dd></dl></div><div class="sup-note-card sel"><h5><i class="fa-solid fa-circle-check"></i> Deta Demir Çelik <span class="gtag mint">Seçili</span></h5><dl><dt>Not</dt><dd>Tek tedarikçiden tam paket; montaj koordinasyonu + 2 yıl garanti dahil</dd><dt>Termin</dt><dd>5 hafta (tüm kalemler)</dd><dt>Ödeme</dt><dd>60 gün vade</dd></dl></div><div class="sup-note-card"><h5><i class="fa-solid fa-truck-field"></i> Nokta Hırdavat</h5><dl><dt>Not</dt><dd>En düşük birim fiyatlar; büyük hacimde stok garantisi sınırlı</dd><dt>Termin</dt><dd>7 hafta (stok gecikebilir)</dd><dt>Ödeme</dt><dd>Peşin</dd></dl></div></div>
+        <div class="tk-sonuc-card show" id="sonucCard">
+          <div><b id="sonucBaslik">Deta Demir Çelik seçildi — 742.300.</b><span id="sonucAlt">Bu form zaten Genel Müdür onayına gönderilmiş durumda.</span></div>
+          <a class="btn btn-acc btn-sm" id="btnSiparise" href="crm-satinalma-form-detay.html?form=018"><i class="fa-solid fa-arrow-right"></i> Siparişe Dönüştür / Onaya Gönder</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- §17 Dosya Ekle — bu sayfada Belgeler bloğu YOKTU, yeni açıldı -->
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-paperclip"></i> Belgeler</div></div>
+      <div class="gc-body">
+        <div class="doc-drop" id="docDrop"><input type="file" id="fBelgeDosya" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls" multiple hidden>
+          <label for="fBelgeDosya" class="doc-drop-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Dosya ekle</label>
+          <span class="doc-hint">PDF/JPG/PNG/XLSX ≤10 MB (demo sınırı) — sürükle bırak veya tıkla</span>
+        </div>
+        <div class="doc-list" id="docList"></div>
+      </div>
+    </div>
+
+    <div class="gv-card" id="islemGecmisi">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişi</div></div>
+      <div class="gc-body" id="islemGecmisiBody" style="display:flex;flex-direction:column;gap:0"></div>
+      <div style="padding:0 22px 18px"><a href="crm-ayarlar-log.html" style="font-size:12.5px;font-weight:700;color:var(--acc-ink)"><i class="fa-solid fa-arrow-up-right-from-square"></i> Tüm İşlem Kayıtları'nda gör</a></div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  function tl(n){ return n.toLocaleString('tr-TR'); }
+
+  /* ---- SAT-2026-018 — form-detay.html/icmal-cikti.html ile BİREBİR (kapalı süreç) ---- */
+  var SUP_018 = [
+    {key:'ege', no:1, ad:'Ege Hazır Beton'},
+    {key:'trakya', no:2, ad:'Trakya Beton'},
+    {key:'marmara', no:3, ad:'Marmara Yapı Market'},
+    {key:'deta', no:4, ad:'Deta Demir Çelik', sel:true},
+    {key:'nokta', no:5, ad:'Nokta Hırdavat'}
+  ];
+  var KALEM_018 = [
+    {ad:'PPR boru ve fitting takımı (Ø20–32 mm)', mik:'1 takım', ege:[84600,17800], trakya:[91200,19600], marmara:[88400,18900], deta:[89500,21800], nokta:[93800,20400]},
+    {ad:'Kolektör grubu (6 çıkışlı, pirinç)', mik:'4 adet', ege:[12600,2800], trakya:[14800,3200], marmara:[13900,3000], deta:[14200,3600], nokta:[15200,3400]},
+    {ad:'Sirkülasyon pompası (Wilo tipi, 3 hız)', mik:'2 adet', ege:[24600,5200], trakya:[25400,5600], marmara:null, deta:[23400,5500], nokta:[21200,4600]},
+    {ad:'Vana grubu (küresel vana + çek valf)', mik:'1 takım', ege:[33600,7200], trakya:[35900,7600], marmara:[30800,6400], deta:[36000,8600], nokta:[37200,8100]},
+    {ad:'Boru izolasyonu (kauçuk köpük, 6 mm)', mik:'340 m', ege:[29800,9900], trakya:[31200,10400], marmara:[27600,9200], deta:[32900,10800], nokta:[33600,11100]},
+    {ad:'Çelik konsol / askı takımı', mik:'220 adet', ege:[30800,9800], trakya:[33400,10600], marmara:[32200,10200], deta:[35600,11600], nokta:[34800,11000]},
+    {ad:'Panel radyatör (600×1200 mm, çift sıra)', mik:'48 adet', ege:[248600,64800], trakya:[252400,66200], marmara:null, deta:[258000,67500], nokta:[236800,61400]},
+    {ad:'Sayaç kutusu (daire kalorimetre)', mik:'34 adet', ege:[80600,19000], trakya:[82400,19600], marmara:[79800,18800], deta:[84600,20000], nokta:[76400,18200]},
+    {ad:'Sarf malzeme paketi (teflon bant, conta, lehim)', mik:'1 paket', ege:[14800,2600], trakya:[15600,2800], marmara:[14200,2500], deta:[15900,2800], nokta:[13600,2400]}
+  ];
+  var NOT_018 = {
+    ege:{not_:'Radyatör + sayaç kalemlerinde 6 hafta ek teslim istedi', termin:'8 hafta (tüm kalemler)', odeme:'45 gün vade'},
+    trakya:{not_:'Tüm kalemlerde rakiplerin üzerinde fiyat', termin:'6 hafta', odeme:'Peşin %30 + 30 gün'},
+    marmara:{not_:'Pompa ve radyatörde teklif vermedi (stoğu dışı)', termin:'4 hafta (7 kalem)', odeme:'30 gün vade'},
+    deta:{not_:'Tek tedarikçiden tam paket; montaj koordinasyonu + 2 yıl garanti dahil', termin:'5 hafta (tüm kalemler)', odeme:'60 gün vade'},
+    nokta:{not_:'En düşük birim fiyatlar; büyük hacimde stok garantisi sınırlı', termin:'7 hafta (stok gecikebilir)', odeme:'Peşin'}
+  };
+
+  /* ---- SAT-2026-014 — crm-satinalma-teklifler.html ile BİREBİR (açık süreç) ---- */
+  var SUP_014 = [
+    {key:'ege', no:1, ad:'Ege Hazır Beton'},
+    {key:'trakya', no:2, ad:'Trakya Beton Santrali'},
+    {key:'marmara', no:3, ad:'Marmara Yapı Market', vermedi:true},
+    {key:'bogazici', no:4, ad:'Boğaziçi Yapı Market', bekliyor:true},
+    {key:'anadolu', no:5, ad:'Anadolu Hırdavat', bekliyor:true}
+  ];
+  var KALEM_014 = [
+    {ad:'Hazır beton C30', mik:'30 m³', ege:[142500,0], trakya:[158000,0]}
+  ];
+  var NOT_014 = {
+    ege:{not_:'—', termin:'2 gün içinde teslim', odeme:'Belirtilmedi'},
+    trakya:{not_:'—', termin:'3 gün içinde teslim', odeme:'Belirtilmedi'}
+  };
+
+  var FORMS = {
+    '018':{ no:'SAT-2026-018', title:'Mekanik Tesisat Paketi — Teklif Karşılaştırma', santiye:'Vadi Konakları',
+      sup:SUP_018, kalem:KALEM_018, notlar:NOT_018, closed:true, secili:'deta',
+      not_:'Bu döküm Gavia CRM satın alma teklif karşılaştırmasını içerir. Seçili tedarikçi (Deta Demir Çelik) hücreleri koyu vurguludur; en iyi fiyat kolonu satır bazında en düşük teklifi gösterir.' },
+    '014':{ no:'SAT-2026-014', title:'Hazır Beton C30 — Teklif Karşılaştırma', santiye:'Vadi Konakları',
+      sup:SUP_014, kalem:KALEM_014, notlar:NOT_014, closed:false, secili:null,
+      not_:'2 tedarikçi yanıtladı, 2 tedarikçi hâlâ bekleniyor. Bir teklifi seçmek diğer açık tekliflerin yanıtını beklemenizi engellemez.' }
+  };
+
+  var q = new URLSearchParams(location.search);
+  var key = q.get('form');
+  key = (key || '018').replace(/^SAT-2026-/i, '').replace(/^0*/, '').padStart(3, '0');
+  if(!FORMS[key]) key = '018';
+  var F = FORMS[key];
+  var selKey = F.secili; // seçim state — açık süreçte kullanıcı değiştirebilir
+
+  function renderTable(){
+    document.getElementById('crumbNo').textContent = F.no;
+    document.getElementById('phEyebrow').textContent = F.santiye + ' · Satın Alma Formu #' + F.no;
+    document.getElementById('phTitle').textContent = F.title;
+    document.title = F.no + ' — Teklif Karşılaştırma — Gavia CRM';
+    document.getElementById('btnIcmalCikti').href = 'crm-satinalma-icmal-cikti.html' + (key === '018' ? '?form=SAT-2026-018' : '');
+    document.getElementById('btnIcmalCikti').style.display = key === '018' ? '' : 'none';
+    document.getElementById('btnPrintCikti').hidden = key === '018';   /* dedike icmal-cikti sayfası yalnız 018 verisini gösterir — diğer formlarda gerçek yazdırma */
+
+    var yanitlayan = F.sup.filter(function(s){ return !s.bekliyor && !s.vermedi; }).length;
+    document.getElementById('phSub').textContent = F.kalem.length + ' kalem · ' + F.sup.length + ' tedarikçi davet edildi · ' + yanitlayan + ' teklif alındı';
+
+    document.getElementById('bannerMount').innerHTML = F.closed
+      ? '<div class="tk-closed-banner"><i class="fa-solid fa-circle-check"></i> Bu süreç kapandı — <b>' + F.sup.filter(function(s){return s.key===selKey;})[0].ad + '</b> seçildi ve Genel Müdür onayına gönderildi. <a href="crm-satinalma-form-detay.html?form=' + key + '" style="margin-left:4px;font-weight:700;color:inherit;text-decoration:underline">Form detayına git</a></div>'
+      : '<div class="tk-open-banner"><i class="fa-solid fa-triangle-exclamation"></i> Bu süreç hâlâ açık — henüz bir tedarikçi seçilmedi. Tabloda bir tedarikçinin başlığındaki "Seç" düğmesine basarak seçim yapabilirsiniz.</div>';
+
+    // özet istatistikler
+    var toplamlar = {}; F.sup.forEach(function(s){ toplamlar[s.key] = 0; });
+    var bestTot = 0;
+    F.kalem.forEach(function(K){
+      var minKey = null, minVal = Infinity;
+      F.sup.forEach(function(s){ var v = K[s.key]; if(v){ var t=v[0]+v[1]; if(t<minVal){minVal=t;minKey=s.key;} } });
+      bestTot += minVal;
+      F.sup.forEach(function(s){ var v = K[s.key]; if(v) toplamlar[s.key] += v[0]+v[1]; });
+    });
+    var seciliTot = selKey ? toplamlar[selKey] : null;
+    document.getElementById('tkSummary').innerHTML =
+      (seciliTot ? '<div class="tk-stat acc"><b>' + tl(seciliTot) + '</b><span>Genel toplam — seçili teklif</span></div>' : '<div class="tk-stat"><b>—</b><span>Henüz seçim yapılmadı</span></div>')
+      + '<div class="tk-stat"><b>' + tl(bestTot) + '</b><span>En iyi fiyat kombinasyonu</span></div>'
+      + '<div class="tk-stat"><b>' + (selKey ? F.sup.filter(function(s){return s.key===selKey;})[0].ad : F.sup.filter(function(s){return !s.bekliyor && !s.vermedi;}).length + ' teklif') + '</b><span>' + (selKey ? 'Seçili tedarikçi' : 'Karşılaştırılan teklif') + '</span></div>'
+      + '<div class="tk-stat"><b>' + F.kalem.length + '</b><span>Kalem sayısı</span></div>';
+
+    // thead
+    var h = '<thead><tr class="sup-row"><th class="col-kalem" rowspan="2">Kalem</th>';
+    F.sup.forEach(function(s){
+      var isSel = s.key === selKey;
+      h += '<th colspan="3" class="sup-th' + (isSel ? ' sup-sel' : '') + '">' + s.no + ' · ' + s.ad
+        + (s.bekliyor ? '<div style="font-size:9px;font-weight:700;color:var(--muted);margin-top:4px">Bekleniyor</div>'
+          : s.vermedi ? '<div style="font-size:9px;font-weight:700;color:var(--danger);margin-top:4px">Teklif vermedi</div>'
+          : !F.closed ? '<button type="button" class="sup-seç-btn' + (isSel ? ' is-sel' : '') + '" data-select="' + s.key + '">' + (isSel ? '✓ Seçili' : 'Bu Teklifi Seç') + '</button>'
+          : (isSel ? '<div style="font-size:9px;font-weight:800;color:var(--acc-ink);margin-top:4px">★ SEÇİLİ</div>' : ''))
+        + '</th>';
+    });
+    h += '<th rowspan="2">En İyi Fiyat</th></tr><tr class="sub-row">';
+    F.sup.forEach(function(s){ var c = s.key===selKey ? ' class="sup-sel"' : ''; h += '<th'+c+'>Malzeme</th><th'+c+'>İşçilik</th><th'+c+'>Toplam</th>'; });
+    h += '</tr></thead>';
+
+    // tbody
+    var rows = '<tbody>';
+    F.kalem.forEach(function(K){
+      var minKey=null, minVal=Infinity;
+      F.sup.forEach(function(s){ var v=K[s.key]; if(v){ var t=v[0]+v[1]; if(t<minVal){minVal=t;minKey=s.key;} } });
+      rows += '<tr><td class="col-kalem"><span class="kalem-ad">' + K.ad + '</span><span class="kalem-mik">' + K.mik + '</span></td>';
+      F.sup.forEach(function(s){
+        var v = K[s.key];
+        var selCls = s.key===selKey ? ' sup-sel' : '';
+        var bestCls = s.key===minKey ? ' best' : '';
+        if(!v) rows += '<td class="mut" colspan="3">— teklif yok</td>';
+        else rows += '<td class="'+(selCls+bestCls).trim()+'">'+tl(v[0])+'</td><td class="'+(selCls+bestCls).trim()+'">'+tl(v[1])+'</td><td class="'+(selCls+bestCls).trim()+'">'+tl(v[0]+v[1])+'</td>';
+      });
+      var bv = K[minKey];
+      rows += '<td class="best">₺' + tl(bv[0]+bv[1]) + '<span class="win-name">' + F.sup.filter(function(s){return s.key===minKey;})[0].ad + '</span></td></tr>';
+    });
+    var tot = {}; F.sup.forEach(function(s){ tot[s.key]=0; });
+    F.kalem.forEach(function(K){ F.sup.forEach(function(s){ var v=K[s.key]; if(v) tot[s.key]+=v[0]+v[1]; }); });
+    rows += '<tr class="tot"><td class="col-kalem">GENEL TOPLAM</td>';
+    F.sup.forEach(function(s){ var selCls = s.key===selKey?' sup-sel':''; rows += '<td colspan="3" class="'+selCls.trim()+'">'+(tot[s.key] ? tl(tot[s.key]) : '—')+'</td>'; });
+    rows += '<td class="best">' + tl(bestTot) + '</td></tr></tbody>';
+
+    document.getElementById('icmalTbl').innerHTML = h + rows;
+    document.getElementById('teklifNote').innerHTML = '<i class="fa-solid fa-circle-info" style="color:var(--acc-ink);margin-top:2px;flex:none"></i><span>' + F.not_ + '</span>';
+
+    // tedarikçi not kartları — yalnız yanıtlayanlar
+    var nh = '';
+    F.sup.filter(function(s){ return !s.bekliyor && !s.vermedi; }).forEach(function(s){
+      var N = F.notlar[s.key] || {};
+      nh += '<div class="sup-note-card' + (s.key===selKey ? ' sel' : '') + '"><h5>' + (s.key===selKey ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-truck-field"></i>') + ' ' + s.ad + (s.key===selKey ? ' <span class="gtag mint">Seçili</span>' : '') + '</h5>'
+        + '<dl><dt>Not</dt><dd>' + (N.not_ || '—') + '</dd><dt>Termin</dt><dd>' + (N.termin || '—') + '</dd><dt>Ödeme</dt><dd>' + (N.odeme || '—') + '</dd></dl></div>';
+    });
+    document.getElementById('supNotes').innerHTML = nh;
+
+    // sonuç kartı — yalnız seçim varsa
+    var sonucCard = document.getElementById('sonucCard');
+    if(selKey){
+      sonucCard.classList.add('show');
+      var secilenAd = F.sup.filter(function(s){return s.key===selKey;})[0].ad;
+      document.getElementById('sonucBaslik').textContent = secilenAd + ' seçildi — ' + tl(seciliTot) + '.';
+      document.getElementById('sonucAlt').textContent = F.closed ? 'Bu form zaten Genel Müdür onayına gönderilmiş durumda.' : 'Devam etmek için siparişe dönüştürün veya onaya gönderin.';
+      document.getElementById('btnSiparise').href = 'crm-satinalma-form-detay.html?form=' + key;
+    } else {
+      sonucCard.classList.remove('show');
+    }
+  }
+
+  /* ---- §17 İŞLEM GEÇMİŞİ — bu sayfada onay zinciri yok; F.closed/F.secili ve kaynak
+     verilerden (form-detay.html/teklifler.html ile BİREBİR tarihler) 1-2 gerçek olay
+     seed edilir, uydurma isim/tarih eklenmedi ---- */
+  var ISLEM_GECMISI = [{kim:'Baran Yıldız', ne:'Teklif toplama sürecini başlattı', tarih: key === '018' ? '20 Haziran 2026' : '2 Temmuz 2026', detay: F.kalem.length + ' kalem için ' + F.sup.length + ' tedarikçi davet edildi.'}];
+  if(F.closed) ISLEM_GECMISI.push({kim:'Baran Yıldız', ne: F.sup.filter(function(s){return s.key===F.secili;})[0].ad + ' seçildi, GM onayına gönderildi', tarih:'1 Temmuz 2026'});
+  function gvRenderHistory(){
+    var body = document.getElementById('islemGecmisiBody'); if(!body) return;
+    body.innerHTML = ISLEM_GECMISI.map(function(h){
+      return '<div class="ig-row"><b style="color:var(--ink)">' + h.kim + '</b> <span style="color:var(--ink-2)">' + h.ne + '</span>'
+        + (h.detay ? '<div style="color:var(--muted);margin-top:3px">' + h.detay + '</div>' : '')
+        + '<div style="color:var(--muted);margin-top:3px;font-size:11.5px">' + h.tarih + '</div></div>';
+    }).join('');
+  }
+  function gvAddHistory(ne, detay){
+    var me = (document.getElementById('gvName') || {}).textContent || 'Siz';
+    ISLEM_GECMISI.push({kim: me, ne: ne, tarih: 'şimdi', detay: detay});
+    gvRenderHistory();
+  }
+  gvRenderHistory();
+
+  /* ---- §17 ARŞİVLE — bu sayfa kendi kaydı olmayan bir kıyaslama anıdır (madde 44,
+     bu yüzden Kopyala/Revizyon Ekle/Pasife Al YOK) ama arşiv bayrağı TÜM detay
+     sayfalarında var; data-no-confirm ZORUNLU (kararlar.md madde 18) ---- */
+  var arsivBtn = document.querySelector('[data-arsivle-detay]');
+  if(arsivBtn) arsivBtn.addEventListener('click', function(){
+    gvConfirm({
+      danger:true, icon:'fa-box-archive', ok:'Arşivle', cancel:'Vazgeç',
+      title: F.no + ' teklif karşılaştırması arşivlensin mi?',
+      message:'Kayıt kalıcı silinmez; arşivlenir, ilgili liste sayfasında varsayılan görünümde artık yer almaz. Bu işlem F.closed durumunu DEĞİŞTİRMEZ — arşiv ayrı bir bayraktır. İşlem kaydına yazılır.',
+      onConfirm:function(){
+        document.getElementById('gdBadge').insertAdjacentHTML('beforeend', '<span class="gtag"><i class="fa-solid fa-box-archive"></i> Arşivlendi</span>');
+        gvAddHistory('Arşivlendi', 'Kayıt arşive alındı — listede varsayılan görünümde artık yer almıyor.');
+        gvToast('Kayıt arşivlendi.', {type:'danger'});
+      }
+    });
+  });
+
+  /* ---- §17 DOSYA EKLE — gerçek File API akışı, crm-operasyon-arac-arsiv.html'in
+     addFile()/docDrop deseni BİREBİR uyarlandı ---- */
+  var docList = document.getElementById('docList');
+  var fBelgeDosya = document.getElementById('fBelgeDosya');
+  var docDrop = document.getElementById('docDrop');
+  function humanSize(bytes){ if(bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB'; return Math.max(1, Math.round(bytes/1024)) + ' KB'; }
+  function docIcon(name){ if(/\.pdf$/i.test(name)) return 'fa-file-pdf'; if(/\.(jpg|jpeg|png)$/i.test(name)) return 'fa-file-image'; if(/\.(xlsx|xls)$/i.test(name)) return 'fa-file-excel'; return 'fa-file-lines'; }
+  function addFile(file){
+    if(!/\.(pdf|jpe?g|png|xlsx|xls)$/i.test(file.name)){ gvToast(file.name + ' — desteklenmeyen dosya türü.', {type:'danger'}); return; }
+    if(file.size > 10*1024*1024){ gvToast(file.name + ' — 10 MB sınırını aşıyor (demo kısıtı).', {type:'danger'}); return; }
+    var el = document.createElement('div'); el.className = 'doc-item';
+    el.innerHTML = '<div class="doc-thumb"><i class="fa-solid ' + docIcon(file.name) + '"></i></div>'
+      + '<div class="doc-info"><b>' + file.name + '</b><span class="doc-meta">' + humanSize(file.size) + '</span><span class="doc-status st-hazir"><i class="fa-solid fa-circle-check"></i> Yüklendi</span></div>'
+      + '<div class="doc-acts"><button type="button" class="ia-btn danger" data-no-confirm data-tip="Kaldır" aria-label="Kaldır"><i class="fa-solid fa-trash"></i></button></div>';
+    docList.appendChild(el);
+    el.querySelector('[data-tip="Kaldır"]').addEventListener('click', function(){ el.remove(); });
+    gvAddHistory('Belge eklendi', file.name + ' yüklendi.');
+    gvToast(file.name + ' yüklendi.');
+  }
+  if(fBelgeDosya){
+    fBelgeDosya.addEventListener('change', function(){ Array.prototype.slice.call(fBelgeDosya.files).forEach(addFile); fBelgeDosya.value = ''; });
+    ['dragenter','dragover'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.add('is-drag'); }); });
+    ['dragleave','drop'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.remove('is-drag'); }); });
+    docDrop.addEventListener('drop', function(e){ var files = e.dataTransfer && e.dataTransfer.files; if(files && files.length) Array.prototype.forEach.call(files, addFile); });
+  }
+
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-select]'); if(!btn || F.closed) return;
+    var newKey = btn.getAttribute('data-select');
+    if(newKey === selKey) return;
+    gvConfirm({
+      icon:'fa-scale-balanced',
+      title:'Bu teklif seçilsin mi?',
+      message: F.sup.filter(function(s){return s.key===newKey;})[0].ad + ' teklifi seçilecek. Diğer tedarikçilerin teklifleri karşılaştırma amacıyla kayıtta kalır.',
+      ok:'Seç', cancel:'Vazgeç',
+      onConfirm:function(){
+        selKey = newKey;
+        renderTable();
+        gvAddHistory(F.sup.filter(function(s){return s.key===newKey;})[0].ad + ' seçildi', 'Diğer tedarikçilerin teklifleri karşılaştırma amacıyla kayıtta kaldı.');
+        gvToast(F.sup.filter(function(s){return s.key===newKey;})[0].ad + ' seçildi.', {icon:'fa-check'});
+      }
+    });
+  });
+
+  renderTable();
+})();
+</script>
+</body>
+</html>

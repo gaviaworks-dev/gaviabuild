@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Şantiye — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Yeni Şantiye Formu ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+
+.addr-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.addr-row{grid-template-columns:1fr}}
+
+.flow-step{display:flex;align-items:center;gap:11px;padding:10px 0}
+.flow-step .fs-ico{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.flow-step b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
+.flow-step span{font-size:11.5px;color:var(--muted)}
+.flow-arrow{padding-left:15px;color:var(--line-2);font-size:11px}
+
+.tip-group{display:flex;gap:8px;flex-wrap:wrap}
+.tip-opt{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
+.tip-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.tip-opt.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+
+.gf-hint-auto{display:flex;align-items:center;gap:6px;color:var(--acc-ink)}
+.gf-hint-auto i{font-size:11px}
+
+/* §15 — Şantiye Türü alanı: tip-group ile AYNI bileşen dili (nitelik seçici ile
+   karıştırılmaması için ayrı bir gfield'de, "zorunlu alan" ayarı kanıtlanabilir bir
+   toggle ile — form ayarı olarak zorunlu/opsiyonel belirlenebilir kabul kriteri). */
+.field-req-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.field-req-row label{margin-bottom:0}
+.req-toggle{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.req-toggle input{position:absolute;opacity:0;width:1px;height:1px}
+.req-toggle .rt-box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line-2);display:grid;place-items:center;flex:none;transition:.15s var(--ease)}
+.req-toggle .rt-box i{font-size:9.5px;color:#fff;opacity:0}
+.req-toggle input:checked + .rt-box{background:var(--acc-ink);border-color:var(--acc-ink)}
+.req-toggle input:checked + .rt-box i{opacity:1}
+.gfield label .req-star{color:var(--danger);margin-left:2px}
+</style>
+</head>
+<body data-sec="santiye" data-screen="liste">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-santiye.html">Şantiyeler</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbNow">Yeni Şantiye</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Saha</div>
+        <h1 id="pageTitle">Yeni Şantiye</h1>
+        <div class="ph-sub" id="pageSub">Şantiye kaydını açın; ekip ataması ve iş programı sonraki adımda tamamlanır.</div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-helmet-safety"></i> Şantiye Bilgileri</div></div>
+        <div class="gc-body">
+          <form class="gform" id="santiyeForm">
+            <div class="gfield full">
+              <label for="fAd">Şantiye Adı</label>
+              <input type="text" id="fAd" placeholder="örn. Vadi Konakları 3. Etap">
+            </div>
+            <div class="gfield full">
+              <label>Proje Niteliği</label>
+              <div class="tip-group" id="tipGroup">
+                <label class="tip-opt is-on" data-t="konut"><input type="radio" name="tip" value="konut" checked> Konut</label>
+                <label class="tip-opt" data-t="ticari"><input type="radio" name="tip" value="ticari"> Ticari</label>
+                <label class="tip-opt" data-t="depo"><input type="radio" name="tip" value="depo"> Depo + Atölye</label>
+                <label class="tip-opt" data-t="ofis"><input type="radio" name="tip" value="ofis"> Ofis</label>
+              </div>
+              <span class="gf-hint">Fiziksel proje niteliği — aşağıdaki Şantiye Türü'nden (ticari model) bağımsızdır.</span>
+            </div>
+            <div class="gfield full">
+              <div class="field-req-row">
+                <label for="fTur">Şantiye Türü<span class="req-star" id="turReqStar">*</span></label>
+                <label class="req-toggle" data-tip="Bu alanı kayıt formunda zorunlu tutup tutmayacağınızı belirler">
+                  <input type="checkbox" id="turRequiredToggle" checked>
+                  <span class="rt-box"><i class="fa-solid fa-check"></i></span>
+                  Zorunlu alan
+                </label>
+              </div>
+              <select id="fTur">
+                <option value="yapsat">Yapsat</option>
+                <option value="kamu">Kamu</option>
+                <option value="taahhut">Taahhüt</option>
+              </select>
+              <span class="gf-hint">Ticari model sınıflandırması — hakediş, raporlama ve şantiye listesi filtresinde kullanılır.</span>
+            </div>
+            <div class="gfield full">
+              <label>Adres</label>
+              <div class="addr-row">
+                <input type="text" id="fIl" placeholder="İl — örn. İstanbul">
+                <input type="text" id="fIlce" placeholder="İlçe — örn. Çekmeköy">
+              </div>
+            </div>
+            <div class="gfield">
+              <label for="fSef">Şantiye Şefi</label>
+              <select id="fSef">
+                <option value="">Atanmadı — sonra belirlenecek</option>
+                <option>Hasan Demirci</option>
+                <option>Aylin Koç</option>
+                <option>Ömer Taşkın</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fMusteri">Müşteri / Kurum</label>
+              <select id="fMusteri">
+                <option value="">Belirtilmedi</option>
+                <option>Körfez GYO</option>
+                <option>Aliağa Liman İşletmeleri</option>
+                <option>Sapanca Belediyesi</option>
+                <option value="yeni">Yeni müşteri…</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fBasla">Başlangıç Tarihi</label>
+              <input type="date" id="fBasla" value="2026-09-01">
+            </div>
+            <div class="gfield">
+              <label for="fHedef">Sözleşmeye Göre İş Bitiş Tarihi</label>
+              <input type="date" id="fHedef" value="2027-12-31">
+              <span class="gf-hint">Hedef teslim tarihi başlangıçta bu tarihe eşittir; süre uzatımı onaylanırsa Şantiye Kartı'nda ayrıca güncellenir.</span>
+            </div>
+            <div class="gfield full">
+              <label for="fSozlesme">Sözleşme Bağlantısı <span class="gf-hint">(isteğe bağlı)</span></label>
+              <select id="fSozlesme">
+                <option value="">Seçilmedi — sonra eklenecek</option>
+                <option>SZL-2026-K01 — Körfez GYO</option>
+                <option>SZL-2026-K02 — Aliağa Liman İşletmeleri</option>
+                <option>SZL-2026-K03 — Sapanca Belediyesi</option>
+                <option>SZL-2025-T05 — Demir-Beton İnş. Ltd.</option>
+                <option>SZL-2025-T06 — Yalıtım Kardeşler</option>
+                <option>SZL-2025-T07 — ElektroMek Taahhüt</option>
+              </select>
+              <span class="gf-hint">Mevcut bir sözleşmeyle ilişkilendirin veya boş bırakıp Finans &gt; Sözleşmeler'den sonra ekleyin.</span>
+            </div>
+            <div class="gfield full">
+              <label for="fNot">Not <span class="gf-hint">(isteğe bağlı)</span></label>
+              <textarea id="fNot" rows="3" placeholder="Ekibe iletmek istediğiniz açıklama…"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="form-foot">
+          <a class="btn btn-ghost btn-sm" href="crm-santiye.html">Vazgeç</a>
+          <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="santiyeSubmit"><i class="fa-solid fa-plus"></i> Şantiyeyi Oluştur</button>
+        </div>
+      </div>
+
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-diagram-project"></i> Sonraki Adımlar</div></div>
+          <div class="gc-body">
+            <div class="flow-step"><div class="fs-ico"><i class="fa-solid fa-plus"></i></div><div><b>Kayıt açılır</b><span>Şantiye "Planlama" durumunda listeye eklenir</span></div></div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+            <div class="flow-step"><div class="fs-ico"><i class="fa-solid fa-user-tie"></i></div><div><b>Ekip atanır</b><span>Şantiye şefi ve saha kadrosu belirlenir</span></div></div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+            <div class="flow-step"><div class="fs-ico"><i class="fa-solid fa-calendar-days"></i></div><div><b>İş programı girilir</b><span>Kilometre taşları Şantiye Kartı'nda oluşturulur</span></div></div>
+          </div>
+          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Bu bir prototip formudur; kayıt gerçek bir veritabanına yazılmaz.</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* oluşturma yetkisi yönetim rollerinde — crm-santiye.html'deki admin-only
+     guard ile aynı üç rol (superadmin/sahip/yonetim); yetkisiz roller doğrudan
+     linkle gelirse de form salt-okunur uyarıyla karşılanır. */
+  var YETKILI = ['superadmin', 'sahip', 'yonetim'];
+  if(YETKILI.indexOf(GV.role) === -1){
+    gvToast('Şantiye oluşturma yetkiniz yok — bu ekran yönetim rollerine açıktır.', {type:'danger'});
+    document.getElementById('santiyeSubmit').disabled = true;
+  }
+
+  /* ============ §17 — Düzenle / Kopyala modu (?mod=duzenle|kopya&santiye=<key>).
+     Kaynak veri crm-santiye.html liste satırlarıyla + crm-santiye-detay.html SITES
+     hero'suyla BİREBİR (kanonik 9 şantiye — 5 aktif/planlama/tamamlanan + 4 kapalı).
+     Kanonik sayılar (51/30/12, %68/%41/%86) bu formda DEĞİŞTİRİLMEZ; yalnız mevcut
+     kaydın alanları düzenleme/kopyalama için forma taşınır. ============ */
+  var SITE_EDIT_DATA = {
+    vadi:  {ad:'Vadi Konakları',              tip:'konut',  tur:'yapsat',  il:'İstanbul', ilce:'Çekmeköy', sef:'Hasan Demirci', musteri:'Körfez GYO',              hedef:'2026-09-30'},
+    liman: {ad:'Liman Lojistik Merkezi',      tip:'ticari', tur:'taahhut', il:'İzmir',    ilce:'Aliağa',    sef:'Aylin Koç',     musteri:'Aliağa Liman İşletmeleri', hedef:'2026-06-30'},
+    merkez:{ad:'Merkez Şantiye',              tip:'depo',   tur:'yapsat',  il:'Kocaeli',  ilce:'Gebze',     sef:'Ömer Taşkın',   musteri:'',                        hedef:'2026-08-31'},
+    gol:   {ad:'Göl Evleri 2. Etap',          tip:'konut',  tur:'yapsat',  il:'Sakarya',  ilce:'Sapanca',   sef:'',              musteri:'Sapanca Belediyesi',      hedef:''},
+    kule:  {ad:'Kule Ofis B Blok',            tip:'ofis',   tur:'taahhut', il:'İstanbul', ilce:'Ataşehir',  sef:'Ömer Taşkın',   musteri:'Körfez GYO',              hedef:''},
+    cskp:  {ad:'Çınar Sokak Karma Proje',     tip:'ticari', tur:'yapsat',  il:'İstanbul', ilce:'Ümraniye',  sef:'',              musteri:'',                        hedef:'', baslangic:'2023-01-10'},
+    btk:   {ad:'Bahçelievler Toplu Konut',    tip:'konut',  tur:'kamu',    il:'İstanbul', ilce:'Bahçelievler', sef:'',           musteri:'',                        hedef:'', baslangic:'2024-06-05'},
+    fmr:   {ad:'Fatih Mahallesi Restorasyon', tip:'ticari', tur:'kamu',    il:'İstanbul', ilce:'Fatih',     sef:'',              musteri:'',                        hedef:'2019-11-14', baslangic:'2018-03-02'},
+    ksr:   {ad:'Kartal Sahil Rezidans',       tip:'konut',  tur:'taahhut', il:'İstanbul', ilce:'Kartal',    sef:'',              musteri:'',                        hedef:'', baslangic:'2025-09-20'}
+  };
+  var q = new URLSearchParams(location.search);
+  var mod = q.get('mod');
+  var siteKey = q.get('santiye');
+  var isEdit = mod === 'duzenle' && siteKey && SITE_EDIT_DATA[siteKey];
+  var isCopy = mod === 'kopya' && siteKey && SITE_EDIT_DATA[siteKey];
+  if(isEdit || isCopy){
+    var sd = SITE_EDIT_DATA[siteKey];
+    document.getElementById('fAd').value = isCopy ? (sd.ad + ' (Kopya)') : sd.ad;
+    document.querySelectorAll('.tip-opt').forEach(function(o){ o.classList.toggle('is-on', o.getAttribute('data-t') === sd.tip); o.querySelector('input').checked = o.getAttribute('data-t') === sd.tip; });
+    document.getElementById('fTur').value = sd.tur;
+    document.getElementById('fIl').value = sd.il;
+    document.getElementById('fIlce').value = sd.ilce;
+    var fSefSel = document.getElementById('fSef');
+    if(sd.sef){ Array.prototype.forEach.call(fSefSel.options, function(o){ if(o.textContent === sd.sef) fSefSel.value = o.value; }); }
+    var fMusteriSel = document.getElementById('fMusteri');
+    if(sd.musteri){ Array.prototype.forEach.call(fMusteriSel.options, function(o){ if(o.textContent === sd.musteri) fMusteriSel.value = o.value; }); }
+    if(sd.baslangic) document.getElementById('fBasla').value = sd.baslangic;
+    if(sd.hedef) document.getElementById('fHedef').value = sd.hedef;
+    if(isEdit){
+      document.getElementById('crumbNow').textContent = sd.ad + ' — Düzenle';
+      document.getElementById('pageTitle').textContent = 'Şantiyeyi Düzenle — ' + sd.ad;
+      document.getElementById('pageSub').textContent = 'Mevcut şantiye kaydı üzerinde değişiklik yapın; değişiklikler işlem kayıtlarına yazılır. Kanonik personel/ilerleme verisi bu formdan etkilenmez.';
+      document.getElementById('santiyeSubmit').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet';
+    } else {
+      document.getElementById('crumbNow').textContent = sd.ad + ' — Kopyala';
+      document.getElementById('pageTitle').textContent = 'Şantiyeyi Kopyala — ' + sd.ad;
+      document.getElementById('pageSub').textContent = 'Seçili şantiyenin bilgilerinden yeni bir taslak şantiye kaydı oluşturun; personel/ilerleme sıfırdan başlar, yeni bir ad girin.';
+      document.getElementById('santiyeSubmit').innerHTML = '<i class="fa-solid fa-copy"></i> Kopyala ve Oluştur';
+    }
+  }
+
+  document.getElementById('tipGroup').addEventListener('click', function(e){
+    var opt = e.target.closest('.tip-opt'); if(!opt) return;
+    document.querySelectorAll('.tip-opt').forEach(function(o){ o.classList.remove('is-on'); });
+    opt.classList.add('is-on');
+  });
+
+  /* §15 kabul kriteri — "zorunlu veya opsiyonel olarak belirlenebilir": bu toggle
+     admin'in Şantiye Türü alanını formda zorunlu tutup tutmayacağını canlı belirler. */
+  var fTur = document.getElementById('fTur');
+  var turReqToggle = document.getElementById('turRequiredToggle');
+  var turReqStar = document.getElementById('turReqStar');
+  function turIsRequired(){ return turReqToggle.checked; }
+  turReqToggle.addEventListener('change', function(){
+    turReqStar.hidden = !turIsRequired();
+    fTur.closest('.gfield').classList.toggle('is-optional', !turIsRequired());
+  });
+
+  document.getElementById('santiyeSubmit').addEventListener('click', function(){
+    if(this.disabled) return;
+    var ad = document.getElementById('fAd').value.trim();
+    if(!ad){ gvToast('Şantiye adını girin.', {type:'danger'}); return; }
+    if(turIsRequired() && !fTur.value){ gvToast('Şantiye türünü seçin.', {type:'danger'}); fTur.focus(); return; }
+    var turLbl = fTur.options[fTur.selectedIndex].textContent;
+    if(isEdit){
+      gvToast('"' + ad + '" güncellendi (' + turLbl + ') — işlem kaydına eklendi.');
+      setTimeout(function(){ location.href = 'crm-santiye-detay.html?santiye=' + siteKey; }, 900);
+      return;
+    }
+    if(isCopy){
+      gvToast('"' + ad + '" yeni taslak şantiye olarak oluşturuldu (' + turLbl + ') — personel/ilerleme sıfırdan başlar.');
+      setTimeout(function(){ location.href = 'crm-santiye.html'; }, 900);
+      return;
+    }
+    gvToast('"' + ad + '" şantiye kaydı oluşturuldu (' + turLbl + ') — Planlama durumunda listeye eklendi.');
+    setTimeout(function(){ location.href = 'crm-santiye.html'; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

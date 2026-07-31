@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yetkili Ekle — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Yetkili Ekle/Düzenle Formu (§3.1)
+   Kaynak-transfer: crm-santiye-form.html (form-grid/gform/form-foot) +
+   crm-ayarlar-rol-form.html (perm-row switch dili) + crm-santiye-bildirim-form.html
+   (media-drop dosya yükleme deseni, belge yükleme için sadeleştirildi). ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.gv-page-head h1 .gtag{vertical-align:middle;margin-left:11px;position:relative;top:-2px}
+
+.role-note{
+  display:flex;align-items:flex-start;gap:13px;
+  background:var(--bg);border:1px dashed var(--line-2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px;
+}
+.role-note .rn-ico{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--paper);border:1px solid var(--line);color:var(--acc-ink);font-size:14px}
+.role-note .rn-b{min-width:0;line-height:1.5}
+.role-note .rn-b b{font-size:13px;color:var(--ink-2);font-weight:700}
+.role-note .rn-b p{font-size:12.5px;color:var(--muted);margin-top:3px}
+
+.form-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+.left-stack{display:flex;flex-direction:column;gap:16px}
+
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.form-foot .foot-left{margin-right:auto;display:flex;gap:10px;flex-wrap:wrap}
+
+/* aktif/pasif satırı — form içinde tekil toggle */
+.stat-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-top:1px solid var(--line);margin-top:4px}
+.stat-row b{font-size:13px;font-weight:700;color:var(--ink)}
+.stat-row span{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* yetki kapsamı — 4 switch satırı */
+.scope-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--line)}
+.scope-row:last-child{border-bottom:none}
+.scope-ico{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--bg);color:var(--ink-2);font-size:13px;transition:.18s var(--ease)}
+.scope-row.is-on .scope-ico{background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.scope-info{flex:1;min-width:0}
+.scope-info b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.scope-info span{font-size:12px;color:var(--muted)}
+
+/* dosya yükleme — media-drop deseninin belge-odaklı sadeleştirmesi */
+.doc-drop{border:1.5px dashed var(--line-2);border-radius:var(--r-md);padding:16px;text-align:center;transition:.18s var(--ease)}
+.doc-drop.is-drag{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.06)}
+.doc-drop-btn{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--acc-ink);cursor:pointer}
+.doc-drop-btn i{font-size:16px}
+.doc-hint{display:block;margin-top:7px;font-size:11.5px;color:var(--muted);font-weight:500}
+.doc-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.doc-item{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
+.doc-item[data-state="hata"]{border-color:color-mix(in srgb, var(--danger) 30%, var(--line));background:var(--danger-tint)}
+.doc-thumb{width:42px;height:42px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:15px;color:#fff;background:var(--gv-night)}
+.doc-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.doc-info b{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{font-size:11.5px;color:var(--muted)}
+.doc-status{font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.doc-status.st-yukleniyor{color:var(--info)}
+.doc-status.st-hazir{color:var(--ok)}
+.doc-status.st-hata{color:var(--danger)}
+.doc-acts{display:flex;align-items:center;justify-content:center;flex:none}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* kullanıldığı yerler */
+.use-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.use-row:last-child{border-bottom:none}
+.use-mark{width:26px;height:26px;flex:none;border-radius:var(--r-circle);display:grid;place-items:center;font-size:11px}
+.use-row.on .use-mark{background:var(--ok-tint);color:var(--ok)}
+.use-row.off .use-mark{background:var(--bg);color:var(--line-2);border:1px solid var(--line)}
+.use-info{flex:1;min-width:0;line-height:1.4}
+.use-info b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
+.use-row.off .use-info b{color:var(--muted)}
+.use-info span{font-size:11px;color:var(--muted)}
+
+/* ilişkili imza sirküleri */
+.sirk-row{display:flex;align-items:center;gap:12px;padding:12px 22px;border-bottom:1px solid var(--line)}
+.sirk-row:last-child{border-bottom:none}
+.sirk-ico{width:34px;height:34px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;background:var(--info-tint);color:var(--info)}
+.sirk-info{flex:1;min-width:0;line-height:1.4}
+.sirk-info b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
+.sirk-info a{color:var(--ink)}
+.sirk-info a:hover{color:var(--acc-ink)}
+.sirk-info span{font-size:11.5px;color:var(--muted)}
+
+/* son işlemler — işlem kaydı simülasyonu (§3.1 "değişiklikler işlem kayıtlarına yazılmalıdır") */
+.yk-log{display:flex;flex-direction:column}
+.yk-log-row{display:flex;align-items:flex-start;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}
+.yk-log-row:last-child{border-bottom:none}
+.yk-log-ico{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:12px;background:rgba(var(--acc-rgb),.1);color:var(--acc-ink);margin-top:1px}
+.yk-log-body{flex:1;min-width:0;line-height:1.45}
+.yk-log-line{font-size:12.5px;color:var(--ink-2)}
+.yk-log-line b{color:var(--ink);font-weight:700}
+.yk-log-meta{margin-top:3px;font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.yk-log-meta a{color:var(--acc-ink);font-weight:700}
+.yk-log-meta a:hover{text-decoration:underline}
+.yk-log-empty{font-size:12.5px;color:var(--muted);padding:6px 0}
+</style>
+</head>
+<body data-sec="ayarlar" data-screen="yetkili-form">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-ayarlar-firma.html#bilgi">Firma Ayarları</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbLbl">Yetkili Ekle</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Yönetim</div>
+        <h1 id="pageTitle">Yetkili Ekle</h1>
+        <div class="ph-sub" id="pageSub">Yapıtaş İnşaat A.Ş. — sözleşme, teklif ve resmi işlemlerde kullanılacak yeni bir yetkili tanımlayın</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-ayarlar-firma.html#bilgi"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a>
+      </div>
+    </div>
+
+    <div class="role-note">
+      <div class="rn-ico"><i class="fa-solid fa-circle-info"></i></div>
+      <div class="rn-b">
+        <b>Yetkili bilgileri nerede kullanılır?</b>
+        <p>Buradaki kayıt; sözleşme, teklif, banka/ödeme talimatı ve resmî doküman çıktılarında otomatik önerilir. Değişiklikler işlem kayıtlarına yazılır.</p>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <!-- ============ SOL: form ============ -->
+      <div class="left-stack">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-user-tie"></i> Yetkili Bilgileri</div></div>
+          <div class="gc-body">
+            <form class="gform" id="ytkForm" onsubmit="return false">
+              <div class="gfield full">
+                <label for="fAd">Ad Soyad</label>
+                <input type="text" id="fAd" placeholder="örn. Kemal Yapıcıoğlu">
+              </div>
+              <div class="gfield">
+                <label for="fUnvan">Ünvan</label>
+                <input type="text" id="fUnvan" placeholder="örn. Firma Sahibi">
+              </div>
+              <div class="gfield">
+                <label for="fDept">Departman</label>
+                <input type="text" id="fDept" placeholder="örn. Yönetim">
+              </div>
+              <div class="gfield">
+                <label for="fTel">Telefon</label>
+                <input type="tel" id="fTel" placeholder="0532 000 00 00">
+              </div>
+              <div class="gfield">
+                <label for="fMail">E-posta</label>
+                <input type="email" id="fMail" placeholder="ad.soyad@yapitas.example">
+              </div>
+              <div class="gfield full">
+                <label for="fTur">Yetki Türü</label>
+                <select id="fTur">
+                  <option value="firma-sahibi">Firma Sahibi</option>
+                  <option value="genel-mudur">Genel Müdür</option>
+                  <option value="mali-yetkili">Mali Yetkili</option>
+                  <option value="imza-yetkilisi">İmza Yetkilisi</option>
+                  <option value="sozlesme-yetkilisi">Sözleşme Yetkilisi</option>
+                  <option value="santiye-yetkilisi">Şantiye Yetkilisi</option>
+                  <option value="satinalma-yetkilisi">Satın Alma Yetkilisi</option>
+                  <option value="ik-yetkilisi">İnsan Kaynakları Yetkilisi</option>
+                  <option value="muhasebe-yetkilisi">Muhasebe Yetkilisi</option>
+                </select>
+              </div>
+              <div class="gfield">
+                <label for="fBasla">Yetki Başlangıç Tarihi</label>
+                <input type="date" id="fBasla">
+              </div>
+              <div class="gfield">
+                <label for="fBitis">Yetki Bitiş Tarihi <span class="gf-hint">(isteğe bağlı)</span></label>
+                <input type="date" id="fBitis">
+                <span class="gf-hint">Boş bırakılırsa yetki süresiz kabul edilir.</span>
+              </div>
+              <div class="gfield full">
+                <label for="fAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label>
+                <textarea id="fAciklama" rows="2" placeholder="Yetkinin kapsamına dair kısa not"></textarea>
+              </div>
+            </form>
+            <div class="stat-row">
+              <div><b>Aktif Yetkili</b><span>Pasif alınan yetkili seçim listelerinde önerilmez, kaydı korunur.</span></div>
+              <label class="gv-toggle"><input type="checkbox" id="fAktif" checked><span class="tg-track"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-shield-halved"></i> Yetki Kapsamı</div></div>
+          <div class="gc-body" id="scopeBody">
+            <div class="scope-row" data-scope="imza">
+              <div class="scope-ico"><i class="fa-solid fa-signature"></i></div>
+              <div class="scope-info"><b>İmza Yetkisi</b><span>Sözleşme, teklif ve resmî evrakları tek başına veya müşterek imzalayabilir</span></div>
+              <label class="gv-toggle"><input type="checkbox" data-scope-input="imza"><span class="tg-track"></span></label>
+            </div>
+            <div class="scope-row" data-scope="temsil">
+              <div class="scope-ico"><i class="fa-solid fa-handshake"></i></div>
+              <div class="scope-info"><b>Temsil Yetkisi</b><span>Firmayı resmî kurum, ihale ve müşteri görüşmelerinde temsil edebilir</span></div>
+              <label class="gv-toggle"><input type="checkbox" data-scope-input="temsil"><span class="tg-track"></span></label>
+            </div>
+            <div class="scope-row" data-scope="finansal">
+              <div class="scope-ico"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div class="scope-info"><b>Finansal İşlem Yetkisi</b><span>Banka talimatı, ödeme onayı ve kasa işlemlerini onaylayabilir</span></div>
+              <label class="gv-toggle"><input type="checkbox" data-scope-input="finansal"><span class="tg-track"></span></label>
+            </div>
+            <div class="scope-row" data-scope="sozlesme">
+              <div class="scope-ico"><i class="fa-solid fa-file-signature"></i></div>
+              <div class="scope-info"><b>Sözleşme İmza Yetkisi</b><span>Kurum ve taşeron sözleşmelerini firma adına imzalayabilir</span></div>
+              <label class="gv-toggle"><input type="checkbox" data-scope-input="sozlesme"><span class="tg-track"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="gv-card" id="belgeCard" hidden>
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-paperclip"></i> Yetki Belgesi</div></div>
+          <div class="gc-body">
+            <div class="doc-drop" id="docDrop">
+              <input type="file" id="fBelge" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple hidden>
+              <label for="fBelge" class="doc-drop-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Yetki belgesi seç veya sürükleyip bırakın</label>
+              <span class="doc-hint">Vekaletname, imza beyannamesi, atama yazısı — PDF/JPG/PNG/DOC ≤10 MB (demo sınırı)</span>
+            </div>
+            <div class="doc-list" id="docList"></div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="form-foot">
+            <div class="foot-left" id="editActs" hidden>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnPasif" data-no-confirm><i class="fa-solid fa-toggle-off"></i> Pasife Al</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnArsiv" data-no-confirm><i class="fa-solid fa-box-archive"></i> Arşivle</button>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="crm-ayarlar-firma.html#bilgi">Vazgeç</a>
+            <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="ytkSubmit"><i class="fa-solid fa-floppy-disk"></i> Yetkiliyi Kaydet</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bilgi notları ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> Kullanıldığı Yerler</div></div>
+          <div class="gc-body" id="useBody" style="padding-top:8px;padding-bottom:8px">
+            <!-- JS ile dolar -->
+          </div>
+          <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Yetki kapsamına göre otomatik güncellenir.</span></div>
+        </div>
+
+        <div class="gv-card" id="sirkulerCard" hidden>
+          <div class="gc-head">
+            <div class="gc-title"><i class="fa-solid fa-file-contract"></i> İlişkili İmza Sirküleri</div>
+          </div>
+          <div class="gc-body flush" id="sirkulerBody"></div>
+          <div class="gc-foot">
+            <a class="btn btn-ghost btn-sm" id="lnkImzaEkle" href="crm-ayarlar-imza-form.html?mod=ekle"><i class="fa-solid fa-plus"></i> İmza Sirküleri Ekle</a>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Kayıt Notları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-list-ol"></i><span>9 yetki türü sistemde sabittir; birden fazla yetkiliye aynı tür atanabilir.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-clock-rotate-left"></i><span>Yetki başlangıç/bitiş tarihleri sözleşme ve resmî doküman kontrolünde otomatik değerlendirilir.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-box-archive"></i><span>Kayıtlar kalıcı silinmez; "Arşivle" seçilen yetkili listelerde gizlenir, geçmiş işlemlerde görünür kalır.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-flask"></i><span>Bu form simülasyondur; kayıt tarayıcı oturumunda tutulur, kalıcı veritabanına yazılmaz.</span></div>
+          </div>
+        </div>
+
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son İşlemler</div></div>
+          <div class="gc-body">
+            <div class="yk-log" id="ykLog">
+              <div class="yk-log-empty" id="ykLogEmpty">Bu oturumda henüz yetkili değişikliği yapılmadı.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ============ KANONİK YETKİLİ KADROSU (§3.1) — yeni kişi ÜRETİLMEDİ.
+     Kemal Yapıcıoğlu (sahip) · Murat Denizli (GM) · Nesrin Aydın (mali/muhasebe) ·
+     Elif Sarıkaya (sözleşme yetkilisi). Numaralama: YTK-##. ============ */
+  var YETKILILER = {
+    'YTK-01': { ad:'Kemal Yapıcıoğlu', unvan:'Firma Sahibi', dept:'Yönetim', tel:'0532 000 00 01', mail:'kemal.yapicioglu@yapitas.example',
+      tur:'firma-sahibi', basla:'2011-03-01', bitis:'', aktif:true,
+      scope:{imza:true, temsil:true, finansal:true, sozlesme:true},
+      aciklama:'Firma sahibi; tüm yetki alanlarında sınırsız temsil ve imza yetkisine sahiptir.',
+      belgeler:[{ad:'Imza Yetkisi Belgesi.pdf', boyut:412000}],
+      sirkuler:['IMZ-2026-014'] },
+    'YTK-02': { ad:'Murat Denizli', unvan:'Genel Müdür', dept:'Yönetim', tel:'0532 000 00 02', mail:'murat.denizli@yapitas.example',
+      tur:'genel-mudur', basla:'2018-01-15', bitis:'', aktif:true,
+      scope:{imza:true, temsil:true, finansal:true, sozlesme:true},
+      aciklama:'Genel müdür; ₺500.000 üstü finansal işlemlerde çift imza kuralına tabidir.',
+      belgeler:[{ad:'GM Atama Yazısı.pdf', boyut:298000}],
+      sirkuler:['IMZ-2026-009'] },
+    'YTK-03': { ad:'Nesrin Aydın', unvan:'Muhasebe Müdürü', dept:'Finans', tel:'0532 000 00 03', mail:'nesrin.aydin@yapitas.example',
+      tur:'muhasebe-yetkilisi', basla:'2015-06-01', bitis:'', aktif:true,
+      scope:{imza:true, temsil:false, finansal:true, sozlesme:false},
+      aciklama:'Yalnız finansal işlemlerde (banka talimatı, ödeme onayı) imza yetkisi taşır.',
+      belgeler:[],
+      sirkuler:['IMZ-2026-011'] },
+    'YTK-04': { ad:'Elif Sarıkaya', unvan:'Teknik Müdür', dept:'Teknik', tel:'0532 000 00 04', mail:'elif.sarikaya@yapitas.example',
+      tur:'sozlesme-yetkilisi', basla:'2019-09-10', bitis:'', aktif:true,
+      scope:{imza:true, temsil:true, finansal:false, sozlesme:true},
+      aciklama:'Yalnız sözleşme imzalarında yetkilidir; finansal işlem yetkisi yoktur.',
+      belgeler:[],
+      sirkuler:['IMZ-2026-016'] }
+  };
+  var YTK_KEYS = Object.keys(YETKILILER);
+
+  /* imza sirküleri durum özetini bu sayfada da göstermek için minik kopya — IMZ verisinin
+     TAM sahibi crm-ayarlar-imza-form.html'dir; burada yalnız rozet metni türetilir. */
+  var BUGUN = new Date(2026, 6, 2);
+  var IMZA_OZET = {
+    'IMZ-2026-014':{ad:'İmza Sirküleri — Kemal Yapıcıoğlu (v2)', bitis:'2028-01-15', gecersiz:false, aktif:true},
+    'IMZ-2026-009':{ad:'İmza Sirküleri — Murat Denizli', bitis:'2026-08-20', gecersiz:false, aktif:true},
+    'IMZ-2026-011':{ad:'İmza Sirküleri — Nesrin Aydın', bitis:'2026-06-15', gecersiz:false, aktif:true},
+    'IMZ-2026-016':{ad:'İmza Sirküleri — Elif Sarıkaya', bitis:'2028-02-05', gecersiz:true,  aktif:false}
+  };
+  function imzaDurum(o){
+    if(o.gecersiz || !o.aktif) return {cls:'off', lbl:'Geçersiz'};
+    var bitis = new Date(o.bitis);
+    var gun = Math.round((bitis - BUGUN) / 86400000);
+    if(gun < 0) return {cls:'danger', lbl:'Süresi doldu'};
+    if(gun <= 60) return {cls:'warn', lbl:'Süresi yaklaşıyor'};
+    return {cls:'ok', lbl:'Geçerli'};
+  }
+
+  var q = new URLSearchParams(location.search);
+  var mod = q.get('mod') === 'duzenle' ? 'duzenle' : 'ekle';
+  var ytkNo = q.get('ytk');
+  var rec = (mod === 'duzenle' && ytkNo && YETKILILER[ytkNo]) ? YETKILILER[ytkNo] : null;
+  if(mod === 'duzenle' && ytkNo && !rec){
+    gvToast(ytkNo + ' bulunamadı — yeni kayıt formu açıldı.', {type:'danger'});
+    mod = 'ekle'; ytkNo = null;
+  }
+
+  var TUR_LBL = {
+    'firma-sahibi':'Firma Sahibi','genel-mudur':'Genel Müdür','mali-yetkili':'Mali Yetkili',
+    'imza-yetkilisi':'İmza Yetkilisi','sozlesme-yetkilisi':'Sözleşme Yetkilisi','santiye-yetkilisi':'Şantiye Yetkilisi',
+    'satinalma-yetkilisi':'Satın Alma Yetkilisi','ik-yetkilisi':'İnsan Kaynakları Yetkilisi','muhasebe-yetkilisi':'Muhasebe Yetkilisi'
+  };
+
+  function nextYtkNo(){
+    var max = 0;
+    YTK_KEYS.forEach(function(k){ var n = parseInt(k.split('-')[1], 10); if(n > max) max = n; });
+    return 'YTK-' + String(max + 1).padStart(2, '0');
+  }
+
+  /* ---- başlık / crumb ---- */
+  if(rec){
+    document.title = ytkNo + ' — ' + rec.ad + ' — Gavia CRM';
+    document.getElementById('crumbLbl').textContent = 'Yetkiliyi Düzenle';
+    document.getElementById('pageTitle').innerHTML = 'Yetkiliyi Düzenle <span class="gtag mint">' + ytkNo + '</span>';
+    document.getElementById('pageSub').textContent = rec.ad + ' — yetki kapsamını ve iletişim bilgilerini güncelleyin';
+    document.getElementById('editActs').hidden = false;
+    document.getElementById('belgeCard').hidden = false;
+    document.getElementById('sirkulerCard').hidden = false;
+    document.getElementById('fAktif').checked = rec.aktif;
+    document.getElementById('btnPasif').innerHTML = rec.aktif
+      ? '<i class="fa-solid fa-toggle-off"></i> Pasife Al' : '<i class="fa-solid fa-toggle-on"></i> Aktifleştir';
+  } else {
+    document.getElementById('belgeCard').hidden = false; /* ekleme sırasında da belge eklenebilir */
+    document.getElementById('lnkImzaEkle').href = 'crm-ayarlar-imza-form.html?mod=ekle';
+  }
+
+  /* ---- form doldur ---- */
+  function fill(){
+    document.getElementById('fAd').value = rec ? rec.ad : '';
+    document.getElementById('fUnvan').value = rec ? rec.unvan : '';
+    document.getElementById('fDept').value = rec ? rec.dept : '';
+    document.getElementById('fTel').value = rec ? rec.tel : '';
+    document.getElementById('fMail').value = rec ? rec.mail : '';
+    document.getElementById('fTur').value = rec ? rec.tur : 'imza-yetkilisi';
+    document.getElementById('fBasla').value = rec ? rec.basla : '';
+    document.getElementById('fBitis').value = rec ? rec.bitis : '';
+    document.getElementById('fAciklama').value = rec ? rec.aciklama : '';
+    var scope = rec ? rec.scope : {imza:false, temsil:false, finansal:false, sozlesme:false};
+    ['imza','temsil','finansal','sozlesme'].forEach(function(k){
+      var inp = document.querySelector('[data-scope-input="'+k+'"]');
+      inp.checked = !!scope[k];
+      syncScopeRow(k);
+    });
+    if(rec && rec.belgeler.length){
+      rec.belgeler.forEach(function(b){ addDocChip(b.ad, b.boyut, 'hazir'); });
+    }
+    renderUse();
+    renderSirkuler();
+  }
+
+  function syncScopeRow(key){
+    var row = document.querySelector('.scope-row[data-scope="'+key+'"]');
+    var on = document.querySelector('[data-scope-input="'+key+'"]').checked;
+    row.classList.toggle('is-on', on);
+  }
+  document.getElementById('scopeBody').addEventListener('change', function(e){
+    var inp = e.target.closest('[data-scope-input]'); if(!inp) return;
+    syncScopeRow(inp.getAttribute('data-scope-input'));
+    renderUse();
+  });
+
+  /* ---- kullanıldığı yerler — yetki kapsamına göre canlı türetilir ---- */
+  var USES = [
+    {key:'sozlesme', ic:'fa-file-signature', lbl:'Sözleşme çıktısı',      dep:['sozlesme']},
+    {key:'teklif',   ic:'fa-file-invoice-dollar', lbl:'Teklif çıktısı',   dep:['sozlesme','temsil']},
+    {key:'banka',    ic:'fa-building-columns', lbl:'Banka/ödeme talimatı', dep:['finansal']},
+    {key:'resmi',    ic:'fa-stamp', lbl:'Resmî doküman / kurum yazışması', dep:['temsil']},
+    {key:'mutabakat',ic:'fa-handshake-angle', lbl:'Cari mutabakat evrakı', dep:['finansal','temsil']}
+  ];
+  function renderUse(){
+    var scope = {
+      imza: document.querySelector('[data-scope-input="imza"]').checked,
+      temsil: document.querySelector('[data-scope-input="temsil"]').checked,
+      finansal: document.querySelector('[data-scope-input="finansal"]').checked,
+      sozlesme: document.querySelector('[data-scope-input="sozlesme"]').checked
+    };
+    var html = '';
+    USES.forEach(function(u){
+      var on = u.dep.some(function(d){ return scope[d]; }) && scope.imza;
+      html += '<div class="use-row ' + (on?'on':'off') + '">'
+        + '<span class="use-mark"><i class="fa-solid ' + (on?'fa-check':u.ic) + '"></i></span>'
+        + '<div class="use-info"><b>' + u.lbl + '</b><span>' + (on ? 'Bu yetkili kullanılabilir' : 'Gerekli yetki kapsamı seçili değil') + '</span></div>'
+        + '</div>';
+    });
+    document.getElementById('useBody').innerHTML = html;
+  }
+
+  function renderSirkuler(){
+    if(!rec || !rec.sirkuler.length) return;
+    var html = '';
+    rec.sirkuler.forEach(function(no){
+      var o = IMZA_OZET[no]; if(!o) return;
+      var d = imzaDurum(o);
+      html += '<div class="sirk-row">'
+        + '<div class="sirk-ico"><i class="fa-solid fa-file-contract"></i></div>'
+        + '<div class="sirk-info"><b><a href="crm-ayarlar-imza-form.html?mod=duzenle&amp;imza=' + no + '">' + no + '</a></b><span>' + o.ad + '</span></div>'
+        + '<span class="gstat ' + d.cls + '">' + d.lbl + '</span>'
+        + '</div>';
+    });
+    document.getElementById('sirkulerBody').innerHTML = html;
+    document.getElementById('lnkImzaEkle').href = 'crm-ayarlar-imza-form.html?mod=ekle&yetkili=' + ytkNo;
+  }
+
+  /* ============ YETKİ BELGESİ — gerçek File API akışı (dosya adı /hata/'ya uyarsa
+     ilk denemede hata, "Yeniden Dene" ikinci denemede daima başarı) ============ */
+  var docList = document.getElementById('docList');
+  var fBelge = document.getElementById('fBelge');
+  var docDrop = document.getElementById('docDrop');
+  var docSeq = 0;
+  var DOC_LIMIT = 10 * 1024 * 1024;
+
+  fill();
+
+  function humanSize(bytes){
+    if(bytes > 1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+    return Math.max(1, Math.round(bytes/1024)) + ' KB';
+  }
+  function docIcon(name){
+    if(/\.pdf$/i.test(name)) return 'fa-file-pdf';
+    if(/\.(doc|docx)$/i.test(name)) return 'fa-file-word';
+    if(/\.(jpg|jpeg|png)$/i.test(name)) return 'fa-file-image';
+    return 'fa-file-lines';
+  }
+
+  function renderDoc(item){
+    var statusHtml = '';
+    if(item.state === 'yukleniyor'){
+      statusHtml = '<div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:' + item.progress + '%"></div></div><span class="gbar-val">%' + item.progress + '</span></div>';
+    } else if(item.state === 'hazir'){
+      statusHtml = '<span class="doc-status st-hazir"><i class="fa-solid fa-circle-check"></i> Yüklendi</span>';
+    } else if(item.state === 'hata'){
+      statusHtml = '<span class="doc-status st-hata"><i class="fa-solid fa-triangle-exclamation"></i> ' + item.errMsg + '</span>';
+    }
+    var acts = item.state === 'hata'
+      ? '<button type="button" class="ia-btn" data-act="retry" data-tip="Yeniden dene" aria-label="Yeniden dene"><i class="fa-solid fa-rotate-right"></i></button>'
+      : '<button type="button" class="ia-btn danger" data-act="kaldir" data-no-confirm data-tip="Kaldır" aria-label="Kaldır"><i class="fa-solid fa-trash"></i></button>';
+    item.el.setAttribute('data-state', item.state);
+    item.el.innerHTML = '<div class="doc-thumb"><i class="fa-solid ' + docIcon(item.name) + '"></i></div>'
+      + '<div class="doc-info"><b>' + item.name + '</b><span class="doc-meta">' + humanSize(item.size) + '</span>' + statusHtml + '</div>'
+      + '<div class="doc-acts">' + acts + '</div>';
+  }
+
+  function addDocChip(name, size, state){
+    docSeq++;
+    var item = {id:'d'+docSeq, name:name, size:size, state: state || 'hazir', progress:100, attempt:0};
+    var el = document.createElement('div'); el.className = 'doc-item'; el.dataset.id = item.id;
+    item.el = el; docList.appendChild(el); renderDoc(item);
+    return item;
+  }
+
+  function startUpload(item){
+    item.progress = 0; item.state = 'yukleniyor'; renderDoc(item);
+    var forceError = /hata|error|fail/i.test(item.name) && (item.attempt || 0) === 0;
+    var tick = setInterval(function(){
+      item.progress = Math.min(100, item.progress + Math.round(10 + Math.random()*18));
+      renderDoc(item);
+      if(item.progress >= 100){
+        clearInterval(tick);
+        item.attempt = (item.attempt || 0) + 1;
+        setTimeout(function(){
+          if(forceError){
+            item.state = 'hata'; item.errMsg = 'Yükleme başarısız oldu (demo).'; renderDoc(item);
+            gvToast(item.name + ' yüklenemedi.', {type:'danger'});
+          } else {
+            item.state = 'hazir'; renderDoc(item);
+            gvToast(item.name + ' yüklendi.');
+          }
+        }, 180);
+      }
+    }, 130);
+  }
+
+  function addFile(file){
+    if(file.size > DOC_LIMIT){
+      gvToast(file.name + ' — 10 MB sınırını aşıyor (demo kısıtı).', {type:'danger'});
+      return;
+    }
+    var item = addDocChip(file.name, file.size, 'yukleniyor');
+    startUpload(item);
+  }
+
+  fBelge.addEventListener('change', function(){
+    Array.prototype.slice.call(fBelge.files).forEach(addFile);
+    fBelge.value = '';
+  });
+  ['dragenter','dragover'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.add('is-drag'); }); });
+  ['dragleave','drop'].forEach(function(evt){ docDrop.addEventListener(evt, function(e){ e.preventDefault(); docDrop.classList.remove('is-drag'); }); });
+  docDrop.addEventListener('drop', function(e){
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if(files && files.length) Array.prototype.forEach.call(files, addFile);
+  });
+  docList.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act]'); if(!btn) return;
+    var itemEl = btn.closest('.doc-item');
+    if(btn.getAttribute('data-act') === 'kaldir'){ itemEl.remove(); return; }
+    if(btn.getAttribute('data-act') === 'retry'){
+      var name = itemEl.querySelector('.doc-info b').textContent;
+      itemEl.remove();
+    }
+  });
+
+  /* ============ son işlemler mini akış — işlem kayıtlarına yazma simülasyonu (§3.1) ============ */
+  var ykLogSeq = 850; /* crm-ayarlar-log.html en yüksek gerçek kayıt LOG-2026-0834; T-A'nın kendi
+     oturum-serisi 840'tan başlıyordu (kararlar.md #14) — çakışmayı önlemek için 850'den başlar. */
+  var ykLogList = document.getElementById('ykLog');
+  var ykLogEmpty = document.getElementById('ykLogEmpty');
+  function addYkLog(lineHtml){
+    ykLogSeq++;
+    if(ykLogEmpty){ ykLogEmpty.remove(); ykLogEmpty = null; }
+    var row = document.createElement('div');
+    row.className = 'yk-log-row';
+    var now = new Date();
+    var saat = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    row.innerHTML =
+      '<div class="yk-log-ico"><i class="fa-solid fa-user-tie"></i></div>' +
+      '<div class="yk-log-body">' +
+        '<div class="yk-log-line">' + lineHtml + '</div>' +
+        '<div class="yk-log-meta"><span>LOG-2026-' + ykLogSeq + '</span><span>· ' + saat + '</span><a href="crm-ayarlar-log.html">İşlem kayıtlarında görüntüle</a></div>' +
+      '</div>';
+    ykLogList.insertBefore(row, ykLogList.firstChild);
+  }
+
+  /* ---- aksiyonlar ---- */
+  var pasifState = rec ? rec.aktif : true;
+  document.getElementById('btnPasif').addEventListener('click', function(){
+    pasifState = !pasifState;
+    document.getElementById('fAktif').checked = pasifState;
+    this.innerHTML = pasifState ? '<i class="fa-solid fa-toggle-off"></i> Pasife Al' : '<i class="fa-solid fa-toggle-on"></i> Aktifleştir';
+    gvToast((ytkNo || 'Yetkili') + (pasifState ? ' aktifleştirildi.' : ' pasife alındı.'), {type: pasifState ? 'ok' : 'info'});
+    addYkLog((ytkNo || 'Yetkili') + ' — <b>' + (pasifState ? 'Aktifleştirildi' : 'Pasife alındı') + '</b>');
+  });
+  document.getElementById('btnArsiv').addEventListener('click', function(){
+    var ad = rec ? rec.ad : ytkNo;
+    gvConfirm({
+      danger:true, icon:'fa-box-archive', ok:'Arşivle', cancel:'Vazgeç',
+      title:'Arşivlensin mi?',
+      message: '"' + ad + '" arşivlenecek — kayıt kalıcı silinmez, seçim listelerinde görünmez, geçmiş işlemlerde görünür kalır.',
+      onConfirm:function(){
+        gvToast(ad + ' arşivlendi — listede gizlendi, geçmiş kayıtlarda görünür kalır.', {type:'danger'});
+        addYkLog(ad + ' — <b>Arşivlendi</b>');
+        setTimeout(function(){ location.href = 'crm-ayarlar-firma.html#bilgi'; }, 900);
+      }
+    });
+  });
+
+  document.getElementById('ytkSubmit').addEventListener('click', function(){
+    var ad = document.getElementById('fAd').value.trim();
+    if(!ad){ gvToast('Ad soyad girin.', {type:'danger'}); return; }
+    var no = rec ? ytkNo : nextYtkNo();
+    gvToast((mod === 'duzenle' ? no + ' güncellendi.' : no + ' — "' + ad + '" yetkili olarak eklendi.'));
+    addYkLog(no + (mod === 'duzenle' ? ' bilgileri güncellendi' : ' — "' + ad + '" yetkili olarak eklendi') + ' — <b>' + ad + '</b>');
+    setTimeout(function(){ location.href = 'crm-ayarlar-firma.html#bilgi'; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

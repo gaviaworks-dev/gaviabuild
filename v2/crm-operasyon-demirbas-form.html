@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yeni Demirbaş — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Yeni Demirbaş Formu (§2.7, 6 sekme + dinamik teknik özellik
+   motoru) — kaynak-transfer: crm-operasyon-arac-form.html'in .gv-tabs/.tab-panel sekme
+   motoru + .gorsel-drop/.doc-drop dosya yükleme dili BİREBİR devralındı. ============ */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+/* trap #2 (bkz. görev brifi) — düz "1fr" bu yoğunlukta sekme barının min-content'iyle
+   yatay taşma yaratır; minmax(0,1fr) ile açıkça sıfırlanır (sayfa-lokal, ui.css'e dokunulmadı) */
+.form-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+@media(max-width:980px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+.left-stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.form-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+.form-foot .foot-left{margin-right:auto;display:flex;gap:10px;flex-wrap:wrap}
+
+/* ============ SEKME MOTORU — crm-operasyon-arac-form.html / -detay.html /
+   crm-santiye-detay.html ile birebir aynı .gv-tab/data-tab-panel dili (kaynak-transfer). */
+.gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 4px;margin-right:22px;flex:none;
+  font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);background:none;border:none;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tab i{font-size:12.5px}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+.tab-panel{animation:tabIn .22s var(--ease)}
+@keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* 390px'te sekme barı kendi içinde kayar — kaydırma ipucu */
+.tab-scroll-hint{display:none;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin:-10px 0 12px;font-weight:600}
+@media(max-width:640px){.tab-scroll-hint{display:flex}}
+
+/* geçiş-kategorisi (Araç) uyarı bloğu */
+.role-note{display:flex;align-items:flex-start;gap:13px;background:var(--bg);border:1px dashed var(--line-2);border-radius:var(--r-md);padding:14px 16px;margin-top:14px}
+.role-note.info{background:var(--info-tint);border-color:rgba(var(--info-rgb,59,130,246),.35)}
+.role-note .rn-ico{width:36px;height:36px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;background:var(--paper);border:1px solid var(--line);color:var(--acc-ink);font-size:14px}
+.role-note.info .rn-ico{color:var(--info)}
+.role-note .rn-b{min-width:0;line-height:1.5}
+.role-note .rn-b b{font-size:13px;color:var(--ink-2);font-weight:700}
+.role-note .rn-b p{font-size:12.5px;color:var(--muted);margin-top:3px}
+
+/* dinamik teknik özellik motoru — kategoriye göre alan seti (§2.6) */
+.teknik-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.teknik-empty{display:flex;align-items:center;gap:10px;padding:14px 16px;border:1px dashed var(--line-2);border-radius:var(--r-md);color:var(--muted);font-size:12.5px;margin-top:10px}
+.teknik-empty i{color:var(--muted);font-size:14px}
+.teknik-json{margin-top:12px;padding:12px 14px;background:var(--gv-night,#141533);border-radius:var(--r-sm);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.6;color:var(--gavia-light,#e9eef1);max-height:150px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.teknik-toggle{font-size:11px;font-weight:700;color:var(--acc-ink);cursor:pointer;background:none;border:none;padding:0;font-family:inherit}
+.coklu-wrap{display:flex;flex-wrap:wrap;gap:8px 14px}
+.coklu-wrap label{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.coklu-wrap input{margin:0}
+
+/* barkod/QR önizleme (Kimlik Bilgileri sekmesi) — gerçek üretim T-DMR4'ün etiket
+   ekranında; burada yalnız deterministik, kayda-özel görsel önizleme (kararlar madde 109) */
+.barkod-prev{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg);margin-bottom:16px;flex-wrap:wrap}
+.bp-bars{display:flex;align-items:flex-end;gap:2px;height:44px;flex:none}
+.bp-bars span{display:block;width:3px;background:var(--ink)}
+.bp-qr{display:grid;grid-template-columns:repeat(5,7px);grid-template-rows:repeat(5,7px);gap:2px;flex:none}
+.bp-qr i{display:block;border-radius:1px;background:var(--line)}
+.bp-qr i.on{background:var(--ink)}
+.bp-info{min-width:180px;flex:1}
+.bp-info b{display:block;font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:.02em}
+.bp-info span{font-size:11.5px;color:var(--muted);display:block;margin-top:3px}
+
+/* dosya yükleme — attach-zone + dosya çipi (gerçek File API, tek dosya, versiyonlu
+   satın-alma/zimmet/bakım belgeleri için tekrar kullanılan parametrik idiyom) */
+.attach-zone{border:1.5px dashed var(--line);border-radius:var(--r-sm);padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;cursor:pointer;transition:.2s var(--ease);background:var(--bg);position:relative}
+.attach-zone:hover{border-color:var(--acc);background:rgba(var(--acc-rgb),.04)}
+.attach-zone i{font-size:18px;color:var(--acc-ink)}
+.attach-zone b{font-size:12.5px;color:var(--ink);font-weight:700}
+.attach-zone span{font-size:11.5px;color:var(--muted)}
+.attach-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper);margin-top:10px}
+.file-chip i.fa-paperclip{color:var(--acc-ink);font-size:13px}
+.file-chip b{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-chip span{font-size:11px;color:var(--muted);flex:none}
+.file-chip button{flex:none;border:none;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px}
+.file-chip button:hover{color:var(--danger)}
+.file-hist{margin-top:6px;padding-left:4px}
+.file-hist-item{font-size:11.5px;color:var(--muted);padding:3px 0;display:flex;align-items:center;gap:8px}
+.file-hist-item .gtag{font-size:9.5px;padding:1px 6px}
+
+/* ürün görseli — kare, div+background-image (CLAUDE.md görsel kuralı — <img> DEĞİL) */
+.gorsel-wrap{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.gorsel-drop{width:88px;height:88px;border-radius:var(--r-md);border:1.5px dashed var(--line-2);display:grid;place-items:center;
+  cursor:pointer;background-size:cover;background-position:center;color:var(--muted);font-size:18px;flex:none;position:relative;overflow:hidden;transition:.18s var(--ease)}
+.gorsel-drop:hover{border-color:var(--acc-ink)}
+.gorsel-drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.gorsel-drop.has-img{border-style:solid;border-color:var(--line)}
+.gorsel-drop.has-img i{display:none}
+.gorsel-hint{font-size:11.5px;color:var(--muted);line-height:1.5;max-width:360px}
+
+.taslak-note{display:flex;align-items:center;gap:12px;background:var(--info-tint,var(--bg));border:1px dashed var(--line-2);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;flex-wrap:wrap}
+.taslak-note span{font-size:12.5px;color:var(--ink-2);flex:1;min-width:200px}
+
+.side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.side-tip:last-child{border-bottom:none}
+.side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
+.side-tip span{font-size:12.5px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body data-sec="varlik" data-screen="demirbas">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-operasyon-demirbas.html">Demirbaş</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="crumbLbl">Yeni Demirbaş</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Günlük Kayıt</div>
+        <h1 id="pageTitle">Yeni Demirbaş</h1>
+        <div class="ph-sub" id="pageSub">Envantere yeni bir demirbaş kalemi ekleyin; sınıflandırma seçildikçe teknik özellik alanları otomatik değişir.</div>
+      </div>
+    </div>
+
+    <!-- ============ Düzenle/Kopyala banner (mod=duzenle|kopya) ============ -->
+    <div class="gv-card" id="modBanner" hidden style="margin-bottom:18px;border-color:rgba(var(--acc-rgb),.35);background:rgba(var(--acc-rgb),.05)">
+      <div class="gc-body" style="display:flex;align-items:center;gap:12px;padding:16px 20px">
+        <i class="fa-solid fa-circle-info" style="color:var(--acc-ink);font-size:16px"></i>
+        <span id="modBannerTxt" style="font-size:12.5px;color:var(--ink-2);line-height:1.6"></span>
+      </div>
+    </div>
+
+    <div class="taslak-note" id="taslakNote" hidden>
+      <i class="fa-solid fa-file-pen" style="color:var(--acc-ink)"></i>
+      <span>Kaydedilmemiş bir taslağınız var.</span>
+      <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="taslakDoldur">Taslağı Doldur</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="taslakSil">Taslağı Sil</button>
+    </div>
+
+    <div class="form-grid">
+      <!-- ============ SOL: 6 sekmeli form (§2.7) ============ -->
+      <div class="left-stack">
+        <div class="tab-scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Sekmeleri görmek için yatay kaydırın</div>
+        <div class="gv-tabs" role="tablist" aria-label="Demirbaş formu sekmeleri" id="gvTabs">
+          <button type="button" class="gv-tab is-active" data-tab="siniflandirma" role="tab" aria-selected="true"><i class="fa-solid fa-sitemap"></i> Sınıflandırma</button>
+          <button type="button" class="gv-tab" data-tab="kimlik" role="tab" aria-selected="false"><i class="fa-solid fa-id-card"></i> Kimlik Bilgileri</button>
+          <button type="button" class="gv-tab" data-tab="satinalma" role="tab" aria-selected="false"><i class="fa-solid fa-file-invoice-dollar"></i> Satın Alma Bilgileri</button>
+          <button type="button" class="gv-tab" data-tab="konum" role="tab" aria-selected="false"><i class="fa-solid fa-location-dot"></i> Konum ve Zimmet</button>
+          <button type="button" class="gv-tab" data-tab="durum" role="tab" aria-selected="false"><i class="fa-solid fa-toggle-on"></i> Durum ve Kullanım</button>
+          <button type="button" class="gv-tab" data-tab="bakim" role="tab" aria-selected="false"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım ve Kontrol</button>
+        </div>
+
+        <form id="demirbasForm" onsubmit="return false">
+        <!-- ============ SEKME 1 — SINIFLANDIRMA ============ -->
+        <section class="tab-panel" data-tab-panel="siniflandirma">
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-sitemap"></i> Sınıflandırma</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield">
+                  <label for="fAnaKategori">Ana Kategori</label>
+                  <select id="fAnaKategori"></select>
+                </div>
+                <div class="gfield">
+                  <label for="fAltKategori">Alt Kategori</label>
+                  <select id="fAltKategori"></select>
+                </div>
+                <div class="gfield">
+                  <label for="fUrunTuru">Ürün Türü</label>
+                  <select id="fUrunTuru"></select>
+                </div>
+                <div class="gfield">
+                  <label for="fMarkaSel">Marka</label>
+                  <select id="fMarkaSel"></select>
+                </div>
+                <div class="gfield" id="fMarkaDigerWrap" hidden>
+                  <label for="fMarkaDiger">Diğer Marka</label>
+                  <input type="text" id="fMarkaDiger" placeholder="Marka adını yazın">
+                </div>
+                <div class="gfield">
+                  <label for="fModel">Model</label>
+                  <input type="text" id="fModel" placeholder="ör. Galaxy A54, GLM 50 C">
+                </div>
+                <div class="gfield">
+                  <label for="fVaryant">Varyant <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fVaryant" placeholder="ör. 64GB, 18V-55">
+                </div>
+              </div>
+
+              <div class="role-note info" id="aracGecisNotu" hidden>
+                <div class="rn-ico"><i class="fa-solid fa-truck-pickup"></i></div>
+                <div class="rn-b">
+                  <b>"Araç" bir geçiş kategorisidir</b>
+                  <p>Araç demirbaşları bu formda ayrıntılı olarak yönetilmez — kayıt <a href="crm-operasyon-arac.html" style="color:var(--acc-ink);font-weight:700">Araçlarım modülünde</a> tutulur (ör. ZMT-2026-044 = ARC-01 Ford Ranger). Bu formda yalnız demirbaş numarası/zimmet köprüsü görüntülenir, kopya kayıt açılmaz.</p>
+                </div>
+              </div>
+
+              <div id="teknikBlock">
+                <div class="teknik-head">
+                  <div class="gd-label" style="margin:0">Teknik Özellikler <span style="text-transform:none;font-weight:500;color:var(--muted)">— kategoriye göre otomatik</span></div>
+                  <button type="button" class="teknik-toggle" data-no-confirm id="teknikJsonToggle">JSON önizle</button>
+                </div>
+                <div class="gform" id="teknikContainer"></div>
+                <pre class="teknik-json" id="teknikJson" hidden></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 2 — KİMLİK BİLGİLERİ ============ -->
+        <section class="tab-panel" data-tab-panel="kimlik" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-id-card"></i> Kimlik Bilgileri</div></div>
+            <div class="gc-body">
+              <div class="gorsel-wrap">
+                <label class="gorsel-drop" id="gorselDrop" for="fGorsel"><i class="fa-solid fa-image"></i><input type="file" id="fGorsel" accept=".jpg,.jpeg,.png"></label>
+                <span class="gorsel-hint">Ürün görseli — kare oranlı JPG/PNG. Demirbaş dosyasında ve listede gösterilir.</span>
+              </div>
+
+              <div class="barkod-prev">
+                <div class="bp-bars" id="bpBars"></div>
+                <div class="bp-qr" id="bpQr"></div>
+                <div class="bp-info">
+                  <b id="bpCodeTxt">DMR kodu bekleniyor</b>
+                  <span>Önizlemedir — gerçek barkod/QR üretimi ve yazdırma <b>Etiket Yazdırma</b> ekranında yapılır (barkod içeriği taranamaz, prototip simülasyonudur).</span>
+                </div>
+              </div>
+
+              <div class="gform">
+                <div class="gfield">
+                  <label for="fDemirbasKodu">Demirbaş Kodu</label>
+                  <input type="text" id="fDemirbasKodu" disabled placeholder="Kayıt onaylandığında atanır">
+                </div>
+                <div class="gfield full">
+                  <label for="fAd">Demirbaş Adı</label>
+                  <input type="text" id="fAd" placeholder="ör. İş Telefonu, Lazer Metre">
+                </div>
+                <div class="gfield">
+                  <label for="fSeriNo"><span id="seriLbl">Seri No</span> <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fSeriNo" placeholder="ör. SN-A54-2K7719X">
+                </div>
+                <div class="gfield">
+                  <label for="fUrunKodu">Üretici Ürün Kodu <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fUrunKodu" placeholder="ör. SM-A546B">
+                </div>
+                <div class="gfield">
+                  <label for="fEtiketNo">Etiket Numarası <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fEtiketNo" placeholder="ör. ETK-000041">
+                </div>
+                <div class="gfield full">
+                  <label for="fAciklama">Açıklama <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <textarea id="fAciklama" rows="2" placeholder="Demirbaşla ilgili not…"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 3 — SATIN ALMA BİLGİLERİ ============ -->
+        <section class="tab-panel" data-tab-panel="satinalma" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Satın Alma Bilgileri</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield">
+                  <label for="fTedarikci">Tedarikçi</label>
+                  <input type="text" id="fTedarikci" placeholder="ör. Bosch Yetkili Bayi">
+                </div>
+                <div class="gfield">
+                  <label for="fFaturaNo">Fatura No</label>
+                  <input type="text" id="fFaturaNo" placeholder="ör. FTR-2026-0046">
+                </div>
+                <div class="gfield">
+                  <label for="fSatinAlmaTarihi">Satın Alma Tarihi</label>
+                  <input type="date" id="fSatinAlmaTarihi">
+                </div>
+                <div class="gfield">
+                  <label for="fKdvOrani">KDV Oranı</label>
+                  <select id="fKdvOrani">
+                    <option value="0">İstisna (%0)</option>
+                    <option value="1">%1</option>
+                    <option value="10">%10</option>
+                    <option value="20" selected>%20</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fToplamBedel">Toplam Bedel</label>
+                  <input type="number" id="fToplamBedel" min="0" placeholder="ör. 6400">
+                </div>
+                <div class="gfield">
+                  <label for="fParaBirimi">Para Birimi</label>
+                  <select id="fParaBirimi">
+                    <option value="TRY" selected>₺ TRY</option>
+                    <option value="USD">$ USD</option>
+                    <option value="EUR">€ EUR</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fOdemeYontemi">Ödeme Yöntemi</label>
+                  <select id="fOdemeYontemi">
+                    <option>Nakit</option>
+                    <option>Havale/EFT</option>
+                    <option>Kredi Kartı</option>
+                    <option>Çek</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fGarantiBaslangic">Garanti Başlangıç <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="date" id="fGarantiBaslangic">
+                </div>
+                <div class="gfield">
+                  <label for="fGarantiBitis">Garanti Bitiş <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="date" id="fGarantiBitis">
+                </div>
+              </div>
+              <div class="gd-label" style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">Fatura / Garanti Belgesi</div>
+              <div id="docWrap-satinalma"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 4 — KONUM VE ZİMMET ============ -->
+        <section class="tab-panel" data-tab-panel="konum" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-location-dot"></i> Konum ve Zimmet</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield">
+                  <label for="fBagliFirma">Bağlı Firma</label>
+                  <input type="text" id="fBagliFirma" value="Yapıtaş İnşaat A.Ş." disabled>
+                </div>
+                <div class="gfield">
+                  <label for="fSube">Şube <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fSube" placeholder="ör. Genel Merkez">
+                </div>
+                <div class="gfield">
+                  <label for="fProje">Proje <span class="gf-hint">(bu prototipte şantiye=proje, isteğe bağlı)</span></label>
+                  <input type="text" id="fProje" placeholder="ör. Vadi Konakları İnşaatı">
+                </div>
+                <div class="gfield">
+                  <label for="fSantiye">Şantiye</label>
+                  <select id="fSantiye">
+                    <option value="">— (depoda / şantiyeye bağlı değil)</option>
+                    <option>Vadi Konakları</option>
+                    <option>Liman Lojistik Merkezi</option>
+                    <option>Merkez Şantiye</option>
+                    <option>Genel Merkez</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fDepo">Depo <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <select id="fDepo">
+                    <option value="">— (depoda değil)</option>
+                    <option>Merkez depo</option>
+                    <option>Vadi Konakları Depo</option>
+                    <option>Liman Lojistik Depo</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fBolum">Bölüm <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fBolum" placeholder="ör. Saha Yönetimi, Muhasebe">
+                </div>
+                <div class="gfield">
+                  <label for="fOdaAlan">Oda / Alan <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="text" id="fOdaAlan" placeholder="ör. Şantiye Şefliği Ofisi">
+                </div>
+                <div class="gfield">
+                  <label for="fZimmet">Zimmetli Personel</label>
+                  <select id="fZimmet"></select>
+                </div>
+                <div class="gfield">
+                  <label for="fZimmetTarihi">Zimmet Tarihi</label>
+                  <input type="date" id="fZimmetTarihi">
+                </div>
+                <div class="gfield">
+                  <label for="fTeslimEden">Teslim Eden</label>
+                  <select id="fTeslimEden"></select>
+                </div>
+                <div class="gfield">
+                  <label for="fTeslimAlan">Teslim Alan</label>
+                  <select id="fTeslimAlan"></select>
+                </div>
+                <div class="gfield full">
+                  <label for="fZimmetAciklama">Zimmet Açıklaması <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <textarea id="fZimmetAciklama" rows="2" placeholder="ör. Teslim sırasında kondisyon notu…"></textarea>
+                </div>
+              </div>
+              <div class="gd-label" style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">Zimmet Formu <span style="text-transform:none;font-weight:500">(isteğe bağlı)</span></div>
+              <div id="docWrap-zimmetformu"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 5 — DURUM VE KULLANIM ============ -->
+        <section class="tab-panel" data-tab-panel="durum" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-toggle-on"></i> Durum ve Kullanım</div></div>
+            <div class="gc-body">
+              <div class="gform">
+                <div class="gfield">
+                  <label for="fDurum">Durum</label>
+                  <select id="fDurum">
+                    <option value="zimmetli">Zimmetli</option>
+                    <option value="depoda" selected>Depoda (Stokta)</option>
+                    <option value="serviste">Serviste (Bakımda)</option>
+                    <option value="arizali">Arızalı</option>
+                    <option value="kayip">Kayıp</option>
+                    <option value="hurda">Hurda</option>
+                    <option value="satildi">Satıldı</option>
+                    <option value="iade">İade Edildi</option>
+                    <option value="pasif">Pasif</option>
+                  </select>
+                  <span class="gf-hint">§2.7 Sekme 5'in 10 durumu birebir — "Kullanımda" ayrı bir sınıf değil, kararlar.md madde 143 gereği "Zimmetli" ile aynı kabul edilir.</span>
+                </div>
+                <div class="gfield">
+                  <label for="fKullanimBaslangic">Kullanıma Başlama Tarihi <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="date" id="fKullanimBaslangic">
+                </div>
+                <div class="gfield">
+                  <label for="fKullanimSikligi">Kullanım Sıklığı</label>
+                  <select id="fKullanimSikligi">
+                    <option value="">Belirtilmedi</option>
+                    <option>Sürekli</option>
+                    <option>Günlük</option>
+                    <option>Haftalık</option>
+                    <option>Aylık</option>
+                    <option>Nadiren</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fSonKontrol">Son Kontrol Tarihi <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="date" id="fSonKontrol">
+                </div>
+                <div class="gfield">
+                  <label for="fSonrakiKontrol">Sonraki Kontrol Tarihi <span class="gf-hint">(isteğe bağlı)</span></label>
+                  <input type="date" id="fSonrakiKontrol">
+                </div>
+              </div>
+              <div class="stat-row" style="padding:13px 0;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+                <div><b style="font-size:13px;font-weight:700;color:var(--ink)">Kritik Ekipman</b><span style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px">İşaretlenirse Demirbaş Bildirimleri'nde öncelikli izlenir (ör. jeneratör, kırıcı-delici).</span></div>
+                <label class="gv-toggle"><input type="checkbox" id="fKritik"><span class="tg-track"></span></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ SEKME 6 — BAKIM VE KONTROL ============ -->
+        <section class="tab-panel" data-tab-panel="bakim" hidden>
+          <div class="gv-card">
+            <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım ve Kontrol</div></div>
+            <div class="gc-body">
+              <div class="stat-row" style="padding:0 0 16px;display:flex;align-items:center;justify-content:space-between">
+                <div><b style="font-size:13px;font-weight:700;color:var(--ink)">Bakım Gerektiriyor mu?</b><span style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px">Açarsanız periyot/tarih alanları etkinleşir.</span></div>
+                <label class="gv-toggle"><input type="checkbox" id="fBakimGerekli"><span class="tg-track"></span></label>
+              </div>
+              <div class="gform" id="bakimAlanlari">
+                <div class="gfield">
+                  <label for="fBakimPeriyodu">Bakım Periyodu</label>
+                  <select id="fBakimPeriyodu">
+                    <option value="">Belirtilmedi</option>
+                    <option>3 Ay</option>
+                    <option>6 Ay</option>
+                    <option>Yıllık</option>
+                    <option>Kullanıma Bağlı</option>
+                  </select>
+                </div>
+                <div class="gfield">
+                  <label for="fSonBakim">Son Bakım Tarihi</label>
+                  <input type="date" id="fSonBakim">
+                </div>
+                <div class="gfield">
+                  <label for="fSonrakiBakim">Sonraki Bakım Tarihi</label>
+                  <input type="date" id="fSonrakiBakim">
+                </div>
+                <div class="gfield">
+                  <label for="fBakimFirmasi">Bakım Firması</label>
+                  <input type="text" id="fBakimFirmasi" placeholder="ör. Hilti Servis Merkezi">
+                </div>
+                <div class="gfield">
+                  <label for="fBakimMaliyeti">Bakım Maliyeti <span class="gf-hint">(₺)</span></label>
+                  <input type="number" id="fBakimMaliyeti" min="0">
+                </div>
+              </div>
+
+              <div class="stat-row" style="padding:16px 0;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+                <div><b style="font-size:13px;font-weight:700;color:var(--ink)">Kalibrasyon Gerektiriyor mu?</b><span style="display:block;font-size:11.5px;color:var(--muted);margin-top:2px">Yalnız ölçüm cihazları için anlamlıdır (ör. Lazer Metre).</span></div>
+                <label class="gv-toggle"><input type="checkbox" id="fKalibrasyonGerekli"><span class="tg-track"></span></label>
+              </div>
+              <div class="gform" id="kalibrasyonAlanlari">
+                <div class="gfield">
+                  <label for="fSonKalibrasyon">Son Kalibrasyon Tarihi</label>
+                  <input type="date" id="fSonKalibrasyon">
+                </div>
+                <div class="gfield">
+                  <label for="fKalibrasyonBitis">Kalibrasyon Bitiş Tarihi</label>
+                  <input type="date" id="fKalibrasyonBitis">
+                </div>
+              </div>
+
+              <div class="gd-label" style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">Kontrol / Bakım Belgesi <span style="text-transform:none;font-weight:500">(isteğe bağlı)</span></div>
+              <div id="docWrap-bakimbelgesi"></div>
+            </div>
+          </div>
+        </section>
+        </form>
+
+        <div class="gv-card">
+          <div class="form-foot">
+            <div class="foot-left">
+              <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="demirbasTaslak"><i class="fa-solid fa-file-pen"></i> Taslak Olarak Kaydet</button>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas.html">Vazgeç</a>
+            <button type="button" class="btn btn-acc btn-sm" data-no-confirm id="demirbasSubmit"><i class="fa-solid fa-floppy-disk"></i> <span id="demirbasSubmitLbl">Demirbaşı Kaydet</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bilgi notları ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-circle-info"></i> Kayıt Notları</div></div>
+          <div class="gc-body">
+            <div class="side-tip"><i class="fa-solid fa-warehouse"></i><span>"Depoda" seçilirse kalem zimmetsiz olarak envantere eklenir; kişiye ataması Konum ve Zimmet sekmesinden yapılır.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-hashtag"></i><span>ZMT takip numarası kayıt onaylandığında otomatik üretilir; Demirbaş Kodu (DMR-…) da bu numaradan deterministik türetilir.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-diagram-project"></i><span>Sınıflandırma sekmesinde seçtiğiniz Alt Kategori'ye göre Teknik Özellikler alanları otomatik değişir — girdiğiniz değerler kategori değişse de kaybolmaz.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-file-pen"></i><span>"Taslak Olarak Kaydet" tarayıcı localStorage'ına yazar — sayfa yeniden açıldığında doldurma önerisi çıkar.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-flask"></i><span>Bu form simülasyondur; gönderilen bilgiler envanter listesine kalıcı olarak eklenmez.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ============================================================================
+     KATEGORİ HİYERARŞİSİ + DİNAMİK TEKNİK ÖZELLİK MOTORU (§2.3/§2.4/§2.6)
+     T-DMR1'in demirbas-kategori.html'i bu turda henüz üretilmedi (diskte yok) —
+     tasks/spec-demirbas-kategori.md'ye devir bırakıldı, bu dosya kararlar.md madde
+     110 kanonik eşleme tablosundan + planın §7.3 seed listesinden DOĞRUDAN türetir,
+     BLOKE OLUNMADI. ============================================================ */
+
+  var ANA_KATEGORILER = [
+    {v:'bt', l:'Bilgi Teknolojileri'},
+    {v:'sarjli', l:'Şarjlı Aletler'},
+    {v:'olcum', l:'Ölçüm Cihazları'},
+    {v:'elaletleri', l:'El Aletleri'},
+    {v:'ofis', l:'Ofis Demirbaşları'},
+    {v:'santiyeEkip', l:'Şantiye Ekipmanları'},
+    {v:'isg', l:'İş Sağlığı ve Güvenliği'},
+    {v:'makine', l:'Makine ve Ağır Ekipman'},
+    {v:'arac', l:'Araç (geçiş kategorisi)'}
+  ];
+
+  var ALT_KATEGORILER = {
+    bt: [['masaustu','Masaüstü Bilgisayar'],['dizustu','Dizüstü Bilgisayar'],['tablet','Tablet'],['cepTelefonu','Cep Telefonu'],['monitor','Monitör'],['yazici','Yazıcı'],['tarayici','Tarayıcı'],['sunucu','Sunucu'],['modem','Modem'],['switch','Switch'],['kamera','Kamera'],['depolama','Depolama Cihazı'],['telsiz','Telsiz / İletişim']],
+    sarjli: [['sarjliMatkap','Şarjlı Matkap'],['sarjliKirici','Şarjlı Kırıcı'],['sarjliTaslama','Şarjlı Taşlama'],['sarjliTestere','Şarjlı Testere'],['sarjliVidalama','Şarjlı Vidalama'],['sarjliSomun','Şarjlı Somun Sıkma'],['aku','Akü'],['sarjCihazi','Şarj Cihazı']],
+    olcum: [['lazerMetre','Lazer Metre'],['nivo','Nivo'],['totalStation','Total Station'],['multimetre','Multimetre'],['termalKamera','Termal Kamera'],['gazOlcum','Gaz Ölçüm Cihazı'],['topraklamaOlcum','Topraklama Ölçüm Cihazı'],['nemOlcer','Nem Ölçer'],['kalinlikOlcer','Kalınlık Ölçer']],
+    elaletleri: [['kiriciDelici','Kırıcı ve Deliciler'],['matkap','Matkaplar'],['taslamaMak','Taşlama Makineleri'],['kesmeMak','Kesme Makineleri'],['testere','Testereler'],['kaynakMak','Kaynak Makineleri'],['kompresor','Kompresörler'],['jeneratorler','Jeneratörler'],['somunSikma','Somun Sıkma Makineleri'],['vidalamaMak','Vidalama Makineleri']],
+    ofis: [['masa','Masa'],['koltuk','Koltuk'],['sandalye','Sandalye'],['dolap','Dolap'],['keson','Keson'],['toplantiMasasi','Toplantı Masası'],['klima','Klima'],['televizyon','Televizyon'],['projeksiyon','Projeksiyon Cihazı']],
+    santiyeEkip: [['iskele','İskele Ekipmanları'],['merdiven','Merdiven'],['betonMikser','Beton Mikseri'],['vibrator','Vibratör'],['elArabasi','El Arabası'],['suPompasi','Su Pompası'],['aydinlatma','Aydınlatma Ekipmanı'],['uzatmaKablo','Uzatma Kablosu'],['elektrikPanosu','Elektrik Panosu']],
+    isg: [['baret','Baret'],['emniyetKemeri','Emniyet Kemeri'],['gazMaskesi','Gaz Maskesi'],['yanginTupu','Yangın Tüpü'],['ilkYardim','İlk Yardım Çantası'],['yasamHatti','Yaşam Hattı Ekipmanı'],['kurtarma','Kurtarma Ekipmanı'],['reflektif','Reflektif Yelek'],['kkdSeti','Kişisel Koruyucu Donanım Seti']],
+    makine: [['forklift','Forklift'],['vinc','Vinç'],['manlift','Manlift'],['platform','Platform'],['ekskavator','Ekskavatör'],['yukleyici','Yükleyici'],['kompresorBuyuk','Kompresör'],['jenerator','Jeneratör']],
+    arac: []
+  };
+
+  var URUN_TURLERI = {
+    cepTelefonu:['Akıllı Telefon','Buton Telefon'],
+    tablet:['Standart Tablet','Rugged Tablet'],
+    sarjliMatkap:['Darbeli','Darbesiz'],
+    lazerMetre:['El Tipi','Tripod Montajlı'],
+    kiriciDelici:['SDS-Plus','SDS-Max'],
+    telsiz:['El Telsizi','Baz İstasyonu'],
+    jenerator:['İnverter','Konvansiyonel'],
+    kkdSeti:['Tam Set','Kısmi Set']
+  };
+
+  var MARKALAR = ['Bosch','Hilti','Motorola','Samsung','Honda','3M','Makita','DeWalt','Milwaukee','Metabo','Stanley','Leica','Topcon','Dell','HP','Lenovo','Diğer'];
+
+  /* Seri No/IMEI etiketi kategoriye göre değişir — arac-form.html'in seriLbl deseniyle aynı dil */
+  var SERI_LBL = { cepTelefonu:'IMEI / Seri No', tablet:'IMEI / Seri No', telsiz:'Seri No' };
+
+  /* 9 alan türü: metin/sayi/ondalik/secim/coklu/tarih/dosya/evethayir/birimli — her tür
+     en az bir TEKNIK_SEMA alanında kullanılır (kanıt: cepTelefonu=metin/secim/birimli,
+     kkdSeti=secim/coklu/tarih, lazerMetre=birimli/ondalik/secim/evethayir/dosya,
+     telsiz=sayi/secim/birimli, sarjliMatkap=birimli/ondalik/sayi/evethayir). */
+  var TEKNIK_SEMA = {
+    cepTelefonu: [
+      {key:'imei', ad:'IMEI', tip:'metin'},
+      {key:'ram', ad:'RAM', tip:'secim', secenekler:['4GB','6GB','8GB','12GB']},
+      {key:'depolama', ad:'Depolama', tip:'secim', secenekler:['64GB','128GB','256GB','512GB']},
+      {key:'os', ad:'İşletim Sistemi', tip:'secim', secenekler:['Android 14','Android 13','iOS 18','iOS 17']},
+      {key:'ekranBoyutu', ad:'Ekran Boyutu', tip:'birimli', birim:'inç'},
+      {key:'simOperator', ad:'SIM Operatörü', tip:'metin'}
+    ],
+    tablet: [
+      {key:'imei', ad:'IMEI / Seri', tip:'metin'},
+      {key:'ram', ad:'RAM', tip:'secim', secenekler:['3GB','4GB','6GB','8GB']},
+      {key:'depolama', ad:'Depolama', tip:'secim', secenekler:['64GB','128GB','256GB']},
+      {key:'ekranBoyutu', ad:'Ekran Boyutu', tip:'birimli', birim:'inç'},
+      {key:'baglanti', ad:'Bağlantı Türü', tip:'secim', secenekler:['Wi-Fi','Wi-Fi + Hücresel']},
+      {key:'os', ad:'İşletim Sistemi', tip:'secim', secenekler:['Android 14','Android 13','iPadOS']}
+    ],
+    sarjliMatkap: [
+      {key:'voltaj', ad:'Voltaj', tip:'birimli', birim:'V'},
+      {key:'akuKapasitesi', ad:'Akü Kapasitesi', tip:'birimli', birim:'Ah'},
+      {key:'tork', ad:'Tork', tip:'birimli', birim:'Nm'},
+      {key:'devir', ad:'Devir', tip:'birimli', birim:'rpm'},
+      {key:'mandrenCapi', ad:'Mandren Çapı', tip:'ondalik', birim:'mm'},
+      {key:'akuAdedi', ad:'Akü Adedi', tip:'sayi'},
+      {key:'cantaDahil', ad:'Çanta Dahil mi', tip:'evethayir'}
+    ],
+    kkdSeti: [
+      {key:'beden', ad:'Beden', tip:'secim', secenekler:['S','M','L','XL','XXL']},
+      {key:'setIcerigi', ad:'Set İçeriği', tip:'coklu', secenekler:['Baret','Yelek','Bot','Eldiven','Gözlük']},
+      {key:'standart', ad:'Standart / Sertifika', tip:'metin'},
+      {key:'sonKontrolTarihi', ad:'Son Kontrol Tarihi', tip:'tarih'}
+    ],
+    lazerMetre: [
+      {key:'olcumMenzili', ad:'Ölçüm Menzili', tip:'birimli', birim:'m'},
+      {key:'hassasiyet', ad:'Hassasiyet', tip:'ondalik', birim:'mm'},
+      {key:'lazerSinifi', ad:'Lazer Sınıfı', tip:'secim', secenekler:['Class 1','Class 2','Class 3R']},
+      {key:'suGecirmezlik', ad:'Su Geçirmezlik', tip:'secim', secenekler:['Yok','IP54','IP65']},
+      {key:'bluetooth', ad:'Bluetooth Bağlantısı', tip:'evethayir'},
+      {key:'kalibrasyonSertifikasi', ad:'Kalibrasyon Sertifikası', tip:'dosya'}
+    ],
+    kiriciDelici: [
+      {key:'darbeEnerjisi', ad:'Darbe Enerjisi', tip:'birimli', birim:'J'},
+      {key:'gucKaynagi', ad:'Güç Kaynağı', tip:'secim', secenekler:['Şebeke','Akü','Benzin']},
+      {key:'agirlik', ad:'Ağırlık', tip:'ondalik', birim:'kg'},
+      {key:'ucTipi', ad:'Uç Tipi', tip:'secim', secenekler:['SDS-Plus','SDS-Max','Altıgen']},
+      {key:'titresimAzaltma', ad:'Titreşim Azaltma', tip:'evethayir'}
+    ],
+    telsiz: [
+      {key:'frekansBandi', ad:'Frekans Bandı', tip:'secim', secenekler:['VHF','UHF']},
+      {key:'kanalSayisi', ad:'Kanal Sayısı', tip:'sayi'},
+      {key:'menzil', ad:'Menzil', tip:'birimli', birim:'km'},
+      {key:'bataryaOmru', ad:'Batarya Ömrü', tip:'birimli', birim:'saat'},
+      {key:'suTozDayanimi', ad:'Su / Toz Dayanımı', tip:'secim', secenekler:['Yok','IP54','IP67']}
+    ],
+    jenerator: [
+      {key:'gucCikisi', ad:'Güç Çıkışı', tip:'birimli', birim:'kVA'},
+      {key:'yakitTuru', ad:'Yakıt Türü', tip:'secim', secenekler:['Benzin','Dizel','LPG']},
+      {key:'depoKapasitesi', ad:'Depo Kapasitesi', tip:'birimli', birim:'L'},
+      {key:'calismaSuresi', ad:'Çalışma Süresi', tip:'birimli', birim:'saat'},
+      {key:'gurultu', ad:'Gürültü Seviyesi', tip:'birimli', birim:'dB'},
+      {key:'inverterMi', ad:'İnverter mi', tip:'evethayir'},
+      {key:'kullanimKilavuzu', ad:'Kullanım Kılavuzu', tip:'dosya'}
+    ]
+  };
+
+  var KAT_KISALTMA = { cepTelefonu:'TEL', tablet:'TAB', sarjliMatkap:'SARJ', kkdSeti:'ISG', lazerMetre:'OLCU', kiriciDelici:'ELALT', telsiz:'BT', jenerator:'MKN' };
+
+  var PERSONEL_OPTGROUPS = [
+    {lbl:'Şantiye Şefleri', kisiler:['Hasan Demirci','Aylin Koç','Ömer Taşkın']},
+    {lbl:'Yönetim', kisiler:['Murat Denizli','Elif Sarıkaya','Baran Yıldız','Seda Karaca','Nesrin Aydın']},
+    {lbl:'Vadi Ekibi', kisiler:['Ali Vural','İbrahim Sönmez','Ramazan Kılıç','Selim Doğan','Musa Erdem','Veli Şimşek']},
+    {lbl:'Liman Ekibi', kisiler:['Şükrü Aslan','Halil Güneş','Metin Çetin','Osman Polat']},
+    {lbl:'Merkez Ekibi', kisiler:['Recep Yaman','İlyas Kurt','Sadık Öz']}
+  ];
+
+  /* ---- negatif dizi indeksi tuzağı — arac-form.html'in pick() işlevi BİREBİR ---- */
+  function seed(str){ var h = 0; for(var i = 0; i < str.length; i++){ h = (h * 31 + str.charCodeAt(i)) >>> 0; } return h; }
+  function pick(arr, s){ if(!arr || !arr.length) return null; var i = ((s % arr.length) + arr.length) % arr.length; return arr[i]; }
+
+  function fillSelect(sel, opts, placeholder){
+    sel.innerHTML = '';
+    if(placeholder){ var ph = document.createElement('option'); ph.value = ''; ph.textContent = placeholder; sel.appendChild(ph); }
+    opts.forEach(function(o){
+      var v = Array.isArray(o) ? o[0] : o, l = Array.isArray(o) ? o[1] : o;
+      var op = document.createElement('option'); op.value = v; op.textContent = l; sel.appendChild(op);
+    });
+  }
+
+  function fillPersonelSelect(sel, extraFirst){
+    sel.innerHTML = '';
+    if(extraFirst){ var ph = document.createElement('option'); ph.value = ''; ph.textContent = extraFirst; sel.appendChild(ph); }
+    PERSONEL_OPTGROUPS.forEach(function(g){
+      var og = document.createElement('optgroup'); og.label = g.lbl;
+      g.kisiler.forEach(function(k){ var op = document.createElement('option'); op.textContent = k; og.appendChild(op); });
+      sel.appendChild(og);
+    });
+  }
+
+  var fAna = document.getElementById('fAnaKategori'), fAlt = document.getElementById('fAltKategori'),
+      fUrun = document.getElementById('fUrunTuru'), fMarkaSel = document.getElementById('fMarkaSel'),
+      fMarkaDigerWrap = document.getElementById('fMarkaDigerWrap'), fMarkaDiger = document.getElementById('fMarkaDiger'),
+      teknikContainer = document.getElementById('teknikContainer'), teknikJson = document.getElementById('teknikJson'),
+      aracNotu = document.getElementById('aracGecisNotu'), teknikBlock = document.getElementById('teknikBlock'),
+      seriLblEl = document.getElementById('seriLbl');
+
+  fillSelect(fAna, ANA_KATEGORILER.map(function(a){ return [a.v, a.l]; }));
+  fillSelect(fMarkaSel, MARKALAR);
+  fillPersonelSelect(document.getElementById('fZimmet'), 'Zimmetsiz — depo/stok kalemi');
+  fillPersonelSelect(document.getElementById('fTeslimEden'), 'Belirtilmedi');
+  fillPersonelSelect(document.getElementById('fTeslimAlan'), 'Belirtilmedi');
+
+  /* ---- dinamik teknik özellik durumu — kategori değişse de değerler kaybolmaz ---- */
+  var teknikState = {};
+
+  function readTeknikStateFromDom(){
+    teknikContainer.querySelectorAll('[data-tk-key]').forEach(function(el){
+      var key = el.getAttribute('data-tk-key');
+      if(el.type === 'checkbox' && el.getAttribute('data-tk-coklu')){
+        var group = teknikState[key] || [];
+        if(el.checked){ if(group.indexOf(el.value) < 0) group.push(el.value); }
+        else { group = group.filter(function(v){ return v !== el.value; }); }
+        teknikState[key] = group;
+      } else if(el.type === 'checkbox'){
+        teknikState[key] = el.checked;
+      } else {
+        teknikState[key] = el.value;
+      }
+    });
+  }
+
+  function fieldEl(f){
+    var wrap = document.createElement('div');
+    wrap.className = 'gfield' + (f.tip === 'coklu' ? ' full' : '');
+    var lbl = document.createElement('label');
+    lbl.textContent = f.ad + (f.birim ? ' (' + f.birim + ')' : '');
+    wrap.appendChild(lbl);
+    var val = teknikState[f.key];
+    if(f.tip === 'secim'){
+      var sel = document.createElement('select'); sel.setAttribute('data-tk-key', f.key);
+      (f.secenekler || []).forEach(function(o){ var op = document.createElement('option'); op.value = o; op.textContent = o; sel.appendChild(op); });
+      if(val !== undefined && f.secenekler.indexOf(val) >= 0) sel.value = val;
+      sel.addEventListener('change', onTeknikChange);
+      wrap.appendChild(sel);
+    } else if(f.tip === 'coklu'){
+      var cw = document.createElement('div'); cw.className = 'coklu-wrap';
+      (f.secenekler || []).forEach(function(o){
+        var id = 'tk_' + f.key + '_' + o.replace(/\s+/g,'');
+        var l = document.createElement('label');
+        var cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = o; cb.id = id;
+        cb.setAttribute('data-tk-key', f.key); cb.setAttribute('data-tk-coklu', '1');
+        if(Array.isArray(val) && val.indexOf(o) >= 0) cb.checked = true;
+        cb.addEventListener('change', onTeknikChange);
+        var span = document.createElement('span'); span.textContent = o;
+        l.appendChild(cb); l.appendChild(span);
+        cw.appendChild(l);
+      });
+      wrap.appendChild(cw);
+    } else if(f.tip === 'evethayir'){
+      var lab = document.createElement('label'); lab.className = 'gv-toggle'; lab.style.marginTop = '2px';
+      var cb2 = document.createElement('input'); cb2.type = 'checkbox'; cb2.setAttribute('data-tk-key', f.key);
+      if(val === true) cb2.checked = true;
+      cb2.addEventListener('change', onTeknikChange);
+      var track = document.createElement('span'); track.className = 'tg-track';
+      lab.appendChild(cb2); lab.appendChild(track);
+      wrap.appendChild(lab);
+    } else if(f.tip === 'tarih'){
+      var inpD = document.createElement('input'); inpD.type = 'date'; inpD.setAttribute('data-tk-key', f.key);
+      if(val) inpD.value = val;
+      inpD.addEventListener('change', onTeknikChange);
+      wrap.appendChild(inpD);
+    } else if(f.tip === 'dosya'){
+      var inpF = document.createElement('input'); inpF.type = 'text'; inpF.placeholder = 'Dosya adı (yükleme simülasyonu)'; inpF.setAttribute('data-tk-key', f.key);
+      if(val) inpF.value = val;
+      inpF.addEventListener('input', onTeknikChange);
+      wrap.appendChild(inpF);
+    } else if(f.tip === 'sayi'){
+      var inpN = document.createElement('input'); inpN.type = 'number'; inpN.step = '1'; inpN.setAttribute('data-tk-key', f.key);
+      if(val !== undefined) inpN.value = val;
+      inpN.addEventListener('input', onTeknikChange);
+      wrap.appendChild(inpN);
+    } else if(f.tip === 'ondalik' || f.tip === 'birimli'){
+      var inpO = document.createElement('input'); inpO.type = 'number'; inpO.step = '0.1'; inpO.setAttribute('data-tk-key', f.key);
+      if(val !== undefined) inpO.value = val;
+      inpO.addEventListener('input', onTeknikChange);
+      wrap.appendChild(inpO);
+    } else {
+      var inpT = document.createElement('input'); inpT.type = 'text'; inpT.setAttribute('data-tk-key', f.key);
+      if(val !== undefined) inpT.value = val;
+      inpT.addEventListener('input', onTeknikChange);
+      wrap.appendChild(inpT);
+    }
+    return wrap;
+  }
+
+  function onTeknikChange(){ readTeknikStateFromDom(); renderTeknikJson(); }
+
+  function currentAltKey(){ return fAlt.value; }
+
+  function serializeTeknik(){
+    var altKey = currentAltKey();
+    var sema = TEKNIK_SEMA[altKey] || [];
+    return sema.map(function(f){
+      var v = teknikState[f.key];
+      return {ad:f.ad, anahtar:f.key, tip:f.tip, birim:f.birim || null, deger:(v === undefined ? null : v)};
+    });
+  }
+
+  function renderTeknikJson(){
+    teknikJson.textContent = JSON.stringify(serializeTeknik(), null, 2);
+  }
+
+  function renderTeknikOzellikler(){
+    /* önce görünürdeki alanların değerlerini state'e yaz — kategori değişse de kaybolmasın */
+    readTeknikStateFromDom();
+    var altKey = currentAltKey();
+    var anaVal = fAna.value;
+    teknikContainer.innerHTML = '';
+    if(anaVal === 'arac'){ renderTeknikJson(); return; }
+    var sema = TEKNIK_SEMA[altKey];
+    if(!sema || !sema.length){
+      var empty = document.createElement('div');
+      empty.className = 'teknik-empty';
+      empty.innerHTML = '<i class="fa-solid fa-circle-info"></i><span>Bu ürün türü için henüz tanımlı bir teknik özellik şablonu yok — Kategori Yönetimi ekranı genişledikçe burada otomatik görünecek.</span>';
+      teknikContainer.appendChild(empty);
+      renderTeknikJson();
+      return;
+    }
+    sema.forEach(function(f){ teknikContainer.appendChild(fieldEl(f)); });
+    renderTeknikJson();
+  }
+
+  function refreshAltKategori(){
+    var ana = fAna.value;
+    var isArac = ana === 'arac';
+    aracNotu.hidden = !isArac;
+    teknikBlock.hidden = isArac;
+    document.querySelectorAll('#fAltKategori, #fUrunTuru, #fMarkaSel, #fModel, #fVaryant').forEach(function(el){ el.disabled = isArac; });
+    fillSelect(fAlt, ALT_KATEGORILER[ana] || []);
+    refreshUrunTuru();
+  }
+
+  function refreshUrunTuru(){
+    var alt = fAlt.value;
+    fillSelect(fUrun, (URUN_TURLERI[alt] || ['Genel']).map(function(x){ return [x, x]; }));
+    seriLblEl.textContent = SERI_LBL[alt] || 'Seri No';
+    renderTeknikOzellikler();
+    refreshDemirbasKodu();
+  }
+
+  fAna.addEventListener('change', refreshAltKategori);
+  fAlt.addEventListener('change', refreshUrunTuru);
+  fMarkaSel.addEventListener('change', function(){
+    fMarkaDigerWrap.hidden = fMarkaSel.value !== 'Diğer';
+    refreshDemirbasKodu();
+  });
+
+  document.getElementById('teknikJsonToggle').addEventListener('click', function(){
+    teknikJson.hidden = !teknikJson.hidden;
+    this.textContent = teknikJson.hidden ? 'JSON önizle' : 'JSON gizle';
+  });
+
+  /* ============================================================================
+     DMR KOD TÜRETME (kararlar.md madde 108) — DMR-{KAT}-{MARKA}-{ZMTsonNo, 6 haneli}
+     ör. ZMT-2026-046 + Bosch → DMR-OLCU-BOSCH-000046 (dokümandaki örnekle birebir). */
+  /* "ilk 4-5 harf büyük" kuralı (kararlar madde 108) — 3M gibi rakam içeren kısa
+     marka adlarında salt harf filtreleme tek karaktere düşürebildiği için (M),
+     rakamlar da korunur; BOSCH/HILTI/SAMSU/MOTOR/HONDA örnekleri etkilenmez. */
+  function markaKisalt(m){ return (m || '').toUpperCase().replace(/[^A-Z0-9ÇĞİÖŞÜ]/g, '').slice(0, 5); }
+  var currentZmtNo = null; /* düzenleme/kopya modunda dolar */
+
+  function refreshDemirbasKodu(){
+    var el = document.getElementById('fDemirbasKodu');
+    var altKey = currentAltKey();
+    var katKisa = KAT_KISALTMA[altKey];
+    var marka = fMarkaSel.value === 'Diğer' ? fMarkaDiger.value : fMarkaSel.value;
+    if(!currentZmtNo || !katKisa || !marka){
+      el.value = '';
+      el.placeholder = 'Kayıt onaylandığında atanır';
+      renderBarkodPrev(null);
+      return;
+    }
+    var numeric = parseInt(currentZmtNo.split('-').pop(), 10) || 0;
+    var kod = 'DMR-' + katKisa + '-' + markaKisalt(marka) + '-' + String(numeric).padStart(6, '0');
+    el.value = kod;
+    renderBarkodPrev(kod);
+  }
+  fMarkaDiger.addEventListener('input', refreshDemirbasKodu);
+
+  /* ---- barkod/QR ÖNİZLEME — deterministik, kayda-özel, "gerçek ama taranamaz"
+     (kararlar madde 109) — güvenli normalize edilmiş indeksleme kullanılır ---- */
+  function renderBarkodPrev(code){
+    var bars = document.getElementById('bpBars'), qr = document.getElementById('bpQr'), txt = document.getElementById('bpCodeTxt');
+    bars.innerHTML = ''; qr.innerHTML = '';
+    if(!code){ txt.textContent = 'DMR kodu bekleniyor'; return; }
+    txt.textContent = code;
+    var s = seed(code);
+    for(var i = 0; i < 28; i++){
+      var h = Math.abs((s >> (i % 24)) ^ (s * (i + 7))) % 100;
+      var bar = document.createElement('span');
+      bar.style.height = (14 + (h % 30)) + 'px';
+      bars.appendChild(bar);
+    }
+    for(var j = 0; j < 25; j++){
+      var bit = ((s >> (j % 30)) ^ (s * (j + 3) >> 2)) & 1;
+      var cell = document.createElement('i');
+      if(bit) cell.className = 'on';
+      qr.appendChild(cell);
+    }
+  }
+
+  /* ============================================================================
+     DOSYA YÜKLEME — attach-zone + gerçek File API (metaveri gösterimi; kayıt kalıcı
+     değil, bkz. prototip notu). Parametrik: satın-alma/zimmet-formu/bakım-belgesi
+     aynı fonksiyonu farklı wrapper'la kullanır. ============================================ */
+  function mountAttachZone(wrapId, hint){
+    var wrap = document.getElementById(wrapId);
+    var state = {file:null, versions:[]};
+    function render(){
+      wrap.innerHTML = '';
+      var zone = document.createElement('label');
+      zone.className = 'attach-zone';
+      zone.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><b>Dosya ekle</b><span>' + hint + '</span><input type="file" accept=".pdf,.jpg,.jpeg,.png">';
+      wrap.appendChild(zone);
+      var input = zone.querySelector('input');
+      input.addEventListener('click', function(e){ e.stopPropagation(); });
+      input.addEventListener('change', function(){
+        var f = input.files[0];
+        if(!f) return;
+        if(state.file) state.versions.unshift(state.file);
+        state.file = {ad:f.name, boyut:f.size, tarih:new Date().toLocaleDateString('tr-TR')};
+        render();
+        gvToast(f.name + ' eklendi.');
+      });
+      if(state.file){
+        var chip = document.createElement('div'); chip.className = 'file-chip';
+        chip.innerHTML = '<i class="fa-solid fa-paperclip"></i><b>' + state.file.ad + '</b><span>' + humanSize(state.file.boyut) + ' · ' + state.file.tarih + '</span><button type="button" data-no-confirm aria-label="Kaldır"><i class="fa-solid fa-xmark"></i></button>';
+        chip.querySelector('button').addEventListener('click', function(){ state.versions.unshift(state.file); state.file = null; render(); });
+        wrap.appendChild(chip);
+        if(state.versions.length){
+          var hist = document.createElement('div'); hist.className = 'file-hist';
+          hist.innerHTML = state.versions.map(function(v){ return '<div class="file-hist-item"><span class="gtag">önceki</span>' + v.ad + ' · ' + v.tarih + '</div>'; }).join('');
+          wrap.appendChild(hist);
+        }
+      }
+    }
+    render();
+    return state;
+  }
+  function humanSize(bytes){ if(bytes > 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB'; return Math.max(1, Math.round(bytes / 1024)) + ' KB'; }
+
+  mountAttachZone('docWrap-satinalma', 'PDF, JPG, PNG — sürükle bırak veya tıkla');
+  mountAttachZone('docWrap-zimmetformu', 'İmzalı zimmet formu — PDF/JPG');
+  mountAttachZone('docWrap-bakimbelgesi', 'Servis fişi / kalibrasyon sertifikası — PDF/JPG');
+
+  /* ürün görseli — kare, div+background-image */
+  var gorselDrop = document.getElementById('gorselDrop'), fGorsel = document.getElementById('fGorsel');
+  function setGorsel(dataUrl){
+    gorselDrop.style.backgroundImage = dataUrl ? 'url(' + dataUrl + ')' : '';
+    gorselDrop.classList.toggle('has-img', !!dataUrl);
+  }
+  fGorsel.addEventListener('change', function(){
+    var f = fGorsel.files[0]; if(!f) return;
+    var reader = new FileReader();
+    reader.onload = function(e){ setGorsel(e.target.result); gvToast('Ürün görseli seçildi.'); };
+    reader.readAsDataURL(f);
+  });
+
+  /* Bakım/Kalibrasyon alanları toggle ile etkin/pasif */
+  function wireGate(toggleId, wrapId){
+    var t = document.getElementById(toggleId), w = document.getElementById(wrapId);
+    function sync(){ w.style.opacity = t.checked ? '1' : '.45'; w.querySelectorAll('input,select').forEach(function(el){ el.disabled = !t.checked; }); }
+    t.addEventListener('change', sync); sync();
+  }
+  wireGate('fBakimGerekli', 'bakimAlanlari');
+  wireGate('fKalibrasyonGerekli', 'kalibrasyonAlanlari');
+
+  /* şef ise şantiye seçici kendi sahasına sabitlenir — crm-operasyon-kasa-form.html ile aynı idiyom */
+  var santiyeSel = document.getElementById('fSantiye');
+  if(GV.role === 'sef'){ santiyeSel.value = 'Vadi Konakları'; santiyeSel.disabled = true; }
+
+  /* ============================================================================
+     SEKME MOTORU — crm-operasyon-arac-form.html ile BİREBİR aynı .gv-tab/data-tab-panel
+     hash-tabanlı deseni (kaynak-transfer, motor tekrar icat edilmedi — T-UX §6 denetimi:
+     önceki halde hash-routing eksikti, arac-form.html ile uyumsuzdu, burada tamamlandı). */
+  (function(){
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+    function activate(id){
+      tabs.forEach(function(t){
+        var on = t.getAttribute('data-tab') === id;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    }
+    tabs.forEach(function(t){
+      t.addEventListener('click', function(){
+        activate(t.getAttribute('data-tab'));
+        history.replaceState(null, '', location.pathname + location.search + '#' + t.getAttribute('data-tab'));
+      });
+    });
+    var initial = (location.hash || '').replace('#', '');
+    var valid = tabs.some(function(t){ return t.getAttribute('data-tab') === initial; });
+    activate(valid ? initial : 'siniflandirma');
+  })();
+
+  /* ============================================================================
+     KANONİK PREFILL — 10 kayıt (ZMT-2026-041..048 + ZMT-2025-017/009), shell.js
+     kanoniğiyle birebir. ⚠ ZMT-2026-045 önceden "Hasan Demirci/Vadi" YANLIŞ
+     gösteriyordu; shell.js kanoniği "Aylin Koç / Liman Lojistik Merkezi"dir — bu
+     dosyada DÜZELTİLDİ (bu bir kanonik sapma değil, mevcut dosyalar arası bir
+     tutarsızlık düzeltmesidir, plan §1 notu). ============================================ */
+  var DUZENLE_PREFILL = {
+    '041': {
+      ad:'İş Telefonu', anaKategori:'bt', altKategori:'cepTelefonu', urunTuru:'Akıllı Telefon', marka:'Samsung', model:'Galaxy A54', varyant:'64GB',
+      seriNo:'SN-A54-2K7719X', urunKodu:'SM-A546B', etiketNo:'ETK-000041',
+      tedarikci:'Turkcell Kurumsal', faturaNo:'FTR-2026-0041', satinAlmaTarihi:'2026-01-03', kdvOrani:'20', toplamBedel:24500, paraBirimi:'TRY', odemeYontemi:'Havale/EFT', garantiBaslangic:'2026-01-03', garantiBitis:'2028-01-03',
+      santiye:'Vadi Konakları', bolum:'Saha Yönetimi', zimmet:'Hasan Demirci', zimmetTarihi:'2026-01-03', teslimEden:'Baran Yıldız', teslimAlan:'Hasan Demirci',
+      durum:'zimmetli', kullanimBaslangic:'2026-01-03', kullanimSikligi:'Sürekli',
+      teknik:{imei:'358823104971234', ram:'8GB', depolama:'64GB', os:'Android 14', ekranBoyutu:6.4, simOperator:'Turkcell'}
+    },
+    '042': {
+      ad:'El Aleti Seti', anaKategori:'sarjli', altKategori:'sarjliMatkap', urunTuru:'Darbeli', marka:'Bosch', model:'GSB 18V-55', varyant:'18 parça set',
+      seriNo:'SN-GSB18-4471X', urunKodu:'06019H5100', etiketNo:'ETK-000042',
+      tedarikci:'Bosch Yetkili Bayi — Hırdavatçı A.Ş.', faturaNo:'FTR-2026-0042', satinAlmaTarihi:'2026-01-03', kdvOrani:'20', toplamBedel:8750, paraBirimi:'TRY', odemeYontemi:'Kredi Kartı', garantiBaslangic:'2026-01-03', garantiBitis:'2027-01-03',
+      santiye:'Vadi Konakları', bolum:'Saha Yönetimi', zimmet:'Hasan Demirci', zimmetTarihi:'2026-01-03', teslimEden:'Baran Yıldız', teslimAlan:'Hasan Demirci',
+      durum:'zimmetli', kullanimBaslangic:'2026-01-03', kullanimSikligi:'Haftalık',
+      bakimGerekli:true, bakimPeriyodu:'Yıllık',
+      teknik:{voltaj:18, akuKapasitesi:5.0, tork:55, devir:1800, mandrenCapi:13, akuAdedi:2, cantaDahil:true}
+    },
+    '043': {
+      ad:'Güvenlik Ekipmanı', anaKategori:'isg', altKategori:'kkdSeti', urunTuru:'Tam Set', marka:'3M', model:'Baret + Yelek + Bot Seti', varyant:'L Beden',
+      seriNo:'', etiketNo:'ETK-000043',
+      tedarikci:'Guvenpar İSG Ekipmanları', faturaNo:'FTR-2026-0043', satinAlmaTarihi:'2026-01-03', kdvOrani:'20', toplamBedel:3200, paraBirimi:'TRY', odemeYontemi:'Nakit',
+      santiye:'Vadi Konakları', bolum:'Saha Yönetimi', zimmet:'Hasan Demirci', zimmetTarihi:'2026-01-03', teslimEden:'Baran Yıldız', teslimAlan:'Hasan Demirci',
+      durum:'zimmetli', kullanimBaslangic:'2026-01-03', kullanimSikligi:'Sürekli',
+      teknik:{beden:'L', setIcerigi:['Baret','Yelek','Bot'], standart:'EN397 / EN20345', sonKontrolTarihi:'2027-01-03'}
+    },
+    '044': {
+      ad:'Araç', anaKategori:'arac', altKategori:'', urunTuru:'', marka:'', model:'Ford Ranger 4x4 Pikap (2023)', varyant:'',
+      seriNo:'NM0LS7EN6DT204471', etiketNo:'ETK-000044',
+      santiye:'Vadi Konakları', zimmet:'Hasan Demirci', zimmetTarihi:'2026-01-03', teslimEden:'Baran Yıldız', teslimAlan:'Hasan Demirci',
+      durum:'zimmetli'
+    },
+    '045': {
+      ad:'Tablet', anaKategori:'bt', altKategori:'tablet', urunTuru:'Standart Tablet', marka:'Samsung', model:'Galaxy Tab A9', varyant:'64GB',
+      seriNo:'SN-TABA9-7K3841L', urunKodu:'SM-X110', etiketNo:'ETK-000045',
+      tedarikci:'Teknosa Kurumsal', faturaNo:'FTR-2026-0045', satinAlmaTarihi:'2026-02-15', kdvOrani:'20', toplamBedel:9800, paraBirimi:'TRY', odemeYontemi:'Havale/EFT', garantiBaslangic:'2026-02-15', garantiBitis:'2028-02-15',
+      santiye:'Liman Lojistik Merkezi', bolum:'Saha Yönetimi', zimmet:'Aylin Koç', zimmetTarihi:'2026-02-15', teslimEden:'Baran Yıldız', teslimAlan:'Aylin Koç',
+      durum:'zimmetli', kullanimBaslangic:'2026-02-15', kullanimSikligi:'Sürekli',
+      teknik:{imei:'358911204471982', ram:'4GB', depolama:'64GB', ekranBoyutu:8.7, baglanti:'Wi-Fi', os:'Android 14'}
+    },
+    '046': {
+      ad:'Lazer Metre', anaKategori:'olcum', altKategori:'lazerMetre', urunTuru:'El Tipi', marka:'Bosch', model:'GLM 50 C', varyant:'',
+      seriNo:'SN-GLM50C-9910M', urunKodu:'0601072C00', etiketNo:'ETK-000046',
+      tedarikci:'Bosch Yetkili Bayi — Hırdavatçı A.Ş.', faturaNo:'FTR-2026-0046', satinAlmaTarihi:'2026-01-20', kdvOrani:'20', toplamBedel:6400, paraBirimi:'TRY', odemeYontemi:'Kredi Kartı', garantiBaslangic:'2026-01-20', garantiBitis:'2027-01-20',
+      santiye:'Merkez Şantiye', bolum:'Şantiye Şefliği', zimmet:'Ömer Taşkın', zimmetTarihi:'2026-01-20', teslimEden:'Baran Yıldız', teslimAlan:'Ömer Taşkın',
+      durum:'zimmetli', kullanimBaslangic:'2026-01-20', kullanimSikligi:'Haftalık',
+      kalibrasyonGerekli:true, sonKalibrasyon:'2026-01-20', kalibrasyonBitis:'2027-01-20',
+      teknik:{olcumMenzili:50, hassasiyet:1.5, lazerSinifi:'Class 2', suGecirmezlik:'IP54', bluetooth:true}
+    },
+    '047': {
+      ad:'Kırıcı-Delici', anaKategori:'elaletleri', altKategori:'kiriciDelici', urunTuru:'SDS-Max', marka:'Hilti', model:'TE 60-A36', varyant:'',
+      seriNo:'SN-TE60-8842X', urunKodu:'TE60-A36-02', etiketNo:'ETK-000047',
+      tedarikci:'Hilti Türkiye', faturaNo:'FTR-2025-0187', satinAlmaTarihi:'2025-11-10', kdvOrani:'20', toplamBedel:42500, paraBirimi:'TRY', odemeYontemi:'Havale/EFT', garantiBaslangic:'2025-11-10', garantiBitis:'2027-11-10',
+      depo:'Merkez depo',
+      durum:'serviste', bakimGerekli:true, bakimFirmasi:'Hilti Servis Merkezi', sonBakim:'2026-06-25',
+      teknik:{darbeEnerjisi:12, gucKaynagi:'Akü', agirlik:10.5, ucTipi:'SDS-Max', titresimAzaltma:true}
+    },
+    '048': {
+      ad:'El Telsizi Seti', anaKategori:'bt', altKategori:'telsiz', urunTuru:'El Telsizi', marka:'Motorola', model:'CP040', varyant:'4 adet set',
+      seriNo:'', urunKodu:'CP040-UHF', etiketNo:'ETK-000048',
+      tedarikci:'Motorola Yetkili Bayi', faturaNo:'FTR-2026-0048', satinAlmaTarihi:'2026-03-01', kdvOrani:'20', toplamBedel:14000, paraBirimi:'TRY', odemeYontemi:'Havale/EFT', garantiBaslangic:'2026-03-01', garantiBitis:'2028-03-01',
+      depo:'Merkez depo',
+      durum:'depoda',
+      teknik:{frekansBandi:'UHF', kanalSayisi:16, menzil:5, bataryaOmru:14, suTozDayanimi:'IP54'}
+    },
+    '2025-017': {
+      ad:'El Telsizi', anaKategori:'bt', altKategori:'telsiz', urunTuru:'El Telsizi', marka:'Motorola', model:'CP040', varyant:'',
+      seriNo:'SN-CP040-2231H', urunKodu:'CP040-UHF', etiketNo:'ETK-2025017',
+      tedarikci:'Motorola Yetkili Bayi', faturaNo:'FTR-2025-0090', satinAlmaTarihi:'2025-03-10', kdvOrani:'20', toplamBedel:3600, paraBirimi:'TRY',
+      zimmetTarihi:'2025-03-10', teslimEden:'Baran Yıldız', teslimAlan:'Hasan Demirci', zimmetAciklama:'3 Ocak 2026 tarihinde depoya iade alındı.',
+      durum:'iade',
+      teknik:{frekansBandi:'UHF', kanalSayisi:16, menzil:5, bataryaOmru:14, suTozDayanimi:'IP54'}
+    },
+    '2025-009': {
+      ad:'Jeneratör', anaKategori:'makine', altKategori:'jenerator', urunTuru:'İnverter', marka:'Honda', model:'EU22i', varyant:'',
+      seriNo:'SN-EU22I-5510H', urunKodu:'EU22I', etiketNo:'ETK-2025009',
+      tedarikci:'Honda Power Products Türkiye', faturaNo:'FTR-2025-0055', satinAlmaTarihi:'2025-04-08', kdvOrani:'20', toplamBedel:38500, paraBirimi:'TRY',
+      durum:'hurda',
+      teknik:{gucCikisi:2.2, yakitTuru:'Benzin', depoKapasitesi:3.6, calismaSuresi:8, gurultu:57, inverterMi:true}
+    }
+  };
+
+  var isEdit = false;
+
+  function setVal(id, val){ var el = document.getElementById(id); if(el && val !== undefined) el.value = val; }
+
+  function applyPrefill(rec){
+    setVal('fAd', rec.ad);
+    fAna.value = rec.anaKategori || 'elaletleri';
+    refreshAltKategori();
+    if(rec.altKategori) fAlt.value = rec.altKategori;
+    refreshUrunTuru();
+    if(rec.urunTuru) fUrun.value = rec.urunTuru;
+    if(rec.marka){
+      if(MARKALAR.indexOf(rec.marka) >= 0) fMarkaSel.value = rec.marka;
+      else { fMarkaSel.value = 'Diğer'; fMarkaDigerWrap.hidden = false; fMarkaDiger.value = rec.marka; }
+    }
+    setVal('fModel', rec.model);
+    setVal('fVaryant', rec.varyant);
+    setVal('fSeriNo', rec.seriNo);
+    setVal('fUrunKodu', rec.urunKodu);
+    setVal('fEtiketNo', rec.etiketNo);
+    setVal('fTedarikci', rec.tedarikci);
+    setVal('fFaturaNo', rec.faturaNo);
+    setVal('fSatinAlmaTarihi', rec.satinAlmaTarihi);
+    if(rec.kdvOrani !== undefined) setVal('fKdvOrani', rec.kdvOrani);
+    setVal('fToplamBedel', rec.toplamBedel);
+    if(rec.paraBirimi) setVal('fParaBirimi', rec.paraBirimi);
+    if(rec.odemeYontemi) setVal('fOdemeYontemi', rec.odemeYontemi);
+    setVal('fGarantiBaslangic', rec.garantiBaslangic);
+    setVal('fGarantiBitis', rec.garantiBitis);
+    setVal('fBolum', rec.bolum);
+    setVal('fDepo', rec.depo);
+    if(!(GV.role === 'sef')) setVal('fSantiye', rec.santiye);
+    var zSel = document.getElementById('fZimmet');
+    if(rec.zimmet && [].slice.call(zSel.options).some(function(o){ return o.value === rec.zimmet; })) zSel.value = rec.zimmet;
+    setVal('fZimmetTarihi', rec.zimmetTarihi);
+    var teSel = document.getElementById('fTeslimEden'); if(rec.teslimEden) teSel.value = rec.teslimEden;
+    var taSel = document.getElementById('fTeslimAlan'); if(rec.teslimAlan) taSel.value = rec.teslimAlan;
+    setVal('fZimmetAciklama', rec.zimmetAciklama);
+    if(rec.durum) setVal('fDurum', rec.durum);
+    setVal('fKullanimBaslangic', rec.kullanimBaslangic);
+    if(rec.kullanimSikligi) setVal('fKullanimSikligi', rec.kullanimSikligi);
+    document.getElementById('fKritik').checked = !!rec.kritik;
+    document.getElementById('fBakimGerekli').checked = !!rec.bakimGerekli;
+    setVal('fBakimPeriyodu', rec.bakimPeriyodu);
+    setVal('fSonBakim', rec.sonBakim);
+    setVal('fSonrakiBakim', rec.sonrakiBakim);
+    setVal('fBakimFirmasi', rec.bakimFirmasi);
+    document.getElementById('fKalibrasyonGerekli').checked = !!rec.kalibrasyonGerekli;
+    setVal('fSonKalibrasyon', rec.sonKalibrasyon);
+    setVal('fKalibrasyonBitis', rec.kalibrasyonBitis);
+    document.getElementById('fBakimGerekli').dispatchEvent(new Event('change'));
+    document.getElementById('fKalibrasyonGerekli').dispatchEvent(new Event('change'));
+
+    teknikState = {};
+    Object.keys(rec.teknik || {}).forEach(function(k){ teknikState[k] = rec.teknik[k]; });
+    renderTeknikOzellikler();
+    if(rec.teknik && rec.teknik.setIcerigi){
+      teknikContainer.querySelectorAll('[data-tk-key="setIcerigi"]').forEach(function(cb){
+        cb.checked = rec.teknik.setIcerigi.indexOf(cb.value) >= 0;
+      });
+    }
+    refreshDemirbasKodu();
+  }
+
+  function wireModBanner(){
+    var q = new URLSearchParams(location.search);
+    var mod = q.get('mod');
+    if(!mod || (mod !== 'duzenle' && mod !== 'kopya')) return;
+    var zmt = q.get('zmt') || '041';
+    var rec = DUZENLE_PREFILL[zmt];
+    var banner = document.getElementById('modBanner');
+    var bannerTxt = document.getElementById('modBannerTxt');
+    var crumbLbl = document.getElementById('crumbLbl');
+    var pageTitle = document.getElementById('pageTitle');
+    var pageSub = document.getElementById('pageSub');
+    var zmtDisplay = zmt.indexOf('-') >= 0 ? 'ZMT-' + zmt : 'ZMT-2026-' + zmt;
+    banner.hidden = false;
+    if(!rec){
+      bannerTxt.textContent = 'Kayıt bulunamadı — boş bir form açıldı, dilerseniz yeni kayıt olarak doldurup gönderebilirsiniz.';
+      return;
+    }
+    currentZmtNo = zmtDisplay;
+    if(mod === 'duzenle'){
+      isEdit = true;
+      crumbLbl.textContent = 'Demirbaşı Düzenle';
+      pageTitle.textContent = rec.ad + ' — ' + zmtDisplay + ' Düzenle';
+      pageSub.textContent = 'Bu kaydı düzenliyorsunuz. Değişiklikler kaydedildiğinde önceki hâli işlem kayıtlarında saklanır.';
+      bannerTxt.innerHTML = '<b>Düzenleme modu</b> — ' + zmtDisplay + ' (' + rec.ad + ') kaydı üzerinde çalışıyorsunuz.';
+      document.getElementById('demirbasSubmitLbl').textContent = 'Değişiklikleri Kaydet';
+    } else {
+      crumbLbl.textContent = 'Kaydı Kopyala';
+      pageTitle.textContent = 'Yeni Demirbaş (Kopya — ' + rec.ad + ')';
+      pageSub.textContent = 'Seçtiğiniz kayıttan kopyalanan bilgilerle yeni bir demirbaş oluşturuluyor — kaynak kayıt DEĞİŞMEZ, yeni bir ZMT numarası alacaktır.';
+      bannerTxt.innerHTML = '<b>Kopyalama modu</b> — alanlar ' + zmtDisplay + ' kaydından dolduruldu; bu tamamen yeni ve bağımsız bir demirbaş kaydı olacaktır.';
+    }
+    applyPrefill(rec);
+  }
+
+  /* ilk açılışta (?mod= yoksa) varsayılan kategori state'ini kur */
+  refreshAltKategori();
+  wireModBanner();
+
+  /* ============================================================================
+     TASLAK OLARAK KAYDET — gerçek localStorage kalıcılığı (§6) */
+  var TASLAK_KEY = 'gv_demirbas_taslak_yeni';
+  var FIELD_IDS = ['fAd','fAnaKategori','fAltKategori','fUrunTuru','fMarkaSel','fMarkaDiger','fModel','fVaryant',
+    'fSeriNo','fUrunKodu','fEtiketNo','fAciklama','fTedarikci','fFaturaNo','fSatinAlmaTarihi','fKdvOrani','fToplamBedel',
+    'fParaBirimi','fOdemeYontemi','fGarantiBaslangic','fGarantiBitis','fSube','fProje','fSantiye','fDepo','fBolum','fOdaAlan',
+    'fZimmet','fZimmetTarihi','fTeslimEden','fTeslimAlan','fZimmetAciklama','fDurum','fKullanimBaslangic','fKullanimSikligi',
+    'fSonKontrol','fSonrakiKontrol','fBakimPeriyodu','fSonBakim','fSonrakiBakim','fBakimFirmasi','fBakimMaliyeti',
+    'fSonKalibrasyon','fKalibrasyonBitis'];
+
+  (function(){
+    var taslakVar = null;
+    try { taslakVar = JSON.parse(localStorage.getItem(TASLAK_KEY) || 'null'); } catch(e){ taslakVar = null; }
+    if(taslakVar && !isEdit){
+      document.getElementById('taslakNote').hidden = false;
+      document.getElementById('taslakDoldur').addEventListener('click', function(){
+        Object.keys(taslakVar.alanlar || {}).forEach(function(id){ setVal(id, taslakVar.alanlar[id]); });
+        refreshUrunTuru();
+        teknikState = taslakVar.teknik || {};
+        renderTeknikOzellikler();
+        document.getElementById('taslakNote').hidden = true;
+        gvToast('Taslak dolduruldu.');
+      });
+      document.getElementById('taslakSil').addEventListener('click', function(){
+        localStorage.removeItem(TASLAK_KEY);
+        document.getElementById('taslakNote').hidden = true;
+        gvToast('Taslak silindi.', {type:'info'});
+      });
+    }
+  })();
+
+  document.getElementById('demirbasTaslak').addEventListener('click', function(){
+    readTeknikStateFromDom();
+    var data = {};
+    FIELD_IDS.forEach(function(id){ var el = document.getElementById(id); if(el) data[id] = el.value; });
+    localStorage.setItem(TASLAK_KEY, JSON.stringify({alanlar:data, teknik:teknikState}));
+    gvToast('Taslak kaydedildi — sayfaya döndüğünüzde doldurma önerisi çıkacak.');
+  });
+
+  /* ============================================================================
+     KAYDET — teknik özellikler kayıt anında serileştirilir (§2.6 kabul kriteri) */
+  document.getElementById('demirbasSubmit').addEventListener('click', function(){
+    var ad = document.getElementById('fAd').value.trim();
+    if(!ad){ gvToast('Demirbaş adı girin.', {type:'danger'}); return; }
+    readTeknikStateFromDom();
+    var kayit = {
+      ad:ad,
+      anaKategori:fAna.value, altKategori:fAlt.value, urunTuru:fUrun.value,
+      marka: fMarkaSel.value === 'Diğer' ? fMarkaDiger.value : fMarkaSel.value,
+      model:document.getElementById('fModel').value, varyant:document.getElementById('fVaryant').value,
+      demirbasKodu:document.getElementById('fDemirbasKodu').value,
+      durum:document.getElementById('fDurum').value,
+      santiye:document.getElementById('fSantiye').value,
+      zimmet:document.getElementById('fZimmet').value,
+      teknikOzellikler: serializeTeknik()
+    };
+    /* test/doğrulama için son kaydı window üzerinde erişilebilir bırak (headless assert) */
+    window.__GV_SON_DEMIRBAS_KAYDI__ = kayit;
+    try { console.log('[demirbas-form] kayıt serileşti:', JSON.stringify(kayit)); } catch(e){}
+    gvToast(isEdit ? ad + ' kaydı güncellendi.' : ad + ' envantere eklendi.');
+    if(!isEdit) localStorage.removeItem(TASLAK_KEY);
+    setTimeout(function(){ location.href = 'crm-operasyon-demirbas.html'; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

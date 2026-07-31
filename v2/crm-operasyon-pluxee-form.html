@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Yükleme / Harcama Kaydı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* sayfaya özel: pluxee yükleme/harcama formu — kasa-form idiyomu uyarlaması */
+.gv-crumb{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.gv-crumb a{color:var(--acc-ink);font-weight:700}
+.gv-crumb a:hover{color:var(--acc-deep)}
+.gv-crumb i{font-size:9px;color:var(--line-2)}
+
+.frm-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+@media(max-width:980px){.frm-grid{grid-template-columns:minmax(0,1fr)}}
+
+.gd-block{padding:22px}
+.gd-block + .gd-block{border-top:1px solid var(--line)}
+.gd-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+
+/* toplu yükleme bilgi bandı */
+.info-band{display:flex;align-items:flex-start;gap:12px;background:var(--bg);border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px}
+.info-band i{color:var(--acc-ink);font-size:15px;margin-top:2px}
+.info-band p{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+.info-band b{color:var(--ink)}
+
+/* özet paneli — seçili kart bakiyesi + işlem sonrası önizleme */
+.bal-card{background:var(--bg);border-radius:var(--r-md);padding:16px 18px}
+.bal-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0}
+.bal-row + .bal-row{border-top:1px dashed var(--line)}
+.bal-row span{font-size:12px;color:var(--muted);font-weight:600}
+.bal-row b{font-size:16px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.bal-row.after b{color:var(--acc-ink)}
+.bal-row.after.is-neg b{color:var(--danger)}
+.sub-note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:14px}
+.sub-note i{color:var(--acc-ink);margin-right:5px}
+.sub-note.danger{color:var(--danger)}
+.sub-note.danger i{color:var(--danger)}
+
+.frm-acts{display:flex;flex-direction:column;gap:10px}
+.frm-acts .btn{width:100%;justify-content:center}
+</style>
+</head>
+<body data-sec="finans" data-screen="pluxee">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-crumb">
+      <a href="crm-operasyon-pluxee.html">Pluxee Kart</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>Yükleme / Harcama Kaydı</span>
+    </div>
+
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Günlük Kayıt</div>
+        <h1>Yükleme / Harcama Kaydı</h1>
+        <div class="ph-sub">Bir karta yükleme veya kart üzerinden yapılan harcamayı kaydedin.</div>
+      </div>
+    </div>
+
+    <div class="info-band">
+      <i class="fa-solid fa-circle-info"></i>
+      <p>Aylık toplu yükleme <b>1 Temmuz'da</b> yapıldı — <b>12 kart × ₺1.250</b>. Bu form tekil yükleme/harcama kayıtları içindir; toplu yükleme kaydı için Muhasebe'ye başvurun.</p>
+    </div>
+
+    <div class="frm-grid">
+      <!-- ============ SOL: form ============ -->
+      <div class="gv-card">
+        <div class="gd-block">
+          <div class="gd-label">İşlem Türü</div>
+          <div class="chips" id="turSecim">
+            <button type="button" class="chip is-on" data-tur="yukleme"><i class="fa-solid fa-arrow-up-from-bracket"></i> Yükleme</button>
+            <button type="button" class="chip" data-tur="harcama"><i class="fa-solid fa-cart-shopping"></i> Harcama</button>
+          </div>
+        </div>
+
+        <div class="gd-block">
+          <div class="gd-label">Kayıt Bilgileri</div>
+          <form class="gform" id="plxForm" onsubmit="return false">
+            <div class="gfield full">
+              <label for="fKart">Kart</label>
+              <select id="fKart">
+                <option value="980"  data-santiye="Vadi Konakları">Ali Vural — •4471 (Vadi Konakları)</option>
+                <option value="1050" data-santiye="Vadi Konakları">İbrahim Sönmez — •4482 (Vadi Konakları)</option>
+                <option value="860"  data-santiye="Vadi Konakları">Ramazan Kılıç — •4493 (Vadi Konakları)</option>
+                <option value="1180" data-santiye="Vadi Konakları">Selim Doğan — •4504 (Vadi Konakları)</option>
+                <option value="720"  data-santiye="Vadi Konakları">Musa Erdem — •4515 (Vadi Konakları)</option>
+                <option value="990"  data-santiye="Vadi Konakları">Veli Şimşek — •4526 (Vadi Konakları)</option>
+                <option value="1100" data-santiye="Liman Lojistik Merkezi">Şükrü Aslan — •5871 (Liman Lojistik Merkezi)</option>
+                <option value="640"  data-santiye="Liman Lojistik Merkezi">Halil Güneş — •5882 (Liman Lojistik Merkezi)</option>
+                <option value="950"  data-santiye="Liman Lojistik Merkezi">Metin Çetin — •5893 (Liman Lojistik Merkezi)</option>
+                <option value="820"  data-santiye="Liman Lojistik Merkezi">Osman Polat — •5904 (Liman Lojistik Merkezi)</option>
+                <option value="1140" data-santiye="Merkez Şantiye">Recep Yaman — •6231 (Merkez Şantiye)</option>
+                <option value="810"  data-santiye="Merkez Şantiye">İlyas Kurt — •6242 (Merkez Şantiye)</option>
+              </select>
+            </div>
+            <div class="gfield">
+              <label for="fTarih">Tarih</label>
+              <input id="fTarih" type="date" value="2026-07-02">
+            </div>
+            <div class="gfield full">
+              <label for="fAciklama">Açıklama</label>
+              <input id="fAciklama" type="text" placeholder="ör. Öğle yemeği, market alışverişi">
+            </div>
+            <div class="gfield">
+              <label for="fTutar">Tutar</label>
+              <input id="fTutar" type="text" class="num-inp" placeholder="₺0" value="₺340">
+            </div>
+            <div class="gfield full">
+              <label for="fFis">Fiş / Belge No (opsiyonel)</label>
+              <input id="fFis" type="text" placeholder="ör. FS-2026-1187">
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============ SAĞ: bakiye özeti + gönder ============ -->
+      <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
+        <div class="gv-card">
+          <div class="gd-block">
+            <div class="gd-label">Bakiye Özeti</div>
+            <div class="bal-card">
+              <div class="bal-row"><span>Mevcut bakiye</span><b id="balMevcut">₺980</b></div>
+              <div class="bal-row after"><span>İşlem sonrası</span><b id="balSonra">₺1.320</b></div>
+            </div>
+            <p class="sub-note" id="subNote"><i class="fa-solid fa-circle-info"></i>Bu kayıt onay akışına girmez; kart bakiyesine doğrudan işlenir.</p>
+          </div>
+          <div class="gd-block frm-acts">
+            <button type="button" class="btn btn-acc btn-sm" id="btnSend"><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
+            <a class="btn btn-ghost btn-sm" href="crm-operasyon-pluxee.html" data-no-confirm>Vazgeç</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  var fKart = document.getElementById('fKart');
+  var fTutar = document.getElementById('fTutar');
+  var fAciklama = document.getElementById('fAciklama');
+  var balMevcut = document.getElementById('balMevcut');
+  var balSonra = document.getElementById('balSonra');
+  var balSonraRow = balSonra.closest('.bal-row');
+  var subNote = document.getElementById('subNote');
+  var curTur = 'yukleme';
+
+  function parseTL(v){
+    var n = parseFloat((v || '').replace(/[₺.\s]/g,'').replace(',', '.'));
+    return isNaN(n) ? 0 : n;
+  }
+  function fmtTL(n){ return '₺' + n.toLocaleString('tr-TR', {maximumFractionDigits:0}); }
+
+  function recalc(){
+    var mevcut = parseInt(fKart.value, 10) || 0;
+    balMevcut.textContent = fmtTL(mevcut);
+    var tutar = parseTL(fTutar.value);
+    var sonra = curTur === 'yukleme' ? mevcut + tutar : mevcut - tutar;
+    balSonra.textContent = fmtTL(sonra);
+    balSonraRow.classList.toggle('is-neg', sonra < 0);
+  }
+  fKart.addEventListener('change', recalc);
+  fTutar.addEventListener('input', recalc);
+
+  document.getElementById('turSecim').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-tur]'); if(!ch) return;
+    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    curTur = ch.getAttribute('data-tur');
+    subNote.innerHTML = curTur === 'yukleme'
+      ? '<i class="fa-solid fa-circle-info"></i>Bu kayıt onay akışına girmez; kart bakiyesine doğrudan yükleme olarak işlenir.'
+      : '<i class="fa-solid fa-circle-info"></i>Bu kayıt onay akışına girmez; kart bakiyesinden doğrudan harcama olarak düşülür.';
+    recalc();
+  });
+
+  document.getElementById('btnSend').addEventListener('click', function(){
+    if(!fAciklama.value.trim()){ gvToast('Açıklama girin.', {type:'danger'}); return; }
+    if(parseTL(fTutar.value) <= 0){ gvToast('Tutar girin.', {type:'danger'}); return; }
+    gvToast('Kayıt oluşturuldu [MOCK]');
+    setTimeout(function(){ location.href = 'crm-operasyon-pluxee.html'; }, 900);
+  });
+
+  recalc();
+})();
+</script>
+</body>
+</html>
