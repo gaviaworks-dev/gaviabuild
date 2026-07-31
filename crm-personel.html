@@ -16,14 +16,33 @@
 <link rel="stylesheet" href="assets/css/shell.css">
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
-/* ============ SAYFAYA ÖZEL — Personel Listesi ============ */
-#tblPersonel{min-width:980px}
-#tblPersonel td:nth-child(3),#tblPersonel td:nth-child(4),#tblPersonel td:nth-child(5),#tblPersonel td:nth-child(6){white-space:nowrap}
+/* ============ SAYFAYA ÖZEL — Personel Listesi ============
+   §7 revizyonu (Dalga 4/TP) — kategori chip slider (gvChipBar), gelişmiş filtre
+   drawer (gvFilterDrawer, 17 alan) ve kolon yönetimi (gvCols, 6 varsayılan + 22
+   eklenebilir) ortak bileşenlere taşındı (tasks/spec-liste-mimarisi.md). Mobil
+   görünüm de sayfa-lokal bespoke kart üretiminden (eski pr-mobile-list/buildCards)
+   ortak `gtable-cards` desenine geçirildi — yeni kolonlar otomatik kart/masaüstü
+   senkron kalır (aynı <td>, yalnız CSS dönüşümü). Genişlik sınıfları REORDER-GÜVENLİ:
+   nth-child DEĞİL, .col-* sınıf seçicisi (gvCols hücreleri taşısa da sınıf üstünde kalır).
+   min-width YALNIZ tablo modunda (>640px) — ID seçici (#tblPersonel) sınıf seçicisinden
+   (.gtable-cards) specificity'de HER ZAMAN kazanır, bu yüzden media query İÇİNE alınarak
+   640px altında hiç uygulanmaz (T-E benzeri bulgu — 390px'te tr'nin table-cell genişliği
+   taşıyıp kart dönüşümünü bozduğu tespit edildi, düzeltildi). */
+@media(min-width:641px){
+  #tblPersonel{min-width:900px}
+}
 .col-santiye{width:190px}
-.col-tel{width:150px}
-.col-kan{width:120px}
-.col-baslama{width:130px}
-.col-durum{width:120px}
+.col-tel{width:150px;white-space:nowrap}
+.col-kan{width:120px;white-space:nowrap}
+.col-baslama{width:130px;white-space:nowrap}
+.col-durum{width:120px;white-space:nowrap}
+/* kart modunda "Personel" hücresi etiketsiz, tam genişlik, SOLA yaslı kart başlığı
+   olarak davranır (varsayılan gtable-cards flex-end'i BİLİNÇLİ ezer — spec §4 notu
+   "gerekirse sayfa-lokal <style>" izniyle) */
+@media(max-width:640px){
+  #tblPersonel.gtable-cards td[data-col="ad"]{justify-content:flex-start;text-align:left;flex-wrap:wrap}
+  #tblPersonel.gtable-cards td[data-col="ad"] .gcell{width:100%}
+}
 
 /* madde 10.2 — kan grubu rozeti: taranabilir monospace etiket, .gstat durum semantiğinden
    BAĞIMSIZ (bu bir durum değil, sabit bir kimlik alanı) — damla ikonu dekoratif kırmızı,
@@ -32,23 +51,9 @@
 .kan-badge i{font-size:10px;color:var(--danger)}
 .kan-badge.kan-unknown{color:var(--muted);font-weight:600;font-family:inherit}
 .kan-badge.kan-unknown i{color:var(--line-2)}
-.pr-mrow-kan{margin-top:2px}
 
-/* madde 10.2 — Kolonlar kolon-görünürlük seçici (.gv-pop idiyomunun yeniden kullanımı,
-   ui.css'e YENİ bir şey eklenmedi; sayfa-lokal .kolon-* sınıfları içerik/checkbox içindir) */
-.kolon-menu{position:relative;margin-left:auto}
-.kolon-pop{min-width:214px}
-.kolon-item{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;border-radius:var(--r-sm);transition:.15s var(--ease)}
-.kolon-item:hover{background:var(--bg);color:var(--ink)}
-.kolon-item input{width:16px;height:16px;accent-color:var(--acc-ink);cursor:pointer;flex:none}
-@media(max-width:640px){
-  .kolon-menu{margin-left:0;width:100%}
-  .kolon-menu .btn{width:100%}
-}
-
-/* kan grubu kolonu gizlendiğinde (Kolonlar menüsü) — 4. kolon (Personel · Şantiye ·
-   Telefon · Kan Grubu · İşe Başlama · Durum · aksiyon) hem başlık hem hücre gizlenir */
-#tblPersonel.hide-kan th:nth-child(4),#tblPersonel.hide-kan td:nth-child(4){display:none}
+/* Kolonlar artık ortak gvCols bileşeni (ui.js/ui.css .gv-colpop) — sayfa-lokal
+   .kolon-* popover implementasyonu kaldırıldı (bkz tasks/kararlar.md, migrasyon kalemi). */
 
 /* personel hücresi altı pozisyon rozeti */
 .gcell-info .gtag{margin-top:5px}
@@ -69,39 +74,21 @@
   .cross-link a{margin-left:0}
 }
 
-/* ---- Durum + İl filtre satırları (madde 4 + 8 — .filter-bar.stack; kasa/pluxee emsali
-   birebir, ui.js'e YENİ bir şey eklenmedi, sayfa kendi <style>'ında taşır) ---- */
+/* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
+   (2) kategori chip slider KENDİ satırında (gv-chipbar-wrap block-level —
+   spec-liste-mimarisi.md §1 notu: flex bağlamında min-width:auto tuzağına düşmesin) */
 .filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-@media(max-width:640px){
-  .filter-row .frow-lbl{min-width:0;width:100%}
-}
+.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar.stack .gv-chipbar-wrap{width:100%}
 
 /* şantiye hücresi altı il/ilçe ikincil satırı + durum hücresi altı ayrılış notu —
    mevcut .gcell-sub token'ı yeniden kullanılır (madde 4 / madde 8, yeni sınıf İCAT EDİLMEDİ) */
 #tblPersonel .col-santiye .gcell-sub,#tblPersonel td .gcell-sub{margin-top:3px}
 
-/* ---- mobil personel kartları (640px altı — D18 Y17 tanımı, bu dalgada ilk uygulama):
-   #tblPersonel ile aynı tr kümesinden üretilir, data-idx ile eşleşir (gorev/kasa emsali) ---- */
-.pr-mobile-list{display:none}
-.pr-mrow{padding:14px 18px;border-bottom:1px solid var(--line)}
-.pr-mrow:last-child{border-bottom:none}
-.pr-mrow[data-durum="pasif"]{background:var(--bg)}
-.pr-mrow-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.pr-mrow-id{min-width:0;line-height:1.4;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
-.pr-mrow-meta{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;font-size:12px;color:var(--muted)}
-.pr-mrow-site,.pr-mrow-tel{display:inline-flex;align-items:center;gap:7px;min-width:0}
-.pr-mrow-site i,.pr-mrow-tel i{font-size:10.5px;color:var(--line-2);flex:none}
-.pr-mrow-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.pr-mrow-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.pr-mrow-date{font-size:11.5px;color:var(--muted)}
-.pr-mrow-acts{display:flex;align-items:center;gap:8px}
-.pr-mrow-acts .ia-btn{width:36px;height:36px}
-@media(max-width:640px){
-  #tblPersonel{display:none}
-  .pr-mobile-list{display:block}
-}
+/* eski sayfa-lokal mobil kart üretimi (pr-mobile-list/buildCards) KALDIRILDI —
+   §7 revizyonunda ortak `gtable-cards` deseni kullanılıyor (aynı <table>, CSS-only
+   dönüşüm — bkz assets/css/ui.css §4). row-chk yükseklik/hizalama .gcell içinde
+   zaten tanımlı, kart modunda da aynı görünür. */
 
 /* ---- Madde 5 — çoklu seçim (row-chk) + Şantiyeye Ata bulk bar + modal (D19/D18
    .lyr/.lyr-box checkbox deseninin bu sayfaya uyarlanmış hâli — yeni ui.js primitifi
@@ -111,8 +98,7 @@
 .row-chk .chk-box{width:18px;height:18px;border-radius:5px;border:2px solid var(--line-2);display:flex;align-items:center;justify-content:center;color:transparent;font-size:10px;transition:.15s var(--ease);background:var(--paper);flex:none}
 .row-chk input:checked + .chk-box{background:var(--acc-ink);border-color:var(--acc-ink);color:#fff}
 .row-chk input:focus-visible + .chk-box{outline:2px solid var(--acc);outline-offset:2px}
-#tblPersonel tbody tr.is-selected,.pr-mrow.is-selected{background:rgba(var(--acc-rgb),.05)}
-.pr-mrow-top .row-chk{margin-right:0}
+#tblPersonel tbody tr.is-selected{background:rgba(var(--acc-rgb),.05)}
 
 .bulk-bar{display:flex;align-items:center;gap:14px;padding:12px 22px;background:rgba(var(--acc-rgb),.06);border-bottom:1px solid var(--line);flex-wrap:wrap}
 .bulk-bar[hidden]{display:none}
@@ -224,38 +210,33 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Ad, pozisyon veya şantiye ara" data-table-search="#tblPersonel">
           </div>
-          <div class="chips" data-target="#tblPersonel">
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtn">
+            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
+            <i class="fa-solid fa-table-columns"></i> Kolonlar
+          </button>
+        </div>
+        <!-- §7.2 — 11 kategorili yatay chip slider (gvChipBar). İçerik arttığında
+             AŞAĞI KAYMAZ, kendi satırında yatay scroll/ok butonlarıyla ilerler.
+             Durum(aktif/pasif) ve İl artık burada değil — §7.3 gelişmiş filtre
+             drawer'ına taşındı (7.1'in "taşma riski" tespitinin doğrudan nedeniydi). -->
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" data-target="#tblPersonel">
             <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">25</span></button>
             <button class="chip" data-filter="yonetim">Yönetim <span class="ch-cnt">3</span></button>
             <button class="chip" data-filter="sef">Şantiye Şefi <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="ofis">Ofis <span class="ch-cnt">3</span></button>
+            <button class="chip" data-filter="ofis">Ofis <span class="ch-cnt">0</span></button>
             <button class="chip" data-filter="saha">Saha Personeli <span class="ch-cnt">13</span></button>
+            <button class="chip" data-filter="teknik">Teknik Ekip <span class="ch-cnt">0</span></button>
+            <button class="chip" data-filter="muhasebe">Muhasebe <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="ik">İK <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="satinalma">Satın Alma <span class="ch-cnt">1</span></button>
+            <button class="chip" data-filter="taseron">Taşeron Personeli <span class="ch-cnt">0</span></button>
+            <button class="chip" data-filter="pasif">Pasif Personel <span class="ch-cnt">3</span></button>
           </div>
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpPersonel">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <div class="kolon-menu">
-            <button type="button" class="btn btn-ghost btn-sm" id="kolonlarBtn" aria-haspopup="true" aria-expanded="false">
-              <i class="fa-solid fa-table-columns"></i> Kolonlar
-            </button>
-          </div>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Durum</span>
-          <div class="chips" id="durumChips">
-            <button class="chip is-on" data-durum="hepsi">Tümü <span class="ch-cnt">25</span></button>
-            <button class="chip" data-durum="aktif">Aktif <span class="ch-cnt">22</span></button>
-            <button class="chip" data-durum="pasif">Pasif <span class="ch-cnt">3</span></button>
-          </div>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">İl</span>
-          <div class="chips" id="ilChips">
-            <button class="chip is-on" data-il="hepsi">Tümü <span class="ch-cnt">25</span></button>
-            <button class="chip" data-il="istanbul">İstanbul <span class="ch-cnt">14</span></button>
-            <button class="chip" data-il="izmir">İzmir <span class="ch-cnt">6</span></button>
-            <button class="chip" data-il="kocaeli">Kocaeli <span class="ch-cnt">5</span></button>
-          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
       </div>
       <div class="gv-achips-row" id="achipsPersonel" hidden>
@@ -264,7 +245,7 @@
           <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
             <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
           </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+          <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all">
             <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
           </button>
         </div>
@@ -276,16 +257,16 @@
           <button type="button" class="btn btn-acc btn-sm" id="bbAta"><i class="fa-solid fa-helmet-safety"></i> Şantiyeye Ata</button>
         </div>
       </div>
-      <div class="gc-body flush">
-        <table class="gtable" id="tblPersonel" data-paginate="25">
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblPersonel" data-paginate="25">
           <thead>
             <tr>
-              <th><label class="row-chk" id="chkAllWrap" data-admin-only hidden><input type="checkbox" id="chkAllPersonel" aria-label="Görünen tüm personeli seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>Personel</th>
-              <th class="col-santiye">Şantiye / Birim</th>
-              <th class="col-tel">Telefon</th>
-              <th class="col-kan">Kan Grubu</th>
-              <th class="col-baslama">İşe Başlama</th>
-              <th class="col-durum">Durum</th>
+              <th data-col="ad"><label class="row-chk" id="chkAllWrap" data-admin-only hidden><input type="checkbox" id="chkAllPersonel" aria-label="Görünen tüm personeli seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label>Personel</th>
+              <th class="col-santiye" data-col="santiye">Şantiye / Birim</th>
+              <th class="col-tel" data-col="telefon">Telefon</th>
+              <th class="col-kan" data-col="kan">Kan Grubu</th>
+              <th class="col-baslama" data-col="baslama">İşe Başlama</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
@@ -392,7 +373,7 @@
               <td><span class="gstat ok">Aktif</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-detay.html?per=006" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="ofis" data-santiye="merkez" data-durum="aktif" data-il="istanbul" data-ilce="Ataşehir">
+            <tr data-f="muhasebe" data-santiye="merkez" data-durum="aktif" data-il="istanbul" data-ilce="Ataşehir">
               <td>
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">NA</div>
@@ -409,7 +390,7 @@
               <td><span class="gstat ok">Aktif</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-detay.html?per=007" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="ofis" data-santiye="merkez" data-durum="aktif" data-il="istanbul" data-ilce="Ataşehir">
+            <tr data-f="satinalma" data-santiye="merkez" data-durum="aktif" data-il="istanbul" data-ilce="Ataşehir">
               <td>
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div>
@@ -426,7 +407,7 @@
               <td><span class="gstat ok">Aktif</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-detay.html?per=008" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="ofis" data-santiye="merkez" data-durum="aktif" data-il="istanbul" data-ilce="Ataşehir">
+            <tr data-f="ik" data-santiye="merkez" data-durum="aktif" data-il="istanbul" data-ilce="Ataşehir">
               <td>
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">SK</div>
@@ -655,10 +636,6 @@
             </tr>
           </tbody>
         </table>
-        <!-- statik bake (D18-B2): #tblPersonel tbody ile aynı 25 satırdan üretilir,
-             JS yüklenince buildCards() aynı mount'u innerHTML ile ezip aktif filtreye
-             göre card.hidden uygular (kaynak: bu dosyanın kendi #tblPersonel satırları) -->
-        <div class="pr-mobile-list" id="prMobileList"><div class="pr-mrow" data-f="yonetim" data-durum="aktif" data-il="istanbul" data-idx="0"><div class="pr-mrow-top"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">KY</div><div class="pr-mrow-id"><span class="gcell-name">Kemal Yapıcıoğlu</span><span class="gtag mint">Firma Sahibi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Ofis · Ataşehir, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0532 118 40 22</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 1 Mart 2014</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=001" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="yonetim" data-durum="aktif" data-il="istanbul" data-idx="1"><div class="pr-mrow-top"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">MD</div><div class="pr-mrow-id"><span class="gcell-name">Murat Denizli</span><span class="gtag mint">Genel Müdür</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Ofis · Ataşehir, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0533 240 71 05</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> 0 Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 10 Mayıs 2016</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=002" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="yonetim" data-durum="aktif" data-il="istanbul" data-idx="2"><div class="pr-mrow-top"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">ES</div><div class="pr-mrow-id"><span class="gcell-name">Elif Sarıkaya</span><span class="gtag mint">Teknik Müdür</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Ofis · Ataşehir, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0535 662 19 47</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 1 Eylül 2018</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=003" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="sef" data-durum="aktif" data-il="istanbul" data-idx="3"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">HD</div><div class="pr-mrow-id"><span class="gcell-name">Hasan Demirci</span><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent">Şantiye Şefi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0532 407 28 11</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> B Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 15 Şubat 2017</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=004" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="sef" data-durum="aktif" data-il="izmir" data-idx="4"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">AK</div><div class="pr-mrow-id"><span class="gcell-name">Aylin Koç</span><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent">Şantiye Şefi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Liman Lojistik Merkezi · Aliağa, İzmir</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0533 815 62 30</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> 0 Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat warn">İzinli</span><span class="pr-mrow-date">İşe başlama 1 Haziran 2019</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=005" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="sef" data-durum="aktif" data-il="kocaeli" data-idx="5"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">ÖT</div><div class="pr-mrow-id"><span class="gcell-name">Ömer Taşkın</span><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent">Şantiye Şefi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Şantiye · Gebze, Kocaeli</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0536 274 90 18</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh-</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 20 Kasım 2015</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=006" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="ofis" data-durum="aktif" data-il="istanbul" data-idx="6"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">NA</div><div class="pr-mrow-id"><span class="gcell-name">Nesrin Aydın</span><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent">Muhasebe</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Ofis · Ataşehir, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0212 445 30 82</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> AB Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 10 Ocak 2016</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=007" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="ofis" data-durum="aktif" data-il="istanbul" data-idx="7"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div><div class="pr-mrow-id"><span class="gcell-name">Baran Yıldız</span><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent">Satın Alma Sorumlusu</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Ofis · Ataşehir, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0538 921 44 06</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> 0 Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 1 Nisan 2020</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=008" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="ofis" data-durum="aktif" data-il="istanbul" data-idx="8"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">SK</div><div class="pr-mrow-id"><span class="gcell-name">Seda Karaca</span><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent">İK Uzmanı</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Ofis · Ataşehir, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0530 674 12 59</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 16 Ağustos 2021</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=009" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="istanbul" data-idx="9"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">AV</div><div class="pr-mrow-id"><span class="gcell-name-flag"><span class="gcell-name">Ali Vural</span><i class="fa-solid fa-triangle-exclamation flag-doc" data-tip="Eksik evrak: Sağlık Raporu"></i></span><span class="gtag">Saha Personeli</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0544 208 63 71</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> 0 Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 1 Haziran 2026</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=010" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="istanbul" data-idx="10"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div><div class="pr-mrow-id"><span class="gcell-name">İbrahim Sönmez</span><span class="gtag">Formen</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0533 402 71 88</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> B Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 5 Mart 2015</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=011" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="istanbul" data-idx="11"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RK</div><div class="pr-mrow-id"><span class="gcell-name-flag"><span class="gcell-name">Ramazan Kılıç</span><i class="fa-solid fa-triangle-exclamation flag-doc" data-tip="Eksik evrak: İSG Eğitim Sertifikası"></i></span><span class="gtag">Kalıpçı</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0535 118 46 92</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 12 Eylül 2018</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=012" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="istanbul" data-idx="12"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SD</div><div class="pr-mrow-id"><span class="gcell-name">Selim Doğan</span><span class="gtag">Demir Ustası</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0536 774 20 15</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> 0 Rh-</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 8 Nisan 2016</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=013" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="istanbul" data-idx="13"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ME</div><div class="pr-mrow-id"><span class="gcell-name">Musa Erdem</span><span class="gtag">Düz İşçi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0544 309 62 47</span><span class="pr-mrow-kan"><span class="kan-badge kan-unknown"><i class="fa-solid fa-droplet"></i> Bilinmiyor</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 22 Ocak 2021</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=014" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="istanbul" data-idx="14"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">VŞ</div><div class="pr-mrow-id"><span class="gcell-name">Veli Şimşek</span><span class="gtag">Elektrik Ustası</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0532 861 45 30</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 14 Haziran 2019</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=015" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="izmir" data-idx="15"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div><div class="pr-mrow-id"><span class="gcell-name">Şükrü Aslan</span><span class="gtag">Formen</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Liman Lojistik Merkezi · Aliağa, İzmir</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0533 297 18 64</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> B Rh-</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 3 Kasım 2014</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=016" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="izmir" data-idx="16"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">HG</div><div class="pr-mrow-id"><span class="gcell-name-flag"><span class="gcell-name">Halil Güneş</span><i class="fa-solid fa-clock flag-doc" style="color:var(--warn)" data-tip="İSG eğitimi süresi 18 gün içinde doluyor"></i></span><span class="gtag">Operatör</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Liman Lojistik Merkezi · Aliağa, İzmir</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0538 450 93 21</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> 0 Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 19 Temmuz 2017</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=017" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="izmir" data-idx="17"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">MÇ</div><div class="pr-mrow-id"><span class="gcell-name-flag"><span class="gcell-name">Metin Çetin</span><i class="fa-solid fa-triangle-exclamation flag-doc" data-tip="Eksik evrak: Sağlık Raporu"></i></span><span class="gtag">Kaynakçı</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Liman Lojistik Merkezi · Aliağa, İzmir</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0505 672 34 08</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> AB Rh-</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 27 Şubat 2020</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=018" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="izmir" data-idx="18"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">OP</div><div class="pr-mrow-id"><span class="gcell-name">Osman Polat</span><span class="gtag">Düz İşçi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Liman Lojistik Merkezi · Aliağa, İzmir</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0544 128 57 96</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 5 Mayıs 2022</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=019" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="kocaeli" data-idx="19"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RY</div><div class="pr-mrow-id"><span class="gcell-name">Recep Yaman</span><span class="gtag">Formen</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Şantiye · Gebze, Kocaeli</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0532 693 41 75</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> 0 Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 11 Ekim 2013</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=020" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="kocaeli" data-idx="20"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İK</div><div class="pr-mrow-id"><span class="gcell-name-flag"><span class="gcell-name">İlyas Kurt</span><i class="fa-solid fa-triangle-exclamation flag-doc" data-tip="Eksik evrak: İSG Eğitim Sertifikası"></i></span><span class="gtag">Marangoz</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Şantiye · Gebze, Kocaeli</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0536 815 20 63</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> B Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 30 Ağustos 2016</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=021" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="saha" data-durum="aktif" data-il="kocaeli" data-idx="21"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SÖ</div><div class="pr-mrow-id"><span class="gcell-name">Sadık Öz</span><span class="gtag">Düz İşçi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Şantiye · Gebze, Kocaeli</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0544 907 36 12</span><span class="pr-mrow-kan"><span class="kan-badge"><i class="fa-solid fa-droplet"></i> A Rh+</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat ok">Aktif</span><span class="pr-mrow-date">İşe başlama 16 Aralık 2023</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=022" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="pasif" data-durum="pasif" data-il="istanbul" data-idx="22"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">KB</div><div class="pr-mrow-id"><span class="gcell-name">Kudret Beşikçi</span><span class="gtag">Düz İşçi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Vadi Konakları · Çekmeköy, İstanbul</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0542 316 87 24</span><span class="pr-mrow-kan"><span class="kan-badge kan-unknown"><i class="fa-solid fa-droplet"></i> Bilinmiyor</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat off">Ayrıldı</span><span class="pr-mrow-date">12 Haz 2026 · İstifa</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=023" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="pasif" data-durum="pasif" data-il="izmir" data-idx="23"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">HU</div><div class="pr-mrow-id"><span class="gcell-name">Hikmet Uğurlu</span><span class="gtag">Operatör</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Liman Lojistik Merkezi · Aliağa, İzmir</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0536 249 71 58</span><span class="pr-mrow-kan"><span class="kan-badge kan-unknown"><i class="fa-solid fa-droplet"></i> Bilinmiyor</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat off">Ayrıldı</span><span class="pr-mrow-date">28 Şub 2026 · İş Akdi Feshi</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=024" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div><div class="pr-mrow" data-f="pasif" data-durum="pasif" data-il="kocaeli" data-idx="24"><div class="pr-mrow-top"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">NÇ</div><div class="pr-mrow-id"><span class="gcell-name">Nadir Çamlıca</span><span class="gtag">Düz İşçi</span></div></div><div class="pr-mrow-meta"><span class="pr-mrow-site"><i class="fa-solid fa-location-dot"></i> Merkez Şantiye · Gebze, Kocaeli</span><span class="pr-mrow-tel"><i class="fa-solid fa-phone"></i> 0533 528 40 19</span><span class="pr-mrow-kan"><span class="kan-badge kan-unknown"><i class="fa-solid fa-droplet"></i> Bilinmiyor</span></span></div><div class="pr-mrow-bottom"><div class="pr-mrow-status"><span class="gstat off">Ayrıldı</span><span class="pr-mrow-date">30 Nis 2026 · Emeklilik</span></div><div class="pr-mrow-acts"><a class="ia-btn" href="crm-personel-detay.html?per=025" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div></div>
         <div class="gv-empty" data-table-empty hidden>
           <div class="ge-ico"><i class="fa-solid fa-users"></i></div>
           <h4>Eşleşen personel yok</h4>
@@ -674,34 +651,10 @@
   </main>
 </div>
 
-<!-- ============ §9 — sağ off-canvas gelişmiş filtre paneli (Şantiye ekseni; Durum/
-     Kategori zaten hızlı çip olarak var — tasks/spec-filtre-tarih.md). Sayfanın kendi
-     çok eksenli filtre motoru (tbl._gvApply) olduğu için opts.table VERİLMEZ, onApply
-     içinde applyPersonelCombinedFilter'a devredilir. ============ -->
-<div class="gv-fpanel-ov" id="fpPersonelOv">
-  <aside class="gv-fpanel" id="fpPersonel" role="dialog" aria-modal="true" aria-label="Gelişmiş Filtre">
-    <div class="gv-fpanel-head">
-      <h3><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</h3>
-      <button type="button" class="gv-fpanel-close" aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="gv-fpanel-body">
-      <div class="gfield">
-        <label>Şantiye</label>
-        <select data-fp-key="fpsantiye" data-fp-label="Şantiye">
-          <option value="">Tümü</option>
-          <option value="merkez">Merkez Ofis</option>
-          <option value="vadi-konaklari">Vadi Konakları</option>
-          <option value="liman-lojistik">Liman Lojistik Merkezi</option>
-          <option value="merkez-santiye">Merkez Şantiye</option>
-        </select>
-      </div>
-    </div>
-    <div class="gv-fpanel-foot">
-      <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
-      <button type="button" class="btn btn-acc" data-fp-apply>Uygula</button>
-    </div>
-  </aside>
-</div>
+<!-- ============ §7.3 — Gelişmiş Filtre artık gvFilterDrawer (17 alan, spec-liste-mimarisi.md
+     §2). Drawer'ın TÜM iskeletini JS üretir (bkz #advFilterBtn tetikleyicisi, sayfa
+     sonundaki script bloğu) — burada elle yazılmış markup GEREKMEZ (eski
+     #fpPersonelOv/#fpPersonel gvFilterPanel-tabanlı tek-alanlı paneli kaldırıldı). ============ -->
 
 <!-- ============ Madde 5.2 — Şantiyeye Personel Ata Modalı (10 alan) ============ -->
 <div class="ata-modal-ov" id="ataModalOv">
@@ -775,7 +728,11 @@
 <script src="assets/js/shell.js"></script>
 <script src="assets/js/ui.js"></script>
 <script>
-/* rol daraltması: yönetim aksiyonları yalnız üst yönetim/İK'da; şef yalnız kendi ekibini görür */
+/* rol daraltması: yönetim aksiyonları yalnız üst yönetim/İK'da; şef yalnız kendi ekibini görür.
+   §7.2 revizyonu: kategori seti 5'ten 11'e çıktı (Yönetim/Şantiye Şefi/Ofis/Saha Personeli/
+   Teknik Ekip/Muhasebe/İK/Satın Alma/Taşeron Personeli/Pasif Personel + Tümü) — şef görünümü
+   sayaçları TÜM 11 kategoriyi kapsayacak şekilde genişletildi. Durum/İl artık ayrı chip satırı
+   DEĞİL (§7.3'e taşındı) — bu IIFE'nin eski #durumChips/#ilChips senkronu kaldırıldı. */
 (function(){
   if(!window.GV) return;
   if(['superadmin','sahip','yonetim','ik'].indexOf(GV.role) === -1){
@@ -787,25 +744,15 @@
          üyesinin ekip sayımını şişirmesini önler (F5 kordonunun bu sayfadaki karşılığı) */
       if(tr.getAttribute('data-santiye') !== 'vadi-konaklari' || tr.getAttribute('data-durum') === 'pasif') tr.remove();
     });
-    var counts = {hepsi:0, yonetim:0, sef:0, ofis:0, saha:0};
+    var counts = {hepsi:0, yonetim:0, sef:0, ofis:0, saha:0, teknik:0, muhasebe:0, ik:0, satinalma:0, taseron:0, pasif:0};
     document.querySelectorAll('#tblPersonel tbody tr').forEach(function(tr){
       counts.hepsi++;
       var f = tr.getAttribute('data-f');
       if(counts[f] !== undefined) counts[f]++;
     });
-    document.querySelectorAll('.chips .chip[data-filter]').forEach(function(ch){
+    document.querySelectorAll('.gv-chipbar .chip[data-filter]').forEach(function(ch){
       var c = ch.querySelector('.ch-cnt');
       if(c) c.textContent = counts[ch.getAttribute('data-filter')] || 0;
-    });
-    /* Durum + İl chip sayaçları da daraltılmış ekibe göre — şef görünümünde satırların
-       tamamı aktif ve tek il (İstanbul); Pasif ve diğer iller 0 gösterir */
-    document.querySelectorAll('#durumChips .chip[data-durum]').forEach(function(ch){
-      var c = ch.querySelector('.ch-cnt'), v = ch.getAttribute('data-durum');
-      if(c) c.textContent = (v === 'pasif') ? 0 : counts.hepsi;
-    });
-    document.querySelectorAll('#ilChips .chip[data-il]').forEach(function(ch){
-      var c = ch.querySelector('.ch-cnt'), v = ch.getAttribute('data-il');
-      if(c) c.textContent = (v === 'hepsi' || v === 'istanbul') ? counts.hepsi : 0;
     });
     var sub = document.getElementById('phSub');
     if(sub) sub.textContent = 'Vadi Konakları ekibiniz — ' + counts.hepsi + ' kişi.';
@@ -822,46 +769,284 @@
   }
 })();
 
-/* ============ Madde 4 + Madde 8 — üç eksenli bileşik filtre (Kategori + Durum + İl) ============
-   D18 delegasyon deseni: motor tblPersonel._gvApply ile ui.js'e kayıtlı (kasa/musteriler
-   emsali). Kategori chip'leri data-filter taşımaya devam eder — ui.js'in kendi click
-   listener'ı onları bağlar (applyFilters(tbl,true) çağırır, wireTables'ta kurulur);
-   Durum ve İl chip'leri data-durum / data-il taşır (data-filter DEĞİL) — ui.js bunlara
-   dokunmaz, sayfa dinler ve gvApplyFilters(tblPersonel, true) üzerinden akıtır.
-   ui.js'in primitifi TEK BOYUTLUDUR (D19 kordonu) — bu yüzden üç eksen tamamen
-   sayfa-lokal. Mobil kart listesi (Y17) aynı motorun sonunda syncCardVisibility()
-   ile senkron tutulur — şef budaması BU IIFE'DEN ÖNCE çalıştığı için kartlar da
-   zaten daraltılmış satır kümesinden üretilir. ---- */
+/* ============ §7.4 — Kolon verisi üretimi + gvCols ============
+   Sayfa-lokal elle yazılmış Kolonlar popover'ı (eski madde 10.2) KALDIRILDI — ortak
+   gvCols'a taşındı (tasks/kararlar.md migrasyon kalemi, tasks/spec-liste-mimarisi.md §3).
+   6 varsayılan kolon zaten HTML'de var (ad/santiye/telefon/kan/baslama/durum) — yalnız
+   data-col/data-lbl işaretleri burada JS ile eklenir (25 satırda elle TEKRARLANMADI).
+   22 eklenebilir kolonun HÜCRE İÇERİĞİ aşağıdaki PERSONEL_META tablosundan üretilir:
+   TC (maskeli) + departman crm-personel-ozluk.html ile ÇAPRAZ DOĞRULANDI (birebir aynı
+   değerler); zimmet durumu crm-operasyon-demirbas.html ZMT-2026-042/043/044/045/046
+   kayıtlarıyla (kişi: Hasan Demirci ×4, Aylin Koç ×1, Ömer Taşkın ×1) BİREBİR; eksik evrak
+   bu sayfanın KENDİ 4 kanonik flag-doc bayrağıyla (Ali Vural/Ramazan Kılıç/Metin Çetin/
+   İlyas Kurt) BİREBİR — kpiEksikNum=4 ile tutarlı. E-posta ad.soyad@yapitas.com.tr
+   deseninden türetilir (Hasan Demirci için crm-personel-detay.html'de zaten kanonik).
+   Eğitim/mezuniyet yılı/acil durum kişisi/son puantaj durumu kurgusal doldurma verisidir
+   (CLAUDE.md "mock veriler kurgusal" hükmü) — hiçbir kanonik sayıyla ÇELİŞMEZ. */
+(function(){
+  var tbl = document.getElementById('tblPersonel');
+  if(!tbl) return;
+
+  var HDR = ['per','dept','pozLbl','pozSlug','kan','tc','egitim','mezYil','evrak','izinx','zimmet','sertifika','puantaj','acilAd','acilTel','baslama','cikis','cikisNeden','durumx'];
+  var ROWS = [
+    ['001','Yönetim','Firma Sahibi','firma-sahibi','A Rh+','187••••••02','Lisans','2001',0,'',0,'var','Tam Gün — Temmuz 2026','Aylin Yapıcıoğlu (Eşi)','0532 118 40 40','2014-03-01','','','aktif'],
+    ['002','Yönetim','Genel Müdür','genel-mudur','0 Rh+','234••••••18','Lisans Üstü','1998',0,'',0,'var','Tam Gün — Temmuz 2026','Zeynep Denizli (Eşi)','0533 240 71 20','2016-05-10','','','aktif'],
+    ['003','Yönetim','Teknik Müdür','teknik-mudur','A Rh+','356••••••41','Lisans Üstü','2010',0,'',0,'var','Tam Gün — Temmuz 2026','Caner Sarıkaya (Eşi)','0535 662 19 60','2018-09-01','','','aktif'],
+    ['004','Şantiye Yönetimi','Şantiye Şefi','santiye-sefi','B Rh+','298••••••14','Lisans','2008',0,'',1,'var','Tam Gün — Temmuz 2026','Fatma Demirci (Eşi)','0532 407 28 40','2017-02-15','','','aktif'],
+    ['005','Şantiye Yönetimi','Şantiye Şefi','santiye-sefi','0 Rh+','412••••••27','Lisans','2011',0,'izinli',1,'var','İzinli Günü Var — Temmuz 2026','Serkan Koç (Eşi)','0533 815 62 50','2019-06-01','','','izinli'],
+    ['006','Şantiye Yönetimi','Şantiye Şefi','santiye-sefi','A Rh-','145••••••63','Önlisans','2005',0,'',1,'var','Tam Gün — Temmuz 2026','Derya Taşkın (Eşi)','0536 274 90 40','2015-11-20','','','aktif'],
+    ['007','Merkez Ofis','Muhasebe','muhasebe','AB Rh+','278••••••39','Lisans','2010',0,'',0,'var','Tam Gün — Temmuz 2026','Kenan Aydın (Eşi)','0212 445 30 90','2016-01-10','','','aktif'],
+    ['008','Merkez Ofis','Satın Alma Sorumlusu','satin-alma-sorumlusu','0 Rh+','519••••••56','Lisans','2015',0,'',0,'var','Tam Gün — Temmuz 2026','Gül Yıldız (Annesi)','0538 921 44 20','2020-04-01','','','aktif'],
+    ['009','Merkez Ofis','İK Uzmanı','ik-uzmani','A Rh+','603••••••81','Lisans','2017',0,'',0,'var','Tam Gün — Temmuz 2026','Onur Karaca (Kardeşi)','0530 674 12 70','2021-08-16','','','aktif'],
+    ['010','Saha Ekibi','Saha Personeli','saha-personeli','0 Rh+','741••••••05','Lise','2022',1,'',0,'eksik','Tam Gün — Temmuz 2026','Mehmet Vural (Babası)','0544 208 63 90','2026-06-01','','','aktif'],
+    ['011','Saha Ekibi','Formen','formen','B Rh+','167••••••92','Lise','2010',0,'',0,'var','Tam Gün — Temmuz 2026','Ayşe Sönmez (Eşi)','0533 402 71 99','2015-03-05','','','aktif'],
+    ['012','Saha Ekibi','Kalıpçı','kalipci','A Rh+','328••••••14','Lise','2013',1,'',0,'eksik','Tam Gün — Temmuz 2026','Hatice Kılıç (Eşi)','0535 118 46 99','2018-09-12','','','aktif'],
+    ['013','Saha Ekibi','Demir Ustası','demir-ustasi','0 Rh-','490••••••67','Lise','2011',0,'',0,'var','Tam Gün — Temmuz 2026','Emine Doğan (Annesi)','0536 774 20 30','2016-04-08','','','aktif'],
+    ['014','Saha Ekibi','Düz İşçi','duz-isci','Bilinmiyor','215••••••33','Ortaokul','2015',0,'',0,'var','Tam Gün — Temmuz 2026','Ahmet Erdem (Babası)','0544 309 62 60','2021-01-22','','','aktif'],
+    ['015','Saha Ekibi','Elektrik Ustası','elektrik-ustasi','A Rh+','583••••••48','Lise','2014',0,'',0,'var','Tam Gün — Temmuz 2026','Nurcan Şimşek (Eşi)','0532 861 45 45','2019-06-14','','','aktif'],
+    ['016','Saha Ekibi','Formen','formen','B Rh-','129••••••76','Lise','2008',0,'',0,'var','Tam Gün — Temmuz 2026','Fadime Aslan (Eşi)','0533 297 18 80','2014-11-03','','','aktif'],
+    ['017','Saha Ekibi','Operatör','operator','0 Rh+','356••••••20','Lise','2012',0,'',0,'yaklasiyor','Tam Gün — Temmuz 2026','Cemal Güneş (Kardeşi)','0538 450 93 40','2017-07-19','','','aktif'],
+    ['018','Saha Ekibi','Kaynakçı','kaynakci','AB Rh-','467••••••85','Lise','2015',1,'',0,'var','Tam Gün — Temmuz 2026','Songül Çetin (Eşi)','0505 672 34 20','2020-02-27','','','aktif'],
+    ['019','Saha Ekibi','Düz İşçi','duz-isci','A Rh+','592••••••31','Ortaokul','2018',0,'',0,'var','Tam Gün — Temmuz 2026','İsmail Polat (Babası)','0544 128 57 20','2022-05-05','','','aktif'],
+    ['020','Saha Ekibi','Formen','formen','0 Rh+','108••••••59','Lise','2007',0,'',0,'var','Tam Gün — Temmuz 2026','Hülya Yaman (Eşi)','0532 693 41 90','2013-10-11','','','aktif'],
+    ['021','Saha Ekibi','Marangoz','marangoz','B Rh+','341••••••02','Lise','2011',1,'',0,'eksik','Tam Gün — Temmuz 2026','Zülal Kurt (Eşi)','0536 815 20 80','2016-08-30','','','aktif'],
+    ['022','Saha Ekibi','Düz İşçi','duz-isci','A Rh+','620••••••47','İlkokul','2020',0,'',0,'var','Tam Gün — Temmuz 2026','Rukiye Öz (Annesi)','0544 907 36 30','2023-12-16','','','aktif'],
+    ['023','Saha Ekibi','Düz İşçi','duz-isci','Bilinmiyor','482••••••19','Ortaokul','2017',0,'',0,'var','—','Nazan Beşikçi (Eşi)','0542 316 87 40','2022-03-03','2026-06-12','İstifa','ayrildi'],
+    ['024','Saha Ekibi','Operatör','operator','Bilinmiyor','337••••••52','Lise','2014',0,'',0,'var','—','Selami Uğurlu (Kardeşi)','0536 249 71 70','2020-10-14','2026-02-28','İş Akdi Feshi','ayrildi'],
+    ['025','Saha Ekibi','Düz İşçi','duz-isci','Bilinmiyor','156••••••07','İlkokul','2004',0,'',0,'var','—','Perihan Çamlıca (Eşi)','0533 528 40 30','2011-02-06','2026-04-30','Emeklilik','ayrildi']
+  ];
+  var META = {};
+  ROWS.forEach(function(r){
+    var o = {}; HDR.forEach(function(k, i){ o[k] = r[i]; });
+    META[o.per] = o;
+  });
+  var WHITE_COLLAR = ['firma-sahibi','genel-mudur','teknik-mudur','santiye-sefi','muhasebe','satin-alma-sorumlusu','ik-uzmani'];
+  var IL_LBL = {istanbul:'İstanbul', izmir:'İzmir', kocaeli:'Kocaeli'};
+  var AY = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+  function slugMail(name){
+    var map = {'ı':'i','İ':'i','ş':'s','Ş':'s','ğ':'g','Ğ':'g','ü':'u','Ü':'u','ö':'o','Ö':'o','ç':'c','Ç':'c'};
+    var s = name.split('').map(function(ch){ return map[ch] || ch; }).join('').toLowerCase();
+    return s.trim().split(/\s+/).join('.') + '@yapitas.com.tr';
+  }
+  function isoToTR(iso){
+    if(!iso) return '—';
+    var p = iso.split('-');
+    return parseInt(p[2], 10) + ' ' + AY[parseInt(p[1], 10) - 1] + ' ' + p[0];
+  }
+  function perOf(tr){
+    var a = tr.querySelector('.ia-btn[href*="per="]');
+    var m = a && a.getAttribute('href').match(/per=(\d+)/);
+    return m ? m[1] : null;
+  }
+  function nameOf(tr){
+    var n = tr.querySelector('.gcell-name');
+    return n ? n.textContent.trim() : '';
+  }
+
+  var COL_LBL = {
+    tc:'TC / Kimlik No', departman:'Departman', pozisyon:'Pozisyon', il:'İl', ilce:'İlçe',
+    eposta:'E-posta', acilkisi:'Acil Durum Kişisi', aciltel:'Acil Durum Telefonu',
+    egitim:'Eğitim Seviyesi', mezuniyet:'Mezuniyet Yılı', evraksayisi:'Eksik Evrak Sayısı',
+    izindurumu:'İzin Durumu', rapordurumu:'Rapor Durumu', zimmetdurumu:'Zimmet Durumu',
+    sgkdurumu:'SGK Durumu', maastipi:'Maaş Tipi', personeltipi:'Personel Tipi',
+    taseronfirma:'Taşeron Firma', sonpuantaj:'Son Puantaj Durumu',
+    atamatarihi:'Şantiye Atama Tarihi', cikistarihi:'İşten Çıkış Tarihi', cikisnedeni:'Çıkış Nedeni'
+  };
+  var COL_ORDER = ['tc','departman','pozisyon','il','ilce','eposta','acilkisi','aciltel','egitim','mezuniyet',
+    'evraksayisi','izindurumu','rapordurumu','zimmetdurumu','sgkdurumu','maastipi','personeltipi',
+    'taseronfirma','sonpuantaj','atamatarihi','cikistarihi','cikisnedeni'];
+  var BASE_LBL = {ad:'Personel', santiye:'Şantiye / Birim', telefon:'Telefon', kan:'Kan Grubu', baslama:'İşe Başlama', durum:'Durum'};
+  var BASE_KEYS = ['ad','santiye','telefon','kan','baslama','durum'];
+
+  function renderCell(key, m, tr){
+    switch(key){
+      case 'tc': return '<span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace">' + m.tc + '</span>';
+      case 'departman': return m.dept;
+      case 'pozisyon': return m.pozLbl;
+      case 'il': return IL_LBL[tr.getAttribute('data-il')] || '—';
+      case 'ilce': return tr.getAttribute('data-ilce') || '—';
+      case 'eposta': return slugMail(nameOf(tr));
+      case 'acilkisi': return m.acilAd;
+      case 'aciltel': return m.acilTel;
+      case 'egitim': return m.egitim;
+      case 'mezuniyet': return m.mezYil;
+      case 'evraksayisi': return String(m.evrak);
+      case 'izindurumu': return m.izinx === 'izinli' ? 'İzinli' : 'Normal';
+      case 'rapordurumu': return 'Yok';
+      case 'zimmetdurumu': return m.zimmet ? 'Var' : 'Yok';
+      case 'sgkdurumu': return m.durumx === 'ayrildi' ? 'Çıkış Bildirgesi Verildi' : 'Aktif';
+      case 'maastipi': return WHITE_COLLAR.indexOf(m.pozSlug) !== -1 ? 'Aylık Maaş' : 'Yevmiye';
+      case 'personeltipi': return 'Öz Kadro';
+      case 'taseronfirma': return '—';
+      case 'sonpuantaj': return m.puantaj;
+      case 'atamatarihi': return isoToTR(m.baslama);
+      case 'cikistarihi': return m.cikis ? isoToTR(m.cikis) : '—';
+      case 'cikisnedeni': return m.cikisNeden || '—';
+      default: return '—';
+    }
+  }
+
+  /* thead: 22 yeni <th> boş İşlem th'sinden ÖNCE eklenir (data-col TAŞIMAYAN hücreler
+     gvCols'un sıra/gizleme yönetimine hiç girmez — spec §3 sözleşmesi) */
+  var headRow = tbl.querySelector('thead tr');
+  var lastTh = headRow.lastElementChild;
+  COL_ORDER.forEach(function(key){
+    var th = document.createElement('th');
+    th.setAttribute('data-col', key);
+    th.textContent = COL_LBL[key];
+    headRow.insertBefore(th, lastTh);
+  });
+
+  tbl.querySelectorAll('tbody tr').forEach(function(tr){
+    var tds = Array.prototype.slice.call(tr.children);
+    BASE_KEYS.forEach(function(k, i){ if(tds[i]){ tds[i].setAttribute('data-col', k); tds[i].setAttribute('data-lbl', BASE_LBL[k]); } });
+    var lastTd = tds[tds.length - 1];
+    if(lastTd) lastTd.setAttribute('data-lbl', '');
+
+    var per = perOf(tr);
+    var m = per ? META[per] : null;
+    if(m){
+      tr.setAttribute('data-dept', m.dept);
+      tr.setAttribute('data-poz', m.pozSlug);
+      tr.setAttribute('data-kan', m.kan);
+      tr.setAttribute('data-tip', 'oz-kadro');
+      tr.setAttribute('data-evrak', m.evrak ? 'eksik' : 'tam');
+      tr.setAttribute('data-izinx', m.izinx || 'normal');
+      tr.setAttribute('data-zimmet', m.zimmet ? 'var' : 'yok');
+      tr.setAttribute('data-egitim', m.egitim);
+      tr.setAttribute('data-sertifika', m.sertifika);
+      tr.setAttribute('data-baslamaiso', m.baslama);
+      tr.setAttribute('data-cikisiso', m.cikis || '');
+      tr.setAttribute('data-durumx', m.durumx);
+    }
+
+    COL_ORDER.forEach(function(key){
+      var td = document.createElement('td');
+      td.setAttribute('data-col', key);
+      td.setAttribute('data-lbl', COL_LBL[key]);
+      td.innerHTML = m ? renderCell(key, m, tr) : '—';
+      tr.insertBefore(td, lastTd);
+    });
+  });
+
+  gvCols.init({
+    mount: '#colsBtn', table: '#tblPersonel', screen: 'personel',
+    cols: [
+      {key:'ad', lbl:'Personel', def:true},
+      {key:'santiye', lbl:'Şantiye / Birim', def:true},
+      {key:'telefon', lbl:'Telefon', def:true},
+      {key:'kan', lbl:'Kan Grubu', def:true},
+      {key:'baslama', lbl:'İşe Başlama', def:true},
+      {key:'durum', lbl:'Durum', def:true},
+      {key:'tc', lbl:'TC / Kimlik No (maskeli)', def:false},
+      {key:'departman', lbl:'Departman', def:false},
+      {key:'pozisyon', lbl:'Pozisyon', def:false},
+      {key:'il', lbl:'İl', def:false},
+      {key:'ilce', lbl:'İlçe', def:false},
+      {key:'eposta', lbl:'E-posta', def:false},
+      {key:'acilkisi', lbl:'Acil Durum Kişisi', def:false},
+      {key:'aciltel', lbl:'Acil Durum Telefonu', def:false},
+      {key:'egitim', lbl:'Eğitim Seviyesi', def:false},
+      {key:'mezuniyet', lbl:'Mezuniyet Yılı', def:false},
+      {key:'evraksayisi', lbl:'Eksik Evrak Sayısı', def:false},
+      {key:'izindurumu', lbl:'İzin Durumu', def:false},
+      {key:'rapordurumu', lbl:'Rapor Durumu', def:false},
+      {key:'zimmetdurumu', lbl:'Zimmet Durumu', def:false},
+      {key:'sgkdurumu', lbl:'SGK Durumu', def:false},
+      {key:'maastipi', lbl:'Maaş Tipi (yetkiye bağlı)', def:false, roleHidden:['teknik','sef','satinalma','personel','satistemsilci','satismudur']},
+      {key:'personeltipi', lbl:'Personel Tipi', def:false},
+      {key:'taseronfirma', lbl:'Taşeron Firma', def:false},
+      {key:'sonpuantaj', lbl:'Son Puantaj Durumu', def:false},
+      {key:'atamatarihi', lbl:'Şantiye Atama Tarihi', def:false},
+      {key:'cikistarihi', lbl:'İşten Çıkış Tarihi', def:false},
+      {key:'cikisnedeni', lbl:'Çıkış Nedeni', def:false}
+    ]
+  });
+
+  /* §7.5 — Kolonlar panelinden "Özel Alan Yönetimi" alt akışına giriş noktası
+     (crm-personel-ozel-alan.html, MENÜSÜZ — shell.js'e dokunulmadı). gvCols popover'ı
+     ui.js tarafından her açılışta yeniden üretilir (.gv-colpop, DOM'da kalıcı DEĞİL) —
+     bu yüzden link her tıklamada yeniden enjekte edilir; ui.js'in KENDİ click listener'ı
+     ÖNCE (gvCols.init() içinde) kayıtlı olduğundan popover DOM'u bu listener çalıştığında
+     zaten var olur (aynı senkron click event'i içinde, kayıt sırasına göre). */
+  var colsBtn = document.getElementById('colsBtn');
+  if(colsBtn){
+    colsBtn.addEventListener('click', function(){
+      requestAnimationFrame(function(){
+        var pop = document.querySelector('.gv-colpop');
+        var foot = pop ? pop.querySelector('.gcol-foot') : null;
+        if(foot && !foot.querySelector('.oa-link')){
+          var a = document.createElement('a');
+          a.href = 'crm-personel-ozel-alan.html';
+          a.className = 'btn btn-ghost btn-sm oa-link';
+          a.style.cssText = 'width:100%;margin-top:6px;justify-content:center';
+          a.innerHTML = '<i class="fa-solid fa-sliders"></i> Özel Alan Yönetimi';
+          foot.appendChild(a);
+        }
+      });
+    });
+  }
+})();
+
+/* ============ §7.3 — Gelişmiş Filtre (gvFilterDrawer, 17 alan) + §7.2 kategori chip
+   (gvChipBar/.gv-chipbar, ui.js'in mevcut data-filter delegasyonundan otomatik gelir)
+   + arama = bileşik motor. Sayfanın kendi çok eksenli filtre motoru (tbl._gvApply,
+   D18 deseni) olduğundan gvFilterDrawer'a opts.table VERİLMEZ — onApply içinde
+   fpState güncellenir, gerçek satır eşleşmesi fpMatch() ile burada yapılır
+   (spec-liste-mimarisi.md §2 "sayfanın kendi motoru varsa onApply kullan"). Eski
+   sayfa-lokal mobil kart üretimi (buildCards/syncCardVisibility) KALDIRILDI —
+   ortak gtable-cards aynı <tr>'den CSS ile üretir, tr.hidden her iki görünümde de
+   aynı anda geçerli. ---- */
 (function(){
   var tblPersonel = document.getElementById('tblPersonel');
   if(!tblPersonel) return;
-  var katChipsWrap = document.querySelector('.chips[data-target="#tblPersonel"]');
-  var durumChipsWrap = document.getElementById('durumChips');
-  var ilChipsWrap = document.getElementById('ilChips');
+  var katChipsWrap = document.querySelector('.gv-chipbar[data-target="#tblPersonel"]');
   var perSearch = document.querySelector('[data-table-search="#tblPersonel"]');
-  /* ============ §9 — Gelişmiş Filtre'nin Şantiye ekseni. Sayfa kendi çok eksenli
-     motorunu taşıdığından (D18 tbl._gvApply deseni) gvFilterPanel'e opts.table
-     VERİLMEZ; panel yalnız UI/aktif-çip/badge yönetir, gerçek satır eşleşmesi
-     burada, mevcut motora eklenen 4. eksen olarak yapılır (tasks/spec-filtre-tarih.md
-     §3'ün "sayfanın kendi motoru varsa onApply kullan" talimatı). ---- */
-  var fpSantiye = '';
+  var fpState = {};
+
+  function fpEq(v, attr, tr){ return !v || tr.getAttribute(attr) === v.value; }
+  function fpMatch(tr){
+    var s = fpState;
+    if(!fpEq(s.durum, 'data-durumx', tr)) return false;
+    if(!fpEq(s.aktifpasif, 'data-durum', tr)) return false;
+    if(!fpEq(s.il, 'data-il', tr)) return false;
+    if(!fpEq(s.ilce, 'data-ilce', tr)) return false;
+    if(!fpEq(s.santiye, 'data-santiye', tr)) return false;
+    if(!fpEq(s.departman, 'data-dept', tr)) return false;
+    if(s.pozisyon){ var pv = tr.getAttribute('data-poz'); if(s.pozisyon.raw.indexOf(pv) === -1) return false; }
+    if(!fpEq(s.personeltipi, 'data-tip', tr)) return false;
+    if(!fpEq(s.kangrubu, 'data-kan', tr)) return false;
+    if(!fpEq(s.evrak, 'data-evrak', tr)) return false;
+    if(!fpEq(s.izinx, 'data-izinx', tr)) return false;
+    if(!fpEq(s.zimmet, 'data-zimmet', tr)) return false;
+    if(!fpEq(s.egitim, 'data-egitim', tr)) return false;
+    if(!fpEq(s.sertifika, 'data-sertifika', tr)) return false;
+    if(s.taseronayrimi && tr.getAttribute('data-tip') !== 'taseron') return false;
+    if(s.baslama && s.baslama.raw && s.baslama.raw.from){
+      var bi = tr.getAttribute('data-baslamaiso');
+      if(!bi) return false;
+      var bd = new Date(bi + 'T00:00:00');
+      if(bd < s.baslama.raw.from || bd > s.baslama.raw.to) return false;
+    }
+    if(s.cikis && s.cikis.raw && s.cikis.raw.from){
+      var ci = tr.getAttribute('data-cikisiso');
+      if(!ci) return false;
+      var cd = new Date(ci + 'T00:00:00');
+      if(cd < s.cikis.raw.from || cd > s.cikis.raw.to) return false;
+    }
+    return true;
+  }
 
   function applyPersonelCombinedFilter(){
     var katOn = katChipsWrap.querySelector('.chip.is-on[data-filter]');
     var kat = katOn ? katOn.getAttribute('data-filter') : 'hepsi';
-    var durumOn = durumChipsWrap.querySelector('.chip.is-on[data-durum]');
-    var durum = durumOn ? durumOn.getAttribute('data-durum') : 'hepsi';
-    var ilOn = ilChipsWrap.querySelector('.chip.is-on[data-il]');
-    var il = ilOn ? ilOn.getAttribute('data-il') : 'hepsi';
     var term = perSearch ? perSearch.value.trim().toLocaleLowerCase('tr') : '';
     var shown = 0;
     tblPersonel.querySelectorAll('tbody tr').forEach(function(tr){
       var okKat = (kat === 'hepsi') || (tr.getAttribute('data-f') === kat);
-      var okDurum = (durum === 'hepsi') || (tr.getAttribute('data-durum') === durum);
-      var okIl = (il === 'hepsi') || (tr.getAttribute('data-il') === il);
-      var okSantiye = !fpSantiye || (tr.getAttribute('data-santiye') === fpSantiye);
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-      var show = okKat && okDurum && okIl && okSantiye && okTerm;
+      var show = okKat && okTerm && fpMatch(tr);
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -869,220 +1054,94 @@
     if(empty) empty.hidden = shown !== 0;
     var cnt = document.querySelector('[data-table-count]');
     if(cnt) cnt.textContent = shown;
-    syncCardVisibility();
   }
   /* URL-state + pager refresh delegasyon sahibinde (ui.js applyFilters) */
   tblPersonel._gvApply = applyPersonelCombinedFilter;
 
-  durumChipsWrap.addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-durum]'); if(!ch) return;
-    durumChipsWrap.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    gvApplyFilters(tblPersonel, true);
+  var POZ_OPTS = [
+    {v:'firma-sahibi', l:'Firma Sahibi'}, {v:'genel-mudur', l:'Genel Müdür'}, {v:'teknik-mudur', l:'Teknik Müdür'},
+    {v:'santiye-sefi', l:'Şantiye Şefi'}, {v:'muhasebe', l:'Muhasebe'}, {v:'satin-alma-sorumlusu', l:'Satın Alma Sorumlusu'},
+    {v:'ik-uzmani', l:'İK Uzmanı'}, {v:'saha-personeli', l:'Saha Personeli'}, {v:'formen', l:'Formen'},
+    {v:'kalipci', l:'Kalıpçı'}, {v:'demir-ustasi', l:'Demir Ustası'}, {v:'duz-isci', l:'Düz İşçi'},
+    {v:'elektrik-ustasi', l:'Elektrik Ustası'}, {v:'operator', l:'Operatör'}, {v:'kaynakci', l:'Kaynakçı'}, {v:'marangoz', l:'Marangoz'}
+  ];
+
+  var fdHandle = gvFilterDrawer.init({
+    mount: '#advFilterBtn', screen: 'personel', chipsMount: '#achipsPersonel',
+    title: 'Gelişmiş Filtre',
+    fields: [
+      {key:'durum', type:'select', label:'Durum', options:[
+        {v:'aktif', l:'Aktif'}, {v:'izinli', l:'İzinli'}, {v:'raporlu', l:'Raporlu'}, {v:'ayrildi', l:'Ayrıldı'}
+      ]},
+      {key:'aktifpasif', type:'select', label:'Aktif / Pasif', options:[
+        {v:'aktif', l:'Aktif'}, {v:'pasif', l:'Pasif'}
+      ]},
+      {key:'il', type:'select', label:'İl', options:[
+        {v:'istanbul', l:'İstanbul'}, {v:'izmir', l:'İzmir'}, {v:'kocaeli', l:'Kocaeli'}
+      ]},
+      {key:'ilce', type:'select', label:'İlçe', options:[
+        {v:'Ataşehir', l:'Ataşehir'}, {v:'Çekmeköy', l:'Çekmeköy'}, {v:'Aliağa', l:'Aliağa'}, {v:'Gebze', l:'Gebze'}
+      ]},
+      {key:'santiye', type:'select', label:'Şantiye', options:[
+        {v:'merkez', l:'Merkez Ofis'}, {v:'vadi-konaklari', l:'Vadi Konakları'},
+        {v:'liman-lojistik', l:'Liman Lojistik Merkezi'}, {v:'merkez-santiye', l:'Merkez Şantiye'}
+      ]},
+      {key:'departman', type:'select', label:'Departman', options:[
+        {v:'Yönetim', l:'Yönetim'}, {v:'Şantiye Yönetimi', l:'Şantiye Yönetimi'},
+        {v:'Merkez Ofis', l:'Merkez Ofis'}, {v:'Saha Ekibi', l:'Saha Ekibi'}
+      ]},
+      {key:'pozisyon', type:'multiselect', label:'Pozisyon', options:POZ_OPTS},
+      {key:'personeltipi', type:'select', label:'Personel Tipi', options:[
+        {v:'oz-kadro', l:'Öz Kadro'}, {v:'taseron', l:'Taşeron'}
+      ]},
+      {key:'baslama', type:'daterange', label:'İşe Başlama Tarihi'},
+      {key:'cikis', type:'daterange', label:'İşten Çıkış Tarihi'},
+      {key:'kangrubu', type:'select', label:'Kan Grubu', options:[
+        'A Rh+', '0 Rh+', 'B Rh+', 'A Rh-', 'AB Rh+', '0 Rh-', 'B Rh-', 'AB Rh-', 'Bilinmiyor'
+      ]},
+      {key:'evrak', type:'select', label:'Eksik Evrak Durumu', options:[
+        {v:'eksik', l:'Eksik Evrak Var'}, {v:'tam', l:'Evrakları Tam'}
+      ]},
+      {key:'izinx', type:'select', label:'İzinli / Raporlu Durumu', options:[
+        {v:'izinli', l:'İzinli'}, {v:'raporlu', l:'Raporlu'}, {v:'normal', l:'Normal (İzinli/Raporlu Değil)'}
+      ]},
+      {key:'zimmet', type:'select', label:'Zimmet Durumu', options:[
+        {v:'var', l:'Zimmetli Ekipmanı Var'}, {v:'yok', l:'Zimmetli Ekipmanı Yok'}
+      ]},
+      {key:'egitim', type:'select', label:'Eğitim Seviyesi', options:[
+        'İlkokul', 'Ortaokul', 'Lise', 'Önlisans', 'Lisans', 'Lisans Üstü'
+      ]},
+      {key:'sertifika', type:'select', label:'Sertifika Durumu', options:[
+        {v:'var', l:'Sertifikaları Güncel'}, {v:'yaklasiyor', l:'Süresi Yaklaşan Sertifika Var'}, {v:'eksik', l:'Eksik / Süresi Dolmuş Sertifika Var'}
+      ]},
+      {key:'taseronayrimi', type:'toggle', label:'Yalnız taşeron personeli göster'}
+    ],
+    onApply: function(state){
+      fpState = state;
+      gvApplyFilters(tblPersonel, true);
+    }
   });
-  ilChipsWrap.addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-il]'); if(!ch) return;
-    ilChipsWrap.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    gvApplyFilters(tblPersonel, true);
-  });
+  /* engine storeKey'den (gv_filters_personel) restore ediyorsa onApply TETİKLENMEZ
+     (ui.js gvFpMakeEngine kararı — restore sırasında yalnız UI/çip yeniden çizilir) —
+     reload sonrası kalıcı filtrenin GERÇEKTEN uygulanması için ilk state burada elle çekilir */
+  fpState = fdHandle.values();
 
-  if(window.gvFilterPanel){
-    window.gvFilterPanel.init('#fpPersonel', {
-      activeRow: '#achipsPersonel',
-      onApply: function(state){
-        fpSantiye = (state.fpsantiye && state.fpsantiye.value) || '';
-        applyPersonelCombinedFilter();
-      },
-      onClear: function(){
-        fpSantiye = '';
-        applyPersonelCombinedFilter();
-      }
-    });
-  }
-
-  /* ---- mobil kart listesi (D18 Y17, bu dalgada ilk uygulama): masaüstü #tblPersonel
-     ile aynı tr kümesinden üretilir (gorev/kasa deseni). data-idx eşleşme anahtarıdır;
-     pager burada fiilen hiç görünmez (25 satır = pageSize 25) ama ileri uyum için
-     yine de kurulur. ---- */
-  function buildCards(){
-    var tbody = document.querySelector('#tblPersonel tbody');
-    var list = document.getElementById('prMobileList');
-    if(!tbody || !list) return;
-    var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
-    list.innerHTML = '';
-    rows.forEach(function(tr, idx){
-      tr.setAttribute('data-idx', idx);
-      var card = document.createElement('div');
-      card.className = 'pr-mrow';
-      card.setAttribute('data-f', tr.getAttribute('data-f') || '');
-      card.setAttribute('data-durum', tr.getAttribute('data-durum') || '');
-      card.setAttribute('data-il', tr.getAttribute('data-il') || '');
-      card.setAttribute('data-idx', idx);
-      card.hidden = tr.hidden;
-
-      var top = document.createElement('div'); top.className = 'pr-mrow-top';
-      var mark = tr.querySelector('.gcell-mark');
-      if(mark) top.appendChild(mark.cloneNode(true));
-      var idWrap = document.createElement('div'); idWrap.className = 'pr-mrow-id';
-      var nameEl = tr.querySelector('.gcell-name-flag') || tr.querySelector('.gcell-name');
-      if(nameEl) idWrap.appendChild(nameEl.cloneNode(true));
-      var tag = tr.querySelector('.gtag');
-      if(tag) idWrap.appendChild(tag.cloneNode(true));
-      top.appendChild(idWrap);
-      card.appendChild(top);
-
-      var meta = document.createElement('div'); meta.className = 'pr-mrow-meta';
-      var siteTd = tr.children[1];
-      var subEl = siteTd ? siteTd.querySelector('.gcell-sub') : null;
-      var siteTxt = siteTd ? (siteTd.firstChild ? siteTd.firstChild.textContent.trim() : siteTd.textContent.trim()) : '';
-      var siteSpan = document.createElement('span'); siteSpan.className = 'pr-mrow-site';
-      siteSpan.innerHTML = '<i class="fa-solid fa-location-dot"></i> ' + siteTxt + (subEl ? ' · ' + subEl.textContent : '');
-      meta.appendChild(siteSpan);
-      var telTd = tr.children[2];
-      var telSpan = document.createElement('span'); telSpan.className = 'pr-mrow-tel';
-      telSpan.innerHTML = '<i class="fa-solid fa-phone"></i> ' + (telTd ? telTd.textContent.trim() : '—');
-      meta.appendChild(telSpan);
-      /* madde 10.2 — kan grubu rozetini masaüstü .col-kan hücresinden aynen kopyala,
-         Kolonlar tercihiyle senkron tutulması syncCardVisibility yanında applyKolonPref'te yapılır */
-      var kanTd = tr.children[3];
-      var kanBadge = kanTd ? kanTd.querySelector('.kan-badge') : null;
-      if(kanBadge){
-        var kanSpan = document.createElement('span'); kanSpan.className = 'pr-mrow-kan';
-        kanSpan.appendChild(kanBadge.cloneNode(true));
-        meta.appendChild(kanSpan);
-      }
-      card.appendChild(meta);
-
-      var bottom = document.createElement('div'); bottom.className = 'pr-mrow-bottom';
-      var statusWrap = document.createElement('div'); statusWrap.className = 'pr-mrow-status';
-      var durumTd = tr.children[5];
-      var stat = durumTd ? durumTd.querySelector('.gstat') : null;
-      if(stat) statusWrap.appendChild(stat.cloneNode(true));
-      var ayrilisSub = durumTd ? durumTd.querySelector('.gcell-sub') : null;
-      var dateSpan = document.createElement('span'); dateSpan.className = 'pr-mrow-date';
-      var baslamaTd = tr.children[4];
-      dateSpan.textContent = ayrilisSub ? ayrilisSub.textContent : 'İşe başlama ' + (baslamaTd ? baslamaTd.textContent.trim() : '—');
-      statusWrap.appendChild(dateSpan);
-      bottom.appendChild(statusWrap);
-
-      var acts = document.createElement('div'); acts.className = 'pr-mrow-acts';
-      var iaBtn = tr.querySelector('.ia-btn');
-      if(iaBtn){
-        var ia = document.createElement('a');
-        ia.className = 'ia-btn'; ia.href = iaBtn.getAttribute('href');
-        ia.setAttribute('data-no-confirm', ''); ia.setAttribute('aria-label', 'Personel kartı');
-        ia.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i>';
-        acts.appendChild(ia);
-      }
-      bottom.appendChild(acts);
-      card.appendChild(bottom);
-
-      list.appendChild(card);
-    });
-  }
-  /* filtre/arama değişince içerik aynı kalır, sadece görünürlük eşitlenir — data-idx
-     üzerinden tr.hidden -> card.hidden aktarımı (portal-odemeler/gorev gvpage deseni) */
-  function syncCardVisibility(){
-    var tbody = document.querySelector('#tblPersonel tbody');
-    var list = document.getElementById('prMobileList');
-    if(!tbody || !list) return;
-    Array.prototype.forEach.call(tbody.querySelectorAll('tr'), function(tr){
-      var idx = tr.getAttribute('data-idx');
-      if(idx === null) return;
-      var card = list.querySelector('.pr-mrow[data-idx="' + idx + '"]');
-      if(card) card.hidden = tr.hidden;
-    });
-  }
-
-  buildCards();
   applyPersonelCombinedFilter();
 })();
 </script>
 
 <script>
 /* =====================================================================
-   Madde 10.2 — Kolonlar (kolon görünürlük seçici). Kan Grubu kolonu
-   kullanıcı tarafından gizlenebilir/gösterilebilir; tercih localStorage'da
-   kalıcıdır (gv_crm_* anahtar konvansiyonu). .gv-pop bileşeni (ui.css,
-   hesap dropdown ile aynı sınıf) YENİDEN KULLANILIR — ortak dosyaya
-   dokunulmadı, yalnız bu sayfa kendi popover içeriğini üretiyor.
-   ===================================================================== */
-(function(){
-  var STORE_KEY = 'gv_crm_personel_kolonlar';
-  var btn = document.getElementById('kolonlarBtn');
-  var tbl = document.getElementById('tblPersonel');
-  if(!btn || !tbl) return;
-  var wrap = btn.parentElement;
-
-  function loadPrefs(){
-    try{
-      var raw = localStorage.getItem(STORE_KEY);
-      if(!raw) return {kan:true};
-      var p = JSON.parse(raw);
-      return {kan: p.kan !== false};
-    }catch(e){ return {kan:true}; }
-  }
-  function savePrefs(p){
-    try{ localStorage.setItem(STORE_KEY, JSON.stringify(p)); }catch(e){ /* localStorage kapalıysa sessizce yut */ }
-  }
-  function applyPrefs(p){
-    tbl.classList.toggle('hide-kan', !p.kan);
-    document.querySelectorAll('.pr-mrow-kan').forEach(function(el){ el.hidden = !p.kan; });
-    var chk = document.getElementById('kolonlarChkKan');
-    if(chk) chk.checked = p.kan;
-  }
-
-  var prefs = loadPrefs();
-  applyPrefs(prefs);
-
-  var menu = null;
-  function openMenu(){
-    if(menu) return;
-    menu = document.createElement('div');
-    menu.className = 'gv-pop kolon-pop';
-    menu.innerHTML = '<div class="gp-head"><b>Kolonlar</b><span>Listede gösterilecek alanları seçin</span></div>'
-      + '<label class="kolon-item"><input type="checkbox" id="kolonlarChkKan"><span>Kan Grubu</span></label>';
-    wrap.appendChild(menu);
-    var chk = menu.querySelector('#kolonlarChkKan');
-    chk.checked = prefs.kan;
-    chk.addEventListener('change', function(e){
-      prefs.kan = e.target.checked;
-      savePrefs(prefs);
-      applyPrefs(prefs);
-    });
-    btn.setAttribute('aria-expanded', 'true');
-    requestAnimationFrame(function(){ menu.classList.add('open'); });
-  }
-  function closeMenu(){
-    if(!menu) return;
-    var m = menu; menu = null;
-    m.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
-    setTimeout(function(){ m.remove(); }, 180);
-  }
-  btn.addEventListener('click', function(e){
-    e.stopPropagation();
-    if(menu) closeMenu(); else openMenu();
-  });
-  document.addEventListener('click', function(e){
-    if(menu && !wrap.contains(e.target)) closeMenu();
-  });
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
-})();
-</script>
-
-<script>
-/* =====================================================================
    Madde 5 — Personel → Şantiye Atama (§5.1/§5.2). Yalnız superadmin/sahip/
-   yonetim/ik görür (mevcut data-admin-only role gate'iyle AYNI 4 rol,
-   crm-personel.html:548 — yeni bir yetki seviyesi İCAT EDİLMEZ).
-   Checkbox'lar mevcut ilk kolonun (.gcell / .pr-mrow-top) İÇİNE JS ile
-   eklenir — tabloya yeni <th>/<td> kolonu EKLENMEZ (kolon sayısı JS
-   kapalıyken de tutarlı kalır, hizalama bozulmaz). data-per kimliği
-   satırın kendi ia-btn href'inden (?per=NNN) türetilir, yeni bir HTML
-   alanı eklenmez. Kanonik veri (25/22/3, öz kadro 69) BU MODÜLDE
-   OKUNMAZ/DEĞİŞTİRİLMEZ — atama yalnızca sayfa-lokal state'te yaşar.
+   yonetim/ik görür (mevcut data-admin-only role gate'iyle AYNI 4 rol).
+   Checkbox mevcut "Personel" kolonunun (.gcell, data-col="ad") İÇİNE JS ile
+   eklenir — tabloya yeni <th>/<td> kolonu EKLENMEZ. §7 revizyonuyla mobil
+   görünüm artık ortak gtable-cards (AYNI <tr>, CSS-only dönüşüm) olduğundan
+   ayrı bir mobil-kart checkbox enjeksiyonuna gerek KALMADI (eski
+   injectMobileChecks/#prMobileList kaldırıldı — tek enjeksiyon iki görünümde
+   de çalışır). data-per kimliği satırın kendi ia-btn href'inden (?per=NNN)
+   türetilir, yeni bir HTML alanı eklenmez. Kanonik veri (25/22/3, öz kadro 69)
+   BU MODÜLDE OKUNMAZ/DEĞİŞTİRİLMEZ — atama yalnızca sayfa-lokal state'te yaşar.
    ===================================================================== */
 (function(){
   if(!window.GV) return;
@@ -1124,23 +1183,9 @@
     if(gcell) gcell.insertBefore(makeChk(per), gcell.firstChild);
   });
 
-  /* ---- mobil kartlar: buildCards() bu script ÇALIŞMADAN ÖNCE (önceki
-     <script> bloğunda) DOM'u üretmiş olur — script tag'leri sırayla
-     çalışır, MutationObserver'a gerek yok ---- */
-  function injectMobileChecks(){
-    document.querySelectorAll('#prMobileList .pr-mrow').forEach(function(card){
-      if(card.querySelector('.row-chk')) return;
-      var per = card.getAttribute('data-per') || perOf(card);
-      if(!per) return;
-      var top = card.querySelector('.pr-mrow-top');
-      if(top) top.insertBefore(makeChk(per), top.firstChild);
-    });
-  }
-  injectMobileChecks();
-
   function updateRowHighlight(per, on){
     document.querySelectorAll('.row-chk[data-per="' + per + '"]').forEach(function(chkLbl){
-      var row = chkLbl.closest('tr') || chkLbl.closest('.pr-mrow');
+      var row = chkLbl.closest('tr');
       if(row) row.classList.toggle('is-selected', on);
     });
   }
