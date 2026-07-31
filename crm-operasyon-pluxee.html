@@ -143,6 +143,19 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
   .plx-bulk-bar .bb-acts{margin-left:0;width:100%}
   .plx-bulk-bar .bb-acts .btn{flex:1}
 }
+
+/* ============ §12.1 — belge yükleme (crm-operasyon-kasa-detay.html "Dosya Ekle" +
+   "Bu Oturumda Eklenen Dosyalar" deseninin birebir devralımı — pluxee'de EKSİKTİ, bkz
+   tasks/kararlar.md). file-row/file-ico/file-info ui.css'de PAYLAŞILMAZ (kasa-detay.html'de
+   de sayfa-lokal), bu yüzden aynı isimlerle burada da tanımlanır. ============ */
+.file-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.file-row:last-child{border-bottom:none}
+.file-ico{width:36px;height:36px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:14px;background:var(--info-tint);color:var(--info)}
+.file-info{flex:1;min-width:0;line-height:1.35}
+.file-info b{display:block;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-info span{font-size:11.5px;color:var(--muted)}
+.file-acts{display:flex;gap:6px;flex:none}
+.plx-belge-empty{font-size:12.5px;color:var(--muted);padding:4px 0}
 </style>
 </head>
 <body data-sec="finans" data-screen="pluxee">
@@ -336,6 +349,19 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       </div>
       <div class="gc-body" id="plxDetailBody"><div class="gv-detail-grid"><div class="gdg-item"><span class="gdg-lbl">Tarih</span><span class="gdg-val">1 Temmuz 2026</span></div><div class="gdg-item"><span class="gdg-lbl">Kart / Personel</span><span class="gdg-val">Ali Vural •4471</span></div><div class="gdg-item"><span class="gdg-lbl">Şantiye</span><span class="gdg-val">Vadi Konakları</span></div><div class="gdg-item"><span class="gdg-lbl">Tür</span><span class="gdg-val"><span class="gtag">Harcama</span></span></div><div class="gdg-item span2"><span class="gdg-lbl">Açıklama</span><span class="gdg-val">Haftalık market alışverişi</span></div><div class="gdg-item"><span class="gdg-lbl">Tutar</span><span class="gdg-val">₺420</span></div></div></div>
     </div>
+
+    <!-- §12.1 — belge yükleme (kasa-detay.html "Dosya Ekle" deseninin devralımı; seçili
+         hareketten BAĞIMSIZ, oturum boyunca kalıcı bir mock ek listesi — fiş/fatura görseli) -->
+    <div class="gv-card" id="plxBelgeCard">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-paperclip"></i> Belge Ekleri</div>
+        <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="plxBtnFile"><i class="fa-solid fa-paperclip"></i> Dosya Ekle</button>
+      </div>
+      <div class="gc-body" id="plxBelgeBody">
+        <p class="plx-belge-empty" id="plxBelgeEmpty">Seçili harekete henüz belge eklenmedi. Fiş görselini eklemek için "Dosya Ekle"yi kullanın.</p>
+      </div>
+    </div>
+    <input type="file" id="plxFileInput" hidden multiple accept=".pdf,.jpg,.jpeg,.png,.xlsx">
   </main>
 </div>
 
@@ -673,6 +699,32 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     renderPlxDetail(id);
     gvUrlState.set({islem: id.replace('plx-', '')});
   });
+
+  /* ============ §12.1 — belge yükleme [MOCK-SİM] — crm-operasyon-kasa-detay.html
+     btnKasaFile/kasaFileInput deseninin birebir devralımı: dosya seçilince "Belge
+     Ekleri" listesine gerçek bir satır eklenir (indirme/ağ YOK, sayfa-içi mock), hangi
+     harekete eklendiği o an açık olan Hareket Detayı kaydından okunur. ============ */
+  (function(){
+    var belgeBody = document.getElementById('plxBelgeBody');
+    var belgeEmpty = document.getElementById('plxBelgeEmpty');
+    var btnFile = document.getElementById('plxBtnFile');
+    var fileInput = document.getElementById('plxFileInput');
+    if(!btnFile || !fileInput) return;
+    btnFile.addEventListener('click', function(){ fileInput.click(); });
+    fileInput.addEventListener('change', function(){
+      var hedef = (document.getElementById('plxDetailNo') || {}).textContent || 'seçili hareket';
+      Array.prototype.forEach.call(this.files, function(file){
+        if(belgeEmpty && !belgeEmpty.hidden) belgeEmpty.hidden = true;
+        var row = document.createElement('div');
+        row.className = 'file-row';
+        row.innerHTML = '<div class="file-ico"><i class="fa-solid fa-file-lines"></i></div>'
+          + '<div class="file-info"><b>' + file.name + '</b><span>' + Math.max(1, Math.round(file.size/1024)) + ' KB · şimdi eklendi</span></div>';
+        belgeBody.appendChild(row);
+        gvToast(file.name + ' eklendi — ' + hedef + ' kaydına işlendi.');
+      });
+      this.value = '';
+    });
+  })();
 
   /* Yeni Kayıt — oluşturabilen roller (İK dahil: kasa mantığından farklı, D8 rol notu) */
   var OLUSTURABILIR = ['superadmin','sahip','yonetim','muhasebe'];

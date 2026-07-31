@@ -140,6 +140,19 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
   .kk-bulk-bar .bb-acts{margin-left:0;width:100%}
   .kk-bulk-bar .bb-acts .btn{flex:1}
 }
+
+/* ============ §12.1 — belge yükleme (crm-operasyon-kasa-detay.html "Dosya Ekle" +
+   "Bu Oturumda Eklenen Dosyalar" deseninin birebir devralımı — kredikarti'de EKSİKTİ,
+   bkz tasks/kararlar.md). file-row/file-ico/file-info sınıfları ui.css'de PAYLAŞILMAZ
+   (kasa-detay.html'de de sayfa-lokal), bu yüzden aynı isimlerle burada da tanımlanır. ============ */
+.file-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.file-row:last-child{border-bottom:none}
+.file-ico{width:36px;height:36px;flex:none;border-radius:9px;display:grid;place-items:center;font-size:14px;background:var(--info-tint);color:var(--info)}
+.file-info{flex:1;min-width:0;line-height:1.35}
+.file-info b{display:block;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-info span{font-size:11.5px;color:var(--muted)}
+.file-acts{display:flex;gap:6px;flex:none}
+.kk-belge-empty{font-size:12.5px;color:var(--muted);padding:4px 0}
 </style>
 </head>
 <body data-sec="finans" data-screen="kredikarti">
@@ -357,6 +370,19 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       <!-- statik bake (D18-B2): JS load'da default seçimle yeniden basar -->
       <div class="gc-body" id="kkDetailBody"><div class="gv-detail-grid"><div class="gdg-item"><span class="gdg-lbl">Tarih</span><span class="gdg-val">2 Temmuz 2026</span></div><div class="gdg-item"><span class="gdg-lbl">Kart</span><span class="gdg-val">Garanti BBVA •4512</span></div><div class="gdg-item"><span class="gdg-lbl">Kart Sahibi</span><span class="gdg-val">Hasan Demirci</span></div><div class="gdg-item"><span class="gdg-lbl">Taksit</span><span class="gdg-val">Tek Çekim</span></div><div class="gdg-item span2"><span class="gdg-lbl">Firma / Satıcı</span><span class="gdg-val">Otel — Liman şantiye ekibi konaklama</span></div><div class="gdg-item span2"><span class="gdg-lbl">Açıklama</span><span class="gdg-val">Konaklama (3 gece, 4 kişi)</span></div><div class="gdg-item"><span class="gdg-lbl">Tutar</span><span class="gdg-val">₺8.400</span></div></div></div>
     </div>
+
+    <!-- §12.1 — belge yükleme (kasa-detay.html "Dosya Ekle" deseninin devralımı; seçili
+         hareketten BAĞIMSIZ, oturum boyunca kalıcı bir mock ek listesi) -->
+    <div class="gv-card" id="kkBelgeCard">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-paperclip"></i> Belge Ekleri</div>
+        <button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="kkBtnFile"><i class="fa-solid fa-paperclip"></i> Dosya Ekle</button>
+      </div>
+      <div class="gc-body" id="kkBelgeBody">
+        <p class="kk-belge-empty" id="kkBelgeEmpty">Seçili harekete henüz belge eklenmedi. Fiş/fatura/ekstre görselini eklemek için "Dosya Ekle"yi kullanın.</p>
+      </div>
+    </div>
+    <input type="file" id="kkFileInput" hidden multiple accept=".pdf,.jpg,.jpeg,.png,.xlsx">
   </main>
 </div>
 
@@ -459,6 +485,14 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
 <script>
 (function(){
   if(!window.GV) return;
+
+  /* ============ §12.1 — cari bağlantısı (kasa'nın crm-cari-detay.html linkleme
+     desenin devralımı; kredikarti'de EKSİKTİ, bkz tasks/kararlar.md). Yalnız gerçekten
+     KAYITLI bir cari hesaba karşılık gelen satıcı adları linklenir (crm-cari-durum.html
+     mock kaydı) — "Petrol Ofisi/Ofix/Lastik Center/Hepsiburada/Otel" gibi tek seferlik
+     nakit-benzeri harcamalar kasa'da da linklenmiyordu, burada da İCAT EDİLMEZ. ============ */
+  var CARI_LINK = {'Anadolu Hırdavat': true};
+  function cariWrap(name){ return CARI_LINK[name] ? '<a href="crm-cari-detay.html">' + name + '</a>' : name; }
 
   /* ---- mock veri — shell.js DALGA 8 kanonik bloğu + D19/S12 kasa-format kart defteri ----
      4 firma kartı; her kartın devir'i (ekstre öncesi dönem borcu) + tx dizisi (tarih sırasıyla,
@@ -600,7 +634,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         html += '<tr data-banka="'+key+'" data-durum="'+t.durum+'" data-id="'+rid+'" data-tarih="'+isoFromUzun(t.tarihUzun)+'" data-santiye="'+meta.santiye+'" data-kategori="'+meta.kategori+'" data-belge="'+belgeDurum+'">'
           + '<td class="df-no">'+(i + 1)+'</td><td class="df-date">'+t.tarih+'</td>'
           + '<td class="df-firm">'+K.banka+' <span class="kk-no">•'+K.no+'</span>'+waitHtml+'</td>'
-          + '<td class="df-desc">'+t.firma+' — '+t.desc+taksitTxt+' — KKR-2026-'+t.id+'</td>'
+          + '<td class="df-desc">'+cariWrap(t.firma)+' — '+t.desc+taksitTxt+' — KKR-2026-'+t.id+'</td>'
           + '<td class="num'+(isOdeme ? ' df-in' : '')+'">'+(isOdeme ? fmtTL(t.tutar) : '')+'</td>'
           + '<td class="num'+(isOdeme ? '' : ' df-out')+'">'+(isOdeme ? '' : fmtTL(t.tutar))+'</td>'
           + '<td class="num df-bak">'+fmtTL(run)+'</td></tr>';
@@ -707,7 +741,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       + gdgItem('Kart', K.banka + ' •' + K.no)
       + gdgItem('Kart Sahibi', K.sahip)
       + gdgItem('Taksit', taksitTxt)
-      + gdgItem('Firma / Satıcı', t.firma, true)
+      + gdgItem('Firma / Satıcı', cariWrap(t.firma), true)
       + gdgItem('Açıklama', t.desc, true)
       + gdgItem('Tutar', fmtTL(t.tutar))
       + '</div>';
@@ -718,6 +752,32 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     renderKkDetail(id);
     gvUrlState.set({islem: id.replace('kkr-', '')});
   });
+
+  /* ============ §12.1 — belge yükleme [MOCK-SİM] — crm-operasyon-kasa-detay.html
+     btnKasaFile/kasaFileInput deseninin birebir devralımı: dosya seçilince "Belge
+     Ekleri" listesine gerçek bir satır eklenir (indirme/ağ YOK, sayfa-içi mock), hangi
+     harekete eklendiği o an açık olan Hareket Detayı kaydından okunur. ============ */
+  (function(){
+    var belgeBody = document.getElementById('kkBelgeBody');
+    var belgeEmpty = document.getElementById('kkBelgeEmpty');
+    var btnFile = document.getElementById('kkBtnFile');
+    var fileInput = document.getElementById('kkFileInput');
+    if(!btnFile || !fileInput) return;
+    btnFile.addEventListener('click', function(){ fileInput.click(); });
+    fileInput.addEventListener('change', function(){
+      var hedef = (document.getElementById('kkDetailNo') || {}).textContent || 'seçili hareket';
+      Array.prototype.forEach.call(this.files, function(file){
+        if(belgeEmpty && !belgeEmpty.hidden) belgeEmpty.hidden = true;
+        var row = document.createElement('div');
+        row.className = 'file-row';
+        row.innerHTML = '<div class="file-ico"><i class="fa-solid fa-file-lines"></i></div>'
+          + '<div class="file-info"><b>' + file.name + '</b><span>' + Math.max(1, Math.round(file.size/1024)) + ' KB · şimdi eklendi</span></div>';
+        belgeBody.appendChild(row);
+        gvToast(file.name + ' eklendi — ' + hedef + ' kaydına işlendi.');
+      });
+      this.value = '';
+    });
+  })();
 
   /* Harcama Kaydı — oluşturabilen roller */
   var OLUSTURABILIR = ['superadmin','sahip','yonetim','muhasebe','sef'];

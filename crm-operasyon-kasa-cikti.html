@@ -54,6 +54,9 @@ body{font-family:var(--font);background:#525659;min-height:100vh;padding:88px 16
 .ck-scope .cs-note{font-size:11.5px;color:#aeb4c9;flex:1;min-width:200px}
 .ck-scope .cs-acts{display:flex;gap:8px;margin-left:auto}
 .ck-scope .cs-acts .cb-btn{padding:8px 14px}
+/* §12.1 — "Seçili Kayıtların Çıktısını Al" modu (kredikarti/pluxee-cikti emsali) */
+.ck-scope .cs-sel-banner{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;flex:1}
+.ck-scope .cs-sel-banner .gtag{display:inline-flex;align-items:center;background:var(--gv-mint);color:var(--gv-deep);font-weight:800;font-size:10.5px;padding:3px 9px;border-radius:20px;letter-spacing:.02em}
 @media(max-width:900px){ .ck-scope{padding:12px 14px} .ck-scope .cs-acts{margin-left:0;width:100%} }
 
 /* ---- A4 kâğıt ---- */
@@ -233,6 +236,7 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
       ]
     }
   };
+  var KS_ADLAR_KISA = { vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye' };   /* §12.1 seçili-kayıt modu kısa etiketleri — crm-operasyon-kasa.html KS_ADLAR ile AYNI */
   var BOS_SATIR_HEDEF = 22;   /* imzaya hazır görünüm — numaralı boş satırlarla grid tamamlanır (xlsx 32 satırlı grid idiyomu) */
 
   /* ============ §13 — tarih aralığı: kasa listesinden query string ile taşınan (veya
@@ -252,6 +256,9 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
   }
 
   var q = new URLSearchParams(location.search);
+  /* §12.1 — liste sayfası (crm-operasyon-kasa.html) "Seçili Kayıtların Çıktısını Al"
+     bulk bar'ından ids= ile gelir (kredikarti/pluxee-cikti ile AYNI query sözleşmesi). */
+  var selIds = q.get('ids') ? q.get('ids').split(',').filter(Boolean) : null;
   var ks = q.get('santiye');
   if(!KASALAR[ks]) ks = 'vadi';
   var state = { from: q.get('from') || '', to: q.get('to') || '', dlabel: q.get('dlabel') || '' };
@@ -269,6 +276,74 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
     if(state.to) p.set('to', state.to);
     if(state.dlabel) p.set('dlabel', state.dlabel);
     history.replaceState(null, '', 'crm-operasyon-kasa-cikti.html?' + p.toString());
+  }
+
+  /* ============ §12.1 — "Seçili Kayıtların Çıktısını Al" render modu — kredikarti/
+     pluxee-cikti emsali: kasa.html'deki İLE AYNI mantıkla açıklama hücresindeki (burada
+     satır dizisinin 3. elemanı) son KSA/KSG kod referansından rid türetilir; ayrı bir id
+     alanı İCAT EDİLMEZ, TEK kaynak açıklama metnidir — kasa.html ile senkron kalır.
+     Devir/mevcut kavramı bir DÖNEME aittir, keyfi bir seçim kümesinin devri yoktur (bu
+     ayrım kredikarti-cikti'nin "Seçili Kayıtlar Modu"nda da aynı, bkz o dosyanın render()
+     yorumu) — bu yüzden yalnız şantiye grup başlığı + gerçek satırlar (gerçek chainRun
+     bakiyesiyle) + grup alt toplamı basılır. ============ */
+  var KS_ORDER = ['vadi','liman','merkez'];
+  function rowId(desc){
+    var m = desc.match(/[A-Z]{2,4}-\d{4}-\d{3}/g);
+    return m ? m[m.length - 1].toLowerCase() : null;
+  }
+  function renderSelected(){
+    var rowsHtml = '', bulunanKs = [];
+    var genelGelen = 0, genelCikan = 0, no = 0;
+    KS_ORDER.forEach(function(key){
+      var K = KASALAR[key];
+      var run = K.devir, blokGelen = 0, blokCikan = 0, blokRows = '';
+      K.rows.forEach(function(r){
+        run += r[3] - r[4];
+        var rid = rowId(r[2]);
+        if(!rid || selIds.indexOf(rid) === -1) return;
+        no++;
+        blokGelen += r[3]; blokCikan += r[4];
+        genelGelen += r[3]; genelCikan += r[4];
+        blokRows += '<tr><td class="c-no">' + no + '</td><td class="c-tarih">' + r[0] + '</td>'
+          + '<td class="c-firma">' + r[1] + '</td><td>' + r[2] + '</td>'
+          + '<td class="c-gelen">' + (r[3] ? tl(r[3]) : '') + '</td>'
+          + '<td class="c-cikan">' + (r[4] ? tl(r[4]) : '') + '</td>'
+          + '<td class="c-bakiye">' + tl(run) + '</td></tr>';
+      });
+      if(!blokRows) return;
+      bulunanKs.push(KS_ADLAR_KISA[key]);
+      rowsHtml += '<tr class="r-devir"><td class="c-no"></td><td colspan="6">' + K.ad + '</td></tr>' + blokRows;
+      rowsHtml += '<tr class="r-total"><td class="c-no"></td><td colspan="3">SEÇİLİ ALT TOPLAM</td>'
+        + '<td class="c-gelen">' + tl(blokGelen) + '</td><td class="c-cikan">' + tl(blokCikan) + '</td><td class="c-bakiye"></td></tr>';
+    });
+    if(!no){
+      rowsHtml = '<tr><td class="c-no"></td><td colspan="6" style="text-align:center;color:#888;padding:16px 6px">Seçili kayıt bulunamadı.</td></tr>';
+    } else {
+      rowsHtml += '<tr class="r-mevcut"><td class="c-no"></td><td colspan="3">SEÇİLİ KAYITLAR TOPLAMI (' + no + ' kayıt)</td>'
+        + '<td class="c-gelen">' + tl(genelGelen) + '</td><td class="c-cikan">' + tl(genelCikan) + '</td><td class="c-bakiye"></td></tr>';
+    }
+    document.getElementById('ppRows').innerHTML = rowsHtml;
+    document.getElementById('ppKasaAdi').textContent = bulunanKs.length > 1
+      ? 'SEÇİLİ KAYITLAR — KARMA ŞANTİYE (' + bulunanKs.join(' · ') + ')'
+      : (bulunanKs[0] ? bulunanKs[0].toUpperCase() + ' — SEÇİLİ KAYITLAR' : 'SEÇİLİ KAYITLAR');
+    document.getElementById('ppAralik').textContent = 'Seçili Kayıtlar';
+    document.title = 'Kasa Çıktısı — Seçili Kayıtlar — Gavia CRM';
+    var sel = document.getElementById('ckSantiye'); if(sel) sel.hidden = true;
+    document.getElementById('ckBack').href = 'crm-operasyon-kasa.html';
+    var scope = document.getElementById('ckScope');
+    if(scope){
+      scope.innerHTML = '<div class="cs-sel-banner"><span class="gtag">Seçili Kayıtlar Modu</span>'
+        + '<span>' + no + ' kayıt listeden seçildi — tarih aralığı filtresi devre dışı</span></div>'
+        + '<div class="cs-acts"><a class="cb-btn" href="crm-operasyon-kasa.html"><i class="fa-solid fa-list"></i> Tüm Listeye Dön</a></div>';
+    }
+    /* imza dörtlüsü — birden çok şantiye karışıksa tek "kasa tutan" ismi verilemez */
+    var tutanAd = bulunanKs.length === 1 ? KASALAR[KS_ORDER.filter(function(k){ return KS_ADLAR_KISA[k] === bulunanKs[0]; })[0]].tutan.name : 'Şantiye şefleri (karma)';
+    var tutanTitle = bulunanKs.length === 1 ? 'Şantiye Şefi' : 'Bkz. ilgili kasa kaydı';
+    document.getElementById('ppSign').innerHTML =
+      '<div class="sg"><div class="sg-role">Kasa Tutan Personel</div><div class="sg-name">' + tutanAd + '</div><div class="sg-title">' + tutanTitle + '</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Nesrin Aydın</div><div class="sg-title">Muhasebe</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Teknik Ofis</div><div class="sg-name">Elif Sarıkaya</div><div class="sg-title">Teknik Müdür</div><div class="sg-line">İMZA</div></div>'
+      + '<div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>';
   }
 
   function render(key){
@@ -333,23 +408,27 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
       + '<div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>';
   }
 
-  render(ks);
-  document.getElementById('ckSantiye').addEventListener('change', function(){
-    ks = this.value;
-    syncUrl();
+  if(selIds && selIds.length){
+    renderSelected();
+  } else {
     render(ks);
-  });
-  document.getElementById('csApply').addEventListener('click', function(){
-    state.from = fromInput.value;
-    state.to = toInput.value;
-    state.dlabel = '';   /* etiket her Uygula'da gerçek seçili tarihlerden yeniden türetilir */
-    syncUrl(); render(ks);
-  });
-  document.getElementById('csClear').addEventListener('click', function(){
-    state = { from:'', to:'', dlabel:'' };
-    fromInput.value = ''; toInput.value = '';
-    syncUrl(); render(ks);
-  });
+    document.getElementById('ckSantiye').addEventListener('change', function(){
+      ks = this.value;
+      syncUrl();
+      render(ks);
+    });
+    document.getElementById('csApply').addEventListener('click', function(){
+      state.from = fromInput.value;
+      state.to = toInput.value;
+      state.dlabel = '';   /* etiket her Uygula'da gerçek seçili tarihlerden yeniden türetilir */
+      syncUrl(); render(ks);
+    });
+    document.getElementById('csClear').addEventListener('click', function(){
+      state = { from:'', to:'', dlabel:'' };
+      fromInput.value = ''; toInput.value = '';
+      syncUrl(); render(ks);
+    });
+  }
 })();
 </script>
 </body>
