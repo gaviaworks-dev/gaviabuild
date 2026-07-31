@@ -1102,6 +1102,51 @@
        5 rol: superadmin/sahip/yonetim/teknik/sef), açıklama. Katman filtreleri (§10.2 ek
        özellikler): renk seç · ikon seç · gizle/göster · sadece kendi katmanlarım · şantiye
        bazlı filtrele · departman bazlı filtrele · görev türüne göre filtrele.
+
+   ─ V2 SAYIM KANONİĞİ (2026-07-31 · A dokümanı §3 — KİLİTLİ, TEK SEFERLİK GÜNCELLEME)
+       Bu blok yalnız `v2/` ağacı içindir; kök sürüm eski zinciriyle donmuştur.
+       A dokümanı §3 liste sayaçlarını açıkça yeniden tanımladı. Aşağıdaki sayılar
+       bu turun KİLİTLİ değerleridir: dalgalar bunları YALNIZ TÜKETİR, hiçbir dalga
+       değiştirmez. Bir sayının değişmesi gerektiği düşünülüyorsa yaklaşım yanlıştır.
+
+     · ŞANTİYE SAYIMI (§3 "Örnek Şantiye Sayımı" — "5 şantiye / Tümü 9" çelişkisinin çözümü):
+         Toplam Şantiye   9   ← 5 kanonik + 4 kapalı (DALGA 20 bloğu)
+         Aktif Görünüm    5   ← "Pasif Şantiyeleri Göster" switch'i KAPALIYKEN görünen
+         Aktif            3   ← Vadi Konakları · Liman Lojistik Merkezi · Merkez Şantiye
+         Planlama         1   ← Göl Evleri 2. Etap
+         Tamamlanan       1   ← Kule Ofis B Blok
+         Pasif / Arşiv    4   ← CSKP Pasif · BTK Askıya Alınan · FMR Arşivlenen · KSR İptal Edilen
+       Denklemler (her liste sayfası bu üçünü SAĞLAMAK ZORUNDA):
+         3 + 1 + 1 = 5 (aktif görünüm) · 5 + 4 = 9 (toplam) · 9 − 5 = 4 (pasif/arşiv)
+       "Tümü" chip'i switch KAPALIYKEN 5, AÇIKKEN 9 gösterir — 9 ile 5 aynı anda
+       çelişkili biçimde YAZILMAZ; özet kart "Toplam 9 · görünen 5" dilini kullanır.
+
+     · PERSONEL SAYIMI (§3 "Örnek Personel Sayımı" — "22 personel / Tümü 25" çelişkisinin çözümü):
+         Toplam Personel  25  ← 001-025 (?per= MAP aralığı)
+         Aktif Personel   22  ← 001-022
+         Pasif / Ayrılan   3  ← 023 Kudret Beşikçi · 024 Hikmet Uğurlu · 025 Nadir Çamlıca
+         Bugün İzinli      1  ← 2 Tem 2026'da izinli AKTİF personel (22'nin İÇİNDE, ayrı küme DEĞİL)
+         Eksik Evrak       4  ← zorunlu 3 evraktan en az biri eksik AKTİF personel (22'nin İÇİNDE)
+       Denklemler: 22 + 3 = 25 · izinli 1 ⊂ aktif 22 · eksik evrak 4 ⊂ aktif 22.
+       "İzinli" ve "Eksik Evrak" TOPLAMA EKLENMEZ — kesişen alt kümelerdir; özet kartta
+       "22 aktif · bunlardan 1 izinli, 4 eksik evraklı" dili kullanılır.
+
+     · SAYIM DİLİ — TÜM LİSTE SAYFALARI İÇİN ORTAK (§3 "Toplam Sayı Mantığı"):
+       Her liste sayfasının kayıt sayısı özeti şu 6 ekseni birbirine karıştırmadan verir:
+         toplam kayıt · aktif kayıt · pasif kayıt · arşivlenen kayıt · filtre sonucu · seçili kayıt
+       Filtre uygulanmışken metin "N kayıttan M tanesi" biçimindedir; M ile N asla
+       eşit sayılmaz, ikisi ayrı değişkendir.
+
+     · BOŞ DURUM SIRALAMASI (§3 "Doğru Liste Durum Mantığı" — KRİTİK KURAL):
+         loading → error → filteredResults.length === 0 → kayıtlar
+       Kayıt varken boş durum mesajı ASLA render edilmez. Boş durum ile tablo gövdesi
+       birbirini DIŞLAR (ikisi aynı anda görünür olamaz).
+
+     · DEĞİŞMEYEN KORDON: 93 saha (69 öz + 24 taşeron) · Vadi 51 · Liman 30 · Merkez 12 ·
+       Demir-Beton 10 · ElektroMek 6 · Yalıtım Kardeşler 8 · haftalık 54/34/44 · arşiv
+       58/34/44 · yemekhane 93 öğün ₺16.020 · kasa ₺165.130 · ZMT-2026-045 Aylin Koç ·
+       Yapıtaş İnşaat A.Ş. §3 güncellemesi bu zincire DOKUNMAZ — saha headcount (93) ile
+       personel KAYIT sayısı (25) AYRI metriklerdir, birbirine denklenmez.
    ===================================================================== */
 (function(){
   'use strict';
