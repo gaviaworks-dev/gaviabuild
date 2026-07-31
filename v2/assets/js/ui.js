@@ -536,7 +536,17 @@
     var page = parseInt(gvUrlState.get(pkey), 10) || 1;
 
     function visRows(){
-      return Array.prototype.filter.call(el.querySelectorAll(rowSel), function(r){ return !r.hidden; });
+      /* [v2-Dalga2/LEAD] `.gv-fp-hide` de dışlanır. Üstteki not iki mekanizmanın
+         çakışmadığını varsayıyordu: filtre satırı `hidden` ile, pager `.gv-pg-hide`
+         ile gizler. Bu, MARKUP-tabanlı `gvFilterPanel` için doğru; ancak config-driven
+         `gvFilterDrawer` aynı motoru `.gv-fp-hide` SINIFIYLA sürüyor (bkz. satır ~1082).
+         O yolda pager filtrelenmiş satırları saymaya devam ediyor, "N kayıt" sayacı ve
+         sayfa bölmesi yanlış çıkıyordu — gelişmiş filtre ile sayfalamayı birlikte
+         kullanan her sayfayı etkiliyordu. `.gv-pg-hide` BİLİNÇLİ olarak dışlanmaz:
+         onu pager'ın kendisi koyar, sayımın girdisi değil çıktısıdır. */
+      return Array.prototype.filter.call(el.querySelectorAll(rowSel), function(r){
+        return !r.hidden && !r.classList.contains('gv-fp-hide');
+      });
     }
     function pageBtns(pages){
       /* pencereli numara listesi: 1 … p−1 p p+1 … son */
