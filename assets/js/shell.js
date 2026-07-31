@@ -1254,8 +1254,10 @@
        Taşeron Kartları = KİMLİK/performans; Taşeron Hakedişleri İŞLEM listesi olarak kalır (K9) */
     /* [v3-Dalga2] spec-menu-mimarisi.md §4.5 — Kasa/Kredi Kartı/Pluxee operasyon'dan
        taşındı (K-162, dosya adları DEĞİŞMEDİ), Cari Hareketler çapraz-link olarak eklendi.
-       Banka Hesapları/Hareketleri ve Mizan kalemleri BİLİNÇLİ EKLENMEDİ — dosyalar henüz
-       yok (Dalga 3 sahibi TB/TZ ekleyecek, bkz spec §4.5 "Dalga 2 sınırı" notu). */
+       [v3-Dalga3/TB] Banka Hesapları/Hareketleri VE Mizan kalemleri BURADA EKLENDİ
+       (bkz aşağı) — Dalga 2'de dosyalar henüz yoktu; TB 7 banka dosyasını üretip
+       menüye bağladı, Mizan'ı da (crm-finans-mizan.html TZ'nin ürünü, shell.js TEK
+       SAHİP kuralı gereği TZ ekleyemiyordu — LEAD talimatıyla TB ekledi) bağladı. */
     finans:{ ic:'fa-file-signature', eyebrow:'Finans', title:'Finans Yönetimi', menu:[
       {ic:'fa-cash-register',      lbl:'Kasa',              href:'crm-operasyon-kasa.html',       screen:'kasa'},
       /* [v3-Dalga2] yörüngesiz-ekran taramasında bulundu: crm-operasyon-kasa-belgesiz-
@@ -1266,6 +1268,13 @@
          dokunma yetkisine sahip değil (domain separation, yalnız shell.js+data-sec+dizin),
          bu yüzden erişim shell.js menüsünden sağlandı. */
       {ic:'fa-receipt',            lbl:'Belgesiz Harcama Formu', href:'crm-operasyon-kasa-belgesiz-harcama-form.html', screen:'kasa'},
+      /* [v3-Dalga3/TB] Banka Hesapları/Hareketleri — spec-menu-mimarisi.md §4 madde 5
+         sırasına birebir (Kasa'dan sonra, Kredi Kartları'ndan önce). Alt akış dosyaları
+         (form/detay/cikti) menüsüz — data-screen ana ekrandan miras alınır (kararlar.md 149
+         emsali). Rol kararı: yalnız scr.finans kısıtı OLMAYAN roller görür (superadmin/
+         sahip/yonetim/muhasebe) — teknik/sef/ik'nin scr.finans listesine EKLENMEDİ, KASITLI. */
+      {ic:'fa-building-columns',   lbl:'Banka Hesapları',   href:'crm-finans-banka.html',         screen:'banka'},
+      {ic:'fa-money-bill-transfer', lbl:'Banka Hareketleri', href:'crm-finans-banka-hareket.html', screen:'banka-hareket'},
       {ic:'fa-money-check-dollar', lbl:'Kredi Kartları',    href:'crm-operasyon-kredikarti.html', screen:'kredikarti'},
       {ic:'fa-credit-card',        lbl:'Pluxee Kartlar',    href:'crm-operasyon-pluxee.html',     screen:'pluxee'},
       {ic:'fa-right-left',         lbl:'Cari Hareketler',   href:'crm-cari-durum.html', reqSec:'cari', reqScreen:'durum'},
@@ -1275,6 +1284,16 @@
       {ic:'fa-id-card-clip',   lbl:'Taşeron Kartları',     href:'crm-finans-taseronlar.html',  screen:'taseronlar'},
       {seclbl:'Sözleşmeler'},
       {ic:'fa-file-contract',  lbl:'Sözleşme Arşivi',      href:'crm-finans-sozlesmeler.html', screen:'sozlesmeler'},
+      /* [v3-Dalga3/TB, LEAD talimatıyla] Mizan — §16 madde 2 + §4.2/§10.2-5 sırası
+         (Sözleşmeler'den sonra, Faz 2 Bütçe&Nakit bloğundan önce). crm-finans-
+         mizan.html TZ'nin ürünü (32KB, hazır) — dosya içeriğine DOKUNULMADI, yalnız
+         menü bağlantısı eklendi (domain separation: shell.js TB'de, dosya TZ'de).
+         tag:'Hazırlık' — §4.3'ün "Faz 2 Finans Genişleme veya Hazırlık etiketiyle
+         gösterilebilir" hükmü. Rol kararı BANKA İLE AYNI GEREKÇE: mizan firma-seviyesi
+         finanstır, yalnız scr.finans kısıtı OLMAYAN roller görür (superadmin/sahip/
+         yonetim/muhasebe) — teknik/sef/ik'nin scr.finans listesine EKLENMEDİ, KASITLI,
+         ROLES'a dokunulmadı. */
+      {ic:'fa-scale-balanced',  lbl:'Mizan',                href:'crm-finans-mizan.html',       screen:'mizan', tag:'Hazırlık'},
       {seclbl:'Bütçe & Nakit', tag:'Faz 2'},
       {ic:'fa-coins',          lbl:'Proje Bütçesi',        href:'crm-finans-butce.html',       screen:'butce'},
       {ic:'fa-chart-pie',      lbl:'Gerçekleşen Maliyet',  href:'crm-finans-maliyet.html',     screen:'maliyet', cnt:'1'},
