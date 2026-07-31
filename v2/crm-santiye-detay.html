@@ -288,6 +288,26 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
 .dosya-toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 16px;border-bottom:1px solid var(--line)}
 @media(max-width:640px){.dosya-toolbar{padding:0 16px 14px}}
 
+/* T-S2 — Dosya Önizleme modalı (A §2 "Video Önizleme"): crm-finans-sozlesme-detay.html
+   "Belge Önizle" .belge-doc/.bd-name/.belge-meta diliyle TUTARLI, sayfa-lokal tanım
+   (o dosya READ-ONLY referans — ui.css'e dokunulmadı). .dop-* video poster'a özel. */
+.belge-doc{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:26px 20px;text-align:center}
+.belge-doc i{font-size:34px;color:var(--muted)}
+.bd-name{font-size:12.5px;font-weight:700;color:var(--ink-2);text-align:center}
+.belge-meta{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.belge-meta .bm-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)}
+.belge-meta .bm-row:last-child{border-bottom:none}
+.belge-meta .bm-lbl{color:var(--muted)}
+.belge-meta .bm-val{color:var(--ink);font-weight:700;text-align:right}
+.dop-video{position:relative;border-radius:var(--r-md);overflow:hidden;aspect-ratio:16/9;
+  background:linear-gradient(135deg,var(--gv-night,#141533) 0%,rgba(var(--acc-rgb),.55) 100%)}
+.dop-poster{position:absolute;inset:0;display:grid;place-items:center;cursor:pointer;border:0;background:none;width:100%;padding:0}
+.dop-poster i{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.92);color:var(--acc-ink);
+  display:grid;place-items:center;font-size:19px;box-shadow:var(--sh-md);transition:.18s var(--ease)}
+.dop-poster:hover i{transform:scale(1.06)}
+.dop-dur{position:absolute;right:9px;bottom:9px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);
+  padding:2px 7px;border-radius:var(--r-sm)}
+
 /* Dosya Ekle modalı — panel-ajanda .gv-modal/.gv-field idiyomunun BİREBİR aynısı */
 .gv-field{margin-bottom:14px}
 .gv-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
@@ -443,6 +463,31 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
       <div class="gv-modal-acts">
         <button type="button" class="btn btn-ghost" id="dosyaModalCancel">Vazgeç</button>
         <button type="button" class="btn btn-acc" id="dosyaModalSave"><i class="fa-solid fa-upload"></i> Yükle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---- T-S2 — Dosya Önizleme modalı (A §2 "Video Önizleme"): Dosyalar sekmesindeki
+       "Önizle" (fa-eye) butonu artık gerçek bir önizleme açar. Video kategorisi bir
+       oynatıcı-benzeri poster (div+gradient, gerçek dosya yok — CLAUDE.md görsel kuralına
+       uygun <img> DEĞİL) + "Oynat" gösterir; diğer kategoriler ad/meta/indir ile aynı
+       .gv-modal idiyomunu (crm-finans-sozlesme-detay.html "Belge Önizle" referansıyla
+       TUTARLI) kullanır. ---- -->
+  <div class="gv-modal-ov" id="dosyaOnizleOv">
+    <div class="gv-modal" style="width:min(440px,100%)" role="dialog" aria-modal="true" aria-labelledby="dosyaOnizleTitle">
+      <h3 id="dosyaOnizleTitle">Dosya Önizle</h3>
+      <div id="dosyaOnizleVideo" class="dop-video" hidden>
+        <button type="button" class="dop-poster" id="dosyaOnizlePlay" data-no-confirm aria-label="Videoyu oynat"><i class="fa-solid fa-play"></i></button>
+        <div class="dop-dur" id="dosyaOnizleDur">00:00</div>
+      </div>
+      <div id="dosyaOnizleGenel" class="belge-doc" hidden>
+        <i class="fa-regular fa-file-lines"></i>
+      </div>
+      <div class="bd-name" id="dosyaOnizleAd" style="margin-top:12px">—</div>
+      <div class="belge-meta" id="dosyaOnizleMeta"></div>
+      <div class="gv-modal-acts" style="margin-top:18px">
+        <button type="button" class="btn btn-ghost btn-sm" id="dosyaOnizleClose">Kapat</button>
+        <button type="button" class="btn btn-acc btn-sm" id="dosyaOnizleAct"><i class="fa-solid fa-download"></i> İndir</button>
       </div>
     </div>
   </div>
@@ -941,13 +986,17 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
     ['teslim-tutanagi', 'Teslim Tutanağı Ekle', 'fa-file-circle-check']
   ];
   function fileRowHtml(f){
-    return '<div class="file-row" data-kategori="'+f.kategori+'">'
+    /* T-S2 — Önizle butonu artık gerçek bir modal açar (video kategorisi için "Video
+       Önizleme"). Gerekli alanlar data-* olarak satıra taşınır — dosyaTabHtml() birden
+       çok şantiye için çağrıldığından merkezi bir kayıt haritası yerine satır-lokal veri
+       tercih edildi (bkz. delege tıklama dinleyicisi, aşağıda). */
+    return '<div class="file-row" data-kategori="'+f.kategori+'" data-ad="'+f.ad+'" data-meta="'+f.boyut+' · '+f.tarih+'" data-sure="'+(f.sure||'')+'">'
       + '<div class="file-ico'+(f.icoCls ? ' '+f.icoCls : '')+'"><i class="fa-solid '+f.ico+'"></i></div>'
       + '<div class="file-info"><b>'+f.ad+'</b><span>'+f.aciklama+'</span></div>'
       + '<div class="file-meta">'+f.boyut+' · '+f.tarih+'</div>'
       + '<div class="row-acts">'
-      +   '<button class="ia-btn" data-no-confirm aria-label="Önizle"><i class="fa-solid fa-eye"></i></button>'
-      +   '<button class="ia-btn" data-no-confirm aria-label="İndir"><i class="fa-solid fa-download"></i></button>'
+      +   '<button class="ia-btn" data-no-confirm aria-label="Önizle" data-dosya-onizle><i class="fa-solid fa-eye"></i></button>'
+      +   '<button class="ia-btn" data-no-confirm aria-label="İndir" data-demo="İndirme hazırlanıyor (demo)"><i class="fa-solid fa-download"></i></button>'
       + '</div></div>';
   }
   function dosyaTabHtml(files){
@@ -1412,7 +1461,9 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
     {ad:'Ruhsat ve Yapı İzni.pdf', aciklama:'Çekmeköy Belediyesi · v1 · Hasan Demirci', boyut:'1.1 MB', tarih:'12 Mar 2024', ico:'fa-file-pdf', kategori:'ruhsat'},
     {ad:'Mimari Uygulama Projesi.dwg', aciklama:'Revize 2 — A-B-C Blok · v2 · Elif Sarıkaya', boyut:'18.6 MB', tarih:'20 Mar 2024', ico:'fa-diagram-project', icoCls:'dwg', kategori:'dwg'},
     {ad:'İmalat Programı — Rev.3.xlsx', aciklama:'Güncel iş programı · v3 · Hasan Demirci', boyut:'640 KB', tarih:'15 Haz 2026', ico:'fa-file-excel', icoCls:'xls', kategori:'diger'},
-    {ad:'Teknik Şartname.pdf', aciklama:'Malzeme ve işçilik standartları · v1 · Elif Sarıkaya', boyut:'3.2 MB', tarih:'4 Mar 2024', ico:'fa-file-pdf', kategori:'teknik-cizim'}
+    {ad:'Teknik Şartname.pdf', aciklama:'Malzeme ve işçilik standartları · v1 · Elif Sarıkaya', boyut:'3.2 MB', tarih:'4 Mar 2024', ico:'fa-file-pdf', kategori:'teknik-cizim'},
+    /* T-S2 — Video Önizleme (A §2): ilk video kategorili dosya kaydı. */
+    {ad:'Temel Kazı İlerleme Videosu.mp4', aciklama:'Drone çekimi — B Blok temel kazısı · Hasan Demirci', boyut:'86.4 MB', tarih:'22 Haz 2026', ico:'fa-file-video', kategori:'video', sure:'01:48'}
   ]);
 
   /* SBL birleştirme (D18 Y10): eski sayfa-lokal 4 anlatı, gerçek bildirim feed'iyle (crm-
@@ -1726,11 +1777,14 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
           var row = document.createElement('div');
           row.className = 'file-row';
           row.setAttribute('data-kategori', katValue);
+          row.setAttribute('data-ad', ad);
+          row.setAttribute('data-meta', katLabel + ' · ' + versiyon + ' · şimdi');
+          row.setAttribute('data-sure', katValue === 'video' ? '00:32' : '');
           row.innerHTML = '<div class="file-ico"><i class="fa-solid fa-file"></i></div>'
             + '<div class="file-info"><b>'+ad+'</b><span>'+katLabel+' · '+versiyon+'</span></div>'
             + '<div class="file-meta">şimdi</div>'
-            + '<div class="row-acts"><button class="ia-btn" data-no-confirm aria-label="Önizle"><i class="fa-solid fa-eye"></i></button>'
-            + '<button class="ia-btn" data-no-confirm aria-label="İndir"><i class="fa-solid fa-download"></i></button></div>';
+            + '<div class="row-acts"><button class="ia-btn" data-no-confirm aria-label="Önizle" data-dosya-onizle><i class="fa-solid fa-eye"></i></button>'
+            + '<button class="ia-btn" data-no-confirm aria-label="İndir" data-demo="İndirme hazırlanıyor (demo)"><i class="fa-solid fa-download"></i></button></div>';
           list.insertBefore(row, list.firstChild);
           var empty = document.getElementById('dosyaEmpty');
           if(empty) empty.hidden = true;
@@ -1740,6 +1794,49 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
         closeDosyaModal();
         gvToast('Dosya eklendi (demo).');
       }, 900);
+    });
+  }
+
+  /* ---- T-S2 — Dosya Önizleme (A §2 "Video Önizleme"): Dosyalar sekmesindeki her
+     "Önizle" (fa-eye) butonu artık #dosyaOnizleOv modalını açar; video kategorisi
+     oynatıcı-benzeri poster + "Oynat" (data-demo simülasyonu, gerçek dosya YOK — bkz.
+     CLAUDE.md görsel kuralı), diğer kategoriler genel belge önizlemesi gösterir. ---- */
+  var dosyaOnizleOv = document.getElementById('dosyaOnizleOv');
+  if(dosyaOnizleOv){
+    var dopVideo = document.getElementById('dosyaOnizleVideo');
+    var dopGenel = document.getElementById('dosyaOnizleGenel');
+    var dopAd = document.getElementById('dosyaOnizleAd');
+    var dopMeta = document.getElementById('dosyaOnizleMeta');
+    var dopDur = document.getElementById('dosyaOnizleDur');
+    var dopAct = document.getElementById('dosyaOnizleAct');
+    function closeDosyaOnizle(){ dosyaOnizleOv.classList.remove('open'); }
+    document.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-dosya-onizle]'); if(!btn) return;
+      var row = btn.closest('.file-row'); if(!row) return;
+      var kategori = row.getAttribute('data-kategori') || '';
+      var ad = row.getAttribute('data-ad') || row.querySelector('.file-info b').textContent;
+      var meta = row.getAttribute('data-meta') || '';
+      var isVideo = (kategori === 'video');
+      document.getElementById('dosyaOnizleTitle').textContent = isVideo ? 'Video Önizleme' : 'Dosya Önizle';
+      dopVideo.hidden = !isVideo;
+      dopGenel.hidden = isVideo;
+      dopAd.textContent = ad;
+      dopMeta.innerHTML = '<div class="bm-row"><span class="bm-lbl">Bilgi</span><span class="bm-val">' + meta + '</span></div>';
+      if(isVideo){
+        dopDur.textContent = row.getAttribute('data-sure') || '00:00';
+        dopAct.innerHTML = '<i class="fa-solid fa-download"></i> İndir';
+      } else {
+        dopAct.innerHTML = '<i class="fa-solid fa-download"></i> İndir';
+      }
+      dosyaOnizleOv.classList.add('open');
+    });
+    dosyaOnizleOv.addEventListener('click', function(e){ if(e.target === dosyaOnizleOv) closeDosyaOnizle(); });
+    document.getElementById('dosyaOnizleClose').addEventListener('click', closeDosyaOnizle);
+    document.getElementById('dosyaOnizlePlay').addEventListener('click', function(){
+      gvToast('Video oynatma bu prototipte simülasyondur (demo).', {type:'info'});
+    });
+    dopAct.addEventListener('click', function(){
+      gvToast('İndirme hazırlanıyor (demo).', {type:'info'});
     });
   }
 

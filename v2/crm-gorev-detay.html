@@ -1180,7 +1180,17 @@
   });
   var actOnayBekliyor = document.getElementById('actOnayBekliyor');
   if(actOnayBekliyor) actOnayBekliyor.addEventListener('click', function(){
-    applyStatus('onaybekliyor', null, 'Tamamlanma onayına gönderildi.'); gvToast('Görev onaya gönderildi.');
+    applyStatus('onaybekliyor', null, 'Tamamlanma onayına gönderildi.');
+    /* Görev Onay Sonuç Sayfası (A §2) — ayrı sayfa yerine B §9.4'ün gvResult modalı,
+       spec-v2-core.md §2 sözleşmesine göre. */
+    gvResult('onaya-gonderildi', {
+      baslik:'Görev onaya gönderildi',
+      mesaj:'"' + data.title + '" tamamlanma onayı için ' + (data.from || 'ilgili onaycıya') + ' gönderildi.',
+      aksiyonlar:[
+        {etiket:'Listeye Dön', href:'crm-gorev.html?f=verdigim'},
+        {etiket:'Sayfada Kal', birincil:true}
+      ]
+    });
   });
   var actRevize = document.getElementById('actRevize');
   if(actRevize) actRevize.addEventListener('click', function(){
@@ -1189,7 +1199,14 @@
       ok:'Revize İste', cancel:'Vazgeç',
       onConfirm:function(){
         applyStatus('revize', null, 'Teslim edilen iş yetersiz bulundu, revize istendi.');
-        gvToast('Görev revize için geri gönderildi.', {type:'info'});
+        /* Görev Onay Sonuç Sayfası (A §2) — onaycının "revize" kararının sonucu. */
+        gvResult('revize-istendi', {
+          mesaj:'"' + data.title + '" görevi revize için ' + (data.to || 'atanan kişiye') + ' geri gönderildi.',
+          aksiyonlar:[
+            {etiket:'Listeye Dön', href:'crm-gorev.html?f=verdigim'},
+            {etiket:'Sayfada Kal', birincil:true}
+          ]
+        });
       }
     });
   });
@@ -1254,13 +1271,34 @@
       activateTab('ekler');
       return;
     }
-    if(onayGerekli){
+    /* Görev zaten "Onay Bekliyor" durumundaysa bu tıklama onaycının ONAY kararıdır
+       (Görev Onay Sonuç Sayfası); değilse atanan kişinin tamamlama bildirimidir
+       (Görev Tamamlama Sonuç Sayfası). İkisi de A §2'nin istediği ayrı sayfa yerine
+       B §9.4'ün gvResult modalıyla karşılanır (spec-v2-core.md §2). */
+    var onayliyor = (data.st === ST.onaybekliyor);
+    if(onayGerekli && !onayliyor){
       applyStatus('onaybekliyor', null, 'Atanan kişi tamamladı, onay bekleniyor.');
-      gvToast('Görev tamamlandı — onay bekliyor.', {type:'info'});
+      gvResult('onaya-gonderildi', {
+        baslik:'Görev tamamlandı — onay bekliyor',
+        mesaj:'"' + data.title + '" tamamlandı olarak işaretlendi ve onaya gönderildi.',
+        aksiyonlar:[
+          {etiket:'Listeye Dön', href:'crm-gorev.html?f=bana'},
+          {etiket:'Sayfada Kal', birincil:true}
+        ]
+      });
     } else {
       promptCompletionNote(function(note){
         applyStatus('tamam', null, note || 'Görev tamamlandı olarak işaretlendi.');
-        gvToast('Durum “Tamamlandı” olarak güncellendi.');
+        gvResult('basarili', {
+          baslik: onayliyor ? 'Görev onaylandı' : 'Görev tamamlandı',
+          mesaj: onayliyor
+            ? '"' + data.title + '" onaylanarak "Tamamlandı" durumuna kapatıldı.'
+            : '"' + data.title + '" tamamlandı olarak işaretlendi.',
+          aksiyonlar:[
+            {etiket:'Listeye Dön', href:'crm-gorev.html?f=tamam'},
+            {etiket:'Sayfada Kal', birincil:true}
+          ]
+        });
       });
     }
   });

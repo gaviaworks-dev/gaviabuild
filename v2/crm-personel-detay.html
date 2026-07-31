@@ -77,13 +77,20 @@
 .phd-chip.danger i{color:var(--danger)}
 .phd-chip.info i{color:var(--info)}
 
-/* §10.1 eğitim bilgileri — kronolojik (en yeni üstte), Kimlik & İK kartı içinde */
+/* §10.1 eğitim bilgileri — kronolojik (en yeni üstte), Kimlik & İK kartı içinde.
+   T-S2 — Eğitim Bilgisi Yönetimi (A §2): .egt-view-head (Ekle CTA) + .egt-row-acts
+   (Düzenle/Sil) eklendi, salt-görünüm liste gerçek yönetim yüzeyine çıkarıldı. */
 .egt-view-wrap{padding:16px 22px;border-top:1px solid var(--line)}
+.egt-view-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .egt-view-list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .egt-view-row{display:flex;align-items:center;gap:11px}
 .egt-view-row i{width:30px;height:30px;flex:none;border-radius:8px;background:var(--bg);color:var(--acc-ink);display:grid;place-items:center;font-size:12px}
+.egt-view-row>div{flex:1;min-width:0}
 .egt-view-row b{display:block;font-size:12.5px;font-weight:700;color:var(--ink)}
 .egt-view-row span{font-size:11.5px;color:var(--muted)}
+.egt-row-acts{display:flex;align-items:center;gap:6px;flex:none}
+.egt-row-acts .ia-btn{width:32px;height:32px}
+@media(max-width:640px){.egt-view-head{gap:8px}.egt-view-head .btn{width:100%;justify-content:center}}
 
 @media(max-width:980px){.per-hero{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:640px){
@@ -264,14 +271,32 @@
   }
 
   /* §10.1 — eğitim listesi kronolojik (en yeni üstte), Kimlik & İK kartı içinde */
+  /* T-S2 — Eğitim Bilgisi Yönetimi (A §2): salt-görünüm listesi Ekle/Düzenle/Sil
+     ile gerçek bir yönetim yüzeyine çıkarıldı (wireEgitim() bkz. aşağıda). Boş
+     liste de artık "Ekle" CTA'sıyla birlikte gv-empty diliyle gösterilir — A §2
+     "boş durum mesajı" maddesi burada da geçerli. */
+  function egitimRowHtml(e, ix){
+    return '<div class="egt-view-row" data-egt-row="' + ix + '"><i class="fa-solid fa-graduation-cap"></i>'
+      + '<div><b>' + esc(e.okul) + '</b><span>' + esc(e.sev) + ' · ' + e.yil + '</span></div>'
+      + '<div class="egt-row-acts" data-admin-only>'
+      +   '<button type="button" class="ia-btn" data-egt-edit="' + ix + '" aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></button>'
+      +   '<button type="button" class="ia-btn danger" data-egt-del="' + ix + '" aria-label="Sil" data-tip="Sil"><i class="fa-solid fa-trash"></i></button>'
+      + '</div></div>';
+  }
+  function egitimListHtml(list){
+    if(!list || !list.length){
+      return '<div class="gv-empty" style="padding:18px 0"><div class="ge-ico"><i class="fa-solid fa-graduation-cap"></i></div>'
+        + '<h4>Kayıtlı eğitim/sertifika bilgisi yok</h4><p>Personelin okul, sertifika veya mesleki eğitim bilgilerini buradan ekleyebilirsiniz.</p></div>';
+    }
+    var sorted = list.map(function(e, ix){ return {e:e, ix:ix}; }).sort(function(a, b){ return b.e.yil - a.e.yil; });
+    return sorted.map(function(p){ return egitimRowHtml(p.e, p.ix); }).join('');
+  }
   function egitimHtml(list){
-    if(!list || !list.length) return '';
-    var sorted = list.slice().sort(function(a, b){ return b.yil - a.yil; });
     return '<div class="egt-view-wrap">'
-      + '<div class="gd-label" style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Eğitim Bilgileri</div>'
-      + '<div class="egt-view-list">' + sorted.map(function(e){
-          return '<div class="egt-view-row"><i class="fa-solid fa-graduation-cap"></i><div><b>' + esc(e.okul) + '</b><span>' + esc(e.sev) + ' · ' + e.yil + '</span></div></div>';
-        }).join('') + '</div>'
+      + '<div class="egt-view-head"><div class="gd-label" style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0">Eğitim Bilgileri</div>'
+      +   '<button type="button" class="btn btn-ghost btn-sm" id="btnEgtEkle" data-admin-only data-no-confirm><i class="fa-solid fa-plus"></i> Eğitim Ekle</button>'
+      + '</div>'
+      + '<div class="egt-view-list" id="egtWrap">' + egitimListHtml(list) + '</div>'
       + '</div>';
   }
 
@@ -424,6 +449,13 @@
   if(id === '004'){
     GV.crumb('Hasan Demirci');
     document.title = 'Hasan Demirci — Personel Kartı — Gavia CRM';
+    /* T-S2 — Eğitim Bilgisi Yönetimi (A §2): 004 hardcode dalı da paylaşılan
+       egitimHtml()/wireEgitim() üzerinden render edilir — Ekle/Düzenle/Sil
+       varsayılan (DEFAULT_ID) kayıtta da çalışsın diye içerik buraya taşındı. */
+    var HASAN_EGITIM = [
+      {okul:'İSG B Sınıfı Uzmanlığı Sertifika Programı', sev:'Sertifika Programı', yil:2019},
+      {okul:'Yıldız Teknik Üniversitesi MYO', sev:'Ön Lisans', yil:2006}
+    ];
     root.innerHTML = ''
       + '<div class="gv-card per-hero">'
       +   '<div class="per-hero-id">'
@@ -526,13 +558,7 @@
       +         '<div data-payroll-only><dt>SGK Sicil No</dt><dd>3417298450</dd></div>'
       +         '<div data-payroll-only><dt>SGK Giriş Tarihi</dt><dd>15 Şubat 2017</dd></div>'
       +       '</dl>'
-      +       '<div class="egt-view-wrap">'
-      +         '<div class="gd-label" style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)">Eğitim Bilgileri</div>'
-      +         '<div class="egt-view-list">'
-      +           '<div class="egt-view-row"><i class="fa-solid fa-graduation-cap"></i><div><b>İSG B Sınıfı Uzmanlığı Sertifika Programı</b><span>Sertifika Programı · 2019</span></div></div>'
-      +           '<div class="egt-view-row"><i class="fa-solid fa-graduation-cap"></i><div><b>Yıldız Teknik Üniversitesi MYO</b><span>Ön Lisans · 2006</span></div></div>'
-      +         '</div>'
-      +       '</div>'
+      +       egitimHtml(HASAN_EGITIM)
       +     '</div>'
       +     '<div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Bordro hesaplaması bu ekranda yapılmaz; tutarlar sözleşme brütüdür.</span></div>'
       +   '</div>'
@@ -641,6 +667,7 @@
     wireTabs();
     wireAyrilAction('Hasan Demirci');
     wireStickyHero();
+    wireEgitim(HASAN_EGITIM);
     return;
   }
 
@@ -981,6 +1008,76 @@
   wireTabs();
   wireAyrilAction(rec.ad);
   wireStickyHero();
+  wireEgitim(rec.egitim || (rec.egitim = []));
+
+  /* T-S2 — Eğitim Bilgisi Yönetimi (A §2): Ekle/Düzenle/Sil, #egtWrap içeriğini
+     egitimListHtml() ile yeniden basar. Paylaşılan .gv-modal-ov/.gv-modal ailesi
+     (gvConfirm/gvResult ile AYNI görsel dil) kullanılır — yeni modal sistemi
+     İCAT EDİLMEDİ. list, çağıranın closure'ındaki diziye (HASAN_EGITIM veya
+     rec.egitim) REFERANSTIR — push/splice ile mutasyon aynı diziyi günceller. */
+  function wireEgitim(list){
+    var wrap = root.querySelector('#egtWrap');
+    var addBtn = root.querySelector('#btnEgtEkle');
+    if(!wrap || !addBtn) return;
+    function redraw(){ wrap.innerHTML = egitimListHtml(list); }
+    function openModal(mode, ix){
+      var editing = (mode === 'edit');
+      var cur = editing ? list[ix] : {okul:'', sev:'Sertifika Programı', yil:new Date().getFullYear()};
+      if(document.querySelector('.gv-modal-ov')) return;
+      var ov = document.createElement('div'); ov.className = 'gv-modal-ov';
+      var m = document.createElement('div'); m.className = 'gv-modal has-note';
+      m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+      m.innerHTML = '<div class="gv-modal-ico"><i class="fa-solid fa-graduation-cap"></i></div>'
+        + '<h3>' + (editing ? 'Eğitim bilgisini düzenle' : 'Eğitim / sertifika ekle') + '</h3>'
+        + '<div class="gfield" style="margin-bottom:10px;text-align:left"><label for="egtFOkul">Okul / Kurum / Program Adı</label><input type="text" id="egtFOkul" maxlength="120" placeholder="Örn. İstanbul Teknik Üniversitesi"></div>'
+        + '<div class="gfield" style="margin-bottom:10px;text-align:left"><label for="egtFSev">Seviye / Tür</label><select id="egtFSev">'
+        +   ['Lisans','Ön Lisans','Yüksek Lisans','Sertifika Programı','Mesleki Eğitim','Lise'].map(function(s){
+              return '<option' + (s === cur.sev ? ' selected' : '') + '>' + s + '</option>';
+            }).join('')
+        + '</select></div>'
+        + '<div class="gfield" style="margin-bottom:4px;text-align:left"><label for="egtFYil">Yıl</label><input type="number" id="egtFYil" min="1970" max="' + new Date().getFullYear() + '" value="' + (cur.yil || new Date().getFullYear()) + '"></div>'
+        + '<div class="gv-modal-acts">'
+        +   '<button type="button" class="btn btn-ghost btn-sm gv-m-cancel">Vazgeç</button>'
+        +   '<button type="button" class="btn btn-sm btn-acc gv-m-ok"><i class="fa-solid fa-check"></i> Kaydet</button>'
+        + '</div>';
+      ov.appendChild(m); document.body.appendChild(ov);
+      requestAnimationFrame(function(){ ov.classList.add('open'); });
+      var fOkul = m.querySelector('#egtFOkul'); fOkul.value = cur.okul || ''; fOkul.focus();
+      function close(){ ov.classList.remove('open'); setTimeout(function(){ ov.remove(); }, 220); }
+      m.querySelector('.gv-m-cancel').addEventListener('click', close);
+      ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+      m.querySelector('.gv-m-ok').addEventListener('click', function(){
+        var okul = fOkul.value.trim();
+        if(!okul){ gvToast('Okul / kurum / program adı zorunludur.', {type:'danger'}); fOkul.focus(); return; }
+        var sev = m.querySelector('#egtFSev').value;
+        var yil = parseInt(m.querySelector('#egtFYil').value, 10) || new Date().getFullYear();
+        if(editing){ list[ix].okul = okul; list[ix].sev = sev; list[ix].yil = yil; }
+        else { list.push({okul:okul, sev:sev, yil:yil}); }
+        close();
+        redraw();
+        gvToast(editing ? 'Eğitim bilgisi güncellendi.' : 'Eğitim bilgisi eklendi.', {type:'ok'});
+      });
+    }
+    addBtn.addEventListener('click', function(){ openModal('add'); });
+    wrap.addEventListener('click', function(e){
+      var editBtn = e.target.closest('[data-egt-edit]');
+      var delBtn = e.target.closest('[data-egt-del]');
+      if(editBtn){ openModal('edit', parseInt(editBtn.getAttribute('data-egt-edit'), 10)); return; }
+      if(delBtn){
+        var ix = parseInt(delBtn.getAttribute('data-egt-del'), 10);
+        var item = list[ix];
+        gvConfirm({
+          danger:true, icon:'fa-trash', title:'Eğitim kaydı silinsin mi?',
+          message:'"' + (item ? item.okul : '') + '" kaydı silinecek.', ok:'Sil', cancel:'Vazgeç',
+          onConfirm:function(){
+            list.splice(ix, 1);
+            redraw();
+            gvToast('Eğitim kaydı silindi.', {type:'danger'});
+          }
+        });
+      }
+    });
+  }
 
   /* §7 — .per-hero'nun sticky "yapışma" anını yakalayan sentinel (hafif gölge, D-T-D2) */
   function wireStickyHero(){
