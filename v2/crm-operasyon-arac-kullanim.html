@@ -119,12 +119,36 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="kulSearch" placeholder="Sürücü, şantiye veya amaç ara">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2): arama
+           solda, sabit aksiyon grubu sağda. Arşiv/Pasif toggle BİLİNÇLİ OLARAK
+           eklenmedi — sefer/kullanım kaydının doğal bir arşiv/pasif ekseni yok
+           (crm-finans-banka.html emsali: veri modelinde karşılığı olmayan eksen
+           uydurulmadı, tasks/kararlar.md). Eski tekil "Tarih" `data-gvdaterange`
+           widget'ı Gelişmiş Filtre panelinin bir alanı oldu. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="kulSearch" placeholder="Sürücü, şantiye veya amaç ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="kulFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="kulColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Araç kullanım kayıtları" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div data-gvdaterange id="tarihFiltre" data-fp-label="Tarih"></div>
+        <div class="lh-achips gv-achips-row" id="kulAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
       </div>
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-road-circle-check"></i> Kullanım Kayıtları</div>
@@ -132,7 +156,7 @@
       </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblKullanim">
-          <thead><tr><th>Tarih</th><th>Sürücü</th><th>Şantiye</th><th class="num">Çıkış Km</th><th class="num">Dönüş Km</th><th class="num">Yapılan Km</th><th class="num">Yakıt</th><th class="num">Yakıt Tutarı</th><th>Amaç</th><th>Notlar</th></tr></thead>
+          <thead><tr><th>Tarih</th><th data-col="surucu">Sürücü</th><th data-col="santiye">Şantiye</th><th class="num" data-col="cikiskm">Çıkış Km</th><th class="num" data-col="donuskm">Dönüş Km</th><th class="num" data-col="yapilankm">Yapılan Km</th><th class="num" data-col="yakit">Yakıt</th><th class="num" data-col="yakittutar">Yakıt Tutarı</th><th data-col="amac">Amaç</th><th data-col="notlar">Notlar</th></tr></thead>
           <tbody id="kulBody"></tbody>
         </table>
         <div class="gv-empty" id="kulEmpty" hidden>
@@ -225,10 +249,10 @@
   }
   render();
 
+  var fpState = {surucu:'', tarihRange:null};
   function renderTable(){
     var term = document.getElementById('kulSearch').value.trim().toLocaleLowerCase('tr');
-    var drEl = document.getElementById('tarihFiltre');
-    var range = drEl._gvValue;
+    var range = fpState.tarihRange;
     var rows = v.kayitlar.slice().sort(function(a,b){ return b.tarih.localeCompare(a.tarih); }).filter(function(k){
       var okTerm = !term || (k.surucu + ' ' + SANTIYE_ADI[k.santiye] + ' ' + k.amac + ' ' + (k.notlar||'')).toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okDate = true;
@@ -236,22 +260,23 @@
         var d = new Date(k.tarih + 'T00:00:00');
         okDate = d >= range.from && d <= range.to;
       }
-      return okTerm && okDate;
+      var okSurucu = !fpState.surucu || k.surucu === fpState.surucu;
+      return okTerm && okDate && okSurucu;
     });
     document.getElementById('kulCount').textContent = rows.length + ' kayıt';
     document.getElementById('kulEmpty').hidden = rows.length !== 0;
     document.getElementById('kulBody').innerHTML = rows.map(function(k){
       return '<tr>'
         + '<td>' + ddmmyyyy(k.tarih) + '</td>'
-        + '<td>' + k.surucu + '</td>'
-        + '<td>' + SANTIYE_ADI[k.santiye] + '</td>'
-        + '<td class="num">' + k.cikisKm.toLocaleString('tr-TR') + '</td>'
-        + '<td class="num">' + k.donusKm.toLocaleString('tr-TR') + '</td>'
-        + '<td class="num">' + (k.donusKm - k.cikisKm).toLocaleString('tr-TR') + ' km</td>'
-        + '<td class="num">' + (k.yakit ? k.yakit + ' L' : '—') + '</td>'
-        + '<td class="num">' + (k.yakit && k.fiyat ? tl(Math.round(k.yakit * k.fiyat)) : '—') + '</td>'
-        + '<td style="font-size:12.5px;color:var(--ink-2);max-width:220px">' + k.amac + '</td>'
-        + '<td style="font-size:12.5px;color:var(--muted);max-width:180px">' + (k.notlar || '—') + '</td>'
+        + '<td data-col="surucu">' + k.surucu + '</td>'
+        + '<td data-col="santiye">' + SANTIYE_ADI[k.santiye] + '</td>'
+        + '<td class="num" data-col="cikiskm">' + k.cikisKm.toLocaleString('tr-TR') + '</td>'
+        + '<td class="num" data-col="donuskm">' + k.donusKm.toLocaleString('tr-TR') + '</td>'
+        + '<td class="num" data-col="yapilankm">' + (k.donusKm - k.cikisKm).toLocaleString('tr-TR') + ' km</td>'
+        + '<td class="num" data-col="yakit">' + (k.yakit ? k.yakit + ' L' : '—') + '</td>'
+        + '<td class="num" data-col="yakittutar">' + (k.yakit && k.fiyat ? tl(Math.round(k.yakit * k.fiyat)) : '—') + '</td>'
+        + '<td data-col="amac" style="font-size:12.5px;color:var(--ink-2);max-width:220px">' + k.amac + '</td>'
+        + '<td data-col="notlar" style="font-size:12.5px;color:var(--muted);max-width:180px">' + (k.notlar || '—') + '</td>'
         + '</tr>';
     }).join('');
     var yakitToplam = rows.reduce(function(s,k){ return s + (k.yakit && k.fiyat ? Math.round(k.yakit * k.fiyat) : 0); }, 0);
@@ -259,9 +284,47 @@
   }
   renderTable();
   document.getElementById('kulSearch').addEventListener('input', renderTable);
-  document.addEventListener('gvdaterange', function(e){
-    if(e.target && e.target.id === 'tarihFiltre') renderTable();
-  });
+
+  /* V3A — Gelişmiş Filtre (gvFilterDrawer; opts.table VERİLMEDİ, sayfanın kendi
+     renderTable() motoru TEK karar mercii kalır). Sürücü listesi bu aracın kendi
+     kayıtlarından türetilir (uydurma isim yok). */
+  if(window.gvFilterDrawer){
+    var surucuSet = {};
+    v.kayitlar.forEach(function(k){ surucuSet[k.surucu] = 1; });
+    gvFilterDrawer.init({
+      mount: '#kulFiltreBtn', screen: 'arackullanim', title: 'Gelişmiş Filtre', chipsMount: '#kulAchips',
+      fields: [
+        {key:'surucu', type:'select', label:'Sürücü', options: Object.keys(surucuSet).map(function(s){ return {v:s, l:s}; })},
+        {key:'tarih', type:'daterange', label:'Tarih', emptyLabel:'Tüm zamanlar'}
+      ],
+      onApply: function(state){
+        fpState.surucu = (state.surucu && state.surucu.value) || '';
+        fpState.tarihRange = (state.tarih && state.tarih.raw) || null;
+        renderTable();
+      },
+      onClear: function(){
+        fpState.surucu = ''; fpState.tarihRange = null;
+        renderTable();
+      }
+    });
+  }
+  /* V3A — Kolonlar (gvCols) */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#kulColsBtn', table: '#tblKullanim', screen: 'arackullanim',
+      cols: [
+        {key:'surucu', lbl:'Sürücü', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'cikiskm', lbl:'Çıkış Km', def:true},
+        {key:'donuskm', lbl:'Dönüş Km', def:true},
+        {key:'yapilankm', lbl:'Yapılan Km', def:true},
+        {key:'yakit', lbl:'Yakıt', def:true},
+        {key:'yakittutar', lbl:'Yakıt Tutarı', def:true},
+        {key:'amac', lbl:'Amaç', def:true},
+        {key:'notlar', lbl:'Notlar', def:true}
+      ]
+    });
+  }
 
   /* ---- kayıt ekle ---- */
   document.getElementById('btnEkleAc').addEventListener('click', function(){

@@ -61,6 +61,11 @@
   .dm-info b{max-width:180px}
   .filter-row .frow-lbl{min-width:0;width:100%}
 }
+/* V3A — .lh-tabs iki bağımsız çip grubunu (Kategori/Durum) alt alta gösterir; ui.css'in
+   paylaşılan .lh-tabs{display:flex} satırı değiştirilmedi (K-220), yalnız bu sayfaya
+   özel bir modifier sınıf EKLENDİ (page-local <style>, ui.css'e sayfa-özel kural
+   EKLENMEDİ — tasks/spec-v3a-ortak.md "Bunu YAPMA" listesi bunu kapsamaz). */
+.lh-tabs.dm-tabs-2row{flex-direction:column;align-items:stretch;gap:10px}
 
 /* T-UX §6 denetimi — 5. ph-actions butonu (Bildirim Merkezi) eklendiğince 641-980px
    arası (ui.css'in ortak .ph-actions sarma kuralı yalnız ≤640px'te devreye giriyor,
@@ -181,7 +186,6 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
              navigasyon — kaldırılmadı, doküman'ın 4 buton listesi bu sayfaya EKLENDİ. -->
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-etiket.html"><i class="fa-solid fa-tag"></i> Etiketleri Yönet</a>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-demirbas-etiket-yazdir.html"><i class="fa-solid fa-print"></i> QR / Barkod Yazdır</a>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Demirbaş envanteri"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-operasyon-demirbas-form.html"><i class="fa-solid fa-plus"></i> Yeni Demirbaş Ekle</a>
       </div>
     </div>
@@ -274,62 +278,77 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row" style="justify-content:space-between">
-          <div class="fb-search" style="max-width:360px">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri, gvFilterPanel'in activeRow'u) → .lh-tabs (Kategori + Durum çip
+           grupları). Gelişmiş Filtre panelindeki "Arşivlenenleri Göster" checkbox'ı
+           §3.2 gereği ayrı .lh-toggle'a taşındı; panelde artık YOK (gorev.html
+           pilotuyla aynı gerekçe: tek kontrol, çift temsil değil). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="dmSearch" placeholder="Demirbaş adı, ZMT no veya kişi ara">
           </div>
-          <div style="display:flex;gap:8px;position:relative">
-            <button type="button" class="btn btn-ghost btn-sm" id="kolonlarBtn" aria-haspopup="true" aria-expanded="false">
-              <i class="fa-solid fa-table-columns"></i> Kolonlar
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpDemirbas" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
             </button>
-            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpDemirbas">
-              <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
+            <button type="button" class="btn btn-ghost btn-sm" id="kolonlarBtn" aria-haspopup="true" aria-expanded="false" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="dmArsivGoster">
+              <input type="checkbox" id="dmArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Demirbaş envanteri" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="achipsDemirbas" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
             </button>
           </div>
         </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Kategori</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="dmKatChips">
-              <button class="chip is-on" data-kat="hepsi">Tümü <span class="ch-cnt">10</span></button>
-              <button class="chip" data-kat="telefon">Telefon &amp; İletişim <span class="ch-cnt">3</span></button>
-              <button class="chip" data-kat="tablet">Tablet <span class="ch-cnt">1</span></button>
-              <button class="chip" data-kat="elaleti">El Aleti <span class="ch-cnt">2</span></button>
-              <button class="chip" data-kat="guvenlik">Güvenlik Ekipmanı <span class="ch-cnt">1</span></button>
-              <button class="chip" data-kat="arac">Araç <span class="ch-cnt">1</span></button>
-              <button class="chip" data-kat="makine">Makine-Ekipman <span class="ch-cnt">2</span></button>
+        <div class="lh-tabs dm-tabs-2row">
+          <div class="filter-row">
+            <span class="frow-lbl">Kategori</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="dmKatChips">
+                <button class="chip is-on" data-kat="hepsi">Tümü <span class="ch-cnt">10</span></button>
+                <button class="chip" data-kat="telefon">Telefon &amp; İletişim <span class="ch-cnt">3</span></button>
+                <button class="chip" data-kat="tablet">Tablet <span class="ch-cnt">1</span></button>
+                <button class="chip" data-kat="elaleti">El Aleti <span class="ch-cnt">2</span></button>
+                <button class="chip" data-kat="guvenlik">Güvenlik Ekipmanı <span class="ch-cnt">1</span></button>
+                <button class="chip" data-kat="arac">Araç <span class="ch-cnt">1</span></button>
+                <button class="chip" data-kat="makine">Makine-Ekipman <span class="ch-cnt">2</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Durum</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="dmDurumChips">
-              <button class="chip is-on" data-durum="hepsi">Tümü</button>
-              <button class="chip" data-durum="zimmetli">Zimmetli</button>
-              <button class="chip" data-durum="depoda">Depoda</button>
-              <button class="chip" data-durum="serviste">Serviste</button>
-              <button class="chip" data-durum="hurda">Hurda</button>
-              <button class="chip" data-durum="iade">İade Edildi</button>
+          <div class="filter-row">
+            <span class="frow-lbl">Durum</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="dmDurumChips">
+                <button class="chip is-on" data-durum="hepsi">Tümü</button>
+                <button class="chip" data-durum="zimmetli">Zimmetli</button>
+                <button class="chip" data-durum="depoda">Depoda</button>
+                <button class="chip" data-durum="serviste">Serviste</button>
+                <button class="chip" data-durum="hurda">Hurda</button>
+                <button class="chip" data-durum="iade">İade Edildi</button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-        </div>
-      </div>
-      <div class="gv-achips-row" id="achipsDemirbas" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
         </div>
       </div>
       <div class="dm-bulk-bar" id="dmBulkBar" hidden>
@@ -490,12 +509,6 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
             <option value="gerekli">Periyodik Bakım Gerektirir</option>
             <option value="gereksiz">Bakım Gerektirmez</option>
           </select>
-        </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
         </div>
       </div>
       <div class="gv-fpanel-foot">
@@ -778,18 +791,24 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
         fpState.fmarka = (state.fmarka && state.fmarka.value) || '';
         fpState.fgaranti = (state.fgaranti && state.fgaranti.value) || '';
         fpState.fbakim = (state.fbakim && state.fbakim.value) || '';
-        var tbl = document.getElementById('tblDemirbas');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
         applyFilter();
       },
       onClear: function(){
         fpState = {fdurum:'', fsantiye:'', fkisi:'', fkategori:'', faltkat:'', fmarka:'', fgaranti:'', fbakim:''};
-        var tbl = document.getElementById('tblDemirbas');
-        if(tbl) tbl.classList.remove('gv-show-arsiv');
         applyFilter();
       }
     });
   }
+
+  /* V3A §3.2 — "Arşivlenenleri Göster" artık .lh-acts'ta bağımsız bir toggle (eskiden
+     Gelişmiş Filtre panelinde gizliydi, gorev.html pilotuyla aynı gerekçe: tek kontrol,
+     panel Temizle'sinden BAĞIMSIZ kalır). */
+  var dmArsivGosterEl = document.getElementById('dmArsivGoster');
+  if(dmArsivGosterEl) dmArsivGosterEl.addEventListener('change', function(){
+    var tbl = document.getElementById('tblDemirbas');
+    if(tbl) tbl.classList.toggle('gv-show-arsiv', dmArsivGosterEl.checked);
+    applyFilter();
+  });
 
   /* ---- satır arşivleme aksiyonu — kalıcı silme YERİNE (§17); crm-satinalma-
      siparisler.html deseni. Hurda kararlı kalem (ZMT-2025-009) zaten data-arsiv="1"

@@ -70,7 +70,7 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
 
 .print-only{display:none}
 @media print{
-  .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.gv-crumb,.ph-actions,.ekle-card,.filter-bar,.gv-achips-row,
+  .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.gv-crumb,.ph-actions,.ekle-card,.filter-bar,.gv-listhead,.gv-achips-row,
   .kpi-grid,#cmpCard,#katCard,.gd-detail-toggle,.gc-foot,.veh-badges-only-screen{display:none !important}
   .print-only{display:block !important}
   body,.gv-main{background:#fff !important;padding:0 !important;margin:0 !important}
@@ -126,7 +126,6 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
       </div>
       <div class="ph-actions">
         <select id="fAracSec" class="btn btn-ghost btn-sm" style="padding:9px 14px"></select>
-        <button type="button" class="btn btn-ghost btn-sm" id="btnCikti"><i class="fa-solid fa-print"></i> Çıktı Al</button>
         <button type="button" class="btn btn-acc btn-sm" id="btnEkleAc" data-no-confirm><i class="fa-solid fa-plus"></i> Gider Kaydı Ekle</button>
       </div>
     </div>
@@ -225,12 +224,38 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="gdSearch" placeholder="Tedarikçi, belge no veya araç ara">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2): arama
+           solda, sabit aksiyon grubu sağda (Gelişmiş Filtre/Kolonlar/Arşiv toggle/
+           Çıktı Al). Eski tekil "Tarih" `data-gvdaterange` widget'ı Gelişmiş Filtre
+           panelinin bir alanı oldu (fpState.tarihRange, script). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="gdSearch" placeholder="Tedarikçi, belge no veya araç ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="gdFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="gdColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="gdArsivGoster">
+              <input type="checkbox" id="gdArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnCikti" aria-label="Çıktı Al">
+              <i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span>
+            </button>
+          </div>
         </div>
-        <div data-gvdaterange id="tarihFiltre" data-fp-label="Tarih"></div>
+        <div class="lh-achips gv-achips-row" id="gdAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
       </div>
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-file-invoice-dollar"></i> Gider Kayıtları</div>
@@ -238,7 +263,7 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
       </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblGider">
-          <thead><tr><th>Tarih</th><th>Araç</th><th>Gider Türü</th><th>Şantiye</th><th class="num">Tutar</th><th class="num">KDV</th><th class="num">Toplam</th><th></th></tr></thead>
+          <thead><tr><th>Tarih</th><th data-col="arac">Araç</th><th data-col="kategori">Gider Türü</th><th data-col="santiye">Şantiye</th><th class="num" data-col="tutar">Tutar</th><th class="num" data-col="kdv">KDV</th><th class="num" data-col="toplam">Toplam</th><th></th></tr></thead>
           <tbody id="gdBody"></tbody>
         </table>
         <div class="gv-empty" id="gdEmpty" hidden>
@@ -271,6 +296,10 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
   };
   var RESMI_KAT = ['mtv', 'hgs', 'ogs', 'kopru-otoyol'];
   var ARCHIVE_STATES = ['arsivlendi', 'satildi', 'hurda', 'kiralamaBitti'];
+  /* V3A — Gelişmiş Filtre'nin (Şantiye/Gider Türü/Tutar Aralığı/Tarih Aralığı) uyguladığı
+     durum; onApply() doldurur, renderTable() okur (sayfanın kendi motoru — spec-v3a-
+     ortak.md "kendi filtre motoru olan sayfalar" kuralı, gorev.html/arac.html emsali). */
+  var fpState = {santiye:'', kategori:'', tutar:null, tarihRange:null};
   function ddmmyyyy(iso){ var p = iso.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
   function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
   function katClass(kat){ return kat === 'trafik-cezasi' ? 'cls-ceza' : (RESMI_KAT.indexOf(kat) !== -1 ? 'cls-resmi' : ''); }
@@ -458,8 +487,8 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
 
   function renderTable(){
     var term = document.getElementById('gdSearch').value.trim().toLocaleLowerCase('tr');
-    var drEl = document.getElementById('tarihFiltre');
-    var range = drEl._gvValue;
+    var range = fpState.tarihRange;
+    var showArsiv = !!(document.getElementById('gdArsivGoster') && document.getElementById('gdArsivGoster').checked);
     var pool = key === 'TUM' ? allRowsFlat() : ARAC[key].kayitlar.map(function(r){ return Object.assign({_no:key}, r); });
     var rows = pool.filter(function(r){
       var okTerm = !term || (r.tedarikci + ' ' + r.belge + ' ' + r._no + ' ' + r.aciklama).toLocaleLowerCase('tr').indexOf(term) !== -1;
@@ -468,7 +497,18 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
         var d = new Date(r.tarih + 'T00:00:00');
         okDate = d >= range.from && d <= range.to;
       }
-      return okTerm && okDate;
+      var okSantiye = !fpState.santiye || r.santiye === fpState.santiye;
+      var okKategori = !fpState.kategori || r.kategori === fpState.kategori;
+      var okTutar = true;
+      if(fpState.tutar){
+        if(fpState.tutar.min != null && fpState.tutar.min !== '') okTutar = okTutar && r.toplam >= Number(fpState.tutar.min);
+        if(fpState.tutar.max != null && fpState.tutar.max !== '') okTutar = okTutar && r.toplam <= Number(fpState.tutar.max);
+      }
+      /* §3 — arşivdeki araca (satıldı/hurda/kiralama bitti/arşivlendi) ait kayıtlar
+         "Tüm Araçlar" görünümünde varsayılan gizli; toggle açıkken veya kullanıcı o
+         aracı doğrudan seçtiğinde (key !== 'TUM') her zaman görünür. */
+      var okArsiv = key !== 'TUM' || showArsiv || ARCHIVE_STATES.indexOf(ARAC[r._no].durum) === -1;
+      return okTerm && okDate && okSantiye && okKategori && okTutar && okArsiv;
     }).sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
 
     document.getElementById('gdCount').textContent = rows.length + ' kayıt';
@@ -482,12 +522,12 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
       var did = 'gdd-' + i;
       var row = '<tr>'
         + '<td>' + ddmmyyyy(r.tarih) + '</td>'
-        + '<td><b>' + r._no + '</b><br><span style="font-size:11px;color:var(--muted)">' + ARAC[r._no].plaka + '</span></td>'
-        + '<td><span class="gd-kat-tag ' + katClass(r.kategori) + '"><i class="fa-solid ' + KAT_ICON[r.kategori] + '"></i> ' + KAT_LBL[r.kategori] + '</span></td>'
-        + '<td>' + SANTIYE_ADI[r.santiye] + '</td>'
-        + '<td class="num">' + tl(r.tutar) + '</td>'
-        + '<td class="num">%' + r.kdvOran + ' · ' + tl(r.kdvTutar) + '</td>'
-        + '<td class="num"><b>' + tl(r.toplam) + '</b></td>'
+        + '<td data-col="arac"><b>' + r._no + '</b><br><span style="font-size:11px;color:var(--muted)">' + ARAC[r._no].plaka + '</span></td>'
+        + '<td data-col="kategori"><span class="gd-kat-tag ' + katClass(r.kategori) + '"><i class="fa-solid ' + KAT_ICON[r.kategori] + '"></i> ' + KAT_LBL[r.kategori] + '</span></td>'
+        + '<td data-col="santiye">' + SANTIYE_ADI[r.santiye] + '</td>'
+        + '<td class="num" data-col="tutar">' + tl(r.tutar) + '</td>'
+        + '<td class="num" data-col="kdv">%' + r.kdvOran + ' · ' + tl(r.kdvTutar) + '</td>'
+        + '<td class="num" data-col="toplam"><b>' + tl(r.toplam) + '</b></td>'
         + '<td><button type="button" class="gd-detail-toggle" data-detail="' + did + '" aria-label="Detayları göster"><i class="fa-solid fa-chevron-down"></i></button></td>'
         + '</tr>';
       row += '<tr class="gd-detail-row" id="' + did + '" hidden><td colspan="8"><div class="gd-detail-grid">'
@@ -525,10 +565,52 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     btn.classList.toggle('is-open', !el.hidden);
   });
   document.getElementById('gdSearch').addEventListener('input', renderTable);
-  document.addEventListener('gvdaterange', function(e){
-    if(e.target && e.target.id === 'tarihFiltre') renderTable();
-  });
   document.getElementById('btnCikti').addEventListener('click', function(){ window.print(); });
+
+  /* V3A — Gelişmiş Filtre (gvFilterDrawer, config-driven; opts.table VERİLMEDİ —
+     sayfanın kendi renderTable() motoru TEK karar mercii kalır) */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#gdFiltreBtn', screen: 'aracgider', title: 'Gelişmiş Filtre', chipsMount: '#gdAchips',
+      fields: [
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'},
+          {v:'merkez', l:'Merkez Şantiye'}, {v:'genelmerkez', l:'Genel Merkez'}
+        ]},
+        {key:'kategori', type:'select', label:'Gider Türü', options: Object.keys(KAT_LBL).map(function(k){ return {v:k, l:KAT_LBL[k]}; })},
+        {key:'tutar', type:'numrange', label:'Toplam Tutar Aralığı', prefix:'₺'},
+        {key:'tarih', type:'daterange', label:'Tarih', emptyLabel:'Tüm zamanlar'}
+      ],
+      onApply: function(state){
+        fpState.santiye = (state.santiye && state.santiye.value) || '';
+        fpState.kategori = (state.kategori && state.kategori.value) || '';
+        fpState.tutar = (state.tutar && state.tutar.value) || null;
+        fpState.tarihRange = (state.tarih && state.tarih.raw) || null;
+        renderTable();
+      },
+      onClear: function(){
+        fpState.santiye = ''; fpState.kategori = ''; fpState.tutar = null; fpState.tarihRange = null;
+        renderTable();
+      }
+    });
+  }
+  /* V3A — Kolonlar (gvCols) */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#gdColsBtn', table: '#tblGider', screen: 'aracgider',
+      cols: [
+        {key:'arac', lbl:'Araç', def:true},
+        {key:'kategori', lbl:'Gider Türü', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'tutar', lbl:'Tutar', def:true},
+        {key:'kdv', lbl:'KDV', def:true},
+        {key:'toplam', lbl:'Toplam', def:true}
+      ]
+    });
+  }
+  /* V3A §3 — "Arşivlenenleri Göster" — arşivdeki araca ait gider kayıtlarını gösterir */
+  var gdArsivGosterEl = document.getElementById('gdArsivGoster');
+  if(gdArsivGosterEl) gdArsivGosterEl.addEventListener('change', renderTable);
 
   /* ============ kayıt ekle ============ */
   document.getElementById('btnEkleAc').addEventListener('click', function(){

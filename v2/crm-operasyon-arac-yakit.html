@@ -64,7 +64,7 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
 
 .print-only{display:none}
 @media print{
-  .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.gv-crumb,.ph-actions,.ekle-card,.filter-bar,.gv-achips-row,
+  .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.gv-crumb,.ph-actions,.ekle-card,.filter-bar,.gv-listhead,.gv-achips-row,
   .kpi-grid,#cmpCard,.yk-detail-toggle,.gc-foot,.veh-badges-only-screen{display:none !important}
   .print-only{display:block !important}
   body,.gv-main{background:#fff !important;padding:0 !important;margin:0 !important}
@@ -120,7 +120,6 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
       </div>
       <div class="ph-actions">
         <select id="fAracSec" class="btn btn-ghost btn-sm" style="padding:9px 14px"></select>
-        <button type="button" class="btn btn-ghost btn-sm" id="btnCikti"><i class="fa-solid fa-print"></i> Çıktı Al</button>
         <button type="button" class="btn btn-acc btn-sm" id="btnEkleAc" data-no-confirm><i class="fa-solid fa-plus"></i> Yakıt Kaydı Ekle</button>
       </div>
     </div>
@@ -202,12 +201,37 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="ykSearch" placeholder="İstasyon, sürücü, fiş no veya araç ara">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2): arama
+           solda, sabit aksiyon grubu sağda. Eski tekil "Tarih" `data-gvdaterange`
+           widget'ı Gelişmiş Filtre panelinin bir alanı oldu (fpState.tarihRange). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="ykSearch" placeholder="İstasyon, sürücü, fiş no veya araç ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="ykFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="ykColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="ykArsivGoster">
+              <input type="checkbox" id="ykArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnCikti" aria-label="Çıktı Al">
+              <i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span>
+            </button>
+          </div>
         </div>
-        <div data-gvdaterange id="tarihFiltre" data-fp-label="Tarih"></div>
+        <div class="lh-achips gv-achips-row" id="ykAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
       </div>
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-gas-pump"></i> Yakıt Kayıtları</div>
@@ -215,7 +239,7 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
       </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblYakit">
-          <thead><tr><th>Tarih</th><th>Araç</th><th>Yakıt Türü</th><th class="num">Km</th><th class="num">Litre/kWh</th><th class="num">Birim Fiyat</th><th class="num">Tutar</th><th>Tüketim / Durum</th><th></th></tr></thead>
+          <thead><tr><th>Tarih</th><th data-col="arac">Araç</th><th data-col="tur">Yakıt Türü</th><th class="num" data-col="km">Km</th><th class="num" data-col="litre">Litre/kWh</th><th class="num" data-col="fiyat">Birim Fiyat</th><th class="num" data-col="tutar">Tutar</th><th data-col="durum">Tüketim / Durum</th><th></th></tr></thead>
           <tbody id="ykBody"></tbody>
         </table>
         <div class="gv-empty" id="ykEmpty" hidden>
@@ -238,6 +262,9 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
   var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye', genelmerkez:'Genel Merkez'};
   var FUEL_LBL = {motorin:'Motorin', benzin:'Benzin', lpg:'LPG', elektrik:'Elektrik', hibrit:'Hibrit', adblue:'AdBlue', diger:'Diğer'};
   var ARCHIVE_STATES = ['arsivlendi', 'satildi', 'hurda', 'kiralamaBitti'];
+  /* V3A — Gelişmiş Filtre'nin (Şantiye/Yakıt Türü/Tutar Aralığı/Tarih Aralığı) uyguladığı
+     durum; onApply() doldurur, renderTable() okur (sayfanın kendi motoru). */
+  var fpState = {santiye:'', yakitTuru:'', tutar:null, tarihRange:null};
   function ddmmyyyy(iso){ var p = iso.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
   function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
   function ay(iso){ return iso.slice(0,7); }  /* 'YYYY-MM' */
@@ -450,8 +477,8 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
 
   function renderTable(){
     var term = document.getElementById('ykSearch').value.trim().toLocaleLowerCase('tr');
-    var drEl = document.getElementById('tarihFiltre');
-    var range = drEl._gvValue;
+    var range = fpState.tarihRange;
+    var showArsiv = !!(document.getElementById('ykArsivGoster') && document.getElementById('ykArsivGoster').checked);
     var pool = key === 'TUM' ? allRowsFlat() : computeDerived(key).sorted.map(function(r){ return Object.assign({_no:key}, r); });
     var rows = pool.filter(function(r){
       var okTerm = !term || (r.istasyon + ' ' + r.personel + ' ' + r.fis + ' ' + r._no).toLocaleLowerCase('tr').indexOf(term) !== -1;
@@ -460,7 +487,17 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
         var d = new Date(r.tarih + 'T00:00:00');
         okDate = d >= range.from && d <= range.to;
       }
-      return okTerm && okDate;
+      var okSantiye = !fpState.santiye || r.santiye === fpState.santiye;
+      var okTur = !fpState.yakitTuru || ARAC[r._no].yakitTuru === fpState.yakitTuru;
+      var okTutar = true;
+      if(fpState.tutar){
+        if(fpState.tutar.min != null && fpState.tutar.min !== '') okTutar = okTutar && r.tutar >= Number(fpState.tutar.min);
+        if(fpState.tutar.max != null && fpState.tutar.max !== '') okTutar = okTutar && r.tutar <= Number(fpState.tutar.max);
+      }
+      /* §3 — arşivdeki araca ait kayıtlar "Tüm Araçlar" görünümünde varsayılan gizli;
+         toggle açıkken veya kullanıcı o aracı doğrudan seçtiğinde her zaman görünür. */
+      var okArsiv = key !== 'TUM' || showArsiv || ARCHIVE_STATES.indexOf(ARAC[r._no].durum) === -1;
+      return okTerm && okDate && okSantiye && okTur && okTutar && okArsiv;
     }).sort(function(a,b){ return b.tarih.localeCompare(a.tarih) || b.km - a.km; });
 
     document.getElementById('ykCount').textContent = rows.length + ' kayıt';
@@ -478,13 +515,13 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
       if(!durum) durum = '—';
       var row = '<tr>'
         + '<td>' + ddmmyyyy(r.tarih) + '</td>'
-        + '<td><b>' + r._no + '</b><br><span style="font-size:11px;color:var(--muted)">' + ARAC[r._no].plaka + '</span></td>'
-        + '<td><span class="yk-tur-tag">' + FUEL_LBL[ARAC[r._no].yakitTuru] + '</span></td>'
-        + '<td class="num">' + r.km.toLocaleString('tr-TR') + '</td>'
-        + '<td class="num">' + r.litre + '</td>'
-        + '<td class="num">₺' + r.fiyat.toFixed(2) + '</td>'
-        + '<td class="num">' + tl(r.tutar) + '</td>'
-        + '<td>' + durum + '</td>'
+        + '<td data-col="arac"><b>' + r._no + '</b><br><span style="font-size:11px;color:var(--muted)">' + ARAC[r._no].plaka + '</span></td>'
+        + '<td data-col="tur"><span class="yk-tur-tag">' + FUEL_LBL[ARAC[r._no].yakitTuru] + '</span></td>'
+        + '<td class="num" data-col="km">' + r.km.toLocaleString('tr-TR') + '</td>'
+        + '<td class="num" data-col="litre">' + r.litre + '</td>'
+        + '<td class="num" data-col="fiyat">₺' + r.fiyat.toFixed(2) + '</td>'
+        + '<td class="num" data-col="tutar">' + tl(r.tutar) + '</td>'
+        + '<td data-col="durum">' + durum + '</td>'
         + '<td><button type="button" class="yk-detail-toggle" data-detail="' + did + '" aria-label="Detayları göster"><i class="fa-solid fa-chevron-down"></i></button></td>'
         + '</tr>';
       row += '<tr class="yk-detail-row" id="' + did + '" hidden><td colspan="9"><div class="yk-detail-grid">'
@@ -502,7 +539,6 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     }).join('');
 
     document.getElementById('ykFoot').textContent = rows.length + ' kayıt · toplam ' + toplamLitre.toLocaleString('tr-TR') + ' L/kWh · toplam ' + tl(toplamTutar);
-    var prRange = range && range.label ? range.label : (document.getElementById('tarihFiltre')._gvValue ? document.getElementById('tarihFiltre')._gvValue.label : 'tüm dönem');
     document.getElementById('prMeta').textContent = (key === 'TUM' ? 'Tüm Araçlar' : key + ' — ' + ARAC[key].plaka) + ' · ' + rows.length + ' kayıt · toplam ' + tl(toplamTutar) + ' · Düzenleme: 02.07.2026';
   }
 
@@ -526,10 +562,53 @@ tr.yk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     btn.classList.toggle('is-open', !el.hidden);
   });
   document.getElementById('ykSearch').addEventListener('input', renderTable);
-  document.addEventListener('gvdaterange', function(e){
-    if(e.target && e.target.id === 'tarihFiltre') renderTable();
-  });
   document.getElementById('btnCikti').addEventListener('click', function(){ window.print(); });
+
+  /* V3A — Gelişmiş Filtre (gvFilterDrawer; opts.table VERİLMEDİ, sayfanın kendi
+     renderTable() motoru TEK karar mercii kalır) */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#ykFiltreBtn', screen: 'aracyakit', title: 'Gelişmiş Filtre', chipsMount: '#ykAchips',
+      fields: [
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'},
+          {v:'merkez', l:'Merkez Şantiye'}, {v:'genelmerkez', l:'Genel Merkez'}
+        ]},
+        {key:'yakitTuru', type:'select', label:'Yakıt Türü', options: Object.keys(FUEL_LBL).map(function(k){ return {v:k, l:FUEL_LBL[k]}; })},
+        {key:'tutar', type:'numrange', label:'Tutar Aralığı', prefix:'₺'},
+        {key:'tarih', type:'daterange', label:'Tarih', emptyLabel:'Tüm zamanlar'}
+      ],
+      onApply: function(state){
+        fpState.santiye = (state.santiye && state.santiye.value) || '';
+        fpState.yakitTuru = (state.yakitTuru && state.yakitTuru.value) || '';
+        fpState.tutar = (state.tutar && state.tutar.value) || null;
+        fpState.tarihRange = (state.tarih && state.tarih.raw) || null;
+        renderTable();
+      },
+      onClear: function(){
+        fpState.santiye = ''; fpState.yakitTuru = ''; fpState.tutar = null; fpState.tarihRange = null;
+        renderTable();
+      }
+    });
+  }
+  /* V3A — Kolonlar (gvCols) */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#ykColsBtn', table: '#tblYakit', screen: 'aracyakit',
+      cols: [
+        {key:'arac', lbl:'Araç', def:true},
+        {key:'tur', lbl:'Yakıt Türü', def:true},
+        {key:'km', lbl:'Km', def:true},
+        {key:'litre', lbl:'Litre/kWh', def:true},
+        {key:'fiyat', lbl:'Birim Fiyat', def:true},
+        {key:'tutar', lbl:'Tutar', def:true},
+        {key:'durum', lbl:'Tüketim / Durum', def:true}
+      ]
+    });
+  }
+  /* V3A §3 — "Arşivlenenleri Göster" — arşivdeki araca ait yakıt kayıtlarını gösterir */
+  var ykArsivGosterEl = document.getElementById('ykArsivGoster');
+  if(ykArsivGosterEl) ykArsivGosterEl.addEventListener('change', renderTable);
 
   /* ============ kayıt ekle ============ */
   document.getElementById('btnEkleAc').addEventListener('click', function(){

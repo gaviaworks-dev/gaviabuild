@@ -133,10 +133,35 @@
       </div>
     </div>
 
-    <div class="gv-card" style="padding:18px 22px 0">
-      <div class="fb-search kat-search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="katSearch" placeholder="Ana veya alt kategori ara">
+    <div class="gv-card">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3),
+           crm-gorev.html deseniyle sıfırdan kuruldu (Grup C — eskiden çıplak bir
+           `.fb-search` vardı, Gelişmiş Filtre/toggle/tab hiç yoktu). "Kolonlar"
+           BİLİNÇLİ OLARAK eklenmedi — bu ekran bir `<table>` değil accordion/ağaç
+           yapısı, gvCols'un göster/gizle/sırala sözleşmesinin karşılığı bir kolon
+           kümesi yok (tasks/kararlar.md). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="katSearch" placeholder="Ana veya alt kategori ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="katFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <label class="lh-toggle" for="katPasifGoster">
+              <input type="checkbox" id="katPasifGoster">
+              <i class="fa-solid fa-power-off"></i> <span class="lh-lbl">Pasifleri Göster</span>
+            </label>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="katAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -292,6 +317,11 @@
 
   var openIds = {};
   var wrap = document.getElementById('katListWrap');
+  /* V3A — Gelişmiş Filtre'nin (Ana Kategori) uyguladığı durum; renderAll() her
+     yeniden çizimde applyVisibility()'yi TEKRAR çağırır (fonksiyon hoisting sayesinde
+     aşağıda tanımlansa da burada erişilebilir; fpState'in KENDİSİ ilk renderAll()
+     çağrısından ÖNCE burada atanmalı). */
+  var fpState = {ana:''};
 
   function altRowHtml(anaId, alt, idx, total){
     var kullanim = altKullanim(alt.ad);
@@ -342,6 +372,7 @@
   function renderAll(){
     wrap.innerHTML = ANA.map(renderAna).join('');
     refreshKpi();
+    applyVisibility();
   }
   function refreshKpi(){
     var altToplam = 0, kullanimda = 0, bos = 0;
@@ -357,19 +388,43 @@
     document.getElementById('kpiBos').textContent = bos;
     document.getElementById('katSub').textContent = ANA.length + ' ana kategori · ' + altToplam + ' alt kategori · 2 Temmuz 2026, Perşembe';
   }
-  renderAll();
-
-  /* ---- arama ---- */
-  document.getElementById('katSearch').addEventListener('input', function(e){
-    var term = e.target.value.trim().toLocaleLowerCase('tr');
+  /* V3A — arama + "Pasifleri Göster" toggle + Gelişmiş Filtre (Ana Kategori) TEK
+     görünürlük fonksiyonunda birleşir; renderAll() kartları yeniden ürettiğinde de
+     TEKRAR uygulanır (accordion aç/kapa gibi diğer state değişimleri innerHTML'i
+     ezdiği için — fpState yukarıda, ilk renderAll() çağrısından ÖNCE atandı). */
+  function applyVisibility(){
+    var term = document.getElementById('katSearch').value.trim().toLocaleLowerCase('tr');
+    var showPasif = !!document.getElementById('katPasifGoster').checked;
     var shown = 0;
     document.querySelectorAll('.kat-card').forEach(function(card){
-      var match = !term || card.getAttribute('data-search').indexOf(term) !== -1;
+      var okTerm = !term || card.getAttribute('data-search').indexOf(term) !== -1;
+      var okPasif = showPasif || !card.classList.contains('is-pasif');
+      var okAna = !fpState.ana || card.getAttribute('data-ana') === fpState.ana;
+      var match = okTerm && okPasif && okAna;
       card.hidden = !match;
       if(match){ shown++; if(term) card.classList.add('open'); }
     });
     document.getElementById('katEmpty').hidden = shown !== 0;
-  });
+  }
+  renderAll();
+  document.getElementById('katSearch').addEventListener('input', applyVisibility);
+  document.getElementById('katPasifGoster').addEventListener('change', applyVisibility);
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#katFiltreBtn', screen: 'demirbaskategori', title: 'Gelişmiş Filtre', chipsMount: '#katAchips',
+      fields: [
+        {key:'ana', type:'select', label:'Ana Kategori', options: ANA.map(function(a){ return {v:a.id, l:a.ad}; })}
+      ],
+      onApply: function(state){
+        fpState.ana = (state.ana && state.ana.value) || '';
+        applyVisibility();
+      },
+      onClear: function(){
+        fpState.ana = '';
+        applyVisibility();
+      }
+    });
+  }
 
   /* ---- accordion aç/kapa ---- */
   wrap.addEventListener('click', function(e){

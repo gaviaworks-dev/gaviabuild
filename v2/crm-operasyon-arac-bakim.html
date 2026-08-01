@@ -154,13 +154,54 @@ tr.bk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     </div>
 
     <div class="gv-card">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3),
+           crm-gorev.html deseniyle sıfırdan kuruldu (Grup C — eskiden `.gv-card` içinde
+           çıplak bir arama/filtre yoktu). Arşiv/Pasif toggle BİLİNÇLİ OLARAK eklenmedi —
+           bakım kaydının kendisinin arşiv/pasif ekseni yok (arac-kullanim.html emsali);
+           aracın kendisi arşivdeyse zaten üstteki "Bu araç arşivlenmiş" notu gösterilir. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="bkSearch" placeholder="Servis, fatura no veya tür ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="bkFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="bkColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Araç bakım geçmişi" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="bkAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="bkTurChips">
+              <button class="chip is-on" data-turgrup="hepsi">Tümü</button>
+              <button class="chip" data-turgrup="periyodik">Periyodik Bakım</button>
+              <button class="chip" data-turgrup="ariza">Arıza / Onarım</button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Kronolojik Bakım Kayıtları</div>
         <span class="gtag" id="bkCount">0 kayıt</span>
       </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblBakim">
-          <thead><tr><th>Tarih</th><th class="num">Km</th><th>Tür</th><th>Servis</th><th class="num">Toplam Tutar</th><th>Fatura No</th><th>Garanti</th><th></th></tr></thead>
+          <thead><tr><th>Tarih</th><th class="num" data-col="km">Km</th><th data-col="tur">Tür</th><th data-col="servis">Servis</th><th class="num" data-col="tutar">Toplam Tutar</th><th data-col="fatura">Fatura No</th><th data-col="garanti">Garanti</th><th></th></tr></thead>
           <tbody id="bakimBody"></tbody>
         </table>
         <div class="gv-empty" id="bakimEmpty" hidden>
@@ -188,6 +229,16 @@ tr.bk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
   };
   var TUR_ARIZA = ['motor-arizasi', 'elektrik-arizasi', 'hasar-onarimi'];
   function turClass(tur){ return TUR_ARIZA.indexOf(tur) !== -1 ? 'cls-ariza' : (tur === 'periyodik' || tur === 'genel-kontrol' ? 'cls-periyodik' : ''); }
+  /* V3A §2.3 — .lh-tabs'ın "Tümü/Periyodik/Arıza" hızlı kategorisi TUR_LBL'in 11 sabit
+     türünü iki ana gruba ayırır (kaporta/diğer yalnız Tümü'nde görünür — üçüncü bir
+     "Diğer" sekmesi UYDURULMADI, doküman §2.3'ün kısa/kalabalıksız tab kuralına uyar). */
+  var TUR_GRUP = {};
+  ['periyodik', 'yag', 'lastik', 'fren', 'aku', 'genel-kontrol'].forEach(function(t){ TUR_GRUP[t] = 'periyodik'; });
+  TUR_ARIZA.forEach(function(t){ TUR_GRUP[t] = 'ariza'; });
+  /* V3A — Gelişmiş Filtre'nin (Bakım Türü/Garanti/Tutar Aralığı/Tarih Aralığı) uyguladığı
+     durum; onApply() doldurur, renderTable() okur (sayfanın kendi motoru). */
+  var fpState = {tur:'', garanti:'', tutar:null, tarihRange:null};
+  var curTurGrup = 'hepsi';
   /* 4-durumlu — arac.html/arac-arsiv.html'in kanoniğiyle hizalı (karar: 'pasif' geçici/
      operasyonel durumdur, arşiv sayılmaz — T-ARC1 acik-kalemler.md madde 1 devri) */
   var ARCHIVE_STATES = ['arsivlendi', 'satildi', 'hurda', 'kiralamaBitti'];
@@ -286,20 +337,40 @@ tr.bk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
       badges += '<span class="gstat off">Planlı bakım yok — araç arşivde</span>';
     }
     document.getElementById('vmBadges').innerHTML = badges;
+  }
 
-    var sorted = v.gecmis.slice().sort(function(a,b){ return b.tarih.localeCompare(a.tarih); });
+  function renderTable(){
+    var term = document.getElementById('bkSearch').value.trim().toLocaleLowerCase('tr');
+    var range = fpState.tarihRange;
+    var sorted = v.gecmis.slice().sort(function(a,b){ return b.tarih.localeCompare(a.tarih); }).filter(function(b){
+      var okTerm = !term || (b.servis + ' ' + b.fatura + ' ' + TUR_LBL[b.tur] + ' ' + (b.notlar||'')).toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okTurGrup = curTurGrup === 'hepsi' || TUR_GRUP[b.tur] === curTurGrup;
+      var okFTur = !fpState.tur || b.tur === fpState.tur;
+      var okGaranti = !fpState.garanti || (fpState.garanti === 'evet' ? b.garanti : !b.garanti);
+      var okTutar = true;
+      if(fpState.tutar){
+        if(fpState.tutar.min != null && fpState.tutar.min !== '') okTutar = okTutar && b.tutar >= Number(fpState.tutar.min);
+        if(fpState.tutar.max != null && fpState.tutar.max !== '') okTutar = okTutar && b.tutar <= Number(fpState.tutar.max);
+      }
+      var okDate = true;
+      if(range && range.from){
+        var d = new Date(b.tarih + 'T00:00:00');
+        okDate = d >= range.from && d <= range.to;
+      }
+      return okTerm && okTurGrup && okFTur && okGaranti && okTutar && okDate;
+    });
     document.getElementById('bkCount').textContent = sorted.length + ' kayıt';
     document.getElementById('bakimEmpty').hidden = sorted.length !== 0;
     document.getElementById('bakimBody').innerHTML = sorted.map(function(b, i){
       var did = 'bkd-' + i;
       var row = '<tr>'
         + '<td>' + ddmmyyyy(b.tarih) + '</td>'
-        + '<td class="num">' + b.km.toLocaleString('tr-TR') + ' km</td>'
-        + '<td><span class="bk-tur-tag ' + turClass(b.tur) + '">' + TUR_LBL[b.tur] + '</span></td>'
-        + '<td>' + b.servis + '</td>'
-        + '<td class="num">' + (b.tutar ? tl(b.tutar) : '—') + '</td>'
-        + '<td>' + b.fatura + '</td>'
-        + '<td>' + (b.garanti ? '<span class="gstat ok">Garanti kapsamında</span>' : '<span class="gstat off">Kapsam dışı</span>') + '</td>'
+        + '<td class="num" data-col="km">' + b.km.toLocaleString('tr-TR') + ' km</td>'
+        + '<td data-col="tur"><span class="bk-tur-tag ' + turClass(b.tur) + '">' + TUR_LBL[b.tur] + '</span></td>'
+        + '<td data-col="servis">' + b.servis + '</td>'
+        + '<td class="num" data-col="tutar">' + (b.tutar ? tl(b.tutar) : '—') + '</td>'
+        + '<td data-col="fatura">' + b.fatura + '</td>'
+        + '<td data-col="garanti">' + (b.garanti ? '<span class="gstat ok">Garanti kapsamında</span>' : '<span class="gstat off">Kapsam dışı</span>') + '</td>'
         + '<td><button type="button" class="bk-detail-toggle" data-detail="' + did + '" aria-label="Detayları göster"><i class="fa-solid fa-chevron-down"></i></button></td>'
         + '</tr>';
       row += '<tr class="bk-detail-row" id="' + did + '" hidden><td colspan="8"><div class="bk-detail-grid">'
@@ -314,6 +385,7 @@ tr.bk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     }).join('');
   }
   render();
+  renderTable();
 
   document.getElementById('bakimBody').addEventListener('click', function(e){
     var btn = e.target.closest('[data-detail]'); if(!btn) return;
@@ -321,6 +393,52 @@ tr.bk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     el.hidden = !el.hidden;
     btn.classList.toggle('is-open', !el.hidden);
   });
+  document.getElementById('bkSearch').addEventListener('input', renderTable);
+  document.getElementById('bkTurChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-turgrup]'); if(!ch) return;
+    document.querySelectorAll('#bkTurChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+    ch.classList.add('is-on');
+    curTurGrup = ch.getAttribute('data-turgrup');
+    renderTable();
+  });
+  /* V3A — Gelişmiş Filtre (gvFilterDrawer; opts.table VERİLMEDİ, sayfanın kendi
+     renderTable() motoru TEK karar mercii kalır) */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#bkFiltreBtn', screen: 'aracbakim', title: 'Gelişmiş Filtre', chipsMount: '#bkAchips',
+      fields: [
+        {key:'tur', type:'select', label:'Bakım Türü', options: Object.keys(TUR_LBL).map(function(k){ return {v:k, l:TUR_LBL[k]}; })},
+        {key:'garanti', type:'select', label:'Garanti Durumu', options:[{v:'evet', l:'Garanti Kapsamında'}, {v:'hayir', l:'Kapsam Dışı'}]},
+        {key:'tutar', type:'numrange', label:'Toplam Tutar Aralığı', prefix:'₺'},
+        {key:'tarih', type:'daterange', label:'Tarih', emptyLabel:'Tüm zamanlar'}
+      ],
+      onApply: function(state){
+        fpState.tur = (state.tur && state.tur.value) || '';
+        fpState.garanti = (state.garanti && state.garanti.value) || '';
+        fpState.tutar = (state.tutar && state.tutar.value) || null;
+        fpState.tarihRange = (state.tarih && state.tarih.raw) || null;
+        renderTable();
+      },
+      onClear: function(){
+        fpState.tur = ''; fpState.garanti = ''; fpState.tutar = null; fpState.tarihRange = null;
+        renderTable();
+      }
+    });
+  }
+  /* V3A — Kolonlar (gvCols) */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#bkColsBtn', table: '#tblBakim', screen: 'aracbakim',
+      cols: [
+        {key:'km', lbl:'Km', def:true},
+        {key:'tur', lbl:'Tür', def:true},
+        {key:'servis', lbl:'Servis', def:true},
+        {key:'tutar', lbl:'Toplam Tutar', def:true},
+        {key:'fatura', lbl:'Fatura No', def:true},
+        {key:'garanti', lbl:'Garanti', def:true}
+      ]
+    });
+  }
 
   document.getElementById('btnEkleAc').addEventListener('click', function(){
     if(this.disabled) return;
@@ -365,6 +483,7 @@ tr.bk-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     document.getElementById('fToplamGoster').value = '₺0';
     document.getElementById('ekleCard').classList.remove('open');
     render();
+    renderTable();
   });
 })();
 </script>

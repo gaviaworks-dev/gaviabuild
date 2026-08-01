@@ -155,6 +155,11 @@
   .arc-info b,.arc-info .arc-sub{max-width:160px}
   .filter-row .frow-lbl{min-width:0;width:100%}
 }
+/* V3A — .lh-tabs iki bağımsız çip grubunu (Şantiye/Durum) alt alta gösterir; ui.css'in
+   paylaşılan .lh-tabs{display:flex} satırı değiştirilmedi (K-220), yalnız bu sayfaya
+   özel bir modifier sınıf EKLENDİ (tasks/spec-v3a-ortak.md "sayfa-özel .lh-* varyantı
+   üretme" yasağı ui.css'i kapsar — page-local <style> içindeki modifier bu yasağın dışı). */
+.lh-tabs.arc-tabs-2row{flex-direction:column;align-items:stretch;gap:10px}
 
 /* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği. hstat/stat-grid/hl-list ui.css'te
    YOK — crm-panel-rapor-santiye.html'in sayfa-lokal pattern'i devralındı (K-220 dersi). ============ */
@@ -212,7 +217,6 @@
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-arac-dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-arac-bildirim.html"><i class="fa-regular fa-bell"></i> Bildirim Merkezi <span class="gtag" id="arBilRozet" style="margin-left:4px"></span></a>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Araç filosu"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-operasyon-arac-form.html"><i class="fa-solid fa-plus"></i> Yeni Araç Ekle</a>
       </div>
     </div>
@@ -314,50 +318,79 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="fb-search" style="max-width:360px">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="arSearch" placeholder="Plaka, ARC no veya zimmetli kişi ara">
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Şantiye</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="arSantiyeChips">
-              <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">10</span></button>
-              <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
-              <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">2</span></button>
-              <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">4</span></button>
-              <button class="chip" data-santiye="genelmerkez">Genel Merkez <span class="ch-cnt">2</span></button>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri, gvFilterPanel'in activeRow'u) → .lh-tabs (Şantiye + Durum çip grupları).
+           Liste/Kart görünüm anahtarı TAB DEĞİL — aynı verinin render toggle'ı, aksiyon
+           grubuna eklendi (K-ARC-TOP, tasks/kararlar.md). Gelişmiş Filtre panelindeki
+           "Arşivlenenleri Göster" checkbox'ı §3.2 gereği ayrı .lh-toggle'a taşındı;
+           panelde artık YOK (gorev.html pilotuyla aynı gerekçe: tek kontrol, çift temsil değil). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="arSearch" placeholder="Plaka, ARC no veya zimmetli kişi ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpArac" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="arArsivGoster">
+              <input type="checkbox" id="arArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Araç filosu" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+            <div class="view-toggle" role="group" aria-label="Görünüm">
+              <button type="button" id="viewBtnListe" class="is-on" data-tip="Liste görünümü" aria-label="Liste görünümü"><i class="fa-solid fa-list"></i> Liste</button>
+              <button type="button" id="viewBtnKart" data-tip="Kart görünümü" aria-label="Kart görünümü"><i class="fa-solid fa-grip"></i> Kart</button>
             </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Durum</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="arDurumChips">
-              <button class="chip is-on" data-durum="hepsi">Tümü</button>
-              <button class="chip" data-durum="aktif">Aktif</button>
-              <button class="chip" data-durum="bakimda">Bakımda</button>
-              <button class="chip" data-durum="arizali">Arızalı</button>
-              <button class="chip" data-durum="beklemede">Beklemede</button>
-              <button class="chip" data-durum="arsivli">Arşivli <span class="ch-cnt">3</span></button>
-            </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="lh-achips gv-achips-row" id="achipsArac" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
           </div>
         </div>
-        <div class="filter-row" style="justify-content:flex-end">
-          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
-            <i class="fa-solid fa-table-columns"></i> Kolonlar
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpArac">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <div class="view-toggle" role="group" aria-label="Görünüm">
-            <button type="button" id="viewBtnListe" class="is-on" data-tip="Liste görünümü" aria-label="Liste görünümü"><i class="fa-solid fa-list"></i> Liste</button>
-            <button type="button" id="viewBtnKart" data-tip="Kart görünümü" aria-label="Kart görünümü"><i class="fa-solid fa-grip"></i> Kart</button>
+        <div class="lh-tabs arc-tabs-2row">
+          <div class="filter-row">
+            <span class="frow-lbl">Şantiye</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="arSantiyeChips">
+                <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">10</span></button>
+                <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
+                <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">2</span></button>
+                <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">4</span></button>
+                <button class="chip" data-santiye="genelmerkez">Genel Merkez <span class="ch-cnt">2</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="filter-row">
+            <span class="frow-lbl">Durum</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="arDurumChips">
+                <button class="chip is-on" data-durum="hepsi">Tümü</button>
+                <button class="chip" data-durum="aktif">Aktif</button>
+                <button class="chip" data-durum="bakimda">Bakımda</button>
+                <button class="chip" data-durum="arizali">Arızalı</button>
+                <button class="chip" data-durum="beklemede">Beklemede</button>
+                <button class="chip" data-durum="arsivli">Arşivli <span class="ch-cnt">3</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
         </div>
       </div>
@@ -373,18 +406,6 @@
           <button type="button" class="btn btn-ghost btn-sm" id="bbPasifBtn" data-no-confirm><i class="fa-solid fa-pause"></i> Toplu Pasife Al</button>
           <button type="button" class="btn btn-ghost btn-sm" id="bbExportBtn" data-export="Seçili araçlar" data-no-confirm><i class="fa-solid fa-download"></i> Seçilenleri Dışa Aktar</button>
           <button type="button" class="btn btn-ghost btn-sm" id="bbClearBtn" data-no-confirm><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
-        </div>
-      </div>
-
-      <div class="gv-achips-row" id="achipsArac" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
         </div>
       </div>
 
@@ -488,15 +509,9 @@
         </select>
         <span class="gf-hint">Yalnız "Aktif" yaşam-döngüsü durumundaki araçlar için anlamlıdır.</span>
       </div>
-      <div class="gfield">
-        <label style="display:flex;align-items:center;gap:9px;cursor:pointer">
-          <input type="checkbox" data-fp-key="arsivGoster" data-fp-label="Arşivlenenleri Göster" style="width:16px;height:16px;flex:none">
-          <span style="font-size:12.5px;font-weight:600;color:var(--ink-2)">Arşivlenenleri Göster</span>
-        </label>
-      </div>
     </div>
     <div class="gv-fpanel-foot">
-      <button type="button" class="btn btn-ghost" data-fp-clear">Temizle</button>
+      <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
       <button type="button" class="btn btn-acc" data-fp-apply>Uygula</button>
     </div>
   </aside>
@@ -905,7 +920,8 @@
   }
   function passesFilters(a){
     var term = document.getElementById('arSearch').value.trim().toLocaleLowerCase('tr');
-    var showArchived = !!fpState.arsivGoster;
+    var arArsivChk = document.getElementById('arArsivGoster');
+    var showArchived = !!(arArsivChk && arArsivChk.checked);
     var fpDurum = fpState.durum ? fpState.durum.value : '';
     var fpTip = fpState.tip ? fpState.tip.value : '';
     var fpYakit = fpState.yakit ? fpState.yakit.value : '';
@@ -957,6 +973,10 @@
     curDurumChip = ch.getAttribute('data-durum');
     applyFilter();
   });
+  /* V3A §3.2 — "Arşivlenenleri Göster" artık .lh-acts'ta bağımsız bir toggle (eskiden
+     Gelişmiş Filtre panelinde gizliydi, gorev.html pilotuyla aynı gerekçe: tek kontrol). */
+  var arArsivGosterEl = document.getElementById('arArsivGoster');
+  if(arArsivGosterEl) arArsivGosterEl.addEventListener('change', applyFilter);
 
   /* §9 gelişmiş filtre paneli — sayfanın kendi çok-eksenli motoru olduğu için
      opts.table VERİLMEDİ; state onApply içinde okunup applyFilter() çağrılır
