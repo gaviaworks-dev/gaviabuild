@@ -124,6 +124,27 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
 .pp-sign .sg-title{font-size:9px;font-weight:600;color:#444}
 .pp-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
 .pp-note{font-size:8.5px;color:#555;padding-top:8px;line-height:1.6}
+.pp-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding-top:6px}
+.pp-foot .pp-note{flex:1;padding-top:0}
+.pp-pageno{flex:none;font-size:8.5px;font-weight:700;color:#555;white-space:nowrap}
+
+/* ============ B §6.4 referans uygulaması eklentileri (kasa-cikti.html'den devralındı,
+   bkz tasks/spec-v2-cikti.md) — özet KPI · grafikler · sayfa no. Filtre bilgisi zaten
+   .pp-info bloğunda vardı; burada yalnız gvExport kapsam/format satırı EKLENDİ. ============ */
+.pp-kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid #111;border-top:none}
+.pp-kpi{border-right:1px solid #111;border-bottom:1px solid #111;padding:9px 12px}
+.pp-kpi:nth-child(3n){border-right:none}
+.pp-kpi:nth-last-child(-n+3){border-bottom:none}
+.pp-kpi-lbl{font-size:7.8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.pp-kpi-val{font-size:14px;font-weight:800;color:#111;margin-top:3px;font-variant-numeric:tabular-nums}
+.pp-kpi-sub{font-size:8.3px;color:#666;margin-top:3px;line-height:1.4}
+
+.pp-charts{display:grid;grid-template-columns:1.3fr 1fr;border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pp-chart{padding:10px 14px;border-right:1px solid #111}
+.pp-chart:last-child{border-right:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.pp-chart-title{font-size:8.3px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#444;margin-bottom:8px;text-align:center}
+.pp-chart-legend{display:flex;gap:10px;font-size:8px;color:#444;flex-wrap:wrap;justify-content:center}
+.pp-chart-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:-1px}
 
 @media print{
   body{background:#fff;padding:0}
@@ -146,6 +167,15 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
   .pp-sign{grid-template-columns:1fr}
   .pp-sign .sg{border-right:none;border-bottom:1px solid #111}
   .pp-sign .sg:last-child{border-bottom:none}
+  .pp-kpis{grid-template-columns:repeat(2,1fr)}
+  .pp-kpi:nth-child(3n){border-right:1px solid #111}
+  .pp-kpi:nth-child(2n){border-right:none}
+  .pp-kpi:nth-last-child(-n+3){border-bottom:1px solid #111}
+  .pp-kpi:nth-last-child(-n+2){border-bottom:none}
+  .pp-charts{grid-template-columns:1fr}
+  .pp-chart{border-right:none;border-bottom:1px solid #111}
+  .pp-chart:last-child{border-bottom:none}
+  .pp-foot{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -167,7 +197,7 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
       <div class="pb-g">Y</div>
       <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>KREDİ KARTI HAREKETLERİ DÖKÜMÜ</span></div>
     </div>
-    <div class="pb-doc">Form No: KKF-01 · Rev.01<br>Düzenleme: <span id="ppBugun">2 Temmuz 2026</span></div>
+    <div class="pb-doc">Form No: KKF-01 · Rev.01<br>Düzenleme: <span id="ppBugun">2 Temmuz 2026</span><br>Hazırlayan: <span id="ppHazirlayan">Nesrin Aydın (Muhasebe)</span></div>
   </div>
 
   <div class="pp-info" id="ppInfo"></div>
@@ -178,6 +208,15 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
       <b id="ppAralik">Tüm Zamanlar</b>
       <span>TARİH ARALIĞI</span>
     </div>
+  </div>
+
+  <!-- B §6.4 — özet KPI kartları -->
+  <div class="pp-kpis" id="ppKpis"></div>
+
+  <!-- B §6.4/§7.3 — grafikler: kart bazlı harcama dağılımı + kategori dağılımı -->
+  <div class="pp-charts" id="ppCharts">
+    <div class="pp-chart"><div class="pp-chart-title">Kart Bazlı Harcama Dağılımı</div><div id="ppBarChart"></div></div>
+    <div class="pp-chart"><div class="pp-chart-title">Kategori Dağılımı</div><div id="ppDonutChart"></div><div class="pp-chart-legend" id="ppDonutLegend"></div></div>
   </div>
 
   <div class="pp-scroll">
@@ -222,9 +261,12 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     <div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Baran Yıldız</div><div class="sg-title">Satın Alma</div><div class="sg-line">İMZA</div></div>
     <div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>
   </div>
-  <p class="pp-note">Bu döküm, seçilen kapsama göre Gavia CRM kredi kartı hareketlerini içerir; el ile eklenen kayıt geçersizdir.
-  Kart bazlı dönem borcu, ilgili kartın ekstre öncesi devrinden başlayarak hesaplanır; toplamlar kredi kartı modülündeki
-  kart defteriyle birebir aynıdır. İmzalar tamamlanmadan döküm resmi değildir.</p>
+  <div class="pp-foot">
+    <p class="pp-note">Bu döküm, seçilen kapsama göre Gavia CRM kredi kartı hareketlerini içerir; el ile eklenen kayıt geçersizdir.
+    Kart bazlı dönem borcu, ilgili kartın ekstre öncesi devrinden başlayarak hesaplanır; toplamlar kredi kartı modülündeki
+    kart defteriyle birebir aynıdır. İmzalar tamamlanmadan döküm resmi değildir.</p>
+    <div class="pp-pageno">Sayfa 1 / 1</div>
+  </div>
 </div>
 
 <script>
@@ -297,6 +339,14 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     kategori: q.get('kategori') || 'hepsi',
     from: q.get('from') || '', to: q.get('to') || '', dlabel: q.get('dlabel') || ''
   };
+  /* B §6.4 — gvExport'un ?kapsam=&format= sözleşmesi (spec-v2-core.md §1 / tasks/spec-v2-cikti.md):
+     bu sayfanın KENDİ kapsam kelime dağarcığı (banka/durum/santiye/kategori) zaten vardı —
+     gvExport'un kapsam=tumu/filtreli/secili + format=pdf/excel/yazdir sözleşmesi bunun
+     ÜSTÜNE, bilgi bloğunda AYRICA okunup gösterilir; sayfa-lokal isim İCAT EDİLMEDİ. */
+  var kapsamParam = q.get('kapsam') || '';
+  var formatParam = q.get('format') || '';
+  var KAPSAM_ETIKET = { tumu:'Tüm Kayıtlar', filtreli:'Filtrelenmiş Kayıtlar', secili:'Seçili Kayıtlar' };
+  var FORMAT_ETIKET = { pdf:'PDF', excel:'Excel', yazdir:'Yazdır' };
 
   var SANTIYE_LIST = ['Vadi Konakları','Liman Lojistik Merkezi','Merkez Şantiye','Genel Merkez'];
   var KATEGORI_LIST = ['Akaryakıt','Hırdavat / Sarf Malzeme','Araç Bakım','Ofis Sarf Malzemesi','Ofis / E-ticaret','Konaklama','Kart Ödemesi'];
@@ -376,6 +426,46 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     });
   }
 
+  /* ---- B §6.4 — özet KPI + grafik yardımcıları. Sayı UYDURULMADI: hepsi filtrelenmiş
+     `tx` kümesinin kendi tutar/kategori/kart/durum alanlarından türetilir. ---- */
+  function renderKpiTiles(tiles){
+    document.getElementById('ppKpis').innerHTML = tiles.map(function(t){
+      return '<div class="pp-kpi"><div class="pp-kpi-lbl">' + t.lbl + '</div><div class="pp-kpi-val">' + t.val + '</div><div class="pp-kpi-sub">' + t.sub + '</div></div>';
+    }).join('');
+  }
+  function svgBarChart(perKart){
+    var items = KART_ORDER.map(function(k){ return {lbl:KARTLAR[k].sahip + ' •' + KARTLAR[k].no, val: perKart[k] || 0}; }).filter(function(i){ return i.val > 0; });
+    if(!items.length) return '<p style="font-size:9px;color:#888;text-align:center;padding:10px 0">Kapsamda harcama yok.</p>';
+    var max = Math.max.apply(null, items.map(function(i){ return i.val; })) || 1;
+    var w = 340, padL = 100, padR = 62, barH = 18, gap = 10;
+    var innerW = w - padL - padR;
+    var rows = items.map(function(it, i){
+      var y = i * (barH + gap);
+      var bw = Math.max(2, (it.val / max) * innerW);
+      return '<text x="' + (padL - 8) + '" y="' + (y + barH/2 + 3.3) + '" text-anchor="end" font-size="7.3" font-weight="700" fill="#333">' + it.lbl + '</text>'
+        + '<rect x="' + padL + '" y="' + y + '" width="' + bw.toFixed(1) + '" height="' + barH + '" fill="#111"><title>' + it.lbl + ': ₺' + tl(it.val) + '</title></rect>'
+        + '<text x="' + (padL + bw + 6) + '" y="' + (y + barH/2 + 3.3) + '" font-size="7.8" font-weight="800" fill="#111">₺' + tl(it.val) + '</text>';
+    }).join('');
+    var totalH = items.length * (barH + gap) - gap;
+    return '<svg viewBox="0 0 ' + w + ' ' + totalH + '" style="width:100%;height:auto;display:block" role="img"><title>Kart bazlı harcama dağılımı</title>' + rows + '</svg>';
+  }
+  var DONUT_COLORS = ['#111','#555','#888','#aaa','#c8c8c8','#e2e2e2'];
+  function svgDonutMulti(items){
+    if(!items.length) return '<p style="font-size:9px;color:#888;text-align:center;padding:10px 0">Kapsamda harcama yok.</p>';
+    var total = items.reduce(function(s,i){ return s + i.val; }, 0) || 1;
+    var r = 42, c = 2 * Math.PI * r, cx = 58, cy = 58, offset = 0, segs = '';
+    items.forEach(function(it, i){
+      var len = c * (it.val / total);
+      segs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + DONUT_COLORS[i % DONUT_COLORS.length]
+        + '" stroke-width="15" stroke-dasharray="' + len.toFixed(1) + ' ' + c.toFixed(1) + '" stroke-dashoffset="-' + offset.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"><title>' + it.lbl + ': ₺' + tl(it.val) + '</title></circle>';
+      offset += len;
+    });
+    return '<svg viewBox="0 0 116 116" width="120" height="120" role="img"><title>Kategori dağılımı</title>' + segs
+      + '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="8" fill="#666" font-weight="700">TOPLAM</text>'
+      + '<text x="' + cx + '" y="' + (cy + 11) + '" text-anchor="middle" font-size="10" fill="#111" font-weight="800">₺' + tl(total) + '</text>'
+      + '</svg>';
+  }
+
   /* ---- ana render — kart bazlı ledger blokları (kasa df-devir/df-total/df-mevcut
      satır dilinin birebir devralımı); Seçili Kayıtlar modunda framesiz düz liste + kart
      bazlı alt-toplam satırları (devir gösterilmez — devir bir DÖNEM kavramıdır, keyfi bir
@@ -383,7 +473,8 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
   function render(){
     var tx = filteredTx();
     var rowsHtml = '', ozetHtml = '';
-    var genelOdeme = 0, genelHarcama = 0, no = 0;
+    var genelOdeme = 0, genelHarcama = 0, no = 0, guncelBorcToplam = 0, belgeEksikSayi = 0;
+    var harcamaPerKart = {}, harcamaPerKategori = {}, kategoriOrder = [];
 
     KART_ORDER.forEach(function(key){
       var K = KARTLAR[key];
@@ -406,8 +497,14 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
         var isSelectedRow = mine.indexOf(t) !== -1;
         if(!isSelectedRow) return;
         no++;
-        if(isOdeme){ blokOdeme += t.tutar; genelOdeme += t.tutar; } else { blokHarcama += t.tutar; genelHarcama += t.tutar; }
+        if(isOdeme){ blokOdeme += t.tutar; genelOdeme += t.tutar; } else {
+          blokHarcama += t.tutar; genelHarcama += t.tutar;
+          harcamaPerKart[key] = (harcamaPerKart[key] || 0) + t.tutar;
+          if(!harcamaPerKategori[t.kategori]){ harcamaPerKategori[t.kategori] = 0; kategoriOrder.push(t.kategori); }
+          harcamaPerKategori[t.kategori] += t.tutar;
+        }
         var belge = BELGE_LBL[t.durum] || 'Belge Tam';
+        if(belge !== 'Belge Tam') belgeEksikSayi++;
         rowsHtml += '<tr>'
           + '<td class="c-no">'+no+'</td>'
           + '<td class="c-tarih">'+fmtTarih(t.tarih)+'</td>'
@@ -424,6 +521,7 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
           + '<td class="c-onay">'+DURUM_LBL[t.durum]+'</td>'
           + '</tr>';
       });
+      guncelBorcToplam += chainRun;
       if(!selIds){
         rowsHtml += '<tr class="r-total"><td></td><td colspan="6">DÖNEM İÇİ ÖDEME – HARCAMA</td><td></td><td class="c-odeme">₺'+tl(blokOdeme)+'</td><td class="c-harcama">₺'+tl(blokHarcama)+'</td><td class="c-bakiye">₺'+tl(chainRun)+'</td><td></td><td></td></tr>';
         rowsHtml += '<tr class="r-mevcut"><td></td><td colspan="6">GÜNCEL DÖNEM BORCU</td><td></td><td></td><td></td><td class="c-bakiye">₺'+tl(chainRun)+'</td><td></td><td></td></tr>';
@@ -447,7 +545,11 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     document.getElementById('ppBaslik').textContent = baslik;
     document.getElementById('ppAralik').textContent = selIds ? 'Seçili Kayıtlar' : (state.dlabel || 'Tüm Zamanlar');
 
-    var infoRows = '';
+    /* B §6.4 — gvExport kapsam/format satırı: sayfanın kendi kapsam kelime dağarcığının
+       (Aktif Filtreler / Seçili) ÜSTÜNE, gvExport'tan gelen kapsam/format ayrıca gösterilir. */
+    var kapsamLbl = KAPSAM_ETIKET[kapsamParam] || (selIds ? 'Seçili Kayıtlar' : ((state.banka!=='hepsi'||state.durum!=='hepsi'||state.santiye!=='hepsi'||state.kategori!=='hepsi'||state.from||state.to) ? 'Filtrelenmiş Kayıtlar' : 'Tüm Kayıtlar'));
+    var infoRows = '<div class="pi-row"><div class="pi-lbl">Çıktı Kapsamı</div><div class="pi-val">'
+      + 'Kapsam: <b>' + kapsamLbl + '</b>' + (formatParam ? ' · Çıktı Formatı: <b>' + (FORMAT_ETIKET[formatParam] || formatParam) + '</b>' : '') + '</div></div>';
     if(selIds){
       infoRows += '<div class="pi-row"><div class="pi-lbl">Kapsam</div><div class="pi-val">Listeden seçili '+selIds.length+' kayıt</div></div>';
     } else {
@@ -461,6 +563,24 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     }
     infoRows += '<div class="pi-row"><div class="pi-lbl">Para Birimi</div><div class="pi-val">Türk Lirası (₺ TRY) — tüm tutarlar</div></div>';
     document.getElementById('ppInfo').innerHTML = infoRows;
+
+    /* B §6.4 — özet KPI + grafikler */
+    var enYuksekKategori = null;
+    kategoriOrder.forEach(function(k){ if(!enYuksekKategori || harcamaPerKategori[k] > enYuksekKategori.tutar) enYuksekKategori = {ad:k, tutar:harcamaPerKategori[k]}; });
+    renderKpiTiles([
+      {lbl:'Toplam Karta Ödeme', val:'₺' + tl(genelOdeme), sub: 'Kapsamdaki ekstre ödemeleri'},
+      {lbl:'Toplam Harcama', val:'₺' + tl(genelHarcama), sub: no + ' hareket içinde'},
+      {lbl:'Güncel Toplam Borç', val:'₺' + tl(guncelBorcToplam), sub:'Kapsamdaki kartların güncel dönem borcu toplamı'},
+      {lbl:'En Yüksek Harcama Kategorisi', val: enYuksekKategori ? enYuksekKategori.ad : '—', sub: enYuksekKategori ? '₺' + tl(enYuksekKategori.tutar) : 'Kapsamda harcama yok'},
+      {lbl:'Belge Eksik Hareket', val: belgeEksikSayi || '—', sub: belgeEksikSayi ? belgeEksikSayi + ' hareket "Belge Yükleniyor" durumunda' : 'Belge eksiği yok'},
+      {lbl:'Kapsamdaki Kart Sayısı', val: Object.keys(harcamaPerKart).length, sub:'Harcama hareketi görünen kart sayısı'}
+    ]);
+    document.getElementById('ppBarChart').innerHTML = svgBarChart(harcamaPerKart);
+    var kategoriItems = kategoriOrder.map(function(k){ return {lbl:k, val:harcamaPerKategori[k]}; }).sort(function(a,b){ return b.val - a.val; });
+    document.getElementById('ppDonutChart').innerHTML = svgDonutMulti(kategoriItems);
+    document.getElementById('ppDonutLegend').innerHTML = kategoriItems.map(function(it, i){
+      return '<span><i style="background:' + DONUT_COLORS[i % DONUT_COLORS.length] + '"></i>' + it.lbl + ' ₺' + tl(it.val) + '</span>';
+    }).join('');
 
     window._ckLastRender = {tx: no ? filteredTx() : [], baslik: baslik};
   }

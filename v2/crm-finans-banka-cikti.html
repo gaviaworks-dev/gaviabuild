@@ -83,6 +83,31 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
 .pp-sign .sg-title{font-size:9px;font-weight:600;color:#444}
 .pp-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
 .pp-note{font-size:8.5px;color:#555;padding-top:6px;line-height:1.6}
+.pp-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding-top:6px}
+.pp-foot .pp-note{flex:1;padding-top:0}
+.pp-pageno{flex:none;font-size:8.5px;font-weight:700;color:#555;white-space:nowrap}
+
+/* ============ B §6.4 referans uygulaması eklentileri (kasa-cikti.html'den devralındı,
+   bkz tasks/spec-v2-cikti.md) — filtre bilgisi · özet KPI · grafikler · sayfa no.
+   ui.css/.pr-*'a DOKUNULMADI, aynı xlsx-facsimile pp-* dili genişletildi. ============ */
+.pp-filtre{display:flex;flex-wrap:wrap;gap:6px;border:1.5px solid #111;border-top:none;padding:9px 12px;background:#fafafa}
+.pp-fchip{font-size:9.5px;font-weight:700;color:#333;background:#fff;border:1px solid #999;border-radius:20px;padding:3px 10px;letter-spacing:.01em}
+.pp-fchip b{color:#111}
+
+.pp-kpis{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid #111;border-top:none}
+.pp-kpi{border-right:1px solid #111;border-bottom:1px solid #111;padding:9px 12px}
+.pp-kpi:nth-child(4n){border-right:none}
+.pp-kpi:nth-last-child(-n+4){border-bottom:none}
+.pp-kpi-lbl{font-size:7.8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.pp-kpi-val{font-size:14px;font-weight:800;color:#111;margin-top:3px;font-variant-numeric:tabular-nums}
+.pp-kpi-sub{font-size:8.3px;color:#666;margin-top:3px;line-height:1.4}
+
+.pp-charts{display:grid;grid-template-columns:1.3fr 1fr;border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pp-chart{padding:10px 14px;border-right:1px solid #111}
+.pp-chart:last-child{border-right:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.pp-chart-title{font-size:8.3px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#444;margin-bottom:8px;text-align:center}
+.pp-chart-legend{display:flex;gap:12px;font-size:8.3px;color:#444;flex-wrap:wrap;justify-content:center}
+.pp-chart-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:-1px}
 
 @media print{
   body{background:#fff;padding:0}
@@ -99,6 +124,15 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
   .pp-title .pt-range span{border-top:none;border-left:1px solid #111;display:flex;align-items:center;padding:0 10px}
   .pp-sign{grid-template-columns:1fr}
   .pp-sign .sg{border-right:none;border-bottom:1px solid #111}
+  .pp-kpis{grid-template-columns:repeat(2,1fr)}
+  .pp-kpi:nth-child(4n){border-right:1px solid #111}
+  .pp-kpi:nth-child(2n){border-right:none}
+  .pp-kpi:nth-last-child(-n+4){border-bottom:1px solid #111}
+  .pp-kpi:nth-last-child(-n+2){border-bottom:none}
+  .pp-charts{grid-template-columns:1fr}
+  .pp-chart{border-right:none;border-bottom:1px solid #111}
+  .pp-chart:last-child{border-bottom:none}
+  .pp-foot{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -144,7 +178,7 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
       <div class="pb-g">Y</div>
       <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>BANKA HAREKETLERİ DÖKÜMÜ</span></div>
     </div>
-    <div class="pb-doc">Form No: BNK-01 · Rev.01<br>Düzenleme: <span id="ppBugun">03.07.2026</span></div>
+    <div class="pb-doc">Form No: BNK-01 · Rev.01<br>Düzenleme: <span id="ppBugun">03.07.2026</span><br>Hazırlayan: <span id="ppHazirlayan">Nesrin Aydın (Muhasebe)</span></div>
   </div>
 
   <div class="pp-title">
@@ -153,6 +187,18 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
       <b id="ppAralik">Tüm dönem</b>
       <span>KAPSAM</span>
     </div>
+  </div>
+
+  <!-- B §6.4 — filtre bilgileri: gvExport'un ?kapsam=&format= parametreleri + aktif filtreler burada okunur -->
+  <div class="pp-filtre" id="ppFiltre"></div>
+
+  <!-- B §6.4 — özet KPI kartları -->
+  <div class="pp-kpis" id="ppKpis"></div>
+
+  <!-- B §6.4/§7.3 — grafikler: hesap bazlı hareket dağılımı + giriş/çıkış dağılımı -->
+  <div class="pp-charts" id="ppCharts">
+    <div class="pp-chart"><div class="pp-chart-title">Hesap Bazlı Hareket Dağılımı</div><div id="ppBarChart"></div></div>
+    <div class="pp-chart"><div class="pp-chart-title">Giriş / Çıkış Dağılımı</div><div id="ppDonutChart"></div><div class="pp-chart-legend" id="ppDonutLegend"></div></div>
   </div>
 
   <table class="pp-tbl">
@@ -178,7 +224,10 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
     <div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>
     <div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Kemal Yapıcıoğlu</div><div class="sg-title">Firma Sahibi</div><div class="sg-line">İMZA</div></div>
   </div>
-  <p class="pp-note">Bu döküm, Gavia CRM banka hareketleri kaydındaki seçili kapsamı içerir; el ile eklenen kayıt geçersizdir. Onay bekleyen hareketler tutara dahildir ancak ayrıca işaretlenmiştir; kesin bakiye için banka hesabı detayına bakınız.</p>
+  <div class="pp-foot">
+    <p class="pp-note">Bu döküm, Gavia CRM banka hareketleri kaydındaki seçili kapsamı içerir; el ile eklenen kayıt geçersizdir. Onay bekleyen hareketler tutara dahildir ancak ayrıca işaretlenmiştir; kesin bakiye için banka hesabı detayına bakınız.</p>
+    <div class="pp-pageno">Sayfa 1 / 1</div>
+  </div>
 </div>
 
 <script>
@@ -232,6 +281,13 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
   Object.keys(cariSet).sort().forEach(function(c){ var o = document.createElement('option'); o.value = c; o.textContent = c; csCari.appendChild(o); });
 
   var q = new URLSearchParams(location.search);
+  /* B §6.4 — gvExport'un ?kapsam=&format= sözleşmesi (spec-v2-core.md §1 / tasks/spec-v2-cikti.md):
+     kapsam=tumu/filtreli/secili + format=pdf/excel/yazdir HER ZAMAN okunur ve filtre bilgileri
+     bloğunda görünür yazılır — kasa-cikti.html referans uygulamasıyla BİREBİR aynı sözleşme. */
+  var kapsamParam = q.get('kapsam') || '';
+  var formatParam = q.get('format') || '';
+  var KAPSAM_ETIKET = { tumu:'Tüm Kayıtlar', filtreli:'Filtrelenmiş Kayıtlar', secili:'Seçili Kayıtlar' };
+  var FORMAT_ETIKET = { pdf:'PDF', excel:'Excel', yazdir:'Yazdır' };
   var state = {
     hesap: q.get('hesap') && HESAPLAR[q.get('hesap')] ? q.get('hesap') : '',
     from: q.get('from') || '', to: q.get('to') || '',
@@ -249,6 +305,59 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
     if(state.santiye) p.set('santiye', state.santiye);
     if(state.cari) p.set('cari', state.cari);
     history.replaceState(null, '', 'crm-finans-banka-cikti.html' + (p.toString() ? '?' + p.toString() : ''));
+  }
+
+  /* ---- B §6.4 — özet KPI + grafik yardımcıları. Sayı UYDURULMADI: hepsi filtrelenmiş
+     `rows` kümesinin kendi tutar/yön/hesap/onay alanlarından türetilir. ---- */
+  function svgBarChart(rows){
+    var byHesap = {}; var order = [];
+    rows.forEach(function(r){
+      if(!byHesap[r.hesap]){ byHesap[r.hesap] = 0; order.push(r.hesap); }
+      byHesap[r.hesap] += r.tutar;
+    });
+    /* kısa etiket — tam hesap adı (ör. "İş Bankası — Merkez Ana İşletme Hesabı") SVG
+       bar genişliğine sığmadığı için " — " öncesi kısa banka adı kullanılır; tam ad
+       zaten <title> tooltip'inde ve tablo/filtre bloklarında görünür, UYDURMA yok. */
+    var items = order.map(function(k){
+      var full = HESAPLAR[k] || k;
+      return {lbl: full.split(' — ')[0], full: full, val:byHesap[k]};
+    }).sort(function(a,b){ return b.val - a.val; }).slice(0, 6);
+    if(!items.length) return '<p style="font-size:9px;color:#888;text-align:center;padding:10px 0">Kapsamda hareket yok.</p>';
+    var max = Math.max.apply(null, items.map(function(i){ return i.val; })) || 1;
+    var w = 360, padL = 96, padR = 66, barH = 16, gap = 8;
+    var innerW = w - padL - padR;
+    var rowsSvg = items.map(function(it, i){
+      var y = i * (barH + gap);
+      var bw = Math.max(2, (it.val / max) * innerW);
+      return '<text x="' + (padL - 8) + '" y="' + (y + barH/2 + 3.2) + '" text-anchor="end" font-size="6.8" font-weight="700" fill="#333">' + it.lbl + '<title>' + it.full + '</title></text>'
+        + '<rect x="' + padL + '" y="' + y + '" width="' + bw.toFixed(1) + '" height="' + barH + '" fill="#111"><title>' + it.full + ': ₺' + tl(it.val) + '</title></rect>'
+        + '<text x="' + (padL + bw + 6) + '" y="' + (y + barH/2 + 3.2) + '" font-size="7.8" font-weight="800" fill="#111">₺' + tl(it.val) + '</text>';
+    }).join('');
+    var totalH = items.length * (barH + gap) - gap;
+    return '<svg viewBox="0 0 ' + w + ' ' + totalH + '" style="width:100%;height:auto;display:block" role="img"><title>Hesap bazlı hareket dağılımı</title>' + rowsSvg + '</svg>';
+  }
+  function svgDonutChart(giris, cikis){
+    var total = giris + cikis || 1;
+    var r = 42, c = 2 * Math.PI * r, cx = 58, cy = 58;
+    var gLen = c * (giris / total);
+    return '<svg viewBox="0 0 116 116" width="120" height="120" role="img"><title>Banka giriş/çıkış dağılımı</title>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#e4e4e4" stroke-width="15"></circle>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#111" stroke-width="15" stroke-dasharray="' + gLen.toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#b0b0b0" stroke-width="15" stroke-dasharray="' + (c - gLen).toFixed(1) + ' ' + c.toFixed(1) + '" stroke-dashoffset="-' + gLen.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>'
+      + '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="8" fill="#666" font-weight="700">TOPLAM</text>'
+      + '<text x="' + cx + '" y="' + (cy + 11) + '" text-anchor="middle" font-size="10" fill="#111" font-weight="800">₺' + tl(total) + '</text>'
+      + '</svg>';
+  }
+  function renderFiltre(kapsamLbl, extraChips){
+    var chips = ['<span class="pp-fchip">Kapsam: <b>' + kapsamLbl + '</b></span>'];
+    if(formatParam) chips.push('<span class="pp-fchip">Çıktı Formatı: <b>' + (FORMAT_ETIKET[formatParam] || formatParam) + '</b></span>');
+    chips = chips.concat(extraChips || []);
+    document.getElementById('ppFiltre').innerHTML = chips.join('');
+  }
+  function renderKpiTiles(tiles){
+    document.getElementById('ppKpis').innerHTML = tiles.map(function(t){
+      return '<div class="pp-kpi"><div class="pp-kpi-lbl">' + t.lbl + '</div><div class="pp-kpi-val">' + t.val + '</div><div class="pp-kpi-sub">' + t.sub + '</div></div>';
+    }).join('');
   }
 
   var FILTERED = [];
@@ -269,13 +378,25 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
     document.getElementById('ppAralik').textContent = aralikLbl;
     document.getElementById('csNote').textContent = rows.length + ' hareket listeleniyor.';
 
+    /* B §6.4 — filtre bilgileri: gvExport kapsam/format + aktif filtreler burada okunur.
+       kapsam param verilmemişse (kaynak liste henüz gvExport'a geçmediyse) durum dürüstçe
+       state.ids/hesap/santiye/cari/from/to'dan türetilir — UYDURULMAZ. */
+    var kapsamLbl = KAPSAM_ETIKET[kapsamParam] || (state.ids ? 'Seçili Kayıtlar' : (kapsamParts.length || state.from || state.to ? 'Filtrelenmiş Kayıtlar' : 'Tüm Kayıtlar'));
+    var extraChips = [];
+    if(state.hesap) extraChips.push('<span class="pp-fchip">Hesap: <b>' + HESAPLAR[state.hesap] + '</b></span>');
+    if(state.santiye) extraChips.push('<span class="pp-fchip">Şantiye: <b>' + state.santiye + '</b></span>');
+    if(state.cari) extraChips.push('<span class="pp-fchip">Cari: <b>' + state.cari + '</b></span>');
+    extraChips.push('<span class="pp-fchip">Tarih Aralığı: <b>' + aralikLbl + '</b></span>');
+    renderFiltre(kapsamLbl, extraChips);
+
     var h = '';
+    var tGiris = 0, tCikis = 0, onayBekleyen = 0, onaySayi = 0;
     if(!rows.length){
       h = '<tr><td class="c-no"></td><td colspan="9" style="text-align:center;color:#888;padding:16px 6px">Seçilen kapsamda banka hareketi bulunamadı.</td></tr>';
     } else {
-      var tGiris = 0, tCikis = 0;
       rows.forEach(function(r, i){
         if(isIn(r.yon)) tGiris += r.tutar; else tCikis += r.tutar;
+        if(r.onay === 'bekliyor'){ onayBekleyen += r.tutar; onaySayi++; }
         h += '<tr><td class="c-no">' + (i+1) + '</td><td class="c-tarih">' + r.tarih + '</td>'
            + '<td class="c-hesap">' + (HESAPLAR[r.hesap] || r.hesap) + '</td>'
            + '<td class="c-tip">' + r.tip + '</td><td>' + r.aciklama + '</td>'
@@ -287,6 +408,28 @@ table.pp-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
          + '<td class="c-tutar">Giriş +' + tl(tGiris) + ' / Çıkış −' + tl(tCikis) + '</td><td colspan="2"></td></tr>';
     }
     document.getElementById('ppRows').innerHTML = h;
+
+    var hesapSet = {}; rows.forEach(function(r){ hesapSet[r.hesap] = true; });
+    var hesapSayisi = Object.keys(hesapSet).length;
+    var enHareketli = null;
+    (function(){
+      var toplam = {};
+      rows.forEach(function(r){ toplam[r.hesap] = (toplam[r.hesap] || 0) + r.tutar; });
+      Object.keys(toplam).forEach(function(k){ if(!enHareketli || toplam[k] > enHareketli.tutar) enHareketli = {ad:HESAPLAR[k] || k, tutar:toplam[k]}; });
+    })();
+    renderKpiTiles([
+      {lbl:'Toplam Giriş', val:'₺' + tl(tGiris), sub: rows.filter(function(r){return isIn(r.yon);}).length + ' tahsilat/giriş hareketi'},
+      {lbl:'Toplam Çıkış', val:'₺' + tl(tCikis), sub: rows.filter(function(r){return !isIn(r.yon);}).length + ' ödeme/çıkış hareketi'},
+      {lbl:'Net (Giriş − Çıkış)', val:'₺' + tl(tGiris - tCikis), sub: rows.length + ' hareket toplamı'},
+      {lbl:'Onay Bekleyen Tutar', val: onaySayi ? '₺' + tl(onayBekleyen) : '—', sub: onaySayi ? onaySayi + ' hareket onay sürecinde' : 'Onay bekleyen hareket yok'},
+      {lbl:'Hesap Sayısı', val: hesapSayisi, sub: 'Kapsamda hareket gören banka hesabı'},
+      {lbl:'En Hareketli Hesap', val: enHareketli ? enHareketli.ad : '—', sub: enHareketli ? 'Toplam hacim ₺' + tl(enHareketli.tutar) : 'Kapsamda hareket yok'}
+    ]);
+    document.getElementById('ppBarChart').innerHTML = svgBarChart(rows);
+    document.getElementById('ppDonutChart').innerHTML = svgDonutChart(tGiris, tCikis);
+    document.getElementById('ppDonutLegend').innerHTML =
+      '<span><i style="background:#111"></i>Giriş ₺' + tl(tGiris) + '</span>'
+      + '<span><i style="background:#b0b0b0"></i>Çıkış ₺' + tl(tCikis) + '</span>';
   }
 
   function ddmm(iso){ var p = iso.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }

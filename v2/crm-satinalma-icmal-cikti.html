@@ -100,6 +100,30 @@ table.pi-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
 .pi-sign .sg-title{font-size:9px;font-weight:600;color:#444}
 .pi-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
 .pp-note{font-size:8px;color:#555;padding-top:5px;line-height:1.55}
+.pp-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.pp-foot .pp-note{flex:1;padding-top:5px}
+.pp-pageno{flex:none;font-size:8px;font-weight:700;color:#555;white-space:nowrap;padding-top:5px}
+
+/* ============ B §6.4 referans uygulaması eklentileri (kasa-cikti.html'den devralındı,
+   bkz tasks/spec-v2-cikti.md) — filtre bilgisi · özet KPI · grafikler · sayfa no. ============ */
+.pp-filtre{display:flex;flex-wrap:wrap;gap:6px;border:1.5px solid #111;border-top:none;padding:8px 12px;background:#fafafa}
+.pp-fchip{font-size:9px;font-weight:700;color:#333;background:#fff;border:1px solid #999;border-radius:20px;padding:3px 10px;letter-spacing:.01em}
+.pp-fchip b{color:#111}
+
+.pp-kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid #111;border-top:none}
+.pp-kpi{border-right:1px solid #111;border-bottom:1px solid #111;padding:8px 12px}
+.pp-kpi:nth-child(3n){border-right:none}
+.pp-kpi:nth-last-child(-n+3){border-bottom:none}
+.pp-kpi-lbl{font-size:7.4px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.pp-kpi-val{font-size:13.5px;font-weight:800;color:#111;margin-top:3px;font-variant-numeric:tabular-nums}
+.pp-kpi-sub{font-size:8px;color:#666;margin-top:3px;line-height:1.4}
+
+.pp-charts{display:grid;grid-template-columns:1.3fr 1fr;border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pp-chart{padding:9px 14px;border-right:1px solid #111}
+.pp-chart:last-child{border-right:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.pp-chart-title{font-size:7.8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#444;margin-bottom:8px;text-align:center}
+.pp-chart-legend{display:flex;gap:10px;font-size:7.6px;color:#444;flex-wrap:wrap;justify-content:center}
+.pp-chart-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:-1px}
 
 @media print{
   body{background:#fff;padding:0}
@@ -110,6 +134,15 @@ table.pi-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
 @media (max-width:1100px){
   body{padding:76px 8px 24px}
   .paper{width:100%;min-height:0;padding:14px 10px;overflow-x:auto}
+  .pp-kpis{grid-template-columns:repeat(2,1fr)}
+  .pp-kpi:nth-child(3n){border-right:1px solid #111}
+  .pp-kpi:nth-child(2n){border-right:none}
+  .pp-kpi:nth-last-child(-n+3){border-bottom:1px solid #111}
+  .pp-kpi:nth-last-child(-n+2){border-bottom:none}
+  .pp-charts{grid-template-columns:1fr}
+  .pp-chart{border-right:none;border-bottom:1px solid #111}
+  .pp-chart:last-child{border-bottom:none}
+  .pp-foot{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -128,7 +161,7 @@ table.pi-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
       <div class="pb-g">Y</div>
       <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>SATIN ALMA İCMALİ DÖKÜMÜ</span></div>
     </div>
-    <div class="pb-doc">Form No: SAİ-01 · Rev.01<br>Düzenleme: 02.07.2026</div>
+    <div class="pb-doc">Form No: SAİ-01 · Rev.01<br>Düzenleme: 02.07.2026<br>Hazırlayan: <span id="ppHazirlayan">Baran Yıldız (Satın Alma Sorumlusu)</span></div>
   </div>
 
   <div class="pi-title">
@@ -139,12 +172,24 @@ table.pi-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
     </div>
   </div>
 
+  <!-- B §6.4 — filtre bilgileri: gvExport'un ?kapsam=&format= parametreleri + form kimliği burada okunur -->
+  <div class="pp-filtre" id="ppFiltre"></div>
+
   <!-- statik bake — DEFAULT icmal verisi (SAT-2026-018, kanonik dizi VERBATIM) JS'siz görünüm için; JS yüklenince aynı mount'lar innerHTML ile ezilir — D18-B2 -->
   <table class="pi-tbl" id="piTbl">
     <thead id="piThead"><tr class="r-sup"><th class="c-no" rowspan="2"></th><th class="c-ad" rowspan="2">Açıklama</th><th colspan="3">1 · Ege Hazır Beton</th><th colspan="3">2 · Trakya Beton</th><th colspan="3">3 · Marmara Yapı Market</th><th colspan="3" class="sel">4 · Deta Demir Çelik ★ SEÇİLİ</th><th colspan="3">5 · Nokta Hırdavat</th><th colspan="3" rowspan="1">EN İYİ FİYAT</th></tr><tr class="r-sub"><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th class="sel">Malzeme</th><th class="sel">İşçilik</th><th class="sel">Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th><th>Malzeme</th><th>İşçilik</th><th>Toplam</th></tr></thead>
     <tbody id="piRows"><tr><td class="c-no">1</td><td class="c-ad"><b>PPR boru ve fitting takımı (Ø20–32 mm)</b><span>1 takım</span></td><td class="num best">84.600</td><td class="num best">17.800</td><td class="num best">102.400</td><td class="num">91.200</td><td class="num">19.600</td><td class="num">110.800</td><td class="num">88.400</td><td class="num">18.900</td><td class="num">107.300</td><td class="num sel">89.500</td><td class="num sel">21.800</td><td class="num sel">111.300</td><td class="num">93.800</td><td class="num">20.400</td><td class="num">114.200</td><td class="num best">84.600</td><td class="num best">17.800</td><td class="num best">102.400</td></tr><tr><td class="c-no">2</td><td class="c-ad"><b>Kolektör grubu (6 çıkışlı, pirinç)</b><span>4 adet</span></td><td class="num best">12.600</td><td class="num best">2.800</td><td class="num best">15.400</td><td class="num">14.800</td><td class="num">3.200</td><td class="num">18.000</td><td class="num">13.900</td><td class="num">3.000</td><td class="num">16.900</td><td class="num sel">14.200</td><td class="num sel">3.600</td><td class="num sel">17.800</td><td class="num">15.200</td><td class="num">3.400</td><td class="num">18.600</td><td class="num best">12.600</td><td class="num best">2.800</td><td class="num best">15.400</td></tr><tr><td class="c-no">3</td><td class="c-ad"><b>Sirkülasyon pompası (Wilo tipi, 3 hız)</b><span>2 adet</span></td><td class="num">24.600</td><td class="num">5.200</td><td class="num">29.800</td><td class="num">25.400</td><td class="num">5.600</td><td class="num">31.000</td><td class="yok" colspan="3">— teklif yok</td><td class="num sel">23.400</td><td class="num sel">5.500</td><td class="num sel">28.900</td><td class="num best">21.200</td><td class="num best">4.600</td><td class="num best">25.800</td><td class="num best">21.200</td><td class="num best">4.600</td><td class="num best">25.800</td></tr><tr><td class="c-no">4</td><td class="c-ad"><b>Vana grubu (küresel vana + çek valf)</b><span>1 takım</span></td><td class="num">33.600</td><td class="num">7.200</td><td class="num">40.800</td><td class="num">35.900</td><td class="num">7.600</td><td class="num">43.500</td><td class="num best">30.800</td><td class="num best">6.400</td><td class="num best">37.200</td><td class="num sel">36.000</td><td class="num sel">8.600</td><td class="num sel">44.600</td><td class="num">37.200</td><td class="num">8.100</td><td class="num">45.300</td><td class="num best">30.800</td><td class="num best">6.400</td><td class="num best">37.200</td></tr><tr><td class="c-no">5</td><td class="c-ad"><b>Boru izolasyonu (kauçuk köpük, 6 mm)</b><span>340 m</span></td><td class="num">29.800</td><td class="num">9.900</td><td class="num">39.700</td><td class="num">31.200</td><td class="num">10.400</td><td class="num">41.600</td><td class="num best">27.600</td><td class="num best">9.200</td><td class="num best">36.800</td><td class="num sel">32.900</td><td class="num sel">10.800</td><td class="num sel">43.700</td><td class="num">33.600</td><td class="num">11.100</td><td class="num">44.700</td><td class="num best">27.600</td><td class="num best">9.200</td><td class="num best">36.800</td></tr><tr><td class="c-no">6</td><td class="c-ad"><b>Çelik konsol / askı takımı</b><span>220 adet</span></td><td class="num best">30.800</td><td class="num best">9.800</td><td class="num best">40.600</td><td class="num">33.400</td><td class="num">10.600</td><td class="num">44.000</td><td class="num">32.200</td><td class="num">10.200</td><td class="num">42.400</td><td class="num sel">35.600</td><td class="num sel">11.600</td><td class="num sel">47.200</td><td class="num">34.800</td><td class="num">11.000</td><td class="num">45.800</td><td class="num best">30.800</td><td class="num best">9.800</td><td class="num best">40.600</td></tr><tr><td class="c-no">7</td><td class="c-ad"><b>Panel radyatör (600×1200 mm, çift sıra)</b><span>48 adet</span></td><td class="num">248.600</td><td class="num">64.800</td><td class="num">313.400</td><td class="num">252.400</td><td class="num">66.200</td><td class="num">318.600</td><td class="yok" colspan="3">— teklif yok</td><td class="num sel">258.000</td><td class="num sel">67.500</td><td class="num sel">325.500</td><td class="num best">236.800</td><td class="num best">61.400</td><td class="num best">298.200</td><td class="num best">236.800</td><td class="num best">61.400</td><td class="num best">298.200</td></tr><tr><td class="c-no">8</td><td class="c-ad"><b>Sayaç kutusu (daire kalorimetre)</b><span>34 adet</span></td><td class="num">80.600</td><td class="num">19.000</td><td class="num">99.600</td><td class="num">82.400</td><td class="num">19.600</td><td class="num">102.000</td><td class="num">79.800</td><td class="num">18.800</td><td class="num">98.600</td><td class="num sel">84.600</td><td class="num sel">20.000</td><td class="num sel">104.600</td><td class="num best">76.400</td><td class="num best">18.200</td><td class="num best">94.600</td><td class="num best">76.400</td><td class="num best">18.200</td><td class="num best">94.600</td></tr><tr><td class="c-no">9</td><td class="c-ad"><b>Sarf malzeme paketi (teflon bant, conta, lehim)</b><span>1 paket</span></td><td class="num">14.800</td><td class="num">2.600</td><td class="num">17.400</td><td class="num">15.600</td><td class="num">2.800</td><td class="num">18.400</td><td class="num">14.200</td><td class="num">2.500</td><td class="num">16.700</td><td class="num sel">15.900</td><td class="num sel">2.800</td><td class="num sel">18.700</td><td class="num best">13.600</td><td class="num best">2.400</td><td class="num best">16.000</td><td class="num best">13.600</td><td class="num best">2.400</td><td class="num best">16.000</td></tr></tbody>
     <tfoot id="piFoot"><tr class="r-tot"><td class="c-no"></td><td class="c-ad">GENEL TOPLAM</td><td class="num" colspan="3">699.100</td><td class="num" colspan="3">727.900</td><td class="num" colspan="3">355.900<span class="parti">7/9 kalem — kısmi</span></td><td class="num sel" colspan="3">742.300</td><td class="num" colspan="3">703.200</td><td class="num best" colspan="3">667.000</td></tr></tfoot>
   </table>
+
+  <!-- B §6.4 — özet KPI kartları -->
+  <div class="pp-kpis" id="ppKpis"></div>
+
+  <!-- B §6.4/§7.3 — grafikler: tedarikçi bazlı teklif toplamı + malzeme/işçilik dağılımı (seçili tedarikçi) -->
+  <div class="pp-charts" id="ppCharts">
+    <div class="pp-chart"><div class="pp-chart-title">Tedarikçi Bazlı Teklif Toplamı</div><div id="ppBarChart"></div></div>
+    <div class="pp-chart"><div class="pp-chart-title" id="ppChart2Title">Malzeme / İşçilik Dağılımı</div><div id="ppDonutChart"></div><div class="pp-chart-legend" id="ppDonutLegend"></div></div>
+  </div>
 
   <div class="pi-notes" id="piNotes"><div class="nc"><h6>1 · Ege Hazır Beton</h6><div class="kv"><b>Not</b><span>Radyatör + sayaç kalemlerinde 6 hafta ek teslim istedi</span></div><div class="kv"><b>Termin</b><span>8 hafta (tüm kalemler)</span></div><div class="kv"><b>Ödeme</b><span>45 gün vade</span></div></div><div class="nc"><h6>2 · Trakya Beton</h6><div class="kv"><b>Not</b><span>Tüm kalemlerde rakiplerin üzerinde fiyat</span></div><div class="kv"><b>Termin</b><span>6 hafta</span></div><div class="kv"><b>Ödeme</b><span>Peşin %30 + 30 gün</span></div></div><div class="nc"><h6>3 · Marmara Yapı Market</h6><div class="kv"><b>Not</b><span>Pompa ve radyatörde teklif vermedi (stoğu dışı)</span></div><div class="kv"><b>Termin</b><span>4 hafta (7 kalem)</span></div><div class="kv"><b>Ödeme</b><span>30 gün vade</span></div></div><div class="nc sel"><h6>4 · Deta Demir Çelik ★</h6><div class="kv"><b>Not</b><span>Tek tedarikçiden tam paket; montaj koordinasyonu + 2 yıl garanti dahil</span></div><div class="kv"><b>Termin</b><span>5 hafta (tüm kalemler)</span></div><div class="kv"><b>Ödeme</b><span>60 gün vade</span></div></div><div class="nc"><h6>5 · Nokta Hırdavat</h6><div class="kv"><b>Not</b><span>En düşük birim fiyatlar; büyük hacimde stok garantisi sınırlı</span></div><div class="kv"><b>Termin</b><span>7 hafta (stok gecikebilir)</span></div><div class="kv"><b>Ödeme</b><span>Peşin</span></div></div></div>
 
@@ -153,8 +198,11 @@ table.pi-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
     <div class="sg"><div class="sg-role">Kontrol Eden</div><div class="sg-name">Elif Sarıkaya</div><div class="sg-title">Teknik Müdür</div><div class="sg-line">İMZA</div></div>
     <div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name">Murat Denizli</div><div class="sg-title">Genel Müdür</div><div class="sg-line">İMZA</div></div>
   </div>
-  <p class="pp-note">Bu döküm, Gavia CRM satın alma icmalindeki tüm teklif karşılaştırmasını içerir; el ile eklenen kayıt geçersizdir.
-  Seçili tedarikçi (Deta Demir Çelik) hücreleri koyu vurguludur; en iyi fiyat kolonu satır bazında en düşük teklifi gösterir. İmzalar tamamlanmadan sipariş verilmez.</p>
+  <div class="pp-foot">
+    <p class="pp-note">Bu döküm, Gavia CRM satın alma icmalindeki tüm teklif karşılaştırmasını içerir; el ile eklenen kayıt geçersizdir.
+    Seçili tedarikçi (Deta Demir Çelik) hücreleri koyu vurguludur; en iyi fiyat kolonu satır bazında en düşük teklifi gösterir. İmzalar tamamlanmadan sipariş verilmez.</p>
+    <div class="pp-pageno">Sayfa 1 / 1</div>
+  </div>
 </div>
 
 <script>
@@ -262,6 +310,88 @@ table.pi-tbl{width:100%;border-collapse:collapse;border:1.5px solid #111;border-
   });
   f += '<td class="num best" colspan="3">' + tl(bestTot) + '</td></tr>';
   document.getElementById('piFoot').innerHTML = f;
+
+  /* B §6.4 — filtre bilgileri: gvExport'un ?kapsam=&format= parametreleri (bu sayfa TEKİL
+     FORM çıktısıdır — SAT-2026-018 tek karşılaştırma tablosu, kapsam bir kayıt kümesi
+     kavramı taşımaz; bilgi bloğunda form kimliği + kapsam/format birlikte gösterilir). */
+  (function(){
+    var q = new URLSearchParams(location.search);
+    var kapsamParam = q.get('kapsam') || '';
+    var formatParam = q.get('format') || '';
+    var KAPSAM_ETIKET = { tumu:'Tüm Kayıtlar', filtreli:'Filtrelenmiş Kayıtlar', secili:'Seçili Kayıtlar' };
+    var FORMAT_ETIKET = { pdf:'PDF', excel:'Excel', yazdir:'Yazdır' };
+    var selKey = SUP.filter(function(s){ return s.sel; })[0];
+    var chips = ['<span class="pp-fchip">Kapsam: <b>' + (KAPSAM_ETIKET[kapsamParam] || 'Tekil Form') + '</b></span>'];
+    if(formatParam) chips.push('<span class="pp-fchip">Çıktı Formatı: <b>' + (FORMAT_ETIKET[formatParam] || formatParam) + '</b></span>');
+    chips.push('<span class="pp-fchip">Form: <b>SAT-2026-018</b></span>');
+    chips.push('<span class="pp-fchip">Kaynak Talep: <b>MLZ-2026-030</b></span>');
+    chips.push('<span class="pp-fchip">Seçili Tedarikçi: <b>' + selKey.ad + '</b></span>');
+    document.getElementById('ppFiltre').innerHTML = chips.join('');
+  })();
+
+  /* B §6.4 — özet KPI kartları + grafikler. Sayı UYDURULMADI: colTot/colCount/bestTot
+     yukarıda GENEL TOPLAM satırı için zaten hesaplanmıştı, aynı değişkenler kullanıldı. */
+  (function(){
+    var selSup = SUP.filter(function(s){ return s.sel; })[0];
+    var kismiSayisi = 0;
+    SUP.forEach(function(s){ if(colCount[s.key] < KALEMLER.length) kismiSayisi++; });
+    var enCokKazananKey = null, enCokKazananSayi = -1;
+    var kazanSayisi = {}; SUP.forEach(function(s){ kazanSayisi[s.key] = 0; });
+    KALEMLER.forEach(function(K){
+      var minKey = null, minVal = Infinity;
+      SUP.forEach(function(s){ var v = K[s.key]; if(v){ var t = v[0]+v[1]; if(t < minVal){ minVal = t; minKey = s.key; } } });
+      if(minKey) kazanSayisi[minKey]++;
+    });
+    SUP.forEach(function(s){ if(kazanSayisi[s.key] > enCokKazananSayi){ enCokKazananSayi = kazanSayisi[s.key]; enCokKazananKey = s.key; } });
+    var enCokKazanan = SUP.filter(function(s){ return s.key === enCokKazananKey; })[0];
+    var fark = colTot[selSup.key] - bestTot;
+
+    document.getElementById('ppKpis').innerHTML = [
+      {lbl:'Seçili Tedarikçi Toplamı', val:tl(colTot[selSup.key]), sub: selSup.ad + ' — ' + colCount[selSup.key] + '/' + KALEMLER.length + ' kalem'},
+      {lbl:'En İyi Fiyat Toplamı', val:tl(bestTot), sub:'Kalem bazında en düşük tekliflerin toplamı'},
+      {lbl:'Fark (Seçili − En İyi)', val:(fark > 0 ? '+' : '') + tl(fark), sub: fark > 0 ? 'Seçili tedarikçi en iyi fiyatın üzerinde' : 'Seçili tedarikçi en iyi fiyatta'},
+      {lbl:'Kalem Sayısı', val:KALEMLER.length, sub: SUP.length + ' tedarikçiden teklif istendi'},
+      {lbl:'Kısmi Teklif Veren Tedarikçi', val:kismiSayisi, sub: kismiSayisi ? kismiSayisi + ' tedarikçi bazı kalemlere teklif vermedi' : 'Tüm tedarikçiler tam teklif verdi'},
+      {lbl:'En Çok Kalemde En İyi Fiyat', val: enCokKazanan ? enCokKazanan.ad : '—', sub: enCokKazananSayi + '/' + KALEMLER.length + ' kalemde en düşük teklif'}
+    ].map(function(t){
+      return '<div class="pp-kpi"><div class="pp-kpi-lbl">' + t.lbl + '</div><div class="pp-kpi-val">' + t.val + '</div><div class="pp-kpi-sub">' + t.sub + '</div></div>';
+    }).join('');
+
+    /* bar chart — tedarikçi bazlı toplam teklif tutarı (kısmi teklifler NOT ile işaretli) */
+    var items = SUP.map(function(s){ return {lbl:s.no + ' · ' + s.ad, val:colTot[s.key], sel:s.sel, kismi: colCount[s.key] < KALEMLER.length}; });
+    var max = Math.max.apply(null, items.map(function(i){ return i.val; })) || 1;
+    var w = 340, padL = 108, padR = 66, barH = 18, gap = 9;
+    var innerW = w - padL - padR;
+    var barsSvg = items.map(function(it, i){
+      var y = i * (barH + gap);
+      var bw = Math.max(2, (it.val / max) * innerW);
+      return '<text x="' + (padL - 8) + '" y="' + (y + barH/2 + 3.3) + '" text-anchor="end" font-size="7.2" font-weight="700" fill="#333">' + it.lbl + (it.sel ? ' ★' : '') + '</text>'
+        + '<rect x="' + padL + '" y="' + y + '" width="' + bw.toFixed(1) + '" height="' + barH + '" fill="' + (it.sel ? '#111' : '#999') + '"><title>' + it.lbl + ': ' + tl(it.val) + (it.kismi ? ' (kısmi teklif)' : '') + '</title></rect>'
+        + '<text x="' + (padL + bw + 6) + '" y="' + (y + barH/2 + 3.3) + '" font-size="7.6" font-weight="800" fill="#111">' + tl(it.val) + (it.kismi ? ' *' : '') + '</text>';
+    }).join('');
+    var totalH = items.length * (barH + gap) - gap;
+    document.getElementById('ppBarChart').innerHTML = '<svg viewBox="0 0 ' + w + ' ' + totalH + '" style="width:100%;height:auto;display:block" role="img"><title>Tedarikçi bazlı teklif toplamı</title>' + barsSvg + '</svg>'
+      + (kismiSayisi ? '<p style="font-size:7px;color:#888;text-align:center;margin-top:4px">* kısmi teklif (bazı kalemler eksik)</p>' : '');
+
+    /* donut — SEÇİLİ tedarikçinin kendi teklifindeki malzeme/işçilik dağılımı (siparişin
+       fiilen verileceği tedarikçinin gerçek kalem verisinden — UYDURULMADI) */
+    var selMlz = 0, selIsc = 0;
+    KALEMLER.forEach(function(K){ var v = K[selSup.key]; if(v){ selMlz += v[0]; selIsc += v[1]; } });
+    var total2 = selMlz + selIsc || 1;
+    var r = 42, c = 2 * Math.PI * r, cx = 58, cy = 58;
+    var mLen = c * (selMlz / total2);
+    document.getElementById('ppChart2Title').textContent = selSup.ad + ' — Malzeme / İşçilik Dağılımı';
+    document.getElementById('ppDonutChart').innerHTML = '<svg viewBox="0 0 116 116" width="112" height="112" role="img"><title>Malzeme/işçilik dağılımı</title>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#e4e4e4" stroke-width="15"></circle>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#111" stroke-width="15" stroke-dasharray="' + mLen.toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#b0b0b0" stroke-width="15" stroke-dasharray="' + (c - mLen).toFixed(1) + ' ' + c.toFixed(1) + '" stroke-dashoffset="-' + mLen.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>'
+      + '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="8" fill="#666" font-weight="700">TOPLAM</text>'
+      + '<text x="' + cx + '" y="' + (cy + 11) + '" text-anchor="middle" font-size="10" fill="#111" font-weight="800">' + tl(total2) + '</text>'
+      + '</svg>';
+    document.getElementById('ppDonutLegend').innerHTML =
+      '<span><i style="background:#111"></i>Malzeme ' + tl(selMlz) + '</span>'
+      + '<span><i style="background:#b0b0b0"></i>İşçilik ' + tl(selIsc) + '</span>';
+  })();
 
   /* ---- tedarikçi not/termin/ödeme blokları ---- */
   var n = '';

@@ -121,6 +121,26 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
 .pp-sign .sg-title{font-size:9px;font-weight:600;color:#444}
 .pp-sign .sg-line{margin-top:auto;border-top:1px dotted #777;padding-top:3px;font-size:8px;color:#888;letter-spacing:.06em;text-align:center}
 .pp-note{font-size:8.5px;color:#555;padding-top:8px;line-height:1.6}
+.pp-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding-top:6px}
+.pp-foot .pp-note{flex:1;padding-top:0}
+.pp-pageno{flex:none;font-size:8.5px;font-weight:700;color:#555;white-space:nowrap}
+
+/* ============ B §6.4 referans uygulaması eklentileri (kasa-cikti.html'den devralındı,
+   bkz tasks/spec-v2-cikti.md) — özet KPI · grafikler · sayfa no. ============ */
+.pp-kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid #111;border-top:none}
+.pp-kpi{border-right:1px solid #111;border-bottom:1px solid #111;padding:9px 12px}
+.pp-kpi:nth-child(3n){border-right:none}
+.pp-kpi:nth-last-child(-n+3){border-bottom:none}
+.pp-kpi-lbl{font-size:7.8px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#555}
+.pp-kpi-val{font-size:14px;font-weight:800;color:#111;margin-top:3px;font-variant-numeric:tabular-nums}
+.pp-kpi-sub{font-size:8.3px;color:#666;margin-top:3px;line-height:1.4}
+
+.pp-charts{display:grid;grid-template-columns:1.3fr 1fr;border:1.5px solid #111;border-top:none;page-break-inside:avoid}
+.pp-chart{padding:10px 14px;border-right:1px solid #111}
+.pp-chart:last-child{border-right:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.pp-chart-title{font-size:8.3px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#444;margin-bottom:8px;text-align:center}
+.pp-chart-legend{display:flex;gap:10px;font-size:8px;color:#444;flex-wrap:wrap;justify-content:center}
+.pp-chart-legend i{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:-1px}
 
 @media print{
   body{background:#fff;padding:0}
@@ -143,6 +163,15 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
   .pp-sign{grid-template-columns:1fr}
   .pp-sign .sg{border-right:none;border-bottom:1px solid #111}
   .pp-sign .sg:last-child{border-bottom:none}
+  .pp-kpis{grid-template-columns:repeat(2,1fr)}
+  .pp-kpi:nth-child(3n){border-right:1px solid #111}
+  .pp-kpi:nth-child(2n){border-right:none}
+  .pp-kpi:nth-last-child(-n+3){border-bottom:1px solid #111}
+  .pp-kpi:nth-last-child(-n+2){border-bottom:none}
+  .pp-charts{grid-template-columns:1fr}
+  .pp-chart{border-right:none;border-bottom:1px solid #111}
+  .pp-chart:last-child{border-bottom:none}
+  .pp-foot{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -164,7 +193,7 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
       <div class="pb-g">Y</div>
       <div class="pb-name">YAPITAŞ İNŞAAT A.Ş.<span>PERSONEL AVANS DÖKÜMÜ</span></div>
     </div>
-    <div class="pb-doc">Form No: AVF-01 · Rev.01<br>Düzenleme: <span id="ppBugun">2 Temmuz 2026</span></div>
+    <div class="pb-doc">Form No: AVF-01 · Rev.01<br>Düzenleme: <span id="ppBugun">2 Temmuz 2026</span><br>Hazırlayan: <span id="ppHazirlayan">Nesrin Aydın (Muhasebe)</span></div>
   </div>
 
   <div class="pp-info" id="ppInfo"></div>
@@ -175,6 +204,15 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
       <b id="ppAralik">Tüm Zamanlar</b>
       <span>TARİH ARALIĞI</span>
     </div>
+  </div>
+
+  <!-- B §6.4 — özet KPI kartları -->
+  <div class="pp-kpis" id="ppKpis"></div>
+
+  <!-- B §6.4/§7.3 — grafikler: personel bazlı talep tutarı + durum dağılımı -->
+  <div class="pp-charts" id="ppCharts">
+    <div class="pp-chart"><div class="pp-chart-title">Personel Bazlı Talep Tutarı</div><div id="ppBarChart"></div></div>
+    <div class="pp-chart"><div class="pp-chart-title">Talep Durumu Dağılımı</div><div id="ppDonutChart"></div><div class="pp-chart-legend" id="ppDonutLegend"></div></div>
   </div>
 
   <div class="pp-scroll">
@@ -218,9 +256,12 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     <div class="sg"><div class="sg-role">Onaylayan</div><div class="sg-name" id="sgOnay">—</div><div class="sg-title" id="sgOnayAlt">İmza sahibi listede tek onaylayan varsa gösterilir</div><div class="sg-line">İMZA</div></div>
     <div class="sg"><div class="sg-role">Teslim Alan</div><div class="sg-name">—</div><div class="sg-title">Ödeme anında imzalanır</div><div class="sg-line">İMZA</div></div>
   </div>
-  <p class="pp-note">Bu döküm, seçilen kapsama göre Gavia CRM avans kayıtlarındaki onay akışı ve tutar bilgilerini içerir; el ile eklenen kayıt geçersizdir.
-  Onaylanan tutar yalnız onaylanmış taleplerde dolu gelir; onay bekleyen/reddedilen/revize taleplerde "—" gösterilir. Toplamlar avans listesindeki
-  KPI'lar ile birebir aynıdır. İmzalar tamamlanmadan ödeme yapılmaz.</p>
+  <div class="pp-foot">
+    <p class="pp-note">Bu döküm, seçilen kapsama göre Gavia CRM avans kayıtlarındaki onay akışı ve tutar bilgilerini içerir; el ile eklenen kayıt geçersizdir.
+    Onaylanan tutar yalnız onaylanmış taleplerde dolu gelir; onay bekleyen/reddedilen/revize taleplerde "—" gösterilir. Toplamlar avans listesindeki
+    KPI'lar ile birebir aynıdır. İmzalar tamamlanmadan ödeme yapılmaz.</p>
+    <div class="pp-pageno">Sayfa 1 / 1</div>
+  </div>
 </div>
 
 <script>
@@ -287,6 +328,12 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     durum: q.get('durum') || 'hepsi',
     from: q.get('from') || '', to: q.get('to') || '', dlabel: q.get('dlabel') || ''
   };
+  /* B §6.4 — gvExport'un ?kapsam=&format= sözleşmesi (tasks/spec-v2-cikti.md) — sayfanın
+     kendi kapsam sözcük dağarcığının (personel/şantiye/durum) ÜSTÜNE okunup gösterilir. */
+  var kapsamParam = q.get('kapsam') || '';
+  var formatParam = q.get('format') || '';
+  var KAPSAM_ETIKET = { tumu:'Tüm Kayıtlar', filtreli:'Filtrelenmiş Kayıtlar', secili:'Seçili Kayıtlar' };
+  var FORMAT_ETIKET = { pdf:'PDF', excel:'Excel', yazdir:'Yazdır' };
 
   var scopeEl = document.getElementById('ckScope');
   function renderScope(){
@@ -358,6 +405,48 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     return uniq.length === 1 ? uniq[0] : null;
   }
 
+  /* ---- B §6.4 — özet KPI + grafik yardımcıları. Sayı UYDURULMADI: hepsi filtrelenmiş
+     `rows` kümesinin kendi tutar/personel/durum alanlarından türetilir. ---- */
+  function renderKpiTiles(tiles){
+    document.getElementById('ppKpis').innerHTML = tiles.map(function(t){
+      return '<div class="pp-kpi"><div class="pp-kpi-lbl">' + t.lbl + '</div><div class="pp-kpi-val">' + t.val + '</div><div class="pp-kpi-sub">' + t.sub + '</div></div>';
+    }).join('');
+  }
+  function svgBarChart(rows){
+    var byPer = {}, order = [];
+    rows.forEach(function(a){ if(!byPer[a.personel]){ byPer[a.personel] = 0; order.push(a.personel); } byPer[a.personel] += a.tutar; });
+    var items = order.map(function(p){ return {lbl:p, val:byPer[p]}; }).sort(function(a,b){ return b.val - a.val; });
+    if(!items.length) return '<p style="font-size:9px;color:#888;text-align:center;padding:10px 0">Kapsamda talep yok.</p>';
+    var max = Math.max.apply(null, items.map(function(i){ return i.val; })) || 1;
+    var w = 340, padL = 96, padR = 62, barH = 18, gap = 10;
+    var innerW = w - padL - padR;
+    var rowsSvg = items.map(function(it, i){
+      var y = i * (barH + gap);
+      var bw = Math.max(2, (it.val / max) * innerW);
+      return '<text x="' + (padL - 8) + '" y="' + (y + barH/2 + 3.3) + '" text-anchor="end" font-size="7.4" font-weight="700" fill="#333">' + esc(it.lbl) + '</text>'
+        + '<rect x="' + padL + '" y="' + y + '" width="' + bw.toFixed(1) + '" height="' + barH + '" fill="#111"><title>' + esc(it.lbl) + ': ' + tl(it.val) + '</title></rect>'
+        + '<text x="' + (padL + bw + 6) + '" y="' + (y + barH/2 + 3.3) + '" font-size="7.8" font-weight="800" fill="#111">' + tl(it.val) + '</text>';
+    }).join('');
+    var totalH = items.length * (barH + gap) - gap;
+    return '<svg viewBox="0 0 ' + w + ' ' + totalH + '" style="width:100%;height:auto;display:block" role="img"><title>Personel bazlı talep tutarı</title>' + rowsSvg + '</svg>';
+  }
+  var DONUT_COLORS = ['#111','#555','#888','#c8c8c8'];
+  function svgDonutMulti(items){
+    if(!items.length) return '<p style="font-size:9px;color:#888;text-align:center;padding:10px 0">Kapsamda talep yok.</p>';
+    var total = items.reduce(function(s,i){ return s + i.val; }, 0) || 1;
+    var r = 42, c = 2 * Math.PI * r, cx = 58, cy = 58, offset = 0, segs = '';
+    items.forEach(function(it, i){
+      var len = c * (it.val / total);
+      segs += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + DONUT_COLORS[i % DONUT_COLORS.length]
+        + '" stroke-width="15" stroke-dasharray="' + len.toFixed(1) + ' ' + c.toFixed(1) + '" stroke-dashoffset="-' + offset.toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"><title>' + it.lbl + ': ' + it.val + '</title></circle>';
+      offset += len;
+    });
+    return '<svg viewBox="0 0 116 116" width="120" height="120" role="img"><title>Talep durumu dağılımı</title>' + segs
+      + '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="8" fill="#666" font-weight="700">TOPLAM</text>'
+      + '<text x="' + cx + '" y="' + (cy + 11) + '" text-anchor="middle" font-size="11" fill="#111" font-weight="800">' + total + '</text>'
+      + '</svg>';
+  }
+
   function render(){
     var rows = filtered();
     var rowsHtml = '', ozetHtml = '';
@@ -412,7 +501,10 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     document.getElementById('ppBaslik').textContent = baslik;
     document.getElementById('ppAralik').textContent = selIds ? (selIds.length === 1 ? 'Tek Kayıt' : 'Seçili Kayıtlar') : (state.dlabel || 'Tüm Zamanlar');
 
-    var infoRows = '';
+    /* B §6.4 — gvExport kapsam/format satırı — sayfanın kendi kapsam sözcük dağarcığının ÜSTÜNE */
+    var kapsamLbl = KAPSAM_ETIKET[kapsamParam] || (selIds ? 'Seçili Kayıtlar' : ((state.personel!=='hepsi'||state.santiye!=='hepsi'||state.durum!=='hepsi'||state.from||state.to) ? 'Filtrelenmiş Kayıtlar' : 'Tüm Kayıtlar'));
+    var infoRows = '<div class="pi-row"><div class="pi-lbl">Çıktı Kapsamı</div><div class="pi-val">'
+      + 'Kapsam: <b>' + kapsamLbl + '</b>' + (formatParam ? ' · Çıktı Formatı: <b>' + (FORMAT_ETIKET[formatParam] || formatParam) + '</b>' : '') + '</div></div>';
     if(selIds){
       infoRows += '<div class="pi-row"><div class="pi-lbl">Kapsam</div><div class="pi-val">'
         + (selIds.length === 1 ? 'Detaydan tek kayıt çıktısı' : 'Listeden seçili ' + selIds.length + ' kayıt') + '</div></div>';
@@ -426,6 +518,23 @@ table.pp-ozet{width:100%;border-collapse:collapse;border:1.5px solid #111;font-s
     }
     infoRows += '<div class="pi-row"><div class="pi-lbl">Para Birimi</div><div class="pi-val">Türk Lirası (₺ TRY) — tüm tutarlar</div></div>';
     document.getElementById('ppInfo').innerHTML = infoRows;
+
+    /* B §6.4 — özet KPI + grafikler */
+    var bekliyorInfo = perDurum.bekliyor;
+    renderKpiTiles([
+      {lbl:'Toplam Talep Tutarı', val: tl(toplamTalep) || '—', sub: rows.length + ' talep'},
+      {lbl:'Toplam Onaylanan Tutar', val: toplamOnay ? tl(toplamOnay) : '—', sub: perDurum.onaylandi.n + ' onaylı talep'},
+      {lbl:'Onay Bekleyen', val: bekliyorInfo.n || '—', sub: bekliyorInfo.n ? tl(bekliyorInfo.talep) + ' tutarında' : 'Bekleyen talep yok'},
+      {lbl:'Reddedilen', val: perDurum.reddedildi.n || '—', sub: perDurum.reddedildi.n ? tl(perDurum.reddedildi.talep) + ' tutarında' : 'Reddedilen talep yok'},
+      {lbl:'Ortalama Talep Tutarı', val: rows.length ? tl(Math.round(toplamTalep / rows.length)) : '—', sub: 'Kapsamdaki talep başına'},
+      {lbl:'Kayıt Sayısı', val: rows.length, sub: 'Seçilen kapsamda toplam talep'}
+    ]);
+    document.getElementById('ppBarChart').innerHTML = svgBarChart(rows);
+    var durumItems = DURUM_LIST.map(function(d){ return {lbl:DURUM_LBL[d], val:perDurum[d].n}; }).filter(function(i){ return i.val > 0; });
+    document.getElementById('ppDonutChart').innerHTML = svgDonutMulti(durumItems);
+    document.getElementById('ppDonutLegend').innerHTML = durumItems.map(function(it, i){
+      return '<span><i style="background:' + DONUT_COLORS[i % DONUT_COLORS.length] + '"></i>' + it.lbl + ' (' + it.val + ')</span>';
+    }).join('');
 
     /* İmza kutuları — isim yalnız kayıt kümesi TEK bir değere indirgeniyorsa
        gösterilir (pickUnique); birden çok personel/onaylayan varsa isim alanı
