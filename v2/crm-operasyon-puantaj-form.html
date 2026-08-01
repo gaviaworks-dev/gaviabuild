@@ -167,7 +167,7 @@
                   <input type="date" id="fTarih" value="2026-07-02">
                 </div>
                 <div class="gfield" style="flex:1;min-width:0">
-                  <label for="fTipi">Puantaj Tipi</label>
+                  <label for="fTipi">Puantaj Tipi <span data-help="taseron-puantaji"></span></label>
                   <select id="fTipi">
                     <option value="gunluk">Günlük Puantaj</option>
                     <option value="haftalik">Haftalık Puantaj</option>
@@ -628,8 +628,24 @@
       try{ localStorage.setItem(GUNLUK_KEY, JSON.stringify(all)); }catch(e){}
     }
 
-    try{ sessionStorage.setItem('gv_pt_form_toast', kayit.id + (durumStr === 'taslak' ? ' taslak olarak kaydedildi.' : ' İK onayına gönderildi.')); }catch(e){}
-    location.href = 'crm-operasyon-puantaj.html?santiye=' + kayit.santiye;
+    var donusHref = 'crm-operasyon-puantaj.html?santiye=' + kayit.santiye;
+    if(durumStr === 'taslak'){
+      gvResult('kaydedildi', {
+        mesaj: kayit.id + ' taslak olarak kaydedildi — dilediğinizde düzenleyip İK onayına gönderebilirsiniz.',
+        aksiyonlar: [
+          {etiket:'Puantaj Listesine Dön', href:donusHref},
+          {etiket:'Sayfada Kal', birincil:true}
+        ]
+      });
+    } else {
+      gvResult('onaya-gonderildi', {
+        mesaj: kayit.id + ' İK onayına gönderildi.',
+        aksiyonlar: [
+          {etiket:'Puantaj Listesine Dön', href:donusHref, birincil:true},
+          {etiket:'Kapat'}
+        ]
+      });
+    }
   }
 
   document.getElementById('btnKaydet').addEventListener('click', function(){ submitKayit('taslak'); });

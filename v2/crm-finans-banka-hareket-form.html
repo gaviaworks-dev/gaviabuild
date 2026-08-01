@@ -256,7 +256,7 @@
       <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
         <div class="gv-card">
           <div class="gd-block">
-            <div class="gd-label">Özet</div>
+            <div class="gd-label" style="display:flex;align-items:center;justify-content:space-between;gap:10px">Özet <span data-help="banka-hareketi-raporlar"></span></div>
             <div class="tot-card"><span id="totLbl">Tutar</span><b id="totTutar">₺0</b></div>
             <p class="sub-note" id="subNote"><i class="fa-solid fa-circle-info"></i>Hareket kaydedildiğinde ilgili banka hesabının hareket listesine ve hesap detayına gerçekten eklenir.</p>
           </div>
@@ -411,8 +411,14 @@
       extra.push(rec);
     }
     saveExtra(extra);
-    gvToast(rec.id + (editId ? ' güncellendi.' : ' oluşturuldu — hareket listesine eklendi.') + (onay === 'bekliyor' ? ' Onay bekliyor.' : ''));
-    setTimeout(function(){ location.href = 'crm-finans-banka-hareket.html'; }, 900);
+    var durum = onay === 'bekliyor' ? 'onaya-gonderildi' : 'kaydedildi';
+    gvResult(durum, {
+      mesaj: rec.id + (editId ? ' güncellendi.' : ' oluşturuldu — hareket listesine eklendi.') + (onay === 'bekliyor' ? ' Onay bekliyor.' : ' Doğrudan onaylanmış sayıldı.'),
+      aksiyonlar: [
+        {etiket:'Hareket Detayını Gör', href:'crm-finans-banka-hareket-detay.html?id=' + rec.id, birincil:true},
+        {etiket:'Listeye Dön', href:'crm-finans-banka-hareket.html'}
+      ]
+    });
   });
 
   wireModBanner();

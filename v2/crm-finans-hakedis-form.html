@@ -164,7 +164,7 @@
         </div>
 
         <div class="gd-block">
-          <div class="gd-label">Hakediş Bilgileri</div>
+          <div class="gd-label">Hakediş Bilgileri <span data-help="hakedis-nedir"></span></div>
           <form class="gform" id="hakForm" onsubmit="return false">
             <div class="gfield full">
               <label for="fSozlesme">Bağlı Sözleşme</label>
@@ -266,7 +266,7 @@
       <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
         <div class="gv-card">
           <div class="gd-block">
-            <div class="gd-label">Net Tutar Özeti</div>
+            <div class="gd-label">Net Tutar Özeti <span data-help="mizan-nedir"></span></div>
             <div class="sum-card">
               <div class="sum-line"><span>Brüt toplam</span><b id="sBrut">₺50.950</b></div>
               <div class="sum-line kesinti" id="sTeminatLine"><span>Teminat kesintisi</span><b id="sTeminat">₺2.548</b></div>
@@ -459,15 +459,28 @@
     if(!anyName){ gvToast('En az bir imalat kalemi girin.', {type:'danger'}); return; }
     var tur = document.querySelector('#turGroup .tip-opt.is-on').getAttribute('data-t');
     var target = tur === 'kurum' ? 'crm-finans-kurum.html' : 'crm-finans-taseron.html';
-    gvToast('Hakediş oluşturuldu ve onay sürecine gönderildi.');
-    setTimeout(function(){ location.href = target; }, 900);
+    gvResult('onaya-gonderildi', {
+      mesaj: 'Hakediş oluşturuldu ve onay sürecine gönderildi — hakediş numarası onay adımında atanır.',
+      aksiyonlar: [
+        {etiket:'Listeye Dön', href:target, birincil:true},
+        {etiket:'Kapat'}
+      ]
+    });
   });
 
   /* §17 — Taslak Olarak Kaydet: gerçek durum geçişi (Taslak), onay akışına GİRMEZ */
   document.getElementById('btnDraft').addEventListener('click', function(){
     var anyName = Array.prototype.some.call(wrap.querySelectorAll('.kal-row input[type="text"]'), function(i){ return i.value.trim(); });
     if(!anyName){ gvToast('En az bir imalat kalemi girin.', {type:'danger'}); return; }
-    gvToast('Hakediş taslak olarak kaydedildi — onaya göndermeden dilediğiniz zaman düzenleyebilirsiniz.', {type:'info'});
+    var turNow = document.querySelector('#turGroup .tip-opt.is-on').getAttribute('data-t');
+    var targetNow = turNow === 'kurum' ? 'crm-finans-kurum.html' : 'crm-finans-taseron.html';
+    gvResult('kaydedildi', {
+      mesaj: 'Hakediş taslak olarak kaydedildi — onaya göndermeden dilediğiniz zaman düzenleyebilirsiniz.',
+      aksiyonlar: [
+        {etiket:'Listeye Dön', href:targetNow},
+        {etiket:'Sayfada Kal', birincil:true}
+      ]
+    });
   });
 
   /* §17 — Kopyala kaynağı (?kaynak=TH-2026-014 gibi) — hakedis-detay.html "Kopyala"

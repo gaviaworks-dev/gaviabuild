@@ -350,16 +350,42 @@
     pageTitleTag.textContent = 'Rolü Kopyala — Gavia CRM';
   }
 
+  /* B §9.3 — "Rol yetkisi değiştirme" kritik aksiyonu: mevcut (mod=duzenle) bir rolün
+     yetki/erişim setini değiştirmek, o role atanmış TÜM kullanıcıları etkiler — bu yüzden
+     onay modalından geçer. Yeni rol oluşturma (mod=ekle) veya kopyalama (mod=kopya) HİÇBİR
+     mevcut kullanıcıyı etkilemediği için onay istemez (yalnız yeni bir kayıt açar). */
+  function dogrudanKaydet(ad){
+    var msg = mod === 'duzenle'
+      ? '"' + ad + '" rolünün yetkileri güncellendi (demo) — bu role atanmış tüm kullanıcılar yeni yetki setini bir sonraki oturumda görecek. İşlem kaydına eklendi, gerçek RBAC davranışını etkilemez.'
+      : mod === 'kopya'
+        ? '"' + ad + '" adıyla yeni rol oluşturuldu (demo) — kaynak rolün kopyası, hiçbir mevcut kullanıcıyı etkilemez.'
+        : '"' + ad + '" rolü oluşturuldu (demo) — hiçbir mevcut kullanıcıyı etkilemez.';
+    gvResult(mod === 'duzenle' ? 'kaydedildi' : 'basarili', {
+      mesaj: msg,
+      aksiyonlar: [
+        {etiket:'Roller & Yetkilere Dön', href:'crm-ayarlar-roller.html', birincil:true},
+        {etiket:'Kapat'}
+      ]
+    });
+  }
+
   document.getElementById('rolSubmit').addEventListener('click', function(){
     var ad = document.getElementById('fRolAd').value.trim();
     if(!ad){ gvToast('Rol adı girin.', {type:'danger'}); return; }
-    var msg = mod === 'duzenle'
-      ? '"' + ad + '" rolü güncellendi (demo) — işlem kaydına eklendi, RBAC davranışını etkilemez.'
-      : mod === 'kopya'
-        ? '"' + ad + '" adıyla yeni rol oluşturuldu (demo) — kaynak rolün kopyası, RBAC davranışını etkilemez.'
-        : '"' + ad + '" rolü oluşturuldu (demo) — RBAC davranışını etkilemez.';
-    gvToast(msg, {type:'ok'});
-    setTimeout(function(){ location.href = 'crm-ayarlar-roller.html'; }, 1000);
+    if(mod === 'duzenle' && kaynakRol){
+      var etkilenenNot = kaynakRol.varsayilan
+        ? 'Bu bir sistem (varsayılan) roldür — değişiklik bu role atanmış TÜM kullanıcıları etkiler.'
+        : 'Bu role atanmış kullanıcılar değişiklikten etkilenir.';
+      gvConfirm({
+        icon:'fa-user-shield',
+        title:'"' + ad + '" rolünün yetkileri değiştirilsin mi?',
+        message: etkilenenNot + ' Bölüm erişimi ve CRUD/onay yetkileri kaydettiğiniz haliyle geçerli olacak; geri almak isterseniz rolü tekrar düzenlemeniz gerekir. (Bu ekran demo simülasyonudur — gerçek RBAC davranışını etkilemez.)',
+        ok:'Yetkileri Değiştir', cancel:'Vazgeç',
+        onConfirm:function(){ dogrudanKaydet(ad); }
+      });
+      return;
+    }
+    dogrudanKaydet(ad);
   });
 })();
 </script>

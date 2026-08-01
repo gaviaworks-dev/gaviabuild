@@ -521,10 +521,14 @@
     draftBtn.addEventListener('click', function(){
       var baslikVal = document.getElementById('fBaslik').value.trim();
       if(!baslikVal){ gvToast('Taslak için de bir görev başlığı gerekir.', {type:'danger'}); document.getElementById('fBaslik').focus(); return; }
-      gvToast('Görev taslak olarak kaydedildi — "Taslak" durumunda listede yer alır.', {type:'info'});
-      setTimeout(function(){
-        location.href = GV_EDIT.mode === 'duzenle' ? ('crm-gorev-detay.html?gorev=' + GV_EDIT.code) : 'crm-gorev.html';
-      }, 900);
+      var draftHref = GV_EDIT.mode === 'duzenle' ? ('crm-gorev-detay.html?gorev=' + GV_EDIT.code) : 'crm-gorev.html';
+      gvResult('kaydedildi', {
+        mesaj: '"' + baslikVal + '" taslak olarak kaydedildi — "Taslak" durumunda listede yer alır.',
+        aksiyonlar: [
+          {etiket:'Listeye Dön', href:draftHref},
+          {etiket:'Sayfada Kal', birincil:true}
+        ]
+      });
     });
   }
 
@@ -667,14 +671,31 @@
         return;
       }
       if(GV_EDIT.mode === 'duzenle'){
-        gvToast('Değişiklikler kaydedildi — işlem kayıtlarına yazıldı.');
-        setTimeout(function(){ location.href = 'crm-gorev-detay.html?gorev=' + GV_EDIT.code; }, 900);
+        gvResult('kaydedildi', {
+          mesaj: '"' + baslik + '" görevi güncellendi — değişiklikler işlem kayıtlarına yazıldı.',
+          aksiyonlar: [
+            {etiket:'Görev Kartını Gör', href:'crm-gorev-detay.html?gorev=' + GV_EDIT.code, birincil:true},
+            {etiket:'Listeye Dön', href:'crm-gorev.html'}
+          ]
+        });
       } else if(atamaMode === 'havuz'){
-        gvToast('Görev ' + DEPT_LBL[fHavuzDept.value] + ' havuzuna bırakıldı.');
-        setTimeout(function(){ location.href = 'crm-gorev.html?f=havuz'; }, 900);
+        gvResult('basarili', {
+          mesaj: '"' + baslik + '" görevi ' + DEPT_LBL[fHavuzDept.value] + ' havuzuna bırakıldı.',
+          aksiyonlar: [
+            {etiket:'Havuza Git', href:'crm-gorev.html?f=havuz', birincil:true},
+            {etiket:'Kapat'}
+          ]
+        });
       } else {
-        gvToast(GV_EDIT.mode === 'kopya' ? 'Kopyalanan görev yeni bir kayıt olarak oluşturuldu.' : 'Görev oluşturuldu ve atanan kişiye bildirim gönderildi.');
-        setTimeout(function(){ location.href = 'crm-gorev.html'; }, 900);
+        gvResult('basarili', {
+          mesaj: GV_EDIT.mode === 'kopya'
+            ? ('"' + baslik + '" kopyalanan görev yeni bir kayıt olarak oluşturuldu.')
+            : ('"' + baslik + '" görevi oluşturuldu ve atanan kişiye bildirim gönderildi.'),
+          aksiyonlar: [
+            {etiket:'Görev Listesine Dön', href:'crm-gorev.html', birincil:true},
+            {etiket:'Kapat'}
+          ]
+        });
       }
     });
   }

@@ -252,18 +252,34 @@
   });
 
   document.getElementById('btnDraft').addEventListener('click', function(){
-    gvToast('Talep taslak olarak kaydedildi.', {type:'info'});
+    gvResult('kaydedildi', {
+      mesaj: 'Malzeme talebi taslak olarak kaydedildi — dilediğinizde düzenleyip onaya gönderebilirsiniz.',
+      aksiyonlar: [
+        {etiket:'Taleplere Dön', href:'crm-satinalma-talepler.html'},
+        {etiket:'Sayfada Kal', birincil:true}
+      ]
+    });
   });
   document.getElementById('btnSend').addEventListener('click', function(){
     var anyName = Array.prototype.some.call(wrap.querySelectorAll('.kal-row input[type="text"]'), function(i){ return i.value.trim(); });
     if(!anyName){ gvToast('En az bir malzeme adı girin.', {type:'danger'}); return; }
     if(revNo){
-      gvToast('Revizyon (v2) onaya gönderildi.');
-      setTimeout(function(){ location.href = 'crm-satinalma-talep-detay.html?mlz=' + revMatch[1]; }, 900);
+      gvResult('onaya-gonderildi', {
+        mesaj: revNo + ' kaydının revizyonu (v2) onaya gönderildi — önceki hâli işlem geçmişinde saklanır.',
+        aksiyonlar: [
+          {etiket:'Talebi Görüntüle', href:'crm-satinalma-talep-detay.html?mlz=' + revMatch[1], birincil:true},
+          {etiket:'Kapat'}
+        ]
+      });
       return;
     }
-    gvToast('Talep onaya gönderildi. Satın Alma Sorumlusu onayı bekleniyor.');
-    setTimeout(function(){ location.href = 'crm-satinalma-talepler.html'; }, 900);
+    gvResult('onaya-gonderildi', {
+      mesaj: 'Talep onaya gönderildi. Satın Alma Sorumlusu onayı bekleniyor.',
+      aksiyonlar: [
+        {etiket:'Taleplere Dön', href:'crm-satinalma-talepler.html', birincil:true},
+        {etiket:'Kapat'}
+      ]
+    });
   });
 
   recalc();

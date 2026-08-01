@@ -575,14 +575,25 @@
   }
 
   document.getElementById('btnDraft').addEventListener('click', function(){
-    gvToast('Rapor taslak olarak kaydedildi.', {type:'info'});
+    gvResult('kaydedildi', {
+      mesaj: 'Kasa raporu taslak olarak kaydedildi — dilediğinizde düzenleyip gönderebilirsiniz.',
+      aksiyonlar: [
+        {etiket:'Kasa Yönetimine Dön', href:'crm-operasyon-kasa.html'},
+        {etiket:'Sayfada Kal', birincil:true}
+      ]
+    });
   });
   document.getElementById('btnSend').addEventListener('click', function(){
     if(curTur === 'giris' || curTur === 'tahsilat'){
       if(!tekAciklamaInp.value.trim()){ gvToast('Açıklama girin.', {type:'danger'}); return; }
       if(parseTL(tekTutarInp.value) <= 0){ gvToast('Tutar girin.', {type:'danger'}); return; }
-      gvToast(curTur === 'tahsilat' ? (fCari.value + ' tahsilatı kasaya işlendi.') : 'Kasa girişi kaydedildi.');
-      setTimeout(function(){ location.href = 'crm-operasyon-kasa.html'; }, 900);
+      gvResult('kaydedildi', {
+        mesaj: (curTur === 'tahsilat' ? (fCari.value + ' tahsilatı kasaya işlendi.') : 'Kasa girişi kaydedildi.') + ' Bu kayıt onay akışına girmez.',
+        aksiyonlar: [
+          {etiket:'Kasa Yönetimine Dön', href:'crm-operasyon-kasa.html', birincil:true},
+          {etiket:'Kapat'}
+        ]
+      });
       return;
     }
     var anyDesc = Array.prototype.some.call(wrap.querySelectorAll('.kal-row input[type="text"]'), function(i){ return i.value.trim(); });
@@ -593,12 +604,15 @@
       fBelgesizNeden.focus();
       return;
     }
-    if(curBelge === 'yok'){
-      gvToast('Rapor onaya gönderildi. Belgesiz harcama olduğu için Teknik Müdür onayının ardından Muhasebe onayına da düşecek.');
-    } else {
-      gvToast('Rapor onaya gönderildi. Teknik Müdür onayı bekleniyor.');
-    }
-    setTimeout(function(){ location.href = 'crm-operasyon-kasa.html'; }, 900);
+    gvResult('onaya-gonderildi', {
+      mesaj: curBelge === 'yok'
+        ? 'Rapor onaya gönderildi. Belgesiz harcama olduğu için Teknik Müdür onayının ardından Muhasebe onayına da düşecek.'
+        : 'Rapor onaya gönderildi. Teknik Müdür onayı bekleniyor.',
+      aksiyonlar: [
+        {etiket:'Kasa Yönetimine Dön', href:'crm-operasyon-kasa.html', birincil:true},
+        {etiket:'Kapat'}
+      ]
+    });
   });
 
   applyTur('odeme');
