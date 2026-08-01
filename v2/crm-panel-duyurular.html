@@ -152,21 +152,43 @@
       </div>
     </div>
 
-    <div class="duy-filterbar">
-      <div class="fb-search" style="max-width:320px">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="duySearch" placeholder="Duyuru başlığında ara">
-      </div>
-      <div class="chips" id="duyChips">
-        <button class="chip is-on" data-hedef="hepsi">Tümü <span class="ch-cnt">6</span></button>
-        <button class="chip" data-hedef="vadi">Vadi Konakları <span class="ch-cnt">2</span></button>
-        <button class="chip" data-hedef="liman">Liman Lojistik <span class="ch-cnt">1</span></button>
-        <button class="chip" data-hedef="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
-        <button class="chip" data-hedef="departman">Departman <span class="ch-cnt">2</span></button>
-      </div>
-    </div>
-
+    <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Kolonlar
+         ve Arşiv/Pasif toggle BİLİNÇLİ OLARAK yok: duyurular kart-satır (`.duy-row`)
+         listesidir, kolon kavramı yok; bir duyuru ya YAYINDA ya da hiç yok — ayrı bir
+         arşiv/pasif ara durumu modellenmedi. Karar tasks/kararlar.md'de. -->
     <div class="gv-card" style="margin-bottom:18px">
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="duySearch" placeholder="Duyuru başlığında ara"></div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="duyFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Duyuru listesi","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="duyAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="duyChips">
+              <button class="chip is-on" data-hedef="hepsi">Tümü <span class="ch-cnt">6</span></button>
+              <button class="chip" data-hedef="vadi">Vadi Konakları <span class="ch-cnt">2</span></button>
+              <button class="chip" data-hedef="liman">Liman Lojistik <span class="ch-cnt">1</span></button>
+              <button class="chip" data-hedef="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
+              <button class="chip" data-hedef="departman">Departman <span class="ch-cnt">2</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-bullhorn"></i> Duyuru Listesi</div>
         <span class="gc-link" style="cursor:default"><span id="duyCount">6</span> duyuru</span>
@@ -244,6 +266,7 @@
   var duyList = document.getElementById('duyList');
   var duyEmpty = document.getElementById('duyEmpty');
   var duyCount = document.getElementById('duyCount');
+  var duyFpState = {};   /* V3A — Gelişmiş Filtre (Öncelik) durumu */
 
   function renderList(){
     var term = document.getElementById('duySearch').value.trim().toLocaleLowerCase('tr');
@@ -253,7 +276,8 @@
     DUYURULAR.forEach(function(d){
       var okF = f === 'hepsi' || (f === 'departman' ? d.hedefTur === 'departman' : d.hedef === f);
       var okTerm = !term || d.baslik.toLocaleLowerCase('tr').indexOf(term) !== -1;
-      if(!okF || !okTerm) return;
+      var okOncelik = !duyFpState.oncelik || d.oncelik === duyFpState.oncelik.value;
+      if(!okF || !okTerm || !okOncelik) return;
       shown++;
       var om = ONCELIK_META[d.oncelik];
       var pct = pctOf(d);
@@ -363,6 +387,24 @@
     });
     var cnt = ch.querySelector('.ch-cnt'); if(cnt) cnt.textContent = n;
   });
+
+  /* ============ V3A — Gelişmiş Filtre + Dışa Aktar (§2.1 madde 6/8). Hedef Kitle
+     zaten .lh-tabs'ta (chip), aynı boyut İKİNCİ kez EKLENMEDİ (K-220 dersi). ============ */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#duyFiltreBtn',
+      screen: 'duyurular',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#duyAchips',
+      fields: [
+        {key:'oncelik', type:'select', label:'Öncelik', options:[
+          {v:'yuksek', l:'Yüksek'}, {v:'orta', l:'Orta'}, {v:'dusuk', l:'Düşük'}
+        ]}
+      ],
+      onApply: function(state){ duyFpState = state; renderList(); }
+    });
+  }
+  if(window.gvExport) gvExport.bind();
 
   renderList();
   var duyParam = gvUrlState.get('duyuru');

@@ -104,34 +104,43 @@
         </div>
       </div>
 
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3).
+           Arşiv/Pasif toggle ve Kolonlar BİLİNÇLİ OLARAK yok: bu kuyruk kart-satır
+           (`.apr-row`) tabanlıdır, tablo değil — "kolon göster/gizle" kavramının
+           karşılığı yok. Onaylanan/reddedilen kayıt kuyruktan tamamen ÇIKAR, "arşivli"
+           bir ara durum yok. Karar tasks/kararlar.md'de. -->
       <div class="gv-card apr-filter-card">
-        <div class="apr-fgroup">
-          <span class="apr-flabel">Tür</span>
-          <div class="chips" data-fgroup="tur">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
-            <button class="chip" data-filter="kasa">Kasa <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="malzeme">Malzeme <span class="ch-cnt">5</span></button>
-            <button class="chip" data-filter="avans">Avans <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="izin">İzin <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="hakedis">Taşeron Hakediş <span class="ch-cnt">2</span></button>
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="onSearch" placeholder="Kayıt no, kişi veya şantiye ara"></div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="onFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Bekleyen onaylar","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </a>
+            </div>
           </div>
-        </div>
-        <div class="apr-fgroup">
-          <span class="apr-flabel">Şantiye</span>
-          <div class="chips" data-fgroup="santiye">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
-            <button class="chip" data-filter="vadi">Vadi Konakları <span class="ch-cnt">9</span></button>
-            <button class="chip" data-filter="liman">Liman Lojistik <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
+          <div class="lh-achips gv-achips-row" id="onAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
           </div>
-        </div>
-        <div class="apr-fgroup">
-          <span class="apr-flabel">Yaş</span>
-          <div class="chips" data-fgroup="yas">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
-            <button class="chip" data-filter="bugun">Bugün <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="yakin">1–2 Gün <span class="ch-cnt">6</span></button>
-            <button class="chip" data-filter="eski">2 Günden Eski <span class="ch-cnt">4</span></button>
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" data-fgroup="tur">
+                <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
+                <button class="chip" data-filter="kasa">Kasa <span class="ch-cnt">2</span></button>
+                <button class="chip" data-filter="malzeme">Malzeme <span class="ch-cnt">5</span></button>
+                <button class="chip" data-filter="avans">Avans <span class="ch-cnt">2</span></button>
+                <button class="chip" data-filter="izin">İzin <span class="ch-cnt">1</span></button>
+                <button class="chip" data-filter="hakedis">Taşeron Hakediş <span class="ch-cnt">2</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
         </div>
       </div>
@@ -332,18 +341,21 @@
     wrap.innerHTML = gvChainBadge('bekliyor') + '<span class="apr-age' + (age === 'eski' ? ' eski' : '') + '">' + (AGE_TXT[i] || ageLbl) + '</span>';
   });
 
-  /* tür + şantiye + yaş — üç boyutlu AND filtre (kart listesi, tablo değil) */
+  /* tür + şantiye + yaş + arama — çok boyutlu AND filtre (kart listesi, tablo değil) */
   var groups = {tur:'hepsi', santiye:'hepsi', yas:'hepsi'};
   var rows = document.querySelectorAll('#onList .apr-row');
   var empty = document.getElementById('onEmpty');
   var countEl = document.getElementById('onCount');
+  var onSearch = document.getElementById('onSearch');
 
   function apply(){
+    var term = onSearch ? onSearch.value.trim().toLocaleLowerCase('tr') : '';
     var shown = 0;
     rows.forEach(function(row){
       var ok = (groups.tur === 'hepsi' || row.getAttribute('data-tur') === groups.tur)
         && (groups.santiye === 'hepsi' || row.getAttribute('data-santiye') === groups.santiye)
-        && (groups.yas === 'hepsi' || row.getAttribute('data-yas') === groups.yas);
+        && (groups.yas === 'hepsi' || row.getAttribute('data-yas') === groups.yas)
+        && (!term || row.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1);
       row.hidden = !ok;
       if(ok) shown++;
     });
@@ -362,6 +374,33 @@
       });
     });
   });
+  if(onSearch) onSearch.addEventListener('input', apply);
+
+  /* ============ V3A — Gelişmiş Filtre (Şantiye + Yaş) — Tür zaten .lh-tabs'ta,
+     aynı boyutu İKİNCİ kez EKLEMEDİK (K-220 dersi). `table` KASITLI verilmedi —
+     tek karar mercii yukarıdaki apply()'dır, onApply yalnız tetikleyici. ============ */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#onFiltreBtn',
+      screen: 'onaylar',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#onAchips',
+      fields: [
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'}, {v:'merkez', l:'Merkez Şantiye'}
+        ]},
+        {key:'yas', type:'select', label:'Yaş', options:[
+          {v:'bugun', l:'Bugün'}, {v:'yakin', l:'1–2 Gün'}, {v:'eski', l:'2 Günden Eski'}
+        ]}
+      ],
+      onApply: function(state){
+        groups.santiye = state.santiye ? state.santiye.value : 'hepsi';
+        groups.yas = state.yas ? state.yas.value : 'hepsi';
+        apply();
+      }
+    });
+  }
+  if(window.gvExport) gvExport.bind();
 })();
 </script>
 </body>

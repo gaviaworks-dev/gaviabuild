@@ -86,14 +86,41 @@
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-users-gear"></i> Kullanıcılar <span class="gtag" id="rkCntTag">0 kişi</span></div>
       </div>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Arşiv/Pasif
+           toggle ve kategori sekmesi BİLİNÇLİ OLARAK yok: bu ekran zaten TEK bir rolün
+           kullanıcı alt kümesi (üst crumb ile gelir), yalnız "Aktif"/"Beklemede" durumu var
+           (kullanıcılar sayfasıyla aynı gerekçe) ve ek bir kategorik eksen yok. Karar
+           tasks/kararlar.md'de. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="rkSearch" placeholder="Kullanıcı ara" data-table-search="#rkTable"></div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="rkFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="rkColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Rol kullanıcıları","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="rkAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+      </div>
       <div class="gc-body flush">
         <table class="gtable" id="rkTable" style="min-width:760px">
           <thead>
             <tr>
               <th>Kullanıcı</th>
-              <th>Şantiye kapsamı</th>
-              <th>Son giriş</th>
-              <th>Durum</th>
+              <th data-col="kapsam">Şantiye kapsamı</th>
+              <th data-col="giris">Son giriş</th>
+              <th data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
@@ -182,6 +209,39 @@
   document.getElementById('rkCntTag').textContent = r.users.length + ' kişi';
   document.getElementById('rkCntFoot').textContent = r.users.length;
 
+  /* ============ V3A — üst alan tamamlayıcıları (§2.1 madde 6/7/8) — kullanıcı 0 olsa
+     bile ÖNCE bağlanır: kontroller hiçbir zaman ölü/işlevsiz kalmaz (YASAKLAR). ============ */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#rkFiltreBtn',
+      screen: 'rol-kullanicilar',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#rkAchips',
+      table: '#rkTable',
+      fields: [
+        {key:'durum', type:'select', label:'Durum', options:[
+          {v:'aktif', l:'Aktif'}, {v:'beklemede', l:'Beklemede (davet)'}
+        ]},
+        {key:'kapsam', type:'select', label:'Kapsam', options:[
+          {v:'all', l:'Tüm şantiyeler'}, {v:'site', l:'Tek şantiye'}
+        ]}
+      ]
+    });
+  }
+  if(window.gvExport) gvExport.bind();
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#rkColsBtn',
+      table: '#rkTable',
+      screen: 'rol-kullanicilar',
+      cols: [
+        {key:'kapsam', lbl:'Şantiye kapsamı', def:true},
+        {key:'giris', lbl:'Son giriş', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
   var body = document.getElementById('rkBody');
   if(!r.users.length){
     document.getElementById('rkTable').hidden = true;
@@ -195,11 +255,11 @@
     var actHtml = u.slug
       ? '<a class="ia-btn" href="crm-ayarlar-kullanici-detay.html?u=' + u.slug + '" aria-label="Kullanıcı detayını gör"><i class="fa-solid fa-chevron-right"></i></a>'
       : '<button class="ia-btn" data-no-confirm data-demo="Kullanıcı detay ekranı bu demo kadrosunda henüz bağlanmadı." aria-label="Kullanıcı detayını gör"><i class="fa-solid fa-chevron-right"></i></button>';
-    return '<tr>'
+    return '<tr data-durum="' + (u.durum === 'ok' ? 'aktif' : 'beklemede') + '" data-kapsam="' + u.scope + '">'
       + '<td><div class="gcell"><div class="gcell-mark">' + esc(u.ini) + '</div><div class="gcell-info"><div class="gcell-name">' + esc(u.ad) + '</div></div></div></td>'
-      + '<td>' + scopeHtml + '</td>'
-      + '<td>' + esc(u.giris) + '</td>'
-      + '<td><span class="gstat ' + u.durum + '">' + u.durumTxt + '</span></td>'
+      + '<td data-col="kapsam">' + scopeHtml + '</td>'
+      + '<td data-col="giris">' + esc(u.giris) + '</td>'
+      + '<td data-col="durum"><span class="gstat ' + u.durum + '">' + u.durumTxt + '</span></td>'
       + '<td><div class="row-acts">' + actHtml + '</div></td>'
       + '</tr>';
   }).join('');
