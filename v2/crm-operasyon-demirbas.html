@@ -119,6 +119,26 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
 .dm-garanti-doldu{color:var(--danger);font-weight:700}
 .dm-garanti-yaklasiyor{color:var(--warn);font-weight:700}
 .dm-yok{color:var(--muted);font-style:italic;font-size:12px}
+
+/* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği. hstat/stat-grid/hl-list ui.css'te
+   YOK — crm-panel-rapor-santiye.html'in sayfa-lokal pattern'i devralındı (K-220 dersi). ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+.dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:1100px){.dash-cols{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body data-sec="varlik" data-screen="demirbas">
@@ -186,6 +206,70 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
         <div class="kpi-ico"><i class="fa-solid fa-screwdriver-wrench"></i></div>
         <div><div class="kpi-num num" id="kpiServiste">—</div><div class="kpi-lbl">Serviste</div>
         <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Bakım/onarımda</div></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Demirbaş) — zimmetli demirbaşlar + şantiye bazlı dağılım.
+         Sayılar aşağıdaki DEMIRBAS_ALL dizisinin (script) kisi/santiye alanlarından
+         sayıldı (6 zimmetli · 4 Vadi/1 Liman/1 Merkez/2 Merkez depo) — türetme
+         tasks/devir-TO1.md'de. ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-user-check"></i> Zimmetli Demirbaşlar — kişi bazlı</h3></div>
+        <div class="rp-chart-body" id="chartDmZimmet"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-map-location-dot"></i> Şantiye Bazlı Demirbaş Dağılımı</h3></div>
+        <div class="rp-chart-body" id="chartDmSantiye"></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Demirbaş) — bakım/kayıp/arşiv durumları + QR/barkod
+         okutma geçmişi. Okutma verisi crm-operasyon-demirbas-etiket.html'in SEED_STATE
+         nesnesinden (aynı kanonik demirbaş kimlikleri, ZMT no ile eşleşir) — o sayfa
+         zaten çalışıyor, buradan yalnız özet + gerçek link veriliyor. ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="rp-chart" style="margin:0">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Bakım / Arşiv Durumları</h3></div>
+        <div class="rp-chart-body" id="chartDmDurum"></div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-qrcode"></i> QR / Barkod Okutma Geçmişi</div></div>
+        <div class="gc-body">
+          <div class="stat-grid">
+            <div class="hstat"><span class="hstat-num">2</span><span class="hstat-lbl">Okutulan kayıt — 9 etiketli kalemden</span></div>
+            <div class="hstat"><span class="hstat-num">1</span><span class="hstat-lbl">Etiketi henüz oluşturulmamış (ZMT-2026-043)</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> <b>ZMT-2026-045</b> 2 Temmuz'da saha teslim kontrolünde okutuldu; <b>ZMT-2025-017</b> 3 Ocak'ta iade teslim kontrolünde okutuldu. <a href="crm-operasyon-demirbas-etiket.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Etiketleri Yönet</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.2 madde 5/6/8) — zaman bazlı grafik + açık işler + kritik uyarılar ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="rp-chart" style="margin:0">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Teslim/Kayıt Tarihine Göre Aylık Dağılım — 2026</h3></div>
+        <div class="rp-chart-body" id="chartDmAylik"></div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Açık İşler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-screwdriver-wrench"></i><span><a href="crm-operasyon-demirbas-detay.html?zmt=047" style="color:var(--acc-ink);font-weight:700;text-decoration:none">ZMT-2026-047</a> · Hilti kırıcı-delici — 25 Haziran'dan beri (7 gündür) serviste, dönüş bekleniyor.</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Garanti tarihi yaklaşan/dolan kalem yok — 8 kalemin garantisi 2027-2028'e uzanıyor, 2'sinde (arşiv) garanti takibi tutulmuyor.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-bottom:18px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+      <div class="gc-body">
+        <div class="hl-list">
+          <div class="hl-row risk-warn"><i class="fa-solid fa-screwdriver-wrench"></i><span><b>ZMT-2026-047</b> 7 gündür serviste — bakım süresi uzarsa Bildirim Merkezi'nden takip edilmeli.</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-qrcode"></i><span><b>ZMT-2026-043</b> (Güvenlik Ekipmanı, Hasan Demirci) için etiket henüz oluşturulmadı — barkod/QR okutması yapılamıyor.</span></div>
+          <div class="hl-row"><i class="fa-solid fa-check"></i><span>Diğer göstergeler sakin — hurda/kayıp artışı yok, garanti süresi dolan kalem yok.</span></div>
+        </div>
       </div>
     </div>
 
@@ -567,6 +651,34 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     document.getElementById('dmBody').innerHTML = DEMIRBAS.map(renderRow).join('');
   }
   renderList();
+
+  /* ============ T-O1 (B §7.3 Demirbaş) — grafik alanı (gvBar/gvDonut, spec-v2-core.md
+     §7). Sayılar DEMIRBAS_ALL'ın kisi/santiye/durum/tarih alanlarından sayıldı (10 kalem
+     — 6 zimmetli · 1 depoda · 1 serviste · 1 hurda · 1 iade). ============ */
+  if(window.gvDonut){
+    gvDonut('#chartDmZimmet', [
+      {lbl:'Hasan Demirci', val:4, tone:'acc'},
+      {lbl:'Aylin Koç', val:1, tone:'info'},
+      {lbl:'Ömer Taşkın', val:1, tone:'ok'}
+    ], {baslik:'Zimmetli demirbaş — kişi bazlı', merkezAlt:'zimmetli'});
+    gvDonut('#chartDmDurum', [
+      {lbl:'Zimmetli', val:6, tone:'ok'},
+      {lbl:'Depoda', val:1, tone:'info'},
+      {lbl:'Serviste', val:1, tone:'warn'},
+      {lbl:'Arşiv (Hurda+İade)', val:2, tone:'muted'}
+    ], {baslik:'Bakım / arşiv durumları', merkezAlt:'kalem'});
+  }
+  if(window.gvBar){
+    gvBar('#chartDmSantiye', [
+      {lbl:'Vadi Konakları', val:4},
+      {lbl:'Merkez Depo', val:2},
+      {lbl:'Liman Lojistik', val:1},
+      {lbl:'Merkez Şantiye', val:1}
+    ], {yon:'yatay', baslik:'Şantiye/birim bazlı demirbaş dağılımı', labelWidth:120});
+    gvBar('#chartDmAylik', [
+      {lbl:'Ocak', val:5, tone:'acc'}, {lbl:'Şubat', val:1}, {lbl:'Haziran', val:1}
+    ], {yon:'dikey', baslik:'Aylık teslim/kayıt sayısı — 2026'});
+  }
 
   function refreshCounts(){
     var byKat = {hepsi:0}, byDurum = {hepsi:0};

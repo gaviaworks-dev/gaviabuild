@@ -79,6 +79,26 @@
 /* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme ---- */
 #tblTalep tbody tr[data-arsiv="1"]{display:none}
 #tblTalep.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+
+/* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği. hstat/stat-grid/hl-list ui.css'te
+   YOK — crm-panel-rapor-santiye.html'in sayfa-lokal pattern'i devralındı (K-220 dersi). ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+.dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:1100px){.dash-cols{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body data-sec="satinalma" data-screen="talepler">
@@ -134,6 +154,86 @@
         <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-gauge-simple-high"></i></div>
         <div><div class="kpi-num num">1,8 gün</div><div class="kpi-lbl">Ortalama onay süresi</div>
         <div class="kpi-delta flat"><i class="fa-solid fa-chart-line"></i> Son 30 gün</div></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.2 madde 4-5 / B §7.3 Satın Alma) — talep durum dağılımı +
+         haftalık talep hacmi (zaman bazlı). Sayılar #tblTalep'in 13 satırının data-f/
+         data-tarih değerlerinden sayıldı — türetme tasks/devir-TO1.md'de. ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Talep Durum Dağılımı</h3></div>
+        <div class="rp-chart-body" id="chartTlDurum"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Haftalık Talep Hacmi</h3></div>
+        <div class="rp-chart-body" id="chartTlHafta"></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Satın Alma) — termin gecikmeleri + tedarikçi teklif
+         karşılaştırma alanı. Sayılar mevcut crm-satinalma-termin.html/crm-satinalma-
+         teklifler.html ekranlarından türetildi (bu 2 ekran zaten çalışıyor, yeniden
+         yazılmadı — buradan sadece özet + gerçek link). ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-truck-ramp-box"></i> Termin Gecikmeleri</div></div>
+        <div class="gc-body">
+          <div class="stat-grid">
+            <div class="hstat danger"><span class="hstat-num">1</span><span class="hstat-lbl">Geciken sipariş — SAT-2026-011, 2 gün</span></div>
+            <div class="hstat"><span class="hstat-num">3,7 gün</span><span class="hstat-lbl">Ortalama teslim süresi</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> SAT-2026-011 (Ege Hazır Beton, Merkez Şantiye, yalıtım malzemesi) 30 Haziran'da teslim edecekti, 2 gün gecikti. <a href="crm-satinalma-termin.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Termin Takibi</a></div>
+        </div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-scale-balanced"></i> Tedarikçi Teklif Karşılaştırma</div></div>
+        <div class="gc-body">
+          <div class="stat-grid">
+            <div class="hstat warn"><span class="hstat-num">2</span><span class="hstat-lbl">Aktif teklif toplama süreci</span></div>
+            <div class="hstat"><span class="hstat-num">8</span><span class="hstat-lbl">Toplam gelen teklif</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> <a href="crm-satinalma-talep-detay.html?mlz=046" style="color:var(--acc-ink);font-weight:700;text-decoration:none">MLZ-2026-046</a>'nın teklif süreci (SAT-2026-014) 2/5 teklif ile açık, son tarih 5 Temmuz. <a href="crm-satinalma-teklif-karsilastir.html?form=014" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Teklifleri Karşılaştır</a> · <a href="crm-satinalma-teklifler.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Tüm Süreçler</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.2 madde 6-8) — açık işler/bekleyen onaylar + son hareketler +
+         kritik uyarılar ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Bekleyen Onaylar</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-satinalma-talep-detay.html?mlz=038" style="color:var(--acc-ink);font-weight:700;text-decoration:none">MLZ-2026-038</a> · Liman — kaynak elektrotu + İSG ekipmanı, Acil, 25 Haziran'dan beri bekliyor — en eski kayıt.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-satinalma-talep-detay.html?mlz=039" style="color:var(--acc-ink);font-weight:700;text-decoration:none">MLZ-2026-039</a> · Vadi — iç kapı seti, Planlı, 26 Haziran'dan beri bekliyor.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-satinalma-talep-detay.html?mlz=042" style="color:var(--acc-ink);font-weight:700;text-decoration:none">MLZ-2026-042</a> · Liman — forklift lastiği, Acil, 29 Haziran'dan beri bekliyor.</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> 7 talep onay bekliyor (4 diğeri liste altında) — kaynak: sayfa üstündeki "Onay bekleyen talep" KPI'ı.</div>
+        </div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-hourglass-half"></i><span><b>MLZ-2026-046</b> · Vadi — bugün oluşturuldu, onay bekliyor (Hasan Demirci).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-hourglass-half"></i><span><b>MLZ-2026-045</b> · Liman — dün oluşturuldu, onay bekliyor (Şükrü Aslan).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-hourglass-half"></i><span><b>MLZ-2026-044</b> · Merkez — dün oluşturuldu, onay bekliyor (Ömer Taşkın).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-arrow-rotate-left"></i><span><b>MLZ-2026-043</b> · Vadi — 30 Haziran'da oluşturuldu, onay bekliyor (İbrahim Sönmez).</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-bottom:18px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+      <div class="gc-body">
+        <div class="hl-list">
+          <div class="hl-row risk"><i class="fa-solid fa-hourglass-half"></i><span><b>MLZ-2026-038</b> (Acil, Liman) 7 gündür onay bekliyor — acil önceliğe rağmen dönemin en eski açık kaydı.</span></div>
+          <div class="hl-row risk"><i class="fa-solid fa-truck-ramp-box"></i><span><b>SAT-2026-011</b> (Merkez, Ege Hazır Beton) 2 gün gecikmeli — <a href="crm-satinalma-termin.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Termin Takibi</a>'nden takip edilmeli.</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-xmark"></i><span><b>MLZ-2026-035</b> (Liman, vinç halatı) reddedildi — Aylin Koç'un alternatif tedarik yolu değerlendirmesi gerekiyor.</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-rotate-left"></i><span><b>MLZ-2026-034</b> (Vadi, cam ünitesi) revize istendi — 12 Haziran'dan beri düzeltme bekliyor.</span></div>
+        </div>
       </div>
     </div>
 
@@ -372,6 +472,27 @@
 <script>
 (function(){
   if(!window.GV) return;
+
+  /* ============ T-O1 (B §7.2/§7.3) — grafik alanı (gvBar/gvDonut, spec-v2-core.md §7).
+     Durum dağılımı: #tblTalep'in 13 satırının data-f rozetleri sayıldı (bekliyor 7 ·
+     onaylandı 2 · tedarik 1 · tamamlandı 1 · reddedildi 1 · revize 1). Haftalık hacim:
+     aynı satırların data-tarih'i haftaya (Pzt başlangıçlı) gruplandı: 9-14 Haz 1 ·
+     15-21 Haz 3 (035/036/037) · 22-28 Haz 4 (038/039/040/041) · 29 Haz-5 Tem 5
+     (042/043/044/045/046). ============ */
+  if(window.gvBar){
+    if(window.gvDonut) gvDonut('#chartTlDurum', [
+      {lbl:'Onay Bekliyor', val:7, tone:'warn'},
+      {lbl:'Onaylandı', val:2, tone:'ok'},
+      {lbl:'Tedarik Sürecinde', val:1, tone:'info'},
+      {lbl:'Tamamlandı', val:1, tone:'acc'},
+      {lbl:'Reddedildi', val:1, tone:'danger'},
+      {lbl:'Revize İstendi', val:1, tone:'muted'}
+    ], {baslik:'Talep durum dağılımı', merkezAlt:'talep'});
+    gvBar('#chartTlHafta', [
+      {lbl:'9–14 Haz', val:1}, {lbl:'15–21 Haz', val:3}, {lbl:'22–28 Haz', val:4},
+      {lbl:'29 Haz–5 Tem', val:5, tone:'acc'}
+    ], {yon:'dikey', baslik:'Haftalık talep hacmi'});
+  }
 
   document.querySelectorAll('[data-badge]').forEach(function(el){
     el.innerHTML = gvChainBadge(el.getAttribute('data-badge'));

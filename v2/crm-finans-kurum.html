@@ -76,6 +76,26 @@
 /* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE (crm-finans-taseron.html deseni) ---- */
 #tblKurum tbody tr[data-arsiv="1"]{display:none}
 #tblKurum.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+
+/* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği. hstat/stat-grid/hl-list ui.css'te
+   YOK — crm-panel-rapor-santiye.html'in sayfa-lokal pattern'i devralındı (K-220 dersi). ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+.dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:1100px){.dash-cols{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body data-sec="finans" data-screen="kurum">
@@ -131,6 +151,63 @@
         <div class="kpi-ico"><i class="fa-solid fa-gauge-simple-high"></i></div>
         <div><div class="kpi-num num">9,4 gün</div><div class="kpi-lbl">Ortalama tahsilat süresi</div>
         <div class="kpi-delta flat"><i class="fa-solid fa-chart-line"></i> Onaydan bankaya düşene kadar</div></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Hakediş) — kurum/taşeron ayrımı + hakediş dönem grafiği.
+         Kurum tarafı bu sayfanın 6 kaydından (₺4.445.000, 2026 toplam kesilen); taşeron
+         tarafı crm-finans-taseron.html KPI toplamlarından (₺166.200 bekleyen + ₺338.500
+         onaylanan + ₺239.000 ödenen = ₺743.700) türetildi — türetme tasks/devir-TO1.md'de. ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Kurum / Taşeron Hakediş Ayrımı — 2026 toplam kesilen</h3></div>
+        <div class="rp-chart-body" id="chartHkAyrim"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Hakediş Dönem Grafiği — kurum</h3></div>
+        <div class="rp-chart-body" id="chartHkDonem"></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Hakediş) — tahsil edilen/bekleyen tutarlar + onay bekleyen
+         hakedişler (açık işler) ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="rp-chart" style="margin:0">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-scale-balanced"></i> Tahsil Edilen / Bekleyen Tutarlar</h3></div>
+        <div class="rp-chart-body" id="chartHkTahsil"></div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Onay Bekleyen Hakedişler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-finans-hakedis-detay.html?hkd=006" style="color:var(--acc-ink);font-weight:700;text-decoration:none">HKD-2026-006</a> · Körfez GYO, Vadi Konakları — ₺1.630.000, 20 Haziran'dan beri (12 gündür) onay bekliyor.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-clock"></i><span><a href="crm-finans-hakedis-detay.html?hkd=003" style="color:var(--acc-ink);font-weight:700;text-decoration:none">HKD-2026-003</a> · Aliağa Liman İşletmeleri, Liman — ₺980.000, onaylandı, tahsilat sürecinde.</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Ortalama tahsilat süresi 9,4 gün — HKD-2026-006 bu ortalamanın üzerinde bekliyor.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.2 madde 7-8) — son hareketler + kritik uyarılar ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-hourglass-half"></i><span><b>HKD-2026-006</b> · Körfez GYO — Haziran dönemi, ₺1.630.000, gönderildi (20 Haz).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-clock"></i><span><b>HKD-2026-003</b> · Aliağa Liman — Haziran dönemi, ₺980.000, onaylandı (18 Haz).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>HKD-2026-005</b> · Körfez GYO — Mayıs dönemi, ₺620.000, ödendi (1 Haz).</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk"><i class="fa-solid fa-hourglass-half"></i><span><b>HKD-2026-006</b> (₺1.630.000) 12 gündür onay bekliyor — ortalama 9,4 günlük tahsilat süresinin üzerinde.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-scale-balanced"></i><span>Bekleyen tutar (₺2.610.000) tahsil edilenin (₺1.835.000) üzerinde — nakit akışı planlamasında dikkate alınmalı.</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -321,6 +398,27 @@
 <script>
 (function(){
   if(!window.GV) return;
+
+  /* ============ T-O1 (B §7.3 Hakediş) — grafik alanı (gvBar/gvDonut, spec-v2-core.md §7).
+     Kurum/taşeron ayrımı ve dönem grafiği #tblKurum'un 6 satırından; tahsil/bekleyen
+     ayrımı: odendi(1.835.000) vs bekliyor+onaylandi(2.610.000). ============ */
+  if(window.gvDonut){
+    gvDonut('#chartHkAyrim', [
+      {lbl:'Kurum', val:4445000, tone:'acc'},
+      {lbl:'Taşeron', val:743700, tone:'info'}
+    ], {baslik:'Kurum / taşeron hakediş ayrımı', merkezAlt:'toplam'});
+    gvDonut('#chartHkTahsil', [
+      {lbl:'Tahsil Edilen', val:1835000, tone:'ok'},
+      {lbl:'Bekleyen', val:2610000, tone:'warn'}
+    ], {baslik:'Tahsil edilen / bekleyen tutarlar', merkezAlt:'2026'});
+  }
+  if(window.gvBar){
+    gvBar('#chartHkDonem', [
+      {lbl:'Nisan', val:805000, valLbl:'₺805.000'},
+      {lbl:'Mayıs', val:1030000, valLbl:'₺1.030.000'},
+      {lbl:'Haziran', val:2610000, valLbl:'₺2.610.000', tone:'acc'}
+    ], {yon:'dikey', baslik:'Aylık kesilen kurum hakedişi'});
+  }
 
   document.querySelectorAll('[data-badge]').forEach(function(el){
     el.innerHTML = gvChainBadge(el.getAttribute('data-badge'));

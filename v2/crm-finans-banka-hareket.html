@@ -48,6 +48,26 @@
   .filter-row .frow-lbl{min-width:0;width:100%}
   .filter-row .gv-chipbar-wrap{width:100%}
 }
+
+/* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği. hstat/stat-grid/hl-list ui.css'te
+   YOK — crm-panel-rapor-santiye.html'in sayfa-lokal pattern'i devralındı (K-220 dersi). ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+.dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:1100px){.dash-cols{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body data-sec="finans" data-screen="banka-hareket">
@@ -104,6 +124,75 @@
         <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
         <div><div class="kpi-num num">₺90.000</div><div class="kpi-lbl">Onay bekleyen</div>
         <div class="kpi-delta down"><i class="fa-solid fa-clock"></i> 1 hareket · Taşeron ödemesi</div></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Banka Hareketleri) — giriş/çıkış grafiği (aylık) + banka
+         hesabı bazlı bakiye özeti. Aylık tutarlar HAREKETLER dizisinin (aşağıda, script)
+         16 satırından ay ay sayıldı; hesap bakiyeleri crm-finans-banka.html "Güncel Bakiye"
+         sütunuyla BİREBİR (₺4.151.000 toplamla eşleşiyor) — türetme tasks/devir-TO1.md'de. ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Giriş / Çıkış Grafiği — aylık</h3></div>
+        <div class="rp-chart-body" id="chartBhAylik"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-building-columns"></i> Banka Hesabı Bazlı Bakiye Özeti</h3></div>
+        <div class="rp-chart-body" id="chartBhHesap"></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Banka Hareketleri) — şantiye bazlı banka hareketi + belge
+         bekleyen hareketler ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="rp-chart" style="margin:0">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-map-location-dot"></i> Şantiye Bazlı Banka Hareketi — toplam hacim</h3></div>
+        <div class="rp-chart-body" id="chartBhSantiye"></div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-circle-exclamation"></i> Belge Bekleyen Hareketler</div></div>
+        <div class="gc-body">
+          <div class="stat-grid">
+            <div class="hstat"><span class="hstat-num">4</span><span class="hstat-lbl">Belgesiz hareket — 16 kayıttan</span></div>
+            <div class="hstat"><span class="hstat-num">₺1.200.150</span><span class="hstat-lbl">Toplam tutar (2 virman bacağı + masraf + iade)</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> BHR-2026-009/010 (virman çifti, ₺600.000×2) ve BHR-2026-015/016 (EFT masrafı + iadesi, ₺75×2) banka-native işlemlerdir — harici belge (fatura/dekont) gerektirmez, bilgi amaçlı listelenir.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.2 madde 6-8) — açık işler/bekleyen + son hareketler + kritik uyarılar ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Onay Bekleyen Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-finans-banka-hareket-detay.html?id=BHR-2026-011" style="color:var(--acc-ink);font-weight:700;text-decoration:none">BHR-2026-011</a> · Demir-Beton İnş. Ltd. — Haziran taşeron hakedişi ödemesi (TH-2026-014), ₺90.000, 28 Haziran'dan beri gönderim aşamasında.</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam ₺90.000 — sayfa üstündeki "Onay bekleyen" KPI'ı ile birebir.</div>
+        </div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-arrow-rotate-left"></i><span><b>BHR-2026-016</b> · 3 Temmuz — Temmuz EFT ücreti hatalı tahsilat iadesi, ₺75.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-arrow-up"></i><span><b>BHR-2026-015</b> · 2 Temmuz — EFT/Havale işlem ücreti, ₺75, otomatik onaylı.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-arrow-up"></i><span><b>BHR-2026-014</b> · 1 Temmuz — Pluxee kart aylık toplu yükleme, ₺15.000.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-arrow-up"></i><span><b>BHR-2026-013</b> · 1 Temmuz — Vadi Konakları kasa beslemesi, ₺120.000.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-card" style="margin-bottom:18px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+      <div class="gc-body">
+        <div class="hl-list">
+          <div class="hl-row risk"><i class="fa-solid fa-hourglass-half"></i><span><b>BHR-2026-011</b> (₺90.000) 5 gündür onay bekliyor — Demir-Beton'un Haziran hakedişi buna bağlı.</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-building-columns"></i><span>3 hesap sıfır bakiyeli: <b>Akbank</b> (Maaş Ödeme), <b>Ziraat Bankası</b> (Kredi), <b>HSBC</b> (arşiv — Kule Ofis teslim edildiği için aktif kullanılmıyor).</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-trend-down"></i><span>Haziran ayında hiç giriş kaydı yok — ay boyunca yalnız ₺310.000 çıkış işlendi, hakediş tahsilatı bekleniyor.</span></div>
+        </div>
       </div>
     </div>
 
@@ -177,6 +266,44 @@
 <script>
 (function(){
   if(!window.GV) return;
+
+  /* ============ T-O1 (B §7.3) — ₺ değer kısaltma yardımcısı (K-224 tuzağı: gvBar
+     yatay sabit 480-birim viewBox'ı 7+ haneli ₺ etiketlerini kırpıyor — ui.js KİLİTLİ,
+     ortak dosyaya dokunulmadı, sayfa-lokal çözüm). ============ */
+  function tlKisa(n){
+    if(n >= 10000000) return '₺' + Math.round(n/1000000) + ' Mn';
+    if(n >= 1000000) return '₺' + (Math.round(n/100000)/10).toString().replace('.', ',') + ' Mn';
+    return '₺' + n.toLocaleString('tr-TR');
+  }
+
+  /* ============ T-O1 (B §7.3 Banka Hareketleri) — grafik alanı (gvBar/gvDonut).
+     Aylık giriş/çıkış: HAREKETLER'in 16 satırı ay ay sayıldı (virman hariç — iç transfer,
+     gerçek nakit akışı değil). Hesap bakiyeleri: crm-finans-banka.html "Güncel Bakiye"
+     sütunuyla birebir (₺1.446.000 İş Bankası · ₺2.000.000 TEB · … toplam ₺4.151.000).
+     Şantiye hacmi: HAREKETLER'in data-santiye alanına göre toplam |tutar|. ============ */
+  if(window.gvBar){
+    gvBar('#chartBhAylik', [
+      {lbl:'Nis — Giriş', val:265000, tone:'ok', valLbl:'₺265.000'}, {lbl:'Nis — Çıkış', val:54000, tone:'danger', valLbl:'₺54.000'},
+      {lbl:'May — Giriş', val:410000, tone:'ok', valLbl:'₺410.000'}, {lbl:'May — Çıkış', val:185000, tone:'danger', valLbl:'₺185.000'},
+      {lbl:'Haz — Giriş', val:0, tone:'ok', valLbl:'₺0'}, {lbl:'Haz — Çıkış', val:310000, tone:'danger', valLbl:'₺310.000'},
+      {lbl:'Tem — Giriş', val:75, tone:'ok', valLbl:'₺75'}, {lbl:'Tem — Çıkış', val:195075, tone:'danger', valLbl:'₺195.075'}
+    ], {yon:'dikey', baslik:'Aylık banka giriş/çıkışı (virman hariç)'});
+    gvBar('#chartBhHesap', [
+      {lbl:'TEB — Kısa Vadeli Mevduat', val:2000000, valLbl:tlKisa(2000000)},
+      {lbl:'İş Bankası — Ana Hesap', val:1446000, valLbl:tlKisa(1446000)},
+      {lbl:'Yapı Kredi — Teminat', val:450000, valLbl:tlKisa(450000)},
+      {lbl:'QNB — Proje Hesabı', val:180000, valLbl:tlKisa(180000)},
+      {lbl:'Garanti BBVA — Hakediş', val:75000, valLbl:tlKisa(75000)},
+      {lbl:'Akbank — Maaş Ödeme', val:0, valLbl:'₺0', tone:'muted'},
+      {lbl:'Ziraat — Kredi', val:0, valLbl:'₺0', tone:'muted'},
+      {lbl:'HSBC — Proje (arşiv)', val:0, valLbl:'₺0', tone:'muted'}
+    ], {yon:'yatay', baslik:'Banka hesabı bazlı güncel bakiye', labelWidth:150});
+    gvBar('#chartBhSantiye', [
+      {lbl:'Liman Lojistik Merkezi', val:760000, valLbl:tlKisa(760000)},
+      {lbl:'Vadi Konakları', val:549000, valLbl:tlKisa(549000), tone:'warn'},
+      {lbl:'Merkez Şantiye', val:60000, valLbl:tlKisa(60000)}
+    ], {yon:'yatay', baslik:'Şantiye bazlı toplam banka hareket hacmi', labelWidth:150});
+  }
 
   /* ============================================================================
      KANONİK 16 BANKA HAREKETİ — §3 kanonik-türetme kuralı gereği kasa/kredikarti/

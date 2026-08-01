@@ -326,6 +326,28 @@ th.is-today .dh-d{color:var(--acc-ink)}
   .ck-opts{flex-direction:column}
   .ck-opt{width:100%;justify-content:center}
 }
+
+/* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği: KPI/grafik/devamsızlık/son
+   hareketler. hstat/stat-grid/hl-list ui.css'te YOK — crm-panel-rapor-santiye.html'in
+   sayfa-lokal pattern'i devralındı (K-220 dersi: ortak dosyaya dokunma). ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:980px){.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
+.dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:1100px){.dash-cols{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body data-sec="personel" data-screen="puantaj">
@@ -389,6 +411,87 @@ th.is-today .dh-d{color:var(--acc-ink)}
         <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
           <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
         </button>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.2 madde 3) — özet KPI kartları: 3 şantiye toplamı (Bireysel/
+         Taşeron sekmelerinin ikisini de kapsayan üst özet). Sayılar bu sayfanın kendi PERSONEL
+         (satır ~748) ve TASERON (satır ~1545) dizilerinden işlenen 4 gün (29 Haz–2 Tem)
+         için doğrudan sayılarak türetildi — türetme tasks/devir-TO1.md'de. ============ -->
+    <div class="kpi-grid" style="margin-bottom:18px">
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-people-group"></i></div>
+        <div><div class="kpi-num num">93</div><div class="kpi-lbl">Bugün sahada (69 öz kadro + 24 taşeron)</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-map-location-dot"></i> Vadi 51 · Liman 30 · Merkez 12</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-gauge-simple-high"></i></div>
+        <div><div class="kpi-num num">%78</div><div class="kpi-lbl">Katılım oranı — izlenen örneklem (16 öz kadro)</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-arrow-trend-down"></i> Liman %65 ile en düşük · Merkez %94 en yüksek</div></div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-ico"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        <div><div class="kpi-num num">3 FM · 2 EM</div><div class="kpi-lbl">Mesai sapması — öz kadro, işlenen 4 gün</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-circle-info"></i> Vadi ağırlıklı (2 FM · 2 EM)</div></div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-ico"><i class="fa-solid fa-xmark"></i></div>
+        <div><div class="kpi-num num">6</div><div class="kpi-lbl">Devamsız personel — 2 öz kadro + 4 taşeron</div>
+        <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Tamamı mazeretsiz</div></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Puantaj) — günlük personel dağılım grafiği + öz kadro/
+         taşeron ayrımı. Günlük dağılım: 16 öz kadro (izlenen örneklem) + 24 taşeronun
+         PERSONEL[].gunler/TASERON[].gunler dizilerinden gün gün sayılmasıyla türetildi
+         (Pzt 35 · Sal 36 · Çar 34 · Per 35 — öz 13/13/13/11 + taşeron 22/23/21/24). ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Günlük Personel Dağılımı — izlenen örneklem</h3></div>
+        <div class="rp-chart-body" id="chartPtGunluk"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Öz Kadro / Taşeron Adam-Gün Ayrımı</h3></div>
+        <div class="rp-chart-body" id="chartPtOzTas"></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Puantaj) — fazla mesai grafiği + durum dağılımı ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-arrow-trend-up"></i> Fazla Mesai — Şantiye Bazlı (öz kadro, işlenen 4 gün)</h3></div>
+        <div class="rp-chart-body" id="chartPtFm"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-simple"></i> Durum Dağılımı — öz kadro, 64 kişi-gün</h3></div>
+        <div class="rp-chart-body" id="chartPtDurum"></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.2 madde 6-7) — devamsızlık uyarıları (kritik uyarı) + son
+         hareketler. "Açık işler/bekleyen işlemler" mevcut "Puantaj Onay Durumları — Bugün"
+         kartıyla (aşağıda, onayCard) zaten karşılanıyor — burada tekrar EDİLMEDİ. ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Devamsızlık Uyarıları</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk"><i class="fa-solid fa-xmark"></i><span><b>Selim Doğan</b> (Demir Ustası, Vadi) 30 Haziran'da mazeretsiz devamsız — aynı hafta 1 gün eksik mesai (EM) de aldı.</span></div>
+            <div class="hl-row risk"><i class="fa-solid fa-xmark"></i><span><b>Osman Polat</b> (Düz İşçi, Liman) 29 Haziran'da mazeretsiz devamsız.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-xmark"></i><span>Taşeron tarafında 4 devamsızlık: <b>Ayhan Böke</b> (Demir-Beton, 29 Haz), <b>Ünal Yavuzer</b> (Demir-Beton, 1 Tem), <b>Uğur Beyazıt</b> (ElektroMek, 30 Haz), <b>Okan Sarıgül</b> (Yalıtım Kardeşler, 29 Haz).</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam 6 devamsızlık (2 öz kadro + 4 taşeron), işlenen 4 gün (29 Haz–2 Tem) içinde — tamamı mazeretsiz.</div>
+        </div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-lock"></i><span>Vadi, Liman ve Merkez'in 1 Temmuz (Çarşamba) puantajı kilitlendi — düzenlenemez.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-pen"></i><span>2 Temmuz (bugün) her 3 şantiye de "Taslak" durumda — henüz İK onayına gönderilmedi.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-people-arrows"></i><span>22–28 Haziran arşiv haftasında taşeron puantajı (136 adam-gün) TH-2026-008/009/014 hakedişlerine aktarıldı.</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -725,6 +828,28 @@ th.is-today .dh-d{color:var(--acc-ink)}
 <script>
 (function(){
   if(!window.GV) return;
+
+  /* ============ T-O1 (B §7.2/§7.3) — grafik alanı (gvBar/gvDonut, spec-v2-core.md §7).
+     Sayılar aşağıdaki PERSONEL (satır ~750)/TASERON (satır ~1560) dizilerinin gunler[]
+     alanları gün gün sayılarak türetildi (öz kadro işlenen 4 gün = 64 kişi-gün; taşeron
+     37 Demir-Beton + 23 ElektroMek + 30 Yalıtım K. = 90 kişi-gün). Türetme + kısa
+     tabloları tasks/devir-TO1.md'de. ============ */
+  if(window.gvBar){
+    gvBar('#chartPtGunluk', [
+      {lbl:'Pzt 29', val:35}, {lbl:'Sal 30', val:36}, {lbl:'Çar 1', val:34}, {lbl:'Per 2', val:35, tone:'acc'}
+    ], {yon:'dikey', baslik:'Günlük personel dağılımı (16 öz kadro + 24 taşeron)'});
+    if(window.gvDonut) gvDonut('#chartPtOzTas', [
+      {lbl:'Öz Kadro', val:64, tone:'acc'}, {lbl:'Taşeron', val:90, tone:'info'}
+    ], {baslik:'Öz kadro / taşeron adam-gün ayrımı', merkezAlt:'adam-gün'});
+    gvBar('#chartPtFm', [
+      {lbl:'Vadi Konakları', val:2}, {lbl:'Liman Lojistik', val:1}, {lbl:'Merkez Şantiye', val:0}
+    ], {yon:'yatay', baslik:'Fazla mesai (FM) — şantiye bazlı'});
+    gvBar('#chartPtDurum', [
+      {lbl:'Tam gün', val:42}, {lbl:'İzinli', val:9}, {lbl:'Fazla mesai', val:3, tone:'info'},
+      {lbl:'Raporlu', val:3, tone:'muted'}, {lbl:'Yarım gün', val:3, tone:'warn'},
+      {lbl:'Eksik mesai', val:2, tone:'warn'}, {lbl:'Devamsız', val:2, tone:'danger'}
+    ], {yon:'yatay', baslik:'Öz kadro durum dağılımı — 64 kişi-gün', labelWidth:90});
+  }
 
   /* ---- mock puantaj verisi — sayfaya özel JS objesi (CLAUDE.md: küçük mock veri sayfa içine gömülür).
      Saha işçisi isimleri shell.js kanonik listesinde kanonikleşti (Dalga 2A, T0 onayı) —
