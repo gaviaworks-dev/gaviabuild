@@ -1452,6 +1452,9 @@
       if(trigger._gvCols) return trigger._gvCols;
       var defs = cfg.cols || [];
       var storeKey = cfg.screen ? 'gv_cols_' + cfg.screen : null;
+      /* V3A — adlandırılmış görünüm (§4.4 madde 5). Yalnız `cfg.screen` verilmişse
+         çalışır (namespace şart); ekransız kullanım eskisi gibi tek örtük tercihte kalır. */
+      var viewsKey = cfg.screen ? 'gv_colviews_' + cfg.screen : null;
       var role = null; try{ role = localStorage.getItem('gv_crm_role'); }catch(e){}
       var visibleDefs = defs.filter(function(c){ return !c.roleHidden || c.roleHidden.indexOf(role) === -1; });
       var defOrder = visibleDefs.map(function(c){ return c.key; });
@@ -1470,6 +1473,14 @@
       }
       function save(){ if(storeKey){ try{ localStorage.setItem(storeKey, JSON.stringify(state)); }catch(e){} } }
       var state = load();
+      /* V3A — adlandırılmış görünümler deposu: {"<isim>": {order:[...], hidden:[...]}} */
+      function loadViews(){
+        if(!viewsKey) return {};
+        var raw; try{ raw = JSON.parse(localStorage.getItem(viewsKey) || 'null'); }catch(e){ raw = null; }
+        return raw && typeof raw === 'object' ? raw : {};
+      }
+      function saveViews(v){ if(viewsKey){ try{ localStorage.setItem(viewsKey, JSON.stringify(v)); }catch(e){} } }
+      var views = loadViews();
 
       function cellsFor(key){ return table.querySelectorAll('[data-col="' + key + '"]'); }
       function reorderRows(){
@@ -1519,7 +1530,19 @@
       function openMenu(){
         if(menu) return;
         menu = document.createElement('div'); menu.className = 'gv-pop gv-colpop';
+        /* V3A — adlandırılmış görünüm bloğu (§4.4 madde 5): yalnız cfg.screen
+           verilmişse render edilir (viewsKey null ise bölüm hiç eklenmez). */
+        var viewsHtml = '';
+        if(viewsKey){
+          viewsHtml = '<div class="gcol-views"><div class="gcol-views-lbl">Kayıtlı Görünümler</div>'
+            + '<div class="gcol-views-list"></div>'
+            + '<div class="gcol-save-row">'
+            +   '<input type="text" class="gcol-save-input" placeholder="Görünüm adı" maxlength="40" aria-label="Görünüm adı">'
+            +   '<button type="button" class="gcol-save-go" aria-label="Görünümü kaydet" disabled><i class="fa-solid fa-floppy-disk"></i></button>'
+            + '</div></div>';
+        }
         menu.innerHTML = '<div class="gp-head"><b>Kolonlar</b><span>Göster / sırala</span></div>'
+          + viewsHtml
           + '<div class="gcol-list"></div>'
           + '<div class="gcol-foot"><button type="button" class="btn btn-ghost btn-sm gcol-reset">Varsayılana Dön</button></div>';
         document.body.appendChild(menu);
@@ -1570,6 +1593,44 @@
           state = {order:defOrder.slice(), hidden:defHidden.slice()};
           apply(); draw();
         });
+        if(viewsKey){
+          var viewsList = menu.querySelector('.gcol-views-list');
+          var saveInp = menu.querySelector('.gcol-save-input');
+          var saveGo = menu.querySelector('.gcol-save-go');
+          function drawViews(){
+            viewsList.innerHTML = '';
+            Object.keys(views).forEach(function(name){
+              var row = document.createElement('div'); row.className = 'gcol-view-row';
+              var b = document.createElement('button'); b.type = 'button'; b.className = 'gcol-view-btn'; b.textContent = name;
+              b.addEventListener('click', function(){
+                var v = views[name]; if(!v) return;
+                var order = (v.order || []).filter(function(k){ return defOrder.indexOf(k) !== -1; });
+                defOrder.forEach(function(k){ if(order.indexOf(k) === -1) order.push(k); });
+                var hidden = (v.hidden || []).filter(function(k){ return defOrder.indexOf(k) !== -1; });
+                state = {order:order, hidden:hidden};
+                apply(); draw(); drawViews();
+              });
+              var del = document.createElement('button'); del.type = 'button'; del.className = 'gcol-view-del';
+              del.setAttribute('aria-label', '"' + name + '" görünümünü sil');
+              del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+              del.addEventListener('click', function(e){
+                e.stopPropagation();
+                delete views[name]; saveViews(views); drawViews();
+              });
+              row.appendChild(b); row.appendChild(del); viewsList.appendChild(row);
+            });
+          }
+          drawViews();
+          saveInp.addEventListener('input', function(){ saveGo.disabled = !saveInp.value.trim(); });
+          saveInp.addEventListener('keydown', function(e){ if(e.key === 'Enter' && !saveGo.disabled) saveGo.click(); });
+          saveGo.addEventListener('click', function(){
+            var name = saveInp.value.trim(); if(!name) return;
+            views[name] = {order:state.order.slice(), hidden:state.hidden.slice()};
+            saveViews(views);
+            saveInp.value = ''; saveGo.disabled = true;
+            drawViews();
+          });
+        }
         var r = trigger.getBoundingClientRect();
         menu.style.position = 'fixed'; menu.style.minWidth = '240px';
         menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
@@ -2264,4 +2325,256 @@
   }
   window.gvEllipSync = gvEllipSync;
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', gvEllipSync); else gvEllipSync();
+
+  /* =====================================================================
+     V3A REVİZYON — T-CORE: ORTAK LİSTE ÜST ALANI PRİMİTİFLERİ (doküman §2/§3/§4/§8)
+     gvListHead · gvTabs · gvSticky. DOM sözleşmesi + kanonik HTML iskeletleri:
+     tasks/spec-v3a-ortak.md — sonraki dalgalar BU dosyayı okuyup tüketir.
+     Hepsi MEVCUT primitifleri (gvFilterDrawer/gvCols/gvExport/gvChipBar) TÜKETİR,
+     yeniden yazmaz. ===================================================== */
+
+  /* ============================================================================
+     gvListHead — §2.1/§2.2 standart liste üst alanı orkestratörü. İKİ MOD:
+     1) "bağlan" — cfg.mount zaten `.lh-row`/`.lh-acts` içeren hazır DOM'a işaret
+        ediyorsa (sayfa kendi HTML'ini yazdıysa — bileşik/özel filtre motoru olan
+        sayfaların TERCİH ETTİĞİ yol, ör. crm-gorev.html), gvListHead yalnız eksik
+        aksiyon düğmelerini tamamlar ve verilen primitifleri var olan/oluşturduğu
+        düğmelere bağlar.
+     2) "üret" — cfg.mount boş bir kapsayıcıysa (`.lh-row` YOKSA), iskeleti SIFIRDAN
+        kurar. Basit tek-boyutlu filtre motoruna sahip yeni sayfalar için önerilir.
+     Her iki modda da: cfg.filter → gvFilterDrawer.init, cfg.cols → gvCols.init,
+     cfg.export → gvExport.init, cfg.arsiv → `.lh-toggle` checkbox (etiket
+     parametreli, §3.1'in 4 adından biri), cfg.tabs → `.lh-tabs` + gvChipBar.init.
+     Yalnız verilen anahtarlar işlenir — hiçbiri ZORUNLU değildir. ============ */
+  window.gvListHead = {
+    init: function(cfg){
+      cfg = cfg || {};
+      var root = typeof cfg.mount === 'string' ? document.querySelector(cfg.mount) : cfg.mount;
+      if(!root){ console.warn('gvListHead: mount bulunamadı', cfg.mount); return null; }
+      if(root._gvListHead) return root._gvListHead;
+      root.classList.add('gv-listhead');
+
+      var lhRow = root.querySelector(':scope > .lh-row');
+      if(!lhRow){
+        lhRow = document.createElement('div'); lhRow.className = 'lh-row';
+        root.insertBefore(lhRow, root.firstChild);
+      }
+      var searchWrap = lhRow.querySelector('.lh-search');
+      if(!searchWrap && cfg.search){
+        searchWrap = document.createElement('div'); searchWrap.className = 'lh-search';
+        searchWrap.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i><input type="text">';
+        lhRow.insertBefore(searchWrap, lhRow.firstChild);
+      }
+      if(searchWrap && cfg.search){
+        var sInp = searchWrap.querySelector('input');
+        if(sInp){
+          if(cfg.search.placeholder) sInp.placeholder = cfg.search.placeholder;
+          if(cfg.search.table) sInp.setAttribute('data-table-search', cfg.search.table);
+        }
+      }
+      var acts = lhRow.querySelector('.lh-acts');
+      if(!acts){ acts = document.createElement('div'); acts.className = 'lh-acts'; lhRow.appendChild(acts); }
+
+      var handles = {};
+
+      /* Gelişmiş Filtre — mevcut gvFilterDrawer'ı çağırır, yeni motor İCAT ETMEZ */
+      if(cfg.filter){
+        var fbtn = cfg.filter.trigger ? document.querySelector(cfg.filter.trigger) : null;
+        if(!fbtn){
+          fbtn = document.createElement('button');
+          fbtn.type = 'button'; fbtn.className = 'btn btn-ghost btn-sm gv-fp-open';
+          fbtn.innerHTML = '<i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>';
+          acts.appendChild(fbtn);
+        } else {
+          fbtn.classList.add('gv-fp-open');
+        }
+        var fcfg = {}; for(var fk in cfg.filter){ if(fk !== 'trigger') fcfg[fk] = cfg.filter[fk]; }
+        fcfg.mount = fbtn;
+        handles.filter = window.gvFilterDrawer.init(fcfg);
+      }
+      /* Kolonlar — mevcut gvCols'u çağırır */
+      if(cfg.cols){
+        var cbtn = cfg.cols.trigger ? document.querySelector(cfg.cols.trigger) : null;
+        if(!cbtn){
+          cbtn = document.createElement('button');
+          cbtn.type = 'button'; cbtn.className = 'btn btn-ghost btn-sm';
+          cbtn.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>';
+          acts.appendChild(cbtn);
+        }
+        var ccfg = {}; for(var ck in cfg.cols){ if(ck !== 'trigger') ccfg[ck] = cfg.cols[ck]; }
+        ccfg.mount = cbtn;
+        handles.cols = window.gvCols.init(ccfg);
+      }
+      /* Arşivlenenleri/Pasifleri/Tamamlananları/İptal Edilenleri Göster (§3.1) —
+         etiket parametreli tek toggle deseni */
+      if(cfg.arsiv){
+        var tgl = cfg.arsiv.trigger ? document.querySelector(cfg.arsiv.trigger) : null;
+        var chk;
+        if(!tgl){
+          tgl = document.createElement('label'); tgl.className = 'lh-toggle';
+          chk = document.createElement('input'); chk.type = 'checkbox';
+          var ic = document.createElement('i'); ic.className = 'fa-solid ' + (cfg.arsiv.ikon || 'fa-box-archive');
+          var lbl = document.createElement('span'); lbl.className = 'lh-lbl'; lbl.textContent = cfg.arsiv.etiket || 'Arşivlenenleri Göster';
+          tgl.appendChild(chk); tgl.appendChild(ic); tgl.appendChild(lbl);
+          acts.appendChild(tgl);
+        } else {
+          chk = tgl.querySelector('input[type="checkbox"]') || tgl;
+        }
+        if(cfg.arsiv.onToggle) chk.addEventListener('change', function(){ cfg.arsiv.onToggle(chk.checked); });
+        handles.arsiv = { input: chk, get checked(){ return chk.checked; } };
+      }
+      /* Çıktı Al / Dışa Aktar — mevcut gvExport'u çağırır */
+      if(cfg.export){
+        var ebtn = cfg.export.trigger ? document.querySelector(cfg.export.trigger) : null;
+        if(!ebtn){
+          ebtn = document.createElement('a'); ebtn.href = '#'; ebtn.className = 'btn btn-ghost btn-sm';
+          ebtn.innerHTML = '<i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>';
+          acts.appendChild(ebtn);
+        }
+        var xcfg = {}; for(var xk in cfg.export){ if(xk !== 'trigger') xcfg[xk] = cfg.export[xk]; }
+        handles.export = window.gvExport.init(ebtn, xcfg);
+      }
+      /* Alt tab satırı (§2.1/§2.3) — .lh-tabs + gvChipBar slider */
+      if(cfg.tabs && cfg.tabs.length){
+        var tabsWrap = root.querySelector(':scope > .lh-tabs');
+        if(!tabsWrap){
+          tabsWrap = document.createElement('div'); tabsWrap.className = 'lh-tabs';
+          var wrap = document.createElement('div'); wrap.className = 'gv-chipbar-wrap'; wrap.setAttribute('data-chipbar', '');
+          var prevB = document.createElement('button'); prevB.type = 'button'; prevB.className = 'cb-arrow cb-prev'; prevB.hidden = true; prevB.setAttribute('aria-label', 'Sola kaydır'); prevB.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+          var track = document.createElement('div'); track.className = 'gv-chipbar chips';
+          if(cfg.tabs.target) track.setAttribute('data-target', cfg.tabs.target);
+          var nextB = document.createElement('button'); nextB.type = 'button'; nextB.className = 'cb-arrow cb-next'; nextB.hidden = true; nextB.setAttribute('aria-label', 'Sağa kaydır'); nextB.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+          (cfg.tabs.chips || []).forEach(function(c){
+            var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('data-filter', c.filter);
+            b.innerHTML = (c.ikon ? '<i class="fa-solid ' + c.ikon + '"></i> ' : '') + c.etiket + (c.sayi != null ? ' <span class="ch-cnt">' + c.sayi + '</span>' : '');
+            track.appendChild(b);
+          });
+          wrap.appendChild(prevB); wrap.appendChild(track); wrap.appendChild(nextB);
+          tabsWrap.appendChild(wrap);
+          root.appendChild(tabsWrap);
+        }
+        window.gvChipBar.init(tabsWrap.querySelector('[data-chipbar]') || tabsWrap);
+        handles.tabsEl = tabsWrap;
+      }
+
+      root._gvListHead = handles;
+      return handles;
+    }
+  };
+
+  /* ============================================================================
+     gvTabs — §8.2 sekme görünümü (Liste/Grafikler/Özet/Rapor/Son Hareketler/
+     Uyarılar). `crm-operasyon-puantaj.html`'in yerel `activateTab()` desenini
+     (satır ~1824-1838, salt-okundu, o dosya DEĞİŞTİRİLMEDİ) genelleştirir:
+     role=tablist/tab/tabpanel + aria-selected + klavye ok tuşu + hash/localStorage
+     kalıcılığı eklendi. **JS KAPALI DAVRANIŞI**: panelleri JS ile gizler, statik
+     HTML'de TÜMÜ görünür kalmalıdır (progressive enhancement, §"JS kapalı statik
+     bake ikizi") — bu yüzden `hidden` özniteliği yalnız burada, çalışma zamanında
+     yazılır; sayfa markup'ında ÖNCEDEN yazılmamalıdır. ============================ */
+  window.gvTabs = {
+    init: function(cfg){
+      cfg = cfg || {};
+      var mount = typeof cfg.mount === 'string' ? document.querySelector(cfg.mount) : cfg.mount;
+      if(!mount){ console.warn('gvTabs: mount bulunamadı', cfg.mount); return null; }
+      if(mount._gvTabs) return mount._gvTabs;
+      var tabs = cfg.tabs || []; if(!tabs.length) return null;
+      var screen = cfg.screen || mount.id || 'gvtabs';
+      var storeKey = 'gv_tab_' + screen;
+
+      var bar = mount.querySelector(':scope > .gv-tabbar');
+      if(!bar){
+        bar = document.createElement('div'); bar.className = 'gv-tabbar gv-chipbar-wrap'; bar.setAttribute('data-chipbar', '');
+        var prevB = document.createElement('button'); prevB.type = 'button'; prevB.className = 'cb-arrow cb-prev'; prevB.hidden = true; prevB.setAttribute('aria-label', 'Sola kaydır'); prevB.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+        var track = document.createElement('div'); track.className = 'gv-chipbar chips'; track.setAttribute('role', 'tablist');
+        var nextB = document.createElement('button'); nextB.type = 'button'; nextB.className = 'cb-arrow cb-next'; nextB.hidden = true; nextB.setAttribute('aria-label', 'Sağa kaydır'); nextB.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+        bar.appendChild(prevB); bar.appendChild(track); bar.appendChild(nextB);
+        tabs.forEach(function(t){
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'tab');
+          b.setAttribute('data-tab', t.key); b.id = 'gvtab-' + screen + '-' + t.key;
+          b.innerHTML = (t.ikon ? '<i class="fa-solid ' + t.ikon + '"></i> ' : '') + gvEscHtml(t.etiket || t.key);
+          track.appendChild(b);
+        });
+        mount.insertBefore(bar, mount.firstChild);
+      }
+      var track2 = bar.querySelector('.gv-chipbar');
+      var btns = {};
+      track2.querySelectorAll('[data-tab]').forEach(function(b){ btns[b.getAttribute('data-tab')] = b; });
+      var panels = {};
+      tabs.forEach(function(t){
+        var p = typeof t.panel === 'string' ? document.querySelector(t.panel) : t.panel;
+        if(!p) return;
+        p.classList.add('gv-tabpanel');
+        p.setAttribute('role', 'tabpanel');
+        if(btns[t.key]){ p.setAttribute('aria-labelledby', btns[t.key].id); btns[t.key].setAttribute('aria-controls', p.id || ''); }
+        panels[t.key] = p;
+      });
+
+      function pickInitial(){
+        var h = (location.hash || '').replace('#', '');
+        if(h && panels[h]) return h;
+        try{ var ls = localStorage.getItem(storeKey); if(ls && panels[ls]) return ls; }catch(e){}
+        return cfg.varsayilan && panels[cfg.varsayilan] ? cfg.varsayilan : tabs[0].key;
+      }
+      function activate(key, persist){
+        if(!panels[key] && !btns[key]) return;
+        Object.keys(btns).forEach(function(k){
+          var on = k === key;
+          btns[k].classList.toggle('is-on', on);
+          btns[k].setAttribute('aria-selected', on ? 'true' : 'false');
+          btns[k].tabIndex = on ? 0 : -1;
+        });
+        Object.keys(panels).forEach(function(k){ panels[k].hidden = (k !== key); });
+        if(persist){
+          try{ localStorage.setItem(storeKey, key); }catch(e){}
+          if(cfg.onChange) cfg.onChange(key);
+        }
+      }
+      Object.keys(btns).forEach(function(k){
+        btns[k].addEventListener('click', function(){ activate(k, true); });
+      });
+      track2.addEventListener('keydown', function(e){
+        var keys = Object.keys(btns);
+        var i = keys.indexOf(document.activeElement && document.activeElement.getAttribute('data-tab'));
+        if(i === -1) return;
+        if(e.key === 'ArrowRight' && keys[i + 1]){ e.preventDefault(); btns[keys[i + 1]].focus(); activate(keys[i + 1], true); }
+        else if(e.key === 'ArrowLeft' && keys[i - 1]){ e.preventDefault(); btns[keys[i - 1]].focus(); activate(keys[i - 1], true); }
+        else if(e.key === 'Home'){ e.preventDefault(); btns[keys[0]].focus(); activate(keys[0], true); }
+        else if(e.key === 'End'){ e.preventDefault(); btns[keys[keys.length - 1]].focus(); activate(keys[keys.length - 1], true); }
+      });
+      window.gvChipBar.init(bar);
+      activate(pickInitial(), false);
+      var handle = { activate: function(k){ activate(k, true); }, el: bar };
+      mount._gvTabs = handle;
+      return handle;
+    }
+  };
+
+  /* ============================================================================
+     gvSticky — §7 sabit-kalan üst alan yardımcısı. Konumlandırma SAF CSS'tir
+     (`.gv-sticky-head{position:sticky}`, ui.css) — bu fonksiyon YALNIZ elemanın
+     gerçekten "yapıştığı" anı (IntersectionObserver sentinel) algılayıp
+     `.gv-sticky-shadow` sınıfını ekler/çıkarır (görsel geri bildirim; JS
+     yoksa/desteklenmiyorsa sticky konumlanma yine çalışır, yalnız gölge eksik kalır). */
+  window.gvSticky = {
+    init: function(sel, opts){
+      var el = typeof sel === 'string' ? document.querySelector(sel) : sel;
+      if(!el || el._gvSticky) return el && el._gvSticky;
+      opts = opts || {};
+      el.classList.add('gv-sticky-head');
+      if(opts.top != null) el.style.top = (typeof opts.top === 'number' ? opts.top + 'px' : opts.top);
+      var handle = {el: el};
+      if('IntersectionObserver' in window){
+        var sentinel = document.createElement('div');
+        sentinel.style.cssText = 'position:relative;height:0;width:100%;pointer-events:none';
+        el.parentNode.insertBefore(sentinel, el);
+        var io = new IntersectionObserver(function(entries){
+          el.classList.toggle('gv-sticky-shadow', !entries[0].isIntersecting);
+        }, {threshold:0});
+        io.observe(sentinel);
+        handle.sentinel = sentinel; handle.io = io;
+      }
+      el._gvSticky = handle;
+      return handle;
+    }
+  };
 })();

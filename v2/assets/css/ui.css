@@ -844,3 +844,146 @@ tr.is-checked td{background:rgba(var(--acc-rgb),.05)}
 /* ============ .gv-ellip/.gv-ellip-2 — uzun metin taşırma önleyici (A §8) ============ */
 .gv-ellip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .gv-ellip-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* =====================================================================
+   V3A REVİZYON — T-CORE: ORTAK LİSTE ÜST ALANI (doküman §2/§3/§4/§7/§8/§16)
+   .gv-listhead/.lh-row/.lh-search/.lh-acts/.lh-toggle/.lh-achips/.lh-tabs ·
+   .gv-tabbar/.gv-tabpanel (§8.2) · .gv-botsec (§8.3/§15.3) · .gv-sticky-head (§7) ·
+   .gv-tscroll (§16.1 kasıtlı-kaydırılabilir sarmalayıcı) · .gv-ell (§16.1 ellipsis).
+   TAMAMI OPT-IN, YENİ sınıf adları — `.filter-bar`/`.filter-bar.stack`/`.fb-search`/
+   `.chips` SEÇİCİLERİNİN İÇİNDEKİ HİÇBİR PROPERTY DEĞİŞTİRİLMEDİ (K-220 — bkz. yukarı
+   satır ~83 yorumu). Kullanmayan sayfa hiçbir şekilde etkilenmez. DOM sözleşmeleri +
+   JS primitifleri (gvListHead/gvTabs/gvCols named-view/gvSticky): tasks/spec-v3a-ortak.md.
+   ===================================================================== */
+
+/* ---- .gv-listhead — üst alan sarmalayıcısı (§2.1). Tek border-bottom BURADA taşınır;
+   içindeki satırlar (.lh-row/.lh-tabs) kendi border'ını taşımaz — böylece hangi alt
+   satırların gösterildiğine (achips gizli/görünür) bakılmaksızın tabloya geçişte HER
+   ZAMAN tek, tutarlı bir ayraç çizgisi olur. ---- */
+.gv-listhead{border-bottom:1px solid var(--line)}
+
+/* ---- .lh-row — arama + sabit sağ aksiyon grubu (§2.2). `flex-wrap:nowrap` BİLİNÇLİ:
+   K-220'nin yasakladığı şey `.filter-bar.stack`'in ORTAK bir wrap-politikasıyla
+   değiştirilmesiydi; bu YENİ, opt-in bir sınıf ailesi — dar ekranda taşma riski
+   `.lh-acts` butonlarının 900/640px'te küçülmesiyle (aşağı) karşılanır, sarmalamayla
+   DEĞİL (§16.1: "gelişmiş filtre ve kolon alanları aşağı düşmemeli"). ---- */
+.lh-row{display:flex;align-items:center;gap:12px;padding:16px 22px;flex-wrap:nowrap}
+.lh-search{position:relative;flex:1 1 auto;min-width:0;max-width:360px}
+.lh-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+.lh-search input{
+  width:100%;height:38px;padding:0 12px 0 34px;
+  font-family:inherit;font-size:13px;font-weight:500;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);
+  outline:none;transition:.2s var(--ease);
+}
+.lh-search input::placeholder{color:var(--muted)}
+.lh-search input:focus{border-color:var(--acc);background:var(--paper);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+.lh-acts{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto}
+.lh-acts .btn{white-space:nowrap}
+.lh-toggle{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--ink-2);cursor:pointer;white-space:nowrap;flex:none}
+.lh-toggle input{width:15px;height:15px;accent-color:var(--acc-ink);cursor:pointer;flex:none}
+.lh-toggle i{font-size:11px;color:var(--muted);flex:none}
+/* §16.1 dar ekran: butonlar aşağı DÜŞMEZ/taşmaz — önce küçülür (900px), sonra ikon+aria-label'a iner (640px) */
+@media(max-width:900px){
+  .lh-acts .btn{padding:8px 12px;font-size:12px}
+}
+@media(max-width:640px){
+  .lh-row{padding:14px 16px}
+  .lh-search{max-width:none}
+  .lh-acts{gap:6px}
+  .lh-acts .btn{padding:0;width:34px;height:34px;gap:0}
+  .lh-acts .lh-lbl{display:none}
+  .lh-toggle{gap:0}
+}
+
+/* ---- .lh-achips — aktif filtre çipleri, .lh-row'un ALTINDA (§4.3 son cümle). Görsel
+   TAMAMEN `.gv-achips-row`/`.gv-achip`'ten gelir (aynı token/ölçü) — bu sınıf sayfada
+   `gvFilterDrawer`'ın `chipsMount` hedefi olarak konumlandırmak için bir isim/kanca
+   sağlar; kendi başına yeni bir görünüm İCAT ETMEZ. ---- */
+.lh-achips{}
+
+/* ---- .lh-tabs — alt satır: kategori/durum tab'ı, şantiye seçimi vb. (§2.1 "alt
+   satırda", §2.3). Mevcut `.gv-chipbar-wrap`/`.gv-chipbar`/`.cb-arrow` slider
+   mekanizması AYNEN kullanılır — burada yalnız çerçeve/ayraç eklenir. ---- */
+.lh-tabs{display:flex;align-items:center;gap:10px;padding:12px 22px;border-top:1px solid var(--line);background:var(--bg)}
+@media(max-width:640px){ .lh-tabs{padding:12px 16px} }
+
+/* =====================================================================
+   .gv-tabbar / .gv-tabpanel — §8.2 sekme görünümü (Liste/Grafikler/Özet/Rapor/
+   Son Hareketler/Uyarılar). `gvTabs.init` (ui.js) ile kurulur. Görsel dil
+   `.gv-chipbar` slider'ıyla AYNI (aktif sekme `.chip.is-on` dolu-chip diliyle
+   belirginleşir) — burada yalnız yerleşim/boşluk eklenir, chip görünümü
+   TEKRAR YAZILMAZ. `role=tablist/tab/tabpanel` semantiği ui.js'te kurulur. */
+.gv-tabbar{display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:18px}
+.gv-tabpanel[hidden]{display:none}
+
+/* =====================================================================
+   .gv-botsec — §8.3/§15.3 "en alt bölüm" (Son hareketler/Kritik uyarılar/
+   Bekleyen onaylar/Termin gecikmeleri/Tedarikçi karşılaştırma/Yönetim notları).
+   Ana liste/işlem alanından görsel olarak AYRIK: üst kenarlık + ferah boşluk —
+   kullanıcı ilk girişte bu bloklarla BOĞULMAZ (§8.3). İçinde mevcut `.kpi-grid`/
+   `.gv-card`/`.act-list`/`.rp-*` desenleri değişmeden çalışmaya devam eder. */
+.gv-botsec{margin-top:32px;padding-top:28px;border-top:1px solid var(--line)}
+.gv-botsec + .gv-botsec{margin-top:26px;padding-top:22px}
+.gv-botsec-h{
+  font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.gv-botsec-h i{color:var(--acc-ink);font-size:12px}
+
+/* =====================================================================
+   .gv-sticky-head — §7 sabit-kalan üst alan. Saf CSS `position:sticky`; `top`
+   sabit topbar'ın (shell.css `.gv-top{height:var(--top-h);z-index:70}`) ALTINDA
+   kalır — z-index 55 < 70, topbar HER ZAMAN üstte. ui.css'te bu, ilk
+   `position:sticky` kullanımıdır (bkz tasks/v3a-referans-anatomi.md §2 tablosu).
+   `gvSticky.init` (ui.js, opsiyonel) yalnız "yapıştı" gölgesini ekler/çıkarır —
+   konumlandırmanın kendisi JS GEREKTİRMEZ. */
+.gv-sticky-head{position:sticky;top:var(--top-h);z-index:55;background:var(--paper)}
+.gv-sticky-head.gv-sticky-shadow{box-shadow:var(--sh-md)}
+
+/* ---- .gv-tscroll — §16.1 "tablolar kendi içinde scroll yapmalıdır" sarmalayıcısı.
+   Taramada KASITLI-KAYDIRILABİLİR sayılır (bkz spec-v3a-ortak.md "taranan sınıflar"
+   listesi) — `.gc-body.flush` zaten aynı davranışı taşıyordu, bu isim `.gv-listhead`
+   dışı serbest-biçim (kart-dışı) tablo/geniş-içerik sarmalayıcıları içindir. ---- */
+.gv-tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---- .gv-ell — §16.1 ellipsis yardımcısı. NOT: işlevi `.gv-ellip` (D17) ile
+   AYNIDIR; yalnız v3a kısa-önek adlandırma tutarlılığı için eklendi — mevcut
+   sayfalar `.gv-ellip` kullanmaya devam eder, ikisi eşdeğerdir, biri diğerinin
+   YERİNE geçirilmez (25+ sayfa `.gv-ellip` kullanıyor). ---- */
+.gv-ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+
+/* =====================================================================
+   .gv-colpop içine EKLENEN adlandırılmış-görünüm bloğu (§4.4 madde 5, gvCols).
+   Mevcut `.gcol-list`/`.gcol-row`/`.gcol-foot` DEĞİŞMEDİ — yalnız footer'a yeni
+   bir bölüm eklendi (gvCols.init, ui.js). ===================================== */
+.gcol-views{padding:2px 6px 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.gcol-views-lbl{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:6px 0 6px}
+.gcol-view-row{display:flex;align-items:center;gap:6px;padding:3px 0}
+.gcol-view-btn{
+  flex:1;min-width:0;text-align:left;font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--ink-2);background:var(--bg);border:1px solid transparent;border-radius:var(--r-sm);
+  padding:7px 9px;cursor:pointer;transition:.15s var(--ease);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.gcol-view-btn:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
+.gcol-view-btn.is-on{background:rgba(var(--acc-rgb),.12);border-color:var(--acc-ink);color:var(--acc-ink);font-weight:700}
+.gcol-view-del{
+  flex:none;width:24px;height:24px;border-radius:7px;border:1px solid var(--line);
+  background:var(--paper);color:var(--muted);font-size:10px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;transition:.15s var(--ease);
+}
+.gcol-view-del:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-tint)}
+.gcol-save-row{display:flex;align-items:center;gap:6px;padding:6px 0 2px}
+.gcol-save-input{
+  flex:1;min-width:0;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:7px 9px;outline:none;transition:.2s var(--ease);
+}
+.gcol-save-input:focus{border-color:var(--acc);background:var(--paper);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+.gcol-save-go{
+  flex:none;width:30px;height:30px;border-radius:var(--r-sm);border:1px solid var(--acc-ink);
+  background:var(--acc-ink);color:#fff;font-size:11px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;transition:.15s var(--ease);
+}
+.gcol-save-go:hover{background:var(--acc-deep)}
+.gcol-save-go:disabled{opacity:.4;cursor:default;background:var(--muted);border-color:var(--muted)}
