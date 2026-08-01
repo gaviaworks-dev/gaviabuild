@@ -128,9 +128,56 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="pf-section-lbl"><i class="fa-solid fa-list-check"></i> Taleplerim (3)</div>
+  <div class="pf-section-lbl"><i class="fa-solid fa-list-check"></i> Taleplerim (<span id="reqVisCount">3</span>)</div>
 
-  <div class="gv-card req-card" id="sst-007">
+  <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Bu
+       portal sayfası CRM shell'i DEĞİL kendi `.pf-*` kabuğunu kullanır, ama tokens.css
+       + ui.css'i CRM ile AYNI (açık zemin) yükler — `.gv-listhead/.lh-*` doğrudan
+       kullanılabilir (koyu Platform Konsolu'ndaki gibi bir sayfa-lokal varyant GEREKMEZ). -->
+  <div class="gv-card" style="margin-bottom:18px">
+    <div class="gv-listhead">
+      <div class="lh-row">
+        <div class="lh-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="reqSearch" placeholder="Talep no veya konu ara">
+        </div>
+        <div class="lh-acts">
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="reqFiltreBtn" aria-label="Gelişmiş Filtre">
+            <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="reqColsBtn" data-demo="Talep kartları kolon bazlı değil — yorum akışı olan bir talep defteridir, ayrıntı kartın içinde." aria-label="Kolonlar">
+            <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+          </button>
+          <label class="lh-toggle" for="reqArsivGoster">
+            <input type="checkbox" id="reqArsivGoster">
+            <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+          </label>
+          <a class="btn btn-ghost btn-sm" href="#" data-export="Taleplerim listesi" aria-label="Dışa Aktar">
+            <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+          </a>
+        </div>
+      </div>
+      <div class="lh-achips gv-achips-row" id="reqAchips" hidden>
+        <div class="gv-achips"></div>
+        <div class="gv-achips-acts">
+          <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+        </div>
+      </div>
+      <div class="lh-tabs">
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" id="reqDurumChips">
+            <button type="button" class="chip is-on" data-durum="hepsi">Tümü <span class="ch-cnt">3</span></button>
+            <button type="button" class="chip" data-durum="islemde">İşlemde <span class="ch-cnt">2</span></button>
+            <button type="button" class="chip" data-durum="tamam">Tamamlandı <span class="ch-cnt">1</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gv-card req-card" id="sst-007" data-tur="garanti" data-durum="islemde">
     <div class="req-top">
       <div class="req-titles">
         <div class="req-no">SST-2026-007</div>
@@ -169,7 +216,7 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="gv-card req-card" id="sst-010">
+  <div class="gv-card req-card" id="sst-010" data-tur="bilgi" data-durum="tamam">
     <div class="req-top">
       <div class="req-titles">
         <div class="req-no">SST-2026-010</div>
@@ -201,7 +248,7 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="gv-card req-card" id="sst-012">
+  <div class="gv-card req-card" id="sst-012" data-tur="eksik" data-durum="islemde">
     <div class="req-top">
       <div class="req-titles">
         <div class="req-no">SST-2026-012</div>
@@ -315,6 +362,60 @@ a{color:inherit;text-decoration:none}
       + '&birim=' + encodeURIComponent(birimSel.value)
       + '&tarih=' + encodeURIComponent(BUGUN);
   });
+
+  /* ============ V3A — arama + Gelişmiş Filtre + durum sekmeleri ============
+     <table> yok — kartlar (`.req-card[data-tur][data-durum]`) doğrudan gizlenir/gösterilir. */
+  var reqCards = Array.prototype.slice.call(document.querySelectorAll('.req-card'));
+  var reqFd = null;
+  function reqFv(key){
+    if(!reqFd) return null;
+    var st = reqFd.values();
+    return st && st[key] ? st[key].value : null;
+  }
+  function applyReqFilter(){
+    var term = (document.getElementById('reqSearch').value || '').trim().toLocaleLowerCase('tr');
+    var onChip = document.querySelector('#reqDurumChips .chip.is-on');
+    var durum = onChip ? onChip.getAttribute('data-durum') : 'hepsi';
+    var tur = reqFv('tur');
+    var showArsiv = (document.getElementById('reqArsivGoster') || {}).checked;
+    var shown = 0;
+    reqCards.forEach(function(card){
+      var okDurum = (durum === 'hepsi') || (card.getAttribute('data-durum') === durum);
+      var okTur = !tur || card.getAttribute('data-tur') === tur;
+      var okArsiv = showArsiv || card.getAttribute('data-recstat') !== 'arsiv';
+      var okTerm = !term || card.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okDurum && okTur && okArsiv && okTerm;
+      card.hidden = !show;
+      if(show) shown++;
+    });
+    var cntEl = document.getElementById('reqVisCount');
+    if(cntEl) cntEl.textContent = shown;
+  }
+  document.getElementById('reqSearch').addEventListener('input', applyReqFilter);
+  document.querySelectorAll('#reqDurumChips .chip[data-durum]').forEach(function(ch){
+    ch.addEventListener('click', function(){
+      document.querySelectorAll('#reqDurumChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+      ch.classList.add('is-on');
+      applyReqFilter();
+    });
+  });
+  var reqArsivToggle = document.getElementById('reqArsivGoster');
+  if(reqArsivToggle) reqArsivToggle.addEventListener('change', applyReqFilter);
+  if(window.gvFilterDrawer){
+    reqFd = gvFilterDrawer.init({
+      mount: '#reqFiltreBtn',
+      screen: 'portaltalep',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#reqAchips',
+      fields: [
+        {key:'tur', type:'select', label:'Tür', options:[
+          {v:'eksik', l:'Eksik İş'}, {v:'garanti', l:'Garanti'}, {v:'bakim', l:'Bakım'},
+          {v:'sikayet', l:'Şikayet'}, {v:'bilgi', l:'Bilgi'}, {v:'teslimat', l:'Teslimat Problemi'}
+        ]}
+      ],
+      onApply: applyReqFilter
+    });
+  }
 })();
 </script>
 </body>

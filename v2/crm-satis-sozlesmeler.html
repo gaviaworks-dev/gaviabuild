@@ -98,9 +98,6 @@
         <h1>Sözleşme &amp; Teslimat</h1>
         <div class="ph-sub" id="phSub"><span data-table-count>7</span> sözleşme · 2 teslim sürecinde · 3 tamamlanmış teslimat</div>
       </div>
-      <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Sözleşme listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-      </div>
     </div>
 
     <div class="kpi-grid" id="kpiGrid">
@@ -134,16 +131,51 @@
     <!-- ============ SEKME: SÖZLEŞMELER ============ -->
     <section class="tab-panel" data-tab-panel="sozlesme" role="tabpanel" aria-label="Sözleşmeler">
       <div class="gv-card">
-        <div class="filter-bar">
-          <div class="fb-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Sözleşme no, müşteri veya birim ara" data-table-search="#tblSsz">
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+             .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+             çipleri, gvFilterDrawer tarafından doldurulur) → .lh-tabs (durum sekmeleri).
+             Sözleşmeler/Teslimatlar sekmesi (.gv-tabs) bu standardın DIŞINDadır — o bir
+             sayfa-üstü içerik anahtarıdır (Teslimatlar sekmesinde <table> yok), bu yüzden
+             gv-listhead yalnız Sözleşmeler panelinin İÇİNDE. -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Sözleşme no, müşteri veya birim ara" data-table-search="#tblSsz">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="sszFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="sszColsBtn" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <label class="lh-toggle" for="sszArsivGoster">
+                <input type="checkbox" id="sszArsivGoster">
+                <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+              </label>
+              <a class="btn btn-ghost btn-sm" href="#" data-export="Sözleşme listesi" aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </a>
+            </div>
           </div>
-          <div class="chips" data-target="#tblSsz">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">7</span></button>
-            <button class="chip" data-filter="imzali">İmzalı <span class="ch-cnt">4</span></button>
-            <button class="chip" data-filter="surecte">Teslim Sürecinde <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="bekliyor">İmza Bekliyor <span class="ch-cnt">1</span></button>
+          <div class="lh-achips gv-achips-row" id="sszAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" data-target="#tblSsz">
+                <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">7</span></button>
+                <button class="chip" data-filter="imzali">İmzalı <span class="ch-cnt">4</span></button>
+                <button class="chip" data-filter="surecte">Teslim Sürecinde <span class="ch-cnt">2</span></button>
+                <button class="chip" data-filter="bekliyor">İmza Bekliyor <span class="ch-cnt">1</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
         </div>
         <div class="gc-body flush">
@@ -151,11 +183,11 @@
             <thead>
               <tr>
                 <th>Sözleşme / Müşteri</th>
-                <th class="col-birim">Birim / Paket</th>
-                <th class="num col-bedel">Bedel</th>
-                <th class="col-ilerleme">Ödeme İlerlemesi</th>
-                <th class="col-durum">Durum</th>
-                <th class="col-tems">Temsilci</th>
+                <th class="col-birim" data-col="birim">Birim / Paket</th>
+                <th class="num col-bedel" data-col="bedel">Bedel</th>
+                <th class="col-ilerleme" data-col="ilerleme">Ödeme İlerlemesi</th>
+                <th class="col-durum" data-col="durum">Durum</th>
+                <th class="col-tems" data-col="tems">Temsilci</th>
                 <th></th>
               </tr>
             </thead>
@@ -170,11 +202,11 @@
                     </div>
                   </div>
                 </td>
-                <td>KO-B-304 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
-                <td class="num t-strong">₺4.100.000</td>
-                <td><span class="gstat ok" style="font-size:11px">Tamamlandı</span></td>
-                <td><span class="gstat ok">İmzalı</span></td>
-                <td>Okan Eren</td>
+                <td data-col="birim">KO-B-304 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
+                <td class="num t-strong" data-col="bedel">₺4.100.000</td>
+                <td data-col="ilerleme"><span class="gstat ok" style="font-size:11px">Tamamlandı</span></td>
+                <td data-col="durum"><span class="gstat ok">İmzalı</span></td>
+                <td data-col="tems">Okan Eren</td>
                 <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2025-042" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
               </tr>
               <tr data-f="imzali" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2026-003">
@@ -187,11 +219,11 @@
                     </div>
                   </div>
                 </td>
-                <td>VK-C-18 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
-                <td class="num t-strong">₺6.120.000</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:38.9%"></div></div><span class="gbar-val">14/36</span></div></td>
-                <td><span class="gstat ok">İmzalı</span></td>
-                <td>Okan Eren</td>
+                <td data-col="birim">VK-C-18 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong" data-col="bedel">₺6.120.000</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:38.9%"></div></div><span class="gbar-val">14/36</span></div></td>
+                <td data-col="durum"><span class="gstat ok">İmzalı</span></td>
+                <td data-col="tems">Okan Eren</td>
                 <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-003" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
               </tr>
               <tr data-f="imzali" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2026-004">
@@ -204,11 +236,11 @@
                     </div>
                   </div>
                 </td>
-                <td>3 daire paketi <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
-                <td class="num t-strong">₺13.665.000</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:33.3%"></div></div><span class="gbar-val">4/12</span></div></td>
-                <td><span class="gstat ok">İmzalı</span></td>
-                <td>Okan Eren</td>
+                <td data-col="birim">3 daire paketi <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong" data-col="bedel">₺13.665.000</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:33.3%"></div></div><span class="gbar-val">4/12</span></div></td>
+                <td data-col="durum"><span class="gstat ok">İmzalı</span></td>
+                <td data-col="tems">Okan Eren</td>
                 <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-004" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
               </tr>
               <tr data-f="imzali" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2026-005">
@@ -221,11 +253,11 @@
                     </div>
                   </div>
                 </td>
-                <td>VK-D-14 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
-                <td class="num t-strong">₺6.120.000</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:66.7%"></div></div><span class="gbar-val">16/24</span></div></td>
-                <td><span class="gstat ok">İmzalı</span></td>
-                <td>Okan Eren</td>
+                <td data-col="birim">VK-D-14 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong" data-col="bedel">₺6.120.000</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:66.7%"></div></div><span class="gbar-val">16/24</span></div></td>
+                <td data-col="durum"><span class="gstat ok">İmzalı</span></td>
+                <td data-col="tems">Okan Eren</td>
                 <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-005" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
               </tr>
               <tr data-f="surecte" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2025-051">
@@ -238,11 +270,11 @@
                     </div>
                   </div>
                 </td>
-                <td>KO-B-311 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
-                <td class="num t-strong">₺4.100.000</td>
-                <td><div class="pay-mini"><span class="pm-done"><i class="fa-solid fa-circle-check"></i> Taksitler tamam</span><span class="pm-note">Teslimde ₺555.000 bekliyor</span></div></td>
-                <td><span class="gstat info">Teslim Sürecinde</span></td>
-                <td>Okan Eren</td>
+                <td data-col="birim">KO-B-311 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
+                <td class="num t-strong" data-col="bedel">₺4.100.000</td>
+                <td data-col="ilerleme"><div class="pay-mini"><span class="pm-done"><i class="fa-solid fa-circle-check"></i> Taksitler tamam</span><span class="pm-note">Teslimde ₺555.000 bekliyor</span></div></td>
+                <td data-col="durum"><span class="gstat info">Teslim Sürecinde</span></td>
+                <td data-col="tems">Okan Eren</td>
                 <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2025-051" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
               </tr>
               <tr data-f="surecte" data-tems="okan" data-href="crm-satis-sozlesme-detay.html?ssz=2025-058">
@@ -255,11 +287,11 @@
                     </div>
                   </div>
                 </td>
-                <td>KO-B-406 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
-                <td class="num t-strong">₺4.350.000</td>
-                <td><div class="pay-mini"><span class="pm-done"><i class="fa-solid fa-circle-check"></i> Taksitler tamam</span><span class="pm-note">Teslimde ₺550.000 bekliyor</span></div></td>
-                <td><span class="gstat info">Teslim Sürecinde</span></td>
-                <td>Okan Eren</td>
+                <td data-col="birim">KO-B-406 <span class="muted" style="font-weight:500">· Kule Ofis</span></td>
+                <td class="num t-strong" data-col="bedel">₺4.350.000</td>
+                <td data-col="ilerleme"><div class="pay-mini"><span class="pm-done"><i class="fa-solid fa-circle-check"></i> Taksitler tamam</span><span class="pm-note">Teslimde ₺550.000 bekliyor</span></div></td>
+                <td data-col="durum"><span class="gstat info">Teslim Sürecinde</span></td>
+                <td data-col="tems">Okan Eren</td>
                 <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2025-058" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
               </tr>
               <tr data-f="bekliyor" data-tems="selin" data-href="crm-satis-sozlesme-detay.html?ssz=2026-007">
@@ -272,11 +304,11 @@
                     </div>
                   </div>
                 </td>
-                <td>VK-D-05 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
-                <td class="num t-strong">₺4.200.000</td>
-                <td><span class="pay-wait">İmza sonrası başlar</span></td>
-                <td><span class="gstat wait">İmza Bekliyor</span></td>
-                <td>Selin Acar</td>
+                <td data-col="birim">VK-D-05 <span class="muted" style="font-weight:500">· Vadi Konakları</span></td>
+                <td class="num t-strong" data-col="bedel">₺4.200.000</td>
+                <td data-col="ilerleme"><span class="pay-wait">İmza sonrası başlar</span></td>
+                <td data-col="durum"><span class="gstat wait">İmza Bekliyor</span></td>
+                <td data-col="tems">Selin Acar</td>
                 <td><div class="row-acts"><a class="ia-btn" href="crm-satis-sozlesme-detay.html?ssz=2026-007" data-no-confirm aria-label="Sözleşme detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
               </tr>
             </tbody>
@@ -403,6 +435,74 @@
   });
   var initial = (location.hash || '').replace('#', '');
   activateTab(tabs.some(function(t){ return t.getAttribute('data-tab') === initial; }) ? initial : 'sozlesme');
+
+  /* ============ V3A — Gelişmiş Filtre + Kolonlar + Arşiv toggle ============
+     Temsilci ayrı bir chip grubu DEĞİL, Gelişmiş Filtre içinde bir `select` alanı —
+     durum sekmeleriyle aynı satırda kalabalık yapmasın (crm-gorev.html emsali).
+     Motor: tbl._gvApply (ui.js applyFilters delegasyon sözleşmesi, D18). */
+  var tblSsz = document.getElementById('tblSsz');
+  var sszFd = null;
+  function sszTemsVal(){
+    if(!sszFd) return 'hepsi';
+    var st = sszFd.values();
+    return st && st.tems ? st.tems.value : 'hepsi';
+  }
+  function applyCompoundSsz(){
+    var onChip = document.querySelector('#tblSsz').closest('.gv-card').querySelector('.chips .chip.is-on[data-filter]');
+    var f = onChip ? onChip.getAttribute('data-filter') : 'hepsi';
+    var tems = sszTemsVal();
+    var showArsiv = (document.getElementById('sszArsivGoster') || {}).checked;
+    var inp = document.querySelector('input[data-table-search="#tblSsz"]');
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var shown = 0;
+    tblSsz.querySelectorAll('tbody tr').forEach(function(tr){
+      var okF = (f === 'hepsi') || (tr.getAttribute('data-f') === f);
+      var okTems = (tems === 'hepsi') || (tr.getAttribute('data-tems') === tems);
+      var okArsiv = showArsiv || tr.getAttribute('data-recstat') !== 'arsiv';
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okF && okTems && okArsiv && okTerm;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    var card = tblSsz.closest('.gv-card');
+    var empty = card.querySelector('[data-table-empty]');
+    if(empty) empty.hidden = shown !== 0;
+    var cntEl = card.querySelector('[data-table-count]');
+    if(cntEl) cntEl.textContent = shown;
+  }
+  tblSsz._gvApply = applyCompoundSsz;
+
+  if(window.gvFilterDrawer){
+    sszFd = gvFilterDrawer.init({
+      mount: '#sszFiltreBtn',
+      screen: 'satissozlesme',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#sszAchips',
+      fields: [
+        {key:'tems', type:'select', label:'Temsilci', options:[
+          {v:'selin', l:'Selin Acar'}, {v:'okan', l:'Okan Eren'}
+        ]}
+      ],
+      onApply: function(){ gvApplyFilters(tblSsz, true); }
+    });
+  }
+  var sszArsivToggle = document.getElementById('sszArsivGoster');
+  if(sszArsivToggle) sszArsivToggle.addEventListener('change', function(){ gvApplyFilters(tblSsz, true); });
+
+  if(window.gvCols && document.getElementById('sszColsBtn')){
+    gvCols.init({
+      mount: '#sszColsBtn',
+      table: '#tblSsz',
+      screen: 'satissozlesme',
+      cols: [
+        {key:'birim', lbl:'Birim / Paket', def:true},
+        {key:'bedel', lbl:'Bedel', def:true},
+        {key:'ilerleme', lbl:'Ödeme İlerlemesi', def:true},
+        {key:'durum', lbl:'Durum', def:true},
+        {key:'tems', lbl:'Temsilci', def:true}
+      ]
+    });
+  }
 
   /* D11: satış temsilcisi yalnız kendi müşterisinin kayıtlarını görür (data-tems budaması) —
      görev/demirbaş budama idiyomuyla aynı: tr.remove() (hidden DEĞİL — filtre motoru geri açar) */

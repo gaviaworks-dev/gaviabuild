@@ -173,6 +173,41 @@ a.pipe-chip:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
       </div>
     </div>
 
+    <div class="gv-card">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3).
+           Pipeline bir kanban/pano görünümüdür, <table> YOK — Kolonlar bu yüzden
+           `crm-finans-taseronlar.html`'deki kabul edilmiş desene uyar: buton şablon
+           tutarlılığı için durur, tıklanınca (data-demo) neden uygulanamadığını
+           dürüstçe açıklar; kart/kanban tasarımı tabloya ÇEVRİLMEDİ (tasks/kararlar.md). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="pipeSearch" placeholder="Fırsat, birim veya müşteri ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="pipeFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="pipeColsBtn" data-demo="Kanban kartları kolon bazlı değil — aşama panosudur, ayrıntı için karta git." aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="pipeArsivGoster">
+              <input type="checkbox" id="pipeArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Pipeline özeti" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="pipeAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+      </div>
     <div class="kanban-wrap">
       <div class="kanban-board" id="kanbanBoard">
 
@@ -339,6 +374,7 @@ a.pipe-chip:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
 
       </div>
     </div>
+    </div>
   </main>
 </div>
 
@@ -399,6 +435,68 @@ a.pipe-chip:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
     document.getElementById('kpiKayipSub').innerHTML = '<i class="fa-solid fa-xmark"></i> ' + kbN + ' kayıp / ' + (kzN+kbN) + ' kapanan';
 
     document.getElementById('phSub').textContent = '7 aşamalı satış hunisi · yalnızca sizin sorumluluğunuzdaki fırsatlar gösteriliyor';
+  }
+
+  /* ============ V3A — arama + Gelişmiş Filtre (gvFilterDrawer) ============
+     <table> yok — motor doğrudan `.kcard` elemanlarını gizler/gösterir; kolon
+     başlıklarındaki adet/toplam, görünür kartlara göre yeniden hesaplanır
+     (yukarıdaki D11 budama bloğuyla AYNI hesap deseni, yalnız kaynak kümesi
+     "kalan tüm kartlar" yerine "hidden=false olan kartlar"). */
+  var pipeFd = null;
+  function pipeFv(key){
+    if(!pipeFd) return null;
+    var st = pipeFd.values();
+    return st && st[key] ? st[key].value : null;
+  }
+  function recalcKanbanHeaders(){
+    document.querySelectorAll('.kanban-col').forEach(function(col){
+      var all = Array.prototype.slice.call(col.querySelectorAll('.kcard'));
+      var visible = all.filter(function(c){ return !c.hidden; });
+      var cntEl = col.querySelector('.kcol-cnt');
+      if(cntEl) cntEl.textContent = visible.length;
+      var totalEl = col.querySelector('.kcol-total');
+      if(totalEl && !totalEl.classList.contains('mut')){
+        var sum = visible.reduce(function(s,c){ return s + (c.getAttribute('data-cash') !== '0' ? parseInt(c.getAttribute('data-tutar') || '0', 10) : 0); }, 0);
+        totalEl.textContent = sum ? tl(sum) : '—';
+      }
+    });
+  }
+  function applyPipeFilter(){
+    var term = (document.getElementById('pipeSearch').value || '').trim().toLocaleLowerCase('tr');
+    var tems = pipeFv('tems');
+    var tutarR = pipeFv('tutar');
+    var showArsiv = (document.getElementById('pipeArsivGoster') || {}).checked;
+    document.querySelectorAll('.kcard').forEach(function(card){
+      var okTerm = !term || card.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okTems = !tems || card.getAttribute('data-tems') === tems;
+      var okArsiv = showArsiv || card.getAttribute('data-recstat') !== 'arsiv';
+      var okTutar = true;
+      if(tutarR){
+        var v = parseInt(card.getAttribute('data-tutar') || '0', 10);
+        if(tutarR.min != null) okTutar = okTutar && v >= tutarR.min;
+        if(tutarR.max != null) okTutar = okTutar && v <= tutarR.max;
+      }
+      card.hidden = !(okTerm && okTems && okArsiv && okTutar);
+    });
+    recalcKanbanHeaders();
+  }
+  document.getElementById('pipeSearch').addEventListener('input', applyPipeFilter);
+  var pipeArsivToggle = document.getElementById('pipeArsivGoster');
+  if(pipeArsivToggle) pipeArsivToggle.addEventListener('change', applyPipeFilter);
+  if(window.gvFilterDrawer){
+    pipeFd = gvFilterDrawer.init({
+      mount: '#pipeFiltreBtn',
+      screen: 'satispipeline',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#pipeAchips',
+      fields: [
+        {key:'tems', type:'select', label:'Temsilci', options: isTemsilci ? [] : [
+          {v:'selin', l:'Selin Acar'}, {v:'okan', l:'Okan Eren'}
+        ]},
+        {key:'tutar', type:'numrange', label:'Tutar Aralığı', prefix:'₺'}
+      ],
+      onApply: applyPipeFilter
+    });
   }
 })();
 </script>

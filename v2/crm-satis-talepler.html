@@ -75,9 +75,6 @@
         <h1>Satış Sonrası Talepler</h1>
         <div class="ph-sub"><span data-table-count>12</span> talep · 6 tür kırılımı</div>
       </div>
-      <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Satış sonrası talep listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-      </div>
     </div>
 
     <div class="kpi-grid">
@@ -104,33 +101,70 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar2">
-        <div class="filter-row">
-          <div class="fb-search" style="flex:1;min-width:200px;max-width:320px;position:relative">
-            <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted)"></i>
-            <input type="text" id="sstSearch" placeholder="Talep no, müşteri veya birim ara" style="width:100%;height:38px;padding:0 12px 0 34px;font-family:inherit;font-size:13px;font-weight:500;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);outline:none">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri, gvFilterDrawer tarafından doldurulur) → .lh-tabs (tür + durum
+           sekmeleri, iki eşdeğer birincil eksen — doküman §2.1 örneğindeki
+           "kategori/durum menüleri" ile birebir, ikisi de üst kontrol satırında
+           kalabalık YARATMADAN alt satırda kalır). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="sstSearch" placeholder="Talep no, müşteri veya birim ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="sstFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="sstColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="sstArsivGoster">
+              <input type="checkbox" id="sstArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Satış sonrası talep listesi" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
           </div>
         </div>
-        <div class="filter-row">
-          <span class="fr-lbl">Tür</span>
-          <div class="chips" id="chipsTur">
-            <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">12</span></button>
-            <button class="chip" data-tur="eksik">Eksik İş <span class="ch-cnt">5</span></button>
-            <button class="chip" data-tur="garanti">Garanti <span class="ch-cnt">2</span></button>
-            <button class="chip" data-tur="bakim">Bakım <span class="ch-cnt">2</span></button>
-            <button class="chip" data-tur="sikayet">Şikayet <span class="ch-cnt">1</span></button>
-            <button class="chip" data-tur="bilgi">Bilgi <span class="ch-cnt">1</span></button>
-            <button class="chip" data-tur="teslimat">Teslimat Problemi <span class="ch-cnt">1</span></button>
+        <div class="lh-achips gv-achips-row" id="sstAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
           </div>
         </div>
-        <div class="filter-row">
-          <span class="fr-lbl">Durum</span>
-          <div class="chips" id="chipsDurum">
-            <button class="chip is-on" data-durum="hepsi">Tümü <span class="ch-cnt">12</span></button>
-            <button class="chip" data-durum="acik">Açık <span class="ch-cnt">3</span></button>
-            <button class="chip" data-durum="islemde">İşlemde <span class="ch-cnt">4</span></button>
-            <button class="chip" data-durum="tamam">Tamamlandı <span class="ch-cnt">4</span></button>
-            <button class="chip" data-durum="red">Reddedildi <span class="ch-cnt">1</span></button>
+        <div class="lh-tabs">
+          <div class="filter-row" style="padding:10px 22px 0">
+            <span class="fr-lbl">Tür</span>
+          </div>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="chipsTur">
+              <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">12</span></button>
+              <button class="chip" data-tur="eksik">Eksik İş <span class="ch-cnt">5</span></button>
+              <button class="chip" data-tur="garanti">Garanti <span class="ch-cnt">2</span></button>
+              <button class="chip" data-tur="bakim">Bakım <span class="ch-cnt">2</span></button>
+              <button class="chip" data-tur="sikayet">Şikayet <span class="ch-cnt">1</span></button>
+              <button class="chip" data-tur="bilgi">Bilgi <span class="ch-cnt">1</span></button>
+              <button class="chip" data-tur="teslimat">Teslimat Problemi <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <div class="filter-row" style="padding:10px 22px 0">
+            <span class="fr-lbl">Durum</span>
+          </div>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="chipsDurum">
+              <button class="chip is-on" data-durum="hepsi">Tümü <span class="ch-cnt">12</span></button>
+              <button class="chip" data-durum="acik">Açık <span class="ch-cnt">3</span></button>
+              <button class="chip" data-durum="islemde">İşlemde <span class="ch-cnt">4</span></button>
+              <button class="chip" data-durum="tamam">Tamamlandı <span class="ch-cnt">4</span></button>
+              <button class="chip" data-durum="red">Reddedildi <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
       </div>
@@ -139,121 +173,121 @@
           <thead>
             <tr>
               <th>Talep / Müşteri</th>
-              <th class="col-tur">Tür</th>
-              <th class="col-kanal">Kanal</th>
-              <th class="col-tarih">Açılış</th>
-              <th class="col-durum">Durum</th>
-              <th class="col-atanan">Atanan</th>
+              <th class="col-tur" data-col="tur">Tür</th>
+              <th class="col-kanal" data-col="kanal">Kanal</th>
+              <th class="col-tarih" data-col="tarih">Açılış</th>
+              <th class="col-durum" data-col="durum">Durum</th>
+              <th class="col-atanan" data-col="atanan">Atanan</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-tur="eksik" data-durum="acik" data-href="crm-satis-talep-detay.html?sst=001">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">RK</div><div class="gcell-info"><div class="gcell-name">SST-2026-001 · Mutfak dolabı kapak ayarı</div><span class="sub">Rıza Kalkan · KO-B-311</span></div></div></td>
-              <td><span class="gtag tur-eksik">Eksik İş</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-clipboard-check"></i> Teslim Kontrolü</span></td>
-              <td>28 Haz 2026</td>
-              <td><span class="gstat info">Açık</span></td>
-              <td>Saha Teknik Ekibi</td>
+              <td data-col="tur"><span class="gtag tur-eksik">Eksik İş</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-clipboard-check"></i> Teslim Kontrolü</span></td>
+              <td data-col="tarih">28 Haz 2026</td>
+              <td data-col="durum"><span class="gstat info">Açık</span></td>
+              <td data-col="atanan">Saha Teknik Ekibi</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=001" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="eksik" data-durum="islemde" data-href="crm-satis-talep-detay.html?sst=002">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">RK</div><div class="gcell-info"><div class="gcell-name">SST-2026-002 · Banyo silikon derz yenileme</div><span class="sub">Rıza Kalkan · KO-B-311</span></div></div></td>
-              <td><span class="gtag tur-eksik">Eksik İş</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-clipboard-check"></i> Teslim Kontrolü</span></td>
-              <td>28 Haz 2026</td>
-              <td><span class="gstat warn">İşlemde</span></td>
-              <td>Yalıtım Kardeşler</td>
+              <td data-col="tur"><span class="gtag tur-eksik">Eksik İş</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-clipboard-check"></i> Teslim Kontrolü</span></td>
+              <td data-col="tarih">28 Haz 2026</td>
+              <td data-col="durum"><span class="gstat warn">İşlemde</span></td>
+              <td data-col="atanan">Yalıtım Kardeşler</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=002" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="eksik" data-durum="tamam" data-href="crm-satis-talep-detay.html?sst=003">
               <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">EB</div><div class="gcell-info"><div class="gcell-name">SST-2026-003 · Süpürgelik eksikliği</div><span class="sub">Ejder Balcı · KO-B-107</span></div></div></td>
-              <td><span class="gtag tur-eksik">Eksik İş</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
-              <td>29 Haz 2026</td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
-              <td>Saha Teknik Ekibi</td>
+              <td data-col="tur"><span class="gtag tur-eksik">Eksik İş</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
+              <td data-col="tarih">29 Haz 2026</td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="atanan">Saha Teknik Ekibi</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=003" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="eksik" data-durum="tamam" data-href="crm-satis-talep-detay.html?sst=004">
               <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SÜ</div><div class="gcell-info"><div class="gcell-name">SST-2026-004 · Kapı zili arızası</div><span class="sub">Seray Ünal · KO-B-212</span></div></div></td>
-              <td><span class="gtag tur-eksik">Eksik İş</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
-              <td>29 Haz 2026</td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
-              <td>Saha Teknik Ekibi</td>
+              <td data-col="tur"><span class="gtag tur-eksik">Eksik İş</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
+              <td data-col="tarih">29 Haz 2026</td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="atanan">Saha Teknik Ekibi</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=004" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="garanti" data-durum="tamam" data-href="crm-satis-talep-detay.html?sst=005">
               <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SÜ</div><div class="gcell-info"><div class="gcell-name">SST-2026-005 · Pencere contası garantisi</div><span class="sub">Seray Ünal · KO-B-212</span></div></div></td>
-              <td><span class="gtag tur-garanti">Garanti</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
-              <td>30 Haz 2026</td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
-              <td>Saha Teknik Ekibi</td>
+              <td data-col="tur"><span class="gtag tur-garanti">Garanti</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
+              <td data-col="tarih">30 Haz 2026</td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="atanan">Saha Teknik Ekibi</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=005" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="bakim" data-durum="islemde" data-href="crm-satis-talep-detay.html?sst=006">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)"><i class="fa-solid fa-building"></i></div><div class="gcell-info"><div class="gcell-name">SST-2026-006 · Ortak alan klima periyodik bakımı</div><span class="sub">Site Yönetimi · Kule Ofis B Blok</span></div></div></td>
-              <td><span class="gtag tur-bakim">Bakım</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
-              <td>1 Tem 2026</td>
-              <td><span class="gstat warn">İşlemde</span></td>
-              <td>Elif Sarıkaya</td>
+              <td data-col="tur"><span class="gtag tur-bakim">Bakım</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
+              <td data-col="tarih">1 Tem 2026</td>
+              <td data-col="durum"><span class="gstat warn">İşlemde</span></td>
+              <td data-col="atanan">Elif Sarıkaya</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=006" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="garanti" data-durum="islemde" data-href="crm-satis-talep-detay.html?sst=007">
               <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SO</div><div class="gcell-info"><div class="gcell-name">SST-2026-007 · Klima drenaj sızıntısı</div><span class="sub">Selçuk Onaran · KO-B-304</span></div></div></td>
-              <td><span class="gtag tur-garanti">Garanti</span></td>
-              <td><span class="gstat info kanal-portal">Portal</span></td>
-              <td>30 Haz 2026</td>
-              <td><span class="gstat warn">İşlemde</span></td>
-              <td>Elif Sarıkaya</td>
+              <td data-col="tur"><span class="gtag tur-garanti">Garanti</span></td>
+              <td data-col="kanal"><span class="gstat info kanal-portal">Portal</span></td>
+              <td data-col="tarih">30 Haz 2026</td>
+              <td data-col="durum"><span class="gstat warn">İşlemde</span></td>
+              <td data-col="atanan">Elif Sarıkaya</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=007" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="bakim" data-durum="red" data-href="crm-satis-talep-detay.html?sst=008">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)"><i class="fa-solid fa-building"></i></div><div class="gcell-info"><div class="gcell-name">SST-2026-008 · Asansör periyodik bakım talebi</div><span class="sub">Site Yönetimi · Kule Ofis B Blok</span></div></div></td>
-              <td><span class="gtag tur-bakim">Bakım</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
-              <td>1 Tem 2026</td>
-              <td><span class="gstat danger">Reddedildi</span></td>
-              <td>Elif Sarıkaya</td>
+              <td data-col="tur"><span class="gtag tur-bakim">Bakım</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
+              <td data-col="tarih">1 Tem 2026</td>
+              <td data-col="durum"><span class="gstat danger">Reddedildi</span></td>
+              <td data-col="atanan">Elif Sarıkaya</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=008" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="sikayet" data-durum="acik" data-href="crm-satis-talep-detay.html?sst=009">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">MI</div><div class="gcell-info"><div class="gcell-name">SST-2026-009 · Otopark su birikintisi</div><span class="sub">Meltem Işık · KO-B-406</span></div></div></td>
-              <td><span class="gtag tur-sikayet">Şikayet</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
-              <td>1 Tem 2026</td>
-              <td><span class="gstat info">Açık</span></td>
-              <td>Elif Sarıkaya</td>
+              <td data-col="tur"><span class="gtag tur-sikayet">Şikayet</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
+              <td data-col="tarih">1 Tem 2026</td>
+              <td data-col="durum"><span class="gstat info">Açık</span></td>
+              <td data-col="atanan">Elif Sarıkaya</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=009" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="bilgi" data-durum="tamam" data-href="crm-satis-talep-detay.html?sst=010">
               <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SO</div><div class="gcell-info"><div class="gcell-name">SST-2026-010 · Taksit planı bilgi talebi</div><span class="sub">Selçuk Onaran · VK-C-18</span></div></div></td>
-              <td><span class="gtag tur-bilgi">Bilgi</span></td>
-              <td><span class="gstat info kanal-portal">Portal</span></td>
-              <td>2 Tem 2026</td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
-              <td>Okan Eren</td>
+              <td data-col="tur"><span class="gtag tur-bilgi">Bilgi</span></td>
+              <td data-col="kanal"><span class="gstat info kanal-portal">Portal</span></td>
+              <td data-col="tarih">2 Tem 2026</td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="atanan">Okan Eren</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=010" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="teslimat" data-durum="acik" data-href="crm-satis-talep-detay.html?sst=011">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">MI</div><div class="gcell-info"><div class="gcell-name">SST-2026-011 · Teslimat randevusu ertelenmesi</div><span class="sub">Meltem Işık · KO-B-406</span></div></div></td>
-              <td><span class="gtag tur-teslimat">Teslimat Problemi</span></td>
-              <td><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
-              <td>2 Tem 2026</td>
-              <td><span class="gstat info">Açık</span></td>
-              <td>Elif Sarıkaya</td>
+              <td data-col="tur"><span class="gtag tur-teslimat">Teslimat Problemi</span></td>
+              <td data-col="kanal"><span class="kanal-cell"><i class="fa-solid fa-phone"></i> Telefon</span></td>
+              <td data-col="tarih">2 Tem 2026</td>
+              <td data-col="durum"><span class="gstat info">Açık</span></td>
+              <td data-col="atanan">Elif Sarıkaya</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=011" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-tur="eksik" data-durum="islemde" data-href="crm-satis-talep-detay.html?sst=012">
               <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">SO</div><div class="gcell-info"><div class="gcell-name">SST-2026-012 · Mutfak dolap kapağı hizası</div><span class="sub">Selçuk Onaran · VK-C-18</span></div></div></td>
-              <td><span class="gtag tur-eksik">Eksik İş</span></td>
-              <td><span class="gstat info kanal-portal">Portal</span></td>
-              <td>20 Tem 2026</td>
-              <td><span class="gstat warn">İşlemde</span></td>
-              <td>Elif Sarıkaya</td>
+              <td data-col="tur"><span class="gtag tur-eksik">Eksik İş</span></td>
+              <td data-col="kanal"><span class="gstat info kanal-portal">Portal</span></td>
+              <td data-col="tarih">20 Tem 2026</td>
+              <td data-col="durum"><span class="gstat warn">İşlemde</span></td>
+              <td data-col="atanan">Elif Sarıkaya</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satis-talep-detay.html?sst=012" data-no-confirm aria-label="Talep detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
@@ -291,14 +325,39 @@
   var emptyEl = document.querySelector('[data-table-empty]');
   var cntEl = document.querySelector('[data-table-count]');
 
+  /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
+     Kanal ve Atanan, tabloda zaten gösterilen ama tür/durum sekmeleriyle
+     KAPSANMAYAN iki gerçek boyuttur (§4.3 örnekleri: "Belge durumu"na karşılık
+     gelen kanal, "Personel"e karşılık gelen atanan). */
+  var sstFd = null;
+  function sstFv(key){
+    if(!sstFd) return null;
+    var st = sstFd.values();
+    return st && st[key] ? st[key].value : null;
+  }
+
   function apply(){
     var term = searchInp.value.trim().toLocaleLowerCase('tr');
+    var kanal = sstFv('kanal');
+    var atanan = sstFv('atanan');
+    var showArsiv = (document.getElementById('sstArsivGoster') || {}).checked;
     var shown = 0;
     rows.forEach(function(tr){
       var okTur = turOn === 'hepsi' || tr.getAttribute('data-tur') === turOn;
       var okDurum = durumOn === 'hepsi' || tr.getAttribute('data-durum') === durumOn;
+      var okArsiv = showArsiv || tr.getAttribute('data-recstat') !== 'arsiv';
+      var okKanal = true;
+      if(kanal){
+        var kanalCell = tr.querySelector('[data-col="kanal"]');
+        okKanal = !!kanalCell && kanalCell.textContent.trim().indexOf(kanal) !== -1;
+      }
+      var okAtanan = true;
+      if(atanan){
+        var atananCell = tr.querySelector('[data-col="atanan"]');
+        okAtanan = !!atananCell && atananCell.textContent.trim() === atanan;
+      }
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-      var show = okTur && okDurum && okTerm;
+      var show = okTur && okDurum && okArsiv && okKanal && okAtanan && okTerm;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -324,8 +383,45 @@
   });
   searchInp.addEventListener('input', apply);
 
+  if(window.gvFilterDrawer){
+    sstFd = gvFilterDrawer.init({
+      mount: '#sstFiltreBtn',
+      screen: 'satistalep',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#sstAchips',
+      fields: [
+        {key:'kanal', type:'select', label:'Kanal', options:[
+          {v:'Portal', l:'Portal'}, {v:'Telefon', l:'Telefon'}, {v:'Teslim Kontrolü', l:'Teslim Kontrolü'}
+        ]},
+        {key:'atanan', type:'select', label:'Atanan', options:[
+          {v:'Saha Teknik Ekibi', l:'Saha Teknik Ekibi'}, {v:'Elif Sarıkaya', l:'Elif Sarıkaya'},
+          {v:'Okan Eren', l:'Okan Eren'}, {v:'Yalıtım Kardeşler', l:'Yalıtım Kardeşler'}
+        ]}
+      ],
+      onApply: apply
+    });
+  }
+  var sstArsivToggle = document.getElementById('sstArsivGoster');
+  if(sstArsivToggle) sstArsivToggle.addEventListener('change', apply);
+
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#sstColsBtn',
+      table: '#tblSst',
+      screen: 'satistalep',
+      cols: [
+        {key:'tur', lbl:'Tür', def:true},
+        {key:'kanal', lbl:'Kanal', def:true},
+        {key:'tarih', lbl:'Açılış', def:true},
+        {key:'durum', lbl:'Durum', def:true},
+        {key:'atanan', lbl:'Atanan', def:true}
+      ]
+    });
+  }
+
   /* teknik rolü satış bölümünde YALNIZ bu ekranı görür — shell.js scr kısıtı zaten
      menüde tek öğe bırakıyor; burada ek bir budama gerekmiyor (tam erişim). */
+  apply();
 })();
 </script>
 </body>

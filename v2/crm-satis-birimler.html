@@ -151,23 +151,59 @@
 
       <!-- ============ TABLO GÖRÜNÜMÜ ============ -->
       <div id="viewTablo">
-        <div class="filter-bar">
-          <div class="fb-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Birim kodu veya müşteri ara" data-table-search="#tblBirim">
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+             .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+             çipleri, gvFilterDrawer tarafından doldurulur) → .lh-tabs (durum sekmeleri).
+             Proje seçimi + Tablo/Matris görünüm anahtarı (.brm-toolbar) bu standardın
+             DIŞINDA bir sayfa-üstü kapsam seçicidir (görev/personel şantiye seçimiyle
+             AYNI kategoride değil — matris görünümünün arama/filtre/kolon kavramı yok),
+             bu yüzden gv-listhead'in ÜSTÜNDE, sadece Tablo görünümünde kalır. -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Birim kodu veya müşteri ara" data-table-search="#tblBirim">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="brmFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="brmColsBtn" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <label class="lh-toggle" for="brmArsivGoster">
+                <input type="checkbox" id="brmArsivGoster">
+                <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+              </label>
+              <a class="btn btn-ghost btn-sm" href="#" data-export="Bağımsız bölüm listesi" aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </a>
+            </div>
           </div>
-          <div class="chips" data-target="#tblBirim" id="durumChips"><button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">96</span></button><button class="chip" data-filter="satista">Satışta <span class="ch-cnt">39</span></button><button class="chip" data-filter="opsiyonlu">Opsiyonlu <span class="ch-cnt">6</span></button><button class="chip" data-filter="rezerve">Rezerve <span class="ch-cnt">3</span></button><button class="chip" data-filter="satildi">Satıldı <span class="ch-cnt">44</span></button><button class="chip" data-filter="arsa">Arsa Sahibi <span class="ch-cnt">2</span></button><button class="chip" data-filter="kapali">Satışa Kapalı <span class="ch-cnt">2</span></button></div>
+          <div class="lh-achips gv-achips-row" id="brmAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" data-target="#tblBirim" id="durumChips"><button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">96</span></button><button class="chip" data-filter="satista">Satışta <span class="ch-cnt">39</span></button><button class="chip" data-filter="opsiyonlu">Opsiyonlu <span class="ch-cnt">6</span></button><button class="chip" data-filter="rezerve">Rezerve <span class="ch-cnt">3</span></button><button class="chip" data-filter="satildi">Satıldı <span class="ch-cnt">44</span></button><button class="chip" data-filter="arsa">Arsa Sahibi <span class="ch-cnt">2</span></button><button class="chip" data-filter="kapali">Satışa Kapalı <span class="ch-cnt">2</span></button></div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
         </div>
         <div class="gc-body flush">
           <table class="gtable" id="tblBirim" data-paginate="25">
             <thead>
               <tr>
                 <th class="col-kod">Kod</th>
-                <th class="col-loc">Blok / Kat</th>
-                <th class="col-tip">Tip</th>
-                <th class="num col-fiyat">Liste Fiyatı</th>
-                <th class="col-durum">Durum</th>
-                <th>İlgili Müşteri</th>
+                <th class="col-loc" data-col="loc">Blok / Kat</th>
+                <th class="col-tip" data-col="tip">Tip</th>
+                <th class="num col-fiyat" data-col="fiyat">Liste Fiyatı</th>
+                <th class="col-durum" data-col="durum">Durum</th>
+                <th data-col="mus">İlgili Müşteri</th>
                 <th></th>
               </tr>
             </thead>
@@ -471,9 +507,21 @@ Satıldı"><b>04</b><span>2+1</span></a></div></div>
     });
   }
 
-  /* arama + durum çipi birlikte uygulanır, sayaç güncellenir, pager tazelenir
-     (ui.js applyFilters ile aynı sözleşme — proje sekmesi değişiminde de çağrılır
-     ki pager sayımı YENİ veri setine göre doğru kalsın, bkz. yukarıdaki not) */
+  /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
+     Durum zaten `.lh-tabs` chip'lerinde var — aynı boyutu drawer'da TEKRAR
+     sunmak §2.2'nin "kontroller kalabalıklaşmasın" hedefiyle çelişir (crm-gorev.html
+     emsali). Fiyat Aralığı, mevcut "Liste Fiyatı" kolonuna karşılık gelen, chip'lerle
+     kapsanmayan TEK yeni boyut olduğu için seçildi (§4.3 "Tutar aralığı" örneği). */
+  var brmFd = null, brmCols = null;
+  function brmFiyatRange(){
+    if(!brmFd) return null;
+    var st = brmFd.values();
+    return st && st.fiyat ? st.fiyat.value : null;
+  }
+
+  /* arama + durum çipi + fiyat aralığı + arşiv birlikte uygulanır, sayaç güncellenir,
+     pager tazelenir (ui.js applyFilters ile aynı sözleşme — proje sekmesi değişiminde
+     de çağrılır ki pager sayımı YENİ veri setine göre doğru kalsın, bkz. yukarıdaki not) */
   function syncTblBirim(isChange){
     var tbl = document.getElementById('tblBirim');
     var card = tbl.closest('.gv-card') || document;
@@ -481,11 +529,21 @@ Satıldı"><b>04</b><span>2+1</span></a></div></div>
     var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
     var on = document.querySelector('#durumChips .chip.is-on[data-filter]');
     var f = on ? on.getAttribute('data-filter') : 'hepsi';
+    var fiyatR = brmFiyatRange();
+    var showArsiv = (document.getElementById('brmArsivGoster') || {}).checked;
     var shown = 0;
     tbl.querySelectorAll('tbody tr').forEach(function(tr){
       var okF = (f === 'hepsi') || (tr.getAttribute('data-f') === f);
       var okT = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-      var show = okF && okT;
+      var okArsiv = showArsiv || tr.getAttribute('data-recstat') !== 'arsiv';
+      var okFiyat = true;
+      if(fiyatR){
+        var priceCell = tr.querySelector('td.num');
+        var priceNum = priceCell ? parseInt(priceCell.textContent.replace(/[^\d]/g, ''), 10) : NaN;
+        if(fiyatR.min != null && !isNaN(priceNum)) okFiyat = okFiyat && priceNum >= fiyatR.min;
+        if(fiyatR.max != null && !isNaN(priceNum)) okFiyat = okFiyat && priceNum <= fiyatR.max;
+      }
+      var show = okF && okT && okArsiv && okFiyat;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -508,11 +566,11 @@ Satıldı"><b>04</b><span>2+1</span></a></div></div>
       }
       return '<tr data-f="' + u.durum + '">'
         + '<td><div class="birim-kod t-strong">' + u.kod + (u.uyari ? ' <i class="fa-solid fa-triangle-exclamation odue" data-tip="' + u.uyari + '"></i>' : '') + '</div></td>'
-        + '<td>' + u.loc + '</td>'
-        + '<td>' + u.tip + '</td>'
-        + '<td class="num">' + tl(u.fiyat) + '</td>'
-        + '<td>' + gstat(u.durum) + '</td>'
-        + '<td>' + musCell + '</td>'
+        + '<td data-col="loc">' + u.loc + '</td>'
+        + '<td data-col="tip">' + u.tip + '</td>'
+        + '<td class="num" data-col="fiyat">' + tl(u.fiyat) + '</td>'
+        + '<td data-col="durum">' + gstat(u.durum) + '</td>'
+        + '<td data-col="mus">' + musCell + '</td>'
         + '<td><div class="row-acts"><a class="ia-btn" href="crm-satis-birim-detay.html?birim=' + u.kod + '" data-no-confirm aria-label="Birim detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>'
         + '</tr>';
     }).join('');
@@ -521,6 +579,10 @@ Satıldı"><b>04</b><span>2+1</span></a></div></div>
        (proje geçişinde arama bağlamı sıfırlanmaz) — syncTblBirim mevcut arama terimini
        yeni veri setine karşı yeniden uygular */
     syncTblBirim(!isInit);
+    /* tbody innerHTML ile yeniden yazıldığı için (proje sekmesi değişimi) gvCols'un
+       önceki gizle/sırala durumu YENİ hücrelere yeniden uygulanır — `apply()` genel
+       (idempotent) API, yeniden init ETMEZ. */
+    if(brmCols) brmCols.apply();
   }
 
   document.getElementById('brmLegend').innerHTML = DURUM_CHIP_ORDER.map(function(d){
@@ -607,6 +669,36 @@ Satıldı"><b>04</b><span>2+1</span></a></div></div>
       document.getElementById('viewMatris').hidden = activeView !== 'matris';
     });
   });
+
+  /* ============ V3A — Gelişmiş Filtre + Kolonlar kurulumu ============ */
+  if(window.gvFilterDrawer){
+    brmFd = gvFilterDrawer.init({
+      mount: '#brmFiltreBtn',
+      screen: 'satisbirim',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#brmAchips',
+      fields: [
+        {key:'fiyat', type:'numrange', label:'Liste Fiyatı Aralığı', prefix:'₺'}
+      ],
+      onApply: function(){ syncTblBirim(true); }
+    });
+  }
+  var brmArsivToggle = document.getElementById('brmArsivGoster');
+  if(brmArsivToggle) brmArsivToggle.addEventListener('change', function(){ syncTblBirim(true); });
+  if(window.gvCols && document.getElementById('brmColsBtn')){
+    brmCols = gvCols.init({
+      mount: '#brmColsBtn',
+      table: '#tblBirim',
+      screen: 'satisbirim',
+      cols: [
+        {key:'loc', lbl:'Blok / Kat', def:true},
+        {key:'tip', lbl:'Tip', def:true},
+        {key:'fiyat', lbl:'Liste Fiyatı', def:true},
+        {key:'durum', lbl:'Durum', def:true},
+        {key:'mus', lbl:'İlgili Müşteri', def:true}
+      ]
+    });
+  }
 
   renderAll(true);
 })();

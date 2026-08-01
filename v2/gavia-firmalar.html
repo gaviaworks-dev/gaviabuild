@@ -118,6 +118,53 @@ tr.pc-sub-row .pc-firma-info span{color:var(--on-dark-faint)}
   .pc-card-head{padding:14px 16px}
   .pc-card-foot{padding:12px 16px}
 }
+
+/* ============ V3A — liste üst alanı, Platform Konsolu KOYU teması için sayfa-lokal
+   varyant (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). `.gv-listhead/.lh-*` ailesi
+   ui.css'te AÇIK zemin token'larıyla (--paper/--ink/--line) tanımlı — bu konsolun
+   koyu `--gv-*`/`--on-dark*` token setiyle doğrudan uyumsuz (beyaz arama kutusu koyu
+   kartta adacık oluşturur). Bu yüzden AYNI konum/davranış standardı (arama sol,
+   aksiyonlar sağ tek satır, tab'lar altta) burada `.pc-lh-*` adıyla koyu tema
+   token'larıyla yeniden kurulur; `gvFilterDrawer`/`gvCols`/`gvExport` JS primitifleri
+   DEĞİŞMEDEN tüketilir (onlar kendi `.gv-fpanel` overlay'ini body'e ekler, sayfa
+   temasından bağımsız kendi kendine yeterlidir). */
+.pc-listhead{border-bottom:1px solid var(--gv-border-dark)}
+.pc-lh-row{display:flex;align-items:center;gap:12px;padding:16px 22px;flex-wrap:nowrap}
+.pc-lh-search{position:relative;flex:1 1 auto;min-width:0;max-width:360px}
+.pc-lh-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--on-dark-mut);pointer-events:none}
+.pc-lh-search input{width:100%;height:38px;padding:0 12px 0 34px;font-family:inherit;font-size:13px;font-weight:500;
+  color:var(--on-dark);background:rgba(255,255,255,.03);border:1px solid var(--gv-border-dark);border-radius:var(--r-sm);outline:none;transition:.18s var(--ease)}
+.pc-lh-search input::placeholder{color:var(--on-dark-mut)}
+.pc-lh-search input:focus{border-color:var(--gv-mint)}
+.pc-lh-acts{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex:0 0 auto}
+.pc-lh-acts .btn-ghost-dk{padding:8px 14px;font-size:12.5px;display:inline-flex;align-items:center;gap:7px;border-radius:var(--r-sm);cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+.pc-lh-toggle{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--on-dark-mut);cursor:pointer;white-space:nowrap;flex:none}
+.pc-lh-toggle input{width:15px;height:15px;accent-color:var(--gv-mint);cursor:pointer;flex:none}
+.pc-lh-tabs{display:flex;align-items:center;gap:8px;padding:12px 22px;border-top:1px solid var(--gv-border-dark);flex-wrap:wrap}
+.pc-chip{border:1px solid var(--gv-border-dark);background:transparent;color:var(--on-dark-mut);font-family:inherit;font-size:12px;font-weight:700;
+  padding:7px 13px;border-radius:var(--r-pill);cursor:pointer;transition:.18s var(--ease);display:inline-flex;align-items:center;gap:6px}
+.pc-chip:hover{border-color:var(--gv-mint);color:#fff}
+.pc-chip.is-on{border-color:var(--gv-mint);color:var(--gv-deep);background:var(--gv-mint)}
+/* §16.1 — aksiyonlar hiçbir genişlikte alt satıra düşmez/taşmaz: `.lh-acts .btn`
+   (ui.css) ile AYNI 900/640px küçülme deseni burada `.pc-lh-acts` için tekrarlanır. */
+@media(max-width:900px){
+  .pc-lh-acts .btn-ghost-dk{padding:8px 12px;font-size:12px}
+}
+@media(max-width:640px){
+  .pc-lh-row{padding:14px 16px}
+  .pc-lh-search{max-width:none}
+  .pc-lh-acts{gap:6px}
+  .pc-lh-acts .btn-ghost-dk{padding:0;width:34px;height:34px;gap:0;justify-content:center}
+  .pc-lh-acts .lh-lbl{display:none}
+  .pc-lh-toggle{gap:0}
+  .pc-lh-tabs{padding:12px 16px}
+}
+/* gvFilterDrawer'ın `.gv-achips-row` mount hedefi ortak ui.css'te AÇIK zemin
+   token'larıyla tanımlı (var(--bg)/var(--line)) — bu konsolda yalnız bu kart
+   İÇİNDE koyu temaya uyarlanır (targeted override, ui.css'e DOKUNULMADI). */
+.pc-card .gv-achips-row{background:rgba(255,255,255,.03);border-color:var(--gv-border-dark)}
+.pc-card .gv-achip{background:var(--gv-mint-glow);color:var(--gv-mint-bright);border-color:rgba(63,213,173,.3)}
+.pc-card .gv-achip b{color:#fff}
 </style>
 </head>
 <body>
@@ -155,36 +202,72 @@ tr.pc-sub-row .pc-firma-info span{color:var(--on-dark-faint)}
     <div class="pc-card">
       <div class="pc-card-head">
         <div class="pc-card-title"><i class="fa-solid fa-list"></i> Firma Listesi</div>
-        <span style="margin-left:auto;font-size:12px;color:var(--on-dark-mut)">5 ana kayıt · 2 alt şirket</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--on-dark-mut)" id="firmaCardSub">5 ana kayıt · 2 alt şirket</span>
+      </div>
+      <!-- V3A — standart liste üst alanı, koyu tema varyantı (bkz. yukarı .pc-lh-* yorumu). -->
+      <div class="pc-listhead">
+        <div class="pc-lh-row">
+          <div class="pc-lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="firmaSearch" placeholder="Firma adı veya alan adı ara">
+          </div>
+          <div class="pc-lh-acts">
+            <button type="button" class="btn-ghost-dk gv-fp-open" id="firmaFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn-ghost-dk" id="firmaColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="pc-lh-toggle" for="firmaPasifGoster">
+              <input type="checkbox" id="firmaPasifGoster">
+              <i class="fa-solid fa-pause"></i> <span class="lh-lbl">Pasifleri Göster</span>
+            </label>
+            <a class="btn-ghost-dk" href="#" data-export="Firma listesi" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="firmaAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="pc-lh-tabs" id="firmaChips">
+          <button type="button" class="pc-chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">5</span></button>
+          <button type="button" class="pc-chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+          <button type="button" class="pc-chip" data-filter="deneme">Deneme <span class="ch-cnt">1</span></button>
+          <button type="button" class="pc-chip" data-filter="ucretsiz">Ücretsiz <span class="ch-cnt">1</span></button>
+        </div>
       </div>
       <div class="pc-card-body flush">
-        <table class="pc-table">
+        <table class="pc-table" id="tblFirma">
           <thead>
             <tr>
               <th>Firma</th>
-              <th>Paket</th>
-              <th>Müşteri süresi</th>
-              <th class="num">Kullanıcı</th>
-              <th class="num">Toplam ödeme</th>
-              <th>Durum</th>
+              <th data-col="paket">Paket</th>
+              <th data-col="sure">Müşteri süresi</th>
+              <th class="num" data-col="kullanici">Kullanıcı</th>
+              <th class="num" data-col="odeme">Toplam ödeme</th>
+              <th data-col="durum">Durum</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
+            <tr data-f="aktif">
               <td>
                 <div class="pc-firma-name">
                   <div class="pc-firma-mark">Y</div>
                   <div class="pc-firma-info"><b><a href="gavia-firma-detay.html?firma=yapitas">Yapıtaş İnşaat A.Ş.</a></b><span>crm.yapitas.example</span></div>
                 </div>
               </td>
-              <td><span class="tier paid"><i class="fa-solid fa-gem"></i> Professional</span></td>
-              <td>14 aydır müşteri</td>
-              <td class="num">18</td>
-              <td class="num">₺208.600</td>
-              <td><span class="gstat ok">Aktif</span></td>
+              <td data-col="paket"><span class="tier paid"><i class="fa-solid fa-gem"></i> Professional</span></td>
+              <td data-col="sure">14 aydır müşteri</td>
+              <td class="num" data-col="kullanici">18</td>
+              <td class="num" data-col="odeme">₺208.600</td>
+              <td data-col="durum"><span class="gstat ok">Aktif</span></td>
             </tr>
 
-            <tr class="pc-firma-row" data-exp-row="miray">
+            <tr class="pc-firma-row" data-exp-row="miray" data-f="aktif">
               <td>
                 <div class="pc-firma-name">
                   <button type="button" class="pc-exp-btn" data-exp-toggle="miray" aria-expanded="false" aria-label="Miray Yapı Group alt şirketlerini göster"><i class="fa-solid fa-chevron-right"></i></button>
@@ -192,11 +275,11 @@ tr.pc-sub-row .pc-firma-info span{color:var(--on-dark-faint)}
                   <div class="pc-firma-info"><b><a href="gavia-firma-detay.html?firma=miray">Miray Yapı Group</a></b><span>3 şirkete erişim · çoklu firma</span></div>
                 </div>
               </td>
-              <td><span class="tier paid"><i class="fa-solid fa-crown"></i> Enterprise</span></td>
-              <td>26 aydır müşteri</td>
-              <td class="num">42</td>
-              <td class="num">₺699.400</td>
-              <td><span class="gstat ok">Aktif</span></td>
+              <td data-col="paket"><span class="tier paid"><i class="fa-solid fa-crown"></i> Enterprise</span></td>
+              <td data-col="sure">26 aydır müşteri</td>
+              <td class="num" data-col="kullanici">42</td>
+              <td class="num" data-col="odeme">₺699.400</td>
+              <td data-col="durum"><span class="gstat ok">Aktif</span></td>
             </tr>
             <tr class="pc-sub-row" data-exp-sub="miray" hidden>
               <td>
@@ -205,11 +288,11 @@ tr.pc-sub-row .pc-firma-info span{color:var(--on-dark-faint)}
                   <div class="pc-firma-info"><b>Miray Konut A.Ş.</b><span>alt şirket · ayrı fatura yok</span></div>
                 </div>
               </td>
-              <td><span class="tier paid"><i class="fa-solid fa-crown"></i> Enterprise</span></td>
-              <td>—</td>
-              <td class="num">24</td>
-              <td class="num">—</td>
-              <td><span class="gstat off">Ana sözleşmede</span></td>
+              <td data-col="paket"><span class="tier paid"><i class="fa-solid fa-crown"></i> Enterprise</span></td>
+              <td data-col="sure">—</td>
+              <td class="num" data-col="kullanici">24</td>
+              <td class="num" data-col="odeme">—</td>
+              <td data-col="durum"><span class="gstat off">Ana sözleşmede</span></td>
             </tr>
             <tr class="pc-sub-row" data-exp-sub="miray" hidden>
               <td>
@@ -218,56 +301,56 @@ tr.pc-sub-row .pc-firma-info span{color:var(--on-dark-faint)}
                   <div class="pc-firma-info"><b>Miray Altyapı Ltd.</b><span>alt şirket · ayrı fatura yok</span></div>
                 </div>
               </td>
-              <td><span class="tier"><i class="fa-solid fa-layer-group"></i> Basic</span></td>
-              <td>—</td>
-              <td class="num">6</td>
-              <td class="num">—</td>
-              <td><span class="gstat off">Ana sözleşmede</span></td>
+              <td data-col="paket"><span class="tier"><i class="fa-solid fa-layer-group"></i> Basic</span></td>
+              <td data-col="sure">—</td>
+              <td class="num" data-col="kullanici">6</td>
+              <td class="num" data-col="odeme">—</td>
+              <td data-col="durum"><span class="gstat off">Ana sözleşmede</span></td>
             </tr>
             <tr class="pc-note-row" data-exp-sub="miray" hidden>
               <td colspan="6"><i class="fa-solid fa-circle-info" style="color:var(--gv-mint);margin-right:6px"></i>Yetkili: Cem Miray — 3 şirkete erişim. Alt şirketler için ayrı fatura kesilmez; tüm ödemeler ana sözleşmeye (Miray Yapı Group) dahildir.</td>
             </tr>
 
-            <tr>
+            <tr data-f="aktif">
               <td>
                 <div class="pc-firma-name">
                   <div class="pc-firma-mark">E</div>
                   <div class="pc-firma-info"><b><a href="gavia-firma-detay.html?firma=ege">Ege Modern İnşaat</a></b><span>satış ofisi ağırlıklı geliştirici</span></div>
                 </div>
               </td>
-              <td><span class="tier paid"><i class="fa-solid fa-handshake"></i> CRM + Sales</span></td>
-              <td>7 aydır müşteri</td>
-              <td class="num">11</td>
-              <td class="num">₺139.300</td>
-              <td><span class="gstat ok">Aktif</span></td>
+              <td data-col="paket"><span class="tier paid"><i class="fa-solid fa-handshake"></i> CRM + Sales</span></td>
+              <td data-col="sure">7 aydır müşteri</td>
+              <td class="num" data-col="kullanici">11</td>
+              <td class="num" data-col="odeme">₺139.300</td>
+              <td data-col="durum"><span class="gstat ok">Aktif</span></td>
             </tr>
 
-            <tr>
+            <tr data-f="deneme">
               <td>
                 <div class="pc-firma-name">
                   <div class="pc-firma-mark">K</div>
                   <div class="pc-firma-info"><b><a href="gavia-firma-detay.html?firma=kuzey">Kuzey Proje Ltd.</a></b><span>deneme sürecinde</span></div>
                 </div>
               </td>
-              <td><span class="tier"><i class="fa-solid fa-layer-group"></i> Basic</span></td>
-              <td>9. gün (deneme)</td>
-              <td class="num">4</td>
-              <td class="num">₺0</td>
-              <td><span class="gstat warn">Deneme · 8 Tem bitiyor</span></td>
+              <td data-col="paket"><span class="tier"><i class="fa-solid fa-layer-group"></i> Basic</span></td>
+              <td data-col="sure">9. gün (deneme)</td>
+              <td class="num" data-col="kullanici">4</td>
+              <td class="num" data-col="odeme">₺0</td>
+              <td data-col="durum"><span class="gstat warn">Deneme · 8 Tem bitiyor</span></td>
             </tr>
 
-            <tr>
+            <tr data-f="ucretsiz">
               <td>
                 <div class="pc-firma-name">
                   <div class="pc-firma-mark">Ç</div>
                   <div class="pc-firma-info"><b><a href="gavia-firma-detay.html?firma=cinar">Çınar İnşaat</a></b><span>Antalya</span></div>
                 </div>
               </td>
-              <td><span class="tier"><i class="fa-solid fa-seedling"></i> Ücretsiz</span></td>
-              <td>2 aydır müşteri</td>
-              <td class="num">3</td>
-              <td class="num">₺0</td>
-              <td><span class="gstat off">Ücretsiz</span></td>
+              <td data-col="paket"><span class="tier"><i class="fa-solid fa-seedling"></i> Ücretsiz</span></td>
+              <td data-col="sure">2 aydır müşteri</td>
+              <td class="num" data-col="kullanici">3</td>
+              <td class="num" data-col="odeme">₺0</td>
+              <td data-col="durum"><span class="gstat off">Ücretsiz</span></td>
             </tr>
           </tbody>
         </table>
@@ -288,6 +371,100 @@ tr.pc-sub-row .pc-firma-info span{color:var(--on-dark-faint)}
       document.querySelectorAll('[data-exp-sub="' + key + '"]').forEach(function(row){ row.hidden = open; });
     });
   });
+
+  /* ============ V3A — liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3) ============
+     Bu sayfa CRM shell'ini DEĞİL, ayrı "Platform Konsolu" (.pc-*) kabuğunu kullanır —
+     shell.js yüklenmez, window.GV yoktur. gvFilterDrawer/gvCols/gvExport GV'ye bağımlı
+     DEĞİLDİR (ui.js'te koşulsuz window.* olarak tanımlı), bu yüzden doğrudan çağrılabilir.
+     Alt şirket satırları (Miray Konut/Altyapı + not satırı) yalnız açma/kapama düğmesiyle
+     yönetilir — arama/chip/Gelişmiş Filtre yalnız BİRİNCİL firma satırlarını (data-f) etkiler. */
+  var tblFirma = document.getElementById('tblFirma');
+  var firmaFd = null;
+  function firmaFv(key){
+    if(!firmaFd) return null;
+    var st = firmaFd.values();
+    return st && st[key] ? st[key].value : null;
+  }
+  function applyFirmaFilter(){
+    var term = (document.getElementById('firmaSearch').value || '').trim().toLocaleLowerCase('tr');
+    var onChip = document.querySelector('#firmaChips .pc-chip.is-on');
+    var f = onChip ? onChip.getAttribute('data-filter') : 'hepsi';
+    var paket = firmaFv('paket');
+    var durum = firmaFv('durum');
+    var showPasif = (document.getElementById('firmaPasifGoster') || {}).checked;
+    var shown = 0;
+    tblFirma.querySelectorAll('tbody > tr[data-f]').forEach(function(tr){
+      var okF = (f === 'hepsi') || (tr.getAttribute('data-f') === f);
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okPasif = showPasif || tr.getAttribute('data-recstat') !== 'pasif';
+      var okPaket = true;
+      if(paket){
+        var paketCell = tr.querySelector('[data-col="paket"]');
+        okPaket = !!paketCell && paketCell.textContent.trim().indexOf(paket) !== -1;
+      }
+      var okDurum = true;
+      if(durum){
+        var durumCell = tr.querySelector('[data-col="durum"]');
+        okDurum = !!durumCell && durumCell.textContent.trim().indexOf(durum) !== -1;
+      }
+      var show = okF && okTerm && okPasif && okPaket && okDurum;
+      tr.hidden = !show;
+      /* satır gizlenince açık alt şirket satırları da gizlenir (tutarlılık) */
+      var expKey = tr.getAttribute('data-exp-row');
+      if(expKey){
+        document.querySelectorAll('[data-exp-sub="' + expKey + '"]').forEach(function(sub){
+          if(!show) sub.hidden = true;
+        });
+      }
+      if(show) shown++;
+    });
+    var sub = document.getElementById('firmaCardSub');
+    if(sub) sub.textContent = shown + ' kayıt gösteriliyor · toplam 5 ana firma';
+  }
+  document.getElementById('firmaSearch').addEventListener('input', applyFirmaFilter);
+  document.querySelectorAll('#firmaChips .pc-chip[data-filter]').forEach(function(ch){
+    ch.addEventListener('click', function(){
+      document.querySelectorAll('#firmaChips .pc-chip').forEach(function(x){ x.classList.remove('is-on'); });
+      ch.classList.add('is-on');
+      applyFirmaFilter();
+    });
+  });
+  var firmaPasifToggle = document.getElementById('firmaPasifGoster');
+  if(firmaPasifToggle) firmaPasifToggle.addEventListener('change', applyFirmaFilter);
+
+  if(window.gvFilterDrawer){
+    firmaFd = gvFilterDrawer.init({
+      mount: '#firmaFiltreBtn',
+      screen: 'gaviafirmalar',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#firmaAchips',
+      fields: [
+        {key:'paket', type:'select', label:'Paket', options:[
+          {v:'Enterprise', l:'Enterprise'}, {v:'Professional', l:'Professional'},
+          {v:'CRM + Sales', l:'CRM + Sales'}, {v:'Basic', l:'Basic'}, {v:'Ücretsiz', l:'Ücretsiz'}
+        ]},
+        {key:'durum', type:'select', label:'Durum', options:[
+          {v:'Aktif', l:'Aktif'}, {v:'Deneme', l:'Deneme'}, {v:'Ücretsiz', l:'Ücretsiz'}
+        ]}
+      ],
+      onApply: applyFirmaFilter
+    });
+  }
+
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#firmaColsBtn',
+      table: '#tblFirma',
+      screen: 'gaviafirmalar',
+      cols: [
+        {key:'paket', lbl:'Paket', def:true},
+        {key:'sure', lbl:'Müşteri süresi', def:true},
+        {key:'kullanici', lbl:'Kullanıcı', def:true},
+        {key:'odeme', lbl:'Toplam ödeme', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
 })();
 </script>
 </body>
