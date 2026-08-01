@@ -43,7 +43,11 @@
 .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
 .filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-#btnSeciliCikti[disabled]{pointer-events:none;opacity:.45}
+/* [v2/LEAD] Kilitli karar #1: pasif buton bırakılmaz. Eski kural
+   `pointer-events:none` ile butonu tamamen ölü yapıyordu; artık seçim yokken
+   yalnız GÖRSEL olarak sönük duruyor ama TIKLANABİLİR — tıklanınca sebebi
+   söyleyen bir sonuç ekranı açılıyor. */
+#btnSeciliCikti.is-bos{opacity:.55}
 @media(max-width:640px){
   .filter-row .frow-lbl{min-width:0;width:100%}
   .filter-row .gv-chipbar-wrap{width:100%}
@@ -209,7 +213,7 @@
           </div>
           <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtn"><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</button>
           <button type="button" class="btn btn-ghost btn-sm" id="colsBtn"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
-          <a class="btn btn-ghost btn-sm" id="btnSeciliCikti" href="crm-finans-banka-cikti.html" disabled><i class="fa-solid fa-print"></i> Seçili Kayıtların Çıktısı <span id="seciliSayi"></span></a>
+          <a class="btn btn-ghost btn-sm" id="btnSeciliCikti" href="crm-finans-banka-cikti.html"><i class="fa-solid fa-print"></i> Seçili Kayıtların Çıktısı <span id="seciliSayi"></span></a>
         </div>
         <div class="filter-row">
           <span class="frow-lbl">Yön</span>
@@ -453,15 +457,37 @@
     function sync(){
       var checked = boxes().filter(function(b){ return b.checked; });
       if(checked.length){
-        btn.removeAttribute('disabled');
+        btn.classList.remove('is-bos');
+        btn.removeAttribute('data-bos-secim');
         sayi.textContent = '(' + checked.length + ')';
         btn.href = 'crm-finans-banka-cikti.html?ids=' + checked.map(function(b){ return b.value; }).join(',');
       } else {
-        btn.setAttribute('disabled', '');
+        btn.classList.add('is-bos');
+        btn.setAttribute('data-bos-secim', '1');
         sayi.textContent = '';
         btn.href = 'crm-finans-banka-cikti.html';
       }
     }
+    /* [v2/LEAD] Seçim yokken buton ölü değil, AÇIKLAYICI: tıklanınca ne yapılması
+       gerektiğini söyleyen sonuç ekranı açılır (B §9.4 `eksik-bilgi`). */
+    btn.addEventListener('click', function(ev){
+      if(!btn.hasAttribute('data-bos-secim')) return;   /* seçim var → normal navigasyon */
+      ev.preventDefault();
+      gvResult('eksik-bilgi', {
+        baslik: 'Önce çıktısını almak istediğiniz hareketleri seçin',
+        mesaj: 'Bu buton yalnız seçili hareketlerin çıktısını hazırlar. Tablodaki satır ' +
+               'kutucuklarından istediğiniz hareketleri işaretleyin; başlıktaki kutucuk ' +
+               'görünen tüm satırları birden seçer. Tüm listenin çıktısı için üstteki ' +
+               '"Dışa Aktar" düğmesini kullanabilirsiniz.',
+        aksiyonlar: [
+          {etiket:'Tüm Listenin Çıktısını Al', birincil:true, onClick:function(){
+            var exp = document.querySelector('[data-gv-export]');
+            if(exp) exp.click();
+          }},
+          {etiket:'Kapat'}
+        ]
+      });
+    });
     selAll.checked = false;
     selAll.addEventListener('change', function(){ boxes().forEach(function(b){ b.checked = selAll.checked; }); sync(); });
     document.getElementById('tblHareket').addEventListener('change', function(e){
