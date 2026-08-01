@@ -44,7 +44,9 @@
 /* 640px altında tablo artık gtable-cards ile gerçek karta dönüşür (assets/css/ui.css) —
    bu sayfada eskiden burada duran min-width:860px yatay-kaydırma kaçış yolu KALDIRILDI. */
 
-/* Pasif Şantiyeleri Göster — switch; sayfa-lokal, ui.js'e yeni primitif eklenmez */
+/* Pasif Şantiyeleri Göster — switch; sayfa-lokal, ui.js'e yeni primitif eklenmez.
+   V3A (T-L1, Dalga 2A) — artık `.lh-acts` içinde, Gelişmiş Filtre/Kolonlar'la aynı
+   hizada (§3.2/§3.3). Görsel dil DEĞİŞMEDİ, yalnız konum taşındı. */
 .st-toggle{display:flex;align-items:center;gap:10px;font-family:inherit;flex:none;
   background:none;border:none;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent}
 .st-toggle-track{width:38px;height:22px;border-radius:var(--r-pill);background:var(--line-2);
@@ -54,49 +56,21 @@
 .st-toggle[aria-checked="true"] .st-toggle-track{background:var(--acc)}
 .st-toggle[aria-checked="true"] .st-toggle-thumb{transform:translateX(16px)}
 .st-toggle-lbl{font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
-@media(max-width:640px){.st-toggle{width:100%;justify-content:space-between;padding:10px 4px}}
+@media(max-width:640px){.st-toggle{width:auto}}
 
-/* Pasif şantiye kart ızgarası (§4.1 — 10 alanlı kart, tablo satırına sığmayan pasif nedeni/
-   son durum metinleri için ayrı bir gv-card kullanılır; switch kapalıyken raw HTML hidden) */
-#pasifGridWrap{margin-top:16px}
-.pasif-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;padding:18px 22px}
-.pasif-card{border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px;display:flex;flex-direction:column;gap:12px;transition:.18s var(--ease)}
-.pasif-card:hover{box-shadow:var(--sh-sm)}
-.pc-head{display:flex;align-items:flex-start;gap:12px}
-.pc-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:12.5px;font-weight:800}
-.pc-id{flex:1;min-width:0}
-.pc-name{font-size:14px;font-weight:800;color:var(--ink)}
-.pc-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
-.pc-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
-.pc-meta dt{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.pc-meta dd{font-size:12.5px;font-weight:700;color:var(--ink);margin-top:1px}
-.pc-meta dd.muted{color:var(--muted);font-weight:600}
-.pc-note{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:var(--r-sm);padding:11px 13px}
-.pc-note i{color:var(--muted);font-size:13px;margin-top:2px;flex:none}
-.pc-note b{display:block;font-size:12px;color:var(--ink);margin-bottom:2px}
-.pc-note span{font-size:11.5px;color:var(--ink-2);line-height:1.5}
-.pc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line)}
-.pc-durum{font-size:11px;color:var(--muted);flex:1;min-width:160px}
-@media(max-width:640px){.pasif-grid{grid-template-columns:1fr;padding:16px}}
+/* V3A (T-L1, Dalga 2A / §3.3 madde 4-5) — pasif şantiyeler artık AYRI bir kart
+   ızgarası (eski #pasifGridWrap/.pasif-grid/.pasif-card) DEĞİL, ana `#tblSantiye`
+   tablosunun İÇİNDE "Pasifleri Göster" ile açılıp kapanan 4 satır. Eski kart CSS'i
+   ve DOM'u KALDIRILDI (bkz tasks/kararlar.md). */
 
-/* Durum chip slider (gvChipBar) + Şantiye Türü ikinci chip satırı + sağdaki
-   Gelişmiş Filtre/Kolonlar aksiyon grubu — .filter-bar.stack sütun düzeninde
-   her doğrudan çocuk (top satırı / chipbar / tur-row) KENDİ satırıdır, bu yüzden
-   gv-chipbar-wrap min-width:auto tuzağına düşmez (spec-liste-mimarisi §1 notu).
-   .filter-row.tur-row İÇİNDE ise chipbar-wrap başka flex kardeşlerle (etiket +
-   aksiyon grubu) aynı satırı paylaşır — orada flex:1 1 0 yerelde eklenir. */
-.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:14px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row.top{justify-content:space-between}
-.filter-row.tur-row{justify-content:space-between}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none}
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-.tur-row-acts{display:flex;align-items:center;gap:8px;flex:none}
-@media(max-width:640px){
-  .filter-row.tur-row{align-items:stretch}
-  .filter-row .frow-lbl{width:100%}
-  .tur-row-acts{width:100%}
-}
+/* Şantiye Türü ikinci chip satırı artık `.lh-tabs` İÇİNDE, durum sekmelerinin
+   ALTINDA kendi satırı (§2.1/§2.3) — Gelişmiş Filtre/Kolonlar `.lh-acts`'a taşındı,
+   bu yüzden bu alt satırda artık yalnız etiket + chip slider kalıyor. */
+.lh-tabs{flex-direction:column;align-items:stretch;gap:10px}
+.tur-sub-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tur-sub-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none}
+.tur-sub-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
+@media(max-width:640px){ .tur-sub-row .frow-lbl{width:100%} }
 </style>
 </head>
 <body data-sec="santiye" data-screen="liste">
@@ -127,7 +101,6 @@
         <div class="ph-sub"><span id="phCount">9 şantiye</span> · 93 personel sahada</div>
       </div>
       <div class="ph-actions" data-admin-only>
-        <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Şantiye listesi","kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-santiye-form.html"><i class="fa-solid fa-plus"></i> Yeni Şantiye</a>
       </div>
     </div>
@@ -164,63 +137,73 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row top">
-          <div class="fb-search">
+      <!-- V3A (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3, §3.3 özel revizyon) — standart
+           liste üst alanı: .lh-row (arama solda, sabit aksiyon grubu sağda: Gelişmiş
+           Filtre · Kolonlar · Pasif Şantiyeleri Göster · Dışa Aktar) → .lh-achips →
+           .lh-tabs (durum sekmeleri + altında Şantiye Türü alt-sekmesi). Pasif şantiye
+           listesi artık ayrı kart ızgarası DEĞİL, tablonun İÇİNDE kontrollü açılıp
+           kapanan satırlar (bkz aşağı tbody, 4 ek satır). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Şantiye, şef veya lokasyon ara" data-table-search="#tblSantiye">
           </div>
-          <button type="button" class="st-toggle" id="swPasif" role="switch" aria-checked="false">
-            <span class="st-toggle-track"><span class="st-toggle-thumb"></span></span>
-            <span class="st-toggle-lbl">Pasif Şantiyeleri Göster</span>
-          </button>
-        </div>
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" data-target="#tblSantiye">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">9</span></button>
-            <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="planlama">Planlama <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="tamam">Tamamlanan <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="pasif">Pasif <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="askida">Askıya Alınan <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="arsiv">Arşivlenen <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="iptal">İptal Edilen <span class="ch-cnt">1</span></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <button type="button" class="st-toggle" id="swPasif" role="switch" aria-checked="false">
+              <span class="st-toggle-track"><span class="st-toggle-thumb"></span></span>
+              <span class="st-toggle-lbl lh-lbl">Pasif Şantiyeleri Göster</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-admin-only data-gv-export='{"baslik":"Şantiye listesi","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
           </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <div class="filter-row tur-row" id="turFilterRow">
-          <span class="frow-lbl">Şantiye Türü</span>
+        <div class="lh-achips gv-achips-row" id="achipsSantiye" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+        <div class="lh-tabs">
           <div class="gv-chipbar-wrap" data-chipbar>
             <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="turChips">
-              <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">9</span></button>
-              <button class="chip" data-tur="yapsat">Yapsat <span class="ch-cnt">4</span></button>
-              <button class="chip" data-tur="kamu">Kamu <span class="ch-cnt">2</span></button>
-              <button class="chip" data-tur="taahhut">Taahhüt <span class="ch-cnt">3</span></button>
+            <div class="gv-chipbar chips" data-target="#tblSantiye">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">9</span></button>
+              <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="planlama">Planlama <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="tamam">Tamamlanan <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="pasif">Pasif <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="askida">Askıya Alınan <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="arsiv">Arşivlenen <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="iptal">İptal Edilen <span class="ch-cnt">1</span></button>
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <div class="tur-row-acts">
-            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtn">
-              <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-            </button>
-            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
-              <i class="fa-solid fa-table-columns"></i> Kolonlar
-            </button>
+          <div class="tur-sub-row" id="turFilterRow">
+            <span class="frow-lbl">Şantiye Türü</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="turChips">
+                <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">9</span></button>
+                <button class="chip" data-tur="yapsat">Yapsat <span class="ch-cnt">4</span></button>
+                <button class="chip" data-tur="kamu">Kamu <span class="ch-cnt">2</span></button>
+                <button class="chip" data-tur="taahhut">Taahhüt <span class="ch-cnt">3</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div class="gv-achips-row" id="achipsSantiye" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
         </div>
       </div>
 
@@ -423,145 +406,151 @@
                 </div>
               </td>
             </tr>
+            <!-- ============ V3A (T-L1, Dalga 2A / §3.3 madde 4-5) — 4 kurgusal kapalı
+                 şantiye artık AYRI kart ızgarası değil, ANA TABLONUN İÇİNDE "Pasif
+                 Şantiyeleri Göster" ile kontrollü açılıp kapanan satırlar. Hepsi 0
+                 personel; Vadi 51/Liman 30/Merkez 12/toplam 93'e dahil DEĞİL. Varsayılan
+                 görünümde raw `hidden` (switch kapalı) — JS-kapalı bake ikizi burada
+                 zaten doğru: switch açılmadan bu 4 satır hiç görünmez (sayfanın kendi
+                 önceki kararı, KORUNDU). ============ -->
+            <tr data-f="pasif" data-site="cskp" data-tur="yapsat" data-durum="pasif" data-nitelik="konut"
+                data-il="istanbul" data-ilce="umraniye" data-sef="atanmadi" data-baslangic="2023-01-10"
+                data-uzatim="yok" data-ilerleme="35" data-personel="0"
+                data-aktifpasif="pasif" data-arsivnedeni="yeniden-degerlendirme" data-sonislem="2026-03-03" hidden>
+              <td data-lbl="Şantiye">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:var(--bg);color:var(--muted)">ÇS</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Çınar Sokak Karma Proje</div>
+                    <div class="gcell-sub">Kod CSKP · Ümraniye, İstanbul</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="nitelik" data-lbl="Proje Niteliği"><span class="gtag">Konut</span></td>
+              <td data-col="tur" data-lbl="Şantiye Türü"><span class="gtag mint">Yapsat</span></td>
+              <td data-col="il" data-lbl="İl">İstanbul</td>
+              <td data-col="ilce" data-lbl="İlçe">Ümraniye</td>
+              <td data-col="sef" data-lbl="Şantiye Şefi" class="muted">Atanmadı</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">10 Oca 2023</td>
+              <td data-col="teslim" data-lbl="Hedef Teslim Tarihi" class="muted">—</td>
+              <td data-col="uzatim" data-lbl="Süre Uzatım"><span class="gtag">Yok</span></td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:35%"></div></div><span class="gbar-val">%35</span></div></td>
+              <td data-col="personel" data-lbl="Personel" class="num muted">—</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat off">Pasif</span></td>
+              <td data-col="sonislem" data-lbl="Son İşlem Tarihi">3 Mar 2026</td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-detay.html?santiye=cskp" data-no-confirm aria-label="Şantiye kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                  <button type="button" class="ia-btn" data-no-confirm data-santiye-aktif="cskp" aria-label="Yeniden Aktifleştir" data-tip="Yeniden Aktifleştir"><i class="fa-solid fa-rotate-left"></i></button>
+                  <a class="ia-btn" href="crm-ayarlar-log.html" data-no-confirm aria-label="İşlem Geçmişi" data-tip="İşlem Geçmişi"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                </div>
+              </td>
+            </tr>
+            <tr data-f="askida" data-site="btk" data-tur="kamu" data-durum="askida" data-nitelik="konut"
+                data-il="istanbul" data-ilce="bahcelievler" data-sef="atanmadi" data-baslangic="2024-06-05"
+                data-uzatim="var" data-ilerleme="20" data-personel="0"
+                data-aktifpasif="pasif" data-arsivnedeni="ruhsat-imar" data-sonislem="2026-05-18" hidden>
+              <td data-lbl="Şantiye">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BT</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Bahçelievler Toplu Konut</div>
+                    <div class="gcell-sub">Kod BTK · Bahçelievler, İstanbul</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="nitelik" data-lbl="Proje Niteliği"><span class="gtag">Konut</span></td>
+              <td data-col="tur" data-lbl="Şantiye Türü"><span class="gtag">Kamu</span></td>
+              <td data-col="il" data-lbl="İl">İstanbul</td>
+              <td data-col="ilce" data-lbl="İlçe">Bahçelievler</td>
+              <td data-col="sef" data-lbl="Şantiye Şefi" class="muted">Atanmadı</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">5 Haz 2024</td>
+              <td data-col="teslim" data-lbl="Hedef Teslim Tarihi" class="muted">—</td>
+              <td data-col="uzatim" data-lbl="Süre Uzatım"><span class="gtag" style="background:var(--warn-tint);color:var(--warn)">Var</span></td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:20%"></div></div><span class="gbar-val">%20</span></div></td>
+              <td data-col="personel" data-lbl="Personel" class="num muted">—</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat wait">Askıya Alınan</span></td>
+              <td data-col="sonislem" data-lbl="Son İşlem Tarihi">18 May 2026</td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-detay.html?santiye=btk" data-no-confirm aria-label="Şantiye kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                  <button type="button" class="ia-btn" data-no-confirm data-santiye-aktif="btk" aria-label="Yeniden Aktifleştir" data-tip="Yeniden Aktifleştir"><i class="fa-solid fa-rotate-left"></i></button>
+                  <a class="ia-btn" href="crm-ayarlar-log.html" data-no-confirm aria-label="İşlem Geçmişi" data-tip="İşlem Geçmişi"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                </div>
+              </td>
+            </tr>
+            <tr data-f="arsiv" data-site="fmr" data-tur="kamu" data-durum="arsiv" data-nitelik="ticari"
+                data-il="istanbul" data-ilce="fatih" data-sef="atanmadi" data-baslangic="2018-03-02"
+                data-teslim="2019-11-14" data-uzatim="yok" data-ilerleme="100" data-personel="0"
+                data-aktifpasif="pasif" data-arsivnedeni="garanti-tamamlandi" data-sonislem="2024-11-14" hidden>
+              <td data-lbl="Şantiye">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:var(--bg);color:var(--muted)">FM</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Fatih Mahallesi Restorasyon</div>
+                    <div class="gcell-sub">Kod FMR · Fatih, İstanbul</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="nitelik" data-lbl="Proje Niteliği"><span class="gtag">Ticari</span></td>
+              <td data-col="tur" data-lbl="Şantiye Türü"><span class="gtag">Kamu</span></td>
+              <td data-col="il" data-lbl="İl">İstanbul</td>
+              <td data-col="ilce" data-lbl="İlçe">Fatih</td>
+              <td data-col="sef" data-lbl="Şantiye Şefi" class="muted">—</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">2 Mar 2018</td>
+              <td data-col="teslim" data-lbl="Hedef Teslim Tarihi">14 Kas 2019</td>
+              <td data-col="uzatim" data-lbl="Süre Uzatım"><span class="gtag">Yok</span></td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div><span class="gbar-val">%100</span></div></td>
+              <td data-col="personel" data-lbl="Personel" class="num muted">—</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat off">Arşivlenen</span></td>
+              <td data-col="sonislem" data-lbl="Son İşlem Tarihi">14 Kas 2024</td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-detay.html?santiye=fmr" data-no-confirm aria-label="Şantiye kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                  <button type="button" class="ia-btn" data-no-confirm data-santiye-aktif="fmr" aria-label="Yeniden Aktifleştir" data-tip="Yeniden Aktifleştir"><i class="fa-solid fa-rotate-left"></i></button>
+                  <a class="ia-btn" href="crm-ayarlar-log.html" data-no-confirm aria-label="İşlem Geçmişi" data-tip="İşlem Geçmişi"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                </div>
+              </td>
+            </tr>
+            <tr data-f="iptal" data-site="ksr" data-tur="taahhut" data-durum="iptal" data-nitelik="konut"
+                data-il="istanbul" data-ilce="kartal" data-sef="atanmadi" data-baslangic="2025-09-20"
+                data-uzatim="yok" data-ilerleme="0" data-personel="0"
+                data-aktifpasif="pasif" data-arsivnedeni="finansman-yetersiz" data-sonislem="2025-12-12" hidden>
+              <td data-lbl="Şantiye">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:var(--danger-tint);color:var(--danger)">KS</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Kartal Sahil Rezidans</div>
+                    <div class="gcell-sub">Kod KSR · Kartal, İstanbul</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="nitelik" data-lbl="Proje Niteliği"><span class="gtag">Konut</span></td>
+              <td data-col="tur" data-lbl="Şantiye Türü"><span class="gtag">Taahhüt</span></td>
+              <td data-col="il" data-lbl="İl">İstanbul</td>
+              <td data-col="ilce" data-lbl="İlçe">Kartal</td>
+              <td data-col="sef" data-lbl="Şantiye Şefi" class="muted">Atanmadı</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">20 Eyl 2025</td>
+              <td data-col="teslim" data-lbl="Hedef Teslim Tarihi" class="muted">—</td>
+              <td data-col="uzatim" data-lbl="Süre Uzatım"><span class="gtag">Yok</span></td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:0%"></div></div><span class="gbar-val">—</span></div></td>
+              <td data-col="personel" data-lbl="Personel" class="num muted">—</td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat danger">İptal Edilen</span></td>
+              <td data-col="sonislem" data-lbl="Son İşlem Tarihi">12 Ara 2025</td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-detay.html?santiye=ksr" data-no-confirm aria-label="Şantiye kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                  <button type="button" class="ia-btn" data-no-confirm data-santiye-aktif="ksr" aria-label="Yeniden Aktifleştir" data-tip="Yeniden Aktifleştir"><i class="fa-solid fa-rotate-left"></i></button>
+                  <a class="ia-btn" href="crm-ayarlar-log.html" data-no-confirm aria-label="İşlem Geçmişi" data-tip="İşlem Geçmişi"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
         <div class="gv-empty" data-table-empty hidden>
           <div class="ge-ico"><i class="fa-solid fa-helmet-safety"></i></div>
           <h4>Eşleşen şantiye yok</h4>
           <p>Aramayı temizleyin veya farklı bir durum filtresi seçin.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pasif şantiyeler (§4.1 H1) — 4 kurgusal kapalı şantiye, hepsi 0 personel; Vadi 51/Liman
-         30/Merkez 12/toplam 93'e dahil DEĞİL. Varsayılan görünümde raw hidden (switch kapalı) —
-         JS-kapalı bake ikizi burada zaten doğru: switch açılmadan bu blok hiç görünmez. -->
-    <div class="gv-card" id="pasifGridWrap" hidden>
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-box-archive"></i> Pasif Şantiyeler</div></div>
-      <div class="pasif-grid" id="pasifGrid">
-        <div class="pasif-card" data-f="pasif" data-tur="yapsat" data-durum="pasif" data-nitelik="konut"
-             data-il="istanbul" data-ilce="umraniye" data-sef="atanmadi" data-baslangic="2023-01-10"
-             data-uzatim="yok" data-ilerleme="35" data-personel="0" data-aktifpasif="pasif"
-             data-arsivnedeni="yeniden-degerlendirme" data-sonislem="2026-03-03" hidden>
-          <div class="pc-head">
-            <div class="pc-mark" style="background:var(--bg);color:var(--muted)">ÇS</div>
-            <div class="pc-id">
-              <div class="pc-name">Çınar Sokak Karma Proje</div>
-              <div class="pc-sub">Kod CSKP · Ümraniye, İstanbul</div>
-            </div>
-            <span class="gstat off">Pasif</span>
-          </div>
-          <dl class="pc-meta">
-            <div><dt>Şantiye Türü</dt><dd><span class="gtag mint" style="font-size:10px;padding:2px 7px">Yapsat</span></dd></div>
-            <div><dt>Şantiye Şefi</dt><dd class="muted">Atanmadı</dd></div>
-            <div><dt>Başlangıç</dt><dd>10 Ocak 2023</dd></div>
-            <div><dt>Kapanış / Teslim</dt><dd class="muted">—</dd></div>
-            <div><dt>Son İşlem Tarihi</dt><dd>3 Mart 2026</dd></div>
-          </dl>
-          <div class="pc-note">
-            <i class="fa-solid fa-circle-info"></i>
-            <div><b>Pasif olma nedeni</b><span>Yatırımcı ile yeniden değerlendirme sürecinde — saha faaliyeti Mart 2026'dan beri durduruldu.</span></div>
-          </div>
-          <div class="pc-foot">
-            <span class="pc-durum">Son durum: Faaliyet durduruldu, ekip diğer şantiyelere kaydırıldı.</span>
-            <div style="display:flex;gap:8px">
-              <button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-santiye-aktif="cskp"><i class="fa-solid fa-rotate-left"></i> Yeniden Aktifleştir</button>
-              <a class="btn btn-ghost btn-sm" href="crm-santiye-detay.html?santiye=cskp" data-no-confirm>Detaya Git <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="pasif-card" data-f="askida" data-tur="kamu" data-durum="askida" data-nitelik="konut"
-             data-il="istanbul" data-ilce="bahcelievler" data-sef="atanmadi" data-baslangic="2024-06-05"
-             data-uzatim="var" data-ilerleme="20" data-personel="0" data-aktifpasif="pasif"
-             data-arsivnedeni="ruhsat-imar" data-sonislem="2026-05-18" hidden>
-          <div class="pc-head">
-            <div class="pc-mark" style="background:var(--warn-tint);color:var(--warn)">BT</div>
-            <div class="pc-id">
-              <div class="pc-name">Bahçelievler Toplu Konut</div>
-              <div class="pc-sub">Kod BTK · Bahçelievler, İstanbul</div>
-            </div>
-            <span class="gstat wait">Askıya Alınan</span>
-          </div>
-          <dl class="pc-meta">
-            <div><dt>Şantiye Türü</dt><dd><span class="gtag" style="background:var(--info-tint);color:var(--info);font-size:10px;padding:2px 7px">Kamu</span></dd></div>
-            <div><dt>Şantiye Şefi</dt><dd class="muted">Atanmadı</dd></div>
-            <div><dt>Başlangıç</dt><dd>5 Haziran 2024</dd></div>
-            <div><dt>Kapanış / Teslim</dt><dd class="muted">—</dd></div>
-            <div><dt>Son İşlem Tarihi</dt><dd>18 Mayıs 2026</dd></div>
-          </dl>
-          <div class="pc-note">
-            <i class="fa-solid fa-circle-info"></i>
-            <div><b>Askıya alınma nedeni</b><span>Belediye imar planı revizyonu nedeniyle inşaat ruhsatı yeniden değerlendiriliyor.</span></div>
-          </div>
-          <div class="pc-foot">
-            <span class="pc-durum">Son durum: Ruhsat sürecinde, saha kapalı.</span>
-            <div style="display:flex;gap:8px">
-              <button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-santiye-aktif="btk"><i class="fa-solid fa-rotate-left"></i> Yeniden Aktifleştir</button>
-              <a class="btn btn-ghost btn-sm" href="crm-santiye-detay.html?santiye=btk" data-no-confirm>Detaya Git <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="pasif-card" data-f="arsiv" data-tur="kamu" data-durum="arsiv" data-nitelik="ticari"
-             data-il="istanbul" data-ilce="fatih" data-sef="atanmadi" data-baslangic="2018-03-02"
-             data-teslim="2019-11-14" data-uzatim="yok" data-ilerleme="100" data-personel="0"
-             data-aktifpasif="pasif" data-arsivnedeni="garanti-tamamlandi" data-sonislem="2024-11-14" hidden>
-          <div class="pc-head">
-            <div class="pc-mark" style="background:var(--bg);color:var(--muted)">FM</div>
-            <div class="pc-id">
-              <div class="pc-name">Fatih Mahallesi Restorasyon</div>
-              <div class="pc-sub">Kod FMR · Fatih, İstanbul</div>
-            </div>
-            <span class="gstat off">Arşivlenen</span>
-          </div>
-          <dl class="pc-meta">
-            <div><dt>Şantiye Türü</dt><dd><span class="gtag" style="background:var(--info-tint);color:var(--info);font-size:10px;padding:2px 7px">Kamu</span></dd></div>
-            <div><dt>Şantiye Şefi</dt><dd class="muted">—</dd></div>
-            <div><dt>Başlangıç</dt><dd>2 Mart 2018</dd></div>
-            <div><dt>Kapanış / Teslim</dt><dd>14 Kasım 2019</dd></div>
-            <div><dt>Son İşlem Tarihi</dt><dd>14 Kasım 2024</dd></div>
-          </dl>
-          <div class="pc-note">
-            <i class="fa-solid fa-circle-info"></i>
-            <div><b>Arşivlenme nedeni</b><span>Proje 2019'da tamamlandı; 5 yıllık garanti süreci sona erdiği için arşive kaldırıldı.</span></div>
-          </div>
-          <div class="pc-foot">
-            <span class="pc-durum">Son durum: Tamamlandı, arşivde.</span>
-            <div style="display:flex;gap:8px">
-              <button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-santiye-aktif="fmr"><i class="fa-solid fa-rotate-left"></i> Yeniden Aktifleştir</button>
-              <a class="btn btn-ghost btn-sm" href="crm-santiye-detay.html?santiye=fmr" data-no-confirm>Detaya Git <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="pasif-card" data-f="iptal" data-tur="taahhut" data-durum="iptal" data-nitelik="konut"
-             data-il="istanbul" data-ilce="kartal" data-sef="atanmadi" data-baslangic="2025-09-20"
-             data-uzatim="yok" data-ilerleme="0" data-personel="0" data-aktifpasif="pasif"
-             data-arsivnedeni="finansman-yetersiz" data-sonislem="2025-12-12" hidden>
-          <div class="pc-head">
-            <div class="pc-mark" style="background:var(--danger-tint);color:var(--danger)">KS</div>
-            <div class="pc-id">
-              <div class="pc-name">Kartal Sahil Rezidans</div>
-              <div class="pc-sub">Kod KSR · Kartal, İstanbul</div>
-            </div>
-            <span class="gstat danger">İptal Edilen</span>
-          </div>
-          <dl class="pc-meta">
-            <div><dt>Şantiye Türü</dt><dd><span class="gtag" style="font-size:10px;padding:2px 7px">Taahhüt</span></dd></div>
-            <div><dt>Şantiye Şefi</dt><dd class="muted">Atanmadı</dd></div>
-            <div><dt>Başlangıç</dt><dd>20 Eylül 2025 <span style="font-weight:600;color:var(--muted)">(ruhsat aşaması)</span></dd></div>
-            <div><dt>Kapanış / Teslim</dt><dd class="muted">—</dd></div>
-            <div><dt>Son İşlem Tarihi</dt><dd>12 Aralık 2025</dd></div>
-          </dl>
-          <div class="pc-note">
-            <i class="fa-solid fa-circle-info"></i>
-            <div><b>İptal nedeni</b><span>Yatırımcı finansman sağlayamadığı için proje ruhsat aşamasında iptal edildi.</span></div>
-          </div>
-          <div class="pc-foot">
-            <span class="pc-durum">Son durum: İptal edildi, saha faaliyeti hiç başlamadı.</span>
-            <div style="display:flex;gap:8px">
-              <button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-santiye-aktif="ksr"><i class="fa-solid fa-rotate-left"></i> Yeniden Aktifleştir</button>
-              <a class="btn btn-ghost btn-sm" href="crm-santiye-detay.html?santiye=ksr" data-no-confirm>Detaya Git <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -572,7 +561,7 @@
 <script src="assets/js/ui.js"></script>
 <script>
 /* rol daraltması: şef yalnız kendi şantiyesini görür; yönetim aksiyonları gizlenir.
-   Sef için pasif şantiye kontrolleri (switch + 4 chip + kart alanı) TAMAMEN kaldırılır —
+   Sef için pasif şantiye kontrolleri (switch + 4 chip + 4 pasif satır) TAMAMEN kaldırılır —
    başka projelere ait kapalı kayıtları görmesi için hiçbir sebep yok (§4.1 "Görebilenler"). */
 (function(){
   if(!window.GV) return;
@@ -585,7 +574,6 @@
       if(ch) ch.remove();
     });
     var swEl = document.getElementById('swPasif'); if(swEl) swEl.remove();
-    var gridEl = document.getElementById('pasifGridWrap'); if(gridEl) gridEl.remove();
     /* kanonik 9/3/1/1/4 özet kartları tüm-firma envanteri gösterir — sef tek
        şantiyesini gördüğü için bu global özet kaldırılır (aşağıdaki ph-sub
        override'ıyla aynı gerekçe). */
@@ -621,7 +609,6 @@
      listener'ından ÖNCE, DOMContentLoaded beklemeden bağlanır). */
   var tblSantiye = document.getElementById('tblSantiye');
   var swPasif = document.getElementById('swPasif');
-  var gridWrap = document.getElementById('pasifGridWrap');
   var PASIF_FILTERS = ['pasif', 'askida', 'arsiv', 'iptal'];
 
   /* ============ A §3 — "Toplam 9 · görünen 5" kayıt sayısı dili (gvCount).
@@ -807,6 +794,11 @@
   }
 
   if(tblSantiye){
+    /* V3A (T-L1, Dalga 2A / §3.3 madde 4-5) — pasif 4 satır artık AYNI tbody/AYNI
+       döngüde ele alınır (eski ayrı .pasif-card/#pasifGrid geçişi KALDIRILDI).
+       "Pasifleri Göster" kapalıyken data-aktifpasif="pasif" satırlar gizlenir;
+       AÇIKKEN ya da kullanıcı doğrudan pasif-tipi bir durum chip'i seçtiyse (kat
+       zaten o satırları hedeflediği için) görünür kalırlar. */
     tblSantiye._gvApply = function(){
       var card = tblSantiye.closest('.gv-card');
       var inp = card.querySelector('input[data-table-search]');
@@ -821,30 +813,16 @@
         var okTur = curTur === 'hepsi' || tr.getAttribute('data-tur') === curTur;
         var okT = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
         var okAdv = advMatch(tr);
-        var show = okF && okTur && okT && okAdv;
+        var isPasif = tr.getAttribute('data-aktifpasif') === 'pasif';
+        var okPasif = !isPasif || showPasif || PASIF_FILTERS.indexOf(f) !== -1;
+        var show = okF && okTur && okT && okAdv && okPasif;
         tr.hidden = !show;
         if(show) shown++;
       });
-      tblSantiye.hidden = shown === 0;
+      tblSantiye.hidden = false;
 
-      var cardShown = 0;
-      if(gridWrap){
-        document.querySelectorAll('#pasifGrid .pasif-card').forEach(function(pc){
-          var f2 = pc.getAttribute('data-f');
-          var okF = showPasif && (f === 'hepsi' || f === f2);
-          var okTur = curTur === 'hepsi' || pc.getAttribute('data-tur') === curTur;
-          var okT = !term || pc.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-          var okAdv = advMatch(pc);
-          var show = okF && okTur && okT && okAdv;
-          pc.hidden = !show;
-          if(show) cardShown++;
-        });
-        gridWrap.hidden = cardShown === 0;
-      }
-
-      var total = shown + cardShown;
       var empty = card.querySelector('[data-table-empty]');
-      if(empty) empty.hidden = total !== 0;
+      if(empty) empty.hidden = shown !== 0;
     };
   }
 
@@ -853,50 +831,44 @@
      bir görünürlük/durum demosu; sayfa yenilenince taban veriye döner (repo genelindeki
      "ekle formları state paylaşmaz" konvansiyonuyla tutarlı). Bu sayfada statik kalıcı
      .gv-modal-ov yok, gvConfirm doğrudan kullanılabilir. */
-  var pasifGrid = document.getElementById('pasifGrid');
   var SITE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye', gol:'Göl Evleri 2. Etap', kule:'Kule Ofis B Blok'};
-  var IL_LBL = {istanbul:'İstanbul', izmir:'İzmir', kocaeli:'Kocaeli', sakarya:'Sakarya'};
-  var ILCE_LBL = {cekmekoy:'Çekmeköy', aliaga:'Aliağa', gebze:'Gebze', sapanca:'Sapanca', atasehir:'Ataşehir', umraniye:'Ümraniye', bahcelievler:'Bahçelievler', fatih:'Fatih', kartal:'Kartal'};
 
-  /* Tek satırın pasif karta dönüştürülmesini yapan PAYLAŞILAN fonksiyon — hem tekil
-     satır aksiyonu (aşağıda) hem gvBulk'ın "Pasife Al" toplu aksiyonu (§2.1 madde 10,
-     spec-v2-core.md §6) AYNI dönüşüm mantığını kullanır (tekrar YAZILMADI). Yalnız
-     DOM dönüşümünü yapar; görünürlük/tekrar-uygulama/toast çağıran taraflara bırakılır. */
+  /* V3A (T-L1, Dalga 2A / §3.3 madde 4-5) — pasif satırlar artık AYRI bir kart DOM'una
+     dönüşmüyor; AYNI <tr> yerinde kalıp öznitelik + hücreleri mutasyona uğruyor
+     (eskiden: card oluştur / tr.remove(); şimdi: aynı satırı dönüştür). "Yeniden
+     Aktifleştir" de simetrik biçimde AYNI satırı geri dönüştürür — DOM node'u hiç
+     değişmediği için gvBulk/gvCols referansları bozulmaz. PAYLAŞILAN fonksiyon hem
+     tekil satır aksiyonu hem gvBulk'ın toplu "Pasife Al" aksiyonu tarafından kullanılır. */
   function convertRowToPasif(tr){
     var key = tr.getAttribute('data-site');
     var ad = SITE_ADI[key] || key;
-    var tur = tr.getAttribute('data-tur') || 'yapsat';
-    var turLbl = tur === 'yapsat' ? 'Yapsat' : tur === 'kamu' ? 'Kamu' : 'Taahhüt';
     var kod = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
-    var card = document.createElement('div');
-    card.className = 'pasif-card'; card.setAttribute('data-f','pasif'); card.setAttribute('data-tur', tur); card.hidden = true;
-    card.setAttribute('data-durum', 'pasif');
-    card.setAttribute('data-nitelik', tr.getAttribute('data-nitelik') || '');
-    card.setAttribute('data-il', tr.getAttribute('data-il') || '');
-    card.setAttribute('data-ilce', tr.getAttribute('data-ilce') || '');
-    card.setAttribute('data-sef', tr.getAttribute('data-sef') || 'atanmadi');
-    card.setAttribute('data-uzatim', tr.getAttribute('data-uzatim') || 'yok');
-    card.setAttribute('data-ilerleme', tr.getAttribute('data-ilerleme') || '0');
-    card.setAttribute('data-personel', '0');
-    card.setAttribute('data-aktifpasif', 'pasif');
-    card.setAttribute('data-arsivnedeni', 'manuel');
-    card.setAttribute('data-sonislem', new Date().toISOString().slice(0, 10));
-    card.innerHTML = '<div class="pc-head"><div class="pc-mark" style="background:var(--bg);color:var(--muted)">' + kod + '</div>'
-      + '<div class="pc-id"><div class="pc-name">' + ad + '</div><div class="pc-sub">İşlem panelinden pasife alındı</div></div>'
-      + '<span class="gstat off">Pasif</span></div>'
-      + '<dl class="pc-meta">'
-      + '<div><dt>Şantiye Türü</dt><dd><span class="gtag' + (tur==='yapsat'?' mint':'') + '" style="font-size:10px;padding:2px 7px">' + turLbl + '</span></dd></div>'
-      + '<div><dt>Şantiye Şefi</dt><dd class="muted">' + (tr.querySelector('.t-strong') ? tr.querySelector('.t-strong').textContent : 'Atanmadı') + '</dd></div>'
-      + '<div><dt>Başlangıç</dt><dd class="muted">—</dd></div>'
-      + '<div><dt>Kapanış / Teslim</dt><dd class="muted">—</dd></div>'
-      + '<div><dt>Son İşlem Tarihi</dt><dd>2 Temmuz 2026</dd></div>'
-      + '</dl>'
-      + '<div class="pc-note"><i class="fa-solid fa-circle-info"></i><div><b>Pasif olma nedeni</b><span>İşlem panelinden manuel olarak pasife alındı; gerekçe işlem kayıtlarında ayrıca izlenebilir.</span></div></div>'
-      + '<div class="pc-foot"><span class="pc-durum">Son durum: Pasife alındı, ' + new Date().toLocaleDateString('tr-TR') + '.</span>'
-      + '<div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-no-confirm data-santiye-aktif="' + key + '"><i class="fa-solid fa-rotate-left"></i> Yeniden Aktifleştir</button>'
-      + '<a class="btn btn-ghost btn-sm" href="crm-santiye-detay.html?santiye=' + key + '" data-no-confirm>Detaya Git <i class="fa-solid fa-arrow-right"></i></a></div></div>';
-    if(pasifGrid) pasifGrid.appendChild(card);
-    tr.remove();
+    var sefTxt = tr.querySelector('.t-strong') ? tr.querySelector('.t-strong').textContent : 'Atanmadı';
+    var bugun = new Date().toLocaleDateString('tr-TR');
+    tr.setAttribute('data-f', 'pasif');
+    tr.setAttribute('data-durum', 'pasif');
+    tr.setAttribute('data-aktifpasif', 'pasif');
+    tr.setAttribute('data-arsivnedeni', 'manuel');
+    tr.setAttribute('data-personel', '0');
+    tr.setAttribute('data-sonislem', new Date().toISOString().slice(0, 10));
+    var markEl = tr.querySelector('.gcell-mark');
+    if(markEl){ markEl.style.background = 'var(--bg)'; markEl.style.color = 'var(--muted)'; markEl.textContent = kod; }
+    var subEl = tr.querySelector('.gcell-sub');
+    if(subEl) subEl.textContent = 'İşlem panelinden pasife alındı · ' + bugun;
+    var sefTd = tr.querySelector('[data-col="sef"]');
+    if(sefTd){ sefTd.textContent = sefTxt; sefTd.classList.add('muted'); sefTd.classList.remove('t-strong'); }
+    var personelTd = tr.querySelector('[data-col="personel"]');
+    if(personelTd){ personelTd.textContent = '—'; personelTd.classList.add('muted'); personelTd.classList.remove('t-strong'); }
+    var durumTd = tr.querySelector('[data-col="durum"]');
+    if(durumTd) durumTd.innerHTML = '<span class="gstat off">Pasif</span>';
+    var sonislemTd = tr.querySelector('[data-col="sonislem"]');
+    if(sonislemTd) sonislemTd.textContent = bugun;
+    var actsWrap = tr.querySelector('.row-acts');
+    if(actsWrap){
+      actsWrap.innerHTML = '<a class="ia-btn" href="crm-santiye-detay.html?santiye=' + key + '" data-no-confirm aria-label="Şantiye kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+        + '<button type="button" class="ia-btn" data-no-confirm data-santiye-aktif="' + key + '" aria-label="Yeniden Aktifleştir" data-tip="Yeniden Aktifleştir"><i class="fa-solid fa-rotate-left"></i></button>'
+        + '<a class="ia-btn" href="crm-ayarlar-log.html" data-no-confirm aria-label="İşlem Geçmişi" data-tip="İşlem Geçmişi"><i class="fa-solid fa-clock-rotate-left"></i></a>';
+    }
     return ad;
   }
 
@@ -911,9 +883,9 @@
       message: '"' + ad + '" şantiye listesinde varsayılan görünümde görünmeyecek şekilde pasife alınacak. Kayıt SİLİNMEZ; personel/ilerleme verisi korunur ve "Pasif Şantiyeleri Göster" ile her zaman erişilebilir kalır.',
       onConfirm:function(){
         convertRowToPasif(tr);
-        if(gridWrap) gridWrap.hidden = false;
         if(swPasif) setSwitch(true);
         reApply();
+        hideAdminOnly();
         gvToast('"' + ad + '" pasife alındı — işlem kaydına eklendi.', {type:'danger'});
       }
     });
@@ -936,9 +908,9 @@
         {etiket:'Pasife Al', ikon:'fa-power-off', tehlikeli:true, onClick:function(rows){
           var n = 0;
           rows.forEach(function(tr){ convertRowToPasif(tr); n++; });
-          if(gridWrap) gridWrap.hidden = false;
           if(swPasif) setSwitch(true);
           reApply();
+          hideAdminOnly();
           gvToast(n + ' şantiye pasife alındı.', {type:'danger'});
         }}
       ]
@@ -948,51 +920,47 @@
   document.addEventListener('click', function(e){
     var btn = e.target.closest('[data-santiye-aktif]'); if(!btn) return;
     var key = btn.getAttribute('data-santiye-aktif');
-    var card = btn.closest('.pasif-card');
-    var ad = card ? card.querySelector('.pc-name').textContent : key;
+    var tr = btn.closest('tr'); if(!tr) return;
+    var ad = tr.querySelector('.gcell-name') ? tr.querySelector('.gcell-name').textContent : (SITE_ADI[key] || key);
     gvConfirm({
       icon:'fa-rotate-left', ok:'Aktif Et', cancel:'Vazgeç',
       title: '"' + ad + '" yeniden aktif edilsin mi?',
       message: '"' + ad + '" şantiyesi yeniden "Aktif" durumuna alınacak ve şantiye listesinde varsayılan aktif görünüme dönecek. Personel/ilerleme sıfırdan başlar — bu prototipte gerçek ekip ataması ayrıca yapılmalıdır.',
       onConfirm:function(){
-        var tur = card.getAttribute('data-tur') || 'yapsat';
-        var turLbl = tur === 'yapsat' ? 'Yapsat' : tur === 'kamu' ? 'Kamu' : 'Taahhüt';
-        var tbody = tblSantiye.querySelector('tbody');
-        var tr = document.createElement('tr');
-        tr.setAttribute('data-f','aktif'); tr.setAttribute('data-site', key); tr.setAttribute('data-tur', tur);
-        tr.setAttribute('data-durum','aktif');
-        tr.setAttribute('data-nitelik', card.getAttribute('data-nitelik') || '');
-        tr.setAttribute('data-il', card.getAttribute('data-il') || '');
-        tr.setAttribute('data-ilce', card.getAttribute('data-ilce') || '');
-        tr.setAttribute('data-sef', 'atanmadi');
-        tr.setAttribute('data-uzatim','yok'); tr.setAttribute('data-ilerleme','0'); tr.setAttribute('data-personel','0');
-        tr.setAttribute('data-aktifpasif','aktif'); tr.setAttribute('data-arsivnedeni','yok');
-        tr.setAttribute('data-sonislem', new Date().toISOString().slice(0, 10));
-        var kod = ad.split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
-        var ilKey = tr.getAttribute('data-il') || '', ilceKey = tr.getAttribute('data-ilce') || '';
         var bugun = new Date().toLocaleDateString('tr-TR');
-        tr.innerHTML = '<td data-lbl="Şantiye"><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--muted)">' + kod + '</div>'
-          + '<div class="gcell-info"><div class="gcell-name">' + ad + '</div><div class="gcell-sub">Yeniden aktifleştirildi · ' + bugun + '</div></div></div></td>'
-          + '<td data-col="nitelik" data-lbl="Proje Niteliği"><span class="gtag">—</span></td>'
-          + '<td data-col="tur" data-lbl="Şantiye Türü"><span class="gtag' + (tur==='yapsat'?' mint':'') + '">' + turLbl + '</span></td>'
-          + '<td data-col="il" data-lbl="İl">' + (IL_LBL[ilKey] || '—') + '</td>'
-          + '<td data-col="ilce" data-lbl="İlçe">' + (ILCE_LBL[ilceKey] || '—') + '</td>'
-          + '<td data-col="sef" data-lbl="Şantiye Şefi" class="muted">Atanmadı</td>'
-          + '<td data-col="baslangic" data-lbl="Başlangıç Tarihi" class="muted">—</td>'
-          + '<td data-col="teslim" data-lbl="Hedef Teslim Tarihi" class="muted">—</td>'
-          + '<td data-col="uzatim" data-lbl="Süre Uzatım"><span class="gtag">Yok</span></td>'
-          + '<td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:0%"></div></div><span class="gbar-val">%0</span></div></td>'
-          + '<td data-col="personel" data-lbl="Personel" class="num muted">0</td>'
-          + '<td data-col="durum" data-lbl="Durum"><span class="gstat info">Yeniden Aktif · Ekip Bekliyor</span></td>'
-          + '<td data-col="sonislem" data-lbl="Son İşlem Tarihi">' + bugun + '</td>'
-          + '<td data-lbl=""><div class="row-acts">'
-          +   '<a class="ia-btn" href="crm-santiye-detay.html?santiye=' + key + '" data-no-confirm aria-label="Şantiye kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
-          +   '<a class="ia-btn" href="crm-santiye-form.html?mod=duzenle&santiye=' + key + '" data-no-confirm aria-label="Düzenle" data-tip="Düzenle" data-admin-only><i class="fa-solid fa-pen"></i></a>'
-          +   '<button type="button" class="ia-btn danger" data-no-confirm data-santiye-pasif="' + key + '" aria-label="Pasife Al" data-tip="Pasife Al" data-admin-only><i class="fa-solid fa-power-off"></i></button>'
-          +   '<a class="ia-btn" href="crm-ayarlar-log.html" data-no-confirm aria-label="İşlem Geçmişi" data-tip="İşlem Geçmişi"><i class="fa-solid fa-clock-rotate-left"></i></a>'
-          + '</div></td>';
-        tbody.appendChild(tr);
-        card.remove();
+        tr.setAttribute('data-f', 'aktif');
+        tr.setAttribute('data-durum', 'aktif');
+        tr.setAttribute('data-aktifpasif', 'aktif');
+        tr.setAttribute('data-arsivnedeni', 'yok');
+        tr.setAttribute('data-uzatim', 'yok');
+        tr.setAttribute('data-ilerleme', '0');
+        tr.setAttribute('data-personel', '0');
+        tr.setAttribute('data-sonislem', new Date().toISOString().slice(0, 10));
+        var subEl = tr.querySelector('.gcell-sub');
+        if(subEl) subEl.textContent = 'Yeniden aktifleştirildi · ' + bugun;
+        var sefTd = tr.querySelector('[data-col="sef"]');
+        if(sefTd){ sefTd.textContent = 'Atanmadı'; sefTd.classList.add('muted'); sefTd.classList.remove('t-strong'); }
+        var baslangicTd = tr.querySelector('[data-col="baslangic"]');
+        if(baslangicTd){ baslangicTd.classList.add('muted'); }
+        var teslimTd = tr.querySelector('[data-col="teslim"]');
+        if(teslimTd){ teslimTd.textContent = '—'; teslimTd.classList.add('muted'); }
+        var uzatimTd = tr.querySelector('[data-col="uzatim"]');
+        if(uzatimTd) uzatimTd.innerHTML = '<span class="gtag">Yok</span>';
+        var progTd = tr.querySelector('[data-col="prog"]');
+        if(progTd) progTd.innerHTML = '<div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:0%"></div></div><span class="gbar-val">%0</span></div>';
+        var personelTd = tr.querySelector('[data-col="personel"]');
+        if(personelTd){ personelTd.textContent = '0'; personelTd.classList.remove('muted'); personelTd.classList.add('t-strong'); }
+        var durumTd = tr.querySelector('[data-col="durum"]');
+        if(durumTd) durumTd.innerHTML = '<span class="gstat info">Yeniden Aktif · Ekip Bekliyor</span>';
+        var sonislemTd = tr.querySelector('[data-col="sonislem"]');
+        if(sonislemTd) sonislemTd.textContent = bugun;
+        var actsWrap = tr.querySelector('.row-acts');
+        if(actsWrap){
+          actsWrap.innerHTML = '<a class="ia-btn" href="crm-santiye-detay.html?santiye=' + key + '" data-no-confirm aria-label="Şantiye kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+            + '<a class="ia-btn" href="crm-santiye-form.html?mod=duzenle&santiye=' + key + '" data-no-confirm aria-label="Düzenle" data-tip="Düzenle" data-admin-only><i class="fa-solid fa-pen"></i></a>'
+            + '<button type="button" class="ia-btn danger" data-no-confirm data-santiye-pasif="' + key + '" aria-label="Pasife Al" data-tip="Pasife Al" data-admin-only><i class="fa-solid fa-power-off"></i></button>'
+            + '<a class="ia-btn" href="crm-ayarlar-log.html" data-no-confirm aria-label="İşlem Geçmişi" data-tip="İşlem Geçmişi"><i class="fa-solid fa-clock-rotate-left"></i></a>';
+        }
         if(tblSantiye) tblSantiye.hidden = false;
         if(gcHandle) gcHandle.apply();
         if(tblSantiye._gvBulk) tblSantiye._gvBulk.refresh();

@@ -30,28 +30,18 @@
 .col-durum{width:150px}
 .col-blacts{width:118px}
 
-/* iki boyutlu filtre — şantiye chip grubu + kategori select, durum ekseni ui.js'in
-   native .chip[data-filter] delegasyonuna bırakıldı (İSG/kasa deseni). */
-/* [T-L1 lead düzeltmesi] KÖK NEDEN — ui.css'in temel .filter-bar{flex-wrap:wrap}
-   kuralı buradan resetlenmiyordu; flex-direction:column + sızan flex-wrap:wrap
-   kombinasyonu 390px'te satırları YANYANA İKİNCİ SÜTUNA sarıyordu (window.innerWidth
-   496'ya şişiyordu — CDP ile ölçüldü, kanıtlandı). crm-santiye.html'nin ÇALIŞAN
-   `.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;...}` kuralıyla TUTARLI. */
-.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-.filter-row.top{justify-content:space-between;width:100%}
-/* [T-L1 lead düzeltmesi] TUZAK #2 — düz .filter-row içindeki Şantiye chip grubu
-   (.gv-chipbar-wrap) flex-item min-width:auto tuzağına düşüyordu (390px'te gerçek
-   doc-level taşma — window.innerWidth 496'ya şişiyordu, ölçüldü ve doğrulandı).
-   crm-santiye.html'deki genel `.filter-row .gv-chipbar-wrap` kuralıyla TUTARLI. */
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-
-/* Kategori satırı — select + sağda Gelişmiş Filtre/Kolonlar aksiyon grubu (kasa'daki
-   .tur-row deseninin devralımı; burada chip yerine <select> olduğundan flex:1 1 0 yerine
-   sabit max-width kullanılır, taşma riski YOK). */
-.filter-row.tur-row{justify-content:space-between}
-.tur-row-acts{display:flex;align-items:center;gap:8px;flex:none}
+/* V3A (tasks/spec-v3a-ortak.md, T-L1 Dalga 2A) — üst alan artık ORTAK
+   `.gv-listhead/.lh-row/.lh-acts/.lh-toggle/.lh-achips/.lh-tabs` sınıflarıyla kurulu;
+   sayfaya özel eski `.filter-bar.stack`/`.filter-row` satır kuralları KALDIRILDI
+   (K-219 sızıntısının kök nedeni oydu — yeni `.lh-*` ailesi ui.css'te ayrıca
+   `flex-wrap:nowrap` ile tanımlı, bu sızıntıya kapalı). `.lh-tabs` içinde ARTIK üç
+   alt satır üst üste dizilir: durum chip'leri → Şantiye chip'leri → Kategori seçimi;
+   bu yüzden `.lh-tabs` bu sayfada BİLİNÇLİ OLARAK column yönüne çevrilir (spec §4
+   notu "gerekirse sayfa-lokal <style>" izniyle, crm-santiye.html emsaliyle TUTARLI). */
+.lh-tabs{flex-direction:column;align-items:stretch;gap:10px}
+.tur-sub-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tur-sub-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+.tur-sub-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
 .tur-select{
   font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);
   background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);
@@ -61,11 +51,9 @@
 .tur-select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
 
 @media(max-width:640px){
-  .filter-row.tur-row{align-items:stretch}
-  .filter-row.tur-row .tur-select{width:100%;max-width:none}
-  .tur-row-acts{width:100%}
-  .filter-row .frow-lbl{min-width:0;width:100%}
-  .filter-row .gv-chipbar-wrap{width:100%}
+  .tur-sub-row .tur-select{width:100%;max-width:none}
+  .tur-sub-row .frow-lbl{min-width:0;width:100%}
+  .tur-sub-row .gv-chipbar-wrap{width:100%}
 }
 
 /* Arşivlenenleri Göster — switch, crm-santiye.html'deki "Pasif Şantiyeleri Göster" ile
@@ -110,7 +98,6 @@ tr.is-arsiv{opacity:.62}
         <div class="ph-sub" id="blSub"><span id="blCount">22 kayıt</span> — şantiyelerden foto ve not paylaşımı</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" id="btnBilCikti"><i class="fa-solid fa-print"></i> Çıktı Al</a>
         <a class="btn btn-acc btn-sm" href="crm-santiye-bildirim-form.html" data-view="paylasabilir" hidden><i class="fa-solid fa-camera"></i> Bildirim Paylaş</a>
       </div>
     </div>
@@ -139,81 +126,96 @@ tr.is-arsiv{opacity:.62}
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row top">
-          <div class="fb-search" style="max-width:360px">
+      <!-- V3A (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3) — standart liste üst alanı:
+           .lh-row (arama solda, sabit aksiyon grubu sağda: Gelişmiş Filtre · Kolonlar ·
+           Arşivlenenleri Göster · Çıktı Al — arşiv toggle'ı zaten arama satırında DOĞRU
+           yerdeydi, bu dalgada yalnız Gelişmiş Filtre/Kolonlar/Çıktı Al aynı satıra
+           TAŞINDI) → .lh-achips → .lh-tabs (durum sekmeleri → Şantiye alt-sekmesi →
+           Kategori alt-sekmesi, üç satır üst üste). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="blSearch" data-table-search="#tblBildirim" placeholder="Bildirim no, gönderen veya şantiye ara">
           </div>
-          <button type="button" class="gv-toggle" id="swArsivBil" role="switch" aria-checked="false">
-            <span class="gv-toggle-track"><span class="gv-toggle-thumb"></span></span>
-            <span class="gv-toggle-lbl">Arşivlenenleri Göster</span>
-          </button>
-        </div>
-
-        <!-- ============ B §2.1 madde 6 — Durum chip slider (kasa'daki .gv-chipbar-wrap
-             + cb-prev/cb-next + .gv-chipbar.chips[data-target] deseninin birebir devralımı). ============ -->
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" data-target="#tblBildirim" id="blDurumChips">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">22</span></button>
-            <button class="chip" data-filter="bekliyor">Bekleyen <span class="ch-cnt">4</span></button>
-            <button class="chip" data-filter="incelendi">İncelendi <span class="ch-cnt">18</span></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtnBil" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnBil" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <button type="button" class="gv-toggle" id="swArsivBil" role="switch" aria-checked="false">
+              <span class="gv-toggle-track"><span class="gv-toggle-thumb"></span></span>
+              <span class="gv-toggle-lbl lh-lbl">Arşivlenenleri Göster</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" id="btnBilCikti" aria-label="Çıktı Al">
+              <i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span>
+            </a>
           </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
-        <div class="filter-row">
-          <span class="frow-lbl">Şantiye</span>
+        <div class="lh-achips gv-achips-row" id="achipsBil" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor."><i class="fa-solid fa-lock"></i> Filtreleri Kaydet</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+
+        <div class="lh-tabs">
+          <!-- ============ B §2.1 madde 6 — Durum chip slider (kasa'daki .gv-chipbar-wrap
+               + cb-prev/cb-next + .gv-chipbar.chips[data-target] deseninin birebir devralımı). ============ -->
           <div class="gv-chipbar-wrap" data-chipbar>
             <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="blSanChips">
-              <button class="chip is-on" data-san="hepsi">Tümü <span class="ch-cnt">22</span></button>
-              <button class="chip" data-san="vadi">Vadi Konakları <span class="ch-cnt">9</span></button>
-              <button class="chip" data-san="liman">Liman Lojistik <span class="ch-cnt">8</span></button>
-              <button class="chip" data-san="merkez">Merkez Şantiye <span class="ch-cnt">5</span></button>
+            <div class="gv-chipbar chips" data-target="#tblBildirim" id="blDurumChips">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">22</span></button>
+              <button class="chip" data-filter="bekliyor">Bekleyen <span class="ch-cnt">4</span></button>
+              <button class="chip" data-filter="incelendi">İncelendi <span class="ch-cnt">18</span></button>
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-        </div>
 
-        <div class="filter-row tur-row">
-          <span class="frow-lbl">Kategori</span>
-          <select id="turSelect" class="tur-select" aria-label="Bildirim türüne göre filtrele">
-            <option value="hepsi">Tüm Kategoriler</option>
-            <option value="yapi">Yapı İlerlemesi</option>
-            <option value="ilerleme-kaydi">Şantiye İlerleme Kaydı</option>
-            <option value="beton">Beton Dökümü</option>
-            <option value="elektrik">Elektrik/Mekanik</option>
-            <option value="malzeme">Malzeme Teslimatı</option>
-            <option value="atolye">Atölye/Depo</option>
-            <option value="makine-ariza">Makine Arızası</option>
-            <option value="hasar">Hasar/Arıza</option>
-            <option value="taseron-sahada">Taşeron Sahada</option>
-            <option value="is-tamamlandi">İş Tamamlandı</option>
-            <option value="revize-gerekiyor">Revize Gerekiyor</option>
-            <option value="kalite">Kalite Kontrol</option>
-            <option value="denetim">Denetim Notu</option>
-            <option value="isg">İSG</option>
-            <option value="isg-uygunsuzluk">İSG Uygunsuzluğu</option>
-            <option value="acil">Acil Durum</option>
-            <option value="hava">Hava Koşulu Etkisi</option>
-            <option value="cevre">Çevre</option>
-            <option value="hakedis-kanit">Hakediş Kanıt Fotoğrafı</option>
-            <option value="oncesi-sonrasi">Öncesi/Sonrası Kaydı</option>
-          </select>
-          <div class="tur-row-acts">
-            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtnBil"><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnBil"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
+          <div class="tur-sub-row">
+            <span class="frow-lbl">Şantiye</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="blSanChips">
+                <button class="chip is-on" data-san="hepsi">Tümü <span class="ch-cnt">22</span></button>
+                <button class="chip" data-san="vadi">Vadi Konakları <span class="ch-cnt">9</span></button>
+                <button class="chip" data-san="liman">Liman Lojistik <span class="ch-cnt">8</span></button>
+                <button class="chip" data-san="merkez">Merkez Şantiye <span class="ch-cnt">5</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="gv-achips-row" id="achipsBil" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor."><i class="fa-solid fa-lock"></i> Filtreleri Kaydet</button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          <div class="tur-sub-row">
+            <span class="frow-lbl">Kategori</span>
+            <select id="turSelect" class="tur-select" aria-label="Bildirim türüne göre filtrele">
+              <option value="hepsi">Tüm Kategoriler</option>
+              <option value="yapi">Yapı İlerlemesi</option>
+              <option value="ilerleme-kaydi">Şantiye İlerleme Kaydı</option>
+              <option value="beton">Beton Dökümü</option>
+              <option value="elektrik">Elektrik/Mekanik</option>
+              <option value="malzeme">Malzeme Teslimatı</option>
+              <option value="atolye">Atölye/Depo</option>
+              <option value="makine-ariza">Makine Arızası</option>
+              <option value="hasar">Hasar/Arıza</option>
+              <option value="taseron-sahada">Taşeron Sahada</option>
+              <option value="is-tamamlandi">İş Tamamlandı</option>
+              <option value="revize-gerekiyor">Revize Gerekiyor</option>
+              <option value="kalite">Kalite Kontrol</option>
+              <option value="denetim">Denetim Notu</option>
+              <option value="isg">İSG</option>
+              <option value="isg-uygunsuzluk">İSG Uygunsuzluğu</option>
+              <option value="acil">Acil Durum</option>
+              <option value="hava">Hava Koşulu Etkisi</option>
+              <option value="cevre">Çevre</option>
+              <option value="hakedis-kanit">Hakediş Kanıt Fotoğrafı</option>
+              <option value="oncesi-sonrasi">Öncesi/Sonrası Kaydı</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -74,12 +74,9 @@
   .cross-link a{margin-left:0}
 }
 
-/* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
-   (2) kategori chip slider KENDİ satırında (gv-chipbar-wrap block-level —
-   spec-liste-mimarisi.md §1 notu: flex bağlamında min-width:auto tuzağına düşmesin) */
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-bar.stack .gv-chipbar-wrap{width:100%}
+/* V3A (tasks/spec-v3a-ortak.md) — üst alan artık ORTAK `.gv-listhead/.lh-row/.lh-search/
+   .lh-acts/.lh-toggle/.lh-achips/.lh-tabs` sınıflarıyla kurulu (ui.css); sayfaya özel
+   `.filter-bar.stack`/`.filter-row` satır kuralları kaldırıldı (T-L1, Dalga 2A). */
 
 /* şantiye hücresi altı il/ilçe ikincil satırı + durum hücresi altı ayrılış notu —
    mevcut .gcell-sub token'ı yeniden kullanılır (madde 4 / madde 8, yeni sınıf İCAT EDİLMEDİ) */
@@ -175,7 +172,6 @@
         <div class="ph-sub" id="phSub"><span data-table-count>22</span> personel · Yapıtaş İnşaat A.Ş.</div>
       </div>
       <div class="ph-actions" data-admin-only>
-        <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Personel listesi","kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-personel-form.html"><i class="fa-solid fa-plus"></i> Yeni Personel</a>
       </div>
     </div>
@@ -204,50 +200,70 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <div class="fb-search">
+      <!-- V3A (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3) — standart liste üst alanı:
+           .lh-row (arama solda, sabit 4'lü aksiyon grubu sağda: Gelişmiş Filtre ·
+           Kolonlar · Pasifleri Göster · Dışa Aktar) → .lh-achips (aktif filtre çipleri) →
+           .lh-tabs (§5.1 — Tümü/Yönetim/Şantiye/Ofis/Saha/Taşeron/Pasif/Eksik evraklı/
+           İzinli-raporlu kategori chip slider, gvChipBar). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Ad, pozisyon veya şantiye ara" data-table-search="#tblPersonel">
           </div>
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtn">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
-            <i class="fa-solid fa-table-columns"></i> Kolonlar
-          </button>
-        </div>
-        <!-- §7.2 — 11 kategorili yatay chip slider (gvChipBar). İçerik arttığında
-             AŞAĞI KAYMAZ, kendi satırında yatay scroll/ok butonlarıyla ilerler.
-             Durum(aktif/pasif) ve İl artık burada değil — §7.3 gelişmiş filtre
-             drawer'ına taşındı (7.1'in "taşma riski" tespitinin doğrudan nedeniydi). -->
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" data-target="#tblPersonel">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">25</span></button>
-            <button class="chip" data-filter="yonetim">Yönetim <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="sef">Şantiye Şefi <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="ofis">Ofis <span class="ch-cnt">0</span></button>
-            <button class="chip" data-filter="saha">Saha Personeli <span class="ch-cnt">13</span></button>
-            <button class="chip" data-filter="teknik">Teknik Ekip <span class="ch-cnt">0</span></button>
-            <button class="chip" data-filter="muhasebe">Muhasebe <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="ik">İK <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="satinalma">Satın Alma <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="taseron">Taşeron Personeli <span class="ch-cnt">0</span></button>
-            <button class="chip" data-filter="pasif">Pasif Personel <span class="ch-cnt">3</span></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="advFilterBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="perPasifGoster">
+              <input type="checkbox" id="perPasifGoster">
+              <i class="fa-solid fa-user-slash"></i> <span class="lh-lbl">Pasifleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-admin-only data-gv-export='{"baslik":"Personel listesi","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
           </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-      </div>
-      <div class="gv-achips-row" id="achipsPersonel" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all">
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-achips gv-achips-row" id="achipsPersonel" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all">
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+        <!-- §7.2/§5.1 — kategori chip slider (gvChipBar). İçerik arttığında AŞAĞI
+             KAYMAZ, kendi satırında yatay scroll/ok butonlarıyla ilerler. "Şantiye" (§5.1
+             genel kategori) ve "Eksik evraklı"/"İzinli / Raporlu" (§5.2 alanlarının chip
+             karşılığı) EKLENDİ — mevcut "Şantiye Şefi"/"Teknik Ekip"/"Muhasebe"/"İK"/
+             "Satın Alma" chip'leri SİLİNMEDİ, KORUNDU. -->
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblPersonel">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">25</span></button>
+              <button class="chip" data-filter="yonetim">Yönetim <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="santiyekat">Şantiye <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="sef">Şantiye Şefi <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="ofis">Ofis <span class="ch-cnt">0</span></button>
+              <button class="chip" data-filter="saha">Saha Personeli <span class="ch-cnt">13</span></button>
+              <button class="chip" data-filter="teknik">Teknik Ekip <span class="ch-cnt">0</span></button>
+              <button class="chip" data-filter="muhasebe">Muhasebe <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="ik">İK <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="satinalma">Satın Alma <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="taseron">Taşeron Personeli <span class="ch-cnt">0</span></button>
+              <button class="chip" data-filter="pasif">Pasif Personel <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="eksikevrak"><i class="fa-solid fa-file-circle-exclamation"></i> Eksik Evraklı <span class="ch-cnt">4</span></button>
+              <button class="chip" data-filter="izinliraporlu"><i class="fa-solid fa-umbrella-beach"></i> İzinli / Raporlu <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
       <div class="bulk-bar" id="bulkBar" hidden data-admin-only>
@@ -1179,15 +1195,32 @@ if(window.gvExport) gvExport.bind();
     return true;
   }
 
+  /* V3A (T-L1, Dalga 2A) — §3.1/§3.2 "Pasifleri Göster" toggle. Varsayılan KAPALI:
+     pasif (data-durum="pasif") 3 kayıt gizlenir, görünen 22 = kanonik "aktif 22" ile
+     birebir örtüşür (eskiden "Tümü" chip'i pasifleri de sayıp 25 gösteriyordu — bu
+     tutarsızlık toggle ile çözüldü). Toggle AÇIK veya kullanıcı açıkça "Pasif Personel"
+     chip'ini ya da Gelişmiş Filtre'de "Aktif/Pasif: Pasif" seçtiyse pasif kayıtlar
+     yine görünür — iki bağımsız kontrol birbirini EZMEZ, aynı yönde birleşir (K-220 dersi). */
+  var pasifToggle = document.getElementById('perPasifGoster');
+
   function applyPersonelCombinedFilter(){
     var katOn = katChipsWrap.querySelector('.chip.is-on[data-filter]');
     var kat = katOn ? katOn.getAttribute('data-filter') : 'hepsi';
     var term = perSearch ? perSearch.value.trim().toLocaleLowerCase('tr') : '';
+    var pasifGoster = pasifToggle ? pasifToggle.checked : false;
+    var explicitPasifFilter = !!(fpState && ((fpState.aktifpasif && fpState.aktifpasif.value === 'pasif') || (fpState.durum && fpState.durum.value === 'ayrildi')));
     var shown = 0;
     tblPersonel.querySelectorAll('tbody tr').forEach(function(tr){
-      var okKat = (kat === 'hepsi') || (tr.getAttribute('data-f') === kat);
+      var okKat;
+      if(kat === 'hepsi') okKat = true;
+      else if(kat === 'santiyekat') okKat = tr.getAttribute('data-f') === 'sef';
+      else if(kat === 'eksikevrak') okKat = tr.getAttribute('data-evrak') === 'eksik';
+      else if(kat === 'izinliraporlu'){ var ix = tr.getAttribute('data-izinx'); okKat = ix === 'izinli' || ix === 'raporlu'; }
+      else okKat = tr.getAttribute('data-f') === kat;
+      var isPasif = tr.getAttribute('data-durum') === 'pasif';
+      var okPasif = !isPasif || pasifGoster || kat === 'pasif' || explicitPasifFilter;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-      var show = okKat && okTerm && fpMatch(tr);
+      var show = okKat && okPasif && okTerm && fpMatch(tr);
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -1198,6 +1231,7 @@ if(window.gvExport) gvExport.bind();
   }
   /* URL-state + pager refresh delegasyon sahibinde (ui.js applyFilters) */
   tblPersonel._gvApply = applyPersonelCombinedFilter;
+  if(pasifToggle) pasifToggle.addEventListener('change', applyPersonelCombinedFilter);
 
   var POZ_OPTS = [
     {v:'firma-sahibi', l:'Firma Sahibi'}, {v:'genel-mudur', l:'Genel Müdür'}, {v:'teknik-mudur', l:'Teknik Müdür'},

@@ -100,15 +100,47 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Personel veya evrak türü ara" data-table-search="#tblUyari">
+      <!-- V3A (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3) — standart liste üst alanı:
+           .lh-row (arama solda, sabit aksiyon grubu sağda: Gelişmiş Filtre · Kolonlar ·
+           Yenilenenleri Göster · Dışa Aktar) → .lh-achips → .lh-tabs (durum sekmeleri). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Personel veya evrak türü ara" data-table-search="#tblUyari">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="uyFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="uyColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="uyYenilenenGoster">
+              <input type="checkbox" id="uyYenilenenGoster">
+              <i class="fa-solid fa-rotate"></i> <span class="lh-lbl">Yenilenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Evrak son kullanma uyarıları","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div class="chips" data-target="#tblUyari">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">8</span></button>
-          <button class="chip" data-filter="yakin">Süresi Yaklaşan <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="dolmus">Süresi Dolmuş <span class="ch-cnt">2</span></button>
+        <div class="lh-achips gv-achips-row" id="uyAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblUyari">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">8</span></button>
+              <button class="chip" data-filter="yakin">Süresi Yaklaşan <span class="ch-cnt">6</span></button>
+              <button class="chip" data-filter="dolmus">Süresi Dolmuş <span class="ch-cnt">2</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
       <div class="gc-body flush">
@@ -116,79 +148,100 @@
           <thead>
             <tr>
               <th>Personel</th>
-              <th class="col-tur">Evrak Türü</th>
-              <th class="col-santiye">Şantiye</th>
-              <th class="col-gun">Kalan Süre</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-tur" data-col="tur">Evrak Türü</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th class="col-gun" data-col="gun">Kalan Süre</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <!-- statik bake — kanonik 8 kayıt, crm-personel-ozluk.html tblMatris ile BİREBİR;
-               JS yüklenince aynı satırlar sıralanıp aynı mount'a yeniden basılır — D18-B2 -->
+               JS yüklenince aynı satırlar sıralanıp aynı mount'a yeniden basılır — D18-B2.
+               V3A (T-L1, Dalga 2A) — data-santiye/data-durum/data-tarih EKLENDİ (Gelişmiş
+               Filtre'nin Şantiye/Durum/Tarih aralığı alanları için); data-doc zaten evrak
+               türü eksenidir, ayrı bir data-tur İCAT EDİLMEDİ. 2 "yenilendi" satırı da
+               EKLENDİ (aşağıda, hidden) — "Yenilenenleri Göster" toggle'ının GERÇEK
+               içeriği (§3, boş demo toggle değil). -->
           <tbody id="tblBody">
-            <tr data-f="dolmus" data-per="17" data-doc="09">
+            <tr data-f="dolmus" data-per="17" data-doc="09" data-santiye="yok" data-durum="dolmus" data-tarih="2026-06-26">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">HG</div><div class="uy-info"><b>Halil Güneş</b><span>Operatör</span></div></div></td>
-              <td>Ehliyet / SRC belgesi</td>
-              <td>—</td>
-              <td><span class="gun-cell crit"><i class="fa-solid fa-triangle-exclamation"></i> 6 gün önce doldu</span></td>
-              <td><span class="gstat danger">Süresi Doldu</span></td>
+              <td data-col="tur">Ehliyet / SRC belgesi</td>
+              <td data-col="santiye">—</td>
+              <td data-col="gun"><span class="gun-cell crit"><i class="fa-solid fa-triangle-exclamation"></i> 6 gün önce doldu</span></td>
+              <td data-col="durum"><span class="gstat danger">Süresi Doldu</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=17&amp;doc=09" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=17&amp;tur=09" data-no-confirm>Yenile</a></div></td>
             </tr>
-            <tr data-f="dolmus" data-per="12" data-doc="08">
+            <tr data-f="dolmus" data-per="12" data-doc="08" data-santiye="vadi" data-durum="dolmus" data-tarih="2026-06-18">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RK</div><div class="uy-info"><b>Ramazan Kılıç</b><span>Kalıpçı</span></div></div></td>
-              <td>Mesleki yeterlilik belgesi</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gun-cell crit"><i class="fa-solid fa-triangle-exclamation"></i> 14 gün önce doldu</span></td>
-              <td><span class="gstat danger">Süresi Doldu</span></td>
+              <td data-col="tur">Mesleki yeterlilik belgesi</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="gun"><span class="gun-cell crit"><i class="fa-solid fa-triangle-exclamation"></i> 14 gün önce doldu</span></td>
+              <td data-col="durum"><span class="gstat danger">Süresi Doldu</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=12&amp;doc=08" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=12&amp;tur=08" data-no-confirm>Yenile</a></div></td>
             </tr>
-            <tr data-f="yakin" data-per="18" data-doc="08">
+            <tr data-f="yakin" data-per="18" data-doc="08" data-santiye="yok" data-durum="yakin" data-tarih="2026-07-12">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">MÇ</div><div class="uy-info"><b>Metin Çetin</b><span>Kaynakçı</span></div></div></td>
-              <td>Mesleki yeterlilik belgesi</td>
-              <td>—</td>
-              <td><span class="gun-cell crit"><i class="fa-solid fa-clock"></i> 10 gün kaldı</span></td>
-              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td data-col="tur">Mesleki yeterlilik belgesi</td>
+              <td data-col="santiye">—</td>
+              <td data-col="gun"><span class="gun-cell crit"><i class="fa-solid fa-clock"></i> 10 gün kaldı</span></td>
+              <td data-col="durum"><span class="gstat warn">Süresi Yaklaşıyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=18&amp;doc=08" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=18&amp;tur=08" data-no-confirm>Yenile</a></div></td>
             </tr>
-            <tr data-f="yakin" data-per="5" data-doc="07">
+            <tr data-f="yakin" data-per="5" data-doc="07" data-santiye="liman" data-durum="yakin" data-tarih="2026-07-14">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--info-tint);color:var(--info)">AK</div><div class="uy-info"><b>Aylin Koç</b><span>Şantiye Şefi</span></div></div></td>
-              <td>İSG eğitim sertifikası</td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="gun-cell crit"><i class="fa-solid fa-clock"></i> 12 gün kaldı</span></td>
-              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td data-col="tur">İSG eğitim sertifikası</td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="gun"><span class="gun-cell crit"><i class="fa-solid fa-clock"></i> 12 gün kaldı</span></td>
+              <td data-col="durum"><span class="gstat warn">Süresi Yaklaşıyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=5&amp;doc=07" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=5&amp;tur=07" data-no-confirm>Yenile</a></div></td>
             </tr>
-            <tr data-f="yakin" data-per="13" data-doc="09">
+            <tr data-f="yakin" data-per="13" data-doc="09" data-santiye="vadi" data-durum="yakin" data-tarih="2026-07-20">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SD</div><div class="uy-info"><b>Selim Doğan</b><span>Demir Ustası</span></div></div></td>
-              <td>Ehliyet / SRC belgesi</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 18 gün kaldı</span></td>
-              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td data-col="tur">Ehliyet / SRC belgesi</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="gun"><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 18 gün kaldı</span></td>
+              <td data-col="durum"><span class="gstat warn">Süresi Yaklaşıyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=13&amp;doc=09" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=13&amp;tur=09" data-no-confirm>Yenile</a></div></td>
             </tr>
-            <tr data-f="yakin" data-per="17" data-doc="07">
+            <tr data-f="yakin" data-per="17" data-doc="07" data-santiye="yok" data-durum="yakin" data-tarih="2026-07-20">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">HG</div><div class="uy-info"><b>Halil Güneş</b><span>Operatör</span></div></div></td>
-              <td>İSG eğitim sertifikası</td>
-              <td>—</td>
-              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 18 gün kaldı</span></td>
-              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td data-col="tur">İSG eğitim sertifikası</td>
+              <td data-col="santiye">—</td>
+              <td data-col="gun"><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 18 gün kaldı</span></td>
+              <td data-col="durum"><span class="gstat warn">Süresi Yaklaşıyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=17&amp;doc=07" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=17&amp;tur=07" data-no-confirm>Yenile</a></div></td>
             </tr>
-            <tr data-f="yakin" data-per="8" data-doc="06">
+            <tr data-f="yakin" data-per="8" data-doc="06" data-santiye="yok" data-durum="yakin" data-tarih="2026-07-22">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div><div class="uy-info"><b>Baran Yıldız</b><span>Satın Alma Sorumlusu</span></div></div></td>
-              <td>Sağlık raporu</td>
-              <td>—</td>
-              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 20 gün kaldı</span></td>
-              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td data-col="tur">Sağlık raporu</td>
+              <td data-col="santiye">—</td>
+              <td data-col="gun"><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 20 gün kaldı</span></td>
+              <td data-col="durum"><span class="gstat warn">Süresi Yaklaşıyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=8&amp;doc=06" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=8&amp;tur=06" data-no-confirm>Yenile</a></div></td>
             </tr>
-            <tr data-f="yakin" data-per="13" data-doc="06">
+            <tr data-f="yakin" data-per="13" data-doc="06" data-santiye="vadi" data-durum="yakin" data-tarih="2026-07-27">
               <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SD</div><div class="uy-info"><b>Selim Doğan</b><span>Demir Ustası</span></div></div></td>
-              <td>Sağlık raporu</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 25 gün kaldı</span></td>
-              <td><span class="gstat warn">Süresi Yaklaşıyor</span></td>
+              <td data-col="tur">Sağlık raporu</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="gun"><span class="gun-cell yakin"><i class="fa-solid fa-clock"></i> 25 gün kaldı</span></td>
+              <td data-col="durum"><span class="gstat warn">Süresi Yaklaşıyor</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=13&amp;doc=06" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn btn-acc btn-sm" href="crm-personel-evrak-form.html?per=13&amp;tur=06" data-no-confirm>Yenile</a></div></td>
+            </tr>
+            <tr data-f="yenilendi" data-per="011" data-doc="07" data-santiye="vadi" data-durum="yenilendi" data-tarih="2026-06-15" hidden>
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">İS</div><div class="uy-info"><b>İbrahim Sönmez</b><span>Formen</span></div></div></td>
+              <td data-col="tur">İSG eğitim sertifikası</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="gun"><span class="gun-cell" style="color:var(--ok)"><i class="fa-solid fa-check"></i> Yenilendi · 15 Haz 2026</span></td>
+              <td data-col="durum"><span class="gstat ok">Yenilendi</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=011&amp;doc=07" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
+            </tr>
+            <tr data-f="yenilendi" data-per="016" data-doc="08" data-santiye="liman" data-durum="yenilendi" data-tarih="2026-06-20" hidden>
+              <td><div class="uy-cell"><div class="uy-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ŞA</div><div class="uy-info"><b>Şükrü Aslan</b><span>Formen</span></div></div></td>
+              <td data-col="tur">Mesleki yeterlilik belgesi</td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="gun"><span class="gun-cell" style="color:var(--ok)"><i class="fa-solid fa-check"></i> Yenilendi · 20 Haz 2026</span></td>
+              <td data-col="durum"><span class="gstat ok">Yenilendi</span></td>
+              <td><div class="row-acts"><a class="ia-btn" href="crm-personel-evrak-detay.html?per=016&amp;doc=08" data-no-confirm aria-label="Evrak detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
         </table>
@@ -214,7 +267,109 @@
   if(!window.GV) return;
 
   /* satırlar zaten kalan-süreye göre sıralı statik basıldı (dolmuş → en az kalan); JS
-     yeniden sıralama yapmaz, yalnız chip/arama filtresi ui.js'in standart motoruna bırakılır. */
+     yeniden sıralama yapmaz. */
+
+  if(window.gvExport) gvExport.bind();
+
+  var tblUyari = document.getElementById('tblUyari');
+  var yenilenenToggle = document.getElementById('uyYenilenenGoster');
+  var advState = {};
+
+  /* ============ V3A (T-L1, Dalga 2A) — Gelişmiş Filtre (gvFilterDrawer, 4 alan) ============
+     `table` KASITLI OLARAK verilmez — bu sayfanın TEK karar mercii aşağıdaki
+     applyUyariFilter() olur (K-220 dersi: iki bağımsız filtre motoru aynı satırlara
+     çakışarak yazmaz). "Durum" alanı BİLİNÇLİ OLARAK "yenilendi" seçeneğini de içerir —
+     kullanıcı drawer'dan doğrudan "Yenilendi" seçerse toggle kapalı olsa da o kayıtlar
+     görünür (aşağıdaki explicit-override mantığı). "Evrak Türü" alanı var olan
+     `data-doc` özniteliğini okur — ayrı bir `data-tur` İCAT EDİLMEDİ. */
+  if(window.gvFilterDrawer && document.getElementById('uyFiltreBtn')){
+    gvFilterDrawer.init({
+      mount: '#uyFiltreBtn', screen: 'evrakuyari', chipsMount: '#uyAchips',
+      title: 'Gelişmiş Filtre',
+      fields: [
+        {key:'durum', type:'select', label:'Durum', options:[
+          {v:'yakin', l:'Süresi Yaklaşan'}, {v:'dolmus', l:'Süresi Dolmuş'}, {v:'yenilendi', l:'Yenilendi'}
+        ]},
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'}, {v:'yok', l:'Belirtilmemiş'}
+        ]},
+        {key:'doc', type:'select', label:'Evrak Türü', options:[
+          {v:'09', l:'Ehliyet / SRC Belgesi'}, {v:'08', l:'Mesleki Yeterlilik Belgesi'},
+          {v:'07', l:'İSG Eğitim Sertifikası'}, {v:'06', l:'Sağlık Raporu'}
+        ]},
+        {key:'tarih', type:'daterange', label:'Son Geçerlilik / Yenileme Tarihi'}
+      ],
+      onApply: function(state){
+        advState = state || {};
+        applyUyariFilter();
+      }
+    });
+  }
+
+  /* ============ V3A (T-L1, Dalga 2A) — Kolonlar (gvCols) ============ */
+  if(window.gvCols && document.getElementById('uyColsBtn')){
+    gvCols.init({
+      mount: '#uyColsBtn', table: '#tblUyari', screen: 'evrakuyari',
+      cols: [
+        {key:'tur', lbl:'Evrak Türü', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'gun', lbl:'Kalan Süre', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
+  function advMatch(tr){
+    var keys = Object.keys(advState);
+    for(var i = 0; i < keys.length; i++){
+      var k = keys[i], v = advState[k];
+      if(k === 'tarih'){
+        var iso = tr.getAttribute('data-tarih');
+        if(!iso) return false;
+        var d = new Date(iso + 'T00:00:00');
+        if(v.raw.from && d < v.raw.from) return false;
+        if(v.raw.to && d > v.raw.to) return false;
+      } else if(tr.getAttribute('data-' + k) !== v.value){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /* ============ §3 — "Yenilenenleri Göster" toggle: bileşik filtre motoru (D18
+     _gvApply delegasyonu). Varsayılan KAPALI: 2 "yenilendi" satırı gizlenir (kanonik
+     8 uyarı sayısı BOZULMAZ — bu 2 kayıt sayının DIŞINDA, santiye'nin pasif 4'ü /
+     personel'in pasif 3'üyle AYNI desen). AÇIK ya da Gelişmiş Filtre'den "Durum:
+     Yenilendi" açıkça seçilirse yine görünür. ============ */
+  function applyUyariFilter(){
+    if(!tblUyari) return;
+    var card = tblUyari.closest('.gv-card');
+    var inp = card.querySelector('input[data-table-search]');
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var on = card.querySelector('.chip.is-on[data-filter]');
+    var f = on ? on.getAttribute('data-filter') : 'hepsi';
+    var showYenilenen = yenilenenToggle ? yenilenenToggle.checked : false;
+    var explicitYenilenen = !!(advState.durum && advState.durum.value === 'yenilendi');
+    var shown = 0;
+    tblUyari.querySelectorAll('tbody tr').forEach(function(tr){
+      var rowF = tr.getAttribute('data-f');
+      var isYenilendi = rowF === 'yenilendi';
+      var okF = (f === 'hepsi') ? (!isYenilendi || showYenilenen || explicitYenilenen) : (rowF === f);
+      var okT = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okAdv = advMatch(tr);
+      var show = okF && okT && okAdv;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    var empty = card.querySelector('[data-table-empty]');
+    if(empty) empty.hidden = shown !== 0;
+    var cnt = document.querySelector('[data-table-count]');
+    if(cnt) cnt.textContent = shown;
+  }
+  if(tblUyari) tblUyari._gvApply = applyUyariFilter;
+  if(yenilenenToggle) yenilenenToggle.addEventListener('change', applyUyariFilter);
+
+  applyUyariFilter();
 })();
 </script>
 </body>
