@@ -78,9 +78,6 @@
         <h1>Termin Takibi</h1>
         <div class="ph-sub"><span data-table-count>6</span> sipariş · teslim tarihine göre izleniyor</div>
       </div>
-      <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Termin listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-      </div>
     </div>
 
     <div class="kpi-grid">
@@ -107,31 +104,53 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Form no, tedarikçi veya şantiye ara" data-table-search="#tblTermin">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri) → .lh-tabs (durum sekmeleri). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Form no, tedarikçi veya şantiye ara" data-table-search="#tblTermin">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTermin" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnTermin" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="fltArsivGosterTermin">
+              <input type="checkbox" id="fltArsivGosterTermin">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Termin listesi" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div class="chips" data-target="#tblTermin">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="yaklasan">Yaklaşan <span class="ch-cnt">2</span></button>
-          <button class="chip" data-filter="gecikti">Geciken <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="teslim">Teslim Alındı <span class="ch-cnt">3</span></button>
+        <div class="lh-achips gv-achips-row" id="achipsTermin" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTermin">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
-      </div>
-
-      <div class="gv-achips-row" id="achipsTermin" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblTermin">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
+              <button class="chip" data-filter="yaklasan">Yaklaşan <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="gecikti">Geciken <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="teslim">Teslim Alındı <span class="ch-cnt">3</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
 
@@ -140,60 +159,60 @@
           <thead>
             <tr>
               <th>Sipariş / Tedarikçi</th>
-              <th class="col-santiye">Şantiye</th>
-              <th>Malzeme</th>
-              <th class="col-tarih">Planlanan Teslim</th>
-              <th class="col-kalan">Durum</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th data-col="malzeme">Malzeme</th>
+              <th class="col-tarih" data-col="tarih">Planlanan Teslim</th>
+              <th class="col-kalan" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr data-f="yaklasan" data-durum="yaklasan" data-santiye="vadi" data-tarih="2026-07-02">
               <td><div class="tm-cell"><div class="tm-mark"><i class="fa-solid fa-truck-ramp-box"></i></div><div class="tm-info"><b>SAT-2026-016</b><span>Ege Hazır Beton</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tm-desc">Kalıp kerestesi</span></td>
-              <td>2 Temmuz 2026</td>
-              <td><span class="kalan-pill today"><span class="k-dot"></span> Bugün teslim</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tm-desc">Kalıp kerestesi</span></td>
+              <td data-col="tarih">2 Temmuz 2026</td>
+              <td data-col="durum"><span class="kalan-pill today"><span class="k-dot"></span> Bugün teslim</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=016" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="yaklasan" data-durum="yaklasan" data-santiye="merkez" data-tarih="2026-07-03">
               <td><div class="tm-cell"><div class="tm-mark"><i class="fa-solid fa-truck-ramp-box"></i></div><div class="tm-info"><b>SAT-2026-012</b><span>Anadolu Hırdavat</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><span class="tm-desc">Elektrik kablosu NYY</span></td>
-              <td>3 Temmuz 2026</td>
-              <td><span class="kalan-pill near"><span class="k-dot"></span> 1 gün kaldı</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="malzeme"><span class="tm-desc">Elektrik kablosu NYY</span></td>
+              <td data-col="tarih">3 Temmuz 2026</td>
+              <td data-col="durum"><span class="kalan-pill near"><span class="k-dot"></span> 1 gün kaldı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=012" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="gecikti" data-durum="gecikti" data-santiye="merkez" data-tarih="2026-06-30">
               <td><div class="tm-cell"><div class="tm-mark" style="background:var(--danger-tint);color:var(--danger)"><i class="fa-solid fa-truck-ramp-box"></i></div><div class="tm-info"><b>SAT-2026-011</b><span>Ege Hazır Beton</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><span class="tm-desc">Yalıtım malzemesi (XPS)</span></td>
-              <td>30 Haziran 2026</td>
-              <td><span class="kalan-pill late"><span class="k-dot"></span> 2 gün gecikti</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="malzeme"><span class="tm-desc">Yalıtım malzemesi (XPS)</span></td>
+              <td data-col="tarih">30 Haziran 2026</td>
+              <td data-col="durum"><span class="kalan-pill late"><span class="k-dot"></span> 2 gün gecikti</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=011" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="teslim" data-durum="teslim" data-santiye="liman" data-tarih="2026-05-09">
               <td><div class="tm-cell"><div class="tm-mark" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-truck-ramp-box"></i></div><div class="tm-info"><b>SAT-2026-010</b><span>Anadolu Hırdavat</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="tm-desc">Kaynak teli + gaz tüpü</span></td>
-              <td>9 Mayıs 2026</td>
-              <td><span class="kalan-pill done"><span class="k-dot"></span> Teslim alındı</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="tm-desc">Kaynak teli + gaz tüpü</span></td>
+              <td data-col="tarih">9 Mayıs 2026</td>
+              <td data-col="durum"><span class="kalan-pill done"><span class="k-dot"></span> Teslim alındı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=010" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="teslim" data-durum="teslim" data-santiye="vadi" data-tarih="2026-06-22">
               <td><div class="tm-cell"><div class="tm-mark" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-truck-ramp-box"></i></div><div class="tm-info"><b>SAT-2026-009</b><span>Anadolu Hırdavat</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tm-desc">PVC boru seti</span></td>
-              <td>22 Haziran 2026</td>
-              <td><span class="kalan-pill done"><span class="k-dot"></span> Teslim alındı</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tm-desc">PVC boru seti</span></td>
+              <td data-col="tarih">22 Haziran 2026</td>
+              <td data-col="durum"><span class="kalan-pill done"><span class="k-dot"></span> Teslim alındı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=009" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="teslim" data-durum="teslim" data-santiye="vadi" data-tarih="2026-06-19">
               <td><div class="tm-cell"><div class="tm-mark" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-truck-ramp-box"></i></div><div class="tm-info"><b>SAT-2026-008</b><span>Ege Hazır Beton</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tm-desc">Alçı sıva malzemesi</span></td>
-              <td>19 Haziran 2026</td>
-              <td><span class="kalan-pill done"><span class="k-dot"></span> Teslim alındı</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tm-desc">Alçı sıva malzemesi</span></td>
+              <td data-col="tarih">19 Haziran 2026</td>
+              <td data-col="durum"><span class="kalan-pill done"><span class="k-dot"></span> Teslim alındı</span></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-form-detay.html?form=008" data-no-confirm aria-label="Form detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
@@ -228,12 +247,6 @@
         <label>Tarih Aralığı</label>
         <div data-gvdaterange data-fp-key="tarih" data-fp-label="Planlanan Teslim"></div>
       </div>
-      <div class="gfield">
-        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-          <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-          Arşivlenenleri Göster
-        </label>
-      </div>
     </div>
     <div class="gv-fpanel-foot">
       <button type="button" class="btn btn-ghost" data-fp-clear">Temizle</button>
@@ -257,14 +270,33 @@
 
   /* ---- §17 Sistem Genelinde Düzenleme/Arşivleme — Gelişmiş Filtre + arşivle aksiyonu ---- */
   if(window.gvFilterPanel){
-    window.gvFilterPanel.init('#fpTermin', {
-      table: '#tblTermin',
-      onApply: function(state){
-        var tbl = document.getElementById('tblTermin');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
+    window.gvFilterPanel.init('#fpTermin', { table: '#tblTermin' });
+  }
+
+  /* §3.2 — Arşivlenenleri Göster artık `.lh-acts` içinde bağımsız bir toggle (panel
+     içinden ÇIKARILDI); CSS'teki tr[data-arsiv="1"]/.gv-show-arsiv katmanını KENDİSİ
+     kontrol eder — durum-tab/arama filtresi (tr.hidden) ile ÇAKIŞMAZ (K-220 dersi). */
+  var arsivToggleTermin = document.getElementById('fltArsivGosterTermin');
+  if(arsivToggleTermin){
+    arsivToggleTermin.addEventListener('change', function(){
+      var tbl = document.getElementById('tblTermin');
+      if(tbl) tbl.classList.toggle('gv-show-arsiv', arsivToggleTermin.checked);
     });
   }
+
+  /* ============ Kolonlar (gvCols) — §2.1 madde 8 ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtnTermin', table: '#tblTermin', screen: 'satinalma-termin',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'malzeme', lbl:'Malzeme', def:true},
+        {key:'tarih', lbl:'Planlanan Teslim', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
   function gvWireRowArchive(rowSel){
     document.querySelectorAll(rowSel).forEach(function(row){
       var acts = row.querySelector('.row-acts');

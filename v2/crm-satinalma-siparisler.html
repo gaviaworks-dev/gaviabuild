@@ -51,9 +51,10 @@
   .sp-desc{max-width:130px}
 }
 
-/* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme ---- */
-#tblSiparis tbody tr[data-arsiv="1"]{display:none}
-#tblSiparis.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+/* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme.
+   V3A: görünürlük artık tamamen tblSiparisApply() (tr.hidden) tarafından karar
+   verilir — CSS'te ayrı bir data-arsiv/gv-show-arsiv kuralı YOK (K-220 dersi:
+   tek motor). ---- */
 </style>
 </head>
 <body data-sec="satinalma" data-screen="siparisler">
@@ -83,9 +84,6 @@
         <h1>Siparişler</h1>
         <div class="ph-sub" id="phSub"><span data-table-count>8</span> sipariş · 5'i açık / tedarik sürecinde</div>
       </div>
-      <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Sipariş listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-      </div>
     </div>
 
     <div class="kpi-grid">
@@ -112,34 +110,71 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Sipariş no, tedarikçi veya şantiye ara" data-table-search="#tblSiparis">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri) → .lh-tabs (durum tabları + malzeme kategori çipleri, §13.3). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Sipariş no, tedarikçi veya şantiye ara" data-table-search="#tblSiparis">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpSiparisler" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnSiparis" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="fltArsivGosterSiparis">
+              <input type="checkbox" id="fltArsivGosterSiparis">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Sipariş listesi" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div class="chips" data-target="#tblSiparis">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">8</span></button>
-          <button class="chip" data-filter="gecikme">Termin Gecikmesi <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="kismi">Kısmi Teslim <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="tedarikcide">Tedarikçide <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="taslak">Taslak <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="teslim">Teslim Edildi <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="kapandi">Kapandı <span class="ch-cnt">2</span></button>
+        <div class="lh-achips gv-achips-row" id="achipsSiparisler" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpSiparisler">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
-      </div>
-      <div class="gv-achips-row" id="achipsSiparisler" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="durumChipsSiparis" data-target="#tblSiparis">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">8</span></button>
+              <button class="chip" data-filter="gecikme">Termin Gecikmesi <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="kismi">Kısmi Teslim <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="tedarikcide">Tedarikçide <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="taslak">Taslak <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="teslim">Teslim Edildi <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="kapandi">Kapandı <span class="ch-cnt">2</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <!-- §13.3 — malzeme kategorisi çipleri (sayfanın kendi sipariş kalemi mock
+               verisinden türetilmiştir: beton/demir-çelik/elektrik/hırdavat/yapı market) -->
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="katChipsSiparis" data-target="#tblSiparis">
+              <button class="chip is-on" data-filter="hepsi"><i class="fa-solid fa-layer-group"></i> Tüm Kategoriler <span class="ch-cnt">8</span></button>
+              <button class="chip" data-filter="beton">Beton <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="demir">Demir &amp; Çelik <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="elektrik">Elektrik <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="hirdavat">Hırdavat <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="yapi">Yapı Market <span class="ch-cnt">2</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
       <div class="gc-body flush">
@@ -147,94 +182,94 @@
           <thead>
             <tr>
               <th>Sipariş</th>
-              <th class="col-tedarikci">Tedarikçi</th>
-              <th class="col-santiye">Şantiye</th>
-              <th>Malzeme</th>
-              <th class="num col-tutar">Tutar</th>
-              <th class="col-termin">Termin</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-tedarikci" data-col="tedarikci">Tedarikçi</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th data-col="malzeme">Malzeme</th>
+              <th class="num col-tutar" data-col="tutar">Tutar</th>
+              <th class="col-termin" data-col="termin">Termin</th>
+              <th class="col-durum" data-col="durum">Durum</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            <tr data-f="kapandi" data-santiye="vadi" data-tutar="1487500" data-tarih="2026-04-14">
+            <tr data-kategori="beton" data-f="kapandi" data-santiye="vadi" data-tutar="1487500" data-tarih="2026-04-14">
               <td><div class="sp-cell"><div class="sp-mark"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-01</b><span>14 Nisan 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-01">Ege Hazır Beton</a></td>
-              <td>Vadi Konakları</td>
-              <td><span class="sp-desc">C30/37 hazır beton — 850 m³</span></td>
-              <td class="num t-strong">₺1.487.500</td>
-              <td><span class="kalan-pill done"><span class="k-dot"></span> Teslim: 4 Mayıs 2026</span></td>
-              <td data-badge2="kapandi"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-01">Ege Hazır Beton</a></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="sp-desc">C30/37 hazır beton — 850 m³</span></td>
+              <td class="num t-strong" data-col="tutar">₺1.487.500</td>
+              <td data-col="termin"><span class="kalan-pill done"><span class="k-dot"></span> Teslim: 4 Mayıs 2026</span></td>
+              <td data-col="durum" data-badge2="kapandi"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="kapandi" data-santiye="liman" data-tutar="96400" data-tarih="2026-05-05">
+            <tr data-kategori="hirdavat" data-f="kapandi" data-santiye="liman" data-tutar="96400" data-tarih="2026-05-05">
               <td><div class="sp-cell"><div class="sp-mark"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-02</b><span>5 Mayıs 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-06">Anadolu Hırdavat</a></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="sp-desc">Kaynak teli + sarf paketi</span></td>
-              <td class="num t-strong">₺96.400</td>
-              <td><span class="kalan-pill done"><span class="k-dot"></span> Teslim: 9 Mayıs 2026</span></td>
-              <td data-badge2="kapandi"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-06">Anadolu Hırdavat</a></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="sp-desc">Kaynak teli + sarf paketi</span></td>
+              <td class="num t-strong" data-col="tutar">₺96.400</td>
+              <td data-col="termin"><span class="kalan-pill done"><span class="k-dot"></span> Teslim: 9 Mayıs 2026</span></td>
+              <td data-col="durum" data-badge2="kapandi"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-02" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="teslim" data-santiye="vadi" data-tutar="418200" data-tarih="2026-05-12">
+            <tr data-kategori="yapi" data-f="teslim" data-santiye="vadi" data-tutar="418200" data-tarih="2026-05-12">
               <td><div class="sp-cell"><div class="sp-mark"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-03</b><span>12 Mayıs 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-04">Boğaziçi Yapı Market</a></td>
-              <td>Vadi Konakları</td>
-              <td><span class="sp-desc">PVC doğrama</span></td>
-              <td class="num t-strong">₺418.200</td>
-              <td><span class="kalan-pill done"><span class="k-dot"></span> Teslim: 9 Haziran 2026</span></td>
-              <td data-badge2="teslim"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-04">Boğaziçi Yapı Market</a></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="sp-desc">PVC doğrama</span></td>
+              <td class="num t-strong" data-col="tutar">₺418.200</td>
+              <td data-col="termin"><span class="kalan-pill done"><span class="k-dot"></span> Teslim: 9 Haziran 2026</span></td>
+              <td data-col="durum" data-badge2="teslim"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-03" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="gecikme" data-santiye="liman" data-tutar="734600" data-tarih="2026-05-20">
+            <tr data-kategori="elektrik" data-f="gecikme" data-santiye="liman" data-tutar="734600" data-tarih="2026-05-20">
               <td><div class="sp-cell"><div class="sp-mark" style="background:var(--danger-tint);color:var(--danger)"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-04</b><span>20 Mayıs 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-05">Delta Elektrik</a></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="sp-desc">Elektrik tesisat malzemesi (kablo+pano)</span></td>
-              <td class="num t-strong">₺734.600</td>
-              <td><span class="kalan-pill late"><span class="k-dot"></span> 24 Haz — 8 gün gecikti</span></td>
-              <td data-badge2="gecikme"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-05">Delta Elektrik</a></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="sp-desc">Elektrik tesisat malzemesi (kablo+pano)</span></td>
+              <td class="num t-strong" data-col="tutar">₺734.600</td>
+              <td data-col="termin"><span class="kalan-pill late"><span class="k-dot"></span> 24 Haz — 8 gün gecikti</span></td>
+              <td data-col="durum" data-badge2="gecikme"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-04" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="kismi" data-santiye="vadi" data-tutar="2840000" data-tarih="2026-06-02">
+            <tr data-kategori="demir" data-f="kismi" data-santiye="vadi" data-tutar="2840000" data-tarih="2026-06-02">
               <td><div class="sp-cell"><div class="sp-mark"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-05</b><span>2 Haziran 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-03">Marmara Demir Çelik</a></td>
-              <td>Vadi Konakları</td>
-              <td><span class="sp-desc">Nervürlü inşaat demiri — 4 kalem, 88 t</span></td>
-              <td class="num t-strong">₺2.840.000</td>
-              <td><span class="kalan-pill partial"><span class="k-dot"></span> 87,6 / 88 t alındı</span></td>
-              <td data-badge2="kismi"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-03">Marmara Demir Çelik</a></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="sp-desc">Nervürlü inşaat demiri — 4 kalem, 88 t</span></td>
+              <td class="num t-strong" data-col="tutar">₺2.840.000</td>
+              <td data-col="termin"><span class="kalan-pill partial"><span class="k-dot"></span> 87,6 / 88 t alındı</span></td>
+              <td data-col="durum" data-badge2="kismi"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="tedarikcide" data-santiye="liman" data-tutar="798000" data-buay="1" data-tarih="2026-06-10">
+            <tr data-kategori="beton" data-f="tedarikcide" data-santiye="liman" data-tutar="798000" data-buay="1" data-tarih="2026-06-10">
               <td><div class="sp-cell"><div class="sp-mark"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-06</b><span>10 Haziran 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-02">Trakya Beton Santrali</a></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="sp-desc">C35/45 beton — 420 m³</span></td>
-              <td class="num t-strong">₺798.000</td>
-              <td><span class="kalan-pill near"><span class="k-dot"></span> 14 Tem (planlı)</span></td>
-              <td data-badge2="tedarikcide"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-02">Trakya Beton Santrali</a></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="sp-desc">C35/45 beton — 420 m³</span></td>
+              <td class="num t-strong" data-col="tutar">₺798.000</td>
+              <td data-col="termin"><span class="kalan-pill near"><span class="k-dot"></span> 14 Tem (planlı)</span></td>
+              <td data-col="durum" data-badge2="tedarikcide"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-06" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="onaylandi" data-santiye="vadi" data-tutar="186000" data-buay="1" data-tarih="2026-06-25">
+            <tr data-kategori="beton" data-f="onaylandi" data-santiye="vadi" data-tutar="186000" data-buay="1" data-tarih="2026-06-25">
               <td><div class="sp-cell"><div class="sp-mark"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-07</b><span>25 Haziran 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-01">Ege Hazır Beton</a></td>
-              <td>Vadi Konakları</td>
-              <td><span class="sp-desc">Şap betonu — 120 m³</span></td>
-              <td class="num t-strong">₺186.000</td>
-              <td><span class="kalan-pill near"><span class="k-dot"></span> 9 Tem (planlı)</span></td>
-              <td data-badge2="onaylandi"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-01">Ege Hazır Beton</a></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="sp-desc">Şap betonu — 120 m³</span></td>
+              <td class="num t-strong" data-col="tutar">₺186.000</td>
+              <td data-col="termin"><span class="kalan-pill near"><span class="k-dot"></span> 9 Tem (planlı)</span></td>
+              <td data-col="durum" data-badge2="onaylandi"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-07" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="taslak" data-santiye="merkez" data-tutar="112750" data-tarih="2026-07-01">
+            <tr data-kategori="yapi" data-f="taslak" data-santiye="merkez" data-tutar="112750" data-tarih="2026-07-01">
               <td><div class="sp-cell"><div class="sp-mark" style="background:var(--bg);color:var(--muted)"><i class="fa-solid fa-cart-flatbed"></i></div><div class="sp-info"><b>SIP-2026-08</b><span>1 Temmuz 2026</span></div></div></td>
-              <td><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-04">Boğaziçi Yapı Market</a></td>
-              <td>Merkez Şantiye</td>
-              <td><span class="sp-desc">Depo raf sistemi</span></td>
-              <td class="num t-strong">₺112.750</td>
-              <td><span class="kalan-pill idle">Belirlenmedi</span></td>
-              <td data-badge2="taslak"></td>
+              <td data-col="tedarikci"><a class="sp-tdr" data-tdr href="crm-satinalma-tedarikci-detay.html?tdr=TDR-04">Boğaziçi Yapı Market</a></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="malzeme"><span class="sp-desc">Depo raf sistemi</span></td>
+              <td class="num t-strong" data-col="tutar">₺112.750</td>
+              <td data-col="termin"><span class="kalan-pill idle">Belirlenmedi</span></td>
+              <td data-col="durum" data-badge2="taslak"></td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-08" data-no-confirm aria-label="Sipariş detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
@@ -271,12 +306,6 @@
         <div class="gfield">
           <label>Tarih Aralığı</label>
           <div data-gvdaterange data-fp-key="tarih" data-fp-label="Sipariş Tarihi"></div>
-        </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
         </div>
       </div>
       <div class="gv-fpanel-foot">
@@ -316,18 +345,26 @@
       if(tr.getAttribute('data-santiye') !== 'vadi') tr.remove();
     });
     var counts = {hepsi:0, gecikme:0, kismi:0, tedarikcide:0, onaylandi:0, taslak:0, teslim:0, kapandi:0};
+    var katCounts = {hepsi:0, beton:0, demir:0, elektrik:0, hirdavat:0, yapi:0};
     var OPEN_F = ['gecikme', 'kismi', 'tedarikcide', 'onaylandi', 'taslak'];
     var acikTutar = 0, buAy = 0;
     document.querySelectorAll('#tblSiparis tbody tr').forEach(function(tr){
       counts.hepsi++;
       var f = tr.getAttribute('data-f');
       if(counts[f] !== undefined) counts[f]++;
+      katCounts.hepsi++;
+      var k = tr.getAttribute('data-kategori');
+      if(katCounts[k] !== undefined) katCounts[k]++;
       if(OPEN_F.indexOf(f) !== -1) acikTutar += parseInt(tr.getAttribute('data-tutar'), 10) || 0;
       if(tr.getAttribute('data-buay') === '1') buAy++;
     });
-    document.querySelectorAll('.chips .chip[data-filter]').forEach(function(ch){
+    document.querySelectorAll('#durumChipsSiparis .chip[data-filter]').forEach(function(ch){
       var c = ch.querySelector('.ch-cnt');
       if(c) c.textContent = counts[ch.getAttribute('data-filter')] || 0;
+    });
+    document.querySelectorAll('#katChipsSiparis .chip[data-filter]').forEach(function(ch){
+      var c = ch.querySelector('.ch-cnt');
+      if(c) c.textContent = katCounts[ch.getAttribute('data-filter')] || 0;
     });
     var sub = document.getElementById('phSub');
     if(sub) sub.innerHTML = '<span data-table-count>' + counts.hepsi + '</span> sipariş · Vadi Konakları ekibiniz';
@@ -361,18 +398,72 @@
     });
   }
 
-  /* ============ §17 — Gelişmiş Filtre paneli + Arşivlenenleri Göster ============ */
+  /* ============ §17 — Gelişmiş Filtre paneli ============
+     Durum (select) + Tarih Aralığı (daterange) alanları `gvFpMakeEngine`'in kendi
+     `.gv-fp-hide` mekanizmasıyla tabloya bağlanır (data-durum/data-tarih eşleşmesi) —
+     bu, aşağıdaki durum-tab/kategori-çip/arama/arşiv bileşik motorunun (tblSiparisApply,
+     tr.hidden) YANINDA bağımsız bir katman olarak çalışır; ikisi CSS'te AND'lenir
+     (.gv-fp-hide{display:none!important} + [hidden]) — K-220 dersi: iki motor AYNI
+     mülke (satırın hidden özniteliği) yazmaz, her biri kendi mekanizmasını kullanır. */
   document.querySelectorAll('#tblSiparis tbody tr[data-f]').forEach(function(tr){
     tr.setAttribute('data-durum', (tr.getAttribute('data-f') || '').split(' ')[0]);
   });
 
   if(window.gvFilterPanel){
-    window.gvFilterPanel.init('#fpSiparisler', {
+    window.gvFilterPanel.init('#fpSiparisler', { table: '#tblSiparis' });
+  }
+
+  /* ============ V3A — durum tabı + malzeme kategorisi + arama + arşiv (§13.3) ============
+     `.chip[data-filter]` tıklaması ve arama input'u zaten ui.js'in wireTables()'ı
+     tarafından dinlenir; BURADA yalnız tblSiparis._gvApply KAYDEDİLİR — D18 bileşik-motor
+     delegasyonu (applyFilters, ui.js ~satır 686) bunu otomatik çağırır, iki bağımsız
+     listener ÇAKIŞMAZ (bkz crm-finans-kurum.html'deki aynı desen). */
+  function tblSiparisApply(){
+    var tbl = document.getElementById('tblSiparis'); if(!tbl) return;
+    var card = tbl.closest('.gv-card');
+    var durumOn = document.querySelector('#durumChipsSiparis .chip.is-on[data-filter]');
+    var durum = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
+    var katOn = document.querySelector('#katChipsSiparis .chip.is-on[data-filter]');
+    var kat = katOn ? katOn.getAttribute('data-filter') : 'hepsi';
+    var inp = card ? card.querySelector('input[data-table-search]') : null;
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var showArsiv = (document.getElementById('fltArsivGosterSiparis') || {}).checked;
+    var shown = 0;
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var okDurum = durum === 'hepsi' || tr.getAttribute('data-f') === durum;
+      var okKat = kat === 'hepsi' || tr.getAttribute('data-kategori') === kat;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okArsiv = showArsiv || tr.getAttribute('data-arsiv') !== '1';
+      var show = okDurum && okKat && okTerm && okArsiv;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    var empty = card ? card.querySelector('[data-table-empty]') : null;
+    if(empty) empty.hidden = shown !== 0;
+    var cnt = (card && card.querySelector('[data-table-count]')) || document.querySelector('[data-table-count]');
+    if(cnt) cnt.textContent = shown;
+  }
+  var tblSiparisEl = document.getElementById('tblSiparis');
+  if(tblSiparisEl) tblSiparisEl._gvApply = tblSiparisApply;
+
+  var arsivToggleSiparis = document.getElementById('fltArsivGosterSiparis');
+  if(arsivToggleSiparis) arsivToggleSiparis.addEventListener('change', tblSiparisApply);
+
+  /* ============ Kolonlar (gvCols) — §2.1 madde 8 ============
+     "Sipariş" (kimlik) ve son "İşlemler" kolonu data-col TAŞIMAZ. */
+  if(window.gvCols && document.getElementById('colsBtnSiparis')){
+    gvCols.init({
+      mount: '#colsBtnSiparis',
       table: '#tblSiparis',
-      onApply: function(state){
-        var tbl = document.getElementById('tblSiparis');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
+      screen: 'satinalma-siparisler',
+      cols: [
+        {key:'tedarikci', lbl:'Tedarikçi', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'malzeme', lbl:'Malzeme', def:true},
+        {key:'tutar', lbl:'Tutar', def:true},
+        {key:'termin', lbl:'Termin', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
     });
   }
 
@@ -403,6 +494,7 @@
       onConfirm:function(){
         row.setAttribute('data-arsiv', '1');
         gvToast(label + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+        tblSiparisApply();
       }
     });
   });

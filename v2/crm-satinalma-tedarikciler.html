@@ -25,13 +25,6 @@
 .col-skor{width:170px}
 .col-siparis{width:150px}
 .col-cari{width:150px}
-/* Dalga T-L3 — chip slider KENDİ satırında (spec-liste-mimarisi.md §1 notu, crm-cari.html
-   emsali BİREBİR): filter-bar iki satır — (1) arama + gelişmiş filtre + kolonlar,
-   (2) durum chip slider. */
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-bar.stack .gv-chipbar-wrap{width:100%}
-
 .tdr-cell{display:flex;align-items:center;gap:12px;min-width:0}
 .tdr-mark{width:38px;height:38px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;font-weight:800;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
 .tdr-info{min-width:0;line-height:1.35}
@@ -52,9 +45,8 @@
   .tdr-info b{max-width:150px}
 }
 
-/* §17 arşiv — varsayılan listede gizli, "Arşivlenenleri Göster" ile açılır */
-#tblTedarikci tbody tr[data-arsiv="1"]{display:none}
-#tblTedarikci.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+/* §17 arşiv — görünürlük tblTedarikciApply() (tr.hidden) tarafından karar verilir;
+   ayrı bir data-arsiv/gv-show-arsiv CSS kuralı YOK (K-220 dersi: tek motor). */
 </style>
 </head>
 <body data-sec="satinalma" data-screen="tedarikciler">
@@ -85,7 +77,6 @@
         <div class="ph-sub"><span data-table-count>6</span> tedarikçi · 4 aktif sipariş · gecikme kaydı olan 2 tedarikçi</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Tedarikçi listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="#" data-view="olusturabilir" hidden data-demo="Tedarikçi kartı oluşturma bu prototipte simülasyondur (demo)."><i class="fa-solid fa-plus"></i> Yeni Tedarikçi</a>
       </div>
     </div>
@@ -114,39 +105,56 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <div class="fb-search">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3, §14):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri) → .lh-tabs (durum sekmeleri, §14.2). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Tedarikçi adı veya kategori ara" data-table-search="#tblTedarikci">
           </div>
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTedarikci">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
-            <i class="fa-solid fa-table-columns"></i> Kolonlar
-          </button>
-        </div>
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" data-target="#tblTedarikci">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
-            <button class="chip" data-filter="aktif">Aktif Siparişi Olan <span class="ch-cnt">4</span></button>
-            <button class="chip" data-filter="gecikme">Gecikme Kaydı Olan <span class="ch-cnt">2</span></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTedarikci" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="fltArsivGosterTedarikci">
+              <input type="checkbox" id="fltArsivGosterTedarikci">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Tedarikçi listesi" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
           </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-      </div>
-
-      <div class="gv-achips-row" id="achipsTedarikci" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-achips gv-achips-row" id="achipsTedarikci" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblTedarikci">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
+              <button class="chip" data-filter="aktif">Aktif Siparişi Olan <span class="ch-cnt">4</span></button>
+              <button class="chip" data-filter="pasif">Pasif <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="kritik">Kritik <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="gecikme">Gecikme Kaydı Olan <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="yuksek">Yüksek Hacimli <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="arsivlenen"><i class="fa-solid fa-box-archive"></i> Arşivlenen <span class="ch-cnt">0</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
 
@@ -203,12 +211,6 @@
           <option value="Hırdavat &amp; Sarf">Hırdavat &amp; Sarf</option>
         </select>
       </div>
-      <div class="gfield">
-        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-          <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-          Arşivlenenleri Göster
-        </label>
-      </div>
     </div>
     <div class="gv-fpanel-foot">
       <button type="button" class="btn btn-ghost" data-fp-clear">Temizle</button>
@@ -254,8 +256,10 @@
   TDR.forEach(function(t){
     var barCls = t.warn ? 'danger' : (t.skor < 90 ? 'warn' : '');
     var fArr = ['hepsi'];
-    if(t.aktifSip) fArr.push('aktif');
+    if(t.aktifSip) fArr.push('aktif'); else fArr.push('pasif');
     if(t.gecikme) fArr.push('gecikme');
+    if(t.warn) fArr.push('kritik');
+    if(t.cari !== null && t.cari >= 200000) fArr.push('yuksek');
     /* Gelişmiş Filtre "Durum" select'i data-f'nin tek-değerli en belirgin durumunu
        yansıtır (gecikme > aktif > hepsi) — data-f'nin literal İLK token'ı her satırda
        sabit "hepsi" olduğu için (her tedarikçi "hepsi" kümesinde) o token'ı aynen almak
@@ -279,16 +283,53 @@
     el.hidden = OLUSTURABILIR.indexOf(GV.role) === -1;
   });
 
-  /* ---- §17 Sistem Genelinde Düzenleme/Arşivleme — Gelişmiş Filtre + arşivle aksiyonu ---- */
+  /* ---- §17 Sistem Genelinde Düzenleme/Arşivleme — Gelişmiş Filtre + arşivle aksiyonu ----
+     Durum/Kategori (select) `gvFpMakeEngine`'in kendi `.gv-fp-hide` mekanizmasıyla
+     tabloya bağlanır — durum-tab/arama/arşiv bileşik motorunun (aşağı, tr.hidden)
+     YANINDA bağımsız bir katman (K-220: iki motor aynı mülke yazmaz). */
   if(window.gvFilterPanel){
-    window.gvFilterPanel.init('#fpTedarikci', {
-      table: '#tblTedarikci',
-      onApply: function(state){
-        var tbl = document.getElementById('tblTedarikci');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
-    });
+    window.gvFilterPanel.init('#fpTedarikci', { table: '#tblTedarikci' });
   }
+
+  /* ============ V3A — durum tabı + arama + arşiv bileşik motoru (D18 delegasyonu, §14.2) ============
+     data-f çok-token'lı olduğundan (ör. "hepsi aktif yuksek") EXACT-MATCH yerine
+     token seti üyeliği kontrol edilir. "arsivlenen" çipi ÖZEL durum: arşiv toggle'dan
+     BAĞIMSIZ olarak yalnızca arşivlenmiş kayıtları gösterir. */
+  function tblTedarikciApply(){
+    var tbl = document.getElementById('tblTedarikci'); if(!tbl) return;
+    var card = tbl.closest('.gv-card');
+    var durumOn = card ? card.querySelector('.lh-tabs .chip.is-on[data-filter]') : null;
+    var durum = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
+    var inp = card ? card.querySelector('input[data-table-search]') : null;
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var showArsiv = (document.getElementById('fltArsivGosterTedarikci') || {}).checked;
+    var shown = 0;
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var isArsiv = tr.getAttribute('data-arsiv') === '1';
+      var tokens = (tr.getAttribute('data-f') || '').split(' ');
+      var okDurum, okArsiv;
+      if(durum === 'arsivlenen'){
+        okDurum = true; okArsiv = isArsiv;
+      } else {
+        okDurum = durum === 'hepsi' || tokens.indexOf(durum) !== -1;
+        okArsiv = showArsiv || !isArsiv;
+      }
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okDurum && okTerm && okArsiv;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    var empty = card ? card.querySelector('[data-table-empty]') : null;
+    if(empty) empty.hidden = shown !== 0;
+    if(tbl._gvPager) tbl._gvPager.refresh(true);
+    syncTdrCount();
+  }
+  var tblTedarikciEl = document.getElementById('tblTedarikci');
+  if(tblTedarikciEl) tblTedarikciEl._gvApply = tblTedarikciApply;
+
+  var arsivToggleTedarikci = document.getElementById('fltArsivGosterTedarikci');
+  if(arsivToggleTedarikci) arsivToggleTedarikci.addEventListener('change', tblTedarikciApply);
+
   function gvWireRowArchive(rowSel){
     document.querySelectorAll(rowSel).forEach(function(row){
       var acts = row.querySelector('.row-acts');
@@ -324,7 +365,7 @@
         }},
         {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
           rows.forEach(function(row){ row.setAttribute('data-arsiv', '1'); });
-          if(window.gvPagerRefresh) window.gvPagerRefresh('#tblTedarikci', true);
+          tblTedarikciApply();
           gvToast(rows.length + ' tedarikçi arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
         }}
       ]
@@ -336,7 +377,7 @@
   function syncTdrCount(){
     var tbl = document.getElementById('tblTedarikci');
     if(!tbl || !window.gvCount) return;
-    var showArsiv = tbl.classList.contains('gv-show-arsiv');
+    var showArsiv = (document.getElementById('fltArsivGosterTedarikci') || {}).checked;
     var arsivCount = tbl.querySelectorAll('tbody tr[data-arsiv="1"]').length;
     var visible = 0;
     tbl.querySelectorAll('tbody tr').forEach(function(tr){
@@ -364,7 +405,7 @@
       message: 'Kayıt kalıcı olarak silinmez; arşive alınır ve varsayılan listede görünmez olur. İşlem kaydına yazılır (İşlem Kayıtları\'ndan izlenebilir) ve "Arşivlenenleri Göster" filtresiyle ya da Ayarlar > Arşiv Merkezi\'nden tekrar görüntülenebilir.',
       onConfirm:function(){
         row.setAttribute('data-arsiv','1');
-        if(window.gvPagerRefresh) window.gvPagerRefresh('#tblTedarikci', true);
+        tblTedarikciApply();
         gvToast(label + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
       }
     });

@@ -151,7 +151,6 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
       <div class="ph-actions">
         <button type="button" class="btn btn-ghost btn-sm" id="btnUplIrs" data-no-confirm><i class="fa-solid fa-upload"></i> İrsaliye Yükle</button>
         <button type="button" class="btn btn-ghost btn-sm" id="btnUplFtr" data-no-confirm><i class="fa-solid fa-upload"></i> Fatura Yükle</button>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="İrsaliye ve fatura listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
@@ -190,41 +189,68 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
       </div>
 
       <section class="tab-panel" data-tab-panel="irsaliye" role="tabpanel" aria-label="İrsaliyeler">
-        <div class="filter-bar">
-          <div id="irsDateRange"></div>
-          <label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px">
-            <input type="checkbox" id="chkArsivIrs" style="margin:0"> Arşivlenenleri Göster
-          </label>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+             .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+             çipleri) → .lh-tabs (masaüstü tablo + mobil kart ikizi AYNI ISO tarihi
+             taşıdığından arama/tarih filtresi ikisine BİRDEN uygulanır). -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="irsSearch" placeholder="İrsaliye no, tedarikçi veya şantiye ara">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="irsFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="colsBtnIrs" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <label class="lh-toggle" for="chkArsivIrs">
+                <input type="checkbox" id="chkArsivIrs">
+                <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+              </label>
+              <a class="btn btn-ghost btn-sm" href="#" data-export="İrsaliye listesi" aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </a>
+            </div>
+          </div>
+          <div class="lh-achips gv-achips-row" id="irsAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
         </div>
         <div class="gc-body flush">
           <table class="gtable" id="tblIrs">
             <thead>
               <tr>
                 <th class="col-no">İrsaliye</th>
-                <th class="col-tarih">Tarih</th>
-                <th class="col-sip">Sipariş</th>
-                <th class="col-tedarikci">Tedarikçi</th>
-                <th class="col-santiye">Şantiye</th>
-                <th>İçerik</th>
-                <th class="col-durum">Durum</th>
+                <th class="col-tarih" data-col="tarih">Tarih</th>
+                <th class="col-sip" data-col="sip">Sipariş</th>
+                <th class="col-tedarikci" data-col="tedarikci">Tedarikçi</th>
+                <th class="col-santiye" data-col="santiye">Şantiye</th>
+                <th data-col="icerik">İçerik</th>
+                <th class="col-durum" data-col="durum">Durum</th>
                 <th class="col-belge">Belge</th>
               </tr>
             </thead>
             <tbody>
-              <tr data-santiye="vadi" data-tarih="2026-04-18"><td class="t-strong">IRS-2026-01</td><td>18 Nisan 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-tdr>Ege Hazır Beton</td><td>Vadi Konakları</td><td><span class="ir-icerik">C30/37 hazır beton — parti 1/3 (280 m³)</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-04-25"><td class="t-strong">IRS-2026-02</td><td>25 Nisan 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-tdr>Ege Hazır Beton</td><td>Vadi Konakları</td><td><span class="ir-icerik">C30/37 hazır beton — parti 2/3 (310 m³)</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-04-30"><td class="t-strong">IRS-2026-03</td><td>30 Nisan 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-tdr>Ege Hazır Beton</td><td>Vadi Konakları</td><td><span class="ir-icerik">C30/37 hazır beton — parti 3/3 (260 m³)</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="liman" data-tarih="2026-05-09"><td class="t-strong">IRS-2026-04</td><td>9 Mayıs 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-02">SIP-2026-02</a></td><td data-tdr>Anadolu Hırdavat</td><td>Liman Lojistik Merkezi</td><td><span class="ir-icerik">Kaynak teli + sarf paketi (tam teslim)</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="liman" data-tarih="2026-05-12"><td class="t-strong">IRS-2026-05</td><td>12 Mayıs 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Trakya Beton Santrali</td><td>Liman Lojistik Merkezi</td><td><span class="ir-icerik">C35/45 beton sevkiyatı — 3 gün gecikmeli teslim (tedarikçi performans notu)</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-05-19"><td class="t-strong">IRS-2026-06</td><td>19 Mayıs 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Ege Hazır Beton</td><td>Vadi Konakları</td><td><span class="ir-icerik">Şap harcı — küçük tamamlama partisi</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="merkez" data-tarih="2026-05-27"><td class="t-strong">IRS-2026-07</td><td>27 Mayıs 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Ege Hazır Beton</td><td>Merkez Şantiye</td><td><span class="ir-icerik">Şap betonu — ön numune partisi</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-06-02"><td class="t-strong">IRS-2026-08</td><td>2 Haziran 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Ege Hazır Beton</td><td>Vadi Konakları</td><td><span class="ir-icerik">Sıva harcı tamamlama</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-06-09"><td class="t-strong">IRS-2026-09</td><td>9 Haziran 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-03">SIP-2026-03</a></td><td data-tdr>Boğaziçi Yapı Market</td><td>Vadi Konakları</td><td><span class="ir-icerik">PVC doğrama (tam teslim)</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="merkez" data-tarih="2026-06-13"><td class="t-strong">IRS-2026-10</td><td>13 Haziran 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Ege Hazır Beton</td><td>Merkez Şantiye</td><td><span class="ir-icerik">Şap betonu — ek parti</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="liman" data-tarih="2026-06-16"><td class="t-strong">IRS-2026-11</td><td>16 Haziran 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Anadolu Hırdavat</td><td>Liman Lojistik Merkezi</td><td><span class="ir-icerik">Sarf malzeme tamamlama</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-06-18"><td class="t-strong">IRS-2026-12</td><td>18 Haziran 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">SIP-2026-05</a></td><td data-tdr>Marmara Demir Çelik</td><td>Vadi Konakları</td><td><span class="ir-icerik">Ø12 20 t + Ø16 6,4 t + Ø20 14 t = 40,4 t · mal kabul STK-2026-041</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-06-22"><td class="t-strong">IRS-2026-13</td><td>22 Haziran 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Anadolu Hırdavat</td><td>Vadi Konakları</td><td><span class="ir-icerik">Sarf malzeme ek tamamlama</span></td><td><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
-              <tr class="is-mismatch" data-santiye="vadi" data-tarih="2026-06-26"><td class="t-strong">IRS-2026-14</td><td>26 Haziran 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">SIP-2026-05</a></td><td data-tdr>Marmara Demir Çelik</td><td>Vadi Konakları</td><td><span class="ir-icerik">Ø10 8 t + Ø12 18 t + Ø16 5,2 t + Ø20 16 t = 47,2 t · mal kabul STK-2026-047</span></td><td><span class="gstat danger">Miktar Uyuşmazlığı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-04-18"><td class="t-strong">IRS-2026-01</td><td data-col="tarih">18 Nisan 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">C30/37 hazır beton — parti 1/3 (280 m³)</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-04-25"><td class="t-strong">IRS-2026-02</td><td data-col="tarih">25 Nisan 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">C30/37 hazır beton — parti 2/3 (310 m³)</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-04-30"><td class="t-strong">IRS-2026-03</td><td data-col="tarih">30 Nisan 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">C30/37 hazır beton — parti 3/3 (260 m³)</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="liman" data-tarih="2026-05-09"><td class="t-strong">IRS-2026-04</td><td data-col="tarih">9 Mayıs 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-02">SIP-2026-02</a></td><td data-col="tedarikci" data-tdr>Anadolu Hırdavat</td><td data-col="santiye">Liman Lojistik Merkezi</td><td data-col="icerik"><span class="ir-icerik">Kaynak teli + sarf paketi (tam teslim)</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="liman" data-tarih="2026-05-12"><td class="t-strong">IRS-2026-05</td><td data-col="tarih">12 Mayıs 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Trakya Beton Santrali</td><td data-col="santiye">Liman Lojistik Merkezi</td><td data-col="icerik"><span class="ir-icerik">C35/45 beton sevkiyatı — 3 gün gecikmeli teslim (tedarikçi performans notu)</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-05-19"><td class="t-strong">IRS-2026-06</td><td data-col="tarih">19 Mayıs 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">Şap harcı — küçük tamamlama partisi</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="merkez" data-tarih="2026-05-27"><td class="t-strong">IRS-2026-07</td><td data-col="tarih">27 Mayıs 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="santiye">Merkez Şantiye</td><td data-col="icerik"><span class="ir-icerik">Şap betonu — ön numune partisi</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-06-02"><td class="t-strong">IRS-2026-08</td><td data-col="tarih">2 Haziran 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">Sıva harcı tamamlama</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-06-09"><td class="t-strong">IRS-2026-09</td><td data-col="tarih">9 Haziran 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-03">SIP-2026-03</a></td><td data-col="tedarikci" data-tdr>Boğaziçi Yapı Market</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">PVC doğrama (tam teslim)</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="merkez" data-tarih="2026-06-13"><td class="t-strong">IRS-2026-10</td><td data-col="tarih">13 Haziran 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="santiye">Merkez Şantiye</td><td data-col="icerik"><span class="ir-icerik">Şap betonu — ek parti</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="liman" data-tarih="2026-06-16"><td class="t-strong">IRS-2026-11</td><td data-col="tarih">16 Haziran 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Anadolu Hırdavat</td><td data-col="santiye">Liman Lojistik Merkezi</td><td data-col="icerik"><span class="ir-icerik">Sarf malzeme tamamlama</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-06-18"><td class="t-strong">IRS-2026-12</td><td data-col="tarih">18 Haziran 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">SIP-2026-05</a></td><td data-col="tedarikci" data-tdr>Marmara Demir Çelik</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">Ø12 20 t + Ø16 6,4 t + Ø20 14 t = 40,4 t · mal kabul STK-2026-041</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-06-22"><td class="t-strong">IRS-2026-13</td><td data-col="tarih">22 Haziran 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Anadolu Hırdavat</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">Sarf malzeme ek tamamlama</span></td><td data-col="durum"><span class="ir-durum-ok"><i class="fa-solid fa-circle-check" style="color:var(--ok)"></i> Mal kabul tamamlandı</span></td></tr>
+              <tr class="is-mismatch" data-santiye="vadi" data-tarih="2026-06-26"><td class="t-strong">IRS-2026-14</td><td data-col="tarih">26 Haziran 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">SIP-2026-05</a></td><td data-col="tedarikci" data-tdr>Marmara Demir Çelik</td><td data-col="santiye">Vadi Konakları</td><td data-col="icerik"><span class="ir-icerik">Ø10 8 t + Ø12 18 t + Ø16 5,2 t + Ø20 16 t = 47,2 t · mal kabul STK-2026-047</span></td><td data-col="durum"><span class="gstat danger">Miktar Uyuşmazlığı</span></td></tr>
             </tbody>
           </table>
           <!-- statik bake (D18-B2 idiyomu, crm-operasyon-kasa.html df-mobile-list ile AYNI desen — o dosya OKU/YAZMA değil, yalnız sınıf sözlüğü devralındı) — 390px altında tablo gizlenir, bu liste görünür -->
@@ -233,35 +259,61 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
       </section>
 
       <section class="tab-panel" data-tab-panel="fatura" role="tabpanel" aria-label="Faturalar" hidden>
-        <div class="filter-bar">
-          <div id="ftrDateRange"></div>
-          <label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px">
-            <input type="checkbox" id="chkArsivFtr" style="margin:0"> Arşivlenenleri Göster
-          </label>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+             .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+             çipleri). -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="ftrSearch" placeholder="Fatura no, tedarikçi veya tutar ara">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="ftrFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="colsBtnFtr" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <label class="lh-toggle" for="chkArsivFtr">
+                <input type="checkbox" id="chkArsivFtr">
+                <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+              </label>
+              <a class="btn btn-ghost btn-sm" href="#" data-export="Fatura listesi" aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </a>
+            </div>
+          </div>
+          <div class="lh-achips gv-achips-row" id="ftrAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
         </div>
         <div class="gc-body flush">
           <table class="gtable" id="tblFtr">
             <thead>
               <tr>
                 <th class="col-no">Fatura</th>
-                <th class="col-tarih">Tarih</th>
-                <th class="col-sip">Sipariş</th>
-                <th class="col-tedarikci">Tedarikçi</th>
-                <th class="num col-tutar">Tutar</th>
-                <th class="col-vade">Vade / Durum</th>
+                <th class="col-tarih" data-col="tarih">Tarih</th>
+                <th class="col-sip" data-col="sip">Sipariş</th>
+                <th class="col-tedarikci" data-col="tedarikci">Tedarikçi</th>
+                <th class="num col-tutar" data-col="tutar">Tutar</th>
+                <th class="col-vade" data-col="vade">Vade / Durum</th>
                 <th class="col-belge">Belge</th>
               </tr>
             </thead>
             <tbody>
-              <tr data-santiye="vadi" data-tarih="2026-04-22"><td class="t-strong">FTR-2026-01</td><td>22 Nisan 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-tdr>Ege Hazır Beton</td><td class="num t-strong">₺495.800</td><td data-badge3="odendi"></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-04-29"><td class="t-strong">FTR-2026-02</td><td>29 Nisan 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-tdr>Ege Hazır Beton</td><td class="num t-strong">₺545.900</td><td data-badge3="odendi"></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-05-04"><td class="t-strong">FTR-2026-03</td><td>4 Mayıs 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-tdr>Ege Hazır Beton</td><td class="num t-strong">₺445.800</td><td data-badge3="odendi"></td></tr>
-              <tr data-santiye="liman" data-tarih="2026-05-13"><td class="t-strong">FTR-2026-04</td><td>13 Mayıs 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-02">SIP-2026-02</a></td><td data-tdr>Anadolu Hırdavat</td><td class="num t-strong">₺96.400</td><td data-badge3="odendi"></td></tr>
-              <tr data-santiye="liman" data-tarih="2026-05-16"><td class="t-strong">FTR-2026-05</td><td>16 Mayıs 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Trakya Beton Santrali</td><td class="num t-strong">₺612.000</td><td data-badge3="odendi" data-not="12 Mayıs sevkiyatının faturası"></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-06-12"><td class="t-strong">FTR-2026-06</td><td>12 Haziran 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-03">SIP-2026-03</a></td><td data-tdr>Boğaziçi Yapı Market</td><td class="num t-strong">₺418.200</td><td data-badge3="vadeli" data-vade="15 Temmuz 2026"></td></tr>
-              <tr data-santiye="vadi" data-tarih="2026-06-21"><td class="t-strong">FTR-2026-07</td><td>21 Haziran 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Ege Hazır Beton</td><td class="num t-strong">₺38.400</td><td data-badge3="odendi" data-not="IRS-06/07/08/10 konsolide fatura"></td></tr>
-              <tr data-santiye="liman" data-tarih="2026-06-24"><td class="t-strong">FTR-2026-08</td><td>24 Haziran 2026</td><td><span class="ir-sip-yok">SIP dışı</span></td><td data-tdr>Anadolu Hırdavat</td><td class="num t-strong">₺9.800</td><td data-badge3="odendi" data-not="IRS-11/13 konsolide fatura"></td></tr>
-              <tr class="is-mismatch" data-santiye="vadi" data-tarih="2026-06-28"><td class="t-strong">FTR-2026-09</td><td>28 Haziran 2026</td><td><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">SIP-2026-05</a></td><td data-tdr>Marmara Demir Çelik</td><td class="num t-strong">₺2.840.000</td><td data-badge3="kontrolde" data-vade="27 Ağustos 2026" data-not="İrsaliye toplamıyla uyuşmazlık — cariye işlenmedi"></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-04-22"><td class="t-strong">FTR-2026-01</td><td data-col="tarih">22 Nisan 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="tutar" class="num t-strong">₺495.800</td><td data-col="vade" data-badge3="odendi"></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-04-29"><td class="t-strong">FTR-2026-02</td><td data-col="tarih">29 Nisan 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="tutar" class="num t-strong">₺545.900</td><td data-col="vade" data-badge3="odendi"></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-05-04"><td class="t-strong">FTR-2026-03</td><td data-col="tarih">4 Mayıs 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="tutar" class="num t-strong">₺445.800</td><td data-col="vade" data-badge3="odendi"></td></tr>
+              <tr data-santiye="liman" data-tarih="2026-05-13"><td class="t-strong">FTR-2026-04</td><td data-col="tarih">13 Mayıs 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-02">SIP-2026-02</a></td><td data-col="tedarikci" data-tdr>Anadolu Hırdavat</td><td data-col="tutar" class="num t-strong">₺96.400</td><td data-col="vade" data-badge3="odendi"></td></tr>
+              <tr data-santiye="liman" data-tarih="2026-05-16"><td class="t-strong">FTR-2026-05</td><td data-col="tarih">16 Mayıs 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Trakya Beton Santrali</td><td data-col="tutar" class="num t-strong">₺612.000</td><td data-col="vade" data-badge3="odendi" data-not="12 Mayıs sevkiyatının faturası"></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-06-12"><td class="t-strong">FTR-2026-06</td><td data-col="tarih">12 Haziran 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-03">SIP-2026-03</a></td><td data-col="tedarikci" data-tdr>Boğaziçi Yapı Market</td><td data-col="tutar" class="num t-strong">₺418.200</td><td data-col="vade" data-badge3="vadeli" data-vade="15 Temmuz 2026"></td></tr>
+              <tr data-santiye="vadi" data-tarih="2026-06-21"><td class="t-strong">FTR-2026-07</td><td data-col="tarih">21 Haziran 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Ege Hazır Beton</td><td data-col="tutar" class="num t-strong">₺38.400</td><td data-col="vade" data-badge3="odendi" data-not="IRS-06/07/08/10 konsolide fatura"></td></tr>
+              <tr data-santiye="liman" data-tarih="2026-06-24"><td class="t-strong">FTR-2026-08</td><td data-col="tarih">24 Haziran 2026</td><td data-col="sip"><span class="ir-sip-yok">SIP dışı</span></td><td data-col="tedarikci" data-tdr>Anadolu Hırdavat</td><td data-col="tutar" class="num t-strong">₺9.800</td><td data-col="vade" data-badge3="odendi" data-not="IRS-11/13 konsolide fatura"></td></tr>
+              <tr class="is-mismatch" data-santiye="vadi" data-tarih="2026-06-28"><td class="t-strong">FTR-2026-09</td><td data-col="tarih">28 Haziran 2026</td><td data-col="sip"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">SIP-2026-05</a></td><td data-col="tedarikci" data-tdr>Marmara Demir Çelik</td><td data-col="tutar" class="num t-strong">₺2.840.000</td><td data-col="vade" data-badge3="kontrolde" data-vade="27 Ağustos 2026" data-not="İrsaliye toplamıyla uyuşmazlık — cariye işlenmedi"></td></tr>
             </tbody>
           </table>
           <div class="df-mobile-list" id="tblFtrMobile"><div class="df-mrow" data-santiye="vadi" data-tarih="2026-04-22"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-01</span><span class="df-mrow-date">22 Nisan 2026</span><span class="df-mrow-bak num">₺495.800</span></div><div class="df-mrow-firm">Ege Hazır Beton</div><div class="df-mrow-desc"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></div><div class="df-mrow-amt"><span class="gstat off">Ödendi</span><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-01" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-01 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow" data-santiye="vadi" data-tarih="2026-04-29"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-02</span><span class="df-mrow-date">29 Nisan 2026</span><span class="df-mrow-bak num">₺545.900</span></div><div class="df-mrow-firm">Ege Hazır Beton</div><div class="df-mrow-desc"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></div><div class="df-mrow-amt"><span class="gstat off">Ödendi</span><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-02" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-02 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow" data-santiye="vadi" data-tarih="2026-05-04"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-03</span><span class="df-mrow-date">4 Mayıs 2026</span><span class="df-mrow-bak num">₺445.800</span></div><div class="df-mrow-firm">Ege Hazır Beton</div><div class="df-mrow-desc"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-01">SIP-2026-01</a></div><div class="df-mrow-amt"><span class="gstat off">Ödendi</span><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-03" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-03 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow" data-santiye="liman" data-tarih="2026-05-13"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-04</span><span class="df-mrow-date">13 Mayıs 2026</span><span class="df-mrow-bak num">₺96.400</span></div><div class="df-mrow-firm">Anadolu Hırdavat</div><div class="df-mrow-desc"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-02">SIP-2026-02</a></div><div class="df-mrow-amt"><span class="gstat off">Ödendi</span><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-04" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-04 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow" data-santiye="liman" data-tarih="2026-05-16"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-05</span><span class="df-mrow-date">16 Mayıs 2026</span><span class="df-mrow-bak num">₺612.000</span></div><div class="df-mrow-firm">Trakya Beton Santrali</div><div class="df-mrow-desc"><span class="ir-sip-yok">SIP dışı</span></div><div class="df-mrow-amt"><span class="gstat off">Ödendi</span><div class="ir-icerik" style="margin-top:5px">12 Mayıs sevkiyatının faturası</div><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-05" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-05 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow" data-santiye="vadi" data-tarih="2026-06-12"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-06</span><span class="df-mrow-date">12 Haziran 2026</span><span class="df-mrow-bak num">₺418.200</span></div><div class="df-mrow-firm">Boğaziçi Yapı Market</div><div class="df-mrow-desc"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-03">SIP-2026-03</a></div><div class="df-mrow-amt"><span class="gstat warn">Vade — 15 Temmuz 2026</span><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-06" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-06 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow" data-santiye="vadi" data-tarih="2026-06-21"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-07</span><span class="df-mrow-date">21 Haziran 2026</span><span class="df-mrow-bak num">₺38.400</span></div><div class="df-mrow-firm">Ege Hazır Beton</div><div class="df-mrow-desc"><span class="ir-sip-yok">SIP dışı</span></div><div class="df-mrow-amt"><span class="gstat off">Ödendi</span><div class="ir-icerik" style="margin-top:5px">IRS-06/07/08/10 konsolide fatura</div><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-07" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-07 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow" data-santiye="liman" data-tarih="2026-06-24"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-08</span><span class="df-mrow-date">24 Haziran 2026</span><span class="df-mrow-bak num">₺9.800</span></div><div class="df-mrow-firm">Anadolu Hırdavat</div><div class="df-mrow-desc"><span class="ir-sip-yok">SIP dışı</span></div><div class="df-mrow-amt"><span class="gstat off">Ödendi</span><div class="ir-icerik" style="margin-top:5px">IRS-11/13 konsolide fatura</div><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-08" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-08 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div><div class="df-mrow is-mismatch" data-santiye="vadi" data-tarih="2026-06-28"><div class="df-mrow-top"><span class="df-mrow-no">FTR-2026-09</span><span class="df-mrow-date">28 Haziran 2026</span><span class="df-mrow-bak num">₺2.840.000</span></div><div class="df-mrow-firm">Marmara Demir Çelik</div><div class="df-mrow-desc"><a class="ir-sip-link" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-05">SIP-2026-05</a></div><div class="df-mrow-amt"><span class="gstat danger">Muhasebe kontrolünde — 27 Ağustos 2026</span><div class="ir-icerik" style="margin-top:5px">İrsaliye toplamıyla uyuşmazlık — cariye işlenmedi</div><span class="df-mrow-belge"><div class="row-acts"><button type="button" class="ia-btn" data-belge="FTR-2026-09" data-kind="fatura" data-no-confirm="" aria-label="FTR-2026-09 belgesini görüntüle"><i class="fa-regular fa-file-lines"></i></button></div></span></div></div></div>
@@ -587,13 +639,14 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
     uplOv.classList.remove('open');
   });
 
-  /* ============ §13 — Tarih Aralığı (spec-filtre-tarih.md §4/B, kredikarti/pluxee
-     emsali). Bu sayfada §9'un off-canvas paneli YOK (madde 46 — çok sekmeli/çok
-     tablolu basitleştirilmiş desen), bu yüzden gvDateRange BAĞIMSIZ (imperatif API)
-     kullanıldı; kendi tetikleyici butonu (`.dr-lbl` + `.is-set`) aktif aralığı
-     GÖRSEL OLARAK gösterir — kredikarti.html/pluxee.html'de kabul edilmiş AYNI desen
-     (kararlar.md madde 97-98). İki sekmenin tarihi farklı anlam taşır (İrsaliye
-     tarihi / Fatura tarihi) — bu yüzden İKİ AYRI gvDateRange, tek bir ortak değil. ============ */
+  /* ============ V3A — Gelişmiş Filtre (Tarih Aralığı) + arama ============
+     Masaüstü tablo + mobil kart ikizi AYRI DOM ağaçları (bkz. dosya başı yorumu) —
+     bu yüzden hem arama hem tarih filtresi HER İKİSİNE birden uygulanır. Eski
+     bağımsız #irsDateRange/#ftrDateRange widget'ları standart gvFilterDrawer'a
+     taşındı; `table` KASITLI verilmez (motor mobil kart ikizini bilmez) — `onApply`
+     `.values()`'ı okuyup applyDateFilter()'ı KENDİSİ çağırır (crm-gorev.html deseni,
+     K-220 dersi). İki sekmenin tarihi farklı anlam taşır (İrsaliye tarihi / Fatura
+     tarihi) — bu yüzden İKİ AYRI drawer, tek bir ortak değil. ============ */
   function applyDateFilter(tableSel, mobileSel, dr){
     document.querySelectorAll(tableSel + ' tbody tr').forEach(function(tr){
       var ok = true;
@@ -612,15 +665,67 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
       card.classList.toggle('gv-fp-hide', !ok);
     });
   }
-  var irsDr = null, ftrDr = null;
-  window.gvDateRange('#irsDateRange', {
-    emptyLabel: 'Tüm zamanlar',
-    onChange: function(val){ irsDr = val; applyDateFilter('#tblIrs', '#tblIrsMobile', irsDr); }
-  });
-  window.gvDateRange('#ftrDateRange', {
-    emptyLabel: 'Tüm zamanlar',
-    onChange: function(val){ ftrDr = val; applyDateFilter('#tblFtr', '#tblFtrMobile', ftrDr); }
-  });
+  var irsFd = null, ftrFd = null;
+  if(window.gvFilterDrawer){
+    irsFd = gvFilterDrawer.init({
+      mount: '#irsFiltreBtn', screen: 'irsaliye', title: 'Gelişmiş Filtre', chipsMount: '#irsAchips',
+      fields: [{key:'tarih', type:'daterange', label:'İrsaliye Tarihi', emptyLabel:'Tüm zamanlar'}],
+      onApply: function(state){
+        var v = state.tarih ? state.tarih.raw : null;
+        applyDateFilter('#tblIrs', '#tblIrsMobile', v);
+      }
+    });
+    ftrFd = gvFilterDrawer.init({
+      mount: '#ftrFiltreBtn', screen: 'fatura', title: 'Gelişmiş Filtre', chipsMount: '#ftrAchips',
+      fields: [{key:'tarih', type:'daterange', label:'Fatura Tarihi', emptyLabel:'Tüm zamanlar'}],
+      onApply: function(state){
+        var v = state.tarih ? state.tarih.raw : null;
+        applyDateFilter('#tblFtr', '#tblFtrMobile', v);
+      }
+    });
+  }
+
+  /* ---- arama — masaüstü tablo + mobil kart ikizi BİRLİKTE filtrelenir ---- */
+  function applyTextFilter(inputEl, tableSel, mobileSel){
+    var term = inputEl.value.trim().toLocaleLowerCase('tr');
+    var shown = 0;
+    document.querySelectorAll(tableSel + ' tbody tr').forEach(function(tr){
+      var ok = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      tr.hidden = !ok;
+      if(ok) shown++;
+    });
+    document.querySelectorAll(mobileSel + ' .df-mrow').forEach(function(card){
+      var ok = !term || card.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      card.hidden = !ok;
+    });
+  }
+  var irsSearchInp = document.getElementById('irsSearch');
+  if(irsSearchInp) irsSearchInp.addEventListener('input', function(){ applyTextFilter(irsSearchInp, '#tblIrs', '#tblIrsMobile'); });
+  var ftrSearchInp = document.getElementById('ftrSearch');
+  if(ftrSearchInp) ftrSearchInp.addEventListener('input', function(){ applyTextFilter(ftrSearchInp, '#tblFtr', '#tblFtrMobile'); });
+
+  /* ============ Kolonlar (gvCols) — §2.1 madde 8 ============
+     Yalnız GERÇEK <table>'a uygulanır; mobil kart ikizi kendi el-yapımı DOM'u olduğu
+     için gvCols'tan etkilenmez (görev/gorev.html'deki mobil kart sınırlamasıyla AYNI
+     bilinçli kapsam-dışı — tasks/kararlar.md). */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtnIrs', table: '#tblIrs', screen: 'irsaliye',
+      cols: [
+        {key:'tarih', lbl:'Tarih', def:true}, {key:'sip', lbl:'Sipariş', def:true},
+        {key:'tedarikci', lbl:'Tedarikçi', def:true}, {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'icerik', lbl:'İçerik', def:true}, {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+    gvCols.init({
+      mount: '#colsBtnFtr', table: '#tblFtr', screen: 'fatura',
+      cols: [
+        {key:'tarih', lbl:'Tarih', def:true}, {key:'sip', lbl:'Sipariş', def:true},
+        {key:'tedarikci', lbl:'Tedarikçi', def:true}, {key:'tutar', lbl:'Tutar', def:true},
+        {key:'vade', lbl:'Vade / Durum', def:true}
+      ]
+    });
+  }
 
   /* ---- §17 Sistem Genelinde Düzenleme/Arşivleme — basitleştirilmiş inline çip.
      Masaüstü tablo + mobil kart ikizi belge NO'suyla (data-belge) senkron tutulur

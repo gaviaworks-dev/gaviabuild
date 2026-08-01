@@ -53,23 +53,6 @@
   .tl-desc{max-width:150px}
 }
 
-/* Dalga 5/T5C — gv-chipbar-wrap + Kolonlar/Gelişmiş Filtre KENDİ satırında (spec-liste-
-   mimarisi.md §1 notu: chipbar'ın ebeveyni flex bir satırın PARÇASIYSA min-width:auto
-   tuzağına düşer — santiye/demirbaş/araç emsali .filter-bar.stack + .filter-row deseni).
-   flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali): ui.css'in temel .filter-bar
-   {flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-direction +
-   flex-wrap:wrap kombinasyonu satırların kart genişliğine kısıtlanması yerine İÇERİK
-   genişliğine göre büyümesine sebep oluyor (390px'te doğrulanan gerçek doc-level
-   yatay taşma — bulundu ve düzeltildi). */
-.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-.tl-filter-acts{display:flex;gap:8px;margin-left:auto;flex:none}
-@media(max-width:640px){
-  .tl-filter-acts{margin-left:0;width:100%}
-  .tl-filter-acts .btn{flex:1}
-}
-
 /* ---- Dalga 5/T5C: eski bespoke .tl-mobile-list/.tl-mrow JS-kart üretimi (D18 Y17)
    ortak `gtable-cards` desenine geçirildi (tasks/spec-liste-mimarisi.md §4,
    crm-personel.html/crm-santiye.html emsali) — #tblTalep artık 640px altında AYNI
@@ -129,7 +112,6 @@
         <div class="ph-sub" id="phSub"><span data-table-count>13</span> talep · 7'si Satın Alma onayı bekliyor</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Malzeme talepleri"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-satinalma-talep-form.html" data-view="olusturabilir" hidden><i class="fa-solid fa-plus"></i> Yeni Talep</a>
       </div>
     </div>
@@ -238,14 +220,44 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <div class="fb-search">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3, §13.1):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri) → .lh-tabs (durum sekmeleri). Bu dalgada YALNIZ üst alan — grafiklere
+           ve yukarıdaki alt bölüm kartlarına DOKUNULMADI (sonraki dalga). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Talep no, malzeme veya şantiye ara" data-table-search="#tblTalep">
           </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTalepler" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="fltArsivGosterTalep">
+              <input type="checkbox" id="fltArsivGosterTalep">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Malzeme talepleri" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div class="filter-row">
+        <div class="lh-achips gv-achips-row" id="achipsTalepler" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+        <div class="lh-tabs">
           <div class="gv-chipbar-wrap" data-chipbar>
             <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
             <div class="gv-chipbar chips" data-target="#tblTalep">
@@ -259,25 +271,6 @@
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <div class="tl-filter-acts">
-            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
-              <i class="fa-solid fa-table-columns"></i> Kolonlar
-            </button>
-            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTalepler">
-              <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="gv-achips-row" id="achipsTalepler" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
@@ -452,12 +445,6 @@
           <label>Tarih Aralığı</label>
           <div data-gvdaterange data-fp-key="tarih" data-fp-label="Talep Tarihi"></div>
         </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
-        </div>
       </div>
       <div class="gv-fpanel-foot">
         <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
@@ -560,12 +547,19 @@
   });
 
   if(window.gvFilterPanel){
-    window.gvFilterPanel.init('#fpTalepler', {
-      table: '#tblTalep',
-      onApply: function(state){
-        var tbl = document.getElementById('tblTalep');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
+    window.gvFilterPanel.init('#fpTalepler', { table: '#tblTalep' });
+  }
+
+  /* §3.2 — Arşivlenenleri Göster artık `.lh-acts` içinde bağımsız bir toggle (panel
+     içinden ÇIKARILDI); CSS'teki tr[data-arsiv="1"]/.gv-show-arsiv katmanını KENDİSİ
+     kontrol eder — durum-tab/arama filtresiyle (tr.hidden) ÇAKIŞMAZ (K-220: iki motor
+     farklı mekanizma kullanır, CSS'te AND'lenir). */
+  var arsivToggleTalep = document.getElementById('fltArsivGosterTalep');
+  if(arsivToggleTalep){
+    arsivToggleTalep.addEventListener('change', function(){
+      var tbl = document.getElementById('tblTalep');
+      if(tbl) tbl.classList.toggle('gv-show-arsiv', arsivToggleTalep.checked);
+      syncTlEmptyMessage();
     });
   }
 

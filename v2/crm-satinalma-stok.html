@@ -61,11 +61,6 @@
 .mv.fire{background:var(--danger-tint);color:var(--danger)}
 .mv.sayim{background:var(--warn-tint);color:var(--warn)}
 
-/* iki boyutlu filtre — depo grubu + durum grubu (demirbaş/araç deseninin aynısı) */
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-
 /* Depolar sekmesi kartları */
 .depo-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
 @media(max-width:1100px){.depo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -83,7 +78,6 @@
 
 @media(max-width:640px){
   .km-info b{max-width:170px}
-  .filter-row .frow-lbl{min-width:0;width:100%}
 }
 
 /* §17 arşiv — varsayılan listede gizli, "Arşivlenenleri Göster" ile açılır */
@@ -121,7 +115,6 @@
         <div class="ph-sub" id="phSub">23 kalem · 4 depo · ₺4.860.000 toplam stok değeri · 3 kalem min-stok altı</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Stok envanteri"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-satinalma-stok-form.html" data-view="olusturabilir" hidden><i class="fa-solid fa-plus"></i> Yeni Hareket</a>
       </div>
     </div>
@@ -159,31 +152,58 @@
     <!-- ============ KALEMLER ============ -->
     <section class="tab-panel" data-tab-panel="kalemler" role="tabpanel" aria-label="Kalemler">
       <div class="gv-card">
-        <div class="filter-bar stack">
-          <div class="fb-search" style="max-width:360px">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="kmSearch" placeholder="Kalem adı veya kategori ara">
-          </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Depo</span>
-            <div class="chips" id="kmDepoChips">
-              <button class="chip is-on" data-depo="hepsi">Tümü <span class="ch-cnt">23</span></button>
-              <button class="chip" data-depo="D-MRK">Merkez Ana Depo <span class="ch-cnt">6</span></button>
-              <button class="chip" data-depo="D-VDI">Vadi Şantiye Deposu <span class="ch-cnt">11</span></button>
-              <button class="chip" data-depo="D-LMN">Liman Şantiye Deposu <span class="ch-cnt">4</span></button>
-              <button class="chip" data-depo="D-ARC">Araç Deposu <span class="ch-cnt">2</span></button>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+             .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+             çipleri) → .lh-tabs (Depo + Durum çip grupları alt satırda). -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="kmSearch" placeholder="Kalem adı veya kategori ara">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="kmFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="colsBtnKalem" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <label class="lh-toggle" for="chkArsivKalem">
+                <input type="checkbox" id="chkArsivKalem">
+                <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+              </label>
+              <a class="btn btn-ghost btn-sm" href="#" data-export="Stok kalemleri" aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </a>
             </div>
           </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Durum</span>
-            <div class="chips" id="kmDurumChips">
-              <button class="chip is-on" data-durum="hepsi">Tümü</button>
-              <button class="chip" data-durum="altmin">Min-Stok Altı <span class="ch-cnt">3</span></button>
-              <button class="chip" data-durum="yeterli">Yeterli</button>
+          <div class="lh-achips gv-achips-row" id="kmAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
             </div>
-            <label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px">
-              <input type="checkbox" id="chkArsivKalem" style="margin:0"> Arşivlenenleri Göster
-            </label>
+          </div>
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar" id="kmDepoChips">
+                <button class="chip is-on" data-depo="hepsi">Tümü <span class="ch-cnt">23</span></button>
+                <button class="chip" data-depo="D-MRK">Merkez Ana Depo <span class="ch-cnt">6</span></button>
+                <button class="chip" data-depo="D-VDI">Vadi Şantiye Deposu <span class="ch-cnt">11</span></button>
+                <button class="chip" data-depo="D-LMN">Liman Şantiye Deposu <span class="ch-cnt">4</span></button>
+                <button class="chip" data-depo="D-ARC">Araç Deposu <span class="ch-cnt">2</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar" id="kmDurumChips">
+                <button class="chip is-on" data-durum="hepsi">Tümü</button>
+                <button class="chip" data-durum="altmin">Min-Stok Altı <span class="ch-cnt">3</span></button>
+                <button class="chip" data-durum="yeterli">Yeterli</button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
         </div>
         <div class="gc-body flush">
@@ -191,12 +211,12 @@
             <thead>
               <tr>
                 <th>Kalem</th>
-                <th class="col-depo">Depo</th>
-                <th class="col-mevcut">Mevcut</th>
-                <th class="col-min">Min-Stok</th>
-                <th class="col-birim">Birim Değer</th>
-                <th class="col-toplam">Toplam Değer</th>
-                <th class="col-durum">Durum</th>
+                <th class="col-depo" data-col="depo">Depo</th>
+                <th class="col-mevcut" data-col="mevcut">Mevcut</th>
+                <th class="col-min" data-col="min">Min-Stok</th>
+                <th class="col-birim" data-col="birim">Birim Değer</th>
+                <th class="col-toplam" data-col="toplam">Toplam Değer</th>
+                <th class="col-durum" data-col="durum">Durum</th>
                 <th></th>
               </tr>
             </thead>
@@ -241,34 +261,63 @@
     <!-- ============ HAREKETLER ============ -->
     <section class="tab-panel" data-tab-panel="hareketler" role="tabpanel" aria-label="Hareketler" hidden>
       <div class="gv-card">
-        <div class="filter-bar">
-          <div class="fb-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Belge no, kalem veya depo ara" data-table-search="#tblHareket">
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+             .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+             çipleri) → .lh-tabs (hareket türü sekmeleri). Eski bağımsız #hkDateRange
+             widget'ı yerine standart Gelişmiş Filtre drawer'ı (Tarih Aralığı alanı). -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Belge no, kalem veya depo ara" data-table-search="#tblHareket">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="hkFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="colsBtnHareket" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <label class="lh-toggle" for="chkArsivHareket">
+                <input type="checkbox" id="chkArsivHareket">
+                <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+              </label>
+              <a class="btn btn-ghost btn-sm" href="#" data-export="Stok hareketleri" aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </a>
+            </div>
           </div>
-          <div class="chips" data-target="#tblHareket">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">18</span></button>
-            <button class="chip" data-filter="giris">Giriş <span class="ch-cnt">4</span></button>
-            <button class="chip" data-filter="cikis">Çıkış <span class="ch-cnt">6</span></button>
-            <button class="chip" data-filter="transfer">Transfer <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="iade">İade <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="fire">Fire <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="sayim">Sayım <span class="ch-cnt">1</span></button>
+          <div class="lh-achips gv-achips-row" id="hkAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
           </div>
-          <div id="hkDateRange" style="margin-top:10px"></div>
-          <label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px;margin-top:10px">
-            <input type="checkbox" id="chkArsivHareket" style="margin:0"> Arşivlenenleri Göster
-          </label>
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" data-target="#tblHareket">
+                <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">18</span></button>
+                <button class="chip" data-filter="giris">Giriş <span class="ch-cnt">4</span></button>
+                <button class="chip" data-filter="cikis">Çıkış <span class="ch-cnt">6</span></button>
+                <button class="chip" data-filter="transfer">Transfer <span class="ch-cnt">3</span></button>
+                <button class="chip" data-filter="iade">İade <span class="ch-cnt">1</span></button>
+                <button class="chip" data-filter="fire">Fire <span class="ch-cnt">2</span></button>
+                <button class="chip" data-filter="sayim">Sayım <span class="ch-cnt">1</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
         </div>
         <div class="gc-body flush">
           <table class="gtable" id="tblHareket">
             <thead>
               <tr>
                 <th>Belge</th>
-                <th class="col-tarih">Tarih</th>
-                <th class="col-tur">Tür</th>
-                <th>Açıklama</th>
-                <th class="col-depo">Depo</th>
+                <th class="col-tarih" data-col="tarih">Tarih</th>
+                <th class="col-tur" data-col="tur">Tür</th>
+                <th data-col="aciklama">Açıklama</th>
+                <th class="col-depo" data-col="depo">Depo</th>
                 <th></th>
               </tr>
             </thead>
@@ -407,15 +456,15 @@
   var kmHtml = '';
   KALEM.forEach(function(k){
     var K = KAT[k.kat];
-    kmHtml += '<tr data-depo="'+k.depo+'" data-durum="'+(k.altMin?'altmin':'yeterli')+'">';
+    kmHtml += '<tr data-depo="'+k.depo+'" data-durum="'+(k.altMin?'altmin':'yeterli')+'" data-toplam="'+k.toplam+'">';
     kmHtml += '<td><div class="km-cell"><div class="km-mark" style="background:'+K.bg+';color:'+K.fg+'"><i class="fa-solid '+K.ic+'"></i></div>'
       + '<div class="km-info"><b>'+k.ad+'</b><span class="km-sub">'+K.lbl+'</span></div></div></td>';
-    kmHtml += '<td>'+DEPO[k.depo].ad.replace(' Deposu','').replace(' Ana Depo','').replace(' (mobil — ARC-06 üstü)', '')+'</td>';
-    kmHtml += '<td><span class="km-qty'+(k.altMin?' danger':'')+'">'+num(k.mevcut, k.mevcut % 1 ? 1 : 0)+' '+k.olcu+'</span></td>';
-    kmHtml += '<td><span class="km-min">'+num(k.min)+' '+k.olcu+'</span></td>';
-    kmHtml += '<td class="num">'+tl(k.birim)+'/'+k.olcu+'</td>';
-    kmHtml += '<td class="num t-strong">'+tl(k.toplam)+'</td>';
-    kmHtml += '<td>'+(k.altMin ? '<span class="gstat danger">Min-Stok Altı</span>' : '<span class="gstat ok">Yeterli</span>')+'</td>';
+    kmHtml += '<td data-col="depo">'+DEPO[k.depo].ad.replace(' Deposu','').replace(' Ana Depo','').replace(' (mobil — ARC-06 üstü)', '')+'</td>';
+    kmHtml += '<td data-col="mevcut"><span class="km-qty'+(k.altMin?' danger':'')+'">'+num(k.mevcut, k.mevcut % 1 ? 1 : 0)+' '+k.olcu+'</span></td>';
+    kmHtml += '<td data-col="min"><span class="km-min">'+num(k.min)+' '+k.olcu+'</span></td>';
+    kmHtml += '<td class="num" data-col="birim">'+tl(k.birim)+'/'+k.olcu+'</td>';
+    kmHtml += '<td class="num t-strong" data-col="toplam">'+tl(k.toplam)+'</td>';
+    kmHtml += '<td data-col="durum">'+(k.altMin ? '<span class="gstat danger">Min-Stok Altı</span>' : '<span class="gstat ok">Yeterli</span>')+'</td>';
     kmHtml += '<td><div class="row-acts"><a class="ia-btn" href="crm-satinalma-stok-detay.html?kalem='+k.slug+'" data-no-confirm aria-label="Kalem detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>';
     kmHtml += '</tr>';
   });
@@ -464,6 +513,37 @@
     applyKmFilter();
   });
 
+  /* ============ V3A — Gelişmiş Filtre (Kalemler): Toplam Değer aralığı ============
+     Depo/Durum zaten görünür çip olarak sunulduğundan drawer'a TEKRAR eklenmedi
+     (§2.2 "kontroller kalabalık olmamalı") — burada YENİ ve gerçek bir boyut: Tutar
+     Aralığı (§4.3 örnek alanlarından). `table` verilir; motor kendi `data-toplam`
+     eşleşmesiyle `.gv-fp-hide` uygular, applyKmFilter()'ın tr.hidden kararıyla
+     ÇAKIŞMAZ (K-220: iki bağımsız katman, CSS'te AND'lenir). */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#kmFiltreBtn', screen: 'stok-kalemler', title: 'Gelişmiş Filtre',
+      chipsMount: '#kmAchips', table: '#tblKalem',
+      fields: [
+        {key:'toplam', type:'numrange', label:'Toplam Değer (₺)', prefix:'₺'}
+      ]
+    });
+  }
+
+  /* ============ Kolonlar (gvCols) — §2.1 madde 8 ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtnKalem', table: '#tblKalem', screen: 'stok-kalemler',
+      cols: [
+        {key:'depo', lbl:'Depo', def:true},
+        {key:'mevcut', lbl:'Mevcut', def:true},
+        {key:'min', lbl:'Min-Stok', def:true},
+        {key:'birim', lbl:'Birim Değer', def:true},
+        {key:'toplam', lbl:'Toplam Değer', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+
   /* sef (Vadi Konakları şantiye şefi) — stokta tam kullanım ama kendi deposu (D-VDI)
      varsayılan filtre olarak öne çıkar (vurgu; kısıtlama YOK — D12 rol notu) */
   if(GV.role === 'sef'){
@@ -481,38 +561,45 @@
     KALEM.forEach(function(k){ if(k.slug === h.kalem) kalemAd = k.ad; });
     hkHtml += '<tr data-f="'+h.tur+'" data-tarih="'+hkIso(h.tarih)+'">';
     hkHtml += '<td class="t-strong">'+h.no+'</td>';
-    hkHtml += '<td class="muted">'+h.tarih+'</td>';
-    hkHtml += '<td><span class="mv '+h.tur+'">'+TUR_LBL[h.tur]+'</span></td>';
-    hkHtml += '<td>'+h.aciklama+'</td>';
-    hkHtml += '<td>'+h.depo+'</td>';
+    hkHtml += '<td class="muted" data-col="tarih">'+h.tarih+'</td>';
+    hkHtml += '<td data-col="tur"><span class="mv '+h.tur+'">'+TUR_LBL[h.tur]+'</span></td>';
+    hkHtml += '<td data-col="aciklama">'+h.aciklama+'</td>';
+    hkHtml += '<td data-col="depo">'+h.depo+'</td>';
     hkHtml += '<td><div class="row-acts">'+(kalemAd ? '<a class="ia-btn" href="crm-satinalma-stok-detay.html?kalem='+h.kalem+'" data-no-confirm aria-label="Kalem detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>' : '')+'</div></td>';
     hkHtml += '</tr>';
   });
   hkBody.innerHTML = hkHtml;
   gvWireRowArchive('#tblHareket tbody tr');
 
-  /* ============ §13 — Tarih Aralığı (Hareketler sekmesi — hareket varsa uygulanır;
-     Kalemler master veri, tarih ekseni taşımaz; Depolar özet kart görünümü, liste
-     değil — ikisine ZORLANMADI, bkz. tasks/kararlar.md). Bu sayfada §9 off-canvas
-     paneli yok (madde 46 — çok sekmeli basitleştirilmiş desen), gvDateRange BAĞIMSIZ
-     kullanıldı (kredikarti/pluxee emsali); kendi tetikleyicisi aktif aralığı gösterir.
-     ui.js'in kendi chip/arama motoru tr.hidden'ı YÖNETİR — gv-fp-hide (!important)
-     bunun ÜZERİNE bağımsız bir katman olarak eklenir, ikisi çakışmaz. ============ */
-  var hkDr = null;
-  function applyHkDateFilter(){
-    document.querySelectorAll('#tblHareket tbody tr').forEach(function(tr){
-      var ok = true;
-      if(hkDr && hkDr.from){
-        var iso = tr.getAttribute('data-tarih');
-        if(iso){ var d = new Date(iso + 'T00:00:00'); ok = d >= hkDr.from && d <= hkDr.to; }
-      }
-      tr.classList.toggle('gv-fp-hide', !ok);
+  /* ============ V3A — Gelişmiş Filtre (Hareketler): Tarih Aralığı ============
+     Kalemler master veri (tarih ekseni yok), Depolar özet kart görünümü (liste
+     değil) — ikisine ZORLANMADI (tasks/kararlar.md). Eski bağımsız #hkDateRange
+     widget'ı standart gvFilterDrawer'a taşındı; `table` verilir, motor kendi
+     `data-tarih` (ISO) eşleşmesiyle `.gv-fp-hide` uygular — ui.js'in kendi
+     chip/arama motoru tr.hidden'ı YÖNETİR, ikisi CSS'te bağımsız katman olarak
+     AND'lenir (K-220 dersi). ============ */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#hkFiltreBtn', screen: 'stok-hareketler', title: 'Gelişmiş Filtre',
+      chipsMount: '#hkAchips', table: '#tblHareket',
+      fields: [
+        {key:'tarih', type:'daterange', label:'Tarih Aralığı', emptyLabel:'Tüm zamanlar'}
+      ]
     });
   }
-  window.gvDateRange('#hkDateRange', {
-    emptyLabel: 'Tüm zamanlar',
-    onChange: function(val){ hkDr = val; applyHkDateFilter(); }
-  });
+
+  /* ============ Kolonlar (gvCols) — §2.1 madde 8 ============ */
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#colsBtnHareket', table: '#tblHareket', screen: 'stok-hareketler',
+      cols: [
+        {key:'tarih', lbl:'Tarih', def:true},
+        {key:'tur', lbl:'Tür', def:true},
+        {key:'aciklama', lbl:'Açıklama', def:true},
+        {key:'depo', lbl:'Depo', def:true}
+      ]
+    });
+  }
 
   /* ---- Depolar sekmesi kartları ---- */
   var depoGrid = document.getElementById('depoGrid');

@@ -61,6 +61,13 @@
 .tk-closed-note i{font-size:14px}
 
 .tk-foot .btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+/* V3A — bu sayfa kart-tabanlı (her kart = bir SAT formunun teklif toplama süreci),
+   satır/tablo YOK; `.gv-listhead` iskeleti aynen devralınır (tasks/spec-v3a-ortak.md
+   §2.1/§2.2), yalnız arama/filtre/tab motoru bespoke render()'a bağlanır — gerçek bir
+   `<table>` olmadığından gvListHead/gvCols "bağlan" modu değil DOĞRUDAN sayfa-lokal
+   motor kullanılır (K-220 dersi: tek motor). "Kolonlar" bu sayfada YOK — kart görünümünde
+   gösterilecek/gizlenecek sütun kavramı karşılığı yok (tasks/kararlar.md'ye not düşüldü). */
 </style>
 </head>
 <body data-sec="satinalma" data-screen="teklifler">
@@ -90,12 +97,6 @@
         <h1>Tedarikçi Teklifleri</h1>
         <div class="ph-sub" id="tkSub">3 satın alma formu · teklif toplama süreci</div>
       </div>
-      <div class="ph-actions">
-        <div id="tkDateRange"></div>
-        <label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;gap:7px">
-          <input type="checkbox" id="chkArsivTeklif" style="margin:0"> Arşivlenenleri Göster
-        </label>
-      </div>
     </div>
 
     <div class="kpi-grid">
@@ -115,6 +116,51 @@
         <div class="kpi-ico"><i class="fa-solid fa-calendar-day"></i></div>
         <div><div class="kpi-num num" id="kpiSonTarih">5 Temmuz</div><div class="kpi-lbl">En yakın son tarih</div></div>
       </div>
+    </div>
+
+    <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+         .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+         çipleri) → .lh-tabs (durum sekmeleri). Kart-tabanlı sayfa — arama/filtre/tab
+         bespoke render()'a bağlanır, `gvFilterDrawer` yalnız panel/alan üretimi için
+         kullanılır (`table` KASITLI verilmez, bkz. crm-gorev.html deseni). -->
+    <div class="gv-card" style="margin-bottom:16px">
+    <div class="gv-listhead">
+      <div class="lh-row">
+        <div class="lh-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="tkSearchInp" placeholder="Form no, tedarikçi veya kalem ara">
+        </div>
+        <div class="lh-acts">
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="tkFiltreBtn" aria-label="Gelişmiş Filtre">
+            <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+          </button>
+          <label class="lh-toggle" for="chkArsivTeklif">
+            <input type="checkbox" id="chkArsivTeklif">
+            <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+          </label>
+          <a class="btn btn-ghost btn-sm" href="#" data-export="Tedarikçi teklifleri" aria-label="Dışa Aktar">
+            <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+          </a>
+        </div>
+      </div>
+      <div class="lh-achips gv-achips-row" id="tkAchips" hidden>
+        <div class="gv-achips"></div>
+        <div class="gv-achips-acts">
+          <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+        </div>
+      </div>
+      <div class="lh-tabs">
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" id="tkDurumChips">
+            <button type="button" class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">3</span></button>
+            <button type="button" class="chip" data-filter="toplaniyor">Teklif Toplanıyor <span class="ch-cnt">2</span></button>
+            <button type="button" class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt">1</span></button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
     </div>
 
     <!-- statik bake (D18-B2 idiyomu) — JS'in render()'ı ÜRETTİĞİ NİHAİ HTML ile
@@ -164,7 +210,7 @@
      vermeyen/vermeyi bekleyen 3 tedarikçi — bu 5'li havuz kanonik değil, illüstratif. */
   var FORMS = [
     {
-      key:'014', no:'SAT-2026-014', kalem:'Hazır beton C30 — 30 m³', santiye:'Vadi Konakları',
+      key:'014', no:'SAT-2026-014', kalem:'Hazır beton C30 — 30 m³', santiye:'Vadi Konakları', santiyeKey:'vadi',
       mlz:'MLZ-2026-046', mlzHref:'crm-satinalma-talep-detay.html?mlz=046',
       formHref:'crm-satinalma-form-detay.html?form=014',
       sonTarih:'5 Temmuz 2026', closed:false,
@@ -177,7 +223,7 @@
       ]
     },
     {
-      key:'018', no:'SAT-2026-018', kalem:'Mekanik Tesisat Paketi — 9 kalem', santiye:'Vadi Konakları',
+      key:'018', no:'SAT-2026-018', kalem:'Mekanik Tesisat Paketi — 9 kalem', santiye:'Vadi Konakları', santiyeKey:'vadi',
       mlz:'MLZ-2026-030', mlzHref:'crm-satinalma-talep-detay.html?mlz=030',
       formHref:'crm-satinalma-form-detay.html?form=018',
       karsilastirHref:'crm-satinalma-teklif-karsilastir.html?form=018',
@@ -191,7 +237,7 @@
       ]
     },
     {
-      key:'019', no:'SAT-2026-019', kalem:'Kompresör Bakım Seti', santiye:'Liman Lojistik Merkezi',
+      key:'019', no:'SAT-2026-019', kalem:'Kompresör Bakım Seti', santiye:'Liman Lojistik Merkezi', santiyeKey:'liman',
       mlz:null, formHref:null,
       sonTarih:'8 Temmuz 2026', closed:false,
       suppliers:[
@@ -206,6 +252,26 @@
   var SUP_ICO = {yanitladi:'fa-check', bekliyor:'fa-clock', vermedi:'fa-xmark'};
   var SUP_LBL = {yanitladi:'Teklif alındı', bekliyor:'Teklif bekleniyor', vermedi:'Teklif vermedi'};
 
+  /* GERÇEK DIŞA AKTARMA — görünen (arşiv/durum/şantiye/arama/tarih filtreli) süreç
+     listesi gerçek .xlsx/.csv olur (ui.js GV_EXPORTERS sözleşmesi, crm-satinalma-
+     formlar.html emsali). */
+  window.GV_EXPORTERS = window.GV_EXPORTERS || {};
+  GV_EXPORTERS['Tedarikçi teklifleri'] = function(){
+    var visibleKeys = Array.prototype.map.call(document.querySelectorAll('#tkList .tk-card[data-form]'), function(el){ return el.getAttribute('data-form'); });
+    var rows = FORMS.filter(function(F){ return visibleKeys.indexOf(F.key) !== -1; });
+    var aoa = [
+      ['YAPITAŞ İNŞAAT A.Ş. — TEDARİKÇİ TEKLİFLERİ (İCMAL LİSTESİ)'],
+      [rows.length + ' satın alma formu · teklif toplama süreci'],
+      [],
+      ['Form No','Şantiye','Kalem','Durum','Son Tarih','Yanıtlayan','Toplam Tedarikçi']
+    ];
+    rows.forEach(function(F){
+      var yanitlayan = F.suppliers.filter(function(s){ return s.durum === 'yanitladi'; }).length;
+      aoa.push([F.no, F.santiye, F.kalem, F.closed ? 'Tamamlandı' : 'Teklif Toplanıyor', F.sonTarih, yanitlayan, F.suppliers.length]);
+    });
+    return { file:'tedarikci-teklifleri-icmal', sheet:'Teklifler', cols:[14, 20, 28, 16, 22, 12, 14], aoa:aoa };
+  };
+
   /* ============ §17 — süreç bazlı arşivleme ============
      Bu sayfa kart-tabanlı (her kart = bir SAT formunun teklif toplama süreci),
      satır/tablo yapısı YOK — bu yüzden standart gvFilterPanel/off-canvas paneli
@@ -214,36 +280,77 @@
      KAPANMIŞ (F.closed) süreçler arşivlenebilir — devam eden bir teklif toplama
      sürecini arşivlemek iş mantığı olarak anlamsız olurdu. ---- */
   var showArsiv = false;
-  document.getElementById('chkArsivTeklif').addEventListener('change', function(){ showArsiv = this.checked; render(); });
+  var arsivToggleTeklif = document.getElementById('chkArsivTeklif');
+  if(arsivToggleTeklif) arsivToggleTeklif.addEventListener('change', function(){ showArsiv = this.checked; render(); });
 
-  /* ============ §13 — Tarih Aralığı. Bu sayfa kart-tabanlı (satır/tablo yok), bu
-     yüzden standart panel yerine BAĞIMSIZ gvDateRange kullanıldı (madde 46 emsali,
-     yukarıdaki §17 notuyla AYNI gerekçe). Anlamlı tarih ekseni bu modülde "son tarih"
-     (teklif toplama son teslim tarihi) — kart başına tek gerçek tarih alanı budur.
-     F.sonTarih TR biçiminde ("5 Temmuz 2026", tamamlanan süreçte "… (tamamlandı)"
-     son eki de olabilir) — ilk 3 jetonu (gün/ay/yıl) ayrıştırıp ISO'ya çevrilir. ============ */
+  /* ============ §13/§4.3 — Gelişmiş Filtre (Şantiye + Tarih Aralığı). Bu sayfa
+     kart-tabanlı (satır/tablo yok) — standart `gvFilterDrawer` yalnız panel/alan
+     üretimi için çağrılır, `table` KASITLI verilmez (bkz. crm-gorev.html deseni,
+     K-220 dersi): satır/kart görünürlüğüne TEK karar mercii bu sayfanın kendi
+     render()'ıdır. Anlamlı tarih ekseni bu modülde "son tarih" (teklif toplama son
+     teslim tarihi) — kart başına tek gerçek tarih alanı budur. F.sonTarih TR
+     biçiminde ("5 Temmuz 2026", tamamlanan süreçte "… (tamamlandı)" son eki de
+     olabilir) — ilk 3 jetonu (gün/ay/yıl) ayrıştırıp ISO'ya çevrilir. ============ */
   var TK_AY = {Ocak:'01',Şubat:'02',Mart:'03',Nisan:'04',Mayıs:'05',Haziran:'06',Temmuz:'07',Ağustos:'08',Eylül:'09',Ekim:'10',Kasım:'11',Aralık:'12'};
   function tkIso(sonTarih){
     var p = sonTarih.trim().split(/\s+/);
     if(p.length < 3 || !TK_AY[p[1]]) return '';
     return p[2].replace(/\D/g, '') + '-' + TK_AY[p[1]] + '-' + ('0' + p[0]).slice(-2);
   }
-  var curTarih = null;
-  window.gvDateRange('#tkDateRange', {
-    emptyLabel: 'Tüm zamanlar',
-    onChange: function(val){ curTarih = val; render(); }
+  var tkFd = null;
+  if(window.gvFilterDrawer){
+    tkFd = gvFilterDrawer.init({
+      mount: '#tkFiltreBtn',
+      screen: 'teklifler',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#tkAchips',
+      fields: [
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'}
+        ]},
+        {key:'tarih', type:'daterange', label:'Son Tarih', emptyLabel:'Tüm zamanlar'}
+      ],
+      onApply: function(){ render(); }
+    });
+  }
+  function tkFv(key){
+    if(!tkFd) return null;
+    var st = tkFd.values();
+    return st && st[key] ? st[key] : null;
+  }
+
+  /* ============ Arama + durum tabı — sayfa-lokal (kart listesi, tablo yok) ============ */
+  var tkSearchInp = document.getElementById('tkSearchInp');
+  if(tkSearchInp) tkSearchInp.addEventListener('input', render);
+  document.querySelectorAll('#tkDurumChips .chip[data-filter]').forEach(function(ch){
+    ch.addEventListener('click', function(){
+      document.querySelectorAll('#tkDurumChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
+      ch.classList.add('is-on');
+      render();
+    });
   });
 
   function render(){
     var listEl = document.getElementById('tkList');
     var html = '';
     var aktif = 0, tamam = 0, gelenToplam = 0;
+    var durumOn = document.querySelector('#tkDurumChips .chip.is-on[data-filter]');
+    var durum = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
+    var santiyeV = tkFv('santiye'), santiye = santiyeV ? santiyeV.value : null;
+    var tarihV = tkFv('tarih'), tarihRange = tarihV ? tarihV.raw : null;
+    var term = tkSearchInp ? tkSearchInp.value.trim().toLocaleLowerCase('tr') : '';
 
     FORMS.forEach(function(F){
       if(F.arsiv && !showArsiv) return;
-      if(curTarih && curTarih.from){
+      if(durum !== 'hepsi' && (durum === 'tamamlandi') !== !!F.closed) return;
+      if(santiye && F.santiyeKey !== santiye) return;
+      if(term){
+        var hay = (F.no + ' ' + F.kalem + ' ' + F.santiye + ' ' + F.suppliers.map(function(s){ return SUP_NAME[s.key]; }).join(' ')).toLocaleLowerCase('tr');
+        if(hay.indexOf(term) === -1) return;
+      }
+      if(tarihRange && tarihRange.from){
         var fIso = tkIso(F.sonTarih);
-        if(fIso){ var fd = new Date(fIso + 'T00:00:00'); if(fd < curTarih.from || fd > curTarih.to) return; }
+        if(fIso){ var fd = new Date(fIso + 'T00:00:00'); if(fd < tarihRange.from || fd > tarihRange.to) return; }
       }
       if(F.closed) tamam++; else aktif++;
       var yanitlayan = F.suppliers.filter(function(s){ return s.durum === 'yanitladi'; }).length;
@@ -308,8 +415,13 @@
       html += '</div>';
     });
 
+    var gosterilen = aktif + tamam;
+    if(!gosterilen){
+      html = '<div class="gv-empty"><div class="ge-ico"><i class="fa-solid fa-file-invoice-dollar"></i></div>'
+        + '<h4>Eşleşen teklif süreci yok</h4><p>Aramayı temizleyin veya farklı bir durum/şantiye filtresi seçin.</p></div>';
+    }
     listEl.innerHTML = html;
-    document.getElementById('tkSub').textContent = FORMS.length + ' satın alma formu · teklif toplama süreci';
+    document.getElementById('tkSub').textContent = gosterilen + ' satın alma formu · teklif toplama süreci';
     document.getElementById('kpiAktif').textContent = aktif;
     document.getElementById('kpiTamam').textContent = tamam;
     document.getElementById('kpiGelen').textContent = gelenToplam;

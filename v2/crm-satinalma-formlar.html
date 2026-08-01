@@ -45,25 +45,9 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
   .fr-desc{max-width:140px}
 }
 
-/* Dalga 5/T5C — gv-chipbar-wrap KENDİ satırında (spec-liste-mimarisi.md §1 notu:
-   chipbar'ın ebeveyni flex bir satırın PARÇASIYSA min-width:auto tuzağına düşer).
-   flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali): ui.css'in temel .filter-bar
-   {flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-direction +
-   flex-wrap:wrap kombinasyonu satırların kart genişliğine kısıtlanması yerine İÇERİK
-   genişliğine göre büyümesine sebep oluyor (390px'te doğrulanan gerçek doc-level
-   yatay taşma — bulundu ve düzeltildi). */
-.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-.fr-filter-acts{display:flex;gap:8px;margin-left:auto;flex:none}
-@media(max-width:640px){
-  .fr-filter-acts{margin-left:0;width:100%}
-  .fr-filter-acts .btn{flex:1}
-}
-
-/* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme ---- */
-#tblForm tbody tr[data-arsiv="1"]{display:none}
-#tblForm.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
+/* ---- §17 arşiv görünürlüğü — kalıcı silme YERİNE varsayılan listede gizleme.
+   V3A: görünürlük tblFormApply() (tr.hidden) tarafından karar verilir; ayrı bir
+   data-arsiv/gv-show-arsiv CSS kuralı YOK (K-220 dersi: tek motor). ---- */
 </style>
 </head>
 <body data-sec="satinalma" data-screen="formlar">
@@ -93,9 +77,6 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
         <h1>Satın Alma Formları</h1>
         <div class="ph-sub"><span data-table-count>9</span> form · onaylanan taleplerden oluşturulan sipariş süreci</div>
       </div>
-      <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Satın alma formları"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-      </div>
     </div>
 
     <div class="kpi-grid">
@@ -122,14 +103,43 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <div class="fb-search">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3, §13.4):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri) → .lh-tabs (durum sekmeleri — menü/tab yapısı alt satırda KORUNDU). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Form no, tedarikçi veya şantiye ara" data-table-search="#tblForm">
           </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpFormlar" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="fltArsivGosterForm">
+              <input type="checkbox" id="fltArsivGosterForm">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Satın alma formları" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div class="filter-row">
+        <div class="lh-achips gv-achips-row" id="achipsFormlar" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+        <div class="lh-tabs">
           <div class="gv-chipbar-wrap" data-chipbar>
             <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
             <div class="gv-chipbar chips" data-target="#tblForm">
@@ -142,25 +152,6 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <div class="fr-filter-acts">
-            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
-              <i class="fa-solid fa-table-columns"></i> Kolonlar
-            </button>
-            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpFormlar">
-              <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="gv-achips-row" id="achipsFormlar" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
@@ -291,12 +282,6 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
           <label>Tarih Aralığı</label>
           <div data-gvdaterange data-fp-key="tarih" data-fp-label="Form Tarihi"></div>
         </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
-        </div>
       </div>
       <div class="gv-fpanel-foot">
         <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
@@ -335,13 +320,9 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
 
   /* D15 — GERÇEK DIŞA AKTARMA: görünen form/icmal listesi (rol budaması + aktif
      filtre/aramaya saygılı) gerçek .xlsx/.csv olur (ui.js GV_EXPORTERS sözleşmesi).
-     §17 düzeltmesi: `tr:not([hidden])` yalnız ui.js'in chip/arama motorunun kullandığı
-     `hidden` özniteliğine bakıyordu — arşivlenen satırlar `hidden` DEĞİL, CSS'te
-     `tr[data-arsiv="1"]{display:none}` ile gizleniyor (bkz. yukarıdaki <style>).
-     Bu yüzden ekranda görünmeyen arşivli kayıtlar sessizce çıktıya giriyordu.
-     Düzeltme: gerçek render edilmiş görünürlüğe (computed display) bakılır — ekran
-     ne gösteriyorsa çıktı da onu verir; "Arşivlenenleri Göster" açıkken arşivli
-     satırlar da (tekrar `display:table-row` olduklarından) çıktıya dahil olur. */
+     V3A: görünürlük artık TAMAMEN tblFormApply()'ın (durum + arama + arşiv, tr.hidden)
+     kararı — "Arşivlenenleri Göster" kapalıyken arşivli satırlar tr.hidden=true olur,
+     çıktıya girmez; açıkken tr.hidden=false olur, çıktıya dahil olur. */
   window.GV_EXPORTERS = window.GV_EXPORTERS || {};
   GV_EXPORTERS['Satın alma formları'] = function(){
     var rows = Array.prototype.filter.call(document.querySelectorAll('#tblForm tbody tr'), function(tr){
@@ -383,20 +364,48 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
              cols:[14, 16, 22, 22, 26, 14, 12, 16], aoa:aoa };
   };
 
-  /* ============ §17 — Gelişmiş Filtre paneli + Arşivlenenleri Göster ============ */
+  /* ============ §17 — Gelişmiş Filtre paneli ============
+     Durum (select) + Tarih Aralığı (daterange) `gvFpMakeEngine`'in kendi `.gv-fp-hide`
+     mekanizmasıyla tabloya bağlanır — durum-tab/arama/arşiv bileşik motorunun (aşağı,
+     tr.hidden) YANINDA bağımsız bir katman (K-220: iki motor aynı mülke yazmaz). */
   document.querySelectorAll('#tblForm tbody tr[data-f]').forEach(function(tr){
     tr.setAttribute('data-durum', (tr.getAttribute('data-f') || '').split(' ')[0]);
   });
 
   if(window.gvFilterPanel){
-    window.gvFilterPanel.init('#fpFormlar', {
-      table: '#tblForm',
-      onApply: function(state){
-        var tbl = document.getElementById('tblForm');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
-    });
+    window.gvFilterPanel.init('#fpFormlar', { table: '#tblForm' });
   }
+
+  /* ============ V3A — durum tabı + arama + arşiv bileşik motoru (D18 delegasyonu) ============
+     `.chip[data-filter]` tıklaması ve arama input'u ui.js'in wireTables()'ı tarafından
+     zaten dinlenir; burada yalnız tblForm._gvApply kaydedilir. */
+  function tblFormApply(){
+    var tbl = document.getElementById('tblForm'); if(!tbl) return;
+    var card = tbl.closest('.gv-card');
+    var durumOn = card ? card.querySelector('.lh-tabs .chip.is-on[data-filter]') : null;
+    var durum = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
+    var inp = card ? card.querySelector('input[data-table-search]') : null;
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var showArsiv = (document.getElementById('fltArsivGosterForm') || {}).checked;
+    var shown = 0;
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var okDurum = durum === 'hepsi' || tr.getAttribute('data-f') === durum;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var okArsiv = showArsiv || tr.getAttribute('data-arsiv') !== '1';
+      var show = okDurum && okTerm && okArsiv;
+      tr.hidden = !show;
+      if(show) shown++;
+    });
+    var empty = card ? card.querySelector('[data-table-empty]') : null;
+    if(empty) empty.hidden = shown !== 0;
+    var cnt = (card && card.querySelector('[data-table-count]')) || document.querySelector('[data-table-count]');
+    if(cnt) cnt.textContent = shown;
+  }
+  var tblFormEl = document.getElementById('tblForm');
+  if(tblFormEl) tblFormEl._gvApply = tblFormApply;
+
+  var arsivToggleForm = document.getElementById('fltArsivGosterForm');
+  if(arsivToggleForm) arsivToggleForm.addEventListener('change', tblFormApply);
 
   /* ============ B §2.1 madde 10 — Seçili kayıt işlemleri (gvBulk, spec-v2-core.md §6) ============ */
   if(window.gvBulk){
@@ -411,6 +420,7 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
         {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
           rows.forEach(function(row){ row.setAttribute('data-arsiv', '1'); });
           gvToast(rows.length + ' form arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+          tblFormApply();
         }}
       ]
     });
@@ -457,6 +467,7 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
       onConfirm:function(){
         row.setAttribute('data-arsiv', '1');
         gvToast(label + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
+        tblFormApply();
       }
     });
   });
