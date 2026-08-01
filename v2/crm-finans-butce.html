@@ -115,6 +115,7 @@
         <span style="font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px">
           <i class="fa-solid fa-circle-info"></i> Revize bütçe nedir? <span data-help="butce-revize-nedir"></span>
         </span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnBtHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
       </div>
     </div>
 
@@ -160,9 +161,9 @@
     </div>
     <div data-gv-state="error" class="gv-empty rp-error" hidden>
       <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-      <h4>Bütçe verisi yüklenemedi</h4>
-      <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
-      <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+      <h4>Bütçe verileri alınamadı</h4>
+      <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+      <button type="button" class="btn btn-acc btn-sm" id="btnBtHataRetry"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
     </div>
     <div data-gv-state="empty" class="gv-empty rp-empty" id="butceEmpty" hidden></div>
     <div data-gv-state="content" id="butceContent">
@@ -354,6 +355,22 @@
   document.getElementById('projeChips').addEventListener('click', function(e){
     var b = e.target.closest('.chip[data-proje]'); if(!b) return;
     render(b.getAttribute('data-proje'));
+  });
+
+  /* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============
+     Demo tetiklendiğinde grafik alanı da (butceWrap dışında, render() tarafından
+     ayrıca yönetilen btChartsWrap) gizlenir; "Tekrar Dene" o an seçili proje
+     chip'iyle render()'ı yeniden çalıştırır — sabit sonucSayisi UYDURULMAZ.
+     loading|error|empty|content dördü yalnız gvEmpty.durum() üzerinden yönetilir. */
+  var btnBtHataDemo = document.getElementById('btnBtHataDemo');
+  var btnBtHataRetry = document.getElementById('btnBtHataRetry');
+  if(btnBtHataDemo) btnBtHataDemo.addEventListener('click', function(){
+    document.getElementById('btChartsWrap').hidden = true;
+    gvEmpty.durum('#butceWrap', { hata:true });
+  });
+  if(btnBtHataRetry) btnBtHataRetry.addEventListener('click', function(){
+    var on = document.querySelector('#projeChips .chip.is-on');
+    render(on ? on.getAttribute('data-proje') : 'tumu');
   });
 
   gvHelp.metinler['butce-revize-nedir'] = {

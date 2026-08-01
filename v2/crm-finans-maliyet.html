@@ -108,6 +108,7 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-finans-butce-detay.html?proje=vadi" id="btnButce"><i class="fa-solid fa-file-lines"></i> Bütçe Detayı</a>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnMlHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
         <a class="btn btn-ghost btn-sm" href="#" id="btnMaliyetExport" data-gv-export='{"baslik":"Gerçekleşen Maliyet","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
@@ -173,9 +174,9 @@
     </div>
     <div data-gv-state="error" class="gv-empty rp-error" hidden>
       <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-      <h4>Maliyet verisi yüklenemedi</h4>
-      <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
-      <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+      <h4>Maliyet verileri alınamadı</h4>
+      <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+      <button type="button" class="btn btn-acc btn-sm" id="btnMlHataRetry"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
     </div>
     <div data-gv-state="empty" class="gv-empty rp-empty" id="maliyetEmpty" hidden></div>
     <div data-gv-state="content" id="maliyetContent">
@@ -434,6 +435,20 @@
       history.replaceState(null, '', url);
       render(pKey);
     });
+  });
+
+  /* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============
+     "Tekrar Dene" o an seçili proje (pKey) ile render()'ı yeniden çalıştırır —
+     bu, content/empty ayrımını da (pKey==='diger') doğru kurar, sabit bir
+     sonucSayisi UYDURULMAZ. loading|error|empty|content dördü yalnız
+     gvEmpty.durum() üzerinden yönetilir. */
+  var btnMlHataDemo = document.getElementById('btnMlHataDemo');
+  var btnMlHataRetry = document.getElementById('btnMlHataRetry');
+  if(btnMlHataDemo) btnMlHataDemo.addEventListener('click', function(){
+    gvEmpty.durum('#maliyetWrap', { hata:true });
+  });
+  if(btnMlHataRetry) btnMlHataRetry.addEventListener('click', function(){
+    render(pKey);
   });
 
   gvHelp.metinler['kaynak-kirilimi-nedir'] = {

@@ -71,6 +71,11 @@
 #tblArac{min-width:760px}
 #tblArac td.col-plaka{white-space:nowrap;font-variant-numeric:tabular-nums}
 #tblArac td.col-km{white-space:nowrap}
+
+/* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============ */
+/* [TR1] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık + demo butonu
+   390px'te taşabiliyor — sayfa-lokal sarma (crm-panel-rapor-calisma.html deseni). */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -141,7 +146,10 @@
       <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> Bu rapor makine parkının statik kanonik durumunu gösterir; günlük giriş ekranındaki (crm-operasyon-makine.html) localStorage kaydı (<code>gvMakineGiris</code>) okunmaz/yazılmaz — sayı değişmesi için kaynak sayfa güncellenmelidir.</div>
 
       <div class="gv-card" style="margin-bottom:20px">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Makine Parkı</div></div>
+        <div class="gc-head rp-gc-head-wrap">
+          <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Makine Parkı</div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnMkHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+        </div>
         <div class="filter-bar stack">
           <div class="filter-row">
             <span class="frow-lbl">Şantiye</span>
@@ -162,8 +170,12 @@
             </div>
           </div>
         </div>
-        <div class="gc-body flush">
-          <table class="gtable" id="tblMkRapor">
+        <div class="gc-body flush" id="mkStateWrap">
+          <div data-gv-state="loading" class="gv-empty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <h4>Yükleniyor…</h4>
+          </div>
+          <table class="gtable" id="tblMkRapor" data-gv-state="content">
             <thead>
               <tr>
                 <th>Makine</th>
@@ -180,16 +192,16 @@
                  aynı mount innerHTML ile ezilir — D18-B2 -->
             <tbody id="mkBody"><tr data-santiye="vadi" data-durum="calisti"><td><div class="mk-cell"><div class="mk-mark" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-truck-pickup"></i></div><div class="mk-info"><b title="Ekskavatör CAT 320">Ekskavatör CAT 320</b> <span class="mk-no">MKN-01</span><br><span class="own kiralik"><i class="fa-solid fa-key"></i> Kiralık</span></div></div></td><td>Vadi Konakları</td><td>Musa Erdem</td><td class="num"><div class="mk-saat">8 sa</div></td><td><span class="mk-not" title="Motorin dolu, sabah vardiyasıyla başladı">Motorin dolu, sabah vardiyasıyla başladı</span></td><td><span class="gstat ok">Çalışıyor</span></td><td><div class="mk-fuel">~118 L/gün</div></td><td><div class="mk-bakim">21 Haz 2026<span>250 sa · sonraki 500 sa</span></div></td></tr><tr data-santiye="vadi" data-durum="calisti"><td><div class="mk-cell"><div class="mk-mark" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-truck-pickup"></i></div><div class="mk-info"><b title="Kule Vinç Potain MC-85">Kule Vinç Potain MC-85</b> <span class="mk-no">MKN-02</span><br><span class="own ozmal"><i class="fa-solid fa-house-chimney"></i> Öz Mal</span></div></div></td><td>Vadi Konakları</td><td>İbrahim Sönmez</td><td class="num"><div class="mk-saat">6,5 sa</div></td><td><span class="mk-not" title="Öğleden sonra rüzgar nedeniyle ara verildi">Öğleden sonra rüzgar nedeniyle ara verildi</span></td><td><span class="gstat ok">Çalışıyor</span></td><td><div class="mk-fuel"><span class="mk-dash">—</span><span>Elektrikli</span></div></td><td><div class="mk-bakim">12 Haz 2026<span>Aylık periyodik</span></div></td></tr><tr data-santiye="vadi" data-durum="bosta"><td><div class="mk-cell"><div class="mk-mark" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-truck-pickup"></i></div><div class="mk-info"><b title="Beton Pompası Putzmeister M42">Beton Pompası Putzmeister M42</b> <span class="mk-no">MKN-03</span><br><span class="own hizmet"><i class="fa-solid fa-handshake"></i> Hizmet Alımı</span></div></div></td><td>Vadi Konakları</td><td>Ege Hazır Beton ekibi</td><td class="num"><div class="mk-saat">0 sa</div></td><td><span class="mk-not" title="Yarın sabah C30 dökümü için sahada bekliyor">Yarın sabah C30 dökümü için sahada bekliyor</span></td><td><span class="gstat off">Boşta</span></td><td><div class="mk-fuel"><span class="mk-dash">—</span><span>Hizmette</span></div></td><td><div class="mk-bakim"><span class="mk-dash">—</span><span>Hizmette</span></div></td></tr><tr data-santiye="liman" data-durum="calisti"><td><div class="mk-cell"><div class="mk-mark" style="background:rgba(var(--acc-rgb),.1);color:var(--acc-ink)"><i class="fa-solid fa-truck-pickup"></i></div><div class="mk-info"><b title="Mobil Vinç Liebherr LTM 1050">Mobil Vinç Liebherr LTM 1050</b> <span class="mk-no">MKN-04</span><br><span class="own kiralik"><i class="fa-solid fa-key"></i> Kiralık</span></div></div></td><td>Liman Lojistik</td><td>Halil Güneş</td><td class="num"><div class="mk-saat">7 sa</div></td><td><span class="mk-not" title="Çelik konstrüksiyon montajı sorunsuz sürüyor">Çelik konstrüksiyon montajı sorunsuz sürüyor</span></td><td><span class="gstat ok">Çalışıyor</span></td><td><div class="mk-fuel">~65 L/gün</div></td><td><div class="mk-bakim">28 Haz 2026</div></td></tr><tr data-santiye="liman" data-durum="calisti"><td><div class="mk-cell"><div class="mk-mark" style="background:rgba(var(--acc-rgb),.1);color:var(--acc-ink)"><i class="fa-solid fa-truck-pickup"></i></div><div class="mk-info"><b title="Forklift Toyota 8FD25">Forklift Toyota 8FD25</b> <span class="mk-no">MKN-05</span><br><span class="own ozmal"><i class="fa-solid fa-house-chimney"></i> Öz Mal</span></div></div></td><td>Liman Lojistik</td><td>Osman Polat</td><td class="num"><div class="mk-saat">8 sa</div></td><td><span class="mk-not" title="Sevkiyat elleçleme, sorunsuz">Sevkiyat elleçleme, sorunsuz</span></td><td><span class="gstat ok">Çalışıyor</span></td><td><div class="mk-fuel">~22 L/gün</div></td><td><div class="mk-bakim">5 Haz 2026</div></td></tr><tr data-santiye="merkez" data-durum="arizali"><td><div class="mk-cell"><div class="mk-mark" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-truck-pickup"></i></div><div class="mk-info"><b title="Beko Loder JCB 3CX">Beko Loder JCB 3CX</b> <span class="mk-no">MKN-06</span><br><span class="own ozmal"><i class="fa-solid fa-house-chimney"></i> Öz Mal</span></div></div></td><td>Merkez Şantiye</td><td>Sadık Öz</td><td class="num"><div class="mk-saat">0 sa</div></td><td><span class="mk-not" title="Hidrolik arıza — servis çağrıldı, parça bekleniyor">Hidrolik arıza — servis çağrıldı, parça bekleniyor</span></td><td><span class="gstat danger">Arızalı</span></td><td><div class="mk-fuel">~40 L/gün</div></td><td><div class="mk-bakim">2 Tem 2026<span>Servis kaydı · hidrolik arıza</span></div></td></tr></tbody>
           </table>
-          <div class="gv-empty" id="mkEmpty" hidden>
+          <div data-gv-state="empty" class="gv-empty" id="mkEmpty" hidden>
             <div class="ge-ico"><i class="fa-solid fa-truck-pickup"></i></div>
             <h4>Bu filtrede makine yok</h4>
             <p>Şantiye veya durum seçimini değiştirin.</p>
           </div>
-          <div class="gv-empty rp-error" id="mkError" hidden>
+          <div data-gv-state="error" class="gv-empty rp-error" id="mkError" hidden>
             <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h4>Makine verisi yüklenemedi</h4>
-            <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
-            <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+            <h4>Makine verileri alınamadı</h4>
+            <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+            <button type="button" class="btn btn-acc btn-sm" id="btnMkHataRetry"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
           </div>
         </div>
         <div class="gc-foot"><span id="mkFoot">6 makine gösteriliyor</span></div>
@@ -441,6 +453,12 @@
   });
   body.innerHTML = html;
 
+  /* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============
+     mkShownCount son applyFilter() sonucunu tutar; "Tekrar Dene" gerçek filtre
+     sonucuna göre content/empty'yi doğru seçsin diye kullanılır — sabit sayı
+     UYDURULMAZ. loading|error|empty|content dördü yalnız gvEmpty.durum() üzerinden
+     yönetilir (elle .hidden atanmaz), ikisi asla aynı anda görünmez. */
+  var mkShownCount = 0;
   var curSantiye = 'tumu', curDurum = 'tumu';
   function applyFilter(){
     var shown = 0;
@@ -451,9 +469,18 @@
       tr.hidden = !show;
       if(show) shown++;
     });
-    document.getElementById('mkEmpty').hidden = shown !== 0;
+    mkShownCount = shown;
+    gvEmpty.durum('#mkStateWrap', { sonucSayisi: shown });
     document.getElementById('mkFoot').textContent = shown + ' makine gösteriliyor · toplam ' + MAKINE.length + ' kayıt';
   }
+  var btnMkHataDemo = document.getElementById('btnMkHataDemo');
+  var btnMkHataRetry = document.getElementById('btnMkHataRetry');
+  if(btnMkHataDemo) btnMkHataDemo.addEventListener('click', function(){
+    gvEmpty.durum('#mkStateWrap', { hata:true });
+  });
+  if(btnMkHataRetry) btnMkHataRetry.addEventListener('click', function(){
+    gvEmpty.durum('#mkStateWrap', { sonucSayisi: mkShownCount });
+  });
   document.getElementById('santiyeChips').addEventListener('click', function(e){
     var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
     this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });

@@ -55,6 +55,11 @@
 
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
+
+/* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============ */
+/* [TR1] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık + demo butonu
+   390px'te taşabiliyor — sayfa-lokal sarma (crm-panel-rapor-calisma.html deseni). */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="raporlar" data-screen="raporlar">
@@ -142,7 +147,10 @@
       </div>
 
       <div class="gv-card" style="margin-bottom:20px">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Demirbaş Envanteri</div></div>
+        <div class="gc-head rp-gc-head-wrap">
+          <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Demirbaş Envanteri</div>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnDmHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+        </div>
         <div class="filter-bar stack">
           <div class="filter-row">
             <span class="frow-lbl">Kategori</span>
@@ -168,8 +176,12 @@
             </div>
           </div>
         </div>
-        <div class="gc-body flush">
-          <table class="gtable" id="tblDmRapor">
+        <div class="gc-body flush" id="dmStateWrap">
+          <div data-gv-state="loading" class="gv-empty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <h4>Yükleniyor…</h4>
+          </div>
+          <table class="gtable" id="tblDmRapor" data-gv-state="content">
             <thead>
               <tr>
                 <th>Kalem</th>
@@ -184,16 +196,16 @@
                  aynı mount innerHTML ile ezilir — D18-B2 -->
             <tbody id="dmBody"><tr data-kat="telefon" data-durum="zimmetli"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-mobile-screen"></i></div><div class="dm-info"><b>İş Telefonu</b><span class="dm-no">ZMT-2026-041 — Samsung Galaxy A54, 64GB</span></div></div></td><td>Telefon &amp; İletişim</td><td>Hasan Demirci</td><td>Vadi Konakları</td><td>3 Oca 2026</td><td><span class="gstat ok">Zimmetli</span></td></tr><tr data-kat="elaleti" data-durum="zimmetli"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-toolbox"></i></div><div class="dm-info"><b>El Aleti Seti</b><span class="dm-no">ZMT-2026-042 — Bosch GSB 18V-55, 18 parça</span></div></div></td><td>El Aleti</td><td>Hasan Demirci</td><td>Vadi Konakları</td><td>3 Oca 2026</td><td><span class="gstat ok">Zimmetli</span></td></tr><tr data-kat="guvenlik" data-durum="zimmetli"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-helmet-safety"></i></div><div class="dm-info"><b>Güvenlik Ekipmanı</b><span class="dm-no">ZMT-2026-043 — baret + yelek + bot seti</span></div></div></td><td>Güvenlik Ekipmanı</td><td>Hasan Demirci</td><td>Vadi Konakları</td><td>3 Oca 2026</td><td><span class="gstat ok">Zimmetli</span></td></tr><tr data-kat="arac" data-durum="zimmetli"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-truck-pickup"></i></div><div class="dm-info"><b>Araç</b><span class="dm-no">ZMT-2026-044 — Ford Ranger pikap, 34 ABC 123</span></div></div></td><td>Araç</td><td>Hasan Demirci</td><td>Vadi Konakları</td><td>3 Oca 2026</td><td><span class="gstat ok">Zimmetli</span></td></tr><tr data-kat="tablet" data-durum="zimmetli"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-tablet-screen-button"></i></div><div class="dm-info"><b>Tablet</b><span class="dm-no">ZMT-2026-045 — Samsung Galaxy Tab A9, 64GB</span></div></div></td><td>Tablet</td><td>Aylin Koç</td><td>Liman Lojistik</td><td>15 Şub 2026</td><td><span class="gstat ok">Zimmetli</span></td></tr><tr data-kat="elaleti" data-durum="zimmetli"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-toolbox"></i></div><div class="dm-info"><b>Lazer Metre</b><span class="dm-no">ZMT-2026-046 — Bosch GLM 50 C</span></div></div></td><td>El Aleti</td><td>Ömer Taşkın</td><td>Merkez Şantiye</td><td>20 Oca 2026</td><td><span class="gstat ok">Zimmetli</span></td></tr><tr data-kat="makine" data-durum="serviste"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-gears"></i></div><div class="dm-info"><b>Kırıcı-Delici</b><span class="dm-no">ZMT-2026-047 — Hilti TE 60-A36</span></div></div></td><td>Makine-Ekipman</td><td><span class="dm-kisisiz">(kişisiz)</span></td><td>Merkez depo</td><td>gönderim 25 Haz 2026</td><td><span class="gstat warn">Serviste</span></td></tr><tr data-kat="telefon" data-durum="depoda"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-mobile-screen"></i></div><div class="dm-info"><b>El Telsizi Seti</b><span class="dm-no">ZMT-2026-048 — Motorola CP040, 4 adet</span></div></div></td><td>Telefon &amp; İletişim</td><td><span class="dm-kisisiz">(kişisiz)</span></td><td>Merkez depo</td><td>—</td><td><span class="gstat info">Depoda</span></td></tr><tr data-kat="telefon" data-durum="iade"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-mobile-screen"></i></div><div class="dm-info"><b>El Telsizi</b><span class="dm-no">ZMT-2025-017 — Motorola CP040 — iade 3 Oca 2026</span></div></div></td><td>Telefon &amp; İletişim</td><td>Hasan Demirci</td><td><span class="dm-kisisiz">—</span></td><td>teslim 10 Mar 2025</td><td><span class="gstat off">İade Edildi</span></td></tr><tr data-kat="makine" data-durum="hurda"><td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid fa-gears"></i></div><div class="dm-info"><b>Jeneratör</b><span class="dm-no">ZMT-2025-009 — Honda EU22i — hurda kararı 12 May 2026</span></div></div></td><td>Makine-Ekipman</td><td><span class="dm-kisisiz">(kişisiz)</span></td><td><span class="dm-kisisiz">—</span></td><td>teslim 8 Nis 2025</td><td><span class="gstat hurda">Hurda</span></td></tr></tbody>
           </table>
-          <div class="gv-empty" id="dmEmpty" hidden>
+          <div data-gv-state="empty" class="gv-empty" id="dmEmpty" hidden>
             <div class="ge-ico"><i class="fa-solid fa-boxes-packing"></i></div>
             <h4>Bu filtrede kalem yok</h4>
             <p>Kategori, durum, şantiye veya tarih aralığı seçimini değiştirin.</p>
           </div>
-          <div class="gv-empty rp-error" id="dmError" hidden>
+          <div data-gv-state="error" class="gv-empty rp-error" id="dmError" hidden>
             <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h4>Demirbaş verisi yüklenemedi</h4>
-            <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
-            <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
+            <h4>Demirbaş verileri alınamadı</h4>
+            <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+            <button type="button" class="btn btn-acc btn-sm" id="btnDmHataRetry"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
           </div>
         </div>
         <div class="gc-foot"><span id="dmFoot">10 kalem gösteriliyor</span></div>
@@ -445,6 +457,12 @@
       + item('Kullanılan kategori çeşidi', k25, k26, 'çeşit');
   })();
 
+  /* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============
+     dmShownCount son applyFilter() sonucunu tutar; "Tekrar Dene" gerçek filtre
+     sonucuna göre content/empty'yi doğru seçsin diye kullanılır — sabit sayı
+     UYDURULMAZ. loading|error|empty|content dördü yalnız gvEmpty.durum() üzerinden
+     yönetilir (elle .hidden atanmaz), ikisi asla aynı anda görünmez. */
+  var dmShownCount = 0;
   var curKat = 'hepsi', curDurum = 'hepsi', curSantiye = 'tumu', curRange = null;
   function applyFilter(){
     var shown = 0;
@@ -461,9 +479,18 @@
       tr.hidden = !show;
       if(show) shown++;
     });
-    document.getElementById('dmEmpty').hidden = shown !== 0;
+    dmShownCount = shown;
+    gvEmpty.durum('#dmStateWrap', { sonucSayisi: shown });
     document.getElementById('dmFoot').textContent = shown + ' kalem gösteriliyor · toplam ' + DEMIRBAS.length + ' kayıt';
   }
+  var btnDmHataDemo = document.getElementById('btnDmHataDemo');
+  var btnDmHataRetry = document.getElementById('btnDmHataRetry');
+  if(btnDmHataDemo) btnDmHataDemo.addEventListener('click', function(){
+    gvEmpty.durum('#dmStateWrap', { hata:true });
+  });
+  if(btnDmHataRetry) btnDmHataRetry.addEventListener('click', function(){
+    gvEmpty.durum('#dmStateWrap', { sonucSayisi: dmShownCount });
+  });
   document.getElementById('katChips').addEventListener('click', function(e){
     var ch = e.target.closest('.chip[data-kat]'); if(!ch) return;
     this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });

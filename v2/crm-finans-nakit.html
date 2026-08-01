@@ -80,6 +80,12 @@
 
 /* T-R3 — seçili aralık KPI + spark grafik başlığı (B §6.2/§7.3) */
 #tblAkis tbody tr.gv-range-off{opacity:.3}
+
+/* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============ */
+/* [TR1] .gc-head (ui.css, kilitli) flex-wrap:nowrap kullanır; başlık + alt-başlık +
+   demo butonu üç öğeyle 390px'te taşabiliyor — sayfa-lokal sarma
+   (crm-panel-rapor-calisma.html deseni). */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="finans" data-screen="nakit">
@@ -184,7 +190,28 @@
     </div>
 
     <div class="gv-card" style="margin-bottom:20px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-line"></i> Haftalık Nakit Akışı</div><span class="ph-sub" style="margin:0">13 hafta · 2 Tem – 1 Eki 2026</span></div>
+      <div class="gc-head rp-gc-head-wrap">
+        <div class="gc-title"><i class="fa-solid fa-chart-line"></i> Haftalık Nakit Akışı</div>
+        <span class="ph-sub" style="margin:0">13 hafta · 2 Tem – 1 Eki 2026</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnNakitHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+      </div>
+      <div id="nakitAkisStateWrap">
+        <div data-gv-state="loading" class="gv-empty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+          <h4>Yükleniyor…</h4>
+        </div>
+        <div data-gv-state="error" class="gv-empty rp-error" id="nakitError" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h4>Nakit akışı verileri alınamadı</h4>
+          <p>Bağlantı yeniden kurulduğunda raporu yeniden çalıştırabilirsiniz.</p>
+          <button type="button" class="btn btn-acc btn-sm" id="btnNakitHataRetry"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+        </div>
+        <div data-gv-state="empty" class="gv-empty" id="nakitAkisEmpty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-chart-line"></i></div>
+          <h4>Bu aralıkta nakit akışı kaydı yok</h4>
+          <p>Hafta aralığı seçimini değiştirin.</p>
+        </div>
+        <div data-gv-state="content">
       <div class="rp-chart" style="box-shadow:none;border:none;border-bottom:1px solid var(--line);border-radius:0;margin-bottom:0">
         <div class="rp-chart-head"><h3><i class="fa-solid fa-wave-square"></i> Kümülatif Nakit Eğrisi</h3></div>
         <div class="rp-chart-body" id="nakitSpark"></div>
@@ -200,18 +227,13 @@
         </table>
       </div>
       <div class="tbl-note"><i class="fa-solid fa-circle-info"></i> Tablo şirket geneli konsolide nakit pozisyonunu gösterir; kümülatif kırmızı hücreler negatif nakit pozisyonunu işaret eder. Proje bazlı haftalık kırılım kapsam dışıdır — proje/şirket geneli görünümü aşağıdaki tahsilat ve ödeme takvimi kartlarında uygulanır.</div>
+        </div>
+      </div>
     </div>
 
     <!-- ============ KARŞILAŞTIRMA ALANI (B §6.2 madde 8) — AKIS[] checkpoint kümülatif
          net değerlerinin (7g/30g/60g/90g, aynı KPI kartlarındaki rakamlar) dönemsel farkı ============ -->
     <div class="rp-compare" id="nakitCompare" style="margin-bottom:20px"></div>
-
-    <div class="gv-empty rp-error" id="nakitError" hidden style="margin-bottom:20px">
-      <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
-      <h4>Nakit akışı verisi yüklenemedi</h4>
-      <p>Sunucuya ulaşılamadı — bağlantınızı kontrol edip tekrar deneyin.</p>
-      <button type="button" class="btn btn-acc btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Yeniden Dene</button>
-    </div>
 
     <div class="rp-note" id="nakitNote"><i class="fa-solid fa-lightbulb"></i> <strong>60 gün ufkunda −₺2.990.000'a düşen kümülatif nakit</strong> — FTR-2026-09 (₺2.840.000, Marmara Demir Çelik) ve 28 Ağustos bordrosu (₺3.400.000) aynı pencerede çakışıyor. 90 gün ufkunda GE2 lansman kaporası (₺4.200.000) ve gecikmiş Toprak tahsilatının (₺570.000, 12 gün gecikme) tahsil edilmesiyle toparlanma bekleniyor — bu iki kalem gerçekleşmezse açık derinleşir.</div>
 
@@ -278,6 +300,20 @@
   document.getElementById('tblAkisBody').innerHTML = rows;
 
   gvSpark('#nakitSpark', AKIS.map(function(a){ return a.kum; }), {tone: 'acc', baslik:'13 haftalık kümülatif nakit pozisyonu'});
+
+  /* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============
+     AKIS her zaman 13 kayıt taşır (statik kanonik veri) — sonucSayisi sabit
+     AKIS.length'tir, uydurulmadı. loading|error|empty|content dördü yalnız
+     gvEmpty.durum() üzerinden yönetilir, ikisi asla aynı anda görünmez. */
+  gvEmpty.durum('#nakitAkisStateWrap', { sonucSayisi: AKIS.length });
+  var btnNakitHataDemo = document.getElementById('btnNakitHataDemo');
+  var btnNakitHataRetry = document.getElementById('btnNakitHataRetry');
+  if(btnNakitHataDemo) btnNakitHataDemo.addEventListener('click', function(){
+    gvEmpty.durum('#nakitAkisStateWrap', { hata:true });
+  });
+  if(btnNakitHataRetry) btnNakitHataRetry.addEventListener('click', function(){
+    gvEmpty.durum('#nakitAkisStateWrap', { sonucSayisi: AKIS.length });
+  });
 
   /* ============ KARŞILAŞTIRMA ALANI — AKIS[]'teki 4 checkpoint'in (7g/30g/60g/90g)
      kümülatif net değerleri arasındaki dönemsel fark; aynı rakamlar üstteki KPI
