@@ -186,8 +186,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         <div class="ph-sub">13 kart · personel yemek kartı yükleme ve harcama takibi</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="crm-operasyon-pluxee-cikti.html?kart=4471" id="btnPlxCikti"><i class="fa-solid fa-print"></i> Çıktı Al</a>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Pluxee hareketleri"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-operasyon-pluxee-form.html" data-view="olusturabilir" hidden><i class="fa-solid fa-plus"></i> Yükleme / Harcama Kaydı</a>
       </div>
     </div>
@@ -250,61 +248,77 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <span class="df-donem"><i class="fa-solid fa-calendar-days"></i> 01 – 15 Temmuz 2026 · cari dönem</span>
         </div>
       </div>
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <div class="fb-search" style="max-width:360px">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Tür/
+           Şantiye/Tarih hızlı filtreleri + gvFilterPanel alanları HEPSİ applyFilter()'ın
+           AYNI tek motoruna akar (K-220 dersi) — yalnız kabuk .gv-listhead'e taşındı,
+           davranış DEĞİŞMEDİ. Üstteki Dönem sekmesi (#donemChips) ve `.plx-grid` kart
+           ızgarası bu dalganın kapsamı DIŞINDA (sonraki dalga, §12) — dokunulmadı. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="plxSearch" placeholder="Kart no, personel veya açıklama ara">
           </div>
-          <!-- [§9/T-G1] sağ off-canvas gelişmiş filtre — mevcut kart/tür/şantiye/tarih hızlı
-               filtreleriyle AND mantığıyla birlikte çalışır (tasks/spec-filtre-tarih.md §3) -->
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpPlx">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" id="colsBtnPlx"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Tür</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="plxTurChips">
-              <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">2</span></button>
-              <button class="chip" data-tur="yukleme">Yükleme <span class="ch-cnt">1</span></button>
-              <button class="chip" data-tur="harcama">Harcama <span class="ch-cnt">1</span></button>
-            </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-          <!-- [§17] Arşivlenen kart varsayılan ızgarada görünmez — bu anahtarla gösterilir -->
-          <button type="button" class="chip" id="plxArsivToggle" aria-pressed="false"><i class="fa-solid fa-box-archive"></i> Arşivlenenleri Göster</button>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Şantiye</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="plxSantiyeChips">
-              <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">2</span></button>
-              <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
-              <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">0</span></button>
-              <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">0</span></button>
-            </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpPlx" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnPlx" aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <label class="lh-toggle" for="plxArsivToggle">
+              <input type="checkbox" id="plxArsivToggle">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="crm-operasyon-pluxee-cikti.html?kart=4471" id="btnPlxCikti" aria-label="Çıktı Al"><i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span></a>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Pluxee hareketleri" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span></a>
           </div>
         </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Tarih Aralığı</span>
-          <div id="plxDateRange"></div>
+        <!-- [§9/T-G1] aktif filtre çipleri — gvFilterPanel tarafından doldurulur, filtre yokken hidden -->
+        <div class="lh-achips gv-achips-row" id="achipsPlx" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
         </div>
-      </div>
-      <!-- [§9/T-G1] aktif filtre çipleri — gvFilterPanel tarafından doldurulur, filtre yokken hidden -->
-      <div class="gv-achips-row" id="achipsPlx" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-tabs">
+          <!-- 3 sıra (Tür/Şantiye/Tarih) — bkz. crm-operasyon-kredikarti.html'deki AYNI
+               yorum: .lh-tabs tek-satır flex konteyner, birden çok filter-row'u DİKEY
+               yığmak için mevcut sayfa-lokal `.filter-bar.stack` yeniden kullanılır. -->
+          <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
+          <div class="filter-row">
+            <span class="frow-lbl">Tür</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="plxTurChips">
+                <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">2</span></button>
+                <button class="chip" data-tur="yukleme">Yükleme <span class="ch-cnt">1</span></button>
+                <button class="chip" data-tur="harcama">Harcama <span class="ch-cnt">1</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="filter-row">
+            <span class="frow-lbl">Şantiye</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="plxSantiyeChips">
+                <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">2</span></button>
+                <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
+                <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">0</span></button>
+                <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">0</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="filter-row">
+            <span class="frow-lbl">Tarih Aralığı</span>
+            <div id="plxDateRange"></div>
+          </div>
+          </div>
         </div>
       </div>
       <div class="plx-bulk-bar" id="plxBulkBar" hidden>
@@ -810,10 +824,8 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     });
   });
   var plxArsivToggle = document.getElementById('plxArsivToggle');
-  plxArsivToggle.addEventListener('click', function(){
-    showArsivKart = !showArsivKart;
-    plxArsivToggle.classList.toggle('is-on', showArsivKart);
-    plxArsivToggle.setAttribute('aria-pressed', String(showArsivKart));
+  plxArsivToggle.addEventListener('change', function(){
+    showArsivKart = plxArsivToggle.checked;
     renderGrid();
     setCard(curPlx);
   });

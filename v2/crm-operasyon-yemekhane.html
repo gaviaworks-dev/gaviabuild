@@ -144,17 +144,50 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-list"></i> Günlük Kişi Sayımı</div>
       </div>
-      <!-- Taşeron filtresi (D9 / 1.6) — .filter-bar/.chip shell komponenti, ancak ui.js'in
-           genel data-filter kablolaması KASITLI kullanılmaz (footer toplamlarını görünen
-           satırlara göre yeniden hesaplamak gerekiyor); data-yfilter özel öznitelikle
-           sayfa-lokal JS bloğu yönetir, bkz. sayfa altındaki script. -->
-      <div class="filter-bar">
-        <div class="chips" id="ykChips">
-          <button class="chip is-on" type="button" data-yfilter="tum"><i class="fa-solid fa-layer-group"></i> Tümü</button>
-          <button class="chip" type="button" data-yfilter="yapitas"><i class="fa-solid fa-helmet-safety"></i> Yapıtaş</button>
-          <button class="chip" type="button" data-yfilter="demir-beton" data-tas="1"><i class="fa-solid fa-people-group"></i> Demir-Beton İnş. Ltd.</button>
-          <button class="chip" type="button" data-yfilter="elektromek" data-tas="1"><i class="fa-solid fa-people-group"></i> ElektroMek Taahhüt</button>
-          <button class="chip" type="button" data-yfilter="yalitim" data-tas="1"><i class="fa-solid fa-people-group"></i> Yalıtım Kardeşler</button>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3).
+           Taşeron/Yapıtaş ayrımı (D9/1.6) hâlâ sayfa-lokal data-yfilter + recomputeFooter()
+           motorundadır (footer toplamlarını görünen satırlara göre yeniden hesaplar) —
+           arama kutusu da AYNI motora bağlanır (K-220 dersi: iki bağımsız filtre motoru
+           çakışmasın diye ui.js'in genel data-table-search kablolaması KASITLI
+           kullanılmaz). Gelişmiş Filtre (Şantiye) `table` parametresiyle bağlanır — onun
+           gv-fp-hide mekanizması mevcut tr.hidden durumuyla AND çalışır (motor çakışması
+           YOK, spec-v3a-ortak.md §"gvFpMakeEngine" ile aynı kompozisyon). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="ykSearchInp" placeholder="Yer veya firma ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="ykFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="ykColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Yemekhane günlük sayımı","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="ykAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="ykChips">
+              <button class="chip is-on" type="button" data-yfilter="tum"><i class="fa-solid fa-layer-group"></i> Tümü</button>
+              <button class="chip" type="button" data-yfilter="yapitas"><i class="fa-solid fa-helmet-safety"></i> Yapıtaş</button>
+              <button class="chip" type="button" data-yfilter="demir-beton" data-tas="1"><i class="fa-solid fa-people-group"></i> Demir-Beton İnş. Ltd.</button>
+              <button class="chip" type="button" data-yfilter="elektromek" data-tas="1"><i class="fa-solid fa-people-group"></i> ElektroMek Taahhüt</button>
+              <button class="chip" type="button" data-yfilter="yalitim" data-tas="1"><i class="fa-solid fa-people-group"></i> Yalıtım Kardeşler</button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
       <!-- §7.3/§13.2 — taşeron puantajı ↔ yemekhane kişi sayısı bağlantısı (T-YEMEKHANE).
@@ -167,13 +200,13 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
         <table class="gtable" id="tblYemek">
           <thead>
             <tr>
-              <th>Yer</th>
-              <th class="col-tur">Tür</th>
-              <th class="col-ogun num">Kahvaltı</th>
-              <th class="col-ogun num">Öğle</th>
-              <th class="col-ogun num">Akşam</th>
-              <th class="col-toplam num">Toplam</th>
-              <th class="col-tutar num">Tutar</th>
+              <th data-col="yer">Yer</th>
+              <th class="col-tur" data-col="tur">Tür</th>
+              <th class="col-ogun num" data-col="kahvalti">Kahvaltı</th>
+              <th class="col-ogun num" data-col="ogle">Öğle</th>
+              <th class="col-ogun num" data-col="aksam">Akşam</th>
+              <th class="col-toplam num" data-col="toplam">Toplam</th>
+              <th class="col-tutar num" data-col="tutar">Tutar</th>
             </tr>
           </thead>
           <tbody id="ykBody"><tr class="" data-firma="yapitas" data-kahvalti="32" data-ogle="35" data-aksam="18"><td><div class="yk-cell"><div class="yk-mark"><i class="fa-solid fa-helmet-safety"></i></div><div class="yk-info"><b>Vadi Konakları</b><span>Öz kadro</span></div></div></td><td><span class="gstat yk-tur-badge off">Yapıtaş</span></td><td class="num yk-num">32</td><td class="num yk-num">35</td><td class="num yk-num">18</td><td class="num"><span class="yk-total">85</span></td><td class="num yk-tutar">₺6.100</td></tr><tr class="is-tas" data-firma="demir-beton" data-kahvalti="9" data-ogle="10" data-aksam="6"><td><div class="yk-cell"><div class="yk-mark tas"><i class="fa-solid fa-people-group"></i></div><div class="yk-info"><b>Demir-Beton İnş. Ltd.</b><span>Taşeron ekibi · Vadi Konakları · <a href="crm-operasyon-taseron-puantaj.html" class="yk-tp-link">Puantaj <i class="fa-solid fa-arrow-right"></i></a></span></div></div></td><td><span class="gstat yk-tur-badge info">Taşeron</span></td><td class="num yk-num">9</td><td class="num yk-num">10</td><td class="num yk-num">6</td><td class="num"><span class="yk-total">25</span></td><td class="num yk-tutar">₺1.800</td></tr><tr class="is-tas" data-firma="elektromek" data-kahvalti="5" data-ogle="6" data-aksam="3"><td><div class="yk-cell"><div class="yk-mark tas"><i class="fa-solid fa-people-group"></i></div><div class="yk-info"><b>ElektroMek Taahhüt</b><span>Taşeron ekibi · Vadi Konakları · <a href="crm-operasyon-taseron-puantaj.html" class="yk-tp-link">Puantaj <i class="fa-solid fa-arrow-right"></i></a></span></div></div></td><td><span class="gstat yk-tur-badge info">Taşeron</span></td><td class="num yk-num">5</td><td class="num yk-num">6</td><td class="num yk-num">3</td><td class="num"><span class="yk-total">14</span></td><td class="num yk-tutar">₺1.015</td></tr><tr class="" data-firma="yapitas" data-kahvalti="20" data-ogle="22" data-aksam="10"><td><div class="yk-cell"><div class="yk-mark"><i class="fa-solid fa-helmet-safety"></i></div><div class="yk-info"><b>Liman Lojistik Merkezi</b><span>Öz kadro</span></div></div></td><td><span class="gstat yk-tur-badge off">Yapıtaş</span></td><td class="num yk-num">20</td><td class="num yk-num">22</td><td class="num yk-num">10</td><td class="num"><span class="yk-total">52</span></td><td class="num yk-tutar">₺3.730</td></tr><tr class="is-tas" data-firma="yalitim" data-kahvalti="7" data-ogle="8" data-aksam="4"><td><div class="yk-cell"><div class="yk-mark tas"><i class="fa-solid fa-people-group"></i></div><div class="yk-info"><b>Yalıtım Kardeşler</b><span>Taşeron ekibi · Liman Lojistik Merkezi · <a href="crm-operasyon-taseron-puantaj.html" class="yk-tp-link">Puantaj <i class="fa-solid fa-arrow-right"></i></a></span></div></div></td><td><span class="gstat yk-tur-badge info">Taşeron</span></td><td class="num yk-num">7</td><td class="num yk-num">8</td><td class="num yk-num">4</td><td class="num"><span class="yk-total">19</span></td><td class="num yk-tutar">₺1.370</td></tr><tr class="" data-firma="yapitas" data-kahvalti="11" data-ogle="12" data-aksam="5"><td><div class="yk-cell"><div class="yk-mark"><i class="fa-solid fa-helmet-safety"></i></div><div class="yk-info"><b>Merkez Şantiye</b><span>Öz kadro</span></div></div></td><td><span class="gstat yk-tur-badge off">Yapıtaş</span></td><td class="num yk-num">11</td><td class="num yk-num">12</td><td class="num yk-num">5</td><td class="num"><span class="yk-total">28</span></td><td class="num yk-tutar">₺2.005</td></tr></tbody>
@@ -234,6 +267,7 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
 <script>
 (function(){
   if(!window.GV) return;
+  var ykFd = null, ykColsHandle = null;
 
   /* ---- mock yemekhane verisi — kişi sayıları şantiye kadrosu + taşeron ekipleriyle tutarlı
      (bkz. shell.js kanonik yorum bloğu: VK ~35 · Liman ~22 · Merkez ~12).
@@ -266,17 +300,18 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
       tasToplam += toplam;
       tas.kahvalti += y.kahvalti; tas.ogle += y.ogle; tas.aksam += y.aksam;
     }
-    html += '<tr class="'+(y.tip === 'tas' ? 'is-tas' : '')+'" data-firma="'+y.firma+'" data-kahvalti="'+y.kahvalti+'" data-ogle="'+y.ogle+'" data-aksam="'+y.aksam+'">';
-    html += '<td><div class="yk-cell"><div class="yk-mark'+(y.tip==='tas'?' tas':'')+'"><i class="fa-solid '+y.ic+'"></i></div>'
+    var ykSantiye = y.tip === 'oz' ? y.ad : y.santiye;
+    html += '<tr class="'+(y.tip === 'tas' ? 'is-tas' : '')+'" data-firma="'+y.firma+'" data-santiye="'+ykSantiye+'" data-kahvalti="'+y.kahvalti+'" data-ogle="'+y.ogle+'" data-aksam="'+y.aksam+'">';
+    html += '<td data-col="yer"><div class="yk-cell"><div class="yk-mark'+(y.tip==='tas'?' tas':'')+'"><i class="fa-solid '+y.ic+'"></i></div>'
           + '<div class="yk-info"><b>'+y.ad+'</b>'
           + (y.tip==='tas' ? '<span>Taşeron ekibi · '+y.santiye+' · <a href="crm-operasyon-taseron-puantaj.html" class="yk-tp-link">Puantaj <i class="fa-solid fa-arrow-right"></i></a></span>' : '<span>Öz kadro</span>')
           + '</div></div></td>';
-    html += '<td><span class="gstat yk-tur-badge '+(y.tip==='tas'?'info':'off')+'">'+(y.tip==='tas'?'Taşeron':'Yapıtaş')+'</span></td>';
-    html += '<td class="num yk-num">'+y.kahvalti+'</td>';
-    html += '<td class="num yk-num">'+y.ogle+'</td>';
-    html += '<td class="num yk-num">'+y.aksam+'</td>';
-    html += '<td class="num"><span class="yk-total">'+toplam+'</span></td>';
-    html += '<td class="num yk-tutar">'+trTl(tutar(y))+'</td>';
+    html += '<td data-col="tur"><span class="gstat yk-tur-badge '+(y.tip==='tas'?'info':'off')+'">'+(y.tip==='tas'?'Taşeron':'Yapıtaş')+'</span></td>';
+    html += '<td class="num yk-num" data-col="kahvalti">'+y.kahvalti+'</td>';
+    html += '<td class="num yk-num" data-col="ogle">'+y.ogle+'</td>';
+    html += '<td class="num yk-num" data-col="aksam">'+y.aksam+'</td>';
+    html += '<td class="num" data-col="toplam"><span class="yk-total">'+toplam+'</span></td>';
+    html += '<td class="num yk-tutar" data-col="tutar">'+trTl(tutar(y))+'</td>';
     html += '</tr>';
   });
   body.innerHTML = html;
@@ -302,11 +337,20 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
      yeniden hesaplar. Şef budaması (aşağıda) DOM'dan satır silmeden önce çalışsa da
      recomputeFooter her zaman DOM'daki mevcut satırlardan okur — sıraya duyarsız. ---- */
   var ftLabel = document.getElementById('ftLabel');
+  var ykCurFil = 'tum';
+  var ykSearchInp = document.getElementById('ykSearchInp');
+  /* V3A — arama kutusu ve firma chip'i AYNI motoru (recomputeFooter) besler; ui.js'in
+     genel data-table-search kablolaması KASITLI kullanılmaz (K-220: iki bağımsız
+     motorun aynı satırlara çakışarak yazması önlenir, bkz. yukarı yorum). */
   function recomputeFooter(fil){
+    ykCurFil = fil;
+    var term = (ykSearchInp ? ykSearchInp.value : '').trim().toLocaleLowerCase('tr');
     var rows = Array.prototype.slice.call(document.querySelectorAll('#tblYemek tbody tr'));
     var s = {kahvalti:0, ogle:0, aksam:0};
     rows.forEach(function(tr){
-      var show = fil === 'tum' || tr.getAttribute('data-firma') === fil;
+      var okFil = fil === 'tum' || tr.getAttribute('data-firma') === fil;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okFil && okTerm;
       tr.hidden = !show;
       if(show){
         s.kahvalti += +tr.getAttribute('data-kahvalti');
@@ -322,6 +366,10 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
     document.getElementById('ftToplam').textContent = toplam;
     document.getElementById('ftTutar').textContent = trTl(maliyet);
     ftLabel.textContent = fil === 'tum' ? 'Genel Toplam' : (FIRMA_LBL[fil] + ' Toplamı — filtrelenmiş görünüm');
+    /* Gelişmiş Filtre (Şantiye) mevcut tr.hidden durumuyla AND çalışır (gvFpMakeEngine) —
+       satır sayısı değiştiğinde yeniden uygulanmalı. */
+    if(ykFd) ykFd.refresh();
+    if(ykColsHandle) ykColsHandle.apply();
   }
   document.querySelectorAll('#ykChips .chip[data-yfilter]').forEach(function(ch){
     ch.addEventListener('click', function(){
@@ -330,6 +378,7 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
       recomputeFooter(ch.getAttribute('data-yfilter'));
     });
   });
+  if(ykSearchInp) ykSearchInp.addEventListener('input', function(){ recomputeFooter(ykCurFil); });
 
   function renderMaliyet(toplam, oz, tasT, tasOgun, kisi){
     var strip = document.getElementById('maliyetStrip');
@@ -442,6 +491,38 @@ tfoot .yk-tutar-total{font-weight:800;color:var(--ink);font-variant-numeric:tabu
     var yalitimChip = document.querySelector('#ykChips .chip[data-yfilter="yalitim"]');
     if(yalitimChip) yalitimChip.hidden = true;
   }
+
+  /* V3A — Gelişmiş Filtre (§4.3: Şantiye) + Kolonlar (§4.4). `table` VERİLİR;
+     engine'in kendi gv-fp-hide otomatiği mevcut tr.hidden (recomputeFooter) durumuyla
+     AND çalışır (gvFpMakeEngine "if(row.hidden) ok=false" — iki motor ÇAKIŞMAZ). */
+  if(window.gvFilterDrawer){
+    ykFd = gvFilterDrawer.init({
+      mount: '#ykFiltreBtn',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#ykAchips',
+      table: '#tblYemek',
+      fields: [
+        {key:'santiye', type:'select', label:'Şantiye', options:['Vadi Konakları', 'Liman Lojistik Merkezi', 'Merkez Şantiye']}
+      ]
+    });
+  }
+  if(window.gvCols && document.getElementById('ykColsBtn')){
+    ykColsHandle = gvCols.init({
+      mount: '#ykColsBtn',
+      table: '#tblYemek',
+      screen: 'yemekhane',
+      cols: [
+        {key:'yer', lbl:'Yer', def:true},
+        {key:'tur', lbl:'Tür', def:true},
+        {key:'kahvalti', lbl:'Kahvaltı', def:true},
+        {key:'ogle', lbl:'Öğle', def:true},
+        {key:'aksam', lbl:'Akşam', def:true},
+        {key:'toplam', lbl:'Toplam', def:true},
+        {key:'tutar', lbl:'Tutar', def:true}
+      ]
+    });
+  }
+  if(window.gvExport) gvExport.bind();
 })();
 </script>
 </body>

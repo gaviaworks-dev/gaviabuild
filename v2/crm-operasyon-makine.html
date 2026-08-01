@@ -106,7 +106,6 @@
       </div>
       <div class="ph-actions">
         <button class="btn btn-ghost btn-sm" id="btnMakineGunluk" type="button" data-no-confirm aria-expanded="false" aria-controls="mkEditBar"><i class="fa-solid fa-list-check"></i> Günlük Giriş</button>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Makine puantajı"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-operasyon-makine-form.html"><i class="fa-solid fa-plus"></i> Puantaj Ekle</a>
       </div>
     </div>
@@ -142,30 +141,58 @@
           <button type="button" class="btn btn-acc btn-sm" id="btnMakineKaydet" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Kaydet</button>
         </div>
       </div>
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Makine, MKN no veya operatör ara" data-table-search="#tblMakine">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
+           .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
+           çipleri) → .lh-tabs (durum sekmeleri). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Makine, MKN no veya operatör ara" data-table-search="#tblMakine">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="mkFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="mkColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Makine puantajı" aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div class="chips" data-target="#tblMakine">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
-          <button class="chip" data-filter="calisti">Çalışıyor <span class="ch-cnt">4</span></button>
-          <button class="chip" data-filter="bosta">Boşta <span class="ch-cnt">1</span></button>
-          <button class="chip" data-filter="arizali">Arızalı <span class="ch-cnt">1</span></button>
+        <div class="lh-achips gv-achips-row" id="mkAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblMakine">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">6</span></button>
+              <button class="chip" data-filter="calisti">Çalışıyor <span class="ch-cnt">4</span></button>
+              <button class="chip" data-filter="bosta">Boşta <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="arizali">Arızalı <span class="ch-cnt">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblMakine">
           <thead>
             <tr>
-              <th>Makine</th>
-              <th class="col-santiye">Şantiye</th>
-              <th class="col-op">Operatör</th>
-              <th class="col-saat num">Bugün</th>
-              <th class="col-not">Not</th>
-              <th class="col-durum">Durum</th>
-              <th class="col-yakit">Yakıt</th>
-              <th class="col-bakim">Son Bakım</th>
+              <th data-col="makine">Makine</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th class="col-op" data-col="operator">Operatör</th>
+              <th class="col-saat num" data-col="saat">Bugün</th>
+              <th class="col-not" data-col="not">Not</th>
+              <th class="col-durum" data-col="durum">Durum</th>
+              <th class="col-yakit" data-col="yakit">Yakıt</th>
+              <th class="col-bakim" data-col="bakim">Son Bakım</th>
               <th class="col-act"></th>
             </tr>
           </thead>
@@ -264,30 +291,30 @@
        interceptor'ı (ortak ui.js) satırdaki ilk <td>'nin textContent'ini onay
        diyaloğunda isim olarak kullanıyor; boşluksuz halde "Forklift Toyota
        8FD25MKN-05Öz Mal" gibi bitişik/okunmaz bir metin üretiyordu. */
-    html += '<td><div class="mk-cell"><div class="mk-mark" style="background:'+tint.bg+';color:'+tint.fg+'"><i class="fa-solid fa-truck-pickup"></i></div>'
+    html += '<td data-col="makine"><div class="mk-cell"><div class="mk-mark" style="background:'+tint.bg+';color:'+tint.fg+'"><i class="fa-solid fa-truck-pickup"></i></div>'
           + '<div class="mk-info"><b title="'+escAttr(m.ad)+'">'+m.ad+'</b> <span class="mk-no">'+m.no+'</span><br>'
           + '<span class="own '+own.cls+'"><i class="fa-solid '+own.ic+'"></i> '+own.lbl+'</span></div></div></td>';
-    html += '<td>'+SANTIYE_ADI[m.santiye]+'</td>';
+    html += '<td data-col="santiye">'+SANTIYE_ADI[m.santiye]+'</td>';
     if(editing && !locked){
-      html += '<td class="mk-edtd"><input type="text" class="mk-ed-input" data-fld="operator" value="'+escAttr(m.operator)+'" aria-label="'+m.no+' operatör"></td>';
-      html += '<td class="num mk-edtd"><input type="number" min="0" max="24" step="0.5" class="mk-ed-input mk-ed-saat" data-fld="saat" value="'+m.saat+'" aria-label="'+m.no+' bugünkü saat"></td>';
+      html += '<td class="mk-edtd" data-col="operator"><input type="text" class="mk-ed-input" data-fld="operator" value="'+escAttr(m.operator)+'" aria-label="'+m.no+' operatör"></td>';
+      html += '<td class="num mk-edtd" data-col="saat"><input type="number" min="0" max="24" step="0.5" class="mk-ed-input mk-ed-saat" data-fld="saat" value="'+m.saat+'" aria-label="'+m.no+' bugünkü saat"></td>';
     } else {
-      html += '<td>'+m.operator+'</td>';
-      html += '<td class="num"><div class="mk-saat">'+fmtSaat(m.saat)+' sa</div></td>';
+      html += '<td data-col="operator">'+m.operator+'</td>';
+      html += '<td class="num" data-col="saat"><div class="mk-saat">'+fmtSaat(m.saat)+' sa</div></td>';
     }
-    html += '<td><span class="mk-not" title="'+escAttr(m.not)+'">'+m.not+'</span></td>';
+    html += '<td data-col="not"><span class="mk-not" title="'+escAttr(m.not)+'">'+m.not+'</span></td>';
     if(editing && !locked){
-      html += '<td class="mk-edtd"><select class="mk-ed-input" data-fld="durum" aria-label="'+m.no+' bugünkü durum">'
+      html += '<td class="mk-edtd" data-col="durum"><select class="mk-ed-input" data-fld="durum" aria-label="'+m.no+' bugünkü durum">'
             + '<option value="calisti"'+(m.durum==='calisti'?' selected':'')+'>Çalıştı</option>'
             + '<option value="bosta"'+(m.durum==='bosta'?' selected':'')+'>Çalışmadı</option>'
             + '</select></td>';
     } else if(editing && locked){
-      html += '<td><span class="gstat '+d.cls+'">'+d.lbl+'</span><div class="mk-ed-note">Serviste — günlük giriş yapılamaz</div></td>';
+      html += '<td data-col="durum"><span class="gstat '+d.cls+'">'+d.lbl+'</span><div class="mk-ed-note">Serviste — günlük giriş yapılamaz</div></td>';
     } else {
-      html += '<td><span class="gstat '+d.cls+'">'+d.lbl+'</span></td>';
+      html += '<td data-col="durum"><span class="gstat '+d.cls+'">'+d.lbl+'</span></td>';
     }
-    html += '<td><div class="mk-fuel">'+(m.yakitVal==='—' ? '<span class="mk-dash">—</span>' : m.yakitVal)+(m.yakitNot ? '<span>'+m.yakitNot+'</span>' : '')+'</div></td>';
-    html += '<td><div class="mk-bakim">'+(m.bakimVal==='—' ? '<span class="mk-dash">—</span>' : m.bakimVal)+(m.bakimNot ? '<span>'+m.bakimNot+'</span>' : '')+'</div></td>';
+    html += '<td data-col="yakit"><div class="mk-fuel">'+(m.yakitVal==='—' ? '<span class="mk-dash">—</span>' : m.yakitVal)+(m.yakitNot ? '<span>'+m.yakitNot+'</span>' : '')+'</div></td>';
+    html += '<td data-col="bakim"><div class="mk-bakim">'+(m.bakimVal==='—' ? '<span class="mk-dash">—</span>' : m.bakimVal)+(m.bakimNot ? '<span>'+m.bakimNot+'</span>' : '')+'</div></td>';
     html += '<td><div class="row-acts">'
           + '<button type="button" class="ia-btn" data-no-confirm onclick="window.gvMakineDuzenle(\''+m.no+'\')" aria-label="'+m.no+' düzenle"><i class="fa-solid fa-pen"></i></button>'
           + '<button type="button" class="ia-btn danger" onclick="window.gvMakineSil(\''+m.no+'\')" aria-label="'+m.no+' sil"><i class="fa-solid fa-trash"></i></button>'
@@ -331,7 +358,12 @@
     }
     refreshCounts();
     reapplyFilter();
+    /* V3A — tbody her render()'da TAMAMEN yeniden basıldığı için Gelişmiş Filtre/
+       Kolonlar durumu yeni satırlara elle yeniden uygulanır. */
+    if(mkFd) mkFd.refresh();
+    if(mkColsHandle) mkColsHandle.apply();
   }
+  var mkFd = null, mkColsHandle = null;
 
   function refreshCounts(){
     var rows = document.querySelectorAll('#tblMakine tbody tr');
@@ -396,6 +428,41 @@
   });
 
   render();
+
+  /* V3A — Gelişmiş Filtre (§4.3: Şantiye, tablodaki gerçek data-santiye ekseni) +
+     Kolonlar (§4.4). cfg.table VERİLİR — bu sayfada satır görünürlüğü tek bir
+     bileşik motora bağlı değil (yalnız arama+chip, K-220 riski yok), engine'in
+     kendi gv-fp-hide otomatiği güvenle kullanılabilir. */
+  if(window.gvFilterDrawer){
+    mkFd = gvFilterDrawer.init({
+      mount: '#mkFiltreBtn',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#mkAchips',
+      table: '#tblMakine',
+      fields: [
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'}, {v:'merkez', l:'Merkez Şantiye'}
+        ]}
+      ]
+    });
+  }
+  if(window.gvCols && document.getElementById('mkColsBtn')){
+    mkColsHandle = gvCols.init({
+      mount: '#mkColsBtn',
+      table: '#tblMakine',
+      screen: 'makine',
+      cols: [
+        {key:'makine', lbl:'Makine', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'operator', lbl:'Operatör', def:true},
+        {key:'saat', lbl:'Bugün (saat)', def:true},
+        {key:'not', lbl:'Not', def:true},
+        {key:'durum', lbl:'Durum', def:true},
+        {key:'yakit', lbl:'Yakıt', def:true},
+        {key:'bakim', lbl:'Son Bakım', def:true}
+      ]
+    });
+  }
 })();
 </script>
 </body>

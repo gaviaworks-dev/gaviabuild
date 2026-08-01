@@ -180,26 +180,67 @@
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-code-compare"></i> Karşılaştırma — <span id="mtSantiye">Vadi Konakları</span> · 01–15 Temmuz 2026</div>
       </div>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Şantiye
+           kapsamı bu sayfada zaten yukarıdaki .ks-grid kart seçicisiyle belirlenir (tüm
+           KPI+tablo+geçmiş bölümünü etkileyen sayfa-seviyesi kapsam seçici, K-308 ile aynı
+           gerekçe) — bu yüzden Gelişmiş Filtre'ye ikinci bir "Şantiye" alanı EKLENMEDİ;
+           yerine tablodaki gerçek bir sayısal eksen olan "Tutar Aralığı" kullanıldı. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Kayıt no veya açıklama ara" data-table-search="#tblMt">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="mtFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="mtColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Kasa mutabakatı karşılaştırma","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="mtAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblMt">
+              <button class="chip is-on" data-filter="hepsi">Tümü</button>
+              <button class="chip" data-filter="eslesti">Eşleşti</button>
+              <button class="chip" data-filter="farkli">Fark Var</button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblMt">
           <thead>
             <tr>
-              <th>Kayıt</th>
-              <th>Açıklama</th>
-              <th class="num">Şantiye Defteri</th>
-              <th class="num">Muhasebe Kaydı</th>
-              <th class="num">Fark</th>
-              <th>Durum</th>
+              <th data-col="kayit">Kayıt</th>
+              <th data-col="aciklama">Açıklama</th>
+              <th class="num" data-col="defter">Şantiye Defteri</th>
+              <th class="num" data-col="muhasebe">Muhasebe Kaydı</th>
+              <th class="num" data-col="fark">Fark</th>
+              <th data-col="durum">Durum</th>
             </tr>
           </thead>
           <!-- statik bake (D18-B2) — Vadi Konakları varsayılanı; JS load'da renderRows()
                AYNI MT.vadi.rows veri kaynağından yeniden basar (kasa.html df-mobile-list
                emsali) — bake ile JS çıktısı birebir aynı olmalı, senkronsuzluk YOK. -->
           <tbody id="mtRows">
-            <tr><td class="mt-kayit">KSG-2026-007</td><td class="mt-desc">Genel merkez kasa beslemesi</td><td class="num">₺120.000</td><td class="num">₺120.000</td><td class="num mt-eslesti">₺0</td><td><i class="fa-solid fa-circle-check mt-eslesti"></i> Eşleşti</td></tr>
-            <tr><td class="mt-kayit">KSG-2026-008</td><td class="mt-desc">Körfez GYO ek iş bedeli tahsilatı</td><td class="num">₺66.400</td><td class="num">₺66.400</td><td class="num mt-eslesti">₺0</td><td><i class="fa-solid fa-circle-check mt-eslesti"></i> Eşleşti</td></tr>
-            <tr><td class="mt-kayit">KSA-2026-023…020</td><td class="mt-desc">1-2 Temmuz gün-sonu giderleri (16 kayıt, onaylı)</td><td class="num">₺133.930 çıkış</td><td class="num">₺133.930 çıkış</td><td class="num mt-eslesti">₺0</td><td><i class="fa-solid fa-circle-check mt-eslesti"></i> Eşleşti</td></tr>
-            <tr><td class="mt-kayit">KSA-2026-021</td><td class="mt-desc">Nakliye + işçilik avansı — onay bekliyor</td><td class="num">₺18.400 çıkış</td><td class="num mt-yok">—</td><td class="num mt-farkli">₺18.400</td><td><i class="fa-solid fa-triangle-exclamation mt-farkli"></i> Fark Var</td></tr>
+            <tr data-f="eslesti" data-tutar="120000"><td class="mt-kayit" data-col="kayit">KSG-2026-007</td><td class="mt-desc" data-col="aciklama">Genel merkez kasa beslemesi</td><td class="num" data-col="defter">₺120.000</td><td class="num" data-col="muhasebe">₺120.000</td><td class="num mt-eslesti" data-col="fark">₺0</td><td data-col="durum"><i class="fa-solid fa-circle-check mt-eslesti"></i> Eşleşti</td></tr>
+            <tr data-f="eslesti" data-tutar="66400"><td class="mt-kayit" data-col="kayit">KSG-2026-008</td><td class="mt-desc" data-col="aciklama">Körfez GYO ek iş bedeli tahsilatı</td><td class="num" data-col="defter">₺66.400</td><td class="num" data-col="muhasebe">₺66.400</td><td class="num mt-eslesti" data-col="fark">₺0</td><td data-col="durum"><i class="fa-solid fa-circle-check mt-eslesti"></i> Eşleşti</td></tr>
+            <tr data-f="eslesti" data-tutar="133930"><td class="mt-kayit" data-col="kayit">KSA-2026-023…020</td><td class="mt-desc" data-col="aciklama">1-2 Temmuz gün-sonu giderleri (16 kayıt, onaylı)</td><td class="num" data-col="defter">₺133.930 çıkış</td><td class="num" data-col="muhasebe">₺133.930 çıkış</td><td class="num mt-eslesti" data-col="fark">₺0</td><td data-col="durum"><i class="fa-solid fa-circle-check mt-eslesti"></i> Eşleşti</td></tr>
+            <tr data-f="farkli" data-tutar="18400"><td class="mt-kayit" data-col="kayit">KSA-2026-021</td><td class="mt-desc" data-col="aciklama">Nakliye + işçilik avansı — onay bekliyor</td><td class="num" data-col="defter">₺18.400 çıkış</td><td class="num mt-yok" data-col="muhasebe">—</td><td class="num mt-farkli" data-col="fark">₺18.400</td><td data-col="durum"><i class="fa-solid fa-triangle-exclamation mt-farkli"></i> Fark Var</td></tr>
           </tbody>
         </table>
         <div class="mt-mobile-list" id="mtRowsMobile">
@@ -293,6 +334,9 @@
   var DURUM_LBL = { eslesti:{cls:'mt-eslesti', ic:'fa-circle-check', txt:'Eşleşti'}, farkli:{cls:'mt-farkli', ic:'fa-triangle-exclamation', txt:'Fark Var'} };
 
   var approvedSet = {};   /* [MOCK] oturum-lokal */
+  var mtFd = null, mtColsHandle = null;
+
+  function parseTutar(s){ var n = parseInt(String(s).replace(/[^0-9]/g, ''), 10); return isNaN(n) ? 0 : n; }
 
   function renderRows(d){
     var tbody = document.getElementById('mtRows');
@@ -301,12 +345,14 @@
     d.rows.forEach(function(r){
       var v = DURUM_LBL[r.durum];
       var tr = document.createElement('tr');
-      tr.innerHTML = '<td class="mt-kayit">' + r.kayit + '</td>'
-        + '<td class="mt-desc">' + r.desc + '</td>'
-        + '<td class="num">' + r.d + '</td>'
-        + '<td class="num' + (r.m === '—' ? ' mt-yok' : '') + '">' + r.m + '</td>'
-        + '<td class="num ' + v.cls + '">' + r.f + '</td>'
-        + '<td><i class="fa-solid ' + v.ic + ' ' + v.cls + '"></i> ' + v.txt + '</td>';
+      tr.setAttribute('data-f', r.durum);
+      tr.setAttribute('data-tutar', parseTutar(r.d));
+      tr.innerHTML = '<td class="mt-kayit" data-col="kayit">' + r.kayit + '</td>'
+        + '<td class="mt-desc" data-col="aciklama">' + r.desc + '</td>'
+        + '<td class="num" data-col="defter">' + r.d + '</td>'
+        + '<td class="num' + (r.m === '—' ? ' mt-yok' : '') + '" data-col="muhasebe">' + r.m + '</td>'
+        + '<td class="num ' + v.cls + '" data-col="fark">' + r.f + '</td>'
+        + '<td data-col="durum"><i class="fa-solid ' + v.ic + ' ' + v.cls + '"></i> ' + v.txt + '</td>';
       tbody.appendChild(tr);
 
       var card = document.createElement('div');
@@ -317,6 +363,12 @@
         + '<div class="mt-mrow-cols"><span>Şantiye<b>' + r.d + '</b></span><span>Muhasebe<b>' + r.m + '</b></span><span>Fark<b class="' + v.cls + '">' + r.f + '</b></span></div>';
       mobile.appendChild(card);
     });
+    /* V3A — tbody her şantiye seçiminde TAMAMEN yeniden basıldığı için arama/chip/
+       Gelişmiş Filtre/Kolonlar durumu yeni satırlara elle yeniden uygulanır. */
+    var tbl = document.getElementById('tblMt');
+    if(window.gvApplyFilters) gvApplyFilters(tbl, false);
+    if(mtFd) mtFd.refresh();
+    if(mtColsHandle) mtColsHandle.apply();
   }
 
   function render(ks){
@@ -378,6 +430,38 @@
       }
     });
   });
+
+  /* V3A — Gelişmiş Filtre (§4.3: Tutar Aralığı, Şantiye Defteri kolonunun gerçek
+     sayısal karşılığı) + Kolonlar (§4.4). table VERİLİR — bu tabloda satır
+     görünürlüğü tek bir bileşik motora bağlı değil (arama+chip standart delegasyon),
+     engine'in gv-fp-hide otomatiği güvenle kullanılabilir. */
+  if(window.gvFilterDrawer){
+    mtFd = gvFilterDrawer.init({
+      mount: '#mtFiltreBtn',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#mtAchips',
+      table: '#tblMt',
+      fields: [
+        {key:'tutar', type:'numrange', label:'Tutar Aralığı', prefix:'₺'}
+      ]
+    });
+  }
+  if(window.gvCols && document.getElementById('mtColsBtn')){
+    mtColsHandle = gvCols.init({
+      mount: '#mtColsBtn',
+      table: '#tblMt',
+      screen: 'kasa-mutabakat',
+      cols: [
+        {key:'kayit', lbl:'Kayıt', def:true},
+        {key:'aciklama', lbl:'Açıklama', def:true},
+        {key:'defter', lbl:'Şantiye Defteri', def:true},
+        {key:'muhasebe', lbl:'Muhasebe Kaydı', def:true},
+        {key:'fark', lbl:'Fark', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
+  if(window.gvExport) gvExport.bind();
 })();
 </script>
 </body>

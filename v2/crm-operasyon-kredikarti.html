@@ -183,7 +183,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         <div class="ph-sub">4 firma kartı · kart bazlı harcama, limit ve ekstre takibi</div>
       </div>
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="crm-operasyon-kredikarti-cikti.html?banka=hepsi" id="btnKkCikti"><i class="fa-solid fa-print"></i> Çıktı Al</a>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-kredikarti-kart-form.html" data-view="karttanim" hidden><i class="fa-solid fa-credit-card"></i> Yeni Kart</a>
         <a class="btn btn-acc btn-sm" href="crm-operasyon-kredikarti-form.html" data-view="olusturabilir" hidden><i class="fa-solid fa-plus"></i> Harcama Kaydı</a>
       </div>
@@ -233,63 +232,80 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <span class="df-donem"><i class="fa-solid fa-calendar-days"></i> 18 Haziran – 2 Temmuz 2026 · cari ekstre dönemi</span>
         </div>
       </div>
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <div class="fb-search" style="max-width:360px">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3).
+           Banka/Durum/Tarih hızlı filtreleri + gvFilterPanel'in kart/şantiye/personel/
+           kategori/belge/onay alanları HEPSİ applyFilter()'ın AYNI tek motoruna akar
+           (K-220 dersi) — yalnız kabuk .gv-listhead'e taşındı, davranış DEĞİŞMEDİ. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="kkSearch" placeholder="Kayıt no, banka veya satıcı ara">
           </div>
-          <!-- [§9/T-G1] sağ off-canvas gelişmiş filtre — mevcut banka/durum/tarih hızlı
-               filtreleriyle AND mantığıyla birlikte çalışır (tasks/spec-filtre-tarih.md §3) -->
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpKK">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" id="colsBtnKK"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Banka</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="kkBankaChips">
-              <button class="chip is-on" data-banka="hepsi">Tümü <span class="ch-cnt">16</span></button>
-              <button class="chip" data-banka="garanti">Garanti BBVA <span class="ch-cnt">7</span></button>
-              <button class="chip" data-banka="akbank">Akbank <span class="ch-cnt">4</span></button>
-              <button class="chip" data-banka="is">İş Bankası <span class="ch-cnt">3</span></button>
-              <button class="chip" data-banka="ykb">Yapı Kredi <span class="ch-cnt">2</span></button>
-            </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-          <!-- [§17] Arşivlenen kart varsayılan şeritte/chip'te görünmez — bu anahtarla gösterilir -->
-          <button type="button" class="chip" id="kkArsivToggle" aria-pressed="false"><i class="fa-solid fa-box-archive"></i> Arşivlenenleri Göster</button>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Durum</span>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="kkDurumChips">
-              <button class="chip is-on" data-durum="hepsi">Tümü</button>
-              <button class="chip" data-durum="ok">Kayıtlı</button>
-              <button class="chip" data-durum="onaylandi">Onaylandı</button>
-              <button class="chip" data-durum="bekliyor">Onay Bekliyor</button>
-            </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpKK" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnKK" aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <label class="lh-toggle" for="kkArsivToggle">
+              <input type="checkbox" id="kkArsivToggle">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="crm-operasyon-kredikarti-cikti.html?banka=hepsi" id="btnKkCikti" aria-label="Çıktı Al"><i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span></a>
           </div>
         </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Tarih Aralığı</span>
-          <div id="kkDateRange"></div>
+        <!-- [§9/T-G1] aktif filtre çipleri — gvFilterPanel tarafından doldurulur, filtre yokken hidden -->
+        <div class="lh-achips gv-achips-row" id="achipsKK" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
         </div>
-      </div>
-      <!-- [§9/T-G1] aktif filtre çipleri — gvFilterPanel tarafından doldurulur, filtre yokken hidden -->
-      <div class="gv-achips-row" id="achipsKK" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-tabs">
+          <!-- 3 sıra (Banka/Durum/Tarih) tek flex-item olarak .lh-tabs'a verilir — .lh-tabs
+               yatay tek-satır flex konteynerdir (yalnız TEK gv-chipbar-wrap için tasarlı);
+               birden çok .filter-row'u kendi içinde DİKEY yığmak için mevcut sayfa-lokal
+               `.filter-bar.stack{display:block}` kuralı (K-220 öncesi, DOKUNULMADI) yeniden
+               kullanılır — yalnız width:100% eklendi, çünkü artık üstteki flex-item genişliği
+               içerik-genişliğine değil .lh-tabs'ın verdiği alana göre belirlenmeli. -->
+          <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
+          <div class="filter-row">
+            <span class="frow-lbl">Banka</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="kkBankaChips">
+                <button class="chip is-on" data-banka="hepsi">Tümü <span class="ch-cnt">16</span></button>
+                <button class="chip" data-banka="garanti">Garanti BBVA <span class="ch-cnt">7</span></button>
+                <button class="chip" data-banka="akbank">Akbank <span class="ch-cnt">4</span></button>
+                <button class="chip" data-banka="is">İş Bankası <span class="ch-cnt">3</span></button>
+                <button class="chip" data-banka="ykb">Yapı Kredi <span class="ch-cnt">2</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="filter-row">
+            <span class="frow-lbl">Durum</span>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="kkDurumChips">
+                <button class="chip is-on" data-durum="hepsi">Tümü</button>
+                <button class="chip" data-durum="ok">Kayıtlı</button>
+                <button class="chip" data-durum="onaylandi">Onaylandı</button>
+                <button class="chip" data-durum="bekliyor">Onay Bekliyor</button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+          <div class="filter-row">
+            <span class="frow-lbl">Tarih Aralığı</span>
+            <div id="kkDateRange"></div>
+          </div>
+          </div>
         </div>
       </div>
       <div class="kk-bulk-bar" id="kkBulkBar" hidden>
@@ -860,10 +876,8 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     });
   });
   var kkArsivToggle = document.getElementById('kkArsivToggle');
-  kkArsivToggle.addEventListener('click', function(){
-    showArsivKart = !showArsivKart;
-    kkArsivToggle.classList.toggle('is-on', showArsivKart);
-    kkArsivToggle.setAttribute('aria-pressed', String(showArsivKart));
+  kkArsivToggle.addEventListener('change', function(){
+    showArsivKart = kkArsivToggle.checked;
     renderStrip();
     syncBankaChipsVisibility();
     syncBankaUI();

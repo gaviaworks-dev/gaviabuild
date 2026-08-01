@@ -378,12 +378,9 @@ th.is-today .dh-d{color:var(--acc-ink)}
         <div class="ph-sub" id="ptSub">7 personel · Vadi Konakları · 29 Haziran – 5 Temmuz 2026</div>
       </div>
       <div class="ph-actions" data-tab-panel-actions="bireysel">
-        <a class="btn btn-ghost btn-sm" href="crm-operasyon-puantaj-form.html"><i class="fa-solid fa-plus"></i> Puantaj Ekle</a>
-        <button class="btn btn-ghost btn-sm" id="btnHaftalikCikti" type="button" data-no-confirm><i class="fa-solid fa-print"></i> Puantaj Çıktısı Al</button>
         <button class="btn btn-ghost btn-sm" id="btnGetirToggle" type="button" data-no-confirm aria-expanded="false" aria-controls="getirCard"><i class="fa-solid fa-people-arrows"></i> Personel Getir</button>
         <button class="btn btn-acc btn-sm" id="btnGunlukToggle" type="button" data-no-confirm aria-expanded="false" aria-controls="gunlukCard"><i class="fa-solid fa-list-check"></i> Günlük Giriş</button>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpPuantaj"><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</button>
-        <button type="button" class="btn btn-ghost btn-sm" id="colsBtnPuantaj"><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
+        <a class="btn btn-ghost btn-sm" href="crm-operasyon-puantaj-form.html"><i class="fa-solid fa-plus"></i> Puantaj Ekle</a>
       </div>
     </div>
 
@@ -590,6 +587,31 @@ th.is-today .dh-d{color:var(--acc-ink)}
           <button class="ia-btn" id="ptPrev" aria-label="Önceki hafta" data-no-confirm><i class="fa-solid fa-chevron-left"></i></button>
           <span class="pt-week-lbl" id="ptWeekLbl">29 Haziran – 5 Temmuz 2026</span>
           <button class="ia-btn" id="ptNext" aria-label="Sonraki hafta" data-no-confirm><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Şantiye
+           seçici + hafta navigasyonu (.pt-toolbar) KORUNUR (sayfa-seviyesi kapsam seçici,
+           kasa.html'deki dönem-row ile aynı gerekçe). Arama, ui.js'in genel data-table-search
+           kablolamasını KASITLI KULLANMAZ — applyPtFpFilters() zaten Bireysel+Taşeron'u
+           BİRLİKTE süzen tek bileşik motor (K-220 dersi); arama terimi de doğrudan o motora
+           eklendi (fpSearchTerm). Bu tabloda mevcut durum eksenini (data-durum-bugun)
+           Gelişmiş Filtre'nin "Çalışma Durumu" alanı zaten karşılıyor — ikinci bir chip-tab
+           EKLENMEDİ (aynı ekseni iki kontrolde durdurmama ilkesi, K-306b). Şeritteki aktif
+           filtre çipleri (#achipsPuantaj) Bireysel/Taşeron İKİ sekmede de ORTAK göründüğü
+           için sayfa kökünde (KPI'dan önce) KALDI — buraya taşınsaydı yalnız Bireysel
+           sekmesinde görünür olur, paylaşılan davranış bozulurdu. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="ptSearchInp" placeholder="Personel adı veya görev ara">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpPuantaj" aria-label="Gelişmiş Filtre"><i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span></button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnPuantaj" aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <button class="btn btn-ghost btn-sm" id="btnHaftalikCikti" type="button" data-no-confirm aria-label="Çıktı Al"><i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span></button>
+            <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Puantaj listesi","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span></a>
+          </div>
         </div>
       </div>
       <div class="pt-bulkbar" id="ptBulkBar" hidden>
@@ -1058,7 +1080,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
      ONApply ile o motoru sürer (şantiye/tip) veya render() sonrası ikinci bir süzme
      katmanı (durum/departman) uygular. Tarih aralığı grid'i hiç değiştirmez — yalnız
      §11.2 Çıktı Al modaline taşınır (bkz. openCiktiModal). ---- */
-  var fpSantiye = '', fpTip = '', fpDurum = '', fpDep = '', fpTarihAraligi = null;
+  var fpSantiye = '', fpTip = '', fpDurum = '', fpDep = '', fpTarihAraligi = null, fpSearchTerm = '';
   function ptDepartmanOf(poz){ return poz === 'Şantiye Şefi' ? 'sef' : 'saha'; }
   function ptFilterDayIdx(){ return WEEK === -1 ? 6 : TODAY_IDX; }
   function ptToggleFpEmpty(tbodyEl, colspan, shown, total){
@@ -1093,6 +1115,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
       var show = !(fpTip === 'taseron' || fpTip === 'tedarikci');
       if(show && fpDurum && tr.getAttribute('data-durum-bugun') !== fpDurum) show = false;
       if(show && fpDep && tr.getAttribute('data-departman') !== fpDep) show = false;
+      if(show && fpSearchTerm && tr.textContent.toLocaleLowerCase('tr').indexOf(fpSearchTerm) === -1) show = false;
       tr.hidden = !show;
       if(show) biShown++;
     });
@@ -1108,6 +1131,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
         if(show && fpSantiye && tr.getAttribute('data-santiye') !== fpSantiye) show = false;
         if(show && fpDurum && tr.getAttribute('data-durum-bugun') !== fpDurum) show = false;
         if(show && fpDep && tr.getAttribute('data-departman') !== fpDep) show = false;
+        if(show && fpSearchTerm && tr.textContent.toLocaleLowerCase('tr').indexOf(fpSearchTerm) === -1) show = false;
         tr.hidden = !show;
         if(show) tShown++;
       });
@@ -1650,6 +1674,18 @@ th.is-today .dh-d{color:var(--acc-ink)}
   render();
   renderOnayListesi();
   updateOnayCardVis();
+
+  /* V3A — arama kutusu applyPtFpFilters() TEK motoruna eklenir (K-220 dersi: ui.js'in
+     genel data-table-search kablolaması KASITLI kullanılmaz, bkz. yukarı .gv-listhead
+     yorumu). Dışa Aktar (data-gv-export) generic gvExport primitifiyle bağlanır. */
+  var ptSearchInp = document.getElementById('ptSearchInp');
+  if(ptSearchInp){
+    ptSearchInp.addEventListener('input', function(){
+      fpSearchTerm = ptSearchInp.value.trim().toLocaleLowerCase('tr');
+      applyPtFpFilters();
+    });
+  }
+  if(window.gvExport) gvExport.bind();
 
   /* ============ Taşeron puantajı — kişi bazlı (D19 revizesi, madde 5+6). Kalfa-kordon:
      5 kalfa 24 kişi sayısına DAHİLDİR, üzerine EKLENMEZ. Ekip içi sıra KANONİKTİR (Cum/Cmt
