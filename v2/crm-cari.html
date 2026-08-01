@@ -71,12 +71,9 @@
 #tblCari tbody tr[data-arsiv="1"]{display:none}
 #tblCari.gv-show-arsiv tbody tr[data-arsiv="1"]{display:table-row}
 
-/* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
-   (2) kategori chip slider KENDİ satırında (gv-chipbar-wrap block-level —
-   spec-liste-mimarisi.md §1 notu, crm-personel.html emsali BİREBİR). */
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-bar.stack .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-bar.stack .gv-chipbar-wrap{width:100%}
+/* V3A — üst alan artık ORTAK `.gv-listhead/.lh-row/.lh-search/.lh-acts/.lh-toggle/
+   .lh-achips/.lh-tabs` sınıflarıyla kurulu (ui.css) — bu sayfaya özel eski
+   `.filter-bar.stack` satır düzeni kaldırıldı (tasks/spec-v3a-ortak.md). */
 </style>
 </head>
 <body data-sec="cari" data-screen="rehber">
@@ -106,9 +103,8 @@
         <h1>Firma Rehberi</h1>
         <div class="ph-sub"><span data-table-count>12</span> cari kaydı · 3 müşteri/kurum · 2 satış müşterisi · 3 taşeron · 4 tedarikçi</div>
       </div>
-      <div class="ph-actions" data-admin-only>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Firma rehberi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-        <a class="btn btn-acc btn-sm" href="crm-cari-form.html"><i class="fa-solid fa-plus"></i> Yeni Cari</a>
+      <div class="ph-actions">
+        <a class="btn btn-acc btn-sm" href="crm-cari-form.html" data-admin-only><i class="fa-solid fa-plus"></i> Yeni Cari</a>
       </div>
     </div>
 
@@ -136,40 +132,52 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <div class="fb-search">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3) -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Firma veya ilgili kişi ara" data-table-search="#tblCari">
           </div>
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpCari">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" id="colsBtn">
-            <i class="fa-solid fa-table-columns"></i> Kolonlar
-          </button>
-        </div>
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" data-target="#tblCari">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
-            <button class="chip" data-filter="musteri">Müşteri-Kurum <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="satis">Müşteri · Satış <span class="ch-cnt">2</span></button>
-            <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="tedarikci">Tedarikçi <span class="ch-cnt">4</span></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpCari" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="cariArsivGoster">
+              <input type="checkbox" id="cariArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Firma rehberi" data-admin-only aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
           </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-      </div>
-      <div class="gv-achips-row" id="achipsCari" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-achips gv-achips-row" id="achipsCari" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblCari">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">12</span></button>
+              <button class="chip" data-filter="musteri">Müşteri-Kurum <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="satis">Müşteri · Satış <span class="ch-cnt">2</span></button>
+              <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="tedarikci">Tedarikçi <span class="ch-cnt">4</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
@@ -441,12 +449,6 @@
             <option value="tedarikci">Tedarikçi</option>
           </select>
         </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
-        </div>
       </div>
       <div class="gv-fpanel-foot">
         <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
@@ -470,7 +472,11 @@
 /* ============ §9/§17 — Gelişmiş Filtre paneli + satır arşivleme ============
    Cari Türü (data-tur) satırın zaten var olan data-f değerinden türetilir —
    yeni bir kategori icat edilmedi. Durum (data-durum) varsayılan "aktif";
-   arşivlenen cari kalıcı SİLİNMEZ, varsayılan listede gizlenir. */
+   arşivlenen cari kalıcı SİLİNMEZ, varsayılan listede gizlenir.
+   V3A — "Arşivlenenleri Göster" artık §3.2 gereği fpCari panelinden ÇIKARILDI,
+   `.lh-acts` içinde BAĞIMSIZ bir toggle (#cariArsivGoster); panelin kendi
+   apply/clear akışı bu görünürlüğü artık ETKİLEMEZ (aksi hâlde Uygula/Temizle
+   her tıklandığında toggle'ın durumunu sessizce sıfırlardı). */
 (function(){
   document.querySelectorAll('#tblCari tbody tr[data-f]').forEach(function(tr){
     tr.setAttribute('data-tur', tr.getAttribute('data-f'));
@@ -480,11 +486,17 @@
   if(window.gvFilterPanel){
     window.gvFilterPanel.init('#fpCari', {
       table: '#tblCari',
-      activeRow: '#achipsCari',
-      onApply: function(state){
-        var tbl = document.getElementById('tblCari');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
+      activeRow: '#achipsCari'
+    });
+  }
+
+  var cariArsivToggle = document.getElementById('cariArsivGoster');
+  if(cariArsivToggle){
+    cariArsivToggle.addEventListener('change', function(){
+      var tbl = document.getElementById('tblCari');
+      if(tbl) tbl.classList.toggle('gv-show-arsiv', cariArsivToggle.checked);
+      if(window.gvPagerRefresh) window.gvPagerRefresh('#tblCari', true);
+      syncCariCount();
     });
   }
 

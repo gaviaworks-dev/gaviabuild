@@ -83,9 +83,8 @@
         <h1>Kişiler</h1>
         <div class="ph-sub"><span data-table-count>10</span> ilgili kişi · 10 cari firmada birer irtibat</div>
       </div>
-      <div class="ph-actions" data-admin-only>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Kişi listesi"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-        <a class="btn btn-acc btn-sm" href="crm-cari-form.html?kayit=kisi"><i class="fa-solid fa-plus"></i> Yeni Kişi</a>
+      <div class="ph-actions">
+        <a class="btn btn-acc btn-sm" href="crm-cari-form.html?kayit=kisi" data-admin-only><i class="fa-solid fa-plus"></i> Yeni Kişi</a>
       </div>
     </div>
 
@@ -110,30 +109,53 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Kişi veya firma ara" data-table-search="#tblKisi">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3).
+           Kolonlar bu ekranda daha önce hiç yoktu (envanter B grubu eksiği) —
+           §4.4 gereği eklendi (gvCols.init, aşağı script). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Kişi veya firma ara" data-table-search="#tblKisi">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpKisi" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnKisi" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="kisiArsivGoster">
+              <input type="checkbox" id="kisiArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Kişi listesi" data-admin-only aria-label="Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+            </a>
+          </div>
         </div>
-        <div class="chips" data-target="#tblKisi">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">10</span></button>
-          <button class="chip" data-filter="musteri">Müşteri-Kurum <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
-          <button class="chip" data-filter="tedarikci">Tedarikçi <span class="ch-cnt">4</span></button>
+        <div class="lh-achips gv-achips-row" id="achipsKisi" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpKisi">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
-      </div>
-      <div class="gv-achips-row" id="achipsKisi" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblKisi">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">10</span></button>
+              <button class="chip" data-filter="musteri">Müşteri-Kurum <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="taseron">Taşeron <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="tedarikci">Tedarikçi <span class="ch-cnt">4</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
       <div class="gc-body flush">
@@ -141,9 +163,9 @@
           <thead>
             <tr>
               <th>Kişi</th>
-              <th class="col-firma">Firma</th>
-              <th class="col-tel">Telefon</th>
-              <th>E-posta</th>
+              <th class="col-firma" data-col="firma">Firma</th>
+              <th class="col-tel" data-col="tel">Telefon</th>
+              <th data-col="email">E-posta</th>
               <th></th>
             </tr>
           </thead>
@@ -155,9 +177,9 @@
                   <div class="kisi-info"><b>Selin Aydemir</b><span>Proje Müdürü</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Körfez GYO</a><span class="gtag mint" style="width:fit-content">Müşteri-Kurum</span></td>
-              <td>0532 240 18 55</td>
-              <td class="email-cell">selin.aydemir@korfezgyo.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Körfez GYO</a><span class="gtag mint" style="width:fit-content">Müşteri-Kurum</span></td>
+              <td data-col="tel">0532 240 18 55</td>
+              <td class="email-cell" data-col="email">selin.aydemir@korfezgyo.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="musteri" data-cari="aliaga-liman" data-rol="yatirim-muduru" data-durum="aktif">
@@ -167,9 +189,9 @@
                   <div class="kisi-info"><b>Erhan Kaya</b><span>Yatırım Müdürü</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Aliağa Liman İşletmeleri</a><span class="gtag mint" style="width:fit-content">Müşteri-Kurum</span></td>
-              <td>0232 618 44 09</td>
-              <td class="email-cell">erhan.kaya@aliagaliman.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Aliağa Liman İşletmeleri</a><span class="gtag mint" style="width:fit-content">Müşteri-Kurum</span></td>
+              <td data-col="tel">0232 618 44 09</td>
+              <td class="email-cell" data-col="email">erhan.kaya@aliagaliman.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="musteri" data-cari="sapanca-belediyesi" data-rol="fen-isleri-muduru" data-durum="aktif">
@@ -179,9 +201,9 @@
                   <div class="kisi-info"><b>Zeynep Ulusoy</b><span>Fen İşleri Müdürü</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Sapanca Belediyesi</a><span class="gtag mint" style="width:fit-content">Müşteri-Kurum</span></td>
-              <td>0264 582 11 30</td>
-              <td class="email-cell">zeynep.ulusoy@sapancabelediyesi.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Sapanca Belediyesi</a><span class="gtag mint" style="width:fit-content">Müşteri-Kurum</span></td>
+              <td data-col="tel">0264 582 11 30</td>
+              <td class="email-cell" data-col="email">zeynep.ulusoy@sapancabelediyesi.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="taseron" data-cari="demir-beton" data-rol="taseron-sorumlusu" data-durum="aktif">
@@ -191,9 +213,9 @@
                   <div class="kisi-info"><b>Yusuf Ergin</b><span>Taşeron Sorumlusu</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Demir-Beton İnş. Ltd.</a><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent;width:fit-content">Taşeron</span></td>
-              <td>0532 411 27 63</td>
-              <td class="email-cell">yusuf.ergin@demirbeton.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Demir-Beton İnş. Ltd.</a><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent;width:fit-content">Taşeron</span></td>
+              <td data-col="tel">0532 411 27 63</td>
+              <td class="email-cell" data-col="email">yusuf.ergin@demirbeton.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="taseron" data-cari="yalitim-kardesler" data-rol="taseron-sorumlusu" data-durum="aktif">
@@ -203,9 +225,9 @@
                   <div class="kisi-info"><b>Cemal Boz</b><span>Taşeron Sorumlusu</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Yalıtım Kardeşler</a><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent;width:fit-content">Taşeron</span></td>
-              <td>0505 322 90 14</td>
-              <td class="email-cell">cemal.boz@yalitimkardesler.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Yalıtım Kardeşler</a><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent;width:fit-content">Taşeron</span></td>
+              <td data-col="tel">0505 322 90 14</td>
+              <td class="email-cell" data-col="email">cemal.boz@yalitimkardesler.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="taseron" data-cari="elektromek" data-rol="taseron-sorumlusu" data-durum="aktif">
@@ -215,9 +237,9 @@
                   <div class="kisi-info"><b>Tolga Şener</b><span>Taşeron Sorumlusu</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">ElektroMek Taahhüt</a><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent;width:fit-content">Taşeron</span></td>
-              <td>0533 765 42 08</td>
-              <td class="email-cell">tolga.sener@elektromek.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">ElektroMek Taahhüt</a><span class="gtag" style="background:var(--info-tint);color:var(--info);border-color:transparent;width:fit-content">Taşeron</span></td>
+              <td data-col="tel">0533 765 42 08</td>
+              <td class="email-cell" data-col="email">tolga.sener@elektromek.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarikci" data-cari="ege-hazir-beton" data-rol="satis-sorumlusu" data-durum="aktif">
@@ -227,9 +249,9 @@
                   <div class="kisi-info"><b>Kadir Solmaz</b><span>Satış Sorumlusu</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Ege Hazır Beton</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
-              <td>0536 218 77 41</td>
-              <td class="email-cell">kadir.solmaz@egehazirbeton.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Ege Hazır Beton</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
+              <td data-col="tel">0536 218 77 41</td>
+              <td class="email-cell" data-col="email">kadir.solmaz@egehazirbeton.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarikci" data-cari="marmara-demir-celik" data-rol="satis-sorumlusu" data-durum="aktif">
@@ -239,9 +261,9 @@
                   <div class="kisi-info"><b>Burcu İnan</b><span>Satış Sorumlusu</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Marmara Demir Çelik</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
-              <td>0212 466 90 23</td>
-              <td class="email-cell">burcu.inan@marmarademir.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Marmara Demir Çelik</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
+              <td data-col="tel">0212 466 90 23</td>
+              <td class="email-cell" data-col="email">burcu.inan@marmarademir.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarikci" data-cari="anadolu-hirdavat" data-rol="satis-sorumlusu" data-durum="aktif">
@@ -251,9 +273,9 @@
                   <div class="kisi-info"><b>Fatih Coşkun</b><span>Satış Sorumlusu</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Anadolu Hırdavat</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
-              <td>0216 349 82 17</td>
-              <td class="email-cell">fatih.coskun@anadoluhirdavat.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Anadolu Hırdavat</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
+              <td data-col="tel">0216 349 82 17</td>
+              <td class="email-cell" data-col="email">fatih.coskun@anadoluhirdavat.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
             <tr data-f="tedarikci" data-cari="bogazici-yapi-market" data-rol="satis-sorumlusu" data-durum="aktif">
@@ -263,9 +285,9 @@
                   <div class="kisi-info"><b>Cem Aydoğan</b><span>Satış Sorumlusu</span></div>
                 </div>
               </td>
-              <td class="firma-cell"><a href="crm-cari-detay.html">Boğaziçi Yapı Market</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
-              <td>0212 000 45 61</td>
-              <td class="email-cell">cem.aydogan@bogaziciyapi.example</td>
+              <td class="firma-cell" data-col="firma"><a href="crm-cari-detay.html">Boğaziçi Yapı Market</a><span class="gtag" style="background:var(--warn-tint);color:var(--warn);border-color:transparent;width:fit-content">Tedarikçi</span></td>
+              <td data-col="tel">0212 000 45 61</td>
+              <td class="email-cell" data-col="email">cem.aydogan@bogaziciyapi.example</td>
               <td><div class="row-acts"><a class="ia-btn" href="crm-cari-detay.html" data-no-confirm aria-label="Cari kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
           </tbody>
@@ -328,12 +350,6 @@
             <option value="arsivlendi">Arşivlendi</option>
           </select>
         </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
-        </div>
       </div>
       <div class="gv-fpanel-foot">
         <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
@@ -356,16 +372,38 @@
 
 /* ============ §9/§17 — Gelişmiş Filtre paneli + kişi arşivleme ============
    Kişi kalıcı silinmez — "firma değiştirdiğinde" gibi durumlarda arşive alınır
-   (görev talimatı örneği); Firma Rehberi liste modeliyle aynı satır-bazlı desen. */
+   (görev talimatı örneği); Firma Rehberi liste modeliyle aynı satır-bazlı desen.
+   V3A — "Arşivlenenleri Göster" panelden ÇIKARILDI, `.lh-acts` içinde BAĞIMSIZ
+   bir toggle (#kisiArsivGoster); panel apply/clear artık bunu sıfırlamaz. */
 (function(){
   if(window.gvFilterPanel){
     window.gvFilterPanel.init('#fpKisi', {
       table: '#tblKisi',
-      activeRow: '#achipsKisi',
-      onApply: function(state){
-        var tbl = document.getElementById('tblKisi');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
+      activeRow: '#achipsKisi'
+    });
+  }
+
+  var kisiArsivToggle = document.getElementById('kisiArsivGoster');
+  if(kisiArsivToggle){
+    kisiArsivToggle.addEventListener('change', function(){
+      var tbl = document.getElementById('tblKisi');
+      if(tbl) tbl.classList.toggle('gv-show-arsiv', kisiArsivToggle.checked);
+    });
+  }
+
+  /* ============ §4.4/§8.4 — gvCols (Kolonlar). Bu ekranda daha önce hiç yoktu —
+     Firma/Telefon/E-posta toggle'lanabilir; "Kişi" (kimlik) ve işlem kolonu
+     data-col TAŞIMAZ (cari/personel/santiye emsalinin AYNI deseni). ============ */
+  if(window.gvCols && document.getElementById('colsBtnKisi')){
+    gvCols.init({
+      mount: '#colsBtnKisi',
+      table: '#tblKisi',
+      screen: 'kisiler',
+      cols: [
+        {key:'firma', lbl:'Firma', def:true},
+        {key:'tel', lbl:'Telefon', def:true},
+        {key:'email', lbl:'E-posta', def:true}
+      ]
     });
   }
 

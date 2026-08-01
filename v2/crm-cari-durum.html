@@ -68,9 +68,9 @@
   padding:14px 22px;background:none;border:none;border-top:1px solid var(--line);
   font-family:inherit;cursor:pointer;transition:.18s var(--ease);position:relative;
 }
-/* ---- §13 — Hareket Ekstresi tarih aralığı + §9 hareket türü hızlı filtresi ---- */
-.ekstre-filter-bar{border-bottom:1px solid var(--line)}
-#tblEkstre tbody tr[hidden],#tblEkstre tbody tr.gv-fp-hide{display:none}
+/* ---- §13 — Hareket Ekstresi tarih aralığı + §9 hareket türü hızlı filtresi ----
+   V3A — eski `.ekstre-filter-bar` kaldırıldı, üst alan artık `.gv-listhead` (bkz. HTML). */
+#tblEkstre tbody tr[hidden],#tblEkstre tbody tr.gv-fp-hide,#tblEkstre tbody tr.gv-search-hide{display:none}
 .crit-row:first-child{border-top:none}
 .crit-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:.18s var(--ease)}
 .crit-row:hover{background:var(--bg)}
@@ -121,7 +121,6 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-cari.html"><i class="fa-solid fa-address-book"></i> Firma Rehberi</a>
-        <a class="btn btn-acc btn-sm" href="#" data-export="Cari durum raporu"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
@@ -154,6 +153,15 @@
           </select>
         </div>
         <div class="picker-hint"><i class="fa-solid fa-circle-info"></i> Firma Rehberi'ndeki 12 cari burada listelenir.</div>
+        <!-- V3A §3 — Arşiv/Pasif Göster standardı: bu ekranın "kaydı" aslında yukarıdaki
+             cari SEÇİCİSİDİR (Hareket Ekstresi tek bir carinin detayı, arşivlenebilir bir
+             kayıt değil) — toggle bu yüzden istisnaen picker'a bağlı (karar: tasks/kararlar.md).
+             Firma Rehberi'nde arşivlenen bir cari varsayılan olarak bu seçicide de gizlenir;
+             bugün 0 arşivli cari olduğundan görünür etkisi yoktur ama kablolama gerçektir. -->
+        <label class="lh-toggle" for="cariDurumArsivGoster" style="flex:none">
+          <input type="checkbox" id="cariDurumArsivGoster">
+          <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenen carileri de listele</span>
+        </label>
       </div>
     </div>
 
@@ -220,32 +228,62 @@
           <div class="gc-title"><i class="fa-solid fa-receipt"></i> Hareket Ekstresi</div>
           <span class="gc-link" id="acctPeriod" style="color:var(--muted);cursor:default">Temmuz 2026</span>
         </div>
-        <!-- ============ §9 (hızlı filtre: hareket türü) + §13 (tarih aralığı) ============ -->
-        <div class="filter-bar ekstre-filter-bar">
-          <div class="chips" data-target="#tblEkstre" id="ekstreChips">
-            <button class="chip is-on" data-filter="hepsi">Tümü</button>
-            <button class="chip" data-filter="borc">Borç</button>
-            <button class="chip" data-filter="alacak">Alacak</button>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3),
+             bu sayfadaki TEK gerçek "liste" olan Hareket Ekstresi'ne uygulandı. Arşiv/
+             Pasif toggle burada YOK — istisna gerekçesi yukarıdaki picker-card'da
+             (bir hareket satırı arşivlenebilir bir kayıt değildir, kalıcı defter
+             girişidir); §9/§13'ün mevcut tarih aralığı widget'ı (`#ekstreDr`) ve
+             hızlı tür çipleri KORUNDU, yalnız `.lh-tabs` altına taşındı. -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Hareket açıklamasında ara" data-ekstre-search>
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="ekstreFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="colsBtnEkstre" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <a class="btn btn-ghost btn-sm" href="#" data-export="Cari durum raporu" id="btnCariDurumCikti" aria-label="Çıktı Al">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Çıktı Al</span>
+              </a>
+            </div>
           </div>
-          <div id="ekstreDr"></div>
+          <div class="lh-achips gv-achips-row" id="ekstreAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
+          <div class="lh-tabs" style="flex-wrap:wrap;gap:14px">
+            <div class="chips" data-target="#tblEkstre" id="ekstreChips">
+              <button class="chip is-on" data-filter="hepsi">Tümü</button>
+              <button class="chip" data-filter="borc">Borç</button>
+              <button class="chip" data-filter="alacak">Alacak</button>
+            </div>
+            <div id="ekstreDr"></div>
+          </div>
         </div>
         <div class="gc-body flush">
           <table class="gtable" id="tblEkstre">
             <thead>
               <tr>
                 <th class="col-tarih">Tarih</th>
-                <th>Açıklama</th>
-                <th class="num col-tutar">Borç</th>
-                <th class="num col-tutar">Alacak</th>
-                <th class="num col-tutar">Yürüyen Bakiye</th>
+                <th data-col="aciklama">Açıklama</th>
+                <th class="num col-tutar" data-col="borc">Borç</th>
+                <th class="num col-tutar" data-col="alacak">Alacak</th>
+                <th class="num col-tutar" data-col="bakiye">Yürüyen Bakiye</th>
               </tr>
             </thead>
-            <tbody id="ekstreBody"><tr data-f="alacak" data-tarih="2026-02-20"><td class="muted">20 Şub 2026</td><td class="t-strong">SSZ-2026-004 paket satış tahakkuku (A-03 · A-09 · C-21)</td><td class="num">₺13.665.000</td><td class="num">—</td><td class="num" style="font-weight:800;color:var(--ok)">₺13.665.000 Alacak</td></tr><tr data-f="alacak" data-tarih="2026-02-20"><td class="muted">20 Şub 2026</td><td class="t-strong">Peşin ödeme tahsilatı (%50)</td><td class="num">—</td><td class="num">₺6.825.000</td><td class="num" style="font-weight:800;color:var(--ok)">₺6.840.000 Alacak</td></tr><tr data-f="alacak" data-tarih="2026-05-20"><td class="muted">20 May 2026</td><td class="t-strong">Taksit tahsilatları 1–4</td><td class="num">—</td><td class="num">₺2.280.000</td><td class="num" style="font-weight:800;color:var(--ok)">₺4.560.000 Alacak</td></tr></tbody>
+            <tbody id="ekstreBody"><tr data-f="alacak" data-tarih="2026-02-20" data-tutar="13665000"><td class="muted">20 Şub 2026</td><td class="t-strong" data-col="aciklama">SSZ-2026-004 paket satış tahakkuku (A-03 · A-09 · C-21)</td><td class="num" data-col="borc">₺13.665.000</td><td class="num" data-col="alacak">—</td><td class="num" data-col="bakiye" style="font-weight:800;color:var(--ok)">₺13.665.000 Alacak</td></tr><tr data-f="alacak" data-tarih="2026-02-20" data-tutar="6825000"><td class="muted">20 Şub 2026</td><td class="t-strong" data-col="aciklama">Peşin ödeme tahsilatı (%50)</td><td class="num" data-col="borc">—</td><td class="num" data-col="alacak">₺6.825.000</td><td class="num" data-col="bakiye" style="font-weight:800;color:var(--ok)">₺6.840.000 Alacak</td></tr><tr data-f="alacak" data-tarih="2026-05-20" data-tutar="2280000"><td class="muted">20 May 2026</td><td class="t-strong" data-col="aciklama">Taksit tahsilatları 1–4</td><td class="num" data-col="borc">—</td><td class="num" data-col="alacak">₺2.280.000</td><td class="num" data-col="bakiye" style="font-weight:800;color:var(--ok)">₺4.560.000 Alacak</td></tr></tbody>
           </table>
           <div class="gv-empty" data-table-empty hidden>
             <div class="ge-ico"><i class="fa-solid fa-filter-circle-xmark"></i></div>
             <h4>Eşleşen hareket yok</h4>
-            <p>Seçili tarih aralığı veya hareket türü filtresini temizleyin.</p>
+            <p>Aramayı temizleyin veya seçili tarih aralığı/hareket türü filtresini sıfırlayın.</p>
           </div>
           <div class="ekstre-empty" id="ekstreEmpty" hidden>
             <i class="fa-solid fa-inbox"></i>
@@ -410,6 +448,29 @@
   var tbl = document.getElementById('tblEkstre');
   var critList = document.getElementById('critList');
 
+  /* V3A §3 — Arşiv/Pasif Göster standardı. Bugün Firma Rehberi'nde (crm-cari.html)
+     0 arşivli cari var — bu yüzden ARSIV_CARI kasıtlı BOŞ (mevcut kanonik durumla
+     BİREBİR tutarlı, fiktif bir arşivli cari İCAT EDİLMEDİ). Toggle'ın bugünkü
+     görünür etkisi yoktur ama kablolama gerçektir: bir cari ileride Firma
+     Rehberi'nde arşivlenirse buraya `arsiv:true` eklenmesi yeterlidir. */
+  var ARSIV_CARI = {};
+  var arsivGosterCari = false;
+  function syncCariSelectArsiv(){
+    sel.querySelectorAll('option[value]').forEach(function(opt){
+      if(!opt.value) return;
+      opt.hidden = !!ARSIV_CARI[opt.value] && !arsivGosterCari;
+    });
+  }
+  var cariDurumArsivToggle = document.getElementById('cariDurumArsivGoster');
+  if(cariDurumArsivToggle){
+    cariDurumArsivToggle.addEventListener('change', function(){
+      arsivGosterCari = cariDurumArsivToggle.checked;
+      syncCariSelectArsiv();
+      buildCritList();
+    });
+  }
+  syncCariSelectArsiv();
+
   function setActive(key){
     Array.prototype.forEach.call(critList.querySelectorAll('.crit-row'), function(r){
       r.classList.toggle('is-active', r.dataset.key === key);
@@ -447,12 +508,13 @@
       var yonColor = yon === 'borc' ? 'var(--danger)' : (yon === 'alacak' ? 'var(--ok)' : 'var(--muted)');
       /* §9 hızlı filtre anahtarı: hangi sütun doluysa (borç girişi mi alacak girişi mi) — h.borc/h.alacak zaten birbirini dışlar (mock veri) */
       var hf = h.borc ? 'borc' : (h.alacak ? 'alacak' : 'hepsi');
-      rows += '<tr data-f="' + hf + '" data-tarih="' + trTarihToIso(h.tarih) + '">'
+      var tutarVal = h.borc || h.alacak || 0;
+      rows += '<tr data-f="' + hf + '" data-tarih="' + trTarihToIso(h.tarih) + '" data-tutar="' + tutarVal + '">'
         + '<td class="muted">' + h.tarih + '</td>'
-        + '<td class="t-strong">' + h.aciklama + '</td>'
-        + '<td class="num">' + (h.borc ? fmt(h.borc) : '—') + '</td>'
-        + '<td class="num">' + (h.alacak ? fmt(h.alacak) : '—') + '</td>'
-        + '<td class="num" style="font-weight:800;color:' + yonColor + '">' + (running === 0 ? '—' : fmt(Math.abs(running)) + ' ' + yonLbl) + '</td>'
+        + '<td class="t-strong" data-col="aciklama">' + h.aciklama + '</td>'
+        + '<td class="num" data-col="borc">' + (h.borc ? fmt(h.borc) : '—') + '</td>'
+        + '<td class="num" data-col="alacak">' + (h.alacak ? fmt(h.alacak) : '—') + '</td>'
+        + '<td class="num" data-col="bakiye" style="font-weight:800;color:' + yonColor + '">' + (running === 0 ? '—' : fmt(Math.abs(running)) + ' ' + yonLbl) + '</td>'
         + '</tr>';
     });
 
@@ -489,33 +551,40 @@
 
   /* Kritik cariler listesi — havuzu kanonik bakiyeye göre sırala, en büyük 5'i göster.
      "Vadesi geçmiş" gibi bir etiket YOK: mock'ta gerçek vade tarihi olmadığından
-     kriticklik, bakiye büyüklüğü + yön (borç/alacak) ile gösterilir. */
-  var ranked = Object.keys(CARI)
-    .map(function(k){ return { key:k, C:CARI[k], b:balanceOf(CARI[k]) }; })
-    .filter(function(x){ return x.b.amount > 0; })
-    .sort(function(a,b){ return b.b.amount - a.b.amount; });
-  var critTop = ranked.slice(0, 5);
-  var maxAmt = critTop.length ? critTop[0].b.amount : 1;
+     kriticklik, bakiye büyüklüğü + yön (borç/alacak) ile gösterilir. Arşivlenen bir
+     cari (bugün için hiçbiri) toggle kapalıyken bu sıralamaya da GİRMEZ. */
+  var ranked, critTop;
+  function buildCritList(){
+    ranked = Object.keys(CARI)
+      .filter(function(k){ return arsivGosterCari || !ARSIV_CARI[k]; })
+      .map(function(k){ return { key:k, C:CARI[k], b:balanceOf(CARI[k]) }; })
+      .filter(function(x){ return x.b.amount > 0; })
+      .sort(function(a,b){ return b.b.amount - a.b.amount; });
+    critTop = ranked.slice(0, 5);
+    var maxAmt = critTop.length ? critTop[0].b.amount : 1;
 
-  critList.innerHTML = critTop.map(function(x){
-    var C = x.C, b = x.b, st = TUR_STYLE[C.tur];
-    var badgeCls = b.dir === 'borc' ? 'danger' : 'ok';
-    var badgeLbl = b.dir === 'borc' ? 'Borç' : 'Alacak';
-    var barCol   = b.dir === 'borc' ? 'var(--danger)' : 'var(--ok)';
-    var w = Math.max(6, Math.round(b.amount / maxAmt * 100));
-    return '<button type="button" class="crit-row" data-key="' + x.key + '">'
-      + '<span class="crit-mark" style="background:' + st.bg + ';color:' + st.fg + '">' + C.ini + '</span>'
-      + '<span class="crit-main">'
-        + '<span class="crit-name">' + C.ad + '</span>'
-        + '<span class="crit-sub">' + TUR_LBL[C.tur] + ' · ' + C.santiye + '</span>'
-        + '<span class="crit-bar"><span class="crit-bar-fill" style="width:' + w + '%;background:' + barCol + '"></span></span>'
-      + '</span>'
-      + '<span class="crit-amt">'
-        + '<span class="crit-val">' + fmt(b.amount) + '</span>'
-        + '<span class="gstat ' + badgeCls + '">' + badgeLbl + '</span>'
-      + '</span>'
-    + '</button>';
-  }).join('');
+    critList.innerHTML = critTop.map(function(x){
+      var C = x.C, b = x.b, st = TUR_STYLE[C.tur];
+      var badgeCls = b.dir === 'borc' ? 'danger' : 'ok';
+      var badgeLbl = b.dir === 'borc' ? 'Borç' : 'Alacak';
+      var barCol   = b.dir === 'borc' ? 'var(--danger)' : 'var(--ok)';
+      var w = Math.max(6, Math.round(b.amount / maxAmt * 100));
+      return '<button type="button" class="crit-row" data-key="' + x.key + '">'
+        + '<span class="crit-mark" style="background:' + st.bg + ';color:' + st.fg + '">' + C.ini + '</span>'
+        + '<span class="crit-main">'
+          + '<span class="crit-name">' + C.ad + '</span>'
+          + '<span class="crit-sub">' + TUR_LBL[C.tur] + ' · ' + C.santiye + '</span>'
+          + '<span class="crit-bar"><span class="crit-bar-fill" style="width:' + w + '%;background:' + barCol + '"></span></span>'
+        + '</span>'
+        + '<span class="crit-amt">'
+          + '<span class="crit-val">' + fmt(b.amount) + '</span>'
+          + '<span class="gstat ' + badgeCls + '">' + badgeLbl + '</span>'
+        + '</span>'
+      + '</button>';
+    }).join('');
+    setActive(sel.value);
+  }
+  buildCritList();
 
   critList.addEventListener('click', function(e){
     var row = e.target.closest('.crit-row');
@@ -529,41 +598,103 @@
 
   sel.addEventListener('change', function(){ render(sel.value); });
 
-  /* ============ §13 — Hareket Ekstresi tarih aralığı (gvDateRange, imperatif
-     kullanım — bkz. tasks/spec-filtre-tarih.md §4B: panel dışı, bağımsız tarih
-     seçici). §9 — hızlı hareket türü çipleri (Tümü/Borç/Alacak) mevcut generic
-     .chip[data-filter] motorunu (ui.js) kullanır, yeni bileşen İCAT EDİLMEDİ. ============ */
+  /* ============ V3A — standart üst alan: arama (§2.1) + Gelişmiş Filtre (§4.3,
+     Tutar Aralığı — tarih zaten §13'ün her-zaman-görünür `#ekstreDr` widget'ıyla
+     kapsanıyor, mükerrer alan İCAT EDİLMEDİ) + Kolonlar (§4.4) + Çıktı Al (§2.2).
+     §9 — hızlı hareket türü çipleri (Tümü/Borç/Alacak) mevcut generic
+     .chip[data-filter] motorunu (ui.js) kullanır, yeni bileşen İCAT EDİLMEDİ.
+     TEK KARAR MERCİİ: applyEkstreAdvanced() — tarih VE tutar aynı `.gv-fp-hide`
+     sınıfını YAZDIĞI için K-220 dersi gereği İKİ ayrı fonksiyon yerine TEK
+     fonksiyonda birleştirildi (aksi hâlde biri diğerini sessizce ezerdi).
+     Arama AYRI bir `.gv-search-hide` sınıfıyla bağımsız bir eksendir. ============ */
   var ekstreEmptyBox = document.querySelector('#tblEkstre').closest('.gc-body').querySelector('[data-table-empty]');
   function syncEkstreEmpty(){
     if(tbl.hidden){ if(ekstreEmptyBox) ekstreEmptyBox.hidden = true; return; }   /* hareket kaydı hiç yoksa ekstre-empty zaten devrede */
     var anyShown = false;
     tbl.querySelectorAll('tbody tr').forEach(function(tr){
-      if(!tr.hidden && !tr.classList.contains('gv-fp-hide')) anyShown = true;
+      if(!tr.hidden && !tr.classList.contains('gv-fp-hide') && !tr.classList.contains('gv-search-hide')) anyShown = true;
     });
     if(ekstreEmptyBox) ekstreEmptyBox.hidden = anyShown;
   }
-  function applyEkstreDateFilter(val){
+  var ekstreDateVal = null, ekstreTutarVal = null;
+  function applyEkstreAdvanced(){
     tbl.querySelectorAll('tbody tr[data-tarih]').forEach(function(tr){
-      if(!val){ tr.classList.remove('gv-fp-hide'); return; }
-      var ds = tr.getAttribute('data-tarih');
-      var d = ds ? new Date(ds + 'T00:00:00') : null;
-      tr.classList.toggle('gv-fp-hide', !d || d < val.from || d > val.to);
+      var okTarih = true;
+      if(ekstreDateVal){
+        var ds = tr.getAttribute('data-tarih');
+        var d = ds ? new Date(ds + 'T00:00:00') : null;
+        okTarih = !!d && d >= ekstreDateVal.from && d <= ekstreDateVal.to;
+      }
+      var okTutar = true;
+      if(ekstreTutarVal){
+        var t = parseFloat(tr.getAttribute('data-tutar') || '0');
+        if(ekstreTutarVal.min != null) okTutar = okTutar && t >= ekstreTutarVal.min;
+        if(ekstreTutarVal.max != null) okTutar = okTutar && t <= ekstreTutarVal.max;
+      }
+      tr.classList.toggle('gv-fp-hide', !(okTarih && okTutar));
     });
     syncEkstreEmpty();
   }
-  var ekstreDr = window.gvDateRange('#ekstreDr', { emptyLabel:'Tüm zamanlar', onChange: applyEkstreDateFilter });
+  var ekstreDr = window.gvDateRange('#ekstreDr', { emptyLabel:'Tüm zamanlar', onChange: function(val){ ekstreDateVal = val; applyEkstreAdvanced(); } });
   document.getElementById('ekstreChips').querySelectorAll('.chip[data-filter]').forEach(function(ch){
     ch.addEventListener('click', function(){ syncEkstreEmpty(); });
   });
+
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#ekstreFiltreBtn',
+      screen: 'ekstre',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#ekstreAchips',
+      fields: [
+        {key:'tutar', type:'numrange', label:'Tutar Aralığı', prefix:'₺'}
+      ],
+      onApply: function(state){
+        ekstreTutarVal = state.tutar ? state.tutar.value : null;
+        applyEkstreAdvanced();
+      }
+    });
+  }
+
+  if(window.gvCols && document.getElementById('colsBtnEkstre')){
+    gvCols.init({
+      mount: '#colsBtnEkstre',
+      table: '#tblEkstre',
+      screen: 'ekstre',
+      cols: [
+        {key:'aciklama', lbl:'Açıklama', def:true},
+        {key:'borc', lbl:'Borç', def:true},
+        {key:'alacak', lbl:'Alacak', def:true},
+        {key:'bakiye', lbl:'Yürüyen Bakiye', def:true}
+      ]
+    });
+  }
+
+  var ekstreSearchInp = document.querySelector('input[data-ekstre-search]');
+  function applyEkstreSearch(){
+    var term = ekstreSearchInp ? ekstreSearchInp.value.trim().toLocaleLowerCase('tr') : '';
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){
+      var show = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      tr.classList.toggle('gv-search-hide', !show);
+    });
+    syncEkstreEmpty();
+  }
+  if(ekstreSearchInp) ekstreSearchInp.addEventListener('input', applyEkstreSearch);
+
   function resetEkstreFilters(){
     if(ekstreDr) ekstreDr.clear();
+    ekstreDateVal = null;
+    var ekstreFiltreBtn = document.getElementById('ekstreFiltreBtn');
+    if(ekstreFiltreBtn && ekstreFiltreBtn._gvFd) ekstreFiltreBtn._gvFd.clear();
+    ekstreTutarVal = null;
+    if(ekstreSearchInp) ekstreSearchInp.value = '';
     var chips = document.getElementById('ekstreChips');
     if(chips){
       chips.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('is-on'); });
       var hepsi = chips.querySelector('.chip[data-filter="hepsi"]');
       if(hepsi) hepsi.classList.add('is-on');
     }
-    tbl.querySelectorAll('tbody tr').forEach(function(tr){ tr.hidden = false; tr.classList.remove('gv-fp-hide'); });
+    tbl.querySelectorAll('tbody tr').forEach(function(tr){ tr.hidden = false; tr.classList.remove('gv-fp-hide', 'gv-search-hide'); });
     syncEkstreEmpty();
   }
 

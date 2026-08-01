@@ -71,7 +71,6 @@
         <div class="ph-sub" id="phSub"><span data-table-count>4</span> sağlık raporu kaydı</div>
       </div>
       <div class="ph-actions">
-        <button type="button" class="btn btn-ghost btn-sm" id="btnRaporCikti"><i class="fa-solid fa-print"></i> Çıktı Al</button>
         <a class="btn btn-acc btn-sm" href="crm-personel-rapor-form.html" data-hr-only><i class="fa-solid fa-plus"></i> Rapor Kaydı Ekle</a>
       </div>
     </div>
@@ -100,42 +99,59 @@
     </div>
 
     <div class="gv-card">
-      <div class="filter-bar stack">
-        <div class="filter-row top">
-          <div class="fb-search">
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §6). KARAR (bkz.
+           tasks/kararlar.md): eski "SGK Bildirimi Bekliyor/Bildirildi/Tamamlandı"
+           chip grubu bu ekranın SGK bildirim sürecini temsil ediyordu ama §6.1'in
+           istediği onay-akışı ekseniyle (Onay Bekleyen/Onaylanan/Reddedilen/Revize
+           İstenen/Arşivlenen) ÖRTÜŞMÜYORDU. SGK bildirim durumu SİLİNMEDİ — "Belge
+           Durumu" alanı olarak Gelişmiş Filtre'ye taşındı (aşağı, zaten oradaydı);
+           `.lh-tabs` tek eksenli standart 5 duruma geçti. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" placeholder="Personel veya kurum ara" data-table-search="#tblRapor">
           </div>
-        </div>
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" data-target="#tblRapor">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">4</span></button>
-            <button class="chip" data-filter="bekliyor">SGK Bildirimi Bekliyor <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="bildirildi">Bildirildi <span class="ch-cnt">1</span></button>
-            <button class="chip" data-filter="tamam">Tamamlandı <span class="ch-cnt">2</span></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpRapor" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="colsBtnRapor" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="raporArsivGoster">
+              <input type="checkbox" id="raporArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnRaporCikti" aria-label="Çıktı Al">
+              <i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span>
+            </button>
           </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <div class="filter-row">
-          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpRapor">
-            <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" id="colsBtnRapor">
-            <i class="fa-solid fa-table-columns"></i> Kolonlar
-          </button>
+        <div class="lh-achips gv-achips-row" id="achipsRapor" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div class="gv-achips-row" id="achipsRapor" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblRapor">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">4</span></button>
+              <button class="chip" data-filter="bekliyor">Onay Bekleyen <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="onaylandi">Onaylanan <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="reddedildi">Reddedilen <span class="ch-cnt">0</span></button>
+              <button class="chip" data-filter="revize">Revize İstenen <span class="ch-cnt">0</span></button>
+              <button class="chip" data-filter="arsiv">Arşivlenen <span class="ch-cnt">0</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
 
@@ -153,7 +169,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr data-f="bildirildi" data-santiye="vadi-konaklari" data-tur="istirahat" data-tarih="2026-06-28">
+            <tr data-f="onaylandi" data-durum="bildirildi" data-santiye="vadi-konaklari" data-tur="istirahat" data-tarih="2026-06-28">
               <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">AV</div>
@@ -167,7 +183,7 @@
               <td data-col="durum" data-lbl="Durum"><span class="gstat info">SGK'ya bildirildi</span></td>
               <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=001" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="tamam" data-santiye="vadi-konaklari" data-tur="istirahat" data-tarih="2026-06-10">
+            <tr data-f="onaylandi" data-durum="tamam" data-santiye="vadi-konaklari" data-tur="istirahat" data-tarih="2026-06-10">
               <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">SD</div>
@@ -181,7 +197,7 @@
               <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Tamamlandı</span></td>
               <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=002" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="tamam" data-santiye="merkez-santiye" data-tur="kurul" data-tarih="2026-06-15">
+            <tr data-f="onaylandi" data-durum="tamam" data-santiye="merkez-santiye" data-tur="kurul" data-tarih="2026-06-15">
               <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">ÖT</div>
@@ -195,7 +211,7 @@
               <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Tamamlandı</span></td>
               <td data-lbl=""><div class="row-acts"><a class="ia-btn" href="crm-personel-rapor-detay.html?rpr=003" data-no-confirm aria-label="Rapor detayı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>
             </tr>
-            <tr data-f="bekliyor" data-santiye="merkez-ofis" data-tur="istirahat" data-tarih="2026-06-22">
+            <tr data-f="bekliyor" data-durum="bekliyor" data-santiye="merkez-ofis" data-tur="istirahat" data-tarih="2026-06-22">
               <td data-lbl="Personel">
                 <div class="gcell">
                   <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">NA</div>
@@ -259,12 +275,6 @@
           <label>Rapor Başlangıç Tarihi Aralığı</label>
           <div data-gvdaterange data-fp-key="tarih" data-fp-label="Rapor Başlangıç Tarihi Aralığı"></div>
         </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
-        </div>
       </div>
       <div class="gv-fpanel-foot">
         <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
@@ -286,11 +296,12 @@
     document.querySelectorAll('#tblRapor tbody tr').forEach(function(tr){
       if(tr.getAttribute('data-santiye') !== 'vadi-konaklari') tr.remove();
     });
-    var counts = {hepsi:0, bekliyor:0, bildirildi:0, tamam:0};
+    var counts = {hepsi:0, bekliyor:0, onaylandi:0, reddedildi:0, revize:0, arsiv:0, tamam:0};
     document.querySelectorAll('#tblRapor tbody tr').forEach(function(tr){
       counts.hepsi++;
       var f = tr.getAttribute('data-f');
       if(counts[f] !== undefined) counts[f]++;
+      if(tr.getAttribute('data-durum') === 'tamam') counts.tamam++;
     });
     document.querySelectorAll('.chips .chip[data-filter]').forEach(function(ch){
       var c = ch.querySelector('.ch-cnt');
@@ -313,18 +324,60 @@
   /* ============ §9/§13/§17 — Gelişmiş Filtre paneli + tarih aralığı + Arşivlenenleri
      Göster. opts.table verildi (basit eşitlik + kanonik "tarih" aralık motoru yeterli —
      spec-filtre-tarih.md §3, crm-satinalma-siparisler.html emsali). ============ */
-  document.querySelectorAll('#tblRapor tbody tr[data-f]').forEach(function(tr){
-    tr.setAttribute('data-durum', (tr.getAttribute('data-f') || '').split(' ')[0]);
-  });
+  /* V3A — data-durum (SGK belge durumu) artık HER satırda doğrudan statik HTML'de
+     tanımlı (bkz. yukarı <tr>'ler); data-f'ten türetme KALDIRILDI çünkü data-f
+     artık §6.1'in standart onay-durumu ekseni (Onay Bekleyen/Onaylanan/…) — iki
+     eksen ARTIK BAĞIMSIZ (karar: tasks/kararlar.md). */
 
   if(window.gvFilterPanel){
     window.gvFilterPanel.init('#fpRapor', {
       table: '#tblRapor',
-      activeRow: '#achipsRapor',
-      onApply: function(state){
-        var tbl = document.getElementById('tblRapor');
-        if(tbl) tbl.classList.toggle('gv-show-arsiv', !!(state.arsivgoster));
-      }
+      activeRow: '#achipsRapor'
+    });
+  }
+
+  /* V3A §3.2/§6.1 — "Arşivlenenleri Göster" panelden ÇIKARILDI, `.lh-acts` içinde
+     BAĞIMSIZ bir toggle; "Arşivlenen" ayrıca standart durum tabına eklendi
+     (data-filter="arsiv") — izin/avans'taki AYNI desen: sekme seçilince toggle
+     otomatik senkron edilir (CSS'teki [data-arsiv="1"]{display:none} kuralı
+     `.gv-show-arsiv` olmadan sekmeyi de gizlerdi).
+     BULGU (standalone CDP etkileşim testinde yakalanıp düzeltildi): `.chip.is-on`
+     DOM'dan okunursa bu sayfanın kendi dinleyicisi ui.js'in genel tıklama
+     dinleyicisinden (o `.is-on`'u GEÇ ekler) ÖNCE çalıştığı için hep BİR ÖNCEKİ
+     chip'i görüyordu — DOM okuma yerine kendi tıklamasında set edilen bayrak
+     (raporArsivTabOn) kullanıldı (izin/avans'taki AYNI düzeltme). */
+  var raporArsivToggle = document.getElementById('raporArsivGoster');
+  var raporTbl = document.getElementById('tblRapor');
+  var raporArsivTabOn = false, raporArsivUserPref = false;
+  function syncRaporArsivGorunum(){
+    var wantArsiv = raporArsivTabOn || raporArsivUserPref;
+    if(raporTbl) raporTbl.classList.toggle('gv-show-arsiv', !!wantArsiv);
+    if(raporArsivToggle) raporArsivToggle.checked = wantArsiv;
+  }
+  if(raporArsivToggle) raporArsivToggle.addEventListener('change', function(){
+    raporArsivUserPref = raporArsivToggle.checked;
+    syncRaporArsivGorunum();
+  });
+  document.querySelectorAll('.chips[data-target="#tblRapor"] .chip[data-filter]').forEach(function(ch){
+    ch.addEventListener('click', function(){
+      raporArsivTabOn = ch.getAttribute('data-filter') === 'arsiv';
+      syncRaporArsivGorunum();
+    });
+  });
+  syncRaporArsivGorunum();
+
+  /* durum-tabı sayaçları (data-f'e göre) — Onayla/Arşivle aksiyonları data-f'i
+     değiştirdiği için statik markup sayıları zamanla eskir. */
+  function syncRaporChipCounts(){
+    var counts = {hepsi:0, bekliyor:0, onaylandi:0, reddedildi:0, revize:0, arsiv:0};
+    document.querySelectorAll('#tblRapor tbody tr[data-f]').forEach(function(tr){
+      counts.hepsi++;
+      var f = tr.getAttribute('data-f');
+      if(counts[f] !== undefined) counts[f]++;
+    });
+    document.querySelectorAll('.chips[data-target="#tblRapor"] .chip[data-filter]').forEach(function(ch){
+      var c = ch.querySelector('.ch-cnt');
+      if(c) c.textContent = counts[ch.getAttribute('data-filter')] || 0;
     });
   }
 
@@ -366,22 +419,23 @@
         {etiket:'Onayla', ikon:'fa-check', onClick:function(rows){
           var n = 0;
           rows.forEach(function(tr){
-            if(tr.getAttribute('data-f') === 'tamam' || tr.getAttribute('data-f') === 'bildirildi') return;
-            tr.setAttribute('data-f', 'bildirildi'); tr.setAttribute('data-durum', 'bildirildi');
+            if(tr.getAttribute('data-durum') === 'tamam' || tr.getAttribute('data-durum') === 'bildirildi') return;
+            tr.setAttribute('data-durum', 'bildirildi');
+            if(tr.getAttribute('data-f') !== 'arsiv') tr.setAttribute('data-f', 'onaylandi');
             var badge = tr.querySelector('[data-col="durum"] .gstat');
             if(badge){ badge.className = 'gstat info'; badge.textContent = "SGK'ya bildirildi"; }
             n++;
           });
-          if(n) gvApplyFilters(document.getElementById('tblRapor'), true);
+          if(n){ gvApplyFilters(document.getElementById('tblRapor'), true); syncRaporChipCounts(); }
           gvToast(n + ' rapor kaydı SGK\'ya bildirildi olarak işaretlendi.', {type:'ok'});
         }},
         {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){
           var n = 0;
           rows.forEach(function(tr){
             if(tr.getAttribute('data-arsiv') === '1') return;
-            tr.setAttribute('data-arsiv', '1'); n++;
+            tr.setAttribute('data-arsiv', '1'); tr.setAttribute('data-f', 'arsiv'); n++;
           });
-          if(window.gvPagerRefresh) gvPagerRefresh('#tblRapor', true);
+          if(n){ if(window.gvPagerRefresh) gvPagerRefresh('#tblRapor', true); syncRaporChipCounts(); }
           gvToast(n + ' rapor kaydı arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
         }}
       ]
@@ -406,6 +460,9 @@
         message: 'Kayıt kalıcı olarak silinmez; arşive alınır ve varsayılan listede görünmez olur. "Arşivlenenleri Göster" filtresiyle tekrar görüntülenebilir. İşlem kaydına yazılır.',
         onConfirm:function(){
           row.setAttribute('data-arsiv', '1');
+          row.setAttribute('data-f', 'arsiv');
+          if(window.gvApplyFilters) gvApplyFilters(document.getElementById('tblRapor'), true);
+          syncRaporChipCounts();
           gvToast(label + ' arşivlendi — varsayılan listede artık görünmeyecek.', {type:'danger'});
         }
       });

@@ -142,13 +142,66 @@
     </div>
 
     <div class="gv-card">
-      <div class="gc-head">
-        <h3>Tanımlı Özel Alanlar</h3>
+      <!-- V3A — bu ekran C grubundaydı (kendi varyantı, hiç `.filter-bar` yok);
+           iskelet crm-gorev.html deseniyle YENİDEN KURULDU (tasks/spec-v3a-ortak.md).
+           Düz `.oa-row` div-listesi bir `<table class="gtable gtable-cards">`'a
+           taşındı — böylece Kolonlar/mobil kart görünümü ortak primitiflerle çalışır. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Alan adı ara" data-table-search="#tblOzelAlan">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="oaFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="oaColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <label class="lh-toggle" for="oaArsivGoster">
+              <input type="checkbox" id="oaArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="oaAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblOzelAlan">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt" id="oaCntHepsi">5</span></button>
+              <button class="chip" data-filter="kolon">Liste Kolonu <span class="ch-cnt" id="oaCntKolon">3</span></button>
+              <button class="chip" data-filter="filtre">Gelişmiş Filtrede <span class="ch-cnt" id="oaCntFiltre">1</span></button>
+              <button class="chip" data-filter="gizli">Role Göre Gizlenen <span class="ch-cnt" id="oaCntGizli">2</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
       </div>
-      <div id="oaList"></div>
-      <div class="oa-empty-fields" id="oaEmpty" hidden>
-        <i class="fa-solid fa-layer-group" style="font-size:20px;margin-bottom:10px;display:block;color:var(--muted)"></i>
-        Henüz özel alan tanımlanmadı. "Yeni Özel Alan" ile ilk alanınızı oluşturun.
+      <div class="gc-body flush gv-cards-pad">
+        <table class="gtable gtable-cards" id="tblOzelAlan" data-paginate="10">
+          <thead>
+            <tr>
+              <th>Alan Adı</th>
+              <th data-col="tip">Tip</th>
+              <th data-col="kullanim">Kullanım Alanları</th>
+              <th data-col="gizlilik">Gizlilik</th>
+              <th data-admin-only></th>
+            </tr>
+          </thead>
+          <tbody id="oaList"></tbody>
+        </table>
+        <div class="gv-empty" id="oaEmpty" hidden>
+          <div class="ge-ico"><i class="fa-solid fa-layer-group"></i></div>
+          <h4>Eşleşen özel alan yok</h4>
+          <p>Henüz özel alan tanımlanmadıysa "Yeni Özel Alan" ile ilk alanınızı oluşturun; aksi hâlde aramayı/filtreyi temizleyin.</p>
+        </div>
       </div>
     </div>
   </main>
@@ -264,11 +317,11 @@
      Yemekhane Kart No) "Yeni Özel Alan" ile kullanıcı tarafından EKLENEBİLİR olduğunu
      göstermek için bilinçli olarak BOŞ bırakıldı, hepsi önceden dolu gelmesin) */
   var SEED = [
-    {id:'oa1', ad:'Bot Numarası', tip:'sayi', opt:'', form:true, col:true, filter:false, hidden:[]},
-    {id:'oa2', ad:'Beden Ölçüsü', tip:'secim', opt:'S,M,L,XL,XXL', form:true, col:true, filter:false, hidden:[]},
-    {id:'oa3', ad:'Usta Seviyesi', tip:'secim', opt:'Çırak,Kalfa,Usta,Formen', form:true, col:true, filter:true, hidden:[]},
-    {id:'oa4', ad:'Turnike Kart No', tip:'kisa-metin', opt:'', form:true, col:false, filter:false, hidden:['personel']},
-    {id:'oa5', ad:'Personel Özel Notu', tip:'uzun-metin', opt:'', form:true, col:false, filter:false, hidden:['personel','sef','teknik']}
+    {id:'oa1', ad:'Bot Numarası', tip:'sayi', opt:'', form:true, col:true, filter:false, hidden:[], arsiv:false},
+    {id:'oa2', ad:'Beden Ölçüsü', tip:'secim', opt:'S,M,L,XL,XXL', form:true, col:true, filter:false, hidden:[], arsiv:false},
+    {id:'oa3', ad:'Usta Seviyesi', tip:'secim', opt:'Çırak,Kalfa,Usta,Formen', form:true, col:true, filter:true, hidden:[], arsiv:false},
+    {id:'oa4', ad:'Turnike Kart No', tip:'kisa-metin', opt:'', form:true, col:false, filter:false, hidden:['personel'], arsiv:false},
+    {id:'oa5', ad:'Personel Özel Notu', tip:'uzun-metin', opt:'', form:true, col:false, filter:false, hidden:['personel','sef','teknik'], arsiv:false}
   ];
 
   function load(){
@@ -288,42 +341,141 @@
   var emptyEl = document.getElementById('oaEmpty');
   var countEl = document.getElementById('oaCount');
 
+  /* V3A §3 — "Arşivlenenleri Göster": bir özel alan kalıcı SİLİNMEDEN (§17 dilinin
+     bu ekrana uyarlanmışı) kullanım dışı bırakılabilir — "Sil" hâlâ kalıcı siler
+     (kabul kriterlerinden biri değişmedi), "Arşivle" YENİ bir daha yumuşak alternatif. */
+  var arsivGosterOa = false;
+  /* BUG NOTU (bu dalgada bulunup düzeltildi): bu değişken aşağı §4.3 bloğunda
+     tanımlıydı ama render() DAHA YUKARIDA hemen çağrılıyor — `var` yalnız
+     bildirimi hoist eder, atamayı ETMEZ; ilk render() çağrısında oaFpState hâlâ
+     `undefined` olduğundan `oaFpState.tip` TypeError fırlatıyordu (v2-scan.cjs
+     konsol hatası olarak yakaladı). Çağrıdan ÖNCEYE taşındı. */
+  var oaFpState = {};
+
+  function syncOaChipCounts(visible){
+    var c = {hepsi:visible.length, kolon:0, filtre:0, gizli:0};
+    visible.forEach(function(f){
+      if(f.col) c.kolon++;
+      if(f.filter) c.filtre++;
+      if(f.hidden && f.hidden.length) c.gizli++;
+    });
+    ['Hepsi','Kolon','Filtre','Gizli'].forEach(function(k){
+      var el = document.getElementById('oaCnt' + k);
+      if(el) el.textContent = c[k.toLowerCase()];
+    });
+  }
+
   function render(){
+    var visible = fields.filter(function(f){ return arsivGosterOa || !f.arsiv; });
+    countEl.textContent = visible.length;
     list.innerHTML = '';
-    emptyEl.hidden = fields.length !== 0;
-    countEl.textContent = fields.length;
-    fields.forEach(function(f){
-      var row = document.createElement('div');
-      row.className = 'oa-row';
-      row.setAttribute('data-id', f.id);
+    visible.forEach(function(f){
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-id', f.id);
 
       var usageChips = '<span class="gtag mint"><i class="fa-solid fa-id-card"></i> Personel Formu</span>';
       if(f.col) usageChips += '<span class="gtag"><i class="fa-solid fa-table-columns"></i> Liste Kolonu</span>';
       if(f.filter) usageChips += '<span class="gtag"><i class="fa-solid fa-sliders"></i> Gelişmiş Filtre</span>';
 
-      var hiddenNote = '';
-      if(f.hidden && f.hidden.length){
-        hiddenNote = '<div class="oa-hidden-note"><i class="fa-solid fa-eye-slash"></i> Gizli: '
-          + f.hidden.map(function(r){ return ROLE_LBL[r] || r; }).join(', ') + '</div>';
-      }
+      var gizlilik = (f.hidden && f.hidden.length)
+        ? ('<span class="oa-hidden-note" style="margin-top:0;width:auto"><i class="fa-solid fa-eye-slash"></i> ' + f.hidden.map(function(r){ return ROLE_LBL[r] || r; }).join(', ') + '</span>')
+        : '<span class="muted">—</span>';
 
       var optNote = f.opt ? '<div class="oa-sub">Seçenekler: ' + f.opt.split(',').map(function(s){return s.trim();}).join(' · ') + '</div>' : '';
+      var arsivBadge = f.arsiv ? ' <span class="gtag" style="background:var(--bg);color:var(--muted);border-color:var(--line)">Arşivde</span>' : '';
 
-      row.innerHTML =
-          '<div class="oa-ico"><i class="fa-solid ' + (TIP_ICO[f.tip] || 'fa-font') + '"></i></div>'
-        + '<div class="oa-main"><div class="oa-name">' + f.ad + '</div>'
-        + '<div class="oa-sub">' + (TIP_LBL[f.tip] || f.tip) + '</div>' + optNote + '</div>'
-        + '<div class="oa-usage">' + usageChips + hiddenNote + '</div>'
-        + '<div class="oa-acts" data-admin-only>'
+      tr.innerHTML =
+          '<td data-lbl="Alan Adı"><div style="display:flex;align-items:center;gap:12px">'
+        +   '<div class="oa-ico"><i class="fa-solid ' + (TIP_ICO[f.tip] || 'fa-font') + '"></i></div>'
+        +   '<div><div class="oa-name">' + f.ad + arsivBadge + '</div>' + optNote + '</div>'
+        + '</div></td>'
+        + '<td data-col="tip" data-lbl="Tip">' + (TIP_LBL[f.tip] || f.tip) + '</td>'
+        + '<td data-col="kullanim" data-lbl="Kullanım Alanları"><div class="oa-usage">' + usageChips + '</div></td>'
+        + '<td data-col="gizlilik" data-lbl="Gizlilik">' + gizlilik + '</td>'
+        + '<td data-admin-only data-lbl=""><div class="row-acts">'
         +   '<button type="button" class="ia-btn oa-edit" aria-label="Düzenle" data-tip="Düzenle"><i class="fa-solid fa-pen"></i></button>'
+        +   '<button type="button" class="ia-btn oa-arsiv" data-no-confirm aria-label="' + (f.arsiv ? 'Arşivden Çıkar' : 'Arşivle') + '" data-tip="' + (f.arsiv ? 'Arşivden Çıkar' : 'Arşivle') + '"><i class="fa-solid ' + (f.arsiv ? 'fa-box-open' : 'fa-box-archive') + '"></i></button>'
         +   '<button type="button" class="ia-btn danger oa-del" aria-label="Sil" data-tip="Sil"><i class="fa-solid fa-trash"></i></button>'
-        + '</div>';
+        + '</div></td>';
 
-      if(!isAdmin) row.querySelector('.oa-acts').hidden = true;
-      list.appendChild(row);
+      if(!isAdmin) tr.querySelector('[data-admin-only]').hidden = true;
+      list.appendChild(tr);
     });
+    syncOaChipCounts(visible);
+    applyOaFilters();
   }
   render();
+
+  /* ============ V3A — arama/tab/gelişmiş-filtre BİLEŞİK motoru (§2.1/§2.3/§4.3).
+     Tablo JS ile her render()'da yeniden basıldığı için (statik HTML değil) ve
+     kategoriler (Liste Kolonu / Gelişmiş Filtre / Gizli) BİRBİRİNİ dışlamadığı
+     için (bir alan aynı anda hem kolon hem filtre olabilir) generic tek-değerli
+     data-f eşleşmesi yetmez — tbl._gvApply = fn delegasyonu (D18 deseni,
+     crm-gorev.html emsali) kullanıldı: arama kutusu ve tab tıklamaları GENERIC
+     ui.js dinleyicilerinden gelir, karar mercii burada (oaFpState yukarıda
+     tanımlı — bkz. hoisting notu). ============ */
+  function oaRowMatches(f, cat, term){
+    if(oaFpState.tip && f.tip !== oaFpState.tip.value) return false;
+    if(cat === 'kolon' && !f.col) return false;
+    if(cat === 'filtre' && !f.filter) return false;
+    if(cat === 'gizli' && !(f.hidden && f.hidden.length)) return false;
+    if(term){
+      var hay = (f.ad + ' ' + (TIP_LBL[f.tip] || '')).toLocaleLowerCase('tr');
+      if(hay.indexOf(term) === -1) return false;
+    }
+    return true;
+  }
+  function applyOaFilters(){
+    var tbl = document.getElementById('tblOzelAlan');
+    var card = tbl.closest('.gv-card') || document;
+    var inp = card.querySelector('input[data-table-search]');
+    var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
+    var onChip = card.querySelector('.chip.is-on[data-filter]');
+    var cat = onChip ? onChip.getAttribute('data-filter') : 'hepsi';
+    var shown = 0;
+    tbl.querySelectorAll('tbody tr[data-id]').forEach(function(tr){
+      var f = fields.filter(function(x){ return x.id === tr.getAttribute('data-id'); })[0];
+      var ok = !!f && oaRowMatches(f, cat, term);
+      tr.hidden = !ok;
+      if(ok) shown++;
+    });
+    if(emptyEl) emptyEl.hidden = shown !== 0;
+  }
+  document.getElementById('tblOzelAlan')._gvApply = applyOaFilters;
+
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#oaFiltreBtn',
+      screen: 'ozelalan',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#oaAchips',
+      fields: [
+        {key:'tip', type:'select', label:'Alan Tipi', options: Object.keys(TIP_LBL).map(function(k){ return {v:k, l:TIP_LBL[k]}; })}
+      ],
+      onApply: function(state){ oaFpState = state; applyOaFilters(); }
+    });
+  }
+
+  if(window.gvCols && document.getElementById('oaColsBtn')){
+    gvCols.init({
+      mount: '#oaColsBtn',
+      table: '#tblOzelAlan',
+      screen: 'ozelalan',
+      cols: [
+        {key:'tip', lbl:'Tip', def:true},
+        {key:'kullanim', lbl:'Kullanım Alanları', def:true},
+        {key:'gizlilik', lbl:'Gizlilik', def:true}
+      ]
+    });
+  }
+
+  var oaArsivToggle = document.getElementById('oaArsivGoster');
+  if(oaArsivToggle){
+    oaArsivToggle.addEventListener('change', function(){
+      arsivGosterOa = oaArsivToggle.checked;
+      render();
+    });
+  }
 
   if(!isAdmin) return; /* kabul kriteri 1 — oluşturma/düzenleme yalnız firma yöneticisi */
 
@@ -398,14 +550,26 @@
   document.addEventListener('click', function(e){
     var editBtn = e.target.closest('.oa-edit');
     if(editBtn){
-      var id = editBtn.closest('.oa-row').getAttribute('data-id');
+      var id = editBtn.closest('tr').getAttribute('data-id');
       var f = fields.filter(function(x){ return x.id === id; })[0];
       if(f) openModal(f);
       return;
     }
+    var arsivBtn = e.target.closest('.oa-arsiv');
+    if(arsivBtn){
+      var aid = arsivBtn.closest('tr').getAttribute('data-id');
+      var af = fields.filter(function(x){ return x.id === aid; })[0];
+      if(af){
+        af.arsiv = !af.arsiv;
+        save(fields);
+        render();
+        gvToast('"' + af.ad + '" özel alanı ' + (af.arsiv ? 'arşivlendi — varsayılan listede artık görünmeyecek.' : 'arşivden çıkarıldı.'), {type: af.arsiv ? 'danger' : 'ok'});
+      }
+      return;
+    }
     var delBtn = e.target.closest('.oa-del');
     if(delBtn){
-      var row = delBtn.closest('.oa-row');
+      var row = delBtn.closest('tr');
       var did = row.getAttribute('data-id');
       var df = fields.filter(function(x){ return x.id === did; })[0];
       /* gvConfirm auto-intercept (fa-trash ikonu) burayı ONAY SONRASI çalıştırır —
