@@ -119,9 +119,7 @@
         <h1>Taşeron Kartları</h1>
         <div class="ph-sub" id="phSub">3 taşeron · kimlik, kapsam ve performans özeti</div>
       </div>
-      <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Taşeron kartları"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-      </div>
+      <div class="ph-actions"></div>
     </div>
 
     <div class="kpi-grid">
@@ -148,33 +146,44 @@
     </div>
 
     <div class="gv-card" style="margin-bottom:16px">
-      <div class="filter-bar">
-        <div class="fb-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="tasSearch" placeholder="Taşeron adı veya kapsam ara">
-        </div>
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" id="tasChips">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">3</span></button>
-            <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="tasSearch" placeholder="Taşeron adı veya kapsam ara">
           </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTaseronlar" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="tasColsBtn" data-demo="Taşeron kartları kolon bazlı değil — kimlik/performans kartıdır, ayrıntı için Detaya git." aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <label class="lh-toggle" for="tasArsivGoster">
+              <input type="checkbox" id="tasArsivGoster">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
+            <a class="btn btn-ghost btn-sm" href="#" data-export="Taşeron kartları" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span></a>
+          </div>
         </div>
-        <button type="button" class="btn btn-ghost btn-sm" id="tasColsBtn" data-demo="Taşeron kartları kolon bazlı değil — kimlik/performans kartıdır, ayrıntı için Detaya git."><i class="fa-solid fa-table-columns"></i> Kolonlar</button>
-        <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpTaseronlar">
-          <i class="fa-solid fa-sliders"></i> Gelişmiş Filtre
-        </button>
-      </div>
-      <div class="gv-achips-row" id="achipsTaseronlar" hidden>
-        <div class="gv-achips"></div>
-        <div class="gv-achips-acts">
-          <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
-            <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
-            <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
-          </button>
+        <div class="lh-achips gv-achips-row" id="achipsTaseronlar" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="chip is-locked" data-demo="Filtre setlerini kaydetme Faz 2'de geliyor.">
+              <i class="fa-solid fa-lock"></i> Filtreleri Kaydet
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fp-clear-all>
+              <i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle
+            </button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="tasChips">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">3</span></button>
+              <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
     </div>
@@ -338,12 +347,6 @@
             <option value="liman">Liman Lojistik Merkezi</option>
           </select>
         </div>
-        <div class="gfield">
-          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:600">
-            <input type="checkbox" data-fp-key="arsivgoster" data-fp-label="Arşivlenenleri Göster">
-            Arşivlenenleri Göster
-          </label>
-        </div>
       </div>
       <div class="gv-fpanel-foot">
         <button type="button" class="btn btn-ghost" data-fp-clear>Temizle</button>
@@ -390,7 +393,8 @@
 
   function render(){
     var term = (document.getElementById('tasSearch').value || '').trim().toLocaleLowerCase('tr');
-    var showArchived = !!(fpState.arsivgoster);
+    var arsivChk = document.getElementById('tasArsivGoster');
+    var showArchived = !!(arsivChk && arsivChk.checked);
     var shown = 0;
     cards().forEach(function(c){
       var lc = c.getAttribute('data-lc') || 'aktif';
@@ -409,6 +413,8 @@
   }
 
   document.getElementById('tasSearch').addEventListener('input', render);
+  var tasArsivChk = document.getElementById('tasArsivGoster');
+  if(tasArsivChk) tasArsivChk.addEventListener('change', render);
   document.querySelectorAll('#tasChips .chip[data-filter]').forEach(function(ch){
     ch.addEventListener('click', function(){
       document.querySelectorAll('#tasChips .chip').forEach(function(x){ x.classList.remove('is-on'); });

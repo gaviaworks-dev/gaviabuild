@@ -120,7 +120,6 @@
           <button data-p="genel" class="is-on">Şirket Geneli</button>
           <button data-p="vk">Vadi Konakları</button>
         </div>
-        <a class="btn btn-ghost btn-sm" href="#" id="btnNakitExport" data-gv-export='{"baslik":"Nakit Akışı","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
@@ -216,10 +215,29 @@
         <div class="rp-chart-head"><h3><i class="fa-solid fa-wave-square"></i> Kümülatif Nakit Eğrisi</h3></div>
         <div class="rp-chart-body" id="nakitSpark"></div>
       </div>
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Hafta veya tarih ara" data-table-search="#tblAkis">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="nakitFiltreBtn" aria-label="Gelişmiş Filtre"><i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span></button>
+            <button type="button" class="btn btn-ghost btn-sm" id="nakitColsBtn" aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <a class="btn btn-ghost btn-sm" href="#" id="btnNakitExport" data-gv-export='{"baslik":"Nakit Akışı","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span></a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="nakitAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+      </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblAkis">
           <thead>
-            <tr><th>Hafta</th><th class="num">Giren</th><th class="num">Çıkan</th><th class="num">Net</th><th class="num">Kümülatif</th></tr>
+            <tr><th>Hafta</th><th class="num" data-col="giren">Giren</th><th class="num" data-col="cikan">Çıkan</th><th class="num" data-col="net">Net</th><th class="num" data-col="kumulatif">Kümülatif</th></tr>
           </thead>
           <!-- statik bake — 13 haftalık kanonik akış (AKIS dizisi) VERBATIM; JS
                yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
@@ -288,16 +306,33 @@
   var rows = '';
   AKIS.forEach(function(a, i){
     var neg = a.kum < 0;
+    var haftaNet = a.giren - a.cikan;
     var ts = haftaBaslangic(a.tarih);
-    rows += '<tr'+(a.chk?' class="is-checkpoint"':'')+' data-w="'+i+'"'+(ts?' data-ts="'+ts.getTime()+'"':'')+'>'
+    rows += '<tr'+(a.chk?' class="is-checkpoint"':'')+' data-w="'+i+'"'+(ts?' data-ts="'+ts.getTime()+'"':'')+' data-net="'+(haftaNet>=0?'pozitif':'negatif')+'">'
       + '<td><div class="hafta-cell"><b>'+a.hafta+'</b><span class="muted" style="font-size:11.5px">'+a.tarih+'</span>'+(a.chk?'<span class="chk-badge '+CHK_CLS[a.chk]+'">'+a.chk+'</span>':'')+'</div></td>'
-      + '<td class="num">'+tl(a.giren)+'</td>'
-      + '<td class="num">'+tl(a.cikan)+'</td>'
-      + '<td class="num">'+(a.giren-a.cikan>=0?'+':'−')+tl(Math.abs(a.giren-a.cikan))+'</td>'
-      + '<td class="num'+(neg?' negatif':'')+'">'+(neg?'−':'+')+tl(Math.abs(a.kum))+'</td>'
+      + '<td class="num" data-col="giren">'+tl(a.giren)+'</td>'
+      + '<td class="num" data-col="cikan">'+tl(a.cikan)+'</td>'
+      + '<td class="num" data-col="net">'+(haftaNet>=0?'+':'−')+tl(Math.abs(haftaNet))+'</td>'
+      + '<td class="num'+(neg?' negatif':'')+'" data-col="kumulatif">'+(neg?'−':'+')+tl(Math.abs(a.kum))+'</td>'
       + '</tr>';
   });
   document.getElementById('tblAkisBody').innerHTML = rows;
+  if(window.gvFilterDrawer) gvFilterDrawer.init({
+    mount:'#nakitFiltreBtn', screen:'finans-nakit', table:'#tblAkis', chipsMount:'#nakitAchips',
+    title:'Haftalık Nakit Akışı — Gelişmiş Filtre',
+    fields:[
+      {key:'net', type:'select', label:'Haftalık Net Durumu', options:[{v:'pozitif',l:'Pozitif'},{v:'negatif',l:'Negatif'}]}
+    ]
+  });
+  if(window.gvCols) gvCols.init({
+    mount:'#nakitColsBtn', table:'#tblAkis', screen:'finans-nakit',
+    cols:[
+      {key:'giren', lbl:'Giren', def:true},
+      {key:'cikan', lbl:'Çıkan', def:true},
+      {key:'net', lbl:'Net', def:true},
+      {key:'kumulatif', lbl:'Kümülatif', def:true}
+    ]
+  });
 
   gvSpark('#nakitSpark', AKIS.map(function(a){ return a.kum; }), {tone: 'acc', baslik:'13 haftalık kümülatif nakit pozisyonu'});
 

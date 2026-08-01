@@ -109,7 +109,6 @@
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-finans-butce-detay.html?proje=vadi" id="btnButce"><i class="fa-solid fa-file-lines"></i> Bütçe Detayı</a>
         <button type="button" class="btn btn-ghost btn-sm" id="btnMlHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
-        <a class="btn btn-ghost btn-sm" href="#" id="btnMaliyetExport" data-gv-export='{"baslik":"Gerçekleşen Maliyet","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
@@ -186,9 +185,28 @@
          (crm-finans-maliyet.html kaynak script'i, render() fonksiyonu, PROJE.vadi) — D18-B2 -->
     <div class="gv-card">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-chart-bar"></i> Kategori Bazlı Bütçe – Gerçekleşen</div><span class="ph-sub" style="margin:0" id="gcSub">Vadi Konakları</span></div>
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Kategori ara" data-table-search="#tblKatDetay">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="mlFiltreBtn" aria-label="Gelişmiş Filtre"><i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span></button>
+            <button type="button" class="btn btn-ghost btn-sm" id="mlColsBtn" aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <a class="btn btn-ghost btn-sm" href="#" id="btnMaliyetExport" data-gv-export='{"baslik":"Gerçekleşen Maliyet","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span></a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="mlAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+      </div>
       <div class="gc-body flush rp-table-wrap" style="box-shadow:none;border:none;border-bottom:1px solid var(--line);margin-bottom:0">
         <table class="gtable" id="tblKatDetay">
-          <thead><tr><th>Kategori</th><th class="num">Bütçe</th><th class="num">Gerçekleşen</th><th class="num">Kullanım</th><th>Durum</th></tr></thead>
+          <thead><tr><th>Kategori</th><th class="num" data-col="butce">Bütçe</th><th class="num" data-col="gerceklesen">Gerçekleşen</th><th class="num" data-col="kullanim">Kullanım</th><th data-col="durum">Durum</th></tr></thead>
           <tbody id="tblKatDetayBody"></tbody>
         </table>
       </div>
@@ -380,10 +398,12 @@
     var detayHtml = '';
     P.kategoriler.forEach(function(k, i){
       var rev=k[0], ger=k[1], kUse=pct(ger,rev), asim = kUse > 100;
-      detayHtml += '<tr><td>'+KATEGORI_ADI[i]+'</td><td class="num">'+tl(rev)+'</td><td class="num">'+tl(ger)+'</td><td class="num">%'+kUse+'</td>'
-        + '<td>'+(asim ? '<span class="gstat danger">Aşımda</span>' : (kUse>=90 ? '<span class="gstat warn">Sınırda</span>' : '<span class="gstat ok">Normal</span>'))+'</td></tr>';
+      var durumKey = asim ? 'asim' : (kUse >= 90 ? 'sinir' : 'normal');
+      detayHtml += '<tr data-durum="'+durumKey+'"><td>'+KATEGORI_ADI[i]+'</td><td class="num" data-col="butce">'+tl(rev)+'</td><td class="num" data-col="gerceklesen">'+tl(ger)+'</td><td class="num" data-col="kullanim">%'+kUse+'</td>'
+        + '<td data-col="durum">'+(asim ? '<span class="gstat danger">Aşımda</span>' : (kUse>=90 ? '<span class="gstat warn">Sınırda</span>' : '<span class="gstat ok">Normal</span>'))+'</td></tr>';
     });
     document.getElementById('tblKatDetayBody').innerHTML = detayHtml;
+    if(window.mlColsHandle) window.mlColsHandle.apply();
 
     var hasAsim = asimIdx !== -1;
     document.getElementById('asimBanner').hidden = !hasAsim;
@@ -427,6 +447,33 @@
   }
 
   render(pKey);
+
+  /* ============ V3A — "Kategori Bazlı Bütçe – Gerçekleşen" tablosu için Gelişmiş
+     Filtre/Kolonlar (tasks/spec-v3a-ortak.md). render(pKey) İLK ÇALIŞTIRILIR (tbody
+     satırları burada doğar) — primitifler ONDAN SONRA bağlanır (aynı gerekçe:
+     crm-finans-butce.html). Proje seçimi zaten üstteki #projeSwitch'te — burada
+     tekrar EKLENMEDİ; anlamlı ikinci facet tablonun kendi "Durum" (Aşımda/Sınırda/
+     Normal) sütunu. ============ */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount:'#mlFiltreBtn', screen:'finans-maliyet', table:'#tblKatDetay', chipsMount:'#mlAchips',
+      title:'Kategori Dökümü — Gelişmiş Filtre',
+      fields:[
+        {key:'durum', type:'select', label:'Durum', options:[{v:'asim',l:'Aşımda'},{v:'sinir',l:'Sınırda'},{v:'normal',l:'Normal'}]}
+      ]
+    });
+  }
+  if(window.gvCols){
+    window.mlColsHandle = gvCols.init({
+      mount:'#mlColsBtn', table:'#tblKatDetay', screen:'finans-maliyet',
+      cols:[
+        {key:'butce', lbl:'Bütçe', def:true},
+        {key:'gerceklesen', lbl:'Gerçekleşen', def:true},
+        {key:'kullanim', lbl:'Kullanım', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
 
   document.querySelectorAll('#projeSwitch button').forEach(function(b){
     b.addEventListener('click', function(){

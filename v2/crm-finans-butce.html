@@ -94,9 +94,7 @@
         <h1>Proje Bütçesi</h1>
         <div class="ph-sub">3 proje · orijinal, revize ve gerçekleşen bütçe karşılaştırması</div>
       </div>
-      <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" id="btnButceExport" data-gv-export='{"baslik":"Proje Bütçesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-      </div>
+      <div class="ph-actions"></div>
     </div>
 
     <div class="rp-toolbar">
@@ -171,9 +169,28 @@
 
     <div class="gv-card" style="margin-top:20px">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Proje Bazlı Bütçe Dökümü</div></div>
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Proje ara" data-table-search="#tblButceDetay">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="btFiltreBtn" aria-label="Gelişmiş Filtre"><i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span></button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btColsBtn" aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <a class="btn btn-ghost btn-sm" href="#" id="btnButceExport" data-gv-export='{"baslik":"Proje Bütçesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span></a>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="btAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+      </div>
       <div class="gc-body flush rp-table-wrap" style="box-shadow:none;border:none;margin-bottom:0">
         <table class="gtable" id="tblButceDetay">
-          <thead><tr><th>Proje</th><th class="num">Orijinal</th><th class="num">Revize</th><th class="num">Gerçekleşen</th><th class="num">Kalan</th><th class="num">Kullanım</th></tr></thead>
+          <thead><tr><th>Proje</th><th class="num" data-col="orijinal">Orijinal</th><th class="num" data-col="revize">Revize</th><th class="num" data-col="gerceklesen">Gerçekleşen</th><th class="num" data-col="kalan">Kalan</th><th class="num" data-col="kullanim">Kullanım</th></tr></thead>
           <tbody id="tblButceDetayBody"></tbody>
         </table>
       </div>
@@ -254,12 +271,12 @@
     keys.forEach(function(k){
       var P = PROJE[k];
       tOrij += P.orij; tRev += P.rev; tGer += P.ger;
-      h += '<tr><td>' + P.ad + '</td><td class="num">' + tl(P.orij) + '</td><td class="num">' + tl(P.rev) + '</td>'
-        + '<td class="num">' + tl(P.ger) + '</td><td class="num">' + tl(P.rev - P.ger) + '</td><td class="num">%' + pct(P.ger, P.rev) + '</td></tr>';
+      h += '<tr data-durum="' + (P.asimKat ? 'asim' : 'normal') + '"><td>' + P.ad + '</td><td class="num" data-col="orijinal">' + tl(P.orij) + '</td><td class="num" data-col="revize">' + tl(P.rev) + '</td>'
+        + '<td class="num" data-col="gerceklesen">' + tl(P.ger) + '</td><td class="num" data-col="kalan">' + tl(P.rev - P.ger) + '</td><td class="num" data-col="kullanim">%' + pct(P.ger, P.rev) + '</td></tr>';
     });
     if(keys.length > 1){
-      h += '<tr class="bd-total"><td>Toplam</td><td class="num">' + tl(tOrij) + '</td><td class="num">' + tl(tRev) + '</td>'
-        + '<td class="num">' + tl(tGer) + '</td><td class="num">' + tl(tRev - tGer) + '</td><td class="num">%' + pct(tGer, tRev) + '</td></tr>';
+      h += '<tr class="bd-total"><td>Toplam</td><td class="num" data-col="orijinal">' + tl(tOrij) + '</td><td class="num" data-col="revize">' + tl(tRev) + '</td>'
+        + '<td class="num" data-col="gerceklesen">' + tl(tGer) + '</td><td class="num" data-col="kalan">' + tl(tRev - tGer) + '</td><td class="num" data-col="kullanim">%' + pct(tGer, tRev) + '</td></tr>';
     }
     return h;
   }
@@ -334,6 +351,10 @@
     document.getElementById('butceCompare').innerHTML = compareHtml(keys);
     document.getElementById('butceCompare').hidden = keys.length < 2;
     document.getElementById('butceNote').innerHTML = noteHtml(keys, filter);
+    /* proje kapsamı değiştikçe tbody satırları YENİDEN yazılır — gvCols'un kayıtlı
+       kolon tercihini (varsa) taze satırlara da uygula (aksi halde yalnız ilk
+       render'da uygulanmış olurdu). btColsHandle ilk render()'dan SONRA atanır. */
+    if(window.btColsHandle) window.btColsHandle.apply();
 
     var tRev=0, tGer=0, revizyon=0, asim=0, asimLbl='Aşımda kategori yok';
     keys.forEach(function(k){
@@ -381,6 +402,37 @@
   gvExport.bind();
 
   render('tumu');
+
+  /* ============ V3A — "Proje Bazlı Bütçe Dökümü" tablosu için Gelişmiş Filtre/
+     Kolonlar (tasks/spec-v3a-ortak.md). render('tumu') İLK ÇALIŞTIRILIR (tbody
+     satırları burada doğar) — primitifler ONDAN SONRA bağlanır, yoksa ilk
+     apply()/applyToTable() boş tabloya karşı çalışır ve kayıtlı kolon/filtre
+     tercihi ilk render'a yansımaz. Tablo yalnız 3 satır barındırdığından (proje
+     bazında) tek anlamlı facet "Bütçe Durumu" (aşımda/aşımda değil) — Proje
+     zaten üstteki rp-toolbar chip'leriyle kapsam olarak seçiliyor, ikinci bir
+     Proje alanı DUPLICATE olurdu (crm-gorev.html K-220 dersiyle tutarlı —
+     tasks/kararlar.md). ============ */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount:'#btFiltreBtn', screen:'finans-butce', table:'#tblButceDetay', chipsMount:'#btAchips',
+      title:'Bütçe Dökümü — Gelişmiş Filtre',
+      fields:[
+        {key:'durum', type:'select', label:'Bütçe Durumu', options:[{v:'asim',l:'Aşımda'},{v:'normal',l:'Aşımda Değil'}]}
+      ]
+    });
+  }
+  if(window.gvCols){
+    window.btColsHandle = gvCols.init({
+      mount:'#btColsBtn', table:'#tblButceDetay', screen:'finans-butce',
+      cols:[
+        {key:'orijinal', lbl:'Orijinal', def:true},
+        {key:'revize', lbl:'Revize', def:true},
+        {key:'gerceklesen', lbl:'Gerçekleşen', def:true},
+        {key:'kalan', lbl:'Kalan', def:true},
+        {key:'kullanim', lbl:'Kullanım', def:true}
+      ]
+    });
+  }
 })();
 </script>
 </body>
