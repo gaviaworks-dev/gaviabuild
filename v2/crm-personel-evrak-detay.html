@@ -77,6 +77,21 @@
 
 .gv-side-stack{display:flex;flex-direction:column;gap:16px}
 .doc-req-badge{font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--acc-ink);background:rgba(var(--acc-rgb),.12);padding:2px 7px;border-radius:20px}
+
+/* ============ §7.2 bağlam kaybı — sabit kimlik bandı (T-S1, Dalga 4) ============
+   Sayfa kaydırıldığında (önizleme + geçmiş sürümler + personel + ilgili kayıt kartları
+   alt alta uzayabilir) hangi personelin/evrakın incelendiği kaybolmasın diye kısa bir
+   sticky şerit. `.gv-sticky-head` ORTAK primitifi (spec-v3a-ortak.md §5) TÜKETİLİR —
+   yeni bir konumlandırma kuralı İCAT EDİLMEDİ, yalnız yerleşim/tipografi eklendi. */
+.gd-sticky{margin-bottom:16px;border-radius:var(--r-md);border:1px solid var(--line);box-shadow:var(--sh-sm)}
+.gd-sticky-row{display:flex;align-items:center;gap:9px;padding:10px 16px;font-size:12.5px;flex-wrap:nowrap;min-width:0}
+.gd-sticky-who{font-weight:800;color:var(--ink);white-space:nowrap;flex:none}
+.gd-sticky-row i{font-size:9px;color:var(--line-2);flex:none}
+.gd-sticky-doc{font-weight:600;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 auto}
+.gd-sticky-row .gstat{flex:none;margin-left:auto}
+@media(max-width:640px){
+  .gd-sticky-row{padding:9px 14px;font-size:11.5px;gap:7px}
+}
 </style>
 </head>
 <body data-sec="personel" data-screen="ozluk">
@@ -104,6 +119,17 @@
       <a href="crm-personel-ozluk.html">Özlük &amp; Evrak</a>
       <i class="fa-solid fa-chevron-right"></i>
       <span id="crumbLbl">Evrak Detayı</span>
+    </div>
+
+    <!-- §7.2 — kaydırırken hangi personelin evrakına bakıldığı kaybolmasın (statik bake:
+         varsayılan per=004/doc=03 ile aynı; JS'te render() bunu ezer). -->
+    <div class="gv-sticky-head gd-sticky" id="gdSticky">
+      <div class="gd-sticky-row">
+        <span class="gd-sticky-who" id="gdStickyWho">Hasan Demirci</span>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        <span class="gd-sticky-doc" id="gdStickyDoc">03 — SGK işe giriş bildirgesi</span>
+        <span class="gstat ok" id="gdStickyStat">Tamamlandı</span>
+      </div>
     </div>
 
     <div class="rec-switch">
@@ -222,6 +248,13 @@
     document.title = t.ad + ' — ' + p.ad + ' — Evrak Detayı — Gavia CRM';
     document.getElementById('crumbLbl').textContent = t.ad + ' — ' + p.ad;
     GV.crumb(t.ad);
+
+    /* §7.2 — sabit kimlik bandı, sayfanın geri kalanıyla AYNI render() çağrısında güncellenir */
+    document.getElementById('gdStickyWho').textContent = p.ad;
+    document.getElementById('gdStickyDoc').textContent = t.no + ' — ' + t.ad;
+    var gdStat = document.getElementById('gdStickyStat');
+    gdStat.className = 'gstat ' + STAT_GS[cls];
+    gdStat.textContent = lbl;
 
     /* ---- ozluk.html'in ÖNİZLEME PANELİ ile AYNI [MOCK] üretim formülü — iki sayfa
        aynı per+doc için aynı dosya adı/boyut/tarihi üretir, ÇELİŞMEZ. ---- */
