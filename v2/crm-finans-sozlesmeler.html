@@ -57,6 +57,17 @@
 /* ============ §17 — Gelişmiş Filtre paneli sade checkbox alanı ============ */
 .gv-fp-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);cursor:pointer;font-weight:600}
 .gv-fp-check input{width:15px;height:15px;accent-color:var(--acc-ink);cursor:pointer}
+
+/* ============ V3A (§15.2) — Özet tab içeriği. stat-grid/hstat ui.css'te YOK —
+   crm-finans-taseron.html'in sayfa-lokal pattern'i devralındı (K-220 dersi). ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:640px){ .stat-grid{grid-template-columns:1fr} }
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:7px}
+.rep-src i{margin-top:2px;flex:none}
 </style>
 </head>
 <body data-sec="finans" data-screen="sozlesmeler">
@@ -114,6 +125,11 @@
       </div>
     </div>
 
+    <!-- ============ V3A (spec-v3a-ortak.md §3, doküman §8/§15.2) — Liste/Grafikler/Özet tab
+         yapısı. Sayfada önceden grafik/§15.3 alt-bölüm bloğu YOKTU — yalnız tab iskeleti +
+         gerçek (placeholder olmayan) Grafikler/Özet içeriği kuruldu. ============ -->
+    <div id="szlTabs"></div>
+    <div class="gv-tabpanel" id="panel-szl-liste">
     <div class="gv-card">
       <div class="gv-listhead">
         <div class="lh-row">
@@ -274,6 +290,40 @@
         <a href="crm-finans-taseron.html">Taşeron Hakedişleri <i class="fa-solid fa-arrow-right"></i></a>
       </div>
     </div>
+    </div>
+
+    <!-- ============ Grafikler tab — sözleşme durum dağılımı (#tblSozlesme'nin 6 satırındaki
+         gstat rozetlerinden: Yürürlükte 5 · İmza Bekliyor 1, k03) + başlangıç yılına göre
+         sözleşme sayısı (data-tarih yıl kırılımı: 2025 → k01/k02 = 2 · 2026 → k03/t05/t06/t07
+         = 4). ============ -->
+    <div class="gv-tabpanel" id="panel-szl-grafik">
+      <div class="rp-charts-2">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Sözleşme Durum Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartSzlDurum"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Başlangıç Yılına Göre Sözleşme Sayısı</h3></div>
+          <div class="rp-chart-body" id="chartSzlDonem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Özet tab — kurum/taşeron bazlı toplam sözleşme sayısı + bedel (KPI
+         şeridiyle BİREBİR: kurum ₺40.500.000/3, taşeron ₺945.000/3) + süresi yaklaşan. ============ -->
+    <div class="gv-tabpanel" id="panel-szl-ozet">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-contract"></i> Kurum / Taşeron Bazlı Toplam</div></div>
+        <div class="gc-body">
+          <div class="stat-grid">
+            <div class="hstat"><span class="hstat-num">₺40.500.000</span><span class="hstat-lbl">Kurum — 3 sözleşme (Körfez GYO, Aliağa Liman, Sapanca Belediyesi)</span></div>
+            <div class="hstat"><span class="hstat-num">₺945.000</span><span class="hstat-lbl">Taşeron — 3 sözleşme (Demir-Beton, Yalıtım Kardeşler, ElektroMek)</span></div>
+            <div class="hstat warn"><span class="hstat-num">1</span><span class="hstat-lbl">Süresi 90 gün içinde dolan — SZL-2026-K02, Aliağa Liman İşletmeleri</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam ₺41.445.000 — kaynak: #tblSozlesme'nin 6 satırı (data-f/data-col="bedel").</div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- ============ §17 — Gelişmiş Filtre paneli (spec-filtre-tarih.md) ============ -->
@@ -317,6 +367,34 @@
   document.querySelectorAll('[data-view="olusturabilir"]').forEach(function(el){
     el.hidden = OLUSTURABILIR.indexOf(GV.role) === -1;
   });
+
+  /* ============ V3A (§15.2) — Grafikler tab içeriği. Durum dağılımı #tblSozlesme'nin 6
+     satırındaki gstat rozetlerinden (Yürürlükte 5 · İmza Bekliyor 1); dönem grafiği
+     data-tarih yıl kırılımından (2025: k01/k02=2 · 2026: k03/t05/t06/t07=4). ============ */
+  function szlDrawCharts(){
+    if(window.gvDonut) gvDonut('#chartSzlDurum', [
+      {lbl:'Yürürlükte', val:5, tone:'ok'},
+      {lbl:'İmza Bekliyor', val:1, tone:'warn'}
+    ], {baslik:'Sözleşme durum dağılımı', merkezAlt:'sözleşme'});
+    if(window.gvBar) gvBar('#chartSzlDonem', [
+      {lbl:'2025', val:2}, {lbl:'2026', val:4, tone:'acc'}
+    ], {yon:'dikey', baslik:'Başlangıç yılına göre sözleşme sayısı'});
+  }
+  szlDrawCharts();
+
+  /* ============ V3A (spec-v3a-ortak.md §3) — Liste/Grafikler/Özet tab yapısı. "Liste"
+     varsayılan+ilk (§8.1). ============ */
+  if(window.gvTabs){
+    gvTabs.init({
+      mount: '#szlTabs', screen: 'finans-sozlesmeler', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-szl-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-szl-grafik'},
+        {key:'ozet', etiket:'Özet', ikon:'fa-clipboard', panel:'#panel-szl-ozet'}
+      ],
+      onChange: function(key){ if(key === 'grafik') szlDrawCharts(); }
+    });
+  }
 
   /* §19 revizyon (D4/Finans) — "Süresi Yaklaşan" chip'i 3. boyut (kurum/taseron chip'iyle
      AYNI data-f alanını paylaşamaz, ui.js chip motoru tek değerli eşleşir) — bu yüzden
