@@ -241,18 +241,6 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
       </div>
     </div>
 
-    <!-- Dönem toggle [MOCK] — madde 8.2: Kasa Girişi/Çıkışı KPI'ları bu 3 önceden
-         hesaplanmış sete göre değişir; diğer 2 KPI (onay bekleyen/reddedilen) anlık
-         onay-zinciri durumu olduğundan dönemden bağımsız, statik kalır. -->
-    <div class="donem-row">
-      <span class="frow-lbl">Dönem</span>
-      <div class="chips" id="donemChips">
-        <button class="chip" data-donem="gunluk">Günlük</button>
-        <button class="chip" data-donem="haftalik">Haftalık</button>
-        <button class="chip is-on" data-donem="aylik">Aylık</button>
-      </div>
-    </div>
-
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-ico" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-wallet"></i></div>
@@ -273,6 +261,27 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
         <div class="kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
         <div><div class="kpi-num num">2</div><div class="kpi-lbl">Onay bekleyen</div>
         <div class="kpi-delta down"><i class="fa-solid fa-clock"></i> ₺43.300 · en eski 3 gündür</div></div>
+      </div>
+    </div>
+
+    <!-- ============ V3A (spec-v3a-ortak.md §3) — Liste/Grafikler/Özet tab iskeleti,
+         T-Y2 Dalga 3. gvTabs.init aşağıdaki <script>'te #kasaTabs mount'una kurulur;
+         "Liste" varsayılan/ilk sekme (§8.1 "ana görünümde öncelik liste/tablo"). Grafikler
+         ana tablonun ÜSTÜNDEN alınıp buraya taşındı — mount id'leri (chartKasaDurum/
+         chartKasaGunluk/chartKasaSantiye) ve gvBar/gvDonut çağrıları KORUNDU, yalnız DOM
+         konumu değişti (spec §8.1/§15.2). ============ -->
+    <div id="kasaTabs"></div>
+
+    <div class="gv-tabpanel" id="panel-kasa-liste">
+    <!-- Dönem toggle [MOCK] — madde 8.2: Kasa Girişi/Çıkışı KPI'ları bu 3 önceden
+         hesaplanmış sete göre değişir; diğer 2 KPI (onay bekleyen/reddedilen) anlık
+         onay-zinciri durumu olduğundan dönemden bağımsız, statik kalır. -->
+    <div class="donem-row">
+      <span class="frow-lbl">Dönem</span>
+      <div class="chips" id="donemChips">
+        <button class="chip" data-donem="gunluk">Günlük</button>
+        <button class="chip" data-donem="haftalik">Haftalık</button>
+        <button class="chip is-on" data-donem="aylik">Aylık</button>
       </div>
     </div>
 
@@ -411,79 +420,6 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
       </div>
     </div>
 
-    <!-- ============ T-O1 (B §7.2 madde 4-5) — durum dağılım grafiği + zaman bazlı grafik
-         (B §7.3 Kasa: günlük giriş/çıkış grafiği). Sayılar kaynak: "Rapor & Onay Akışı"
-         tablosunun 16 kaydının data-f rozetleri (durum) + kasa defterinin 1-2 Temmuz
-         satırlarının günlük toplamı (zaman). Türetme tasks/devir-TO1.md'de. ============ -->
-    <div class="rp-charts-2" style="margin-bottom:18px">
-      <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Rapor Durum Dağılımı</h3></div>
-        <div class="rp-chart-body" id="chartKasaDurum"></div>
-      </div>
-      <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Günlük Giriş / Çıkış — cari dönem</h3></div>
-        <div class="rp-chart-body" id="chartKasaGunluk"></div>
-      </div>
-    </div>
-
-    <!-- ============ T-O1 (B §7.3 Kasa) — şantiye bazlı harcama dağılımı + belgesiz harcama oranı ============ -->
-    <div class="rp-charts-2" style="margin-bottom:18px">
-      <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-map-location-dot"></i> Şantiye Bazlı Harcama Dağılımı — cari dönem</h3></div>
-        <div class="rp-chart-body" id="chartKasaSantiye"></div>
-      </div>
-      <div class="gv-card" style="margin:0">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-circle-exclamation"></i> Belgesiz Harcama Oranı</div></div>
-        <div class="gc-body">
-          <div class="stat-grid cols-2">
-            <div class="hstat warn"><span class="hstat-num">%90</span><span class="hstat-lbl">Belgesiz hareket oranı — 9/10 ödeme+avans kaydı</span></div>
-            <div class="hstat"><span class="hstat-num">₺66.980</span><span class="hstat-lbl">Belgesiz tutar · dönem ödeme+avans toplamının %73'ü</span></div>
-          </div>
-          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> 10 ödeme/avans kaydından yalnız <b>KSA-2026-018</b> (₺24.900) belgeli; kalan 9 kaydın tutarı belli 8'i ₺66.980 ile bu dönemin ödeme+avans toplamının (₺91.880) %73'ünü oluşturuyor — <b>KSA-2026-022</b> taslak olduğundan tutar hesaba girmiyor. Kaynak: <a href="crm-operasyon-kasa-detay.html?ks=ksa-018" style="color:var(--acc-ink);font-weight:700;text-decoration:none">kasa hareketi detayı</a>.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ T-O1 (B §7.2 madde 6-7) — açık işler/bekleyen işlemler + son hareketler ============ -->
-    <div class="dash-cols" style="margin-bottom:18px">
-      <div class="gv-card" style="margin:0">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Onay Bekleyen Kasa Hareketleri</div></div>
-        <div class="gc-body">
-          <div class="hl-list">
-            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-operasyon-kasa-detay.html?ks=ksa-018" style="color:var(--acc-ink);font-weight:700;text-decoration:none">KSA-2026-018</a> · Vadi Konakları — Hafriyat nakliye bedeli, ₺24.900, 29 Haziran'dan beri (3 gündür) onay bekliyor — en eski kayıt.</span></div>
-            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-operasyon-kasa-detay.html?ks=ksa-021" style="color:var(--acc-ink);font-weight:700;text-decoration:none">KSA-2026-021</a> · Vadi Konakları — Nakliye + işçilik avansı, ₺18.400, bugün (2 Temmuz) oluşturuldu.</span></div>
-          </div>
-          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam ₺43.300 — kasa KPI şeridindeki "Onay bekleyen" ile birebir.</div>
-        </div>
-      </div>
-      <div class="gv-card" style="margin:0">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
-        <div class="gc-body">
-          <div class="hl-list">
-            <div class="hl-row"><i class="fa-solid fa-pen"></i><span><b>KSA-2026-022</b> · Vadi — taslak, sarf malzeme nakit (2 Temmuz, gönderilmedi).</span></div>
-            <div class="hl-row"><i class="fa-solid fa-hourglass-half"></i><span><b>KSA-2026-021</b> · Vadi — ₺18.400 nakliye avansı, onay bekliyor (2 Temmuz).</span></div>
-            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>KSG-2026-006</b> · Merkez — ₺60.000 genel merkez kasa beslemesi, kayıtlı (1 Temmuz).</span></div>
-            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>KSA-2026-020</b> · Liman — ₺9.750 malzeme nakit alımı, onaylandı (1 Temmuz).</span></div>
-            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>KSA-2026-019</b> · Merkez — ₺6.200 yakıt + sarf malzeme, onaylandı (30 Haziran).</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ T-O1 (B §7.2 madde 8) — kritik uyarılar ============ -->
-    <div class="gv-card" style="margin-bottom:18px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
-      <div class="gc-body">
-        <div class="hl-list">
-          <div class="hl-row risk"><i class="fa-solid fa-hourglass-half"></i><span><b>KSA-2026-018</b> (₺24.900) 3 gündür onay bekliyor — dönemin en eski bekleyen kaydı.</span></div>
-          <div class="hl-row risk"><i class="fa-solid fa-file-circle-exclamation"></i><span>Belgesiz harcama oranı <b>%90</b> — dönem kapatılmadan (Dönem Kapatma ekranı) 9 kayda belge eklenmesi gerekiyor.</span></div>
-          <div class="hl-row risk-warn"><i class="fa-solid fa-xmark"></i><span><b>KSA-2026-017</b> (₺4.500, Liman) reddedildi — Aylin Koç'un yeniden düzenlemesi gerekiyor.</span></div>
-          <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-rotate-left"></i><span><b>KSA-2026-016</b> (₺3.150, Vadi) revize istendi — düzeltme bekliyor.</span></div>
-          <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-trend-down"></i><span>Liman Lojistik kasası dönem başına göre <b>%42 düştü</b> (₺31.750 → ₺18.520) — nakit erimesi hızlı, beslenme ihtiyacı değerlendirilmeli.</span></div>
-        </div>
-      </div>
-    </div>
-
     <div class="gv-card">
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-stamp"></i> Rapor &amp; Onay Akışı</div>
@@ -577,6 +513,119 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
         </div>
       </div>
     </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-kasa-grafik">
+    <!-- ============ T-O1 (B §7.2 madde 4-5) — durum dağılım grafiği + zaman bazlı grafik
+         (B §7.3 Kasa: günlük giriş/çıkış grafiği). Sayılar kaynak: "Rapor & Onay Akışı"
+         tablosunun 16 kaydının data-f rozetleri (durum) + kasa defterinin 1-2 Temmuz
+         satırlarının günlük toplamı (zaman). Türetme tasks/devir-TO1.md'de. ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Rapor Durum Dağılımı</h3></div>
+        <div class="rp-chart-body" id="chartKasaDurum"></div>
+      </div>
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Günlük Giriş / Çıkış — cari dönem</h3></div>
+        <div class="rp-chart-body" id="chartKasaGunluk"></div>
+      </div>
+    </div>
+
+    <!-- ============ T-O1 (B §7.3 Kasa) — şantiye bazlı harcama dağılımı + belgesiz harcama oranı ============ -->
+    <div class="rp-charts-2" style="margin-bottom:18px">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-map-location-dot"></i> Şantiye Bazlı Harcama Dağılımı — cari dönem</h3></div>
+        <div class="rp-chart-body" id="chartKasaSantiye"></div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-circle-exclamation"></i> Belgesiz Harcama Oranı</div></div>
+        <div class="gc-body">
+          <div class="stat-grid cols-2">
+            <div class="hstat warn"><span class="hstat-num">%90</span><span class="hstat-lbl">Belgesiz hareket oranı — 9/10 ödeme+avans kaydı</span></div>
+            <div class="hstat"><span class="hstat-num">₺66.980</span><span class="hstat-lbl">Belgesiz tutar · dönem ödeme+avans toplamının %73'ü</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> 10 ödeme/avans kaydından yalnız <b>KSA-2026-018</b> (₺24.900) belgeli; kalan 9 kaydın tutarı belli 8'i ₺66.980 ile bu dönemin ödeme+avans toplamının (₺91.880) %73'ünü oluşturuyor — <b>KSA-2026-022</b> taslak olduğundan tutar hesaba girmiyor. Kaynak: <a href="crm-operasyon-kasa-detay.html?ks=ksa-018" style="color:var(--acc-ink);font-weight:700;text-decoration:none">kasa hareketi detayı</a>.</div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-kasa-ozet">
+      <!-- ============ V3A T-Y2 Dalga 3 — Özet tab'ı: şantiye bazlı kasa özeti, kanonik
+           toplam ₺165.130 = Vadi ₺81.920 + Liman ₺18.520 + Merkez ₺64.690 (D8 kanonik
+           devir/giriş/çıkış/mevcut değerlerinden TÜRETİLDİ, ks-grid ile AYNI kaynak,
+           yalnız kart yerine karşılaştırmalı özet tablosu olarak sunuluyor). ============ -->
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-scale-balanced"></i> Şantiye Bazlı Kasa Özeti — cari dönem</div></div>
+        <div class="gc-body">
+          <div class="stat-grid" style="margin-bottom:16px">
+            <div class="hstat"><span class="hstat-num">₺165.130</span><span class="hstat-lbl">Toplam kasa bakiyesi — 3 aktif kasa</span></div>
+            <div class="hstat ok"><span class="hstat-num">₺81.920</span><span class="hstat-lbl">Vadi Konakları — mevcut kasa</span></div>
+            <div class="hstat"><span class="hstat-num">₺18.520</span><span class="hstat-lbl">Liman Lojistik Merkezi — mevcut kasa</span></div>
+            <div class="hstat"><span class="hstat-num">₺64.690</span><span class="hstat-lbl">Merkez Şantiye — mevcut kasa</span></div>
+          </div>
+          <div class="gc-body flush" style="padding:0">
+            <table class="gtable">
+              <thead>
+                <tr><th>Şantiye</th><th class="num">Devir (1 Tem)</th><th class="num">Dönem Girişi</th><th class="num">Dönem Çıkışı</th><th class="num">Mevcut Kasa</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Vadi Konakları</td><td class="num">₺48.250</td><td class="num df-in">+₺186.400</td><td class="num df-out">−₺152.730</td><td class="num t-strong">₺81.920</td></tr>
+                <tr><td>Liman Lojistik Merkezi</td><td class="num">₺31.750</td><td class="num df-in">+₺0</td><td class="num df-out">−₺13.230</td><td class="num t-strong">₺18.520</td></tr>
+                <tr><td>Merkez Şantiye</td><td class="num">₺12.860</td><td class="num df-in">+₺60.000</td><td class="num df-out">−₺8.170</td><td class="num t-strong">₺64.690</td></tr>
+                <tr class="df-total"><td><b>TOPLAM</b></td><td class="num"><b>₺92.860</b></td><td class="num df-in"><b>+₺246.400</b></td><td class="num df-out"><b>−₺174.130</b></td><td class="num"><b>₺165.130</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Kaynak: Kasa Defteri (Liste sekmesi) — devir + dönem içi giriş/çıkış toplamı her şantiyede MEVCUT KASA satırına eşittir; genel toplam KPI şeridindeki kasa bakiyesi/giriş/çıkış rakamlarıyla birebir.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec">
+    <!-- ============ T-O1 (B §7.2 madde 6-7) — açık işler/bekleyen işlemler + son hareketler ============ -->
+    <div class="dash-cols" style="margin-bottom:18px">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Onay Bekleyen Kasa Hareketleri</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-operasyon-kasa-detay.html?ks=ksa-018" style="color:var(--acc-ink);font-weight:700;text-decoration:none">KSA-2026-018</a> · Vadi Konakları — Hafriyat nakliye bedeli, ₺24.900, 29 Haziran'dan beri (3 gündür) onay bekliyor — en eski kayıt.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><a href="crm-operasyon-kasa-detay.html?ks=ksa-021" style="color:var(--acc-ink);font-weight:700;text-decoration:none">KSA-2026-021</a> · Vadi Konakları — Nakliye + işçilik avansı, ₺18.400, bugün (2 Temmuz) oluşturuldu.</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam ₺43.300 — kasa KPI şeridindeki "Onay bekleyen" ile birebir.</div>
+        </div>
+      </div>
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-pen"></i><span><b>KSA-2026-022</b> · Vadi — taslak, sarf malzeme nakit (2 Temmuz, gönderilmedi).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-hourglass-half"></i><span><b>KSA-2026-021</b> · Vadi — ₺18.400 nakliye avansı, onay bekliyor (2 Temmuz).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>KSG-2026-006</b> · Merkez — ₺60.000 genel merkez kasa beslemesi, kayıtlı (1 Temmuz).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>KSA-2026-020</b> · Liman — ₺9.750 malzeme nakit alımı, onaylandı (1 Temmuz).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>KSA-2026-019</b> · Merkez — ₺6.200 yakıt + sarf malzeme, onaylandı (30 Haziran).</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="gv-botsec">
+    <!-- ============ T-O1 (B §7.2 madde 8) — kritik uyarılar ============ -->
+    <div class="gv-card" style="margin-bottom:18px">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+      <div class="gc-body">
+        <div class="hl-list">
+          <div class="hl-row risk"><i class="fa-solid fa-hourglass-half"></i><span><b>KSA-2026-018</b> (₺24.900) 3 gündür onay bekliyor — dönemin en eski bekleyen kaydı.</span></div>
+          <div class="hl-row risk"><i class="fa-solid fa-file-circle-exclamation"></i><span>Belgesiz harcama oranı <b>%90</b> — dönem kapatılmadan (Dönem Kapatma ekranı) 9 kayda belge eklenmesi gerekiyor.</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-xmark"></i><span><b>KSA-2026-017</b> (₺4.500, Liman) reddedildi — Aylin Koç'un yeniden düzenlemesi gerekiyor.</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-rotate-left"></i><span><b>KSA-2026-016</b> (₺3.150, Vadi) revize istendi — düzeltme bekliyor.</span></div>
+          <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-trend-down"></i><span>Liman Lojistik kasası dönem başına göre <b>%42 düştü</b> (₺31.750 → ₺18.520) — nakit erimesi hızlı, beslenme ihtiyacı değerlendirilmeli.</span></div>
+        </div>
+      </div>
+    </div>
+    </div>
+
   </main>
 
   <!-- ============ §17 — Gelişmiş Filtre paneli (spec-filtre-tarih.md) ============ -->
@@ -619,8 +668,13 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
   /* ============ T-O1 (B §7.2/§7.3) — grafik alanı (gvBar/gvDonut, spec-v2-core.md §7).
      Sayılar sayfa içi kanonik veriden türetildi (bkz üstteki HTML yorumu + devir-TO1.md):
      durum → "Rapor & Onay Akışı" 16 kaydının data-f dağılımı; günlük → kasa defteri 1-2
-     Temmuz satırlarının toplamı; şantiye → ks-grid dönem çıkış değerleri. ============ */
-  if(window.gvBar){
+     Temmuz satırlarının toplamı; şantiye → ks-grid dönem çıkış değerleri.
+     V3A T-Y2 Dalga 3 — grafikler artık "Grafikler" tab'ında; gvBar/gvDonut viewBox
+     tabanlı SVG çizdiği için offsetWidth'e bağımlı değil (tab gizliyken de doğru
+     render eder), yine de spec §2 gereği tab ilk açıldığında yeniden çizilir
+     (gvTabs onChange, aşağıda) — crm-operasyon-arac.html (T-Y4) emsali. ============ */
+  function drawKasaCharts(){
+    if(!window.gvBar) return;
     if(window.gvDonut) gvDonut('#chartKasaDurum', [
       {lbl:'Kayıtlı', val:6, tone:'acc'},
       {lbl:'Onaylandı', val:5, tone:'ok'},
@@ -640,6 +694,18 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
       {lbl:'Liman Lojistik', val:13230, valLbl:'₺13.230', tone:'warn'},
       {lbl:'Merkez Şantiye', val:8170, valLbl:'₺8.170'}
     ], {yon:'yatay', baslik:'Şantiye bazlı dönem çıkışı', labelWidth:120});
+  }
+  drawKasaCharts();
+  if(window.gvTabs){
+    gvTabs.init({
+      mount: '#kasaTabs', screen: 'kasa', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-kasa-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-kasa-grafik'},
+        {key:'ozet', etiket:'Özet', ikon:'fa-clipboard', panel:'#panel-kasa-ozet'}
+      ],
+      onChange: function(key){ if(key === 'grafik') drawKasaCharts(); }
+    });
   }
 
   /* ============ §13 — kasa listesindeki aktif tarih aralığı Çıktı Al'a taşınır ============
