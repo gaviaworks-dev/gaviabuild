@@ -108,6 +108,12 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       </div>
     </div>
 
+    <!-- ============ V3A (tasks/spec-v3a-ortak.md §3) — Liste/Grafikler/Uyarılar tab
+         iskeleti, T-Y4 Dalga 3. gvTabs.init aşağıdaki <script>'te #izinTabs mount'una
+         kurulur; "Liste" varsayılan/ilk sekme. ============ -->
+    <div id="izinTabs"></div>
+
+    <div class="gv-tabpanel" id="panel-izin-liste">
     <div class="gv-card" style="margin-bottom:16px">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §6). "Arşivlenen"
            5. durum tabı olarak EKLENDİ (§6.1) — arşivlenen bir izin talebi bu tabı
@@ -248,7 +254,34 @@ a.gcell-sub:hover{color:var(--acc-ink)}
         </div>
       </div>
     </div>
+    </div>
 
+    <div class="gv-tabpanel" id="panel-izin-grafik">
+      <div class="rp-charts-2">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Durum Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartIzinDurum"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-umbrella-beach"></i> Tür Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartIzinTur"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-izin-uyarilar">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Bekleyen Onaylar</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="izinUyariList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ §15.3 alt bölüm — Onay Akışı detay kartı zaten ana tablodan SONRA
+         duruyordu (T-Y4 Dalga 3: yalnız .gv-botsec sarmalayıcısı EKLENDİ, içerik/id
+         DEĞİŞMEDİ). ============ -->
+    <div class="gv-botsec">
     <div class="gv-card" id="izinDetailCard">
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-stamp"></i> Onay Akışı — <span id="izinDetailName">—</span></div>
@@ -262,6 +295,7 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       </div>
       <div class="gc-foot izin-detail-acts" id="izinDetailActs" hidden></div>
       <div class="izin-detail-note" id="izinDetailNote" hidden><i class="fa-solid fa-circle-info"></i> <span>Bu kayıtta sıradaki onay adımı sizde değil.</span></div>
+    </div>
     </div>
   </main>
 
@@ -427,9 +461,80 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       if(bgN){ bgN.textContent = '0'; bgD.innerHTML = '<i class="fa-solid fa-check"></i> Ekipte bugün izinli yok'; }
     }
     render('izn-031');
+    redrawIzinCharts();
+    renderIzinUyarilar();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+
+  /* ============ V3A Dalga 3 (T-Y4) — Grafikler/Uyarılar tab içeriği #tblIzin
+     satırlarından (sef rol-budamasından SONRA, init() içinde çağrılır — bu yüzden rol-
+     budanmış veriyi doğru yansıtır) GERÇEKTEN türetilir. gvBar/gvDonut viewBox tabanlı
+     SVG çizdiği için panel gizliyken de doğru üretilir; yine de spec §2 gereği tab ilk
+     açıldığında yeniden çizilir. ============ */
+  var IZIN_TUR_LBL = {yillik:'Yıllık İzin', yol:'Yol İzni', mazeret:'Mazeret İzni', evlilik:'Evlilik İzni', dogum:'Doğum İzni', babalik:'Babalık İzni', olum:'Ölüm (Vefat) İzni', raporlu:'Raporlu', ucretsiz:'Ücretsiz İzin', saatlik:'Saatlik İzin', tamgun:'Tam Gün İzin', yarim:'Yarım Gün İzin'};
+  var IZIN_DURUM_LBL = {bekliyor:'Onay Bekleyen', onaylandi:'Onaylanan', reddedildi:'Reddedilen', revize:'Revize İstenen', arsiv:'Arşivlenen'};
+  var IZIN_DURUM_TONE = {bekliyor:'warn', onaylandi:'ok', reddedildi:'danger', revize:'info', arsiv:'muted'};
+  function redrawIzinCharts(){
+    var rows = document.querySelectorAll('#tblIzin tbody tr[data-izin]');
+    var byDurum = {}, byTur = {};
+    rows.forEach(function(tr){
+      if(tr.getAttribute('data-arsiv') === '1') return;
+      var f = tr.getAttribute('data-f');
+      byDurum[f] = (byDurum[f]||0) + 1;
+      var t = tr.getAttribute('data-tur');
+      byTur[t] = (byTur[t]||0) + 1;
+    });
+    if(window.gvDonut){
+      gvDonut('#chartIzinDurum', Object.keys(byDurum).map(function(k){
+        return {lbl: IZIN_DURUM_LBL[k] || k, val: byDurum[k], tone: IZIN_DURUM_TONE[k] || 'muted'};
+      }), {baslik:'İzin durumu dağılımı', merkezAlt:'talep'});
+    }
+    if(window.gvBar){
+      gvBar('#chartIzinTur', Object.keys(byTur).map(function(k){
+        return {lbl: IZIN_TUR_LBL[k] || k, val: byTur[k]};
+      }), {yon:'yatay', baslik:'İzin türü dağılımı', labelWidth:130});
+    }
+  }
+  function renderIzinUyarilar(){
+    var wrap = document.getElementById('izinUyariList'); if(!wrap) return;
+    var rows = document.querySelectorAll('#tblIzin tbody tr[data-f="bekliyor"]');
+    if(!rows.length){
+      wrap.innerHTML = '<div class="act-row"><div class="act-ico ok"><i class="fa-solid fa-circle-check"></i></div><div class="act-info"><b>Onay bekleyen izin talebi yok</b></div></div>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(tr){
+      var id = tr.getAttribute('data-izin');
+      var rec = IZIN[id];
+      var name = rec ? rec.personel + ' — ' + rec.name : id;
+      var tarihEl = tr.querySelector('[data-col="tarih"]'); var tarih = tarihEl ? tarihEl.textContent : '';
+      var gunEl = tr.querySelector('[data-col="gun"]'); var gun = gunEl ? gunEl.textContent : '';
+      html += '<div class="act-row"><div class="act-ico warn"><i class="fa-solid fa-hourglass-half"></i></div>'
+        + '<div class="act-info"><b>' + name + '</b><span>' + tarih + ' · ' + gun + ' gün</span></div>'
+        + '<div class="act-time"><button type="button" class="ia-btn" data-izin-select="' + id + '" data-no-confirm aria-label="Onay akışını gör"><i class="fa-solid fa-stamp"></i></button></div></div>';
+    });
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('[data-izin-select]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        render(btn.getAttribute('data-izin-select'));
+        if(izinTabsHandle) izinTabsHandle.activate('liste');
+      });
+    });
+  }
+  var izinTabsHandle = null;
+  if(window.gvTabs){
+    izinTabsHandle = gvTabs.init({
+      mount: '#izinTabs', screen: 'izin', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-izin-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-izin-grafik'},
+        {key:'uyarilar', etiket:'Uyarılar', ikon:'fa-triangle-exclamation', panel:'#panel-izin-uyarilar'}
+      ],
+      onChange: function(key){ if(key === 'grafik') redrawIzinCharts(); }
+    });
+  }
 
   /* ============ §9/§13/§17 — Gelişmiş Filtre paneli + tarih aralığı + Arşivlenenleri
      Göster. opts.table verildi (basit eşitlik + kanonik "tarih" aralık motoru yeterli —

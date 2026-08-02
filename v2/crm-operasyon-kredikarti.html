@@ -215,6 +215,12 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     <!-- statik bake (D18-B2): JS load'da aynı mount'u kanonik veriden yeniden basar -->
     <div class="kk-strip" id="kkStrip"><button type="button" class="kk-card" data-banka="garanti"><div class="kk-top"><div class="kk-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">G</div><div class="kk-id"><div class="kk-bank">Garanti BBVA</div><span class="kk-no">•4512</span></div></div><div class="kk-owner">Hasan Demirci</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:78%"></div></div><span class="gbar-val">%78</span></div><div class="kk-avail">Kullanılabilir ₺32.600</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 8'i</div></button><button type="button" class="kk-card" data-banka="akbank"><div class="kk-top"><div class="kk-mark" style="background:var(--info-tint);color:var(--info)">A</div><div class="kk-id"><div class="kk-bank">Akbank</div><span class="kk-no">•7789</span></div></div><div class="kk-owner">Baran Yıldız</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:41%"></div></div><span class="gbar-val">%41</span></div><div class="kk-avail">Kullanılabilir ₺58.700</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 15'i</div></button><button type="button" class="kk-card" data-banka="is"><div class="kk-top"><div class="kk-mark" style="background:var(--ok-tint);color:var(--ok)">İ</div><div class="kk-id"><div class="kk-bank">İş Bankası</div><span class="kk-no">•2301</span></div></div><div class="kk-owner">Merkez (Nesrin Aydın)</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:32%"></div></div><span class="gbar-val">%32</span></div><div class="kk-avail">Kullanılabilir ₺136.200</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 20'si</div></button><button type="button" class="kk-card" data-banka="ykb"><div class="kk-top"><div class="kk-mark" style="background:var(--bg);color:var(--ink-2)">Y</div><div class="kk-id"><div class="kk-bank">Yapı Kredi</div><span class="kk-no">•9944</span></div></div><div class="kk-owner">Elif Sarıkaya</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:16%"></div></div><span class="gbar-val">%16</span></div><div class="kk-avail">Kullanılabilir ₺62.850</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 25'i</div></button></div>
 
+    <!-- ============ V3A (tasks/spec-v3a-ortak.md §3) — Liste/Grafikler/Özet tab iskeleti,
+         T-Y4 Dalga 3. kk-strip kart seçici (üstte) bir TAB DEĞİL, KORUNDU. gvTabs.init
+         aşağıdaki <script>'te #kkTabs mount'una kurulur; "Liste" varsayılan/ilk sekme. ============ -->
+    <div id="kkTabs"></div>
+
+    <div class="gv-tabpanel" id="panel-kk-liste">
     <!-- ============ D19/S12 — Kart Defteri (crm-operasyon-kasa.html #tblDefter kolon
          düzenine paralel; banka seçimi PRİMER kapsam — kk-strip + kkBankaChips senkron
          (syncBankaUI); "Tümü" bankada 4 kartın defteri art arda görünür) ============ -->
@@ -409,6 +415,29 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       </div>
     </div>
     <input type="file" id="kkFileInput" hidden multiple accept=".pdf,.jpg,.jpeg,.png,.xlsx">
+    </div>
+
+    <div class="gv-tabpanel" id="panel-kk-grafik">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-simple"></i> Kart Bazlı Doluluk Oranı</h3></div>
+        <div class="rp-chart-body" id="chartKkDoluluk"></div>
+      </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-kk-ozet">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-list"></i> Kart Bazlı Özet</div></div>
+        <div class="gc-body flush">
+          <table class="gtable">
+            <thead>
+              <tr><th>Kart</th><th class="num">Limit</th><th class="num">Dönem Borcu</th><th class="num">Kullanılabilir</th><th class="num">Doluluk</th></tr>
+            </thead>
+            <tbody id="kkOzetBody"></tbody>
+            <tfoot id="kkOzetFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -1119,6 +1148,51 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     if(!ISLEM_BY_ID[initId]) initId = Object.keys(ISLEM_BY_ID)[0];
     renderKkDetail(initId);
   })();
+
+  /* ============ V3A Dalga 3 (T-Y4) — "Grafikler"/"Özet" tab içeriği KARTLAR nesnesinden
+     (yukarıdaki kanonik mock veri) GERÇEKTEN türetildi: doluluk % = Math.round(borc/limit*100)
+     (kk-strip'teki statik gbar-fill genişlikleriyle BİREBİR aynı, ayrı bir sayı İCAT EDİLMEDİ),
+     kullanılabilir = limit - borc. gvBar viewBox tabanlı SVG çizdiği için panel gizliyken de
+     doğru üretilir; yine de spec §2 gereği tab ilk açıldığında yeniden çizilir. ============ */
+  var KK_BANKA_SIRA = ['garanti', 'akbank', 'is', 'ykb'];
+  function tlKk(n){ return '₺' + n.toLocaleString('tr-TR'); }
+  function redrawKkCharts(){
+    if(!window.gvBar) return;
+    gvBar('#chartKkDoluluk', KK_BANKA_SIRA.map(function(k){
+      var K = KARTLAR[k];
+      var oran = Math.round(K.borc / K.limit * 100);
+      return {lbl: K.banka + ' •' + K.no, val: oran, valLbl: '%' + oran, tone: oran >= 60 ? 'warn' : 'acc'};
+    }), {yon:'yatay', baslik:'Kart bazlı doluluk oranı (%)', labelWidth:150});
+  }
+  function renderKkOzet(){
+    var toplamLimit = 0, toplamBorc = 0, toplamMusait = 0;
+    var rows = KK_BANKA_SIRA.map(function(k){
+      var K = KARTLAR[k];
+      var musait = K.limit - K.borc;
+      var oran = Math.round(K.borc / K.limit * 100);
+      toplamLimit += K.limit; toplamBorc += K.borc; toplamMusait += musait;
+      return '<tr><td>' + K.banka + ' <span class="kk-no">•' + K.no + '</span></td>'
+        + '<td class="num">' + tlKk(K.limit) + '</td><td class="num">' + tlKk(K.borc) + '</td>'
+        + '<td class="num">' + tlKk(musait) + '</td><td class="num">%' + oran + '</td></tr>';
+    }).join('');
+    document.getElementById('kkOzetBody').innerHTML = rows;
+    var toplamOran = Math.round(toplamBorc / toplamLimit * 100);
+    document.getElementById('kkOzetFoot').innerHTML = '<tr><td>Toplam</td><td class="num">' + tlKk(toplamLimit)
+      + '</td><td class="num">' + tlKk(toplamBorc) + '</td><td class="num">' + tlKk(toplamMusait) + '</td><td class="num">%' + toplamOran + '</td></tr>';
+  }
+  redrawKkCharts();
+  renderKkOzet();
+  if(window.gvTabs){
+    gvTabs.init({
+      mount: '#kkTabs', screen: 'kredikarti', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-kk-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-kk-grafik'},
+        {key:'ozet', etiket:'Özet', ikon:'fa-clipboard', panel:'#panel-kk-ozet'}
+      ],
+      onChange: function(key){ if(key === 'grafik') redrawKkCharts(); }
+    });
+  }
 })();
 </script>
 </body>

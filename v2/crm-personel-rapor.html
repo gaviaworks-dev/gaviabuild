@@ -98,6 +98,12 @@
       </div>
     </div>
 
+    <!-- ============ V3A (tasks/spec-v3a-ortak.md §3) — Liste/Grafikler/Uyarılar tab
+         iskeleti, T-Y4 Dalga 3. gvTabs.init aşağıdaki <script>'te #raporTabs mount'una
+         kurulur; "Liste" varsayılan/ilk sekme. kpiSgkCard (yukarıdaki KPI şeridi) KORUNDU. ============ -->
+    <div id="raporTabs"></div>
+
+    <div class="gv-tabpanel" id="panel-rapor-liste">
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §6). KARAR (bkz.
            tasks/kararlar.md): eski "SGK Bildirimi Bekliyor/Bildirildi/Tamamlandı"
@@ -231,6 +237,41 @@
           <div class="ge-ico"><i class="fa-solid fa-file-medical"></i></div>
           <h4>Eşleşen rapor kaydı yok</h4>
           <p>Aramayı temizleyin veya farklı bir durum filtresi seçin.</p>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-rapor-grafik">
+      <div class="rp-charts-2">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Rapor Türü Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartRaporTur"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-calendar-days"></i> Rapor Süresi — Personel Bazlı (Gün)</h3></div>
+          <div class="rp-chart-body" id="chartRaporSure"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-rapor-uyarilar">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> SGK Bildirimi Bekleyen Raporlar</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="raporUyariList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ §15.3 alt bölüm — eksik belge uyarıları (T-Y4 Dalga 3). SGK
+         bildirimi henüz yapılmamış (data-durum="bekliyor") rapor kayıtlarından
+         GERÇEKTEN türetilir; kpiSgkCard (yukarıdaki KPI şeridi) DEĞİŞMEDEN kalır. ============ -->
+    <div class="gv-botsec">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-circle-exclamation"></i> Eksik Belge Uyarıları</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="raporEksikBelgeList"></div>
         </div>
       </div>
     </div>
@@ -469,6 +510,75 @@
     });
     acts.appendChild(btn);
   });
+
+  /* ============ V3A Dalga 3 (T-Y4) — Grafikler/Uyarılar tab + §15.3 eksik belge
+     uyarıları alt bölümü; #tblRapor satırlarından (sef rol-budaması bu bloktan ÖNCE,
+     dosyanın başında tamamlanmış olur) GERÇEKTEN türetilir. gvBar/gvDonut viewBox
+     tabanlı SVG çizdiği için panel gizliyken de doğru üretilir; yine de tab ilk
+     açıldığında yeniden çizilir. ============ */
+  var RAPOR_TUR_LBL = {istirahat:'İstirahat Raporu', kurul:'Sağlık Kurulu Raporu'};
+  function redrawRaporCharts(){
+    var rows = document.querySelectorAll('#tblRapor tbody tr[data-f]');
+    var byTur = {};
+    var sureData = [];
+    rows.forEach(function(tr){
+      if(tr.getAttribute('data-arsiv') === '1') return;
+      var t = tr.getAttribute('data-tur');
+      byTur[t] = (byTur[t]||0) + 1;
+      var nameEl = tr.querySelector('.gcell-name');
+      var gunEl = tr.querySelector('[data-col="gun"]');
+      if(nameEl && gunEl) sureData.push({lbl: nameEl.textContent.trim(), val: parseInt(gunEl.textContent, 10) || 0});
+    });
+    if(window.gvDonut){
+      gvDonut('#chartRaporTur', Object.keys(byTur).map(function(k){
+        return {lbl: RAPOR_TUR_LBL[k] || k, val: byTur[k], tone: k === 'kurul' ? 'info' : 'acc'};
+      }), {baslik:'Rapor türü dağılımı', merkezAlt:'rapor'});
+    }
+    if(window.gvBar){
+      gvBar('#chartRaporSure', sureData, {yon:'yatay', baslik:'Rapor süresi — personel bazlı (gün)', labelWidth:130});
+    }
+  }
+  function raporUyariRowHtml(tr){
+    var nameEl = tr.querySelector('.gcell-name'); var name = nameEl ? nameEl.textContent.trim() : '—';
+    var subEl = tr.querySelector('.gcell-sub'); var sub = subEl ? subEl.textContent.trim() : '';
+    var kurumEl = tr.querySelector('[data-col="kurum"]'); var kurum = kurumEl ? kurumEl.textContent.trim() : '—';
+    var tarihEl = tr.querySelector('[data-col="tarih"]'); var tarih = tarihEl ? tarihEl.textContent.trim() : '—';
+    return '<div class="act-row"><div class="act-ico warn"><i class="fa-solid fa-hourglass-half"></i></div>'
+      + '<div class="act-info"><b>' + name + (sub ? ' — ' + sub : '') + '</b><span>' + kurum + ' · ' + tarih + '</span></div></div>';
+  }
+  function renderRaporUyarilar(){
+    var rows = Array.prototype.filter.call(document.querySelectorAll('#tblRapor tbody tr[data-f]'), function(tr){
+      return tr.getAttribute('data-durum') === 'bekliyor' && tr.getAttribute('data-arsiv') !== '1';
+    });
+    var uyariWrap = document.getElementById('raporUyariList');
+    var eksikWrap = document.getElementById('raporEksikBelgeList');
+    if(!rows.length){
+      var yokHtml = '<div class="act-row"><div class="act-ico ok"><i class="fa-solid fa-circle-check"></i></div><div class="act-info"><b>SGK bildirimi bekleyen rapor yok</b></div></div>';
+      if(uyariWrap) uyariWrap.innerHTML = yokHtml;
+      if(eksikWrap) eksikWrap.innerHTML = '<div class="act-row"><div class="act-ico ok"><i class="fa-solid fa-circle-check"></i></div><div class="act-info"><b>Eksik belge yok</b><span>Tüm rapor kayıtlarının SGK bildirimi tamam.</span></div></div>';
+      return;
+    }
+    var html = rows.map(raporUyariRowHtml).join('');
+    if(uyariWrap) uyariWrap.innerHTML = html;
+    if(eksikWrap) eksikWrap.innerHTML = rows.map(function(tr){
+      var nameEl = tr.querySelector('.gcell-name'); var name = nameEl ? nameEl.textContent.trim() : '—';
+      return '<div class="act-row"><div class="act-ico danger"><i class="fa-solid fa-file-circle-exclamation"></i></div>'
+        + '<div class="act-info"><b>' + name + '</b><span>SGK bildirimi henüz yapılmadı — belge süreci eksik.</span></div></div>';
+    }).join('');
+  }
+  redrawRaporCharts();
+  renderRaporUyarilar();
+  if(window.gvTabs){
+    gvTabs.init({
+      mount: '#raporTabs', screen: 'rapor', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-rapor-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-rapor-grafik'},
+        {key:'uyarilar', etiket:'Uyarılar', ikon:'fa-triangle-exclamation', panel:'#panel-rapor-uyarilar'}
+      ],
+      onChange: function(key){ if(key === 'grafik') redrawRaporCharts(); }
+    });
+  }
 })();
 </script>
 </body>

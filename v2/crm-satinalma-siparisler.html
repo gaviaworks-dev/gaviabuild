@@ -109,6 +109,12 @@
       </div>
     </div>
 
+    <!-- ============ V3A (tasks/spec-v3a-ortak.md §3) — Liste/Grafikler/Uyarılar tab
+         iskeleti, T-Y4 Dalga 3. gvTabs.init aşağıdaki <script>'te #spTabs mount'una
+         kurulur; "Liste" varsayılan/ilk sekme. ============ -->
+    <div id="spTabs"></div>
+
+    <div class="gv-tabpanel" id="panel-sp-liste">
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
            .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
@@ -278,6 +284,29 @@
           <div class="ge-ico"><i class="fa-solid fa-cart-flatbed"></i></div>
           <h4>Eşleşen sipariş yok</h4>
           <p>Aramayı temizleyin veya farklı bir durum filtresi seçin.</p>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-sp-grafik">
+      <div class="rp-charts-2">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Durum Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartSpDurum"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-truck-ramp-box"></i> Termin Durumu Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartSpTermin"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-sp-uyarilar">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-truck-ramp-box"></i> Termin Gecikmeleri</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="spGecikmeList"></div>
         </div>
       </div>
     </div>
@@ -498,6 +527,73 @@
       }
     });
   });
+
+  /* ============ V3A Dalga 3 (T-Y4) — Grafikler/Uyarılar tab içeriği #tblSiparis
+     satırlarından GERÇEKTEN türetilir: durum dağılımı SIP_DURUM sözlüğü + data-f
+     sayımı, termin durumu .kalan-pill sınıflarının sayımı, gecikme listesi
+     data-f="gecikme" satırlarından (KPI@104 ile aynı kaynak). sef rol-budamasından
+     SONRA çalışır (bu bloktan önceki tr.remove() bu satırın üstünde), bu yüzden
+     rol-budanmış veriyi doğru yansıtır. gvBar/gvDonut viewBox tabanlı SVG çizdiği
+     için panel gizliyken de doğru üretilir; yine de spec §2 gereği tab ilk
+     açıldığında yeniden çizilir. ============ */
+  var SP_DURUM_TONE = {kapandi:'muted', teslim:'ok', kismi:'warn', gecikme:'danger', tedarikcide:'info', onaylandi:'acc', taslak:'muted'};
+  var SP_TERMIN_LBL = {done:'Zamanında Teslim', near:'Yaklaşan (Planlı)', partial:'Kısmi Teslim', late:'Gecikmiş', idle:'Termin Belirsiz'};
+  var SP_TERMIN_TONE = {done:'ok', near:'info', partial:'warn', late:'danger', idle:'muted'};
+  function redrawSpCharts(){
+    var tbl = document.getElementById('tblSiparis'); if(!tbl) return;
+    var rows = Array.prototype.slice.call(tbl.querySelectorAll('tbody tr'));
+    if(window.gvDonut){
+      var byDurum = {};
+      rows.forEach(function(tr){ var f = tr.getAttribute('data-f'); byDurum[f] = (byDurum[f]||0) + 1; });
+      gvDonut('#chartSpDurum', Object.keys(byDurum).map(function(k){
+        var d = SIP_DURUM[k] || {lbl:k};
+        return {lbl:d.lbl, val:byDurum[k], tone:SP_DURUM_TONE[k] || 'muted'};
+      }), {baslik:'Sipariş durum dağılımı', merkezAlt:'sipariş'});
+    }
+    if(window.gvBar){
+      var byTermin = {};
+      rows.forEach(function(tr){
+        var pill = tr.querySelector('.kalan-pill'); if(!pill) return;
+        var cls = ['done', 'near', 'partial', 'late', 'idle'].filter(function(c){ return pill.classList.contains(c); })[0] || 'idle';
+        byTermin[cls] = (byTermin[cls]||0) + 1;
+      });
+      gvBar('#chartSpTermin', Object.keys(SP_TERMIN_LBL).filter(function(k){ return byTermin[k]; }).map(function(k){
+        return {lbl:SP_TERMIN_LBL[k], val:byTermin[k], tone:SP_TERMIN_TONE[k]};
+      }), {yon:'yatay', baslik:'Termin durumu dağılımı', labelWidth:150});
+    }
+  }
+  function renderSpGecikme(){
+    var tbl = document.getElementById('tblSiparis'); var wrap = document.getElementById('spGecikmeList');
+    if(!tbl || !wrap) return;
+    var rows = tbl.querySelectorAll('tbody tr[data-f="gecikme"]');
+    if(!rows.length){
+      wrap.innerHTML = '<div class="act-row"><div class="act-ico ok"><i class="fa-solid fa-circle-check"></i></div><div class="act-info"><b>Termin gecikmesi yok</b><span>Tüm siparişler planlanan takvimde.</span></div></div>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(tr){
+      var noEl = tr.querySelector('.sp-info b'); var no = noEl ? noEl.textContent : '—';
+      var tdrEl = tr.querySelector('[data-col="tedarikci"]'); var tdr = tdrEl ? tdrEl.textContent.trim() : '—';
+      var tutarEl = tr.querySelector('[data-col="tutar"]'); var tutar = tutarEl ? tutarEl.textContent.trim() : '—';
+      var terminEl = tr.querySelector('.kalan-pill'); var termin = terminEl ? terminEl.textContent.trim() : '—';
+      html += '<div class="act-row"><div class="act-ico danger"><i class="fa-solid fa-truck-ramp-box"></i></div>'
+        + '<div class="act-info"><b>' + no + ' · ' + tdr + '</b><span>' + tutar + ' — ' + termin + '</span></div></div>';
+    });
+    wrap.innerHTML = html;
+  }
+  redrawSpCharts();
+  renderSpGecikme();
+  if(window.gvTabs){
+    gvTabs.init({
+      mount: '#spTabs', screen: 'siparisler', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-sp-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-sp-grafik'},
+        {key:'uyarilar', etiket:'Uyarılar', ikon:'fa-triangle-exclamation', panel:'#panel-sp-uyarilar'}
+      ],
+      onChange: function(key){ if(key === 'grafik') redrawSpCharts(); }
+    });
+  }
 })();
 </script>
 </body>

@@ -104,6 +104,12 @@
       </div>
     </div>
 
+    <!-- ============ V3A (tasks/spec-v3a-ortak.md §3) — Liste/Grafikler/Özet tab iskeleti,
+         T-Y4 Dalga 3. gvTabs.init aşağıdaki <script>'te #tdrTabs mount'una kurulur;
+         "Liste" varsayılan/ilk sekme. ============ -->
+    <div id="tdrTabs"></div>
+
+    <div class="gv-tabpanel" id="panel-tdr-liste">
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3, §14):
            .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
@@ -181,6 +187,38 @@
       </div>
       <!-- §15 — kayıt sayısı özeti (gvCount) -->
       <div class="gc-foot"><span id="tdrFoot">—</span></div>
+    </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-tdr-grafik">
+      <div class="rp-chart">
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-gauge-high"></i> Tedarikçi Performans Skoru</h3></div>
+        <div class="rp-chart-body" id="chartTdrSkor"></div>
+      </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-tdr-ozet">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-layer-group"></i> Kategori Bazlı Özet</div></div>
+        <div class="gc-body flush">
+          <table class="gtable">
+            <thead><tr><th>Kategori</th><th class="num">Tedarikçi Sayısı</th><th class="num">Ortalama Performans</th></tr></thead>
+            <tbody id="tdrOzetBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ §13.2/§15.3 alt bölüm — tedarikçi karşılaştırma (T-Y4 Dalga 3). Bu
+         sayfada §8.3'ün saydığı "tedarikçi karşılaştırma" kalemi anlamlıdır; TDR
+         dizisinden performans sırasına göre GERÇEKTEN türetilir. ============ -->
+    <div class="gv-botsec">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-scale-balanced"></i> Tedarikçi Karşılaştırma — Performansa Göre</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="tdrKarsilastirma"></div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -277,6 +315,54 @@
     html += '</tr>';
   });
   body.innerHTML = html;
+
+  /* ============ V3A Dalga 3 (T-Y4) — Grafikler/Özet tab + §13.2 tedarikçi karşılaştırma
+     alt bölümü; TDR dizisinden (yukarıdaki kanonik mock veri) GERÇEKTEN türetilir, yeni
+     sayı İCAT EDİLMEDİ. gvBar viewBox tabanlı SVG çizdiği için panel gizliyken de doğru
+     üretilir; yine de spec §2 gereği tab ilk açıldığında yeniden çizilir. ============ */
+  function redrawTdrCharts(){
+    if(!window.gvBar) return;
+    gvBar('#chartTdrSkor', TDR.map(function(t){
+      return {lbl:t.ad, val:t.skor, valLbl:'%' + t.skor, tone: t.warn ? 'danger' : (t.skor < 90 ? 'warn' : 'acc')};
+    }), {yon:'yatay', baslik:'Tedarikçi bazlı performans skoru (%)', labelWidth:170});
+  }
+  function renderTdrOzet(){
+    var byKat = {};
+    TDR.forEach(function(t){
+      if(!byKat[t.kat]) byKat[t.kat] = {say:0, toplamSkor:0};
+      byKat[t.kat].say++; byKat[t.kat].toplamSkor += t.skor;
+    });
+    var html = Object.keys(byKat).map(function(k){
+      var g = byKat[k];
+      return '<tr><td>' + k + '</td><td class="num">' + g.say + '</td><td class="num">%' + (g.toplamSkor / g.say).toFixed(1).replace('.', ',') + '</td></tr>';
+    }).join('');
+    document.getElementById('tdrOzetBody').innerHTML = html;
+  }
+  function renderTdrKarsilastirma(){
+    var sirali = TDR.slice().sort(function(a, b){ return b.skor - a.skor; });
+    var html = sirali.map(function(t){
+      var ico = t.warn ? 'danger' : (t.gecikme ? 'warn' : 'ok');
+      var not = t.gecikme ? (t.warn ? 'Aktif gecikme riski taşıyor' : 'Geçmişte gecikme kaydı var') : 'Gecikme kaydı yok';
+      return '<div class="act-row"><div class="act-ico ' + ico + '"><i class="fa-solid fa-gauge-high"></i></div>'
+        + '<div class="act-info"><b>' + t.ad + ' — %' + t.skor + '</b><span>' + t.kat + ' · ' + not + '</span></div>'
+        + '<div class="act-time">' + (t.aktifSip || '—') + '</div></div>';
+    }).join('');
+    document.getElementById('tdrKarsilastirma').innerHTML = html;
+  }
+  redrawTdrCharts();
+  renderTdrOzet();
+  renderTdrKarsilastirma();
+  if(window.gvTabs){
+    gvTabs.init({
+      mount: '#tdrTabs', screen: 'tedarikciler', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-tdr-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-tdr-grafik'},
+        {key:'ozet', etiket:'Özet', ikon:'fa-clipboard', panel:'#panel-tdr-ozet'}
+      ],
+      onChange: function(key){ if(key === 'grafik') redrawTdrCharts(); }
+    });
+  }
 
   var OLUSTURABILIR = ['superadmin','sahip','satinalma'];
   document.querySelectorAll('[data-view="olusturabilir"]').forEach(function(el){

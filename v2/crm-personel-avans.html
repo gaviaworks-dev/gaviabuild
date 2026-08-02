@@ -151,6 +151,12 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       </div>
     </div>
 
+    <!-- ============ V3A (tasks/spec-v3a-ortak.md §3) — Liste/Grafikler/Uyarılar tab
+         iskeleti, T-Y4 Dalga 3. gvTabs.init aşağıdaki <script>'te #avansTabs mount'una
+         kurulur; "Liste" varsayılan/ilk sekme. ============ -->
+    <div id="avansTabs"></div>
+
+    <div class="gv-tabpanel" id="panel-avans-liste">
     <div class="gv-card" style="margin-bottom:16px">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §6). "Arşivlenen"
            5. durum tabı olarak EKLENDİ (§6.1); mevcut yaşam-döngüsü (kebab menüsü
@@ -318,7 +324,34 @@ a.gcell-sub:hover{color:var(--acc-ink)}
         </div>
       </div>
     </div>
+    </div>
 
+    <div class="gv-tabpanel" id="panel-avans-grafik">
+      <div class="rp-charts-2">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Durum Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartAvansDurum"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-sitemap"></i> Departman Dağılımı</h3></div>
+          <div class="rp-chart-body" id="chartAvansDep"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-tabpanel" id="panel-avans-uyarilar">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Bekleyen Onaylar</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="avansUyariList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ §15.3 alt bölüm — Onay Akışı detay kartı zaten ana tablodan SONRA
+         duruyordu (T-Y4 Dalga 3: yalnız .gv-botsec sarmalayıcısı EKLENDİ, içerik/id
+         DEĞİŞMEDİ). ============ -->
+    <div class="gv-botsec">
     <div class="gv-card" id="avansDetailCard">
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-stamp"></i> Onay Akışı — <span id="avansDetailName">—</span></div>
@@ -332,6 +365,7 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       </div>
       <div class="gc-foot avans-detail-acts" id="avansDetailActs" hidden></div>
       <div class="avans-detail-note" id="avansDetailNote" hidden><i class="fa-solid fa-circle-info"></i> <span>Bu kayıtta sıradaki onay adımı sizde değil.</span></div>
+    </div>
     </div>
   </main>
 </div>
@@ -525,9 +559,81 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       if(rvN){ rvN.textContent = '0'; rvD.innerHTML = '<i class="fa-solid fa-check"></i> Ekipte revize istenen yok'; }
     }
     render('avn-014');
+    redrawAvCharts();
+    renderAvUyarilar();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+
+  /* ============ V3A Dalga 3 (T-Y4) — Grafikler/Uyarılar tab içeriği #tblAvans
+     satırlarından (sef rol-budamasından SONRA, init() içinde çağrılır) GERÇEKTEN
+     türetilir. Avans kaydında "tür" alanı YOK — brief'in izin/avans ortak "tür
+     dağılımı" önerisi bu modülde gerçek karşılığı olan "departman dağılımı"na
+     uyarlandı (data-departman). gvBar/gvDonut viewBox tabanlı SVG çizdiği için
+     panel gizliyken de doğru üretilir; yine de tab ilk açıldığında yeniden çizilir. ============ */
+  var AVANS_DURUM_LBL = {bekliyor:'Onay Bekleyen', onaylandi:'Onaylanan', reddedildi:'Reddedilen', revize:'Revize İstenen'};
+  var AVANS_DURUM_TONE = {bekliyor:'warn', onaylandi:'ok', reddedildi:'danger', revize:'info'};
+  var AVANS_DEP_LBL = {yonetim:'Yönetim', sefligi:'Şantiye Yönetimi', muhasebe:'Muhasebe', satinalma:'Satın Alma', ik:'İnsan Kaynakları', saha:'Saha Operasyonu'};
+  function redrawAvCharts(){
+    var rows = document.querySelectorAll('#tblAvans tbody tr[data-avans]');
+    var byDurum = {}, byDep = {};
+    rows.forEach(function(tr){
+      if(tr.getAttribute('data-durum') === 'arsivlendi') return;
+      var f = tr.getAttribute('data-f');
+      byDurum[f] = (byDurum[f]||0) + 1;
+      var d = tr.getAttribute('data-departman');
+      byDep[d] = (byDep[d]||0) + 1;
+    });
+    if(window.gvDonut){
+      gvDonut('#chartAvansDurum', Object.keys(byDurum).map(function(k){
+        return {lbl: AVANS_DURUM_LBL[k] || k, val: byDurum[k], tone: AVANS_DURUM_TONE[k] || 'muted'};
+      }), {baslik:'Avans durumu dağılımı', merkezAlt:'talep'});
+    }
+    if(window.gvBar){
+      gvBar('#chartAvansDep', Object.keys(byDep).map(function(k){
+        return {lbl: AVANS_DEP_LBL[k] || k, val: byDep[k]};
+      }), {yon:'yatay', baslik:'Departman bazlı avans talebi dağılımı', labelWidth:150});
+    }
+  }
+  function renderAvUyarilar(){
+    var wrap = document.getElementById('avansUyariList'); if(!wrap) return;
+    var rows = Array.prototype.filter.call(document.querySelectorAll('#tblAvans tbody tr[data-avans]'), function(tr){ return tr.getAttribute('data-f') === 'bekliyor'; });
+    if(!rows.length){
+      wrap.innerHTML = '<div class="act-row"><div class="act-ico ok"><i class="fa-solid fa-circle-check"></i></div><div class="act-info"><b>Onay bekleyen avans talebi yok</b></div></div>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(tr){
+      var id = tr.getAttribute('data-avans');
+      var rec = AVANS[id];
+      var name = rec ? rec.personel + ' — ' + rec.name : id;
+      var tutarEl = tr.querySelector('[data-col="tutar"]'); var tutar = tutarEl ? tutarEl.textContent.trim() : '—';
+      var tarihEl = tr.querySelector('[data-col="tarih"]'); var tarih = tarihEl ? tarihEl.textContent.trim() : '—';
+      html += '<div class="act-row"><div class="act-ico warn"><i class="fa-solid fa-hourglass-half"></i></div>'
+        + '<div class="act-info"><b>' + name + '</b><span>' + tutar + ' — ' + tarih + '</span></div>'
+        + '<div class="act-time"><button type="button" class="ia-btn" data-avans-select="' + id + '" data-no-confirm aria-label="Onay akışını gör"><i class="fa-solid fa-stamp"></i></button></div></div>';
+    });
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('[data-avans-select]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        render(btn.getAttribute('data-avans-select'));
+        if(avansTabsHandle) avansTabsHandle.activate('liste');
+      });
+    });
+  }
+  var avansTabsHandle = null;
+  if(window.gvTabs){
+    avansTabsHandle = gvTabs.init({
+      mount: '#avansTabs', screen: 'avans', varsayilan: 'liste',
+      tabs: [
+        {key:'liste', etiket:'Liste', ikon:'fa-list', panel:'#panel-avans-liste'},
+        {key:'grafik', etiket:'Grafikler', ikon:'fa-chart-simple', panel:'#panel-avans-grafik'},
+        {key:'uyarilar', etiket:'Uyarılar', ikon:'fa-triangle-exclamation', panel:'#panel-avans-uyarilar'}
+      ],
+      onChange: function(key){ if(key === 'grafik') redrawAvCharts(); }
+    });
+  }
 })();
 </script>
 <script>
