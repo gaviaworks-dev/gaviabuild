@@ -50,6 +50,30 @@ kararı her zaman Beyar'a sorulur. Bu kural teammate/subagent'lar için de geçe
 doğrulama dosyaları (`kordon.md`, `handoff.md`) kaybolur. Bu dosyalar izlenmediği için
 commit'ten geri getirilemez; kaybolurlarsa dalga sonu doğrulaması dayanaksız kalır.
 
+### Yıkıcı git komutu YASAĞI — teammate/subagent'lar için MUTLAK
+
+**Agent teammate'ler yıkıcı git komutu ÇALIŞTIRAMAZ.** Yasak, istisnasız:
+
+| YASAK | | İZİNLİ |
+|---|---|---|
+| `git stash` (ve `stash pop`/`stash apply`) | | `git add` |
+| `git reset` (her biçimi) | | `git diff` |
+| `git clean` | | `git status` |
+| `git checkout -- <dosya>` | | `git commit` (yalnız lead) |
+| `git restore` | | `git log`, `git show` (okuma) |
+
+Taban/karşılaştırma gerekiyorsa `git show HEAD:<dosya>` veya `git diff` kullanılır;
+ikisi de working tree'ye dokunmaz. `git worktree` de güvenlidir.
+
+**Gerekçe (2026-08-02, v3 revizyon turu):** Bir teammate, tablet taramasını tabanla
+karşılaştırmak için `git stash` + `stash pop` çalıştırdı; pop, sahibi olmadığı bir
+dosyada çakıştı ve **aynı anda çalışan üç ajanın işini working tree'den sildi** —
+10 dosya, hepsi yeniden yapıldı. Yasak o turda yalnız prompt'ta duruyordu; prompt
+kuralı ajan bazında delinebildiği için kural buraya, depoya taşındı.
+Paralel ajan varken working tree paylaşılan bir kaynaktır: bir ajanın onu
+sıfırlaması diğerlerinin işini sessizce yok eder.
+Olay kaydı: `tasks/lessons.md`.
+
 ## Referans UI Dili
 
 Yapı, layout, etkileşim ve component dili şu referanstan devralınır:
