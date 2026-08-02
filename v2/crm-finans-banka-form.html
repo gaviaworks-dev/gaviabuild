@@ -320,16 +320,24 @@
     gvToast('Belge eklendi (mock).', {type:'ok'});
   });
 
-  /* ============ §17 emsali — Düzenle modu prefill (crm-finans-banka.html liste ile AYNI 8 kanonik hesap) ============ */
+  /* ============ §17 emsali — Düzenle modu prefill (crm-finans-banka.html liste ile AYNI 8 kanonik hesap) ============
+     Bulgu #6 (Dalga 6 denetim) — "Hesap no" (#fHesapNo) görsel olarak vardı ama
+     prefill/kaydet veri akışına hiç bağlı değildi. hesapNo TÜRETME YÖNTEMİ: her
+     kanonik IBAN'ın SON 13 hanesi (iban.slice(-13) — banka+şube kodu ve dolgu
+     sıfırlarının bir kısmı düşülünce kalan hesap numarası segmenti). Bu türetme
+     sayfanın KENDİ #fHesapNo placeholder'ıyla ("ör. 0011234567890") zaten birebir
+     örtüşüyor — is-bankasi-ana IBAN'ının (TR330006400000011234567890) son 13
+     hanesi tam olarak bu placeholder'dır; uydurma sayı yok, mevcut IBAN'lardan
+     mekanik olarak türetildi. */
   var HESAP_PREFILL = {
-    'is-bankasi-ana':{banka:'İş Bankası', sube:'Merkez Şube', subeKod:'4058', ad:'Merkez Ana İşletme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR330006400000011234567890', pb:'TRY', tur:'vadesiz', varsayilan:true, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'Firma genel işletme hesabı — kasa beslemeleri, kredi kartı ve Pluxee ekstre ödemeleri bu hesaptan yapılır.'},
-    'garanti-hakedis':{banka:'Garanti BBVA', sube:'Etiler Şube', subeKod:'313', ad:'Hakediş Tahsilat Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR700006200001245980012345', pb:'TRY', tur:'hakedis', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', santiye:'Liman Lojistik Merkezi', aciklama:'Aliağa Liman İşletmeleri hakediş tahsilatları bu hesaba yatırılır.'},
-    'akbank-maas':{banka:'Akbank', sube:'Levent Kurumsal Şube', subeKod:'0129', ad:'Maaş Ödeme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR130004600000987654321098', pb:'TRY', tur:'maas', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'Aylık personel maaş ödemeleri bordro sistemine bağlı toplu talimatla bu hesaptan yapılır.'},
-    'yapikredi-teminat':{banka:'Yapı Kredi', sube:'Bahçelievler Şube', subeKod:'0844', ad:'Vadi Konakları Teminat Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR330006700006677889900112', pb:'TRY', tur:'teminat', varsayilan:false, durum:'aktif', yetkili:'Elif Sarıkaya', santiye:'Vadi Konakları', aciklama:'Vadi Konakları projesi kesin teminat mektubu karşılığı bloke hesap.'},
-    'qnb-proje':{banka:'QNB Finansbank', sube:'Kartal Şube', subeKod:'0921', ad:'Vadi Konakları Proje Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR690011100003344556677889', pb:'TRY', tur:'proje', varsayilan:false, durum:'aktif', yetkili:'Hasan Demirci', santiye:'Vadi Konakları', aciklama:'Vadi Konakları projesine özel tahsis edilmiş, yalnız bu proje harcamalarında kullanılan hesap.'},
-    'teb-vadeli':{banka:'TEB', sube:'Maslak Şube', subeKod:'0057', ad:'Kısa Vadeli Mevduat', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR490003200009988776655443', pb:'TRY', tur:'vadeli', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'3 aylık vadeli mevduat, vade sonu 15 Eylül 2026.'},
-    'ziraat-eski-kredi':{banka:'Ziraat Bankası', sube:'Ticari Şube', subeKod:'1200', ad:'Ekipman Kredisi Ödeme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR310000100005566778899001', pb:'TRY', tur:'kredi', varsayilan:false, durum:'pasif', yetkili:'Nesrin Aydın', aciklama:'Ekskavatör/vinç ekipman kredisi Mart 2026\'da kapatıldı, hesap pasife alındı.'},
-    'hsbc-eski-proje':{banka:'HSBC', sube:'Kurumsal Şube', subeKod:'0311', ad:'Kule Ofis B Blok Proje Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR630012300001122334455667', pb:'TRY', tur:'diger', varsayilan:false, durum:'arsiv', yetkili:'Nesrin Aydın', santiye:'Kule Ofis B Blok', aciklama:'Proje Mart 2026\'da tesliminin ardından kapatıldı, hesap arşive kaldırıldı.'}
+    'is-bankasi-ana':{banka:'İş Bankası', sube:'Merkez Şube', subeKod:'4058', ad:'Merkez Ana İşletme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR330006400000011234567890', hesapNo:'0011234567890', pb:'TRY', tur:'vadesiz', varsayilan:true, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'Firma genel işletme hesabı — kasa beslemeleri, kredi kartı ve Pluxee ekstre ödemeleri bu hesaptan yapılır.'},
+    'garanti-hakedis':{banka:'Garanti BBVA', sube:'Etiler Şube', subeKod:'313', ad:'Hakediş Tahsilat Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR700006200001245980012345', hesapNo:'1245980012345', pb:'TRY', tur:'hakedis', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', santiye:'Liman Lojistik Merkezi', aciklama:'Aliağa Liman İşletmeleri hakediş tahsilatları bu hesaba yatırılır.'},
+    'akbank-maas':{banka:'Akbank', sube:'Levent Kurumsal Şube', subeKod:'0129', ad:'Maaş Ödeme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR130004600000987654321098', hesapNo:'0987654321098', pb:'TRY', tur:'maas', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'Aylık personel maaş ödemeleri bordro sistemine bağlı toplu talimatla bu hesaptan yapılır.'},
+    'yapikredi-teminat':{banka:'Yapı Kredi', sube:'Bahçelievler Şube', subeKod:'0844', ad:'Vadi Konakları Teminat Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR330006700006677889900112', hesapNo:'6677889900112', pb:'TRY', tur:'teminat', varsayilan:false, durum:'aktif', yetkili:'Elif Sarıkaya', santiye:'Vadi Konakları', aciklama:'Vadi Konakları projesi kesin teminat mektubu karşılığı bloke hesap.'},
+    'qnb-proje':{banka:'QNB Finansbank', sube:'Kartal Şube', subeKod:'0921', ad:'Vadi Konakları Proje Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR690011100003344556677889', hesapNo:'3344556677889', pb:'TRY', tur:'proje', varsayilan:false, durum:'aktif', yetkili:'Hasan Demirci', santiye:'Vadi Konakları', aciklama:'Vadi Konakları projesine özel tahsis edilmiş, yalnız bu proje harcamalarında kullanılan hesap.'},
+    'teb-vadeli':{banka:'TEB', sube:'Maslak Şube', subeKod:'0057', ad:'Kısa Vadeli Mevduat', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR490003200009988776655443', hesapNo:'9988776655443', pb:'TRY', tur:'vadeli', varsayilan:false, durum:'aktif', yetkili:'Nesrin Aydın', aciklama:'3 aylık vadeli mevduat, vade sonu 15 Eylül 2026.'},
+    'ziraat-eski-kredi':{banka:'Ziraat Bankası', sube:'Ticari Şube', subeKod:'1200', ad:'Ekipman Kredisi Ödeme Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR310000100005566778899001', hesapNo:'5566778899001', pb:'TRY', tur:'kredi', varsayilan:false, durum:'pasif', yetkili:'Nesrin Aydın', aciklama:'Ekskavatör/vinç ekipman kredisi Mart 2026\'da kapatıldı, hesap pasife alındı.'},
+    'hsbc-eski-proje':{banka:'HSBC', sube:'Kurumsal Şube', subeKod:'0311', ad:'Kule Ofis B Blok Proje Hesabı', sahip:'Yapıtaş İnşaat A.Ş.', iban:'TR630012300001122334455667', hesapNo:'1122334455667', pb:'TRY', tur:'diger', varsayilan:false, durum:'arsiv', yetkili:'Nesrin Aydın', santiye:'Kule Ofis B Blok', aciklama:'Proje Mart 2026\'da tesliminin ardından kapatıldı, hesap arşive kaldırıldı.'}
   };
 
   var editSlug = null;
@@ -354,6 +362,7 @@
     document.getElementById('fBanka').value = rec.banka;
     document.getElementById('fSube').value = rec.sube;
     document.getElementById('fSubeKod').value = rec.subeKod;
+    document.getElementById('fHesapNo').value = rec.hesapNo || '';
     document.getElementById('fAd').value = rec.ad;
     document.getElementById('fSahip').value = rec.sahip;
     fIban.value = ibanFormat(rec.iban); refreshIban();
@@ -400,7 +409,8 @@
     var slug = slugify(banka + '-' + ad);
     extra.push({
       slug:slug, banka:banka, sube:document.getElementById('fSube').value.trim(),
-      subeKod:document.getElementById('fSubeKod').value.trim(), ad:ad, sahip:sahip,
+      subeKod:document.getElementById('fSubeKod').value.trim(),
+      hesapNo:document.getElementById('fHesapNo').value.trim(), ad:ad, sahip:sahip,
       iban:cleanIban, ibanFmt:ibanFormat(cleanIban), pb:document.getElementById('fPb').value,
       tur:document.getElementById('fTur').value, yetkili:document.getElementById('fYetkili').value.trim(),
       santiye:document.getElementById('fSantiye').value, aciklama:document.getElementById('fAciklama').value.trim(),

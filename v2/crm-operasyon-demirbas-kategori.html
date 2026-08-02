@@ -447,6 +447,17 @@
     gvToast(ad.trim() + ' ana kategorisi eklendi.');
   });
 
+  /* ---- Bulgu #7 (Dalga 6 denetim) — Ana Kategori/Alt Kategori aksiyon butonları ölü
+     çıkıyordu: .kat-head > .row-acts'taki inline onclick="event.stopPropagation()"
+     (accordion'un satır tıklamasıyla açılıp kapanmasını engellemek için, satır 358)
+     BUBBLE fazında durduruyor, bu delege dinleyici de wrap üzerinde bubble fazında
+     olduğu için event'e HİÇ ULAŞMIYORDU. stopPropagation() KALDIRILMADI (accordion
+     davranışı hâlâ gerekli) — bunun yerine bu dinleyici CAPTURE fazına alındı
+     (3. argüman `true`): capture, target'a ulaşmadan ÖNCE kökten aşağı iner, yani
+     row-acts'ın bubble-fazındaki stopPropagation()'ından önce çalışır. Alt Kategori
+     satırlarının aksiyonları zaten stopPropagation'a maruz kalmadığından (.alt-acts
+     bunu kullanmıyor) capture/bubble farkı onları etkilemez — ikisi de aynı şekilde
+     çalışmaya devam eder. */
   wrap.addEventListener('click', function(e){
     var editBtn = e.target.closest('[data-ana-edit]');
     if(editBtn){
@@ -559,7 +570,7 @@
       });
       return;
     }
-  });
+  }, true);
 })();
 </script>
 </body>
