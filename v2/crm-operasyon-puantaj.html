@@ -165,11 +165,12 @@ th.is-today .dh-d{color:var(--acc-ink)}
   .pg-foot .btn{flex:1 1 auto;justify-content:center}
 }
 
-/* ============ Görünüm sekmeleri (Bireysel / Taşeron) — Dalga 5 spec madde 3: eski
-   sayfa-lokal gv-tabs kaldırıldı, markup gvChipBar'a taşındı (spec-liste-mimarisi.md §1).
-   Pill/chip görsel dili, ok butonları, klavye gezinme, edge-fade ui.css'ten gelir; burada
-   yalnız panel geçiş animasyonu kalır. ============ */
-.tab-panel{animation:tabIn .22s var(--ease)}
+/* ============ Görünüm sekmeleri — Dalga 5'te gvChipBar'a taşınmıştı, T-Y1 (Dalga 3)
+   ortak gvTabs.init'e genişletti (6 sekme, tasks/spec-v3a-ortak.md §3). Pill/chip
+   görsel dili, ok butonları, klavye gezinme, edge-fade ui.css'ten (.gv-tabbar/
+   .gv-chipbar) gelir; burada yalnız panel geçiş animasyonu kalır — seçici artık
+   ui.js'in ürettiği .gv-tabpanel'e uygulanır. ============ */
+.gv-tabpanel{animation:tabIn .22s var(--ease)}
 @keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 /* eski .gv-tabs'ın margin-bottom:22px'i korunur — gvChipBar bunu kendi başına vermez
    (sarmalayıcı farklı sayfalarda farklı bağlamlarda kullanılabildiği için nötr) */
@@ -348,6 +349,15 @@ th.is-today .dh-d{color:var(--acc-ink)}
 .rep-src i{margin-top:2px;flex:none}
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
 @media(max-width:1100px){.dash-cols{grid-template-columns:minmax(0,1fr)}}
+
+/* ============ T-Y1 (Dalga 3) — "Uyarılar" tab'ının .hstat kartları tıklanabilir
+   butona dönüştü ("o bölüme götürür", tasks/kararlar.md); .stat-grid/.hstat tanımı
+   yukarıda zaten var (T-O1), yalnız buton reset'i eklendi. Alt bölüm hedeflerine
+   scroll-margin-top — sabit topbar (64px) altına gizlenmesin diye. ============ */
+.hstat-btn{border:none;background:var(--bg);cursor:pointer;text-align:left;font:inherit;width:100%;transition:.15s var(--ease)}
+.hstat-btn:hover{background:var(--paper);box-shadow:var(--sh-sm)}
+.hstat-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#botsecDevamsizlik,#botsecEksikMesai,#botsecSonHareketler,#botsecOnayBekleyen,#botsecKritik{scroll-margin-top:84px}
 </style>
 </head>
 <body data-sec="personel" data-screen="puantaj">
@@ -377,23 +387,11 @@ th.is-today .dh-d{color:var(--acc-ink)}
         <h1>Puantaj</h1>
         <div class="ph-sub" id="ptSub">7 personel · Vadi Konakları · 29 Haziran – 5 Temmuz 2026</div>
       </div>
-      <div class="ph-actions" data-tab-panel-actions="bireysel">
+      <div class="ph-actions" data-tab-panel-actions="liste">
         <button class="btn btn-ghost btn-sm" id="btnGetirToggle" type="button" data-no-confirm aria-expanded="false" aria-controls="getirCard"><i class="fa-solid fa-people-arrows"></i> Personel Getir</button>
         <button class="btn btn-acc btn-sm" id="btnGunlukToggle" type="button" data-no-confirm aria-expanded="false" aria-controls="gunlukCard"><i class="fa-solid fa-list-check"></i> Günlük Giriş</button>
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-puantaj-form.html"><i class="fa-solid fa-plus"></i> Puantaj Ekle</a>
       </div>
-    </div>
-
-    <!-- ============ SEKMELER — gvChipBar (Dalga 5 spec madde 3: eski gv-tabs taşındı;
-         chip tıklama davranışı YOK — data-tab özel sekme-geçiş JS'i sürer, wireTables()'ın
-         data-filter delegasyonu bu butonlara hiç bağlanmaz) ============ -->
-    <div class="gv-chipbar-wrap" data-chipbar>
-      <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-      <div class="gv-chipbar" role="tablist" aria-label="Puantaj görünümü">
-        <button class="chip is-on" data-tab="bireysel" role="tab" aria-selected="true"><i class="fa-solid fa-user-clock"></i> Bireysel</button>
-        <button class="chip" data-tab="taseron" role="tab" aria-selected="false"><i class="fa-solid fa-people-group"></i> Taşeron</button>
-      </div>
-      <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 
     <!-- ============ §9 — aktif gelişmiş-filtre çip satırı (Bireysel/Taşeron ORTAK,
@@ -438,61 +436,14 @@ th.is-today .dh-d{color:var(--acc-ink)}
       </div>
     </div>
 
-    <!-- ============ T-O1 (B §7.3 Puantaj) — günlük personel dağılım grafiği + öz kadro/
-         taşeron ayrımı. Günlük dağılım: 16 öz kadro (izlenen örneklem) + 24 taşeronun
-         PERSONEL[].gunler/TASERON[].gunler dizilerinden gün gün sayılmasıyla türetildi
-         (Pzt 35 · Sal 36 · Çar 34 · Per 35 — öz 13/13/13/11 + taşeron 22/23/21/24). ============ -->
-    <div class="rp-charts-2" style="margin-bottom:18px">
-      <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Günlük Personel Dağılımı — izlenen örneklem</h3></div>
-        <div class="rp-chart-body" id="chartPtGunluk"></div>
-      </div>
-      <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Öz Kadro / Taşeron Adam-Gün Ayrımı</h3></div>
-        <div class="rp-chart-body" id="chartPtOzTas"></div>
-      </div>
-    </div>
+    <!-- ============ T-Y1 (Dalga 3, doküman §8.1/§8.2/§9.1/§9.3) — grafikler "Grafikler"
+         tab'ına, devamsızlık/son hareketler alt bölüme (.gv-botsec, sayfa sonu) taşındı;
+         ana görünümde öncelik listeye verildi. Mount BOŞ — .gv-tabbar gvTabs.init ile
+         kurulur (tasks/spec-v3a-ortak.md §3), JS kapalıyken aşağıdaki TÜM paneller
+         sırayla ve tam görünür kalır (statik hidden YAZILMAZ). ============ -->
+    <div id="ptTabs"></div>
 
-    <!-- ============ T-O1 (B §7.3 Puantaj) — fazla mesai grafiği + durum dağılımı ============ -->
-    <div class="rp-charts-2" style="margin-bottom:18px">
-      <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-arrow-trend-up"></i> Fazla Mesai — Şantiye Bazlı (öz kadro, işlenen 4 gün)</h3></div>
-        <div class="rp-chart-body" id="chartPtFm"></div>
-      </div>
-      <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-simple"></i> Durum Dağılımı — öz kadro, 64 kişi-gün</h3></div>
-        <div class="rp-chart-body" id="chartPtDurum"></div>
-      </div>
-    </div>
-
-    <!-- ============ T-O1 (B §7.2 madde 6-7) — devamsızlık uyarıları (kritik uyarı) + son
-         hareketler. "Açık işler/bekleyen işlemler" mevcut "Puantaj Onay Durumları — Bugün"
-         kartıyla (aşağıda, onayCard) zaten karşılanıyor — burada tekrar EDİLMEDİ. ============ -->
-    <div class="dash-cols" style="margin-bottom:18px">
-      <div class="gv-card" style="margin:0">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Devamsızlık Uyarıları</div></div>
-        <div class="gc-body">
-          <div class="hl-list">
-            <div class="hl-row risk"><i class="fa-solid fa-xmark"></i><span><b>Selim Doğan</b> (Demir Ustası, Vadi) 30 Haziran'da mazeretsiz devamsız — aynı hafta 1 gün eksik mesai (EM) de aldı.</span></div>
-            <div class="hl-row risk"><i class="fa-solid fa-xmark"></i><span><b>Osman Polat</b> (Düz İşçi, Liman) 29 Haziran'da mazeretsiz devamsız.</span></div>
-            <div class="hl-row risk-warn"><i class="fa-solid fa-xmark"></i><span>Taşeron tarafında 4 devamsızlık: <b>Ayhan Böke</b> (Demir-Beton, 29 Haz), <b>Ünal Yavuzer</b> (Demir-Beton, 1 Tem), <b>Uğur Beyazıt</b> (ElektroMek, 30 Haz), <b>Okan Sarıgül</b> (Yalıtım Kardeşler, 29 Haz).</span></div>
-          </div>
-          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam 6 devamsızlık (2 öz kadro + 4 taşeron), işlenen 4 gün (29 Haz–2 Tem) içinde — tamamı mazeretsiz.</div>
-        </div>
-      </div>
-      <div class="gv-card" style="margin:0">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
-        <div class="gc-body">
-          <div class="hl-list">
-            <div class="hl-row"><i class="fa-solid fa-lock"></i><span>Vadi, Liman ve Merkez'in 1 Temmuz (Çarşamba) puantajı kilitlendi — düzenlenemez.</span></div>
-            <div class="hl-row"><i class="fa-solid fa-pen"></i><span>2 Temmuz (bugün) her 3 şantiye de "Taslak" durumda — henüz İK onayına gönderilmedi.</span></div>
-            <div class="hl-row"><i class="fa-solid fa-people-arrows"></i><span>22–28 Haziran arşiv haftasında taşeron puantajı (136 adam-gün) TH-2026-008/009/014 hakedişlerine aktarıldı.</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <section class="tab-panel" data-tab-panel="bireysel" role="tabpanel" aria-label="Bireysel">
+    <section class="gv-tabpanel" id="panel-liste" role="tabpanel" aria-label="Puantaj Listesi">
 
     <div class="gv-card" id="gunlukCard" style="margin-bottom:24px" hidden>
       <div class="gc-head">
@@ -515,59 +466,6 @@ th.is-today .dh-d{color:var(--acc-ink)}
           <div class="fb-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="getirArama" autocomplete="off" placeholder="Personel adıyla ara…" aria-label="Personel ara"></div>
           <ul class="pf-mini-list" id="getirListe" role="listbox" aria-label="Diğer şantiyelerden personel"></ul>
         </div>
-      </div>
-    </div>
-
-    <!-- ============ Puantaj onay durumları — §14 (revize istendi / kilitlendi rozetleri,
-         filtrelenebilir liste). Chip filtre + tablo mevcut ui.js data-filter/data-f
-         motoruna bağlanır (crm-personel-ozluk.html'deki desenin aynısı) — sayfa yeni JS
-         primitifi icat etmez. ============ -->
-    <div class="gv-card" id="onayCard" style="margin-bottom:24px">
-      <div class="gc-head">
-        <div class="gc-title"><i class="fa-solid fa-clipboard-check"></i> Puantaj Onay Durumları — Bugün</div>
-      </div>
-      <div class="gc-body">
-        <div class="chips" data-target="#tblOnay" style="margin-bottom:14px">
-          <button class="chip is-on" data-filter="hepsi">Tümü</button>
-          <button class="chip" data-filter="taslak">Taslak</button>
-          <button class="chip" data-filter="gonderildi">İK Onayında</button>
-          <button class="chip" data-filter="onaylandi">Onaylandı</button>
-          <button class="chip" data-filter="revize">Revize İstendi</button>
-          <button class="chip" data-filter="kilitli">Kilitlendi</button>
-        </div>
-      </div>
-      <div class="gc-body flush gv-cards-pad">
-        <table class="gtable gtable-cards" id="tblOnay" data-paginate="25" data-paginate-key="onay">
-          <thead><tr><th class="col-per">Şantiye</th><th>Durum</th><th></th></tr></thead>
-          <tbody>
-            <tr data-f="taslak" data-santiye="vadi"><td><div class="pp-cell"><div class="pp-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-building"></i></div><div class="pp-info"><b>Vadi Konakları</b><span>7 personel</span></div></div></td><td><span class="gstat off">Taslak</span></td><td><div class="row-acts"><button type="button" class="ia-btn onay-goster" data-santiye="vadi" data-no-confirm aria-label="Şantiyeyi görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button></div></td></tr>
-            <tr data-f="taslak" data-santiye="liman"><td><div class="pp-cell"><div class="pp-mark" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-building"></i></div><div class="pp-info"><b>Liman Lojistik Merkezi</b><span>5 personel</span></div></div></td><td><span class="gstat off">Taslak</span></td><td><div class="row-acts"><button type="button" class="ia-btn onay-goster" data-santiye="liman" data-no-confirm aria-label="Şantiyeyi görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button></div></td></tr>
-            <tr data-f="taslak" data-santiye="merkez"><td><div class="pp-cell"><div class="pp-mark" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-building"></i></div><div class="pp-info"><b>Merkez Şantiye</b><span>4 personel</span></div></div></td><td><span class="gstat off">Taslak</span></td><td><div class="row-acts"><button type="button" class="ia-btn onay-goster" data-santiye="merkez" data-no-confirm aria-label="Şantiyeyi görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-check"></i></div>
-        <div><div class="kpi-num num" id="kpiTam">17</div><div class="kpi-lbl" id="kpiTamLbl">Tam gün (29 Haz–2 Tem)</div>
-        <div class="kpi-delta flat" id="kpiGunDelta"><i class="fa-solid fa-calendar-check"></i> İşlenen 4 gün</div></div>
-      </div>
-      <div class="kpi-card warn">
-        <div class="kpi-ico"><i class="fa-solid fa-circle-half-stroke"></i></div>
-        <div><div class="kpi-num num" id="kpiYarim">1</div><div class="kpi-lbl">Yarım gün</div>
-        <div class="kpi-delta flat"><i class="fa-solid fa-clock"></i> Erken çıkış / geç giriş</div></div>
-      </div>
-      <div class="kpi-card danger">
-        <div class="kpi-ico"><i class="fa-solid fa-xmark"></i></div>
-        <div><div class="kpi-num num" id="kpiYok">1</div><div class="kpi-lbl">Devamsız</div>
-        <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Mazeretsiz</div></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-umbrella-beach"></i></div>
-        <div><div class="kpi-num num" id="kpiIzin">5</div><div class="kpi-lbl">İzinli / Raporlu</div>
-        <div class="kpi-delta flat"><i class="fa-solid fa-file-medical"></i> Bu hafta toplam</div></div>
       </div>
     </div>
 
@@ -597,9 +495,10 @@ th.is-today .dh-d{color:var(--acc-ink)}
            eklendi (fpSearchTerm). Bu tabloda mevcut durum eksenini (data-durum-bugun)
            Gelişmiş Filtre'nin "Çalışma Durumu" alanı zaten karşılıyor — ikinci bir chip-tab
            EKLENMEDİ (aynı ekseni iki kontrolde durdurmama ilkesi, K-306b). Şeritteki aktif
-           filtre çipleri (#achipsPuantaj) Bireysel/Taşeron İKİ sekmede de ORTAK göründüğü
-           için sayfa kökünde (KPI'dan önce) KALDI — buraya taşınsaydı yalnız Bireysel
-           sekmesinde görünür olur, paylaşılan davranış bozulurdu. -->
+           filtre çipleri (#achipsPuantaj) Puantaj Listesi/Taşeron Puantajı sekmelerinde
+           ORTAK göründüğü için sayfa kökünde (KPI'dan önce, tab sisteminin DIŞINDA) KALDI
+           (T-Y1, Dalga 3) — bir tab panelinin içine taşınsaydı yalnız o sekmede görünür
+           olur, paylaşılan davranış bozulurdu. -->
       <div class="gv-listhead">
         <div class="lh-row">
           <div class="lh-search">
@@ -658,6 +557,68 @@ th.is-today .dh-d{color:var(--acc-ink)}
 
     </section>
 
+    <!-- ============ T-Y1 — "Grafikler" tab'ı (§8.1/§8.2/§9.1 madde 2). 4 grafik AYNEN
+         (mount id + gvBar/gvDonut çağrıları KORUNUR), yalnız DOM konumu değişti. Panel
+         gizliyken (sıfır genişlik) çizilmez — ilk açılışta gvTabs onChange kancasıyla
+         drawPtCharts() tetiklenir (aşağıda script bloğu). ============ -->
+    <section class="gv-tabpanel" id="panel-grafik" role="tabpanel" aria-label="Grafikler">
+      <!-- ============ T-O1 (B §7.3 Puantaj) — günlük personel dağılım grafiği + öz kadro/
+           taşeron ayrımı. Günlük dağılım: 16 öz kadro (izlenen örneklem) + 24 taşeronun
+           PERSONEL[].gunler/TASERON[].gunler dizilerinden gün gün sayılmasıyla türetildi
+           (Pzt 35 · Sal 36 · Çar 34 · Per 35 — öz 13/13/13/11 + taşeron 22/23/21/24). ============ -->
+      <div class="rp-charts-2" style="margin-bottom:18px">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Günlük Personel Dağılımı — izlenen örneklem</h3></div>
+          <div class="rp-chart-body" id="chartPtGunluk"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Öz Kadro / Taşeron Adam-Gün Ayrımı</h3></div>
+          <div class="rp-chart-body" id="chartPtOzTas"></div>
+        </div>
+      </div>
+
+      <!-- ============ T-O1 (B §7.3 Puantaj) — fazla mesai grafiği + durum dağılımı ============ -->
+      <div class="rp-charts-2">
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-arrow-trend-up"></i> Fazla Mesai — Şantiye Bazlı (öz kadro, işlenen 4 gün)</h3></div>
+          <div class="rp-chart-body" id="chartPtFm"></div>
+        </div>
+        <div class="rp-chart">
+          <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-simple"></i> Durum Dağılımı — öz kadro, 64 kişi-gün</h3></div>
+          <div class="rp-chart-body" id="chartPtDurum"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ T-Y1 — "Günlük Özet" tab'ı (§9.1 madde 3). İkinci KPI şeridi (eski
+         satır ~554) BİREBİR buraya taşındı — id'ler (kpiTam/kpiYarim/kpiYok/kpiIzin)
+         KORUNUR, render() bu kartları hâlâ günceller (hangi tab açık olursa olsun). ============ -->
+    <section class="gv-tabpanel" id="panel-ozet" role="tabpanel" aria-label="Günlük Özet">
+      <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Seçili şantiye ve haftanın günlük durum dağılımı — üstteki "Puantaj Listesi" sekmesindeki şantiye seçici ve hafta gezinmesiyle birlikte güncellenir.</p>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-check"></i></div>
+          <div><div class="kpi-num num" id="kpiTam">17</div><div class="kpi-lbl" id="kpiTamLbl">Tam gün (29 Haz–2 Tem)</div>
+          <div class="kpi-delta flat" id="kpiGunDelta"><i class="fa-solid fa-calendar-check"></i> İşlenen 4 gün</div></div>
+        </div>
+        <div class="kpi-card warn">
+          <div class="kpi-ico"><i class="fa-solid fa-circle-half-stroke"></i></div>
+          <div><div class="kpi-num num" id="kpiYarim">1</div><div class="kpi-lbl">Yarım gün</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-clock"></i> Erken çıkış / geç giriş</div></div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="kpi-ico"><i class="fa-solid fa-xmark"></i></div>
+          <div><div class="kpi-num num" id="kpiYok">1</div><div class="kpi-lbl">Devamsız</div>
+          <div class="kpi-delta down"><i class="fa-solid fa-triangle-exclamation"></i> Mazeretsiz</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-umbrella-beach"></i></div>
+          <div><div class="kpi-num num" id="kpiIzin">5</div><div class="kpi-lbl">İzinli / Raporlu</div>
+          <div class="kpi-delta flat"><i class="fa-solid fa-file-medical"></i> Bu hafta toplam</div></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ TAŞERON — kişi bazlı puantaj (D19 revizesi — Beyar onayıyla 5C'deki
          "kişi adı listelenmez" kuralı geri alındı, bkz. shell.js DALGA 19). Grid Bireysel
          sekmenin desenine hizalı: aynı STATUS seti + .pt-mark hücre dili. Kalfalar kendi
@@ -666,8 +627,8 @@ th.is-today .dh-d{color:var(--acc-ink)}
          2 Temmuz (bugün) değerleri yemekhane taşeron öğle sayılarıyla birebir: Demir-Beton 10 ·
          ElektroMek 6 · Yalıtım Kardeşler 8. Firma bazlı adam-gün özeti ALT BLOK olarak
          korunur (S7 kararı) — taşeron hakedişleri (TH-2026-###) buna bağlı; kişi grid'inden
-         türetilir, ayrı sabit veri değildir. -->
-    <section class="tab-panel" data-tab-panel="taseron" role="tabpanel" aria-label="Taşeron" hidden>
+         türetilir, ayrı sabit veri değildir. Bu "Taşeron Puantajı" §9.1'in 4. tab'ıdır. -->
+    <section class="gv-tabpanel" id="panel-taseron" role="tabpanel" aria-label="Taşeron Puantajı">
       <div class="gv-card" style="margin-bottom:20px">
         <div class="gc-head">
           <div class="gc-title"><i class="fa-solid fa-people-group"></i> Taşeron Puantajı</div>
@@ -724,6 +685,138 @@ th.is-today .dh-d{color:var(--acc-ink)}
         <div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> Hücre değeri o gün sahadaki kişi sayısıdır (kişi satırlarından türetilir), ekip büyüklüğünü aşamaz. Taşeron hakedişleri (TH-2026-###) bu adam-gün toplamlarına bağlıdır.</span></div>
       </div>
     </section>
+
+    <!-- ============ T-Y1 — "Çıktılar" tab'ı (§9.1 madde 5). Gerçek çıktı akışı: mevcut
+         çıktı modalını (id=ciktiModalOv, sayfa sonunda — sabit konumlu overlay olduğu
+         için taşınmadı) AÇAR + crm-operasyon-puantaj-cikti.html'e doğrudan bağlantı verir.
+         Placeholder DEĞİL — btnCiktiTabOpen mevcut btnHaftalikCikti'nin TÜM onay/seçim
+         mantığını tetikler (script bloğunda click() proxy). ============ -->
+    <section class="gv-tabpanel" id="panel-ciktilar" role="tabpanel" aria-label="Çıktılar">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-print"></i> Puantaj Çıktıları</div></div>
+        <div class="gc-body">
+          <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Seçili kişiler, şantiye veya tüm liste için PDF/Excel çıktı alın; ya da tam kanonik roster'ı (93 kişi) kapsayan ayrı çıktı sayfasını açın.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button type="button" class="btn btn-acc" id="btnCiktiTabOpen" data-no-confirm><i class="fa-solid fa-print"></i> Çıktı Al</button>
+            <a class="btn btn-ghost" href="crm-operasyon-puantaj-cikti.html?kapsam=tumu&amp;donem=haftalik&amp;hafta=2026-06-29"><i class="fa-solid fa-arrow-up-right-from-square"></i> Puantaj Çıktı Sayfasını Aç</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ T-Y1 — "Uyarılar" tab'ı (§9.1 madde 6). §9.2'nin 5 bloğu sayfanın
+         EN ALTINDA (.gv-botsec, aşağıda) her tab'da GÖRÜNÜR durur — bu tab onlarla
+         çakışmaz, o bölüme GÖTÜRÜR/GÖSTERİR (karar gerekçesi: tasks/kararlar.md).
+         Sayılar aşağıdaki botsec bloklarıyla BİREBİR — kanonik: devamsız 6 (2 öz+4 taş),
+         EM 2 (Vadi), onay bekleyen 3 şantiye (hepsi Taslak), kritik 3 (2 evrak + 1 onay). ============ -->
+    <section class="gv-tabpanel" id="panel-uyarilar" role="tabpanel" aria-label="Uyarılar">
+      <div class="gv-card">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Puantaj Uyarıları</div></div>
+        <div class="gc-body">
+          <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Devamsızlık, eksik mesai, onay ve kritik uyarılar sayfanın en altında toplanır — karta tıklayınca ilgili bölüme inersiniz.</p>
+          <div class="stat-grid">
+            <button type="button" class="hstat hstat-btn danger" data-jump="#botsecDevamsizlik"><div class="hstat-num">6</div><div class="hstat-lbl">Devamsızlık uyarısı — 2 öz kadro + 4 taşeron</div></button>
+            <button type="button" class="hstat hstat-btn warn" data-jump="#botsecEksikMesai"><div class="hstat-num">2</div><div class="hstat-lbl">Eksik mesai (EM) uyarısı — Vadi Konakları</div></button>
+            <button type="button" class="hstat hstat-btn" data-jump="#botsecSonHareketler"><div class="hstat-num">3</div><div class="hstat-lbl">Son hareket kaydı</div></button>
+            <button type="button" class="hstat hstat-btn warn" data-jump="#botsecOnayBekleyen"><div class="hstat-num">3</div><div class="hstat-lbl">Şantiyenin puantajı onay bekliyor — hepsi Taslak</div></button>
+            <button type="button" class="hstat hstat-btn danger" data-jump="#botsecKritik"><div class="hstat-num">3</div><div class="hstat-lbl">Kritik uyarı — eksik evrak + onaysız puantaj</div></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ T-Y1 — §8.3/§15.3/§9.2 alt bölüm (spec-v3a-ortak.md §4). Ana tablodan
+         (#tblPuantaj) SONRA, sayfanın gerçek altında — hangi tab açık olursa olsun HER ZAMAN
+         görünür (tab sistemi dışında). Sıra §9.2 ile birebir: Devamsızlık · Eksik Mesai ·
+         Son Hareketler · Onay Bekleyen · Kritik. İlk üçü BİREBİR taşındı (eski satır
+         ~476/487); Eksik Mesai ve Kritik sayfada AYRI BLOK olarak yoktu — mevcut FM 3/EM 2/
+         devamsız 2 kanoniğinden ve EVRAK_UYARI/onay-durumu verisinden TÜRETİLDİ, uydurma
+         sayı yok (bkz. tasks/kararlar.md). ============ -->
+    <div class="gv-botsec" id="botsecDevamsizlik">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Devamsızlık Uyarıları</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk"><i class="fa-solid fa-xmark"></i><span><b>Selim Doğan</b> (Demir Ustası, Vadi) 30 Haziran'da mazeretsiz devamsız — aynı hafta 1 gün eksik mesai (EM) de aldı.</span></div>
+            <div class="hl-row risk"><i class="fa-solid fa-xmark"></i><span><b>Osman Polat</b> (Düz İşçi, Liman) 29 Haziran'da mazeretsiz devamsız.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-xmark"></i><span>Taşeron tarafında 4 devamsızlık: <b>Ayhan Böke</b> (Demir-Beton, 29 Haz), <b>Ünal Yavuzer</b> (Demir-Beton, 1 Tem), <b>Uğur Beyazıt</b> (ElektroMek, 30 Haz), <b>Okan Sarıgül</b> (Yalıtım Kardeşler, 29 Haz).</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam 6 devamsızlık (2 öz kadro + 4 taşeron), işlenen 4 gün (29 Haz–2 Tem) içinde — tamamı mazeretsiz.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecEksikMesai">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-arrow-trend-down"></i> Eksik Mesai Uyarıları</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-trend-down"></i><span><b>Ali Vural</b> (Saha Personeli, Vadi) 1 Temmuz'da (Çarşamba) eksik mesai (EM) aldı — 08:00–15:00 · −3 saat.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-arrow-trend-down"></i><span><b>Selim Doğan</b> (Demir Ustası, Vadi) 2 Temmuz'da (bugün) eksik mesai (EM) aldı — aynı hafta 30 Haziran'da mazeretsiz devamsızlığı da var.</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Toplam 2 eksik mesai (EM), işlenen 4 gün (29 Haz–2 Tem) içinde — ikisi de Vadi Konakları'nda (kanonik EM kırılımı 2/0/0).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecSonHareketler">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-lock"></i><span>Vadi, Liman ve Merkez'in 1 Temmuz (Çarşamba) puantajı kilitlendi — düzenlenemez.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-pen"></i><span>2 Temmuz (bugün) her 3 şantiye de "Taslak" durumda — henüz İK onayına gönderilmedi.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-people-arrows"></i><span>22–28 Haziran arşiv haftasında taşeron puantajı (136 adam-gün) TH-2026-008/009/014 hakedişlerine aktarıldı.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecOnayBekleyen">
+      <!-- ============ Puantaj onay durumları — §14 (revize istendi / kilitlendi rozetleri,
+           filtrelenebilir liste). Chip filtre + tablo mevcut ui.js data-filter/data-f
+           motoruna bağlanır (crm-personel-ozluk.html'deki desenin aynısı) — sayfa yeni JS
+           primitifi icat etmez. §9.2 "Onay bekleyen puantajlar" bloğu BİREBİR budur. ============ -->
+      <div class="gv-card" id="onayCard" style="margin:0">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-clipboard-check"></i> Puantaj Onay Durumları — Bugün</div>
+        </div>
+        <div class="gc-body">
+          <div class="chips" data-target="#tblOnay" style="margin-bottom:14px">
+            <button class="chip is-on" data-filter="hepsi">Tümü</button>
+            <button class="chip" data-filter="taslak">Taslak</button>
+            <button class="chip" data-filter="gonderildi">İK Onayında</button>
+            <button class="chip" data-filter="onaylandi">Onaylandı</button>
+            <button class="chip" data-filter="revize">Revize İstendi</button>
+            <button class="chip" data-filter="kilitli">Kilitlendi</button>
+          </div>
+        </div>
+        <div class="gc-body flush gv-cards-pad">
+          <table class="gtable gtable-cards" id="tblOnay" data-paginate="25" data-paginate-key="onay">
+            <thead><tr><th class="col-per">Şantiye</th><th>Durum</th><th></th></tr></thead>
+            <tbody>
+              <tr data-f="taslak" data-santiye="vadi"><td><div class="pp-cell"><div class="pp-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)"><i class="fa-solid fa-building"></i></div><div class="pp-info"><b>Vadi Konakları</b><span>7 personel</span></div></div></td><td><span class="gstat off">Taslak</span></td><td><div class="row-acts"><button type="button" class="ia-btn onay-goster" data-santiye="vadi" data-no-confirm aria-label="Şantiyeyi görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button></div></td></tr>
+              <tr data-f="taslak" data-santiye="liman"><td><div class="pp-cell"><div class="pp-mark" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-building"></i></div><div class="pp-info"><b>Liman Lojistik Merkezi</b><span>5 personel</span></div></div></td><td><span class="gstat off">Taslak</span></td><td><div class="row-acts"><button type="button" class="ia-btn onay-goster" data-santiye="liman" data-no-confirm aria-label="Şantiyeyi görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button></div></td></tr>
+              <tr data-f="taslak" data-santiye="merkez"><td><div class="pp-cell"><div class="pp-mark" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-building"></i></div><div class="pp-info"><b>Merkez Şantiye</b><span>4 personel</span></div></div></td><td><span class="gstat off">Taslak</span></td><td><div class="row-acts"><button type="button" class="ia-btn onay-goster" data-santiye="merkez" data-no-confirm aria-label="Şantiyeyi görüntüle"><i class="fa-solid fa-arrow-up-right-from-square"></i></button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecKritik">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk"><i class="fa-solid fa-file-circle-exclamation"></i><span><b>Ali Vural</b> (Saha Personeli, Vadi) — SGK işe giriş bildirgesi onay bekliyor; zorunlu evrak tamamlanmadan puantajı bordroya kapatılmamalı.</span></div>
+            <div class="hl-row risk"><i class="fa-solid fa-file-circle-exclamation"></i><span><b>Musa Erdem</b> (Düz İşçi, Vadi) — SGK işe giriş bildirgesi onay bekliyor; aynı evrak eksikliği.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-lock"></i><span>2 Temmuz (bugün) her 3 şantiyenin puantajı hâlâ "Taslak" — İK onayına gönderilmeden hakedişe/bordroya işlenemez.</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Eksik evrak uyarıları crm-personel-detay.html özlük kaydıyla birebir (tablodaki "Zorunlu evrak" rozetiyle aynı 2 kişi).</div>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -855,8 +948,15 @@ th.is-today .dh-d{color:var(--acc-ink)}
      Sayılar aşağıdaki PERSONEL (satır ~750)/TASERON (satır ~1560) dizilerinin gunler[]
      alanları gün gün sayılarak türetildi (öz kadro işlenen 4 gün = 64 kişi-gün; taşeron
      37 Demir-Beton + 23 ElektroMek + 30 Yalıtım K. = 90 kişi-gün). Türetme + kısa
-     tabloları tasks/devir-TO1.md'de. ============ */
-  if(window.gvBar){
+     tabloları tasks/devir-TO1.md'de.
+     T-Y1 (Dalga 3) — grafikler artık "Grafikler" tab'ında, sayfa açılışında GİZLİ
+     (0 genişlik sorunu). Çizim burada ÇAĞRILMAZ; ilk kez o tab açıldığında (gvTabs
+     onChange kancası, aşağıda) veya sayfa doğrudan #grafik hash'iyle açılırsa
+     drawPtCharts() tetiklenir — mount id'ler ve gvBar/gvDonut çağrıları AYNEN KORUNUR. ============ */
+  var ptChartsDrawn = false;
+  function drawPtCharts(){
+    if(ptChartsDrawn || !window.gvBar) return;
+    ptChartsDrawn = true;
     gvBar('#chartPtGunluk', [
       {lbl:'Pzt 29', val:35}, {lbl:'Sal 30', val:36}, {lbl:'Çar 1', val:34}, {lbl:'Per 2', val:35, tone:'acc'}
     ], {yon:'dikey', baslik:'Günlük personel dağılımı (16 öz kadro + 24 taşeron)'});
@@ -1855,23 +1955,62 @@ th.is-today .dh-d{color:var(--acc-ink)}
   }
   renderTaseron();
 
-  /* ============ Sekme geçişi — Bireysel / Taşeron ============
-     Mevcut günlük-giriş/İK-onay sim'ine ve aylık grid'e dokunmaz; yalnız görünürlük değişir. ---- */
-  var gvTabs = Array.prototype.slice.call(document.querySelectorAll('.chip[data-tab]'));
-  var tabPanels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+  /* ============ T-Y1 (Dalga 3, doküman §8.1/§8.2/§9.1) — 6 sekme, ortak gvTabs.init
+     primitifiyle (tasks/spec-v3a-ortak.md §3). Eski sayfa-lokal chip+activateTab()
+     motoru (Bireysel/Taşeron, 2 sekme) buraya GENİŞLETİLDİ — motor İCAT EDİLMEDİ.
+     "Puantaj Listesi" varsayılan/ilk (§8.1 "ana görünümde öncelik liste/tablo").
+     Mevcut günlük-giriş/İK-onay sim'ine ve aylık grid'e dokunmaz; yalnız görünürlük
+     değişir. tabActions (.ph-actions[data-tab-panel-actions]) eski davranışın AYNISI:
+     yalnız "liste" sekmesinde görünür (Puantaj Ekle/Günlük Giriş/Personel Getir
+     bireysel akışın parçası). ---- */
   var tabActions = Array.prototype.slice.call(document.querySelectorAll('[data-tab-panel-actions]'));
-  function activateTab(id){
-    gvTabs.forEach(function(t){
-      var on = t.getAttribute('data-tab') === id;
-      t.classList.toggle('is-on', on);
-      t.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    tabPanels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
-    tabActions.forEach(function(a){ a.hidden = a.getAttribute('data-tab-panel-actions') !== id; });
+  function syncPtTabActions(key){
+    tabActions.forEach(function(a){ a.hidden = a.getAttribute('data-tab-panel-actions') !== key; });
   }
-  gvTabs.forEach(function(t){
-    t.addEventListener('click', function(){ activateTab(t.getAttribute('data-tab')); });
+  var ptTabsHandle = null;
+  if(window.gvTabs){
+    ptTabsHandle = gvTabs.init({
+      mount: '#ptTabs',
+      screen: 'puantaj',
+      varsayilan: 'liste',
+      tabs: [
+        {key:'liste',    etiket:'Puantaj Listesi',   ikon:'fa-list',                 panel:'#panel-liste'},
+        {key:'grafik',   etiket:'Grafikler',         ikon:'fa-chart-simple',         panel:'#panel-grafik'},
+        {key:'ozet',     etiket:'Günlük Özet',       ikon:'fa-clipboard-list',       panel:'#panel-ozet'},
+        {key:'taseron',  etiket:'Taşeron Puantajı',  ikon:'fa-people-group',         panel:'#panel-taseron'},
+        {key:'ciktilar', etiket:'Çıktılar',          ikon:'fa-print',                panel:'#panel-ciktilar'},
+        {key:'uyarilar', etiket:'Uyarılar',          ikon:'fa-triangle-exclamation', panel:'#panel-uyarilar'}
+      ],
+      onChange: function(key){
+        syncPtTabActions(key);
+        if(key === 'grafik') drawPtCharts();
+      }
+    });
+  }
+  /* gvTabs.init'in ilk aktivasyonu persist=false ile çalışır (localStorage'a yazmaz),
+     bu yüzden onChange İLK açılışta TETİKLENMEZ (ui.js gvTabs.init sözleşmesi). Hangi
+     sekme fiilen açık (hash/localStorage'dan gelebilir) ELLE ölçülüp senkronize edilir —
+     "Grafikler" ilk açılan sekmeyse grafik burada ÇİZİLİR, boş çıkmaz. */
+  (function syncInitialPtTab(){
+    var keys = ['liste','grafik','ozet','taseron','ciktilar','uyarilar'];
+    var active = 'liste';
+    for(var i = 0; i < keys.length; i++){
+      var p = document.getElementById('panel-' + keys[i]);
+      if(p && !p.hidden){ active = keys[i]; break; }
+    }
+    syncPtTabActions(active);
+    if(active === 'grafik') drawPtCharts();
+  })();
+  /* Uyarılar tab'ındaki özet kartları — ilgili .gv-botsec bölümüne kaydırır (gerçek
+     işlev, placeholder değil). Bloklar HER tab'da zaten görünür (sayfa altı); bu
+     yalnız kullanıcıyı oraya götürür. */
+  document.addEventListener('click', function(e){
+    var jb = e.target.closest('[data-jump]');
+    if(!jb) return;
+    var target = document.querySelector(jb.getAttribute('data-jump'));
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
   });
+  document.getElementById('btnCiktiTabOpen').addEventListener('click', function(){ btnCikti.click(); });
 
   /* ============ §11.2 — Puantaj Çıktısı Al modalı [MOCK-SİM]. Kapsam/dönem/format
      seçilip crm-operasyon-puantaj-cikti.html'e yönlendirilir (PDF = yazdırmaya hazır
@@ -2073,8 +2212,10 @@ th.is-today .dh-d{color:var(--acc-ink)}
           sel.value = fpSantiye;
           sel.dispatchEvent(new Event('change'));
         }
-        if(fpTip === 'oz') activateTab('bireysel');
-        else if(fpTip === 'taseron') activateTab('taseron');
+        if(ptTabsHandle){
+          if(fpTip === 'oz') ptTabsHandle.activate('liste');
+          else if(fpTip === 'taseron') ptTabsHandle.activate('taseron');
+        }
         applyPtFpFilters();
       },
       onClear: function(){
