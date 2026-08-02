@@ -225,6 +225,26 @@ th.is-today .dh-d{color:var(--acc-ink)}
 .tg-total span{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:1px}
 .pt-arsiv-not{display:flex;align-items:center;gap:10px;margin-bottom:24px;padding:12px 16px;border:1px dashed var(--border);border-radius:10px;background:var(--bg);color:var(--ink-2);font-size:13px;font-weight:600}
 .pt-arsiv-not i{color:var(--muted)}
+/* [§15.1] "Arşivlenenleri Göster" toggle'ıyla eklenen arşiv haftası satırları —
+   kredikarti'ndeki .kk-card.is-pasif soluklaştırma deseniyle AYNI (opacity, silinme
+   veya devre dışı bırakma değil). */
+.pt-arsiv-row{opacity:.62}
+.pt-arsiv-row:hover{background:transparent}
+
+/* [§15.1] "Arşivlenenleri Göster" .lh-acts'a 5. kontrol olarak eklenince 1024px
+   tablet-yatayda satır taşıyordu (kasa/arac/mizan'ın K-344'te düzeltildiği AYNI kök
+   neden — bkz. tasks/kararlar.md). Bu sayfada kasa'daki "taşıma" çözümüne uygun,
+   sarılabilir bir gc-head çifti YOK (.pt-toolbar şantiye/hafta seçicisi, ayrı amaç) —
+   bu yüzden mizan'daki (b) sayfa-lokal media query deseni izlendi: ortak ui.css'in
+   .lh-lbl gizleme eşiği (640px) BURADA değiştirilmedi, yalnız BU sayfaya özel olarak
+   1024px'e kadar aynı davranış erkene çekildi. Butonlar disabled/placeholder OLMAZ —
+   yalnız ikon+aria-label'a döner (ui.css'in kendi 640px kuralıyla BİREBİR aynı görsel
+   dil, tek fark eşik genişliği). */
+@media(max-width:1024px){
+  .lh-acts .lh-lbl{display:none}
+  .lh-acts .btn{padding:0;width:34px;height:34px;gap:0}
+  .lh-toggle{gap:0}
+}
 
 /* ============ §11.1 — Grup başlığı satırı (Öz Kadro · Taşeron Personeli ·
    Tedarikçi Personeli · Geçici Görevli). Eski yaklaşım (baskın renkli satır) yerine
@@ -508,6 +528,10 @@ th.is-today .dh-d{color:var(--acc-ink)}
           <div class="lh-acts">
             <button type="button" class="btn btn-ghost btn-sm gv-fp-open" data-fpanel="#fpPuantaj" aria-label="Gelişmiş Filtre"><i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span></button>
             <button type="button" class="btn btn-ghost btn-sm" id="colsBtnPuantaj" aria-label="Kolonlar"><i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span></button>
+            <label class="lh-toggle" for="ptArsivToggle">
+              <input type="checkbox" id="ptArsivToggle">
+              <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
+            </label>
             <button class="btn btn-ghost btn-sm" id="btnHaftalikCikti" type="button" data-no-confirm aria-label="Çıktı Al"><i class="fa-solid fa-print"></i> <span class="lh-lbl">Çıktı Al</span></button>
             <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Puantaj listesi","kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span></a>
           </div>
@@ -1123,6 +1147,62 @@ th.is-today .dh-d{color:var(--acc-ink)}
     return parts.length ? parts.join(' · ') : '—';
   }
 
+  /* ============ §15.1 — "Arşivlenenleri Göster" toggle. Eksen: arşiv haftası (22–28
+     Haziran), PREV verisiyle AYNI kaynak. Hafta navigatörüyle YARIŞMAZ: statusOf/
+     weeklyTotal/monthlySummary global WEEK'i okur, bunlara DOKUNULMAZ — bunun yerine
+     PREV'i doğrudan okuyan ayrı, salt-okunur yardımcılar tanımlanır. Toggle açıkken
+     render() ana tabloya (yalnız WEEK===0 iken, nav zaten -1'deyse eklenen grup
+     nav'ın gösterdiğiyle birebir tekrar olacağından atlanır — bkz. render() içindeki
+     kontrol) "Arşiv Haftası" grubu ekler; bu KENDİ satırları data-per TAŞIMAZ, bu
+     yüzden seçim/gelişmiş-filtre/gvCols dışında yalnız sütun-görünürlüğü (data-col)
+     paylaşılır — mevcut seçim/filtre motorlarını BOZMAZ. ---- */
+  var ptArsivGoster = false;
+  function arsivStatusOf(person, dayIdx){ return (PREV[person.ad] || [])[dayIdx] || 'ht'; }
+  function arsivWeeklyTotal(person){
+    var tam = 0, half = 0;
+    for(var i = 0; i <= 6; i++){
+      var s = arsivStatusOf(person, i);
+      if(s === 'tam' || s === 'fm') tam++;
+      else if(s === 'yarim' || s === 'em') half++;
+    }
+    return tam + half * 0.5;
+  }
+  function arsivMonthlySummary(person){
+    var c = {};
+    for(var i = 0; i <= 6; i++){
+      var s = arsivStatusOf(person, i);
+      if(s === 'ht' || s === 'rt' || s === 'gelecek') continue;
+      c[s] = (c[s] || 0) + 1;
+    }
+    var parts = [];
+    OZET_SIRA.forEach(function(k){ if(c[k]) parts.push(c[k] + ' ' + OZET_KOD[k]); });
+    return parts.length ? parts.join(' · ') : '—';
+  }
+  function arsivRowsHtml(rows, tint, santiye){
+    if(!rows.length) return '';
+    var h = '<tr class="pgrp-row" data-grp="arsiv"><td colspan="12"><span class="pgrp-lbl"><i class="fa-solid fa-box-archive"></i> Arşiv Haftası (22–28 Haziran)</span><span class="pgrp-badge">'+rows.length+' kişi</span></td></tr>';
+    rows.forEach(function(p){
+      h += '<tr class="pt-arsiv-row" data-per-arsiv="'+p.ad+'">';
+      h += '<td class="col-chk" data-lbl=""></td>';
+      h += '<td data-lbl="Personel"><div class="pp-cell"><div class="pp-mark" style="background:'+tint.bg+';color:'+tint.fg+'">'+initials(p.ad)+'</div>'
+         + '<div class="pp-info"><b>'+p.ad+'</b><span>'+SANTIYE_ADI[santiye]+' · arşiv</span></div></div></td>';
+      h += '<td data-col="poz" data-lbl="Görev">'+p.poz+'</td>';
+      for(var d = 0; d < 7; d++){
+        var st = arsivStatusOf(p, d);
+        var V = STATUS[st];
+        var locked = st !== 'ht' && st !== 'gelecek';
+        var tip = PREV_DAYS[d] + ' · ' + V.lbl;
+        h += '<td class="col-gun" data-col="'+GUN_KEY[d]+'" data-lbl="'+PREV_DAYS[d]+'"><div class="pt-mark '+st+(locked?' is-locked':'')+'" data-tip="'+tip+'" data-locked="'+(locked?'1':'0')+'" tabindex="0">'
+           + (V.ic ? '<i class="fa-solid '+V.ic+'"></i>' : '') + (locked ? '<span class="pt-lock"><i class="fa-solid fa-lock"></i></span>' : '') + '</div></td>';
+      }
+      var wt = arsivWeeklyTotal(p);
+      h += '<td class="num" data-col="hafta" data-lbl="Haftalık"><div class="pt-total">'+(wt % 1 === 0 ? wt : wt.toString().replace('.', ','))+' gün<span>7 gün işlendi</span></div></td>';
+      h += '<td data-col="ozet" data-lbl="Haziran Özeti"><div class="pt-ozet">'+arsivMonthlySummary(p)+'</div></td>';
+      h += '</tr>';
+    });
+    return h;
+  }
+
   var body = document.getElementById('ptBody');
   var sel = document.getElementById('ptSantiye');
   var sub = document.getElementById('ptSub');
@@ -1295,6 +1375,11 @@ th.is-today .dh-d{color:var(--acc-ink)}
       html += '<td data-col="ozet" data-lbl="'+(WEEK === -1 ? 'Haziran Özeti' : 'Temmuz Özeti')+'"><div class="pt-ozet">'+monthlySummary(p)+'</div></td>';
       html += '</tr>';
     });
+    /* [§15.1] Toggle AÇIKKEN arşiv haftası kayıtları listeye eklenir — ama nav zaten
+       WEEK===-1'deyse (arşiv haftası ZATEN görünüyor) grup atlanır: aksi halde aynı
+       veri iki kez, birbiriyle YARIŞARAK görünürdü. Nav 0'a dönünce toggle açık kaldığı
+       sürece grup otomatik geri gelir (render() her applyWeek()'te yeniden çağrılır). */
+    if(ptArsivGoster && WEEK !== -1) html += arsivRowsHtml(rows, tint, santiye);
     body.innerHTML = html || '<tr><td colspan="12" style="text-align:center;justify-content:center;color:var(--muted);padding:32px">Bu şantiyede kayıtlı personel yok.</td></tr>';
     if(gcHandle) gcHandle.apply();
     syncRowChecks();
@@ -1788,6 +1873,18 @@ th.is-today .dh-d{color:var(--acc-ink)}
         {key:'hafta', lbl:'Haftalık Toplam', def:true},
         {key:'ozet', lbl:'Aylık Özet', def:true}
       ]
+    });
+  }
+
+  /* [§15.1] .lh-acts'taki "Arşivlenenleri Göster" toggle'ı — kasa/kredikarti'ndeki
+     desenle BİREBİR: bayrağı çevirir, sayfanın KENDİ render()'ını çağırır. Hafta
+     navigatörünün WEEK state'ine DOKUNMAZ (yukarıdaki render() içindeki WEEK!==-1
+     koşuluyla nav'a saygı duyar). */
+  var ptArsivToggle = document.getElementById('ptArsivToggle');
+  if(ptArsivToggle){
+    ptArsivToggle.addEventListener('change', function(){
+      ptArsivGoster = ptArsivToggle.checked;
+      render();
     });
   }
 
