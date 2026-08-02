@@ -360,6 +360,20 @@
 (function(){
   if(!window.GV) return;
 
+  /* banka hareketi oluşturma yalnız üst yönetim + muhasebe (crm-finans-banka.html /
+     crm-finans-kurum.html / crm-finans-taseron.html ile AYNI OLUSTURABILIR deseni —
+     §10.1 "Banka Ekle net görünmeli" hükmü hareketler tarafında da ölü data-view=
+     "olusturabilir" hidden butonu rol-duyarlı yapıldı). Rol kümesi banka.html ile
+     BİREBİR AYNI: shell.js'in scr.finans listelerinde 'banka-hareket' teknik/sef/ik
+     rollerinin HİÇBİRİNDE yok (yalnız kasa/kredikarti/pluxee/taseron gibi diğer
+     finans ekranları var) — yani bu sayfaya erişebilen roller zaten tam olarak
+     superadmin/sahip/yonetim/muhasebe kümesiyle örtüşüyor; daha geniş bir liste
+     erişemeyen bir rolü "oluşturabilir" yapmış olurdu. */
+  var OLUSTURABILIR = ['superadmin','sahip','yonetim','muhasebe'];
+  document.querySelectorAll('[data-view="olusturabilir"]').forEach(function(el){
+    el.hidden = OLUSTURABILIR.indexOf(GV.role) === -1;
+  });
+
   /* ============ T-O1 (B §7.3) — ₺ değer kısaltma yardımcısı (K-224 tuzağı: gvBar
      yatay sabit 480-birim viewBox'ı 7+ haneli ₺ etiketlerini kırpıyor — ui.js KİLİTLİ,
      ortak dosyaya dokunulmadı, sayfa-lokal çözüm). ============ */
