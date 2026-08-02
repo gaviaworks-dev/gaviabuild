@@ -103,7 +103,6 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-acc btn-sm" id="btnDisaAktar"><i class="fa-solid fa-download"></i> Çıktı Al / Dışa Aktar</button>
       </div>
     </div>
 
@@ -154,15 +153,46 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     <!-- ============ TALEP LİSTESİ ============ -->
     <!-- kaynak: crm-satinalma-talepler.html tbody :133-249, 13 kayıt birebir. -->
     <div class="gv-card" style="margin-bottom:24px">
-      <div class="filter-bar">
-        <div class="chips" data-target="#tblTalep" id="durumChips">
-          <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt" id="cntHepsi">13</span></button>
-          <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt" id="cntBekliyor">7</span></button>
-          <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt" id="cntOnaylandi">2</span></button>
-          <button class="chip" data-filter="tedarik">Tedarik Sürecinde <span class="ch-cnt" id="cntTedarik">1</span></button>
-          <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt" id="cntTamamlandi">1</span></button>
-          <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt" id="cntReddedildi">1</span></button>
-          <button class="chip" data-filter="revize">Revize İstendi <span class="ch-cnt" id="cntRevize">1</span></button>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Durum chip'leri
+           arama+aksiyonların ALTINA taşındı. Sayfa-üstü Tarih/Şantiye toolbar'ı (bu tablonun yanı
+           sıra Satın Alma Formları + Termin Takibi tablolarını da birlikte süzdüğü için sayfa-geneli
+           kapsam taşır) KASITLI OLARAK burada TEKRARLANMADI/taşınmadı, yerinde kaldı. Arşiv/pasif
+           toggle KONMADI — Tamamlandı/Reddedildi/Revize zaten durum chip'inde, ayrı bir arşiv
+           ekseni yok (K-326 emsali). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Talep no, malzeme veya talep eden ara" data-table-search="#tblTalep">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="tlFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="tlColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" type="button" id="btnDisaAktar" aria-label="Çıktı Al / Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Çıktı Al / Dışa Aktar</span>
+            </button>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="tlAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="chips" data-target="#tblTalep" id="durumChips">
+            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt" id="cntHepsi">13</span></button>
+            <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt" id="cntBekliyor">7</span></button>
+            <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt" id="cntOnaylandi">2</span></button>
+            <button class="chip" data-filter="tedarik">Tedarik Sürecinde <span class="ch-cnt" id="cntTedarik">1</span></button>
+            <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt" id="cntTamamlandi">1</span></button>
+            <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt" id="cntReddedildi">1</span></button>
+            <button class="chip" data-filter="revize">Revize İstendi <span class="ch-cnt" id="cntRevize">1</span></button>
+          </div>
         </div>
       </div>
       <div class="gc-body flush">
@@ -170,117 +200,117 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
           <thead>
             <tr>
               <th>Talep</th>
-              <th>Şantiye</th>
-              <th>Malzeme Özeti</th>
-              <th>Talep Eden</th>
-              <th>Öncelik</th>
-              <th>Durum</th>
+              <th data-col="santiye">Şantiye</th>
+              <th data-col="malzeme">Malzeme Özeti</th>
+              <th data-col="talepeden">Talep Eden</th>
+              <th data-col="oncelik">Öncelik</th>
+              <th data-col="durum">Durum</th>
             </tr>
           </thead>
           <tbody>
-            <tr data-tarih="2026-07-02" data-f="bekliyor" data-santiye="vadi">
+            <tr data-tarih="2026-07-02" data-f="bekliyor" data-santiye="vadi" data-oncelik="acil">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-046</b><span>2 Temmuz 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tl-desc">Hazır beton C30 (30 m³) + demir çubuk Ø12 (2 ton)</span></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tl-desc">Hazır beton C30 (30 m³) + demir çubuk Ø12 (2 ton)</span></td>
+              <td data-col="talepeden">Hasan Demirci</td>
+              <td data-col="oncelik"><span class="pri acil">Acil</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
             </tr>
-            <tr data-tarih="2026-07-01" data-f="bekliyor" data-santiye="liman">
+            <tr data-tarih="2026-07-01" data-f="bekliyor" data-santiye="liman" data-oncelik="normal">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-045</b><span>1 Temmuz 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="tl-desc">Çelik konstrüksiyon kaynak teli + gaz tüpü</span></td>
-              <td>Şükrü Aslan</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="tl-desc">Çelik konstrüksiyon kaynak teli + gaz tüpü</span></td>
+              <td data-col="talepeden">Şükrü Aslan</td>
+              <td data-col="oncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
             </tr>
-            <tr data-tarih="2026-07-01" data-f="bekliyor" data-santiye="merkez">
+            <tr data-tarih="2026-07-01" data-f="bekliyor" data-santiye="merkez" data-oncelik="normal">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-044</b><span>1 Temmuz 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><span class="tl-desc">Yalıtım malzemesi (XPS) — 200 m²</span></td>
-              <td>Ömer Taşkın</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="malzeme"><span class="tl-desc">Yalıtım malzemesi (XPS) — 200 m²</span></td>
+              <td data-col="talepeden">Ömer Taşkın</td>
+              <td data-col="oncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
             </tr>
-            <tr data-tarih="2026-06-30" data-f="bekliyor" data-santiye="vadi">
+            <tr data-tarih="2026-06-30" data-f="bekliyor" data-santiye="vadi" data-oncelik="normal">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-043</b><span>30 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tl-desc">PVC boru + pis su bağlantı seti</span></td>
-              <td>İbrahim Sönmez</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tl-desc">PVC boru + pis su bağlantı seti</span></td>
+              <td data-col="talepeden">İbrahim Sönmez</td>
+              <td data-col="oncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
             </tr>
-            <tr data-tarih="2026-06-29" data-f="bekliyor" data-santiye="liman">
+            <tr data-tarih="2026-06-29" data-f="bekliyor" data-santiye="liman" data-oncelik="acil">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-042</b><span>29 Haziran 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="tl-desc">Forklift lastiği (4 adet)</span></td>
-              <td>Halil Güneş</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="tl-desc">Forklift lastiği (4 adet)</span></td>
+              <td data-col="talepeden">Halil Güneş</td>
+              <td data-col="oncelik"><span class="pri acil">Acil</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
             </tr>
-            <tr data-tarih="2026-06-28" data-f="tedarik" data-santiye="merkez">
+            <tr data-tarih="2026-06-28" data-f="tedarik" data-santiye="merkez" data-oncelik="normal">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-041</b><span>28 Haziran 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><span class="tl-desc">Elektrik kablosu NYY 3x2,5 — 500 m</span></td>
-              <td>Recep Yaman</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat info">Tedarik Sürecinde</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="malzeme"><span class="tl-desc">Elektrik kablosu NYY 3x2,5 — 500 m</span></td>
+              <td data-col="talepeden">Recep Yaman</td>
+              <td data-col="oncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum"><span class="gstat info">Tedarik Sürecinde</span></td>
             </tr>
-            <tr data-tarih="2026-06-27" data-f="tamamlandi" data-santiye="vadi">
+            <tr data-tarih="2026-06-27" data-f="tamamlandi" data-santiye="vadi" data-oncelik="planli">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-040</b><span>27 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tl-desc">Alçı sıva malzemesi — 40 torba</span></td>
-              <td>Selim Doğan</td>
-              <td><span class="pri planli">Planlı</span></td>
-              <td><span class="gstat ok">Tamamlandı</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tl-desc">Alçı sıva malzemesi — 40 torba</span></td>
+              <td data-col="talepeden">Selim Doğan</td>
+              <td data-col="oncelik"><span class="pri planli">Planlı</span></td>
+              <td data-col="durum"><span class="gstat ok">Tamamlandı</span></td>
             </tr>
-            <tr data-tarih="2026-06-26" data-f="bekliyor" data-santiye="vadi">
+            <tr data-tarih="2026-06-26" data-f="bekliyor" data-santiye="vadi" data-oncelik="planli">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-039</b><span>26 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tl-desc">İç kapı seti — 12 adet</span></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri planli">Planlı</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tl-desc">İç kapı seti — 12 adet</span></td>
+              <td data-col="talepeden">Hasan Demirci</td>
+              <td data-col="oncelik"><span class="pri planli">Planlı</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
             </tr>
-            <tr data-tarih="2026-06-25" data-f="bekliyor" data-santiye="liman">
+            <tr data-tarih="2026-06-25" data-f="bekliyor" data-santiye="liman" data-oncelik="acil">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-038</b><span>25 Haziran 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="tl-desc">Kaynak elektrotu + iş güvenliği ekipmanı</span></td>
-              <td>Metin Çetin</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td><span class="gstat wait">Onay Bekliyor</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="tl-desc">Kaynak elektrotu + iş güvenliği ekipmanı</span></td>
+              <td data-col="talepeden">Metin Çetin</td>
+              <td data-col="oncelik"><span class="pri acil">Acil</span></td>
+              <td data-col="durum"><span class="gstat wait">Onay Bekliyor</span></td>
             </tr>
-            <tr data-tarih="2026-06-20" data-f="onaylandi" data-santiye="merkez">
+            <tr data-tarih="2026-06-20" data-f="onaylandi" data-santiye="merkez" data-oncelik="normal">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-037</b><span>20 Haziran 2026</span></div></div></td>
-              <td>Merkez Şantiye</td>
-              <td><span class="tl-desc">Çimento (50 torba) + kum-çakıl</span></td>
-              <td>Ömer Taşkın</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat ok">Onaylandı</span></td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="malzeme"><span class="tl-desc">Çimento (50 torba) + kum-çakıl</span></td>
+              <td data-col="talepeden">Ömer Taşkın</td>
+              <td data-col="oncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum"><span class="gstat ok">Onaylandı</span></td>
             </tr>
-            <tr data-tarih="2026-06-18" data-f="onaylandi" data-santiye="vadi">
+            <tr data-tarih="2026-06-18" data-f="onaylandi" data-santiye="vadi" data-oncelik="normal">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-036</b><span>18 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tl-desc">Boya malzemesi — iç cephe</span></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat ok">Onaylandı</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tl-desc">Boya malzemesi — iç cephe</span></td>
+              <td data-col="talepeden">Hasan Demirci</td>
+              <td data-col="oncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum"><span class="gstat ok">Onaylandı</span></td>
             </tr>
-            <tr data-tarih="2026-06-15" data-f="reddedildi" data-santiye="liman">
+            <tr data-tarih="2026-06-15" data-f="reddedildi" data-santiye="liman" data-oncelik="acil">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-035</b><span>15 Haziran 2026</span></div></div></td>
-              <td>Liman Lojistik Merkezi</td>
-              <td><span class="tl-desc">Vinç halatı değişimi</span></td>
-              <td>Aylin Koç</td>
-              <td><span class="pri acil">Acil</span></td>
-              <td><span class="gstat danger">Reddedildi</span></td>
+              <td data-col="santiye">Liman Lojistik Merkezi</td>
+              <td data-col="malzeme"><span class="tl-desc">Vinç halatı değişimi</span></td>
+              <td data-col="talepeden">Aylin Koç</td>
+              <td data-col="oncelik"><span class="pri acil">Acil</span></td>
+              <td data-col="durum"><span class="gstat danger">Reddedildi</span></td>
             </tr>
-            <tr data-tarih="2026-06-12" data-f="revize" data-santiye="vadi">
+            <tr data-tarih="2026-06-12" data-f="revize" data-santiye="vadi" data-oncelik="normal">
               <td><div class="tl-cell"><div class="tl-mark"><i class="fa-solid fa-boxes-stacked"></i></div><div class="tl-info"><b>MLZ-2026-034</b><span>12 Haziran 2026</span></div></div></td>
-              <td>Vadi Konakları</td>
-              <td><span class="tl-desc">Cam ünitesi — B Blok pencere</span></td>
-              <td>Hasan Demirci</td>
-              <td><span class="pri normal">Normal</span></td>
-              <td><span class="gstat warn">Revize istendi</span></td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="malzeme"><span class="tl-desc">Cam ünitesi — B Blok pencere</span></td>
+              <td data-col="talepeden">Hasan Demirci</td>
+              <td data-col="oncelik"><span class="pri normal">Normal</span></td>
+              <td data-col="durum"><span class="gstat warn">Revize istendi</span></td>
             </tr>
           </tbody>
         </table>
@@ -624,10 +654,24 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     return okS && okT;
   }
 
+  /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
+     Şantiye/Tarih zaten sayfa-üstü toolbar'da, Durum zaten .lh-tabs chip'inde — burada
+     TEKRAR EDİLMEDİ. Öncelik (Acil/Normal/Planlı) hiçbir kontrolle filtrelenemiyordu,
+     yalnız satır içi rozet olarak görünüyordu — tek yeni alan olarak eklendi (data-oncelik). */
+  var tlFd = null;
+  function tlFv(key){
+    if(!tlFd) return null;
+    var st = tlFd.values();
+    return st && st[key] ? st[key] : null;
+  }
+
   /* ---- Talep KPI + chip sayaçları — görünür (rol budaması + toolbar süzgeci sonrası) satırlardan CANLI ---- */
   function renderTalep(){
     var onChip = document.querySelector('#durumChips .chip.is-on');
     var f = onChip ? onChip.getAttribute('data-filter') : 'hepsi';
+    var oncelikFv = tlFv('oncelik');
+    var searchInp = document.querySelector('input[data-table-search]');
+    var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
     var counts = {hepsi:0, bekliyor:0, onaylandi:0, tedarik:0, tamamlandi:0, reddedildi:0, revize:0};
     var rows = Array.prototype.slice.call(tblTalep.querySelectorAll('tr')).filter(tlBaseVisible);
     rows.forEach(function(tr){
@@ -642,7 +686,9 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
 
     var shown = 0;
     Array.prototype.slice.call(tblTalep.querySelectorAll('tr')).forEach(function(tr){
-      var show = tlBaseVisible(tr) && (f === 'hepsi' || tr.getAttribute('data-f') === f);
+      var okOncelik = !oncelikFv || tr.getAttribute('data-oncelik') === oncelikFv.value;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = tlBaseVisible(tr) && (f === 'hepsi' || tr.getAttribute('data-f') === f) && okOncelik && okTerm;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -784,6 +830,38 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
   };
   if(window.gvExport){
     gvExport.init('#btnDisaAktar', { baslik:'Talep raporu', formatlar:['pdf', 'excel', 'yazdir'], kapsam:['tumu', 'filtreli'] });
+  }
+
+  /* D18 bileşik-motor delegasyonu — arama kutusu data-table-search taşır, ui.js'in
+     genel motoru bu tabloda tbl._gvApply'a devreder (çifte-listener YOK). */
+  document.getElementById('tblTalep')._gvApply = renderTalep;
+
+  if(window.gvFilterDrawer){
+    tlFd = gvFilterDrawer.init({
+      mount: '#tlFiltreBtn',
+      screen: 'rapor-talep',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#tlAchips',
+      fields: [
+        {key:'oncelik', type:'select', label:'Öncelik', options:[
+          {v:'acil', l:'Acil'}, {v:'normal', l:'Normal'}, {v:'planli', l:'Planlı'}
+        ]}
+      ],
+      onApply: function(){ renderTalep(); },
+      onClear: function(){ renderTalep(); }
+    });
+  }
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#tlColsBtn', table: '#tblTalep', screen: 'rapor-talep',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'malzeme', lbl:'Malzeme Özeti', def:true},
+        {key:'talepeden', lbl:'Talep Eden', def:true},
+        {key:'oncelik', lbl:'Öncelik', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
   }
 
   renderTalep();

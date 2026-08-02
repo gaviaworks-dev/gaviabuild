@@ -108,7 +108,6 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" id="btnMkExport" data-gv-export='{"baslik":"Makine Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
@@ -150,23 +149,54 @@
           <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Makine Parkı</div>
           <button type="button" class="btn btn-ghost btn-sm" id="btnMkHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
         </div>
-        <div class="filter-bar stack">
-          <div class="filter-row">
-            <span class="frow-lbl">Şantiye</span>
-            <div class="chips" id="santiyeChips">
-              <button class="chip is-on" data-santiye="tumu">Tümü <span class="ch-cnt">6</span></button>
-              <button class="chip" data-santiye="vadi">Vadi Konakları <span class="ch-cnt">3</span></button>
-              <button class="chip" data-santiye="liman">Liman Lojistik <span class="ch-cnt">2</span></button>
-              <button class="chip" data-santiye="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Şantiye/Durum
+             chip'leri arama+aksiyonların ALTINA taşındı; arşiv/pasif toggle KONMADI — makine
+             parkının arşivlenen/pasife alınan bir ekseni yok (K-326 emsali, crm-operasyon-makine.html
+             ile aynı gerekçe: durum yalnız Çalışıyor/Boşta/Arızalı, "silinen" makine kalıcı arşiv değil). -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Makine adı, no veya operatör ara" data-table-search="#tblMkRapor">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="mkFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="mkColsBtn" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnMkExport" data-gv-export='{"baslik":"Makine Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </button>
             </div>
           </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Durum</span>
-            <div class="chips" id="durumChips">
-              <button class="chip is-on" data-durum="tumu">Tümü <span class="ch-cnt">6</span></button>
-              <button class="chip" data-durum="calisti">Çalışıyor <span class="ch-cnt">4</span></button>
-              <button class="chip" data-durum="bosta">Boşta <span class="ch-cnt">1</span></button>
-              <button class="chip" data-durum="arizali">Arızalı <span class="ch-cnt">1</span></button>
+          <div class="lh-achips gv-achips-row" id="mkAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
+          <div class="lh-tabs">
+            <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
+              <div class="filter-row">
+                <span class="frow-lbl">Şantiye</span>
+                <div class="chips" id="santiyeChips">
+                  <button class="chip is-on" data-santiye="tumu">Tümü <span class="ch-cnt">6</span></button>
+                  <button class="chip" data-santiye="vadi">Vadi Konakları <span class="ch-cnt">3</span></button>
+                  <button class="chip" data-santiye="liman">Liman Lojistik <span class="ch-cnt">2</span></button>
+                  <button class="chip" data-santiye="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
+                </div>
+              </div>
+              <div class="filter-row">
+                <span class="frow-lbl">Durum</span>
+                <div class="chips" id="durumChips">
+                  <button class="chip is-on" data-durum="tumu">Tümü <span class="ch-cnt">6</span></button>
+                  <button class="chip" data-durum="calisti">Çalışıyor <span class="ch-cnt">4</span></button>
+                  <button class="chip" data-durum="bosta">Boşta <span class="ch-cnt">1</span></button>
+                  <button class="chip" data-durum="arizali">Arızalı <span class="ch-cnt">1</span></button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -179,13 +209,13 @@
             <thead>
               <tr>
                 <th>Makine</th>
-                <th class="col-santiye">Şantiye</th>
-                <th class="col-op">Operatör</th>
-                <th class="col-saat num">Bugün</th>
-                <th class="col-not">Not</th>
-                <th class="col-durum">Durum</th>
-                <th class="col-yakit">Yakıt</th>
-                <th class="col-bakim">Son Bakım</th>
+                <th class="col-santiye" data-col="santiye">Şantiye</th>
+                <th class="col-op" data-col="operator">Operatör</th>
+                <th class="col-saat num" data-col="saat">Bugün</th>
+                <th class="col-not" data-col="not">Not</th>
+                <th class="col-durum" data-col="durum">Durum</th>
+                <th class="col-yakit" data-col="yakit">Yakıt</th>
+                <th class="col-bakim" data-col="bakim">Son Bakım</th>
               </tr>
             </thead>
             <!-- statik bake — DEFAULT (rol-agnostic, filtresiz) tam kayıt seti; JS yüklenince
@@ -438,17 +468,17 @@
     var tint = SANTIYE_TINT[m.santiye];
     var own = OWN[m.own];
     var d = DURUM[m.durum];
-    html += '<tr data-santiye="'+m.santiye+'" data-durum="'+m.durum+'">';
+    html += '<tr data-santiye="'+m.santiye+'" data-durum="'+m.durum+'" data-own="'+m.own+'">';
     html += '<td><div class="mk-cell"><div class="mk-mark" style="background:'+tint.bg+';color:'+tint.fg+'"><i class="fa-solid fa-truck-pickup"></i></div>'
           + '<div class="mk-info"><b title="'+esc(m.ad)+'">'+m.ad+'</b> <span class="mk-no">'+m.no+'</span><br>'
           + '<span class="own '+own.cls+'"><i class="fa-solid '+own.ic+'"></i> '+own.lbl+'</span></div></div></td>';
-    html += '<td>'+SANTIYE_ADI[m.santiye]+'</td>';
-    html += '<td>'+m.operator+'</td>';
-    html += '<td class="num"><div class="mk-saat">'+m.saat+'</div></td>';
-    html += '<td><span class="mk-not" title="'+esc(m.not)+'">'+m.not+'</span></td>';
-    html += '<td><span class="gstat '+d.cls+'">'+d.lbl+'</span></td>';
-    html += '<td><div class="mk-fuel">'+(m.yakitVal==='—' ? '<span class="mk-dash">—</span>' : m.yakitVal)+(m.yakitNot ? '<span>'+m.yakitNot+'</span>' : '')+'</div></td>';
-    html += '<td><div class="mk-bakim">'+(m.bakimVal==='—' ? '<span class="mk-dash">—</span>' : m.bakimVal)+(m.bakimNot ? '<span>'+m.bakimNot+'</span>' : '')+'</div></td>';
+    html += '<td data-col="santiye">'+SANTIYE_ADI[m.santiye]+'</td>';
+    html += '<td data-col="operator">'+m.operator+'</td>';
+    html += '<td class="num" data-col="saat"><div class="mk-saat">'+m.saat+'</div></td>';
+    html += '<td data-col="not"><span class="mk-not" title="'+esc(m.not)+'">'+m.not+'</span></td>';
+    html += '<td data-col="durum"><span class="gstat '+d.cls+'">'+d.lbl+'</span></td>';
+    html += '<td data-col="yakit"><div class="mk-fuel">'+(m.yakitVal==='—' ? '<span class="mk-dash">—</span>' : m.yakitVal)+(m.yakitNot ? '<span>'+m.yakitNot+'</span>' : '')+'</div></td>';
+    html += '<td data-col="bakim"><div class="mk-bakim">'+(m.bakimVal==='—' ? '<span class="mk-dash">—</span>' : m.bakimVal)+(m.bakimNot ? '<span>'+m.bakimNot+'</span>' : '')+'</div></td>';
     html += '</tr>';
   });
   body.innerHTML = html;
@@ -460,12 +490,29 @@
      yönetilir (elle .hidden atanmaz), ikisi asla aynı anda görünmez. */
   var mkShownCount = 0;
   var curSantiye = 'tumu', curDurum = 'tumu';
+
+  /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
+     Şantiye/Durum zaten kendi chip satırında (§2.1 kategori/durum sekmesi) — burada
+     TEKRAR EDİLMEDİ. Mülkiyet (Öz Mal/Kiralık/Hizmet Alımı) hiçbir kontrolle
+     filtrelenemiyordu, tek yeni alan olarak eklendi (data-own, mekanik olarak MAKINE[]
+     kaynağından üretildi). Arşiv/pasif toggle KONMADI — K-326 emsali (yukarı bkz). */
+  var mkFd = null;
+  function mkFv(key){
+    if(!mkFd) return null;
+    var st = mkFd.values();
+    return st && st[key] ? st[key] : null;
+  }
   function applyFilter(){
+    var ownFv = mkFv('own');
+    var searchInp = document.querySelector('input[data-table-search]');
+    var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
     var shown = 0;
     document.querySelectorAll('#tblMkRapor tbody tr').forEach(function(tr){
       var okS = curSantiye === 'tumu' || tr.getAttribute('data-santiye') === curSantiye;
       var okD = curDurum === 'tumu' || tr.getAttribute('data-durum') === curDurum;
-      var show = okS && okD;
+      var okOwn = !ownFv || tr.getAttribute('data-own') === ownFv.value;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okS && okD && okOwn && okTerm;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -495,6 +542,41 @@
     curDurum = ch.getAttribute('data-durum');
     applyFilter();
   });
+
+  /* D18 bileşik-motor delegasyonu — arama kutusu data-table-search taşır, ui.js'in
+     genel motoru bu tabloda tbl._gvApply'a devreder (çifte-listener YOK). */
+  document.getElementById('tblMkRapor')._gvApply = applyFilter;
+
+  if(window.gvFilterDrawer){
+    mkFd = gvFilterDrawer.init({
+      mount: '#mkFiltreBtn',
+      screen: 'rapor-makine',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#mkAchips',
+      fields: [
+        {key:'own', type:'select', label:'Mülkiyet', options:[
+          {v:'ozmal', l:'Öz Mal'}, {v:'kiralik', l:'Kiralık'}, {v:'hizmet', l:'Hizmet Alımı'}
+        ]}
+      ],
+      onApply: function(){ applyFilter(); },
+      onClear: function(){ applyFilter(); }
+    });
+  }
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#mkColsBtn', table: '#tblMkRapor', screen: 'rapor-makine',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'operator', lbl:'Operatör', def:true},
+        {key:'saat', lbl:'Bugün', def:true},
+        {key:'not', lbl:'Not', def:true},
+        {key:'durum', lbl:'Durum', def:true},
+        {key:'yakit', lbl:'Yakıt', def:true},
+        {key:'bakim', lbl:'Son Bakım', def:true}
+      ]
+    });
+  }
+
   applyFilter();
 
   /* Bakım Takvimi — Dönem chip [MOCK], canlı: görünür satırlardan sayılır */

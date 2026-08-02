@@ -105,7 +105,6 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-acc btn-sm" type="button" id="btnCiktiSantiye"><i class="fa-solid fa-file-export"></i> Çıktı Al</button>
       </div>
     </div>
 
@@ -170,24 +169,55 @@
           <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Şantiye Durum Tablosu</div>
           <button type="button" class="btn btn-ghost btn-sm" id="btnSrHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
         </div>
-        <div class="filter-bar stack">
-          <div class="filter-row">
-            <div class="chips" data-target="#tblSrDurum">
-              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">5</span></button>
-              <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
-              <button class="chip" data-filter="planlama">Planlama <span class="ch-cnt">1</span></button>
-              <button class="chip" data-filter="tamam">Tamamlanan <span class="ch-cnt">1</span></button>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Durum/Şantiye
+             chip'leri arama+aksiyonların ALTINA taşındı. Arşiv/pasif toggle KONMADI — "Tamamlanan"
+             durum chip'i zaten teslim edilmiş şantiyeyi gizleme/gösterme eksenini karşılıyor;
+             ikinci bir kontrolle aynı ekseni tekrarlamak K-326/K-327 dersiyle çelişirdi. -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Şantiye adı veya şef ara" data-table-search="#tblSrDurum">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="srFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="srColsBtn" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <button class="btn btn-ghost btn-sm" type="button" id="btnCiktiSantiye" aria-label="Çıktı Al">
+                <i class="fa-solid fa-file-export"></i> <span class="lh-lbl">Çıktı Al</span>
+              </button>
             </div>
           </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Şantiye</span>
-            <div class="chips" id="srTblSanChips">
-              <button class="chip is-on" data-tblsan="hepsi">Tümü</button>
-              <button class="chip" data-tblsan="vadi">Vadi</button>
-              <button class="chip" data-tblsan="liman">Liman</button>
-              <button class="chip" data-tblsan="merkez">Merkez</button>
-              <button class="chip" data-tblsan="kule">Kule Ofis</button>
-              <button class="chip" data-tblsan="gol">Göl Evleri</button>
+          <div class="lh-achips gv-achips-row" id="srAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
+          <div class="lh-tabs">
+            <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
+              <div class="filter-row">
+                <div class="chips" data-target="#tblSrDurum">
+                  <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">5</span></button>
+                  <button class="chip" data-filter="aktif">Aktif <span class="ch-cnt">3</span></button>
+                  <button class="chip" data-filter="planlama">Planlama <span class="ch-cnt">1</span></button>
+                  <button class="chip" data-filter="tamam">Tamamlanan <span class="ch-cnt">1</span></button>
+                </div>
+              </div>
+              <div class="filter-row">
+                <span class="frow-lbl">Şantiye</span>
+                <div class="chips" id="srTblSanChips">
+                  <button class="chip is-on" data-tblsan="hepsi">Tümü</button>
+                  <button class="chip" data-tblsan="vadi">Vadi</button>
+                  <button class="chip" data-tblsan="liman">Liman</button>
+                  <button class="chip" data-tblsan="merkez">Merkez</button>
+                  <button class="chip" data-tblsan="kule">Kule Ofis</button>
+                  <button class="chip" data-tblsan="gol">Göl Evleri</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -211,54 +241,54 @@
             <thead>
               <tr>
                 <th>Şantiye</th>
-                <th>Tür</th>
-                <th>Şantiye Şefi</th>
-                <th class="col-prog">İlerleme</th>
-                <th class="num">Personel</th>
-                <th>Durum</th>
+                <th data-col="tur">Tür</th>
+                <th data-col="sef">Şantiye Şefi</th>
+                <th class="col-prog" data-col="ilerleme">İlerleme</th>
+                <th class="num" data-col="personel">Personel</th>
+                <th data-col="durum">Durum</th>
               </tr>
             </thead>
             <tbody>
               <!-- kaynak: crm-santiye.html tbody :98-202 (Personel sütunu = saha headcount, taşeron dahil) -->
-              <tr data-f="aktif" data-tblsan="vadi">
+              <tr data-f="aktif" data-tblsan="vadi" data-tur="konut">
                 <td><div class="gcell"><div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">VK</div><div class="gcell-info"><div class="gcell-name">Vadi Konakları</div><div class="gcell-sub">Çekmeköy, İstanbul · Körfez GYO</div></div></div></td>
-                <td><span class="gtag">Konut</span></td>
-                <td class="t-strong">Hasan Demirci</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:68%"></div></div><span class="gbar-val">%68</span></div></td>
-                <td class="num t-strong">51</td>
-                <td><span class="gstat ok">Aktif</span></td>
+                <td data-col="tur"><span class="gtag">Konut</span></td>
+                <td class="t-strong" data-col="sef">Hasan Demirci</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:68%"></div></div><span class="gbar-val">%68</span></div></td>
+                <td class="num t-strong" data-col="personel">51</td>
+                <td data-col="durum"><span class="gstat ok">Aktif</span></td>
               </tr>
-              <tr data-f="aktif" data-tblsan="liman">
+              <tr data-f="aktif" data-tblsan="liman" data-tur="ticari">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">LL</div><div class="gcell-info"><div class="gcell-name">Liman Lojistik Merkezi</div><div class="gcell-sub">Aliağa, İzmir · Aliağa Liman İşletmeleri</div></div></div></td>
-                <td><span class="gtag">Ticari</span></td>
-                <td class="t-strong">Aylin Koç</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:41%"></div></div><span class="gbar-val">%41</span></div></td>
-                <td class="num t-strong">30</td>
-                <td><span class="gstat wait">Programın gerisinde</span></td>
+                <td data-col="tur"><span class="gtag">Ticari</span></td>
+                <td class="t-strong" data-col="sef">Aylin Koç</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:41%"></div></div><span class="gbar-val">%41</span></div></td>
+                <td class="num t-strong" data-col="personel">30</td>
+                <td data-col="durum"><span class="gstat wait">Programın gerisinde</span></td>
               </tr>
-              <tr data-f="aktif" data-tblsan="merkez">
+              <tr data-f="aktif" data-tblsan="merkez" data-tur="depo">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">MŞ</div><div class="gcell-info"><div class="gcell-name">Merkez Şantiye</div><div class="gcell-sub">Gebze, Kocaeli · iç yatırım</div></div></div></td>
-                <td><span class="gtag">Depo + Atölye</span></td>
-                <td class="t-strong">Ömer Taşkın</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:86%"></div></div><span class="gbar-val">%86</span></div></td>
-                <td class="num t-strong">12</td>
-                <td><span class="gstat ok">Aktif</span></td>
+                <td data-col="tur"><span class="gtag">Depo + Atölye</span></td>
+                <td class="t-strong" data-col="sef">Ömer Taşkın</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:86%"></div></div><span class="gbar-val">%86</span></div></td>
+                <td class="num t-strong" data-col="personel">12</td>
+                <td data-col="durum"><span class="gstat ok">Aktif</span></td>
               </tr>
-              <tr data-f="planlama" data-tblsan="gol">
+              <tr data-f="planlama" data-tblsan="gol" data-tur="konut">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--muted)">GE</div><div class="gcell-info"><div class="gcell-name">Göl Evleri 2. Etap</div><div class="gcell-sub">Sapanca, Sakarya · Sapanca Belediyesi</div></div></div></td>
-                <td><span class="gtag">Konut</span></td>
-                <td class="muted">Atanmadı</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:0%"></div></div><span class="gbar-val">—</span></div></td>
-                <td class="num muted">—</td>
-                <td><span class="gstat info">Planlama · Eylül 2026</span></td>
+                <td data-col="tur"><span class="gtag">Konut</span></td>
+                <td class="muted" data-col="sef">Atanmadı</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:0%"></div></div><span class="gbar-val">—</span></div></td>
+                <td class="num muted" data-col="personel">—</td>
+                <td data-col="durum"><span class="gstat info">Planlama · Eylül 2026</span></td>
               </tr>
-              <tr data-f="tamam" data-tblsan="kule">
+              <tr data-f="tamam" data-tblsan="kule" data-tur="ofis">
                 <td><div class="gcell"><div class="gcell-mark" style="background:var(--ok-tint);color:var(--ok)">KO</div><div class="gcell-info"><div class="gcell-name">Kule Ofis B Blok</div><div class="gcell-sub">Ataşehir, İstanbul · Körfez GYO</div></div></div></td>
-                <td><span class="gtag">Ofis</span></td>
-                <td class="t-strong">Ömer Taşkın</td>
-                <td><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div><span class="gbar-val">%100</span></div></td>
-                <td class="num muted">—</td>
-                <td><span class="gstat off">Teslim edildi · Mart 2026</span></td>
+                <td data-col="tur"><span class="gtag">Ofis</span></td>
+                <td class="t-strong" data-col="sef">Ömer Taşkın</td>
+                <td data-col="ilerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div><span class="gbar-val">%100</span></div></td>
+                <td class="num muted" data-col="personel">—</td>
+                <td data-col="durum"><span class="gstat off">Teslim edildi · Mart 2026</span></td>
               </tr>
             </tbody>
           </table>
@@ -639,16 +669,33 @@
   if(tblSr){
     var durumWrap = document.querySelector('.chips[data-target="#tblSrDurum"]');
     var tblSanWrap = document.getElementById('srTblSanChips');
+
+    /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
+       Durum/Şantiye zaten kendi chip satırında (§2.1 kategori sekmesi) — burada
+       TEKRAR EDİLMEDİ. Tür (Konut/Ticari/Depo+Atölye/Ofis) hiçbir kontrolle
+       filtrelenemiyordu, tablodaki mevcut "Tür" sütunundan (data-tur) tek yeni
+       alan olarak eklendi. */
+    var srFd = null;
+    function srFv(key){
+      if(!srFd) return null;
+      var st = srFd.values();
+      return st && st[key] ? st[key] : null;
+    }
     function applySrTblFilter(){
       var dOn = durumWrap.querySelector('.chip.is-on[data-filter]');
       var d = dOn ? dOn.getAttribute('data-filter') : 'hepsi';
       var sOn = tblSanWrap.querySelector('.chip.is-on[data-tblsan]');
       var s = sOn ? sOn.getAttribute('data-tblsan') : 'hepsi';
+      var turFv = srFv('tur');
+      var searchInp = document.querySelector('input[data-table-search]');
+      var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
       var shown = 0;
       tblSr.querySelectorAll('tbody tr').forEach(function(tr){
         var okD = (d === 'hepsi') || (tr.getAttribute('data-f') === d);
         var okS = (s === 'hepsi') || (tr.getAttribute('data-tblsan') === s);
-        var show = okD && okS;
+        var okTur = !turFv || tr.getAttribute('data-tur') === turFv.value;
+        var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+        var show = okD && okS && okTur && okTerm;
         tr.hidden = !show;
         if(show) shown++;
       });
@@ -663,6 +710,39 @@
       ch.classList.add('is-on');
       applySrTblFilter();
     });
+
+    /* D18 bileşik-motor delegasyonu — arama kutusu data-table-search taşır, ui.js'in
+       genel motoru bu tabloda tbl._gvApply'a devreder (çifte-listener YOK). */
+    tblSr._gvApply = applySrTblFilter;
+
+    if(window.gvFilterDrawer){
+      srFd = gvFilterDrawer.init({
+        mount: '#srFiltreBtn',
+        screen: 'rapor-santiye',
+        title: 'Gelişmiş Filtre',
+        chipsMount: '#srAchips',
+        fields: [
+          {key:'tur', type:'select', label:'Tür', options:[
+            {v:'konut', l:'Konut'}, {v:'ticari', l:'Ticari'},
+            {v:'depo', l:'Depo + Atölye'}, {v:'ofis', l:'Ofis'}
+          ]}
+        ],
+        onApply: function(){ applySrTblFilter(); },
+        onClear: function(){ applySrTblFilter(); }
+      });
+    }
+    if(window.gvCols){
+      gvCols.init({
+        mount: '#srColsBtn', table: '#tblSrDurum', screen: 'rapor-santiye',
+        cols: [
+          {key:'tur', lbl:'Tür', def:true},
+          {key:'sef', lbl:'Şantiye Şefi', def:true},
+          {key:'ilerleme', lbl:'İlerleme', def:true},
+          {key:'personel', lbl:'Personel', def:true},
+          {key:'durum', lbl:'Durum', def:true}
+        ]
+      });
+    }
 
     /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
     var srHataOn = false;

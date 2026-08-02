@@ -89,33 +89,7 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-acc btn-sm" type="button" id="btnCiktiIzin"><i class="fa-solid fa-file-export"></i> Çıktı Al</button>
       </div>
-    </div>
-
-    <!-- ============ FİLTRE — Dönem (herkes) + Şantiye (yalnız yönetim; şef zaten Vadi'ye sabit) ============ -->
-    <div class="gv-card" style="margin-bottom:20px">
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <span class="frow-lbl">Dönem</span>
-          <div class="chips" id="donemChips">
-            <button class="chip is-on" data-donem="tumu">Tümü</button>
-            <button class="chip" data-donem="haziran">Haziran</button>
-            <button class="chip" data-donem="temmuz">Temmuz</button>
-          </div>
-          <div data-gvdaterange id="izinDateRange" style="margin-left:8px"></div>
-        </div>
-        <div class="filter-row" data-view="yonetim" id="santiyeRow">
-          <span class="frow-lbl">Şantiye</span>
-          <div class="chips" id="santiyeChips">
-            <button class="chip is-on" data-santiye="tumu">Tümü</button>
-            <button class="chip" data-santiye="vadi">Vadi Konakları</button>
-            <button class="chip" data-santiye="liman">Liman Lojistik</button>
-            <button class="chip" data-santiye="merkez">Merkez</button>
-          </div>
-        </div>
-      </div>
-      <div class="filtre-ozet" id="filtreOzet"><i class="fa-solid fa-circle-info"></i> <span>—</span></div>
     </div>
 
     <!-- KPI'lar seçili dönem/şantiye setindeki kayıtlardan CANLI hesaplanır (sabit set değil).
@@ -170,6 +144,57 @@
         <div class="gc-title"><i class="fa-solid fa-umbrella-beach"></i> Durum Kırılımı</div><span class="ph-sub" style="margin:0">crm-personel-izin.html</span>
         <button type="button" class="btn btn-ghost btn-sm" id="btnIzinHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
       </div>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Dönem/Şantiye
+           chip'leri (eskiden sayfa başında ayrı bir .gv-card) buraya, arama+aksiyonların ALTINA
+           taşındı (§2.1/§2.3) — çok satırlı içerik K-325 deseniyle .filter-bar.stack sarmalayıcısında. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="İzin no veya personel ara" data-table-search="#tblIzinKirilim">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="izinFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="izinColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" type="button" id="btnCiktiIzin" aria-label="Çıktı Al">
+              <i class="fa-solid fa-file-export"></i> <span class="lh-lbl">Çıktı Al</span>
+            </button>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="izinAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
+            <div class="filter-row">
+              <span class="frow-lbl">Dönem</span>
+              <div class="chips" id="donemChips">
+                <button class="chip is-on" data-donem="tumu">Tümü</button>
+                <button class="chip" data-donem="haziran">Haziran</button>
+                <button class="chip" data-donem="temmuz">Temmuz</button>
+              </div>
+              <div data-gvdaterange id="izinDateRange" style="margin-left:8px"></div>
+            </div>
+            <div class="filter-row" data-view="yonetim" id="santiyeRow">
+              <span class="frow-lbl">Şantiye</span>
+              <div class="chips" id="santiyeChips">
+                <button class="chip is-on" data-santiye="tumu">Tümü</button>
+                <button class="chip" data-santiye="vadi">Vadi Konakları</button>
+                <button class="chip" data-santiye="liman">Liman Lojistik</button>
+                <button class="chip" data-santiye="merkez">Merkez</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="filtre-ozet" id="filtreOzet"><i class="fa-solid fa-circle-info"></i> <span>—</span></div>
+      </div>
       <div class="gc-body flush" id="izinStateWrap">
         <div data-gv-state="error" class="gv-empty rp-error" hidden>
           <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
@@ -181,53 +206,53 @@
           <thead>
             <tr>
               <th>İzin No / Personel</th>
-              <th class="col-tur">Tür</th>
-              <th class="col-tarih">Tarih Aralığı</th>
-              <th class="col-gun num">Gün</th>
-              <th class="col-santiye">Şantiye</th>
-              <th class="col-durum">Durum</th>
+              <th class="col-tur" data-col="tur">Tür</th>
+              <th class="col-tarih" data-col="tarih">Tarih Aralığı</th>
+              <th class="col-gun num" data-col="gun">Gün</th>
+              <th class="col-santiye" data-col="santiye">Şantiye</th>
+              <th class="col-durum" data-col="durum">Durum</th>
             </tr>
           </thead>
           <tbody>
             <tr data-donem="temmuz" data-santiye="vadi" data-durum="bekliyor" data-tur="yillik" data-tur-label="Yıllık İzin" data-gun="5" data-personel="Ali Vural">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">AV</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-izin-detay.html?izn=031" style="color:inherit;text-decoration:none">Ali Vural</a></div><span class="gcell-sub">İZN-2026-031</span></div></div></td>
-              <td>Yıllık İzin</td>
-              <td>6 – 10 Temmuz 2026</td>
-              <td class="num">5</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gstat warn">Bekliyor</span></td>
+              <td data-col="tur">Yıllık İzin</td>
+              <td data-col="tarih">6 – 10 Temmuz 2026</td>
+              <td class="num" data-col="gun">5</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="durum"><span class="gstat warn">Bekliyor</span></td>
             </tr>
             <tr data-donem="temmuz" data-santiye="liman" data-durum="onaylandi" data-tur="yillik" data-tur-label="Yıllık İzin" data-gun="3" data-personel="Aylin Koç">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">AK</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-izin-detay.html?izn=030" style="color:inherit;text-decoration:none">Aylin Koç</a></div><span class="gcell-sub">İZN-2026-030</span></div></div></td>
-              <td>Yıllık İzin</td>
-              <td>1 – 3 Temmuz 2026</td>
-              <td class="num">3</td>
-              <td>Liman Lojistik</td>
-              <td><span class="gstat ok">Onaylandı</span></td>
+              <td data-col="tur">Yıllık İzin</td>
+              <td data-col="tarih">1 – 3 Temmuz 2026</td>
+              <td class="num" data-col="gun">3</td>
+              <td data-col="santiye">Liman Lojistik</td>
+              <td data-col="durum"><span class="gstat ok">Onaylandı</span></td>
             </tr>
             <tr data-donem="haziran" data-santiye="vadi" data-durum="onaylandi" data-tur="raporlu" data-tur-label="Raporlu" data-gun="1" data-personel="Ramazan Kılıç">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">RK</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-izin-detay.html?izn=029" style="color:inherit;text-decoration:none">Ramazan Kılıç</a></div><span class="gcell-sub">İZN-2026-029</span></div></div></td>
-              <td>Raporlu</td>
-              <td>28 Haziran 2026</td>
-              <td class="num">1</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gstat ok">Onaylandı</span></td>
+              <td data-col="tur">Raporlu</td>
+              <td data-col="tarih">28 Haziran 2026</td>
+              <td class="num" data-col="gun">1</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="durum"><span class="gstat ok">Onaylandı</span></td>
             </tr>
             <tr data-donem="haziran" data-santiye="merkez" data-durum="reddedildi" data-tur="yillik" data-tur-label="Yıllık İzin" data-gun="4" data-personel="Nesrin Aydın">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">NA</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-izin-detay.html?izn=028" style="color:inherit;text-decoration:none">Nesrin Aydın</a></div><span class="gcell-sub">İZN-2026-028</span></div></div></td>
-              <td>Yıllık İzin</td>
-              <td>15 – 18 Haziran 2026</td>
-              <td class="num">4</td>
-              <td>Merkez Ofis</td>
-              <td><span class="gstat danger">Reddedildi</span></td>
+              <td data-col="tur">Yıllık İzin</td>
+              <td data-col="tarih">15 – 18 Haziran 2026</td>
+              <td class="num" data-col="gun">4</td>
+              <td data-col="santiye">Merkez Ofis</td>
+              <td data-col="durum"><span class="gstat danger">Reddedildi</span></td>
             </tr>
             <tr data-donem="haziran" data-santiye="merkez" data-durum="revize" data-tur="babalik" data-tur-label="Babalık İzni" data-gun="5" data-personel="Ömer Taşkın">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">ÖT</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-izin-detay.html?izn=027" style="color:inherit;text-decoration:none">Ömer Taşkın</a></div><span class="gcell-sub">İZN-2026-027</span></div></div></td>
-              <td>Babalık İzni</td>
-              <td>20 – 24 Haziran 2026</td>
-              <td class="num">5</td>
-              <td>Merkez Şantiye</td>
-              <td><span class="gstat info">Revize</span></td>
+              <td data-col="tur">Babalık İzni</td>
+              <td data-col="tarih">20 – 24 Haziran 2026</td>
+              <td class="num" data-col="gun">5</td>
+              <td data-col="santiye">Merkez Şantiye</td>
+              <td data-col="durum"><span class="gstat info">Revize</span></td>
             </tr>
           </tbody>
         </table>
@@ -312,6 +337,17 @@
     return arr.join(', ');
   }
 
+  /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
+     Durum ve Tür şu ana kadar hiçbir kontrolle filtrelenemiyordu (yalnız rozet/kırılım
+     olarak görünüyorlardı) — Dönem/Şantiye zaten kendi chip satırlarında olduğu için
+     BURADA TEKRAR EDİLMEDİ (K-220/K-326 dersi: aynı ekseni iki kontrolle sunma). */
+  var izinFd = null;
+  function izinFv(key){
+    if(!izinFd) return null;
+    var st = izinFd.values();
+    return st && st[key] ? st[key] : null;
+  }
+
   function render(){
     var donemOn = document.querySelector('#donemChips .chip.is-on');
     var donem = donemOn ? donemOn.getAttribute('data-donem') : 'tumu';
@@ -319,12 +355,18 @@
     var santiyeVisible = view === 'yonetim';
     var santiyeOn = santiyeVisible ? santiyeWrap.querySelector('.chip.is-on') : null;
     var santiye = santiyeOn ? santiyeOn.getAttribute('data-santiye') : 'tumu';
+    var durumFv = izinFv('durum'), turFv = izinFv('tur');
+    var searchInp = document.querySelector('input[data-table-search]');
+    var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
 
     var vis = [];
     tbody.querySelectorAll('tr').forEach(function(tr){
       var okD = donem === 'tumu' || tr.getAttribute('data-donem') === donem;
       var okS = santiye === 'tumu' || tr.getAttribute('data-santiye') === santiye;
-      var show = okD && okS;
+      var okDurumF = !durumFv || tr.getAttribute('data-durum') === durumFv.value;
+      var okTurF = !turFv || tr.getAttribute('data-tur') === turFv.value;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      var show = okD && okS && okDurumF && okTurF && okTerm;
       tr.hidden = !show;
       if(show) vis.push(tr);
     });
@@ -400,6 +442,42 @@
       this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
       ch.classList.add('is-on');
       render();
+    });
+  }
+
+  /* D18 bileşik-motor delegasyonu — arama kutusu data-table-search taşıdığı için
+     ui.js'in genel motoru bu tabloda tbl._gvApply'a devreder (çifte-listener YOK). */
+  document.getElementById('tblIzinKirilim')._gvApply = render;
+
+  if(window.gvFilterDrawer){
+    izinFd = gvFilterDrawer.init({
+      mount: '#izinFiltreBtn',
+      screen: 'rapor-izin',
+      title: 'Gelişmiş Filtre',
+      chipsMount: '#izinAchips',
+      fields: [
+        {key:'durum', type:'select', label:'Durum', options:[
+          {v:'bekliyor', l:'Bekliyor'}, {v:'onaylandi', l:'Onaylandı'},
+          {v:'reddedildi', l:'Reddedildi'}, {v:'revize', l:'Revize'}
+        ]},
+        {key:'tur', type:'select', label:'Tür', options:[
+          {v:'yillik', l:'Yıllık İzin'}, {v:'raporlu', l:'Raporlu'}, {v:'babalik', l:'Babalık İzni'}
+        ]}
+      ],
+      onApply: function(){ render(); },
+      onClear: function(){ render(); }
+    });
+  }
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#izinColsBtn', table: '#tblIzinKirilim', screen: 'rapor-izin',
+      cols: [
+        {key:'tur', lbl:'Tür', def:true},
+        {key:'tarih', lbl:'Tarih Aralığı', def:true},
+        {key:'gun', lbl:'Gün', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
     });
   }
 

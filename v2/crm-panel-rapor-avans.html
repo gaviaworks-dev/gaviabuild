@@ -86,36 +86,7 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-acc btn-sm" id="btnDisaAktar"><i class="fa-solid fa-download"></i> Çıktı Al / Dışa Aktar</button>
       </div>
-    </div>
-
-    <!-- ============ FİLTRE — Tarih aralığı + Dönem (herkes) + Şantiye (yalnız yönetim; şef zaten Vadi'ye sabit) ============ -->
-    <div class="gv-card" style="margin-bottom:20px">
-      <div class="filter-bar stack">
-        <div class="filter-row">
-          <span class="frow-lbl">Tarih Aralığı</span>
-          <div data-gvdaterange id="avnDateRange"></div>
-        </div>
-        <div class="filter-row">
-          <span class="frow-lbl">Dönem</span>
-          <div class="chips" id="donemChips">
-            <button class="chip is-on" data-donem="tumu">Tümü</button>
-            <button class="chip" data-donem="haziran">Haziran</button>
-            <button class="chip" data-donem="temmuz">Temmuz</button>
-          </div>
-        </div>
-        <div class="filter-row" data-view="yonetim" id="santiyeRow">
-          <span class="frow-lbl">Şantiye</span>
-          <div class="chips" id="santiyeChips">
-            <button class="chip is-on" data-santiye="tumu">Tümü</button>
-            <button class="chip" data-santiye="vadi">Vadi Konakları</button>
-            <button class="chip" data-santiye="liman">Liman Lojistik</button>
-            <button class="chip" data-santiye="merkez">Merkez</button>
-          </div>
-        </div>
-      </div>
-      <div class="filtre-ozet" id="filtreOzet"><i class="fa-solid fa-circle-info"></i> <span><b>5</b> kayıt gösteriliyor · <b>₺32.000</b> toplam</span></div>
     </div>
 
     <!-- KPI'lar seçili dönem/şantiye setindeki kayıtlardan CANLI hesaplanır (sabit set değil) -->
@@ -151,52 +122,94 @@
          Sorumlusu, Merkez Ofis) kaydını kapsar. -->
     <div class="gv-card" style="margin-bottom:20px">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hand-holding-dollar"></i> Durum Kırılımı</div><span class="ph-sub" style="margin:0">crm-personel-avans.html</span></div>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1). Dönem kalır
+           .lh-tabs chip'i. Şantiye (yalnız yönetim) + Tarih Aralığı Gelişmiş Filtre'ye
+           taşındı (crm-gorev.html deseni: gvFilterDrawer'a table VERİLMEDİ — sayfanın
+           kendi render() fonksiyonu TEK karar mercii kalır, K-220 dersi). Arşiv toggle
+           EKLENMEDİ — durum (bekliyor/onaylandı/reddedildi/revize) tek eksenli bir talep
+           durumu, ayrı bir arşiv/pasif kavramı yok (K-326 emsali). -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Personel veya avans no ara" data-table-search="#tblAvansKirilim">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm" id="avnFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="avnColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <button type="button" class="btn btn-acc btn-sm" id="btnDisaAktar" aria-label="Çıktı Al / Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Çıktı Al / Dışa Aktar</span>
+            </button>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="avnAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="donemChips">
+              <button class="chip is-on" data-donem="tumu">Tümü</button>
+              <button class="chip" data-donem="haziran">Haziran</button>
+              <button class="chip" data-donem="temmuz">Temmuz</button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblAvansKirilim">
           <thead>
             <tr>
               <th>Avans No / Personel</th>
-              <th class="col-tutar num">Tutar</th>
-              <th class="col-tarih">Talep Tarihi</th>
-              <th class="col-santiye">Şantiye</th>
-              <th class="col-durum">Durum</th>
+              <th data-col="tutar" class="col-tutar num">Tutar</th>
+              <th data-col="tarih" class="col-tarih">Talep Tarihi</th>
+              <th data-col="santiye" class="col-santiye">Şantiye</th>
+              <th data-col="durum" class="col-durum">Durum</th>
             </tr>
           </thead>
           <tbody>
             <tr data-donem="temmuz" data-santiye="vadi" data-durum="bekliyor" data-zincir="standart" data-zincir-label="Standart (Şef → Muhasebe)" data-tutar="3500" data-personel="Musa Erdem" data-tarih="2026-07-01">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">ME</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-avans-detay.html?avn=015" style="color:inherit;text-decoration:none">Musa Erdem</a></div><span class="gcell-sub">AVN-2026-015</span></div></div></td>
-              <td class="num t-strong">₺3.500</td>
-              <td>1 Temmuz 2026</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gstat warn">Bekliyor</span></td>
+              <td data-col="tutar" class="num t-strong">₺3.500</td>
+              <td data-col="tarih">1 Temmuz 2026</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="durum"><span class="gstat warn">Bekliyor</span></td>
             </tr>
             <tr data-donem="haziran" data-santiye="vadi" data-durum="bekliyor" data-zincir="standart" data-zincir-label="Standart (Şef → Muhasebe)" data-tutar="4000" data-personel="Ali Vural" data-tarih="2026-06-29">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--bg);color:var(--ink-2);border:1px solid var(--line)">AV</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-avans-detay.html?avn=014" style="color:inherit;text-decoration:none">Ali Vural</a></div><span class="gcell-sub">AVN-2026-014</span></div></div></td>
-              <td class="num t-strong">₺4.000</td>
-              <td>29 Haziran 2026</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gstat warn">Bekliyor</span></td>
+              <td data-col="tutar" class="num t-strong">₺4.000</td>
+              <td data-col="tarih">29 Haziran 2026</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="durum"><span class="gstat warn">Bekliyor</span></td>
             </tr>
             <tr data-donem="haziran" data-santiye="vadi" data-durum="onaylandi" data-zincir="gm" data-zincir-label="GM Onaylı (+ Genel Müdür)" data-tutar="8000" data-personel="Hasan Demirci" data-tarih="2026-06-18">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">HD</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-avans-detay.html?avn=013" style="color:inherit;text-decoration:none">Hasan Demirci</a></div><span class="gcell-sub">AVN-2026-013</span></div></div></td>
-              <td class="num t-strong">₺8.000</td>
-              <td>18 Haziran 2026</td>
-              <td>Vadi Konakları</td>
-              <td><span class="gstat ok">Onaylandı</span></td>
+              <td data-col="tutar" class="num t-strong">₺8.000</td>
+              <td data-col="tarih">18 Haziran 2026</td>
+              <td data-col="santiye">Vadi Konakları</td>
+              <td data-col="durum"><span class="gstat ok">Onaylandı</span></td>
             </tr>
             <tr data-donem="haziran" data-santiye="merkez" data-durum="reddedildi" data-zincir="gm" data-zincir-label="GM Onaylı (+ Genel Müdür)" data-tutar="6500" data-personel="Baran Yıldız" data-tarih="2026-06-10">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">BY</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-avans-detay.html?avn=012" style="color:inherit;text-decoration:none">Baran Yıldız</a></div><span class="gcell-sub">AVN-2026-012</span></div></div></td>
-              <td class="num t-strong">₺6.500</td>
-              <td>10 Haziran 2026</td>
-              <td>Merkez Ofis</td>
-              <td><span class="gstat danger">Reddedildi</span></td>
+              <td data-col="tutar" class="num t-strong">₺6.500</td>
+              <td data-col="tarih">10 Haziran 2026</td>
+              <td data-col="santiye">Merkez Ofis</td>
+              <td data-col="durum"><span class="gstat danger">Reddedildi</span></td>
             </tr>
             <tr data-donem="haziran" data-santiye="liman" data-durum="revize" data-zincir="gm" data-zincir-label="GM Onaylı (+ Genel Müdür)" data-tutar="10000" data-personel="Aylin Koç" data-tarih="2026-06-03">
               <td><div class="gcell"><div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">AK</div><div class="gcell-info"><div class="gcell-name"><a href="crm-personel-avans-detay.html?avn=011" style="color:inherit;text-decoration:none">Aylin Koç</a></div><span class="gcell-sub">AVN-2026-011</span></div></div></td>
-              <td class="num t-strong">₺10.000</td>
-              <td>3 Haziran 2026</td>
-              <td>Liman Lojistik</td>
-              <td><span class="gstat info">Revize</span></td>
+              <td data-col="tutar" class="num t-strong">₺10.000</td>
+              <td data-col="tarih">3 Haziran 2026</td>
+              <td data-col="santiye">Liman Lojistik</td>
+              <td data-col="durum"><span class="gstat info">Revize</span></td>
             </tr>
           </tbody>
         </table>
@@ -206,6 +219,7 @@
           <p>Dönem veya şantiye seçimini değiştirin.</p>
         </div>
       </div>
+      <div class="gc-foot" id="filtreOzet"><i class="fa-solid fa-circle-info"></i> <span><b>5</b> kayıt gösteriliyor · <b>₺32.000</b> toplam</span></div>
     </div>
 
     <!-- ============ GRAFİK ALANI (B §6.2 madde 6) ============ -->
@@ -306,7 +320,8 @@
     el.hidden = el.getAttribute('data-view') !== view;
   });
 
-  var tbody = document.querySelector('#tblAvansKirilim tbody');
+  var tblAvans = document.getElementById('tblAvansKirilim');
+  var tbody = tblAvans.querySelector('tbody');
 
   /* ŞEF: yalnız Vadi Konakları kayıtları kalır — Baran Yıldız, Aylin Koç DOM'dan
      tamamen kaldırılır (isim dahi geçmez). Kaynak: crm-personel-avans.html şef
@@ -328,21 +343,21 @@
   function render(){
     var donemOn = document.querySelector('#donemChips .chip.is-on');
     var donem = donemOn ? donemOn.getAttribute('data-donem') : 'tumu';
-    var santiyeWrap = document.getElementById('santiyeChips');
-    var santiyeVisible = view === 'yonetim';
-    var santiyeOn = santiyeVisible ? santiyeWrap.querySelector('.chip.is-on') : null;
-    var santiye = santiyeOn ? santiyeOn.getAttribute('data-santiye') : 'tumu';
+    var santiye = fpSantiye;
+    var searchInp = document.querySelector('input[data-table-search="#tblAvansKirilim"]');
+    var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
 
     var vis = [];
     tbody.querySelectorAll('tr').forEach(function(tr){
       var okD = donem === 'tumu' || tr.getAttribute('data-donem') === donem;
       var okS = santiye === 'tumu' || tr.getAttribute('data-santiye') === santiye;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okT = true;
-      if(avnDateFilter){
+      if(fpTarih){
         var t = new Date(tr.getAttribute('data-tarih') + 'T12:00:00');
-        okT = t >= avnDateFilter.from && t <= avnDateFilter.to;
+        okT = t >= fpTarih.from && t <= fpTarih.to;
       }
-      var show = okD && okS && okT;
+      var show = okD && okS && okTerm && okT;
       tr.hidden = !show;
       if(show) vis.push(tr);
     });
@@ -404,7 +419,7 @@
     document.getElementById('filtreOzet').querySelector('span').innerHTML =
       '<b>' + vis.length + '</b> kayıt gösteriliyor · <b>' + fmtTL(toplamTutar) + '</b> toplam' +
       (scopeParts.length ? ' (' + scopeParts.join(' · ') + ')' : '') +
-      (avnDateFilter ? ' · tarih: ' + avnDateFilter.label : '');
+      (fpTarih ? ' · tarih: ' + fpTarihLabel : '');
 
     /* ============ GRAFİK ALANI — görünür (filtrelenmiş) sete göre CANLI ============ */
     if(window.gvDonut){
@@ -423,30 +438,51 @@
     }
   }
 
-  /* ============ TARİH ARALIĞI — gerçek Date karşılaştırması, satırların data-tarih'i ile ============ */
-  var avnDateFilter = null;
-  if(window.gvDateRange){
-    gvDateRange('#avnDateRange', {
-      emptyLabel: 'Tüm tarihler',
-      onChange: function(val){
-        avnDateFilter = val ? {from:val.from, to:val.to, label:val.label} : null;
-        render();
-      }
-    });
-  }
-
   document.getElementById('donemChips').addEventListener('click', function(e){
     var ch = e.target.closest('.chip[data-donem]'); if(!ch) return;
     this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
     ch.classList.add('is-on');
     render();
   });
-  if(view === 'yonetim'){
-    document.getElementById('santiyeChips').addEventListener('click', function(e){
-      var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
-      this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-      ch.classList.add('is-on');
-      render();
+
+  /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer). Şantiye (yalnız yönetim —
+     şef zaten Vadi'ye sabit, ayrı bir kontrol dead-control olurdu) + Tarih Aralığı.
+     `table` KASITLI VERİLMEDİ (K-220/gorev.html deseni) — render() TEK karar mercii
+     kalır, bu yüzden search de tbl._gvApply delegasyonuyla render()'a bağlanır. ============ */
+  var fpSantiye = 'tumu', fpTarih = null, fpTarihLabel = '';
+  tblAvans._gvApply = render;
+  if(window.gvFilterDrawer){
+    var avnFields = [];
+    if(view === 'yonetim'){
+      avnFields.push({key:'santiye', type:'select', label:'Şantiye', options:[
+        {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik'}, {v:'merkez', l:'Merkez'}
+      ]});
+    }
+    avnFields.push({key:'tarih', type:'daterange', label:'Talep Tarihi', emptyLabel:'Tüm tarihler'});
+    gvFilterDrawer.init({
+      mount: '#avnFiltreBtn', title: 'Gelişmiş Filtre', screen: 'rapor-avans',
+      chipsMount: '#avnAchips', fields: avnFields,
+      onApply: function(state){
+        fpSantiye = state.santiye ? state.santiye.raw : 'tumu';
+        fpTarih = (state.tarih && state.tarih.raw && state.tarih.raw.from) ? {from:state.tarih.raw.from, to:state.tarih.raw.to} : null;
+        fpTarihLabel = state.tarih ? state.tarih.raw.label : '';
+        render();
+      },
+      onClear: function(){
+        fpSantiye = 'tumu'; fpTarih = null; fpTarihLabel = '';
+        render();
+      }
+    });
+  }
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#avnColsBtn', table: '#tblAvansKirilim', screen: 'rapor-avans',
+      cols: [
+        {key:'tutar', lbl:'Tutar', def:true},
+        {key:'tarih', lbl:'Talep Tarihi', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
     });
   }
 

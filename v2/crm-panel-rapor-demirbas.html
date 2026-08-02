@@ -92,25 +92,11 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-ghost btn-sm" id="btnDmExport" data-gv-export='{"baslik":"Demirbaş Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}'><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
     <!-- ============ YÖNETİM GÖRÜNÜMÜ ============ -->
     <section data-view="yonetim">
-      <div class="rp-toolbar">
-        <div class="rp-tb-group">
-          <div class="chips" id="santiyeChips">
-            <button class="chip is-on" data-santiye="tumu">Tüm Şantiyeler <span class="ch-cnt">10</span></button>
-            <button class="chip" data-santiye="vadi">Vadi Konakları <span class="ch-cnt">4</span></button>
-            <button class="chip" data-santiye="liman">Liman Lojistik <span class="ch-cnt">1</span></button>
-            <button class="chip" data-santiye="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
-            <button class="chip" data-santiye="depo">Merkez Depo <span class="ch-cnt">2</span></button>
-          </div>
-          <div data-gvdaterange style="margin-left:4px"></div>
-        </div>
-      </div>
-
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-ico"><i class="fa-solid fa-boxes-stacked"></i></div>
@@ -151,28 +137,50 @@
           <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Demirbaş Envanteri</div>
           <button type="button" class="btn btn-ghost btn-sm" id="btnDmHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
         </div>
-        <div class="filter-bar stack">
-          <div class="filter-row">
-            <span class="frow-lbl">Kategori</span>
-            <div class="chips" id="katChips">
-              <button class="chip is-on" data-kat="hepsi">Tümü <span class="ch-cnt">10</span></button>
-              <button class="chip" data-kat="telefon">Telefon &amp; İletişim <span class="ch-cnt">3</span></button>
-              <button class="chip" data-kat="tablet">Tablet <span class="ch-cnt">1</span></button>
-              <button class="chip" data-kat="elaleti">El Aleti <span class="ch-cnt">2</span></button>
-              <button class="chip" data-kat="guvenlik">Güvenlik Ekipmanı <span class="ch-cnt">1</span></button>
-              <button class="chip" data-kat="arac">Araç <span class="ch-cnt">1</span></button>
-              <button class="chip" data-kat="makine">Makine-Ekipman <span class="ch-cnt">2</span></button>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1). Durum kalır
+             .lh-tabs chip'i (birincil kategorik eksen — envanterin en çok arandığı
+             alan). Kategori + Şantiye + Tarih Aralığı Gelişmiş Filtre'ye taşındı;
+             `table` KASITLI VERİLMEDİ — sayfanın kendi applyFilter() TEK karar mercii
+             kalır (K-220/gorev.html deseni: Kategori+Durum+Şantiye+Tarih = 4 boyut,
+             tek motor). Arşiv toggle EKLENMEDİ — Hurda/İade Edildi zaten Durum
+             ekseninde birer değer; ayrı bir toggle bu ekseni İKİNCİ kez temsil ederdi
+             (K-326 tekilleştirme ilkesi). -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Kalem, zimmetli veya seri no ara" data-table-search="#tblDmRapor">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm" id="dmFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="dmColsBtn" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnDmExport" data-gv-export='{"baslik":"Demirbaş Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar">
+                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
+              </button>
             </div>
           </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Durum</span>
-            <div class="chips" id="durumChips">
-              <button class="chip is-on" data-durum="hepsi">Tümü <span class="ch-cnt">10</span></button>
-              <button class="chip" data-durum="zimmetli">Zimmetli <span class="ch-cnt">6</span></button>
-              <button class="chip" data-durum="depoda">Depoda <span class="ch-cnt">1</span></button>
-              <button class="chip" data-durum="serviste">Serviste <span class="ch-cnt">1</span></button>
-              <button class="chip" data-durum="hurda">Hurda <span class="ch-cnt">1</span></button>
-              <button class="chip" data-durum="iade">İade Edildi <span class="ch-cnt">1</span></button>
+          <div class="lh-achips gv-achips-row" id="dmAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="durumChips">
+                <button class="chip is-on" data-durum="hepsi">Tümü <span class="ch-cnt">10</span></button>
+                <button class="chip" data-durum="zimmetli">Zimmetli <span class="ch-cnt">6</span></button>
+                <button class="chip" data-durum="depoda">Depoda <span class="ch-cnt">1</span></button>
+                <button class="chip" data-durum="serviste">Serviste <span class="ch-cnt">1</span></button>
+                <button class="chip" data-durum="hurda">Hurda <span class="ch-cnt">1</span></button>
+                <button class="chip" data-durum="iade">İade Edildi <span class="ch-cnt">1</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
             </div>
           </div>
         </div>
@@ -185,11 +193,11 @@
             <thead>
               <tr>
                 <th>Kalem</th>
-                <th class="col-kategori">Kategori</th>
-                <th class="col-kisi">Zimmetli</th>
-                <th class="col-santiye">Şantiye</th>
-                <th class="col-tarih">Tarih</th>
-                <th class="col-durum">Durum</th>
+                <th data-col="kategori" class="col-kategori">Kategori</th>
+                <th data-col="kisi" class="col-kisi">Zimmetli</th>
+                <th data-col="santiye" class="col-santiye">Şantiye</th>
+                <th data-col="tarih" class="col-tarih">Tarih</th>
+                <th data-col="durum" class="col-durum">Durum</th>
               </tr>
             </thead>
             <!-- statik bake — DEMIRBAS[] kanonik dizisi (10 kayıt) VERBATIM; JS yüklenince
@@ -394,11 +402,11 @@
     html += '<tr data-kat="'+d.kat+'" data-durum="'+d.durum+'" data-santiye="'+(d.santiye||'')+'"'+(tDate?' data-ts="'+tDate.getTime()+'"':'')+'>';
     html += '<td><div class="dm-cell"><div class="dm-mark" style="background:var(--bg);color:var(--ink-2)"><i class="fa-solid '+K.ic+'"></i></div>'
           + '<div class="dm-info"><b>'+d.ad+'</b><span class="dm-no">'+d.no+' — '+d.alt+'</span></div></div></td>';
-    html += '<td>'+K.lbl+'</td>';
-    html += '<td>'+(d.kisi ? d.kisi : '<span class="dm-kisisiz">(kişisiz)</span>')+'</td>';
-    html += '<td>'+(d.santiye ? SANTIYE_ADI[d.santiye] : '<span class="dm-kisisiz">—</span>')+'</td>';
-    html += '<td>'+d.tarih+'</td>';
-    html += '<td><span class="gstat '+D.cls+'">'+D.lbl+'</span></td>';
+    html += '<td data-col="kategori">'+K.lbl+'</td>';
+    html += '<td data-col="kisi">'+(d.kisi ? d.kisi : '<span class="dm-kisisiz">(kişisiz)</span>')+'</td>';
+    html += '<td data-col="santiye">'+(d.santiye ? SANTIYE_ADI[d.santiye] : '<span class="dm-kisisiz">—</span>')+'</td>';
+    html += '<td data-col="tarih">'+d.tarih+'</td>';
+    html += '<td data-col="durum"><span class="gstat '+D.cls+'">'+D.lbl+'</span></td>';
     html += '</tr>';
   });
   body.innerHTML = html;
@@ -464,18 +472,22 @@
      yönetilir (elle .hidden atanmaz), ikisi asla aynı anda görünmez. */
   var dmShownCount = 0;
   var curKat = 'hepsi', curDurum = 'hepsi', curSantiye = 'tumu', curRange = null;
+  var tblDmRapor = document.getElementById('tblDmRapor');
   function applyFilter(){
+    var searchInp = document.querySelector('input[data-table-search="#tblDmRapor"]');
+    var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
     var shown = 0;
     document.querySelectorAll('#tblDmRapor tbody tr').forEach(function(tr){
       var okKat = curKat === 'hepsi' || tr.getAttribute('data-kat') === curKat;
       var okDurum = curDurum === 'hepsi' || tr.getAttribute('data-durum') === curDurum;
       var okSantiye = curSantiye === 'tumu' || tr.getAttribute('data-santiye') === curSantiye;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okTarih = true;
       if(curRange){
         var ts = tr.getAttribute('data-ts');
         okTarih = ts && (+ts >= curRange.from.getTime()) && (+ts <= curRange.to.getTime());
       }
-      var show = okKat && okDurum && okSantiye && okTarih;
+      var show = okKat && okDurum && okSantiye && okTerm && okTarih;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -491,13 +503,6 @@
   if(btnDmHataRetry) btnDmHataRetry.addEventListener('click', function(){
     gvEmpty.durum('#dmStateWrap', { sonucSayisi: dmShownCount });
   });
-  document.getElementById('katChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-kat]'); if(!ch) return;
-    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curKat = ch.getAttribute('data-kat');
-    applyFilter();
-  });
   document.getElementById('durumChips').addEventListener('click', function(e){
     var ch = e.target.closest('.chip[data-durum]'); if(!ch) return;
     this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
@@ -505,17 +510,50 @@
     curDurum = ch.getAttribute('data-durum');
     applyFilter();
   });
-  document.getElementById('santiyeChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
-    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curSantiye = ch.getAttribute('data-santiye');
-    applyFilter();
-  });
-  window.gvDateRange('[data-gvdaterange]', {
-    emptyLabel: 'Tüm zamanlar',
-    onChange: function(val){ curRange = val; applyFilter(); }
-  });
+
+  /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer). Kategori + Şantiye +
+     Tarih Aralığı. `table` KASITLI VERİLMEDİ (K-220/gorev.html deseni) — applyFilter()
+     TEK karar mercii kalır (Kategori+Durum+Şantiye+Tarih+arama = 5 boyut); arama da
+     tbl._gvApply delegasyonuyla applyFilter()'a bağlanır. ============ */
+  tblDmRapor._gvApply = applyFilter;
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#dmFiltreBtn', title: 'Gelişmiş Filtre', screen: 'rapor-demirbas',
+      chipsMount: '#dmAchips',
+      fields: [
+        {key:'kategori', type:'select', label:'Kategori', options:[
+          {v:'telefon', l:'Telefon & İletişim'}, {v:'tablet', l:'Tablet'}, {v:'elaleti', l:'El Aleti'},
+          {v:'guvenlik', l:'Güvenlik Ekipmanı'}, {v:'arac', l:'Araç'}, {v:'makine', l:'Makine-Ekipman'}
+        ]},
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik'}, {v:'merkez', l:'Merkez Şantiye'}, {v:'depo', l:'Merkez Depo'}
+        ]},
+        {key:'tarih', type:'daterange', label:'Tarih Aralığı', emptyLabel:'Tüm zamanlar'}
+      ],
+      onApply: function(state){
+        curKat = state.kategori ? state.kategori.raw : 'hepsi';
+        curSantiye = state.santiye ? state.santiye.raw : 'tumu';
+        curRange = (state.tarih && state.tarih.raw && state.tarih.raw.from) ? state.tarih.raw : null;
+        applyFilter();
+      },
+      onClear: function(){
+        curKat = 'hepsi'; curSantiye = 'tumu'; curRange = null;
+        applyFilter();
+      }
+    });
+  }
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#dmColsBtn', table: '#tblDmRapor', screen: 'rapor-demirbas',
+      cols: [
+        {key:'kategori', lbl:'Kategori', def:true},
+        {key:'kisi', lbl:'Zimmetli', def:true},
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'tarih', lbl:'Tarih', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
   applyFilter();
   gvExport.bind();
 })();

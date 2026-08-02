@@ -150,13 +150,47 @@
           <div class="gc-title"><i class="fa-solid fa-table-cells"></i> Kişi × Durum Dökümü</div>
           <span class="ph-sub" style="margin:0">29 Haz – 2 Tem</span>
         </div>
-        <div class="filter-bar">
-          <span class="frow-lbl">Şantiye</span>
-          <div class="chips" data-target="#tblCalisma">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">16</span></button>
-            <button class="chip" data-filter="vadi">Vadi Konakları <span class="ch-cnt">7</span></button>
-            <button class="chip" data-filter="liman">Liman Lojistik <span class="ch-cnt">5</span></button>
-            <button class="chip" data-filter="merkez">Merkez Şantiye <span class="ch-cnt">4</span></button>
+        <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1). Şantiye
+             kalır .lh-tabs chip'i (native ui.js data-filter, DEĞİŞMEDİ). Unvan/Görev
+             Gelişmiş Filtre alanı olarak eklendi — mevcut `gt-role` metninden mekanik
+             türetildi (16 satıra data-unvan eklendi), uydurma eksen değil. `table`
+             VERİLDİ: Şantiye chip'i zaten tr.hidden ile, arama zaten generic ile,
+             Unvan ise .gv-fp-hide ile — üç katman BAĞIMSIZ, CSS'te birleşir (K-220
+             dersi burada bileşik motor GEREKTİRMEDİ). Arşiv toggle EKLENMEDİ —
+             puantaj durumları (Tam/Yarım/Yok/İzin/Rapor/FM/EM) satır başına çoklu
+             sayaç, arşiv/pasif kavramı yok (K-326 emsali). -->
+        <div class="gv-listhead">
+          <div class="lh-row">
+            <div class="lh-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Personel ara" data-table-search="#tblCalisma">
+            </div>
+            <div class="lh-acts">
+              <button type="button" class="btn btn-ghost btn-sm" id="calFiltreBtn" aria-label="Gelişmiş Filtre">
+                <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="calColsBtn" aria-label="Kolonlar">
+                <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+              </button>
+            </div>
+          </div>
+          <div class="lh-achips gv-achips-row" id="calAchips" hidden>
+            <div class="gv-achips"></div>
+            <div class="gv-achips-acts">
+              <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+            </div>
+          </div>
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" data-target="#tblCalisma">
+                <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">16</span></button>
+                <button class="chip" data-filter="vadi">Vadi Konakları <span class="ch-cnt">7</span></button>
+                <button class="chip" data-filter="liman">Liman Lojistik <span class="ch-cnt">5</span></button>
+                <button class="chip" data-filter="merkez">Merkez Şantiye <span class="ch-cnt">4</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
         </div>
         <div class="gc-body flush">
@@ -164,37 +198,37 @@
             <thead>
               <tr>
                 <th>Personel</th>
-                <th>Şantiye</th>
-                <th class="num"><i class="fa-solid fa-check" style="color:var(--ok)"></i>Tam</th>
-                <th class="num"><i class="fa-solid fa-circle-half-stroke" style="color:var(--warn)"></i>Yarım</th>
-                <th class="num"><i class="fa-solid fa-xmark" style="color:var(--danger)"></i>Yok</th>
-                <th class="num"><i class="fa-solid fa-umbrella-beach" style="color:var(--info)"></i>İzin</th>
-                <th class="num"><i class="fa-solid fa-file-medical" style="color:var(--muted)"></i>Rapor</th>
-                <th class="num"><i class="fa-solid fa-arrow-trend-up" style="color:var(--acc-ink)"></i>FM</th>
-                <th class="num"><i class="fa-solid fa-arrow-trend-down" style="color:var(--warn)"></i>EM</th>
-                <th class="num">Hafta-gün</th>
+                <th data-col="santiye">Şantiye</th>
+                <th data-col="tam" class="num"><i class="fa-solid fa-check" style="color:var(--ok)"></i>Tam</th>
+                <th data-col="yarim" class="num"><i class="fa-solid fa-circle-half-stroke" style="color:var(--warn)"></i>Yarım</th>
+                <th data-col="yok" class="num"><i class="fa-solid fa-xmark" style="color:var(--danger)"></i>Yok</th>
+                <th data-col="izin" class="num"><i class="fa-solid fa-umbrella-beach" style="color:var(--info)"></i>İzin</th>
+                <th data-col="rapor" class="num"><i class="fa-solid fa-file-medical" style="color:var(--muted)"></i>Rapor</th>
+                <th data-col="fm" class="num"><i class="fa-solid fa-arrow-trend-up" style="color:var(--acc-ink)"></i>FM</th>
+                <th data-col="em" class="num"><i class="fa-solid fa-arrow-trend-down" style="color:var(--warn)"></i>EM</th>
+                <th data-col="hafta" class="num">Hafta-gün</th>
               </tr>
             </thead>
             <tbody>
               <!-- kaynak: crm-operasyon-puantaj.html PERSONEL[].gunler, indeks 0-3 (Pzt 29 Haz – Per 2 Tem) sayılarak derlendi.
                    Hafta-gün = weeklyTotal kuralı: tam+fm=1.0 · yarim+em=0.5 · izin/rapor/yok=0. -->
-              <tr data-f="vadi"><td class="gt-person"><span class="t-strong">Hasan Demirci</span><span class="gt-role">Şantiye Şefi</span></td><td>Vadi</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">4.0</td></tr>
-              <tr data-f="vadi"><td class="gt-person"><span class="t-strong">Ali Vural</span><span class="gt-role">Saha Personeli</span></td><td>Vadi</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">4.0</td></tr>
-              <tr data-f="vadi"><td class="gt-person"><span class="t-strong">İbrahim Sönmez</span><span class="gt-role">Formen</span></td><td>Vadi</td><td class="num">2</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num t-strong">3.5</td></tr>
-              <tr data-f="vadi"><td class="gt-person"><span class="t-strong">Ramazan Kılıç</span><span class="gt-role">Kalıpçı</span></td><td>Vadi</td><td class="num">3</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">3.0</td></tr>
-              <tr data-f="vadi"><td class="gt-person"><span class="t-strong">Selim Doğan</span><span class="gt-role">Demir Ustası</span></td><td>Vadi</td><td class="num">2</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num t-strong">2.5</td></tr>
-              <tr data-f="vadi"><td class="gt-person"><span class="t-strong">Musa Erdem</span><span class="gt-role">Düz İşçi</span></td><td>Vadi</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">2.0</td></tr>
-              <tr data-f="vadi"><td class="gt-person"><span class="t-strong">Veli Şimşek</span><span class="gt-role">Elektrik Ustası</span></td><td>Vadi</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">2.0</td></tr>
-              <tr data-f="liman"><td class="gt-person"><span class="t-strong">Aylin Koç</span><span class="gt-role">Şantiye Şefi</span></td><td>Liman</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">0.0</td></tr>
-              <tr data-f="liman"><td class="gt-person"><span class="t-strong">Şükrü Aslan</span><span class="gt-role">Formen</span></td><td>Liman</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">4.0</td></tr>
-              <tr data-f="liman"><td class="gt-person"><span class="t-strong">Halil Güneş</span><span class="gt-role">Operatör</span></td><td>Liman</td><td class="num">2</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num t-strong">3.5</td></tr>
-              <tr data-f="liman"><td class="gt-person"><span class="t-strong">Metin Çetin</span><span class="gt-role">Kaynakçı</span></td><td>Liman</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">2.0</td></tr>
-              <tr data-f="liman"><td class="gt-person"><span class="t-strong">Osman Polat</span><span class="gt-role">Düz İşçi</span></td><td>Liman</td><td class="num">3</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">3.0</td></tr>
-              <tr data-f="merkez"><td class="gt-person"><span class="t-strong">Ömer Taşkın</span><span class="gt-role">Şantiye Şefi</span></td><td>Merkez</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">4.0</td></tr>
-              <tr data-f="merkez"><td class="gt-person"><span class="t-strong">Recep Yaman</span><span class="gt-role">Formen</span></td><td>Merkez</td><td class="num">4</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">4.0</td></tr>
-              <tr data-f="merkez"><td class="gt-person"><span class="t-strong">İlyas Kurt</span><span class="gt-role">Marangoz</span></td><td>Merkez</td><td class="num">3</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">3.0</td></tr>
-              <tr data-f="merkez"><td class="gt-person"><span class="t-strong">Sadık Öz</span><span class="gt-role">Düz İşçi</span></td><td>Merkez</td><td class="num">3</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num t-strong">3.5</td></tr>
-              <tr class="gt-total"><td>Toplam</td><td>—</td><td class="num">44</td><td class="num">3</td><td class="num">2</td><td class="num">9</td><td class="num">3</td><td class="num">2</td><td class="num">1</td><td class="num">48.0</td></tr>
+              <tr data-unvan="santiye-sefi" data-f="vadi"><td class="gt-person"><span class="t-strong">Hasan Demirci</span><span class="gt-role">Şantiye Şefi</span></td><td data-col="santiye">Vadi</td><td data-col="tam" class="num">4</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">4.0</td></tr>
+              <tr data-unvan="saha-personeli" data-f="vadi"><td class="gt-person"><span class="t-strong">Ali Vural</span><span class="gt-role">Saha Personeli</span></td><td data-col="santiye">Vadi</td><td data-col="tam" class="num">4</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">4.0</td></tr>
+              <tr data-unvan="formen" data-f="vadi"><td class="gt-person"><span class="t-strong">İbrahim Sönmez</span><span class="gt-role">Formen</span></td><td data-col="santiye">Vadi</td><td data-col="tam" class="num">2</td><td data-col="yarim" class="num">1</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">1</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">3.5</td></tr>
+              <tr data-unvan="kalipci" data-f="vadi"><td class="gt-person"><span class="t-strong">Ramazan Kılıç</span><span class="gt-role">Kalıpçı</span></td><td data-col="santiye">Vadi</td><td data-col="tam" class="num">3</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">1</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">3.0</td></tr>
+              <tr data-unvan="demir-ustasi" data-f="vadi"><td class="gt-person"><span class="t-strong">Selim Doğan</span><span class="gt-role">Demir Ustası</span></td><td data-col="santiye">Vadi</td><td data-col="tam" class="num">2</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">1</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">1</td><td data-col="hafta" class="num t-strong">2.5</td></tr>
+              <tr data-unvan="duz-isci" data-f="vadi"><td class="gt-person"><span class="t-strong">Musa Erdem</span><span class="gt-role">Düz İşçi</span></td><td data-col="santiye">Vadi</td><td data-col="tam" class="num">2</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">2</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">2.0</td></tr>
+              <tr data-unvan="elektrik-ustasi" data-f="vadi"><td class="gt-person"><span class="t-strong">Veli Şimşek</span><span class="gt-role">Elektrik Ustası</span></td><td data-col="santiye">Vadi</td><td data-col="tam" class="num">2</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">2</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">2.0</td></tr>
+              <tr data-unvan="santiye-sefi" data-f="liman"><td class="gt-person"><span class="t-strong">Aylin Koç</span><span class="gt-role">Şantiye Şefi</span></td><td data-col="santiye">Liman</td><td data-col="tam" class="num">0</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">4</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">0.0</td></tr>
+              <tr data-unvan="formen" data-f="liman"><td class="gt-person"><span class="t-strong">Şükrü Aslan</span><span class="gt-role">Formen</span></td><td data-col="santiye">Liman</td><td data-col="tam" class="num">4</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">4.0</td></tr>
+              <tr data-unvan="operator" data-f="liman"><td class="gt-person"><span class="t-strong">Halil Güneş</span><span class="gt-role">Operatör</span></td><td data-col="santiye">Liman</td><td data-col="tam" class="num">2</td><td data-col="yarim" class="num">1</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">1</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">3.5</td></tr>
+              <tr data-unvan="kaynakci" data-f="liman"><td class="gt-person"><span class="t-strong">Metin Çetin</span><span class="gt-role">Kaynakçı</span></td><td data-col="santiye">Liman</td><td data-col="tam" class="num">2</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">2</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">2.0</td></tr>
+              <tr data-unvan="duz-isci" data-f="liman"><td class="gt-person"><span class="t-strong">Osman Polat</span><span class="gt-role">Düz İşçi</span></td><td data-col="santiye">Liman</td><td data-col="tam" class="num">3</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">1</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">3.0</td></tr>
+              <tr data-unvan="santiye-sefi" data-f="merkez"><td class="gt-person"><span class="t-strong">Ömer Taşkın</span><span class="gt-role">Şantiye Şefi</span></td><td data-col="santiye">Merkez</td><td data-col="tam" class="num">4</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">4.0</td></tr>
+              <tr data-unvan="formen" data-f="merkez"><td class="gt-person"><span class="t-strong">Recep Yaman</span><span class="gt-role">Formen</span></td><td data-col="santiye">Merkez</td><td data-col="tam" class="num">4</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">4.0</td></tr>
+              <tr data-unvan="marangoz" data-f="merkez"><td class="gt-person"><span class="t-strong">İlyas Kurt</span><span class="gt-role">Marangoz</span></td><td data-col="santiye">Merkez</td><td data-col="tam" class="num">3</td><td data-col="yarim" class="num">0</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">1</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">3.0</td></tr>
+              <tr data-unvan="duz-isci" data-f="merkez"><td class="gt-person"><span class="t-strong">Sadık Öz</span><span class="gt-role">Düz İşçi</span></td><td data-col="santiye">Merkez</td><td data-col="tam" class="num">3</td><td data-col="yarim" class="num">1</td><td data-col="yok" class="num">0</td><td data-col="izin" class="num">0</td><td data-col="rapor" class="num">0</td><td data-col="fm" class="num">0</td><td data-col="em" class="num">0</td><td data-col="hafta" class="num t-strong">3.5</td></tr>
+              <tr class="gt-total"><td>Toplam</td><td data-col="santiye">—</td><td data-col="tam" class="num">44</td><td data-col="yarim" class="num">3</td><td data-col="yok" class="num">2</td><td data-col="izin" class="num">9</td><td data-col="rapor" class="num">3</td><td data-col="fm" class="num">2</td><td data-col="em" class="num">1</td><td data-col="hafta" class="num">48.0</td></tr>
             </tbody>
           </table>
           <div class="gv-empty" data-table-empty hidden>
@@ -438,6 +472,57 @@
     {lbl:'FM', val:2, tone:'acc'},
     {lbl:'EM', val:1, tone:'warn'}
   ], {baslik:'Hafta durum dağılımı', merkezAlt:'kişi-gün'});
+
+  /* ============ V3A — Kişi × Durum Dökümü .gv-listhead: Gelişmiş Filtre (Unvan) +
+     Kolonlar. `table` VERİLDİ — Şantiye chip'i (tr.hidden) + arama (generic, tr.hidden)
+     + Unvan fp alanı (.gv-fp-hide) bağımsız katmanlar, CSS'te birleşir; bileşik motor
+     GEREKMEDİ (K-220 dersi). ============ */
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#calFiltreBtn', title: 'Gelişmiş Filtre', screen: 'rapor-calisma',
+      chipsMount: '#calAchips', table: '#tblCalisma',
+      fields: [
+        {key:'unvan', type:'select', label:'Unvan', options:[
+          {v:'santiye-sefi', l:'Şantiye Şefi'}, {v:'saha-personeli', l:'Saha Personeli'},
+          {v:'formen', l:'Formen'}, {v:'kalipci', l:'Kalıpçı'}, {v:'demir-ustasi', l:'Demir Ustası'},
+          {v:'duz-isci', l:'Düz İşçi'}, {v:'elektrik-ustasi', l:'Elektrik Ustası'},
+          {v:'operator', l:'Operatör'}, {v:'kaynakci', l:'Kaynakçı'}, {v:'marangoz', l:'Marangoz'}
+        ]}
+      ],
+      onApply: function(){ syncCalismaEmpty(); }, onClear: function(){ syncCalismaEmpty(); }
+    });
+  }
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#calColsBtn', table: '#tblCalisma', screen: 'rapor-calisma',
+      cols: [
+        {key:'santiye', lbl:'Şantiye', def:true},
+        {key:'tam', lbl:'Tam', def:true},
+        {key:'yarim', lbl:'Yarım', def:true},
+        {key:'yok', lbl:'Yok', def:true},
+        {key:'izin', lbl:'İzin', def:true},
+        {key:'rapor', lbl:'Rapor', def:true},
+        {key:'fm', lbl:'FM', def:true},
+        {key:'em', lbl:'EM', def:true},
+        {key:'hafta', lbl:'Hafta-gün', def:true}
+      ]
+    });
+  }
+  /* .gv-fp-hide'ın generic applyFilters() sayaç/boş-durum hesabına dahil OLMAMASI
+     riskine karşı (bkz ui.js applyFilters — yalnız chip+arama sayar) küçük bir
+     resync: arama/şantiye chip'i de bu sayımı tetikler. */
+  function syncCalismaEmpty(){
+    var empty = document.querySelector('#tblCalisma').closest('.gv-card').querySelector('[data-table-empty]');
+    if(!empty) return;
+    var shown = 0;
+    document.querySelectorAll('#tblCalisma tbody tr:not(.gt-total)').forEach(function(tr){
+      if(!tr.hidden && !tr.classList.contains('gv-fp-hide')) shown++;
+    });
+    empty.hidden = shown !== 0;
+  }
+  document.querySelector('.chips[data-target="#tblCalisma"]').addEventListener('click', function(){ setTimeout(syncCalismaEmpty, 0); });
+  var calSearchInp = document.querySelector('input[data-table-search="#tblCalisma"]');
+  if(calSearchInp) calSearchInp.addEventListener('input', function(){ setTimeout(syncCalismaEmpty, 0); });
 
   /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
   var btnCalHataDemo = document.getElementById('btnCalHataDemo');

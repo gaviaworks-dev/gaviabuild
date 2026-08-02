@@ -87,7 +87,6 @@
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm rp-back" href="crm-panel-raporlar.html"><i class="fa-solid fa-arrow-left"></i> Rapor Merkezi</a>
-        <button class="btn btn-acc btn-sm" id="btnDisaAktar"><i class="fa-solid fa-download"></i> Çıktı Al / Dışa Aktar</button>
       </div>
     </div>
 
@@ -129,15 +128,50 @@
 
     <div class="gv-card">
       <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> İş Programı — Ana Kalemler</div></div>
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1). Şantiye
+           chip'i sayfanın EN ÜSTÜNDE (KPI/grafik/not/kritik-gecikme dahil TÜM
+           sayfayı değiştiren bağlam seçici, satır bazlı bir tablo filtresi DEĞİL —
+           kaynak veri kendisi değişiyor) BİLİNÇLİ OLARAK burada kalmadı, listhead'e
+           taşınmadı. Durum (Tamamlandı/Programında/Gecikme vb.) satır bazlı gerçek
+           bir eksen olduğu için Gelişmiş Filtre'ye eklendi. Arşiv toggle EKLENMEDİ —
+           "Tamamlandı" zaten Durum ekseninin bir değeri, ayrı bir arşiv kavramı yok
+           (K-326 emsali). Tarih Aralığı (sayfa üstünde) satırları FİLTRELEMEZ (kaynakta
+           belgelenmiş bilinçli karar, bkz. gvDateRange onChange yorumu) — bu yüzden
+           Gelişmiş Filtre'ye taşınmadı, ikinci bir anlamsız kontrol üretilmedi. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Kalem ara" data-table-search="#tblProgram">
+          </div>
+          <div class="lh-acts">
+            <button type="button" class="btn btn-ghost btn-sm" id="ipFiltreBtn" aria-label="Gelişmiş Filtre">
+              <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="ipColsBtn" aria-label="Kolonlar">
+              <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
+            </button>
+            <button type="button" class="btn btn-acc btn-sm" id="btnDisaAktar" aria-label="Çıktı Al / Dışa Aktar">
+              <i class="fa-solid fa-download"></i> <span class="lh-lbl">Çıktı Al / Dışa Aktar</span>
+            </button>
+          </div>
+        </div>
+        <div class="lh-achips gv-achips-row" id="ipAchips" hidden>
+          <div class="gv-achips"></div>
+          <div class="gv-achips-acts">
+            <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+          </div>
+        </div>
+      </div>
       <div class="gc-body flush">
         <table class="gtable" id="tblProgram">
           <thead>
             <tr>
               <th>Kalem</th>
-              <th>Planlanan / Gerçekleşen</th>
-              <th>İlerleme</th>
-              <th class="num">Sapma</th>
-              <th>Durum</th>
+              <th data-col="plangercek">Planlanan / Gerçekleşen</th>
+              <th data-col="ilerleme">İlerleme</th>
+              <th data-col="sapma" class="num">Sapma</th>
+              <th data-col="durum">Durum</th>
             </tr>
           </thead>
           <tbody id="ipBody"><tr><td><div class="pg-kalem">Temel ve Bodrum Betonu</div></td><td><div class="pg-dates"><b>Planlanan:</b> 04.03.2024 – 12.09.2024<br><b>Gerçekleşen:</b> Tamamlandı · 12.09.2024</div></td><td><div class="prog-cell"><div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:100%"></div></div><span class="gbar-val">%100</span></div></div><div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:100%"></div></div><span class="gbar-val">%100</span></div></div></div></td><td class="num"><span class="sapma-val flat"><i class="fa-solid fa-minus"></i> Sapma yok</span></td><td><span class="gstat ok">Tamamlandı — planında bitti</span></td></tr><tr><td><div class="pg-kalem">Kaba İnşaat — A, B, C Blok</div></td><td><div class="pg-dates"><b>Planlanan:</b> 16.09.2024 – 15.08.2026<br><b>Gerçekleşen:</b> Devam ediyor · tahmini 13.08.2026</div></td><td><div class="prog-cell"><div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:90%"></div></div><span class="gbar-val">%90</span></div></div><div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:94%"></div></div><span class="gbar-val">%94</span></div></div></div></td><td class="num"><span class="sapma-val ok"><i class="fa-solid fa-arrow-trend-up"></i> +2 gün</span></td><td><span class="gstat ok">Programın önünde</span></td></tr><tr><td><div class="pg-kalem">Çatı ve Cephe İmalatı</div></td><td><div class="pg-dates"><b>Planlanan:</b> 01.09.2026 – 31.10.2026<br><b>Gerçekleşen:</b> Henüz başlamadı</div></td><td><div class="prog-cell"><div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:0%"></div></div><span class="gbar-val">%0</span></div></div><div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:0%"></div></div><span class="gbar-val">%0</span></div></div></div></td><td class="num"><span class="sapma-val flat"><i class="fa-solid fa-minus"></i> Sapma yok</span></td><td><span class="gstat off">Planlandı</span></td></tr><tr><td><div class="pg-kalem">İnce İşler ve Tesisat</div></td><td><div class="pg-dates"><b>Planlanan:</b> 01.06.2026 – 30.11.2026<br><b>Gerçekleşen:</b> Devam ediyor</div></td><td><div class="prog-cell"><div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:55%"></div></div><span class="gbar-val">%55</span></div></div><div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:58%"></div></div><span class="gbar-val">%58</span></div></div></div></td><td class="num"><span class="sapma-val flat"><i class="fa-solid fa-minus"></i> Sapma yok</span></td><td><span class="gstat info">Programında</span></td></tr><tr><td><div class="pg-kalem">Elektrik &amp; Tesisat</div></td><td><div class="pg-dates"><b>Planlanan:</b> 01.07.2026 – 15.12.2026<br><b>Gerçekleşen:</b> Devam ediyor</div></td><td><div class="prog-cell"><div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:40%"></div></div><span class="gbar-val">%40</span></div></div><div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:41%"></div></div><span class="gbar-val">%41</span></div></div></div></td><td class="num"><span class="sapma-val flat"><i class="fa-solid fa-minus"></i> Sapma yok</span></td><td><span class="gstat info">Programında</span></td></tr><tr><td><div class="pg-kalem">Çevre Düzenleme</div></td><td><div class="pg-dates"><b>Planlanan:</b> 01.10.2026 – 31.12.2026<br><b>Gerçekleşen:</b> Erken hazırlık aşaması</div></td><td><div class="prog-cell"><div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:10%"></div></div><span class="gbar-val">%10</span></div></div><div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:12%"></div></div><span class="gbar-val">%12</span></div></div></div></td><td class="num"><span class="sapma-val flat"><i class="fa-solid fa-minus"></i> Sapma yok</span></td><td><span class="gstat info">Programında</span></td></tr><tr><td><div class="pg-kalem">Teslim</div></td><td><div class="pg-dates"><b>Planlanan:</b> Aralık 2026<br><b>Gerçekleşen:</b> —</div></td><td><div class="prog-cell"><div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:0%"></div></div><span class="gbar-val">%0</span></div></div><div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:0%"></div></div><span class="gbar-val">%0</span></div></div></div></td><td class="num"><span class="sapma-val flat"><i class="fa-solid fa-minus"></i> Sapma yok</span></td><td><span class="gstat off">Planlandı</span></td></tr></tbody>
@@ -299,18 +333,19 @@
     var body = '';
     R.kalemler.forEach(function(x){
       var gCls = x.sapma < 0 ? 'danger' : (x.sapma > 0 ? '' : '');
-      body += '<tr>'
+      body += '<tr data-durum="' + x.durum.cls + '">'
         + '<td><div class="pg-kalem">' + x.ad + '</div></td>'
-        + '<td><div class="pg-dates"><b>Planlanan:</b> ' + x.plan + '<br><b>Gerçekleşen:</b> ' + x.gercek + '</div></td>'
-        + '<td><div class="prog-cell">'
+        + '<td data-col="plangercek"><div class="pg-dates"><b>Planlanan:</b> ' + x.plan + '<br><b>Gerçekleşen:</b> ' + x.gercek + '</div></td>'
+        + '<td data-col="ilerleme"><div class="prog-cell">'
         +   '<div class="pc-row"><span class="pc-lbl">Plan</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill plan" style="width:' + x.planPct + '%"></div></div><span class="gbar-val">%' + x.planPct + '</span></div></div>'
         +   '<div class="pc-row"><span class="pc-lbl">Gerçek</span><div class="gbar"><div class="gbar-track"><div class="gbar-fill ' + gCls + '" style="width:' + x.gercekPct + '%"></div></div><span class="gbar-val">%' + x.gercekPct + '</span></div></div>'
         + '</div></td>'
-        + '<td class="num"><span class="sapma-val ' + sapmaTxt(x.sapma).cls + '"><i class="fa-solid ' + sapmaTxt(x.sapma).ic + '"></i> ' + sapmaTxt(x.sapma).lbl + '</span></td>'
-        + '<td><span class="gstat ' + x.durum.cls + '">' + x.durum.lbl + '</span></td>'
+        + '<td data-col="sapma" class="num"><span class="sapma-val ' + sapmaTxt(x.sapma).cls + '"><i class="fa-solid ' + sapmaTxt(x.sapma).ic + '"></i> ' + sapmaTxt(x.sapma).lbl + '</span></td>'
+        + '<td data-col="durum"><span class="gstat ' + x.durum.cls + '">' + x.durum.lbl + '</span></td>'
         + '</tr>';
     });
     document.getElementById('ipBody').innerHTML = body;
+    if(window.ipApplyFilter) ipApplyFilter();
 
     var crit = '';
     if(geciken.length){
@@ -370,6 +405,50 @@
     history.replaceState(null, '', 'crm-panel-rapor-isprogrami.html?santiye=' + k);
     render(k);
   });
+
+  /* ============ V3A — .gv-listhead: Gelişmiş Filtre (Durum) + Kolonlar. Tablo
+     her şantiye değişiminde (render(k)) TAMAMEN yeniden üretiliyor (ipBody.innerHTML),
+     bu yüzden `table` otomatik-uygulaması yerine kendi ipApplyFilter() TEK karar
+     mercii — render() sonunda da çağrılır ki şantiye değişince aktif filtre/arama
+     kaybolmasın. ============ */
+  var fpDurum = '';
+  var tblProgram = document.getElementById('tblProgram');
+  function ipApplyFilter(){
+    var searchInp = document.querySelector('input[data-table-search="#tblProgram"]');
+    var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
+    tblProgram.querySelectorAll('tbody tr').forEach(function(tr){
+      var okDurum = !fpDurum || tr.getAttribute('data-durum') === fpDurum;
+      var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
+      tr.hidden = !(okDurum && okTerm);
+    });
+  }
+  window.ipApplyFilter = ipApplyFilter;
+  tblProgram._gvApply = ipApplyFilter;
+  if(window.gvFilterDrawer){
+    gvFilterDrawer.init({
+      mount: '#ipFiltreBtn', title: 'Gelişmiş Filtre', screen: 'rapor-isprogrami',
+      chipsMount: '#ipAchips',
+      fields: [
+        {key:'durum', type:'select', label:'Durum', options:[
+          {v:'ok', l:'Tamamlandı / Önde'}, {v:'info', l:'Programında'},
+          {v:'off', l:'Planlandı'}, {v:'warn', l:'Hafif Gecikme'}, {v:'danger', l:'Gecikme'}
+        ]}
+      ],
+      onApply: function(state){ fpDurum = state.durum ? state.durum.raw : ''; ipApplyFilter(); },
+      onClear: function(){ fpDurum = ''; ipApplyFilter(); }
+    });
+  }
+  if(window.gvCols){
+    gvCols.init({
+      mount: '#ipColsBtn', table: '#tblProgram', screen: 'rapor-isprogrami',
+      cols: [
+        {key:'plangercek', lbl:'Planlanan / Gerçekleşen', def:true},
+        {key:'ilerleme', lbl:'İlerleme', def:true},
+        {key:'sapma', lbl:'Sapma', def:true},
+        {key:'durum', lbl:'Durum', def:true}
+      ]
+    });
+  }
 
   /* ============ TARİH ARALIĞI — iş programı kalemleri ay/yıl bazlı uzun aralıklar
      kapsar (ör. 2024-2027); tekil gün filtresi anlamlı olmadığından seçim, seçili
