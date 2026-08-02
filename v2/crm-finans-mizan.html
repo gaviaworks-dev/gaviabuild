@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>Mizan Hazırlığı — Gavia CRM</title>
+<title>Mizan — Gavia CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -16,14 +16,16 @@
 <link rel="stylesheet" href="assets/css/shell.css">
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
-/* ============ SAYFAYA ÖZEL — Mizan Hazırlığı [§4/§12.2/§15.2, TZ track]
-   crm-ayarlar-cok-dil.html'in "kilitli modül önizlemesi" deseninden (hero + 2 kolon +
-   roadmap kutusu) devralındı — doküman "Mizan Hazırlık / Yakında ekranı" diyor ama bu
-   projede ölü 'yakında' bloğu YASAK; §4.3'ün 8 kalemi burada GERÇEKTEN gezilebilir:
-   dönem seçici çalışır, kaynak modül listesi gerçek href'lerle ilgili ekrana gider,
-   hesap planı ağacı native <details> ile açılır/kapanır, örnek mizan tablosu mevcut
-   kanonik KPI'lardan (kasa/kredikarti/pluxee/cari/hakediş/avans/satınalma) türetilir —
-   YENİ bir tutar İCAT EDİLMEDİ. ============ */
+/* ============ SAYFAYA ÖZEL — Mizan [Dalga 4 / T-S3, doküman §11.1/§11.2/§11.3]
+   Önceki turun "Hazırlık" önizleme çerçevesi KALDIRILDI — sayfa artık gerçekten
+   çalışan bir mizan ekranı: dönem çipleri + başlangıç/bitiş tarihi GERÇEKTEN
+   tabloyu yeniden hesaplar (borç/alacak/borç bakiye/alacak bakiye + toplam +
+   KPI'lar + grafik + şantiye kırılımı), her kaynak satırı tıklanınca özet
+   açılır ve "Tümünü Gör" ile ilgili gerçek ekrana gider, Çıktı Al PDF/Yazdır'da
+   `crm-finans-mizan-cikti.html`'e gider ve Excel'de gerçek .xlsx indirir.
+   Hesap planı ağacı/kaynak modül listesi/gelir-gider sınıflandırması "ek blok"
+   olarak KORUNDU (önceki dalgaların kapsamı) — yalnız artık gerçekten aktif
+   ekranın parçası, "hazırlık" çerçevesi değil. ============ */
 
 .mz-hero{display:flex;gap:18px;align-items:flex-start;margin-bottom:24px}
 .mz-hero-ico{
@@ -46,12 +48,6 @@
 .mz-list li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink-2);line-height:1.5}
 .mz-list li i{color:var(--acc-ink);font-size:12px;margin-top:4px;flex:none}
 
-.mz-roadmap{
-  border:1px dashed var(--line-2);border-radius:var(--r-lg);background:var(--bg);
-  padding:16px 18px;display:flex;gap:12px;align-items:flex-start;font-size:12.5px;color:var(--muted);line-height:1.55;
-}
-.mz-roadmap i{color:var(--acc-ink);font-size:14px;margin-top:2px;flex:none}
-.mz-roadmap b{color:var(--ink-2)}
 .inv-note{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
 .inv-note i{color:var(--acc-ink);flex:none}
 
@@ -94,14 +90,34 @@ a.mz-src-row:hover .mz-src-go{color:var(--acc-ink)}
 .mz-gg-row:last-child{border-bottom:none}
 .mz-gg-row b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 
-/* ---- örnek mizan tablosu ---- */
-#tblMizan{min-width:640px}
-#tblMizan .mz-hcode{width:70px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+/* ---- mizan tablosu ---- */
+#tblMizan{min-width:760px}
+#tblMizan .mz-hcode{width:86px;white-space:nowrap;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
 #tblMizan td,#tblMizan th{font-variant-numeric:tabular-nums}
 #tblMizan .num{white-space:nowrap}
 #tblMizan .mz-borc{color:var(--ink)}
 #tblMizan .mz-alacak{color:var(--ink)}
 tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weight:800;color:var(--ink)}
+
+/* ---- §11.2 drill-down: satır tıkla → özet açılır, ayrı ikon → gerçek hedef sayfa ---- */
+#tblMizan tbody tr.mz-row{cursor:pointer;transition:.12s var(--ease)}
+#tblMizan tbody tr.mz-row:hover{background:var(--bg)}
+#tblMizan tbody tr.mz-row:focus-visible{outline:2px solid var(--acc-ink);outline-offset:-2px}
+.mz-rcar{color:var(--muted);font-size:10px;margin-right:6px;transition:transform .15s var(--ease)}
+#tblMizan tbody tr.mz-row[aria-expanded="true"] .mz-rcar{transform:rotate(90deg);color:var(--acc-ink)}
+.mz-golink{margin-left:8px;color:var(--muted);font-size:11px;text-decoration:none}
+.mz-golink:hover{color:var(--acc-ink)}
+tr.mz-detail td{background:var(--bg);padding:0;border-top:none}
+.mz-detail-wrap{padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mz-detail-wrap p{flex:1;min-width:220px;font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+.mz-detail-wrap p b{color:var(--ink-2)}
+
+/* ---- §11.1 madde 2/3 — başlangıç/bitiş tarihi ---- */
+.mz-daterange{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.mz-dr-field{display:flex;flex-direction:column;gap:5px}
+.mz-dr-field label{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.mz-dr-field input[type="date"]{font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line-2);border-radius:8px;padding:7px 9px;outline:none}
+.mz-dr-field input[type="date"]:focus{border-color:var(--acc-ink)}
 
 /* ---- §15.2 mizan tablo kart başlığı — uzun tarih rozeti (.gtag, shared token:
    white-space:nowrap) dar viewport'ta flex min-content taşmasına sebep oluyordu
@@ -120,10 +136,10 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
 .mz-field-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 10px}
 .mz-field-chip i{font-size:9px;color:var(--acc-ink)}
 
-/* ============ B §6.2/§6.4 eklentileri (T-R4) — karşılaştırma · şantiye kırılımı ·
-   değerlendirme · çıktı al. Bu sayfa BİLEREK "Hazırlık" (Faz 2) önizlemesidir —
-   ağır bir rapor iskeleti İCAT EDİLMEDİ, mevcut mz-* diliyle hafif genişletildi
-   (bkz. tasks/kararlar.md K-222). ============ */
+/* ============ B §6.2/§6.4 eklentileri (T-R4, sonradan Dalga 4/T-S3'te dönem
+   motoruna bağlandı) — karşılaştırma · şantiye kırılımı · değerlendirme · çıktı
+   al. Ağır bir rapor iskeleti İCAT EDİLMEDİ, mevcut mz-* diliyle genişletildi
+   (bkz. tasks/kararlar.md K-222 ve Dalga 4/T-S3 kaydı). ============ */
 .mz-cmp{display:flex;gap:18px;flex-wrap:wrap;padding:14px 0 4px;border-top:1px dashed var(--line);margin-top:6px}
 .mz-cmp-item{flex:1;min-width:140px}
 .mz-cmp-lbl{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -165,8 +181,8 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
     <div class="gv-page-head">
       <div>
         <div class="ph-eyebrow">Finans Yönetimi</div>
-        <h1 style="font-size:15px;font-weight:700;color:var(--muted)">Mizan Hazırlığı <span class="gtag" style="margin-left:6px">Hazırlık</span></h1>
-        <div class="ph-sub">Detay doküman gelene kadar modülün amacı, veri kaynakları ve borç/alacak altyapı hazırlığı burada gösterilir</div>
+        <h1 style="font-size:15px;font-weight:700;color:var(--muted)">Mizan</h1>
+        <div class="ph-sub">11 kaynaktan gelen hareketlerin hesap kodu bazlı borç/alacak bakiyesi — dönem ve tarih aralığına göre gerçekten yeniden hesaplanır</div>
       </div>
       <div class="ph-actions">
         <a class="btn btn-ghost btn-sm" href="crm-operasyon-kasa.html"><i class="fa-solid fa-arrow-left"></i> Finans Yönetimine Dön</a>
@@ -177,9 +193,9 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
     <div class="mz-hero">
       <div class="mz-hero-ico"><i class="fa-solid fa-scale-balanced"></i></div>
       <div class="mz-hero-txt">
-        <div class="mz-eyebrow"><i class="fa-solid fa-map"></i> Faz 2 Finans Genişleme · Hazırlık — detay doküman bekleniyor</div>
+        <div class="mz-eyebrow"><i class="fa-solid fa-scale-balanced"></i> Finans · Muhasebe Mizanı</div>
         <h1>Mizan Modülü</h1>
-        <p class="mz-value">Mizan; kasa, banka, kredi kartı, Pluxee kart, cari, hakediş, taşeron/tedarikçi ödemesi, avans ve satın alma faturası gibi <b>tüm finansal hareketleri tek bir hesap planında</b> toplayıp her hesabın borç/alacak bakiyesini gösteren temel muhasebe raporudur. Yapıtaş İnşaat A.Ş. için hedef: şantiye bazlı nakit durumunu, cari alacak/borç dengesini ve dönemsel gelir/gider dağılımını tek ekrandan, denetime hazır bir formatta görebilmek.</p>
+        <p class="mz-value">Mizan; kasa, banka, kredi kartı, Pluxee kart, cari, hakediş, taşeron/tedarikçi ödemesi, avans ve satın alma faturası gibi <b>tüm finansal hareketleri tek bir hesap planında</b> toplayıp her hesabın borç/alacak bakiyesini gösteren temel muhasebe raporudur. Yapıtaş İnşaat A.Ş. için şantiye bazlı nakit durumunu, cari alacak/borç dengesini ve dönemsel gelir/gider dağılımını tek ekrandan, denetime hazır bir formatta gösterir.</p>
       </div>
     </div>
 
@@ -190,21 +206,21 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
       <div class="kpi-card">
         <div class="kpi-ico"><i class="fa-solid fa-diagram-project"></i></div>
         <div><div class="kpi-num num">11</div><div class="kpi-lbl">Bağlı kaynak modül</div>
-        <div class="kpi-delta flat"><i class="fa-solid fa-circle-check"></i> 10 aktif · 1 kavramsal</div></div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-circle-check"></i> 10 canlı ekran · 1 türetilmiş</div></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-arrow-down"></i></div>
-        <div><div class="kpi-num num" id="kpiMzBorc">—</div><div class="kpi-lbl">Toplam borç (kaynak bakiyesi)</div>
+        <div><div class="kpi-num num" id="kpiMzBorc">₺8.894.870</div><div class="kpi-lbl">Toplam borç (seçili dönem)</div>
         <div class="kpi-delta flat"><i class="fa-solid fa-table-list"></i> 5 hesap kodu</div></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-ico" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
-        <div><div class="kpi-num num" id="kpiMzAlacak">—</div><div class="kpi-lbl">Toplam alacak (kaynak bakiyesi)</div>
+        <div><div class="kpi-num num" id="kpiMzAlacak">₺3.659.050</div><div class="kpi-lbl">Toplam alacak (seçili dönem)</div>
         <div class="kpi-delta flat"><i class="fa-solid fa-table-list"></i> 3 hesap kodu</div></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-scale-unbalanced"></i></div>
-        <div><div class="kpi-num num" id="kpiMzFark">—</div><div class="kpi-lbl">Fark (borç − alacak)</div>
+        <div><div class="kpi-num num" id="kpiMzFark">₺5.235.820</div><div class="kpi-lbl">Fark (borç − alacak)</div>
         <div class="kpi-delta flat"><i class="fa-solid fa-circle-info"></i> Çift kayıt kurulana kadar beklenen</div></div>
       </div>
     </div>
@@ -285,10 +301,10 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
                 <div class="mz-src-txt"><b>Satın Alma Faturaları</b><span>İrsaliye/fatura eşleşmesi — açık/vadeli tutar</span></div>
                 <span class="mz-src-go"><i class="fa-solid fa-arrow-right"></i></span>
               </a>
-              <a class="mz-src-row is-pending" href="#" data-demo="Gelir/Gider Kayıtları ayrı bir ekran değil — mizanda yukarıdaki kaynakların hareket tipine göre otomatik sınıflandırılır (bkz. aşağıdaki Gelir/Gider Sınıflandırması kartı).">
+              <a class="mz-src-row" href="#mzGgCard">
                 <div class="mz-src-ico"><i class="fa-solid fa-chart-line"></i></div>
-                <div class="mz-src-txt"><b>Gelir / Gider Kayıtları</b><span>Ayrı ekranı yok — diğer 10 kaynaktan otomatik türetilir</span></div>
-                <span class="gtag">Hazırlık</span>
+                <div class="mz-src-txt"><b>Gelir / Gider Kayıtları</b><span>Ayrı ekranı yok — aşağıdaki "Gelir / Gider Sınıflandırması" kartına gider</span></div>
+                <span class="mz-src-go"><i class="fa-solid fa-arrow-right"></i></span>
               </a>
             </div>
           </div>
@@ -342,8 +358,9 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
           </div>
         </div>
 
-        <!-- §4.3-4 — gelir/gider sınıflandırması -->
-        <div class="gv-card">
+        <!-- §4.3-4 — gelir/gider sınıflandırması; id, "Hangi Modüllerden Veri Alacak"
+             kartındaki Gelir/Gider Kayıtları satırının GERÇEK sayfa-içi hedefi -->
+        <div class="gv-card" id="mzGgCard">
           <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-arrow-right-arrow-left"></i> Gelir / Gider Sınıflandırması</div></div>
           <div class="gc-body">
             <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px">Mizan altyapısı, her kaynak hareketini otomatik olarak gelir veya gider tarafına yazacak — aşağıda mevcut kanonik verilerle örnek bir dağılım gösterilmiştir.</p>
@@ -369,15 +386,15 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
         <!-- §4.3-5/§15.2 — borç/alacak mantığı, örnek mizan tablosu -->
         <div class="gv-card">
           <div class="gc-head rp-gc-head-wrap" id="mzTblHead">
-            <div class="gc-title"><i class="fa-solid fa-table-list"></i> Kaynak Hesap Bakiyeleri — Mizan Öncesi</div>
-            <span class="gtag">2 Temmuz 2026 itibarıyla · bakiye görünümü</span>
+            <div class="gc-title"><i class="fa-solid fa-table-list"></i> Mizan — Kaynak Hesap Bakiyeleri</div>
+            <span class="gtag" id="mzTblHeadGtag">1–2 Temmuz 2026 itibarıyla · bakiye görünümü</span>
             <div style="display:flex;gap:8px;margin-left:auto">
               <button type="button" class="btn btn-ghost btn-sm" id="btnMzBosDemo"><i class="fa-solid fa-inbox"></i> Boş Durumu Gör</button>
               <button type="button" class="btn btn-ghost btn-sm" id="btnMzHataDemo"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
             </div>
           </div>
           <div class="gc-body" style="padding-bottom:6px">
-            <p style="font-size:12.5px;color:var(--muted);margin-bottom:4px">Borç/alacak mantığı: <b style="color:var(--ink-2)">varlık hesapları</b> (kasa, kredi kartı/Pluxee bakiyesi, cari alacak, avans) normalde <b style="color:var(--ink-2)">borç</b> bakiyesi verir; <b style="color:var(--ink-2)">kaynak hesapları</b> (tedarikçi/taşeron borcu, kredi kartı dönem borcu) normalde <b style="color:var(--ink-2)">alacak</b> bakiyesi verir. Aşağıdaki tutarlar ilgili modüllerin bugünkü kanonik bakiyeleridir — gerçek çift kayıt (double-entry) eşleşmesi detay doküman sonrası kurulacaktır.</p>
+            <p style="font-size:12.5px;color:var(--muted);margin-bottom:4px">Borç/alacak mantığı: <b style="color:var(--ink-2)">varlık hesapları</b> (kasa, kredi kartı/Pluxee bakiyesi, cari alacak, avans) normalde <b style="color:var(--ink-2)">borç</b> bakiyesi verir; <b style="color:var(--ink-2)">kaynak hesapları</b> (tedarikçi/taşeron borcu, kredi kartı dönem borcu) normalde <b style="color:var(--ink-2)">alacak</b> bakiyesi verir. Aşağıdaki tutarlar, seçili dönem/tarih aralığına göre yeniden hesaplanan kaynak hesap bakiyeleridir; her hesap yalnız borç YA DA alacak tarafında bakiye taşır — <b style="color:var(--ink-2)">Borç Bakiye</b>/<b style="color:var(--ink-2)">Alacak Bakiye</b> kolonları bundan türetilir. Kod veya satıra tıklayınca ilgili hareket özeti açılır.</p>
           </div>
           <!-- ============ B §6.2 madde 15 — boş durum VE hata durumu (4-state, gvEmpty.durum) ============ -->
           <div class="gc-body flush" id="mzTblStateWrap">
@@ -405,18 +422,31 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
                   <th>Kaynak Modül</th>
                   <th class="num">Borç</th>
                   <th class="num">Alacak</th>
+                  <th class="num">Borç Bakiye</th>
+                  <th class="num">Alacak Bakiye</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr><td class="mz-hcode">100</td><td>Kasa Hesapları</td><td>Kasa</td><td class="num mz-borc">₺165.130</td><td class="num"></td></tr>
-                <tr><td class="mz-hcode">102</td><td>Banka Hesapları</td><td>Banka</td><td class="num mz-borc">₺4.151.000</td><td class="num"></td></tr>
-                <tr><td class="mz-hcode">108</td><td>Pluxee Kart Hesapları</td><td>Pluxee</td><td class="num mz-borc">₺11.240</td><td class="num"></td></tr>
-                <tr><td class="mz-hcode">120</td><td>Alıcılar (Cari Alacak)</td><td>Cari</td><td class="num mz-borc">₺4.560.000</td><td class="num"></td></tr>
-                <tr><td class="mz-hcode">195</td><td>Personele Verilen Avanslar</td><td>Avanslar</td><td class="num mz-borc">₺7.500</td><td class="num"></td></tr>
-                <tr><td class="mz-hcode">320</td><td>Satıcılar (Tedarikçi Cari Borcu)</td><td>Satın Alma</td><td class="num"></td><td class="num mz-alacak">₺3.258.200</td></tr>
-                <tr><td class="mz-hcode">336</td><td>Taşeronlara Ödenecek Hakedişler</td><td>Taşeron Ödemeleri</td><td class="num"></td><td class="num mz-alacak">₺166.200</td></tr>
-                <tr><td class="mz-hcode">340</td><td>Kredi Kartı Dönem Borcu</td><td>Kredi Kartı</td><td class="num"></td><td class="num mz-alacak">₺234.650</td></tr>
-                <tr class="mz-total"><td></td><td colspan="2">KAYNAK TOPLAMI</td><td class="num" id="mzToplamBorc">₺8.894.870</td><td class="num" id="mzToplamAlacak">₺3.659.050</td></tr>
+              <!-- statik bake (JS kapalı): Temmuz 2026 (kanonik) dönemiyle birebir — JS
+                   yüklenince computeAndRender() AYNI içeriği (dönem/tarih motoruyla) yeniden
+                   basar, gerçek link zaten JS'siz de çalışır (§11.2 drill-down). -->
+              <tbody id="mzTblBody">
+                <tr class="mz-row" data-idx="0" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet0"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 100</td><td>Kasa Hesapları</td><td>Kasa <a class="mz-golink" href="crm-operasyon-kasa.html" aria-label="Kasa hareketlerine git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num mz-borc">₺165.130</td><td class="num"></td><td class="num">₺165.130</td><td class="num"></td></tr>
+                <tr class="mz-detail" id="mzDet0" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Kasa hareketleri.</b> Şantiye bazlı kasa defteri — giriş/çıkış/bakiye.</p><a class="btn btn-acc btn-sm" href="crm-operasyon-kasa.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-row" data-idx="1" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet1"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 102</td><td>Banka Hesapları</td><td>Banka <a class="mz-golink" href="crm-finans-banka-hareket.html" aria-label="Banka hareketlerine git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num mz-borc">₺4.151.000</td><td class="num"></td><td class="num">₺4.151.000</td><td class="num"></td></tr>
+                <tr class="mz-detail" id="mzDet1" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Banka hareketleri.</b> Banka hesap hareketleri.</p><a class="btn btn-acc btn-sm" href="crm-finans-banka-hareket.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-row" data-idx="2" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet2"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 108</td><td>Pluxee Kart Hesapları</td><td>Pluxee <a class="mz-golink" href="crm-operasyon-pluxee.html" aria-label="Pluxee hareketlerine git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num mz-borc">₺11.240</td><td class="num"></td><td class="num">₺11.240</td><td class="num"></td></tr>
+                <tr class="mz-detail" id="mzDet2" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Pluxee hareketleri.</b> 12 aktif kart — yükleme + harcama.</p><a class="btn btn-acc btn-sm" href="crm-operasyon-pluxee.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-row" data-idx="3" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet3"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 120</td><td>Alıcılar (Cari Alacak)</td><td>Cari <a class="mz-golink" href="crm-cari-durum.html" aria-label="Cari hareketlere git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num mz-borc">₺4.560.000</td><td class="num"></td><td class="num">₺4.560.000</td><td class="num"></td></tr>
+                <tr class="mz-detail" id="mzDet3" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Cari hareketleri.</b> Müşteri/tedarikçi/taşeron borç-alacak durumu.</p><a class="btn btn-acc btn-sm" href="crm-cari-durum.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-row" data-idx="4" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet4"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 195</td><td>Personele Verilen Avanslar</td><td>Avanslar <a class="mz-golink" href="crm-personel-avans.html" aria-label="Avans hareketlerine git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num mz-borc">₺7.500</td><td class="num"></td><td class="num">₺7.500</td><td class="num"></td></tr>
+                <tr class="mz-detail" id="mzDet4" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Avans hareketleri.</b> Personel avans talepleri — onay + ödeme durumu.</p><a class="btn btn-acc btn-sm" href="crm-personel-avans.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-row" data-idx="5" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet5"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 320</td><td>Satıcılar (Tedarikçi Cari Borcu)</td><td>Satın Alma <a class="mz-golink" href="crm-satinalma-irsaliye-fatura.html" aria-label="Satın alma faturalarına git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num"></td><td class="num mz-alacak">₺3.258.200</td><td class="num"></td><td class="num">₺3.258.200</td></tr>
+                <tr class="mz-detail" id="mzDet5" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Satın alma faturaları.</b> İrsaliye/fatura eşleşmesi — açık/vadeli tutar.</p><a class="btn btn-acc btn-sm" href="crm-satinalma-irsaliye-fatura.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-row" data-idx="6" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet6"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 336</td><td>Taşeronlara Ödenecek Hakedişler</td><td>Taşeron Ödemeleri <a class="mz-golink" href="crm-finans-taseron.html" aria-label="Taşeron hakediş hareketlerine git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num"></td><td class="num mz-alacak">₺166.200</td><td class="num"></td><td class="num">₺166.200</td></tr>
+                <tr class="mz-detail" id="mzDet6" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Taşeron ödemeleri.</b> Taşeron hakedişleri — onaylanan/ödenen/kesinti.</p><a class="btn btn-acc btn-sm" href="crm-finans-taseron.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-row" data-idx="7" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet7"><td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> 340</td><td>Kredi Kartı Dönem Borcu</td><td>Kredi Kartı <a class="mz-golink" href="crm-operasyon-kredikarti.html" aria-label="Kredi kartı hareketlerine git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td><td class="num"></td><td class="num mz-alacak">₺234.650</td><td class="num"></td><td class="num">₺234.650</td></tr>
+                <tr class="mz-detail" id="mzDet7" hidden><td colspan="7"><div class="mz-detail-wrap"><p><b>Kredi kartı hareketleri.</b> 4 kurumsal kart — harcama + ekstre ödemesi.</p><a class="btn btn-acc btn-sm" href="crm-operasyon-kredikarti.html"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a></div></td></tr>
+                <tr class="mz-total"><td></td><td colspan="2">KAYNAK TOPLAMI</td><td class="num" id="mzToplamBorc">₺8.894.870</td><td class="num" id="mzToplamAlacak">₺3.659.050</td><td class="num" id="mzToplamBorcBak">₺8.894.870</td><td class="num" id="mzToplamAlacakBak">₺3.659.050</td></tr>
               </tbody>
             </table>
           </div>
@@ -429,7 +459,7 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
             </div>
           </div>
           <div class="gc-foot">
-            <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Bu liste henüz mizan değil — modüllerin ham bakiyeleridir. Sıradaki adım çift kayıt (her hareketin iki hesaba birden işlenmesi) eşleştirmesini kurmak; bu kurulduğunda borç ve alacak toplamları eşitlenip gerçek mizan tablosu buradan üretilecektir. Fark rakamı bir muhasebe dengesizliği DEĞİLDİR — çift kayıt eşleştirmesi kurulana kadar beklenen bir görünümdür.</span>
+            <span class="inv-note" id="mzFootNote"><i class="fa-solid fa-circle-info"></i> Borç ve alacak toplamları farklıdır çünkü her hesap tek taraflı (yalnız borç YA DA yalnız alacak) kaynaktan besleniyor — Borç Bakiye/Alacak Bakiye kolonları bu farktan satır bazında türetilir. Fark rakamı bir muhasebe dengesizliği DEĞİLDİR — tam çift kayıt (double-entry) eşleşmesi bu prototipin kapsamı dışındadır.</span>
           </div>
         </div>
 
@@ -456,20 +486,26 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
         <div class="gv-card">
           <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Dönem Seçimi</div></div>
           <div class="gc-body">
-            <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">Mizan, seçili döneme göre hareket hacmini gösterecek. Aşağıdaki dönem çipleri gerçekten seçilebilir.</p>
+            <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:12px">Dönem çipleri veya başlangıç/bitiş tarihiyle aralığı seçin — soldaki mizan tablosu, KPI'lar ve grafik seçime göre GERÇEKTEN yeniden hesaplanır.</p>
             <div class="chips" id="mzDonemChips" role="tablist" aria-label="Mizan dönemi">
               <button type="button" class="chip is-on" data-donem="ay" aria-selected="true">Temmuz 2026</button>
               <button type="button" class="chip" data-donem="ceyrek" aria-selected="false">2. Çeyrek 2026</button>
               <button type="button" class="chip" data-donem="yil" aria-selected="false">2026 Yılı</button>
             </div>
+            <div class="mz-daterange">
+              <div class="mz-dr-field"><label for="mzFrom">Başlangıç</label><input type="date" id="mzFrom" value="2026-07-01"></div>
+              <div class="mz-dr-field"><label for="mzTo">Bitiş</label><input type="date" id="mzTo" value="2026-07-02"></div>
+              <button type="button" class="btn btn-ghost btn-sm" id="mzDrApply"><i class="fa-solid fa-check"></i> Uygula</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="mzDrClear"><i class="fa-solid fa-filter-circle-xmark"></i> Temizle</button>
+            </div>
             <div class="mz-donem-sum">
               <div class="mz-donem-stat"><span>Kapsanan tarih aralığı</span><b id="mzDonemAralik">1–2 Temmuz 2026</b></div>
-              <div class="mz-donem-stat"><span>Kaynak modül sayısı</span><b id="mzDonemModul">10 aktif · 1 kavramsal</b></div>
+              <div class="mz-donem-stat"><span>Kaynak modül sayısı</span><b id="mzDonemModul">10 canlı ekran · 1 türetilmiş</b></div>
               <div class="mz-donem-stat"><span>Örnek hareket sayısı</span><b id="mzDonemHareket">~38 hareket</b></div>
             </div>
           </div>
           <div class="gc-foot">
-            <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Hesap bakiyeleri (soldaki tablo) bir anlık görünümdür, dönem seçiminden bağımsızdır — dönem yalnız hareket hacmi özetini değiştirir.</span>
+            <span class="inv-note"><i class="fa-solid fa-circle-info"></i> Hesap bakiyeleri artık seçili döneme bağlıdır: aralık daraldıkça o aralıkta oluşan borç/alacak hareketi ve bakiyeler küçülür, genişledikçe büyür. Temmuz 2026 (varsayılan) kanonik referans değerleri (₺8.894.870 borç / ₺3.659.050 alacak) gösterir.</span>
           </div>
         </div>
 
@@ -479,26 +515,13 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
              BÖLÜŞTÜRMEK yeni sayı İCADI olurdu, bu yüzden yalnız gerçekten şantiye bazlı
              kaynak (kasa) gösterildi. -->
         <div class="gv-card">
-          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-location-dot"></i> Şantiye Kırılımı — Kasa</div><span class="gtag">Planlanan Filtre Önizlemesi</span></div>
+          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-location-dot"></i> Şantiye Kırılımı — Kasa</div><span class="gtag">Şantiye Bazlı Tek Kaynak</span></div>
           <div class="gc-body">
-            <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">"Planlanan Rapor Formatı"ndaki şantiye filtresinin nasıl çalışacağının önizlemesi — Kasa Hesapları (₺165.130) tek gerçekten şantiye bazlı kaynak.</p>
-            <div class="mz-santiye-row"><span>Vadi Konakları</span><b>₺81.920</b></div>
-            <div class="mz-santiye-row"><span>Liman Lojistik Merkezi</span><b>₺18.520</b></div>
-            <div class="mz-santiye-row"><span>Merkez Şantiye</span><b>₺64.690</b></div>
-            <div class="mz-santiye-row" style="border-top:1px solid var(--line-2);padding-top:8px;margin-top:2px"><span style="font-weight:700;color:var(--ink)">Toplam</span><b>₺165.130</b></div>
-          </div>
-        </div>
-
-        <!-- §4.3-7 — rapor formatı -->
-        <div class="gv-card">
-          <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-file-export"></i> Planlanan Rapor Formatı</div></div>
-          <div class="gc-body">
-            <ul class="mz-list">
-              <li><i class="fa-solid fa-table-columns"></i> Kolonlar: Hesap Kodu · Hesap Adı · Kaynak Modül · Borç · Alacak · Bakiye · Şantiye (opsiyonel kırılım).</li>
-              <li><i class="fa-solid fa-filter"></i> Dönem, şantiye ve hesap grubu (varlık/kaynak/gelir/gider) bazlı filtre.</li>
-              <li><i class="fa-solid fa-file-pdf"></i> PDF çıktı — kasa/kredi kartı/Pluxee çıktı ekranlarıyla aynı imzaya-hazır A4 dil.</li>
-              <li><i class="fa-solid fa-file-excel"></i> Excel çıktı — mevcut "Dışa Aktar" mekanizmasının (SheetJS) devralımı.</li>
-            </ul>
+            <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">11 kaynak arasında yalnız Kasa Hesapları gerçekten şantiye bazlı tutulur — aşağıdaki dağılım, mizan tablosundaki Kasa borcuyla AYNI oranda, seçili döneme göre güncellenir.</p>
+            <div class="mz-santiye-row"><span>Vadi Konakları</span><b id="mzSantVadi">₺81.920</b></div>
+            <div class="mz-santiye-row"><span>Liman Lojistik Merkezi</span><b id="mzSantLiman">₺18.520</b></div>
+            <div class="mz-santiye-row"><span>Merkez Şantiye</span><b id="mzSantMerkez">₺64.690</b></div>
+            <div class="mz-santiye-row" style="border-top:1px solid var(--line-2);padding-top:8px;margin-top:2px"><span style="font-weight:700;color:var(--ink)">Toplam</span><b id="mzSantToplam">₺165.130</b></div>
           </div>
         </div>
 
@@ -525,12 +548,6 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
           </div>
         </div>
 
-        <!-- §4.3-8 — detay doküman bekleniyor -->
-        <div class="mz-roadmap">
-          <i class="fa-solid fa-circle-info"></i>
-          <div><b>Detay doküman bekleniyor.</b> Mizan modülünün kesin hesap planı, dönem kapatma kuralları ve rapor şablonu, Beyar tarafından ayrıca iletilecek detay dokümana göre netleştirilecek. Bu ekrandaki hesap kodları ve örnek tablo, mevcut kanonik veriyle kurulmuş bir <b>hazırlık önizlemesidir</b> — detay doküman geldiğinde güncellenecektir.</div>
-        </div>
-
       </div>
     </div>
   </main>
@@ -539,96 +556,255 @@ tr.mz-total td{background:var(--bg);border-top:2px solid var(--line-2);font-weig
 <script src="assets/js/shell.js"></script>
 <script src="assets/js/ui.js"></script>
 <script>
-/* ---- §4.3-6 — dönem seçici [MOCK-SİM]: gerçek chip toggle, sağ panelin kapsam
-   özetini günceller. Hesap bakiyeleri (sol tablo) dönemden bağımsız anlık görünüm
-   olduğu için DEĞİŞMEZ — bkz. kartın gc-foot notu. ---- */
+/* ============================================================================
+   §11 Mizan — dönem/tarih aralığı motoru [MOCK-SİM, Dalga 4 / T-S3]. Dönem
+   çipleri VE başlangıç/bitiş tarihi input'ları AYNI mekanizmayı sürer: tblMizan
+   GERÇEKTEN yeniden hesaplanır (borç/alacak/borç bakiye/alacak bakiye/toplam +
+   KPI kartları + gvBar + şantiye kırılımı + değerlendirme metni).
+   Büyüme modeli: kanonik Temmuz 2026 satır bazlı rakamları (₺8.894.870 borç /
+   ₺3.659.050 alacak toplamı) referans (faktör ×1, gün sayısı 2); 2. Çeyrek
+   (93 gün → ×3.2) ve 2026 Yılı (183 gün → ×6.4) referans noktaları arasında
+   PARÇA PARÇA DOĞRUSAL enterpolasyonla büyütülür, serbest tarih aralığı da aynı
+   gün-sayısı eğrisinden faktör alır. Gerçek bir çift kayıt (double-entry)
+   defteri DEĞİLDİR — dönem büyüklüğüne göre kümülatif hareket hacmini temsil
+   eden şeffaf, tek parametreli bir simülasyondur (bkz. tasks/kararlar.md).
+   Her kaynak satırı TEK taraflıdır (yalnız borç YA DA yalnız alacak) — bu
+   yüzden Borç Bakiye = max(borç−alacak,0), Alacak Bakiye = max(alacak−borç,0)
+   satır bazında doğrudan o satırın kendi borç/alacak değerine eşitlenir. ============ */
 (function(){
-  var DONEM = {
-    ay:     { aralik: '1–2 Temmuz 2026',           modul: '10 aktif · 1 kavramsal', hareket: '~38 hareket' },
-    ceyrek: { aralik: '1 Nisan – 2 Temmuz 2026',   modul: '10 aktif · 1 kavramsal', hareket: '~210 hareket' },
-    yil:    { aralik: '1 Ocak – 2 Temmuz 2026',    modul: '10 aktif · 1 kavramsal', hareket: '~540 hareket' }
+  'use strict';
+  function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+  function num(n){ return Math.round(n).toLocaleString('tr-TR'); }
+
+  /* §11.2 — 8 kaynağın 8'i de gerçek hedefe gider (doküman listesiyle birebir sıra) */
+  var MZ_ROWS = [
+    {kod:'100', ad:'Kasa Hesapları', kaynak:'Kasa', href:'crm-operasyon-kasa.html', borc:165130, alacak:0, desc:'Şantiye bazlı kasa defteri — giriş/çıkış/bakiye.'},
+    {kod:'102', ad:'Banka Hesapları', kaynak:'Banka', href:'crm-finans-banka-hareket.html', borc:4151000, alacak:0, desc:'Banka hesap hareketleri.'},
+    {kod:'108', ad:'Pluxee Kart Hesapları', kaynak:'Pluxee', href:'crm-operasyon-pluxee.html', borc:11240, alacak:0, desc:'12 aktif kart — yükleme + harcama.'},
+    {kod:'120', ad:'Alıcılar (Cari Alacak)', kaynak:'Cari', href:'crm-cari-durum.html', borc:4560000, alacak:0, desc:'Müşteri/tedarikçi/taşeron borç-alacak durumu.'},
+    {kod:'195', ad:'Personele Verilen Avanslar', kaynak:'Avanslar', href:'crm-personel-avans.html', borc:7500, alacak:0, desc:'Personel avans talepleri — onay + ödeme durumu.'},
+    {kod:'320', ad:'Satıcılar (Tedarikçi Cari Borcu)', kaynak:'Satın Alma', href:'crm-satinalma-irsaliye-fatura.html', borc:0, alacak:3258200, desc:'İrsaliye/fatura eşleşmesi — açık/vadeli tutar.'},
+    {kod:'336', ad:'Taşeronlara Ödenecek Hakedişler', kaynak:'Taşeron Ödemeleri', href:'crm-finans-taseron.html', borc:0, alacak:166200, desc:'Taşeron hakedişleri — onaylanan/ödenen/kesinti.'},
+    {kod:'340', ad:'Kredi Kartı Dönem Borcu', kaynak:'Kredi Kartı', href:'crm-operasyon-kredikarti.html', borc:0, alacak:234650, desc:'4 kurumsal kart — harcama + ekstre ödemesi.'}
+  ];
+
+  var ANCHORS = [[2,1],[93,3.2],[183,6.4]];   /* [gün, faktör] — ay/çeyrek/yıl referansları */
+  function faktorForDays(days){
+    if(days <= ANCHORS[0][0]) return ANCHORS[0][1];
+    for(var i=0;i<ANCHORS.length-1;i++){
+      var a=ANCHORS[i], b=ANCHORS[i+1];
+      if(days <= b[0]) return a[1] + (days-a[0])/(b[0]-a[0]) * (b[1]-a[1]);
+    }
+    var a2=ANCHORS[1], b2=ANCHORS[2], slope=(b2[1]-a2[1])/(b2[0]-a2[0]);
+    return Math.min(b2[1] + slope*(days-b2[0]), 9);
+  }
+
+  var AY_KISA = {'01':'Oca','02':'Şub','03':'Mar','04':'Nis','05':'May','06':'Haz','07':'Tem','08':'Ağu','09':'Eyl','10':'Eki','11':'Kas','12':'Ara'};
+  function isoKisa(iso){ var p = iso.split('-'); return parseInt(p[2],10) + ' ' + AY_KISA[p[1]]; }
+  function dayCount(fromIso, toIso){
+    return Math.round((new Date(toIso+'T00:00:00') - new Date(fromIso+'T00:00:00')) / 86400000) + 1;
+  }
+  function rangeLabel(fromIso, toIso){
+    var yf = fromIso.slice(0,4), yt = toIso.slice(0,4);
+    return isoKisa(fromIso) + (yf !== yt ? ' ' + yf : '') + '–' + isoKisa(toIso) + ' ' + yt;
+  }
+
+  var PRESET = {
+    ay:     {from:'2026-07-01', to:'2026-07-02'},
+    ceyrek: {from:'2026-04-01', to:'2026-07-02'},
+    yil:    {from:'2026-01-01', to:'2026-07-02'}
   };
+  var YIL_BASI = '2026-01-01', BUGUN = '2026-07-02';
+
   var chips = Array.prototype.slice.call(document.querySelectorAll('#mzDonemChips .chip'));
+  var fromInput = document.getElementById('mzFrom');
+  var toInput = document.getElementById('mzTo');
   var elAralik = document.getElementById('mzDonemAralik');
-  var elModul = document.getElementById('mzDonemModul');
   var elHareket = document.getElementById('mzDonemHareket');
+  var elGtag = document.getElementById('mzTblHeadGtag');
+  var elFootNote = document.getElementById('mzFootNote');
+  var lastComputed = null;    /* GV_EXPORTERS + gvExport filtreOzeti bunu okur */
+  var lastBarLen = 0;         /* boş/hata demo düğmeleri bunu okur */
+
+  function setActiveChip(key){
+    chips.forEach(function(c){
+      var on = c.getAttribute('data-donem') === key;
+      c.classList.toggle('is-on', on);
+      c.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  function computeAndRender(fromIso, toIso){
+    var days = dayCount(fromIso, toIso);
+    var faktor = faktorForDays(days);
+    var aralikLbl = rangeLabel(fromIso, toIso);
+
+    var rows = MZ_ROWS.map(function(r){
+      var borc = Math.round(r.borc * faktor);
+      var alacak = Math.round(r.alacak * faktor);
+      return { kod:r.kod, ad:r.ad, kaynak:r.kaynak, href:r.href, desc:r.desc, borc:borc, alacak:alacak,
+               bb: Math.max(borc - alacak, 0), ab: Math.max(alacak - borc, 0) };
+    });
+    var totalBorc = 0, totalAlacak = 0, totalBB = 0, totalAB = 0;
+    rows.forEach(function(r){ totalBorc += r.borc; totalAlacak += r.alacak; totalBB += r.bb; totalAB += r.ab; });
+
+    /* ---- §11.1 madde 8/9/10 + §11.2 drill-down — tablo gövdesi ---- */
+    var bodyHtml = rows.map(function(r, i){
+      return '<tr class="mz-row" data-idx="' + i + '" tabindex="0" role="button" aria-expanded="false" aria-controls="mzDet' + i + '">'
+        + '<td class="mz-hcode"><i class="fa-solid fa-chevron-right mz-rcar"></i> ' + r.kod + '</td>'
+        + '<td>' + r.ad + '</td>'
+        + '<td>' + r.kaynak + ' <a class="mz-golink" href="' + r.href + '" aria-label="' + r.kaynak + ' hareketlerine git" onclick="event.stopPropagation()"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>'
+        + '<td class="num mz-borc">' + (r.borc ? tl(r.borc) : '') + '</td>'
+        + '<td class="num mz-alacak">' + (r.alacak ? tl(r.alacak) : '') + '</td>'
+        + '<td class="num">' + (r.bb ? tl(r.bb) : '') + '</td>'
+        + '<td class="num">' + (r.ab ? tl(r.ab) : '') + '</td>'
+        + '</tr>'
+        + '<tr class="mz-detail" id="mzDet' + i + '" hidden><td colspan="7"><div class="mz-detail-wrap">'
+        + '<p><b>' + r.kaynak + ' hareketleri.</b> ' + r.desc + '</p>'
+        + '<a class="btn btn-acc btn-sm" href="' + r.href + '"><i class="fa-solid fa-arrow-right"></i> Tümünü Gör</a>'
+        + '</div></td></tr>';
+    }).join('')
+    + '<tr class="mz-total"><td></td><td colspan="2">KAYNAK TOPLAMI</td>'
+    + '<td class="num" id="mzToplamBorc">' + tl(totalBorc) + '</td>'
+    + '<td class="num" id="mzToplamAlacak">' + tl(totalAlacak) + '</td>'
+    + '<td class="num" id="mzToplamBorcBak">' + tl(totalBB) + '</td>'
+    + '<td class="num" id="mzToplamAlacakBak">' + tl(totalAB) + '</td></tr>';
+    document.getElementById('mzTblBody').innerHTML = bodyHtml;
+
+    /* ---- §11.1 madde 1 — dönem özet paneli ---- */
+    elAralik.textContent = aralikLbl;
+    elHareket.textContent = '~' + num(38 * faktor) + ' hareket';
+    if(elGtag) elGtag.textContent = aralikLbl + ' itibarıyla · bakiye görünümü';
+
+    /* ---- özet KPI kartları — AYNI hesaplanmış toplamlardan ---- */
+    document.getElementById('kpiMzBorc').textContent = tl(totalBorc);
+    document.getElementById('kpiMzAlacak').textContent = tl(totalAlacak);
+    document.getElementById('kpiMzFark').textContent = tl(totalBorc - totalAlacak);
+
+    /* ---- karşılaştırma alanı ---- */
+    document.getElementById('mzCmpBorc').textContent = tl(totalBorc);
+    document.getElementById('mzCmpAlacak').textContent = tl(totalAlacak);
+    document.getElementById('mzCmpFark').textContent = tl(totalBorc - totalAlacak);
+
+    /* ---- şantiye kırılımı — Kasa (MZ_ROWS[0]) İLE AYNI oranda büyür/küçülür;
+       81.920/18.520/64.690 kanonik oranları SABİT, yalnız toplam ölçeklenir ---- */
+    var kasaToplam = rows[0].borc;
+    var elVadi = document.getElementById('mzSantVadi'), elLiman = document.getElementById('mzSantLiman'),
+        elMerkez = document.getElementById('mzSantMerkez'), elSantToplam = document.getElementById('mzSantToplam');
+    if(elVadi){
+      elVadi.textContent = tl(kasaToplam * (81920/165130));
+      elLiman.textContent = tl(kasaToplam * (18520/165130));
+      elMerkez.textContent = tl(kasaToplam * (64690/165130));
+      elSantToplam.textContent = tl(kasaToplam);
+    }
+
+    /* ---- grafik alanı: kaynak modül bazlı bakiye dağılımı (gvBar) ---- */
+    var barVeri = rows.filter(function(r){ return r.borc || r.alacak; }).map(function(r){
+      return r.borc
+        ? {lbl:r.ad, val:r.borc, valLbl:tl(r.borc), tone:'ok'}
+        : {lbl:r.ad, val:r.alacak, valLbl:tl(r.alacak), tone:'warn'};
+    });
+    lastBarLen = barVeri.length;
+    if(window.gvBar) gvBar('#mzBarWrap', barVeri, {yon:'yatay', baslik:'Kaynak modül bazlı bakiye dağılımı', labelWidth:190});
+    if(window.gvEmpty) gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:barVeri.length});
+
+    /* ---- değerlendirme ---- */
+    var enBuyukGenel = rows.reduce(function(a,b){ return Math.max(b.borc,b.alacak) > Math.max(a.borc,a.alacak) ? b : a; });
+    var enBuyukAlacakli = rows.reduce(function(a,b){ return b.alacak > a.alacak ? b : a; });
+    document.getElementById('mzEval').innerHTML =
+      '<p>Seçili aralıkta (' + aralikLbl + ') kaynak toplamı borç <b>' + tl(totalBorc) + '</b>, alacak <b>' + tl(totalAlacak) + '</b> — fark <b>' + tl(totalBorc - totalAlacak) + '</b>; '
+      + 'her hesap tek taraflı çalıştığı için Borç Bakiye/Alacak Bakiye kolonları doğrudan bu tutarlardan türetilir, tam çift kayıt (double-entry) eşleşmesi bu prototipin kapsamı dışındadır.</p>'
+      + '<p style="margin-top:8px">En büyük tekil kalem <b>' + enBuyukGenel.ad + '</b> (' + tl(Math.max(enBuyukGenel.borc, enBuyukGenel.alacak)) + ') — '
+      + 'alacak tarafındaki en büyük kalem ise <b>' + enBuyukAlacakli.ad + '</b> (' + tl(enBuyukAlacakli.alacak) + '). '
+      + 'Kasa (' + tl(kasaToplam) + '), şantiye bazlı kırılımı gerçekten canlı tutulan tek kaynaktır (sağdaki "Şantiye Kırılımı" kartına bakın).</p>';
+
+    if(elFootNote){
+      elFootNote.innerHTML = '<i class="fa-solid fa-circle-info"></i> Borç ve alacak toplamları farklıdır çünkü her hesap tek taraflı (yalnız borç YA DA yalnız alacak) kaynaktan besleniyor — Borç Bakiye/Alacak Bakiye kolonları bu farktan satır bazında türetilir. Fark rakamı bir muhasebe dengesizliği DEĞİLDİR — tam çift kayıt (double-entry) eşleşmesi bu prototipin kapsamı dışındadır.';
+    }
+
+    lastComputed = { fromIso:fromIso, toIso:toIso, aralikLbl:aralikLbl, rows:rows,
+      totalBorc:totalBorc, totalAlacak:totalAlacak, totalBB:totalBB, totalAB:totalAB, faktor:faktor };
+    return lastComputed;
+  }
+
+  /* ---- §11.2 — satır tıkla → özet açılır (accordion); .mz-golink KENDİSİ zaten
+     gerçek, JS'siz de çalışan bir hedef linki, tıklaması olayı durdurur ---- */
+  var tblEl = document.getElementById('tblMizan');
+  tblEl.addEventListener('click', function(e){
+    if(e.target.closest('.mz-golink')) return;
+    var tr = e.target.closest('.mz-row'); if(!tr) return;
+    var det = document.getElementById('mzDet' + tr.getAttribute('data-idx'));
+    var open = tr.getAttribute('aria-expanded') === 'true';
+    tr.setAttribute('aria-expanded', open ? 'false' : 'true');
+    if(det) det.hidden = open;
+  });
+  tblEl.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    var tr = e.target.closest('.mz-row'); if(!tr) return;
+    e.preventDefault(); tr.click();
+  });
+
+  /* ---- §11.1 madde 1/2/3 — dönem çipleri + başlangıç/bitiş tarihi ---- */
   chips.forEach(function(c){
     c.addEventListener('click', function(){
       var key = c.getAttribute('data-donem');
-      chips.forEach(function(x){
-        var on = x === c;
-        x.classList.toggle('is-on', on);
-        x.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
-      var d = DONEM[key]; if(!d) return;
-      elAralik.textContent = d.aralik;
-      elModul.textContent = d.modul;
-      elHareket.textContent = d.hareket;
+      var p = PRESET[key]; if(!p) return;
+      setActiveChip(key);
+      fromInput.value = p.from; toInput.value = p.to;
+      computeAndRender(p.from, p.to);
     });
   });
-})();
-
-/* ---- B §6.2/§6.4 — karşılaştırma sayısal doğrulama + değerlendirme + çıktı al
-   (T-R4). Borç/alacak toplamları .mz-total satırındaki AYNI statik metinden
-   parse edilir — ikinci bir tutar İCAT EDİLMEZ, tek kaynak DOM'daki tablo. ---- */
-(function(){
-  function parseTl(s){ return parseInt(s.replace(/[^\d]/g, ''), 10) || 0; }
-  var borc = parseTl(document.getElementById('mzToplamBorc').textContent);
-  var alacak = parseTl(document.getElementById('mzToplamAlacak').textContent);
-  var fark = borc - alacak;
-  function tl(n){ return '₺' + n.toLocaleString('tr-TR'); }
-  document.getElementById('mzCmpBorc').textContent = tl(borc);
-  document.getElementById('mzCmpAlacak').textContent = tl(alacak);
-  document.getElementById('mzCmpFark').textContent = tl(fark);
-
-  /* ---- B §6.2 madde 5 — özet KPI kartları: AYNI borç/alacak/fark'tan türetilir ---- */
-  document.getElementById('kpiMzBorc').textContent = tl(borc);
-  document.getElementById('kpiMzAlacak').textContent = tl(alacak);
-  document.getElementById('kpiMzFark').textContent = tl(fark);
-
-  /* ---- B §6.2 madde 6 — grafik alanı: kaynak modül bazlı bakiye dağılımı (gvBar).
-     Veri tblMizan DOM'undan parse edilir — ikinci bir tutar İCAT EDİLMEZ. ---- */
-  var mzBarVeri = [];
-  document.querySelectorAll('#tblMizan tbody tr:not(.mz-total)').forEach(function(tr){
-    var ad = tr.children[1].textContent.trim();
-    var borcCell = tr.querySelector('.mz-borc');
-    var alacakCell = tr.querySelector('.mz-alacak');
-    if(borcCell && borcCell.textContent.trim()){
-      mzBarVeri.push({lbl:ad, val:parseTl(borcCell.textContent), valLbl:borcCell.textContent.trim(), tone:'ok'});
-    } else if(alacakCell && alacakCell.textContent.trim()){
-      mzBarVeri.push({lbl:ad, val:parseTl(alacakCell.textContent), valLbl:alacakCell.textContent.trim(), tone:'warn'});
-    }
+  var applyBtn = document.getElementById('mzDrApply');
+  var clearBtn = document.getElementById('mzDrClear');
+  if(applyBtn) applyBtn.addEventListener('click', function(){
+    var f = fromInput.value || YIL_BASI, t = toInput.value || BUGUN;
+    if(new Date(f) > new Date(t)){ var tmp = f; f = t; t = tmp; fromInput.value = f; toInput.value = t; }
+    chips.forEach(function(c){ c.classList.remove('is-on'); c.setAttribute('aria-selected', 'false'); });
+    computeAndRender(f, t);
   });
-  if(window.gvBar) gvBar('#mzBarWrap', mzBarVeri, {yon:'yatay', baslik:'Kaynak modül bazlı bakiye dağılımı', labelWidth:190});
+  if(clearBtn) clearBtn.addEventListener('click', function(){
+    setActiveChip('ay');
+    fromInput.value = PRESET.ay.from; toInput.value = PRESET.ay.to;
+    computeAndRender(PRESET.ay.from, PRESET.ay.to);
+  });
 
-  /* ============ B §6.2 madde 15 — boş durum VE hata durumu (4-state, gvEmpty.durum,
-     demo düğmeleriyle) ============ */
-  if(window.gvEmpty) gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:mzBarVeri.length});
+  /* ============ boş durum VE hata durumu (4-state, gvEmpty.durum, demo düğmeleriyle) ============ */
   var btnMzBosDemo = document.getElementById('btnMzBosDemo');
   var btnMzHataDemo = document.getElementById('btnMzHataDemo');
   var btnMzHataRetry = document.getElementById('btnMzHataRetry');
   var btnMzBosGeriDon = document.getElementById('btnMzBosGeriDon');
   if(btnMzBosDemo) btnMzBosDemo.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:0}); });
-  if(btnMzHataDemo) btnMzHataDemo.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:true, sonucSayisi:mzBarVeri.length}); });
-  if(btnMzHataRetry) btnMzHataRetry.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:mzBarVeri.length}); });
-  if(btnMzBosGeriDon) btnMzBosGeriDon.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:mzBarVeri.length}); });
+  if(btnMzHataDemo) btnMzHataDemo.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:true, sonucSayisi:lastBarLen}); });
+  if(btnMzHataRetry) btnMzHataRetry.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:lastBarLen}); });
+  if(btnMzBosGeriDon) btnMzBosGeriDon.addEventListener('click', function(){ gvEmpty.durum('#mzTblStateWrap', {yukleniyor:false, hata:false, sonucSayisi:lastBarLen}); });
 
-  var enBuyukAlacak = { ad:'Alıcılar (Cari Alacak)', tutar:4560000 };
-  var enBuyukBorc = { ad:'Satıcılar (Tedarikçi Cari Borcu)', tutar:3258200 };
-  document.getElementById('mzEval').innerHTML =
-    '<p>Kaynak toplamı borç <b>' + tl(borc) + '</b>, alacak <b>' + tl(alacak) + '</b> — fark <b>' + tl(fark) + '</b>; '
-    + 'çift kayıt (double-entry) eşleştirmesi kurulana kadar bu fark bir muhasebe dengesizliği olarak YORUMLANMAMALI, '
-    + 'yalnız 11 kaynağın ham bakiyelerinin toplamıdır.</p>'
-    + '<p style="margin-top:8px">En büyük tekil kalem <b>' + enBuyukAlacak.ad + '</b> (' + tl(enBuyukAlacak.tutar) + ') — '
-    + 'kaynak taraftaki en büyük kalem ise <b>' + enBuyukBorc.ad + '</b> (' + tl(enBuyukBorc.tutar) + '). '
-    + 'Kasa (₺165.130), şantiye bazlı kırılımı gerçekten canlı tutulan tek kaynaktır (sağdaki "Şantiye Kırılımı" kartına bakın).</p>';
+  /* ---- ilk yükleme — Temmuz 2026 (kanonik referans, statik bake ile birebir) ---- */
+  fromInput.value = PRESET.ay.from; toInput.value = PRESET.ay.to;
+  computeAndRender(PRESET.ay.from, PRESET.ay.to);
 
+  /* ============ §11.1 madde 11/12/13 — GERÇEK DIŞA AKTARMA. Excel: GV_EXPORTERS
+     üzerinden gerçek .xlsx (SheetJS) indirir; PDF/Yazdır: ciktiHref ile
+     crm-finans-mizan-cikti.html'e gider (§11.3). ============ */
+  window.GV_EXPORTERS = window.GV_EXPORTERS || {};
+  GV_EXPORTERS['Mizan — kaynak hesap bakiyeleri'] = function(){
+    var c = lastComputed;
+    var aoa = [
+      ['YAPITAŞ İNŞAAT A.Ş. — MİZAN (KAYNAK HESAP BAKİYELERİ)'],
+      [c.aralikLbl + ' itibarıyla'],
+      [],
+      ['Kod','Hesap Adı','Kaynak Modül','Borç','Alacak','Borç Bakiye','Alacak Bakiye']
+    ];
+    c.rows.forEach(function(r){ aoa.push([r.kod, r.ad, r.kaynak, r.borc, r.alacak, r.bb, r.ab]); });
+    aoa.push(['', 'KAYNAK TOPLAMI', '', c.totalBorc, c.totalAlacak, c.totalBB, c.totalAB]);
+    return { file:'mizan-' + c.fromIso + '_' + c.toIso, aoa:aoa, sheet:'Mizan', cols:[8,32,18,14,14,14,14] };
+  };
   if(window.gvExport){
     gvExport.init('#btnMzCikti', {
-      baslik: 'Mizan hazırlığı — kaynak hesap bakiyeleri',
+      baslik: 'Mizan — kaynak hesap bakiyeleri',
+      ciktiHref: 'crm-finans-mizan-cikti.html',
       formatlar: ['pdf','excel','yazdir'],
       kapsam: ['tumu'],
-      filtreOzeti: function(){ return 'Dönem: ' + document.getElementById('mzDonemAralik').textContent + ' · 2 Temmuz 2026 itibarıyla bakiye görünümü'; }
+      filtreOzeti: function(){ return lastComputed ? ('Dönem: ' + lastComputed.aralikLbl + ' itibarıyla bakiye görünümü') : ''; }
     });
   }
 })();
