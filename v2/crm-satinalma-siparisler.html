@@ -55,6 +55,28 @@
    V3A: görünürlük artık tamamen tblSiparisApply() (tr.hidden) tarafından karar
    verilir — CSS'te ayrı bir data-arsiv/gv-show-arsiv kuralı YOK (K-220 dersi:
    tek motor). ---- */
+
+/* ============ T-B1 Dalga 6 / §15.3 — .gv-botsec içerik desenleri (crm-operasyon-
+   puantaj.html'in stat-grid/hstat/hstat-btn/hl-list/hl-row/rep-src'ının BİREBİR
+   devralımı; ui.css'te PAYLAŞILMAZ, K-220 dersi gereği her sayfa kendi <style>'ına
+   kopyalar). ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:640px){.stat-grid{grid-template-columns:1fr}}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hstat-btn{border:none;cursor:pointer;text-align:left;font:inherit;width:100%;transition:.15s var(--ease)}
+.hstat-btn:hover{background:var(--paper);box-shadow:var(--sh-sm)}
+.hstat-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
 </style>
 </head>
 <body data-sec="satinalma" data-screen="siparisler">
@@ -303,10 +325,66 @@
     </div>
 
     <div class="gv-tabpanel" id="panel-sp-uyarilar">
-      <div class="gv-card">
+    <!-- ============ T-B1 Dalga 6 / §15.3 (Denetim Bulgu #1) — "Termin Gecikmeleri"
+         içeriği (#spGecikmeList) `.gv-botsec`'e TAŞINDI (#botsecSpGecikme, sayfa altı)
+         — puantaj'ın çözümü: tab SİLİNMEDİ, burada yalnız o bölüme ve YENİ eklenen 3
+         botsec'e scrollIntoView ile götüren özet kartları kalır (data-jump, aşağıdaki
+         betikte dinlenir). renderSpGecikme() JS DEĞİŞMEDİ, yalnız mount'un DOM konumu
+         taşındı — id AYNI (#spGecikmeList). ============ -->
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Sipariş Uyarıları</div></div>
+      <div class="gc-body">
+        <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Termin gecikmeleri, kritik ve onay bekleyen siparişler ile son hareketler sayfanın en altında toplanır — karta tıklayınca ilgili bölüme inersiniz.</p>
+        <div class="stat-grid">
+          <button type="button" class="hstat hstat-btn danger" data-jump="#botsecSpGecikme"><div class="hstat-num" id="spGecikmeSayisi">1</div><div class="hstat-lbl">Termin gecikmesi</div></button>
+          <button type="button" class="hstat hstat-btn warn" data-jump="#botsecSpKritik"><div class="hstat-num" id="spKritikSayisi">1</div><div class="hstat-lbl">Kritik uyarı — kısmi teslim, yüksek tutarlı sipariş</div></button>
+          <button type="button" class="hstat hstat-btn warn" data-jump="#botsecSpBekleyen"><div class="hstat-num" id="spBekleyenSayisi">1</div><div class="hstat-lbl">Onay bekleyen (taslak) sipariş</div></button>
+          <button type="button" class="hstat hstat-btn" data-jump="#botsecSpSonHareket"><div class="hstat-num" id="spSonHareketSayisi">4</div><div class="hstat-lbl">Son sipariş hareketi</div></button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- ============ T-B1 Dalga 6 — §13.2/§15.3 alt bölüm (spec-v3a-ortak.md §4). Ana
+         tablodan (#tblSiparis) SONRA, sayfanın gerçek altında — hangi tab açık olursa
+         olsun HER ZAMAN görünür. Termin Gecikmeleri TAŞINDI (yukarıdaki yorum); Kritik
+         Uyarılar/Bekleyen Onaylar/Son Hareketler YENİ — #tblSiparis satırlarından
+         (data-f/data-tarih) GERÇEKTEN türetilir (renderSpKritik/renderSpBekleyen/
+         renderSpSonHareket, aşağıdaki betik), uydurma sayı yok. sef rol-budamasından
+         SONRA çalışır (bu bloktan önceki tr.remove() üstte), rol-budanmış veriyi
+         doğru yansıtır. ============ -->
+    <div class="gv-botsec" id="botsecSpGecikme">
+      <div class="gv-card" style="margin:0">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-truck-ramp-box"></i> Termin Gecikmeleri</div></div>
         <div class="gc-body flush">
           <div class="act-list" id="spGecikmeList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecSpKritik">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+        <div class="gc-body">
+          <div class="hl-list" id="spKritikList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecSpBekleyen">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Bekleyen Onaylar</div></div>
+        <div class="gc-body">
+          <div class="hl-list" id="spBekleyenList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecSpSonHareket">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="spSonHareketList"></div>
         </div>
       </div>
     </div>
@@ -580,9 +658,79 @@
         + '<div class="act-info"><b>' + no + ' · ' + tdr + '</b><span>' + tutar + ' — ' + termin + '</span></div></div>';
     });
     wrap.innerHTML = html;
+    var sayiEl = document.getElementById('spGecikmeSayisi');
+    if(sayiEl) sayiEl.textContent = rows.length;
   }
+
+  /* ============ T-B1 Dalga 6 — §15.3 "Kritik Uyarılar"/"Bekleyen Onaylar"/"Son
+     Hareketler" alt bölümleri. #tblSiparis satırlarından (data-f/data-tarih) GERÇEKTEN
+     türetilir — renderSpGecikme()'nin AYNI DOM-okuma desenini kullanır, uydurma sayı
+     yok. sef rol-budamasından SONRA çalışır (bu bloktan önceki tr.remove() üstte). ============ */
+  function renderSpKritik(){
+    var tbl = document.getElementById('tblSiparis'); var wrap = document.getElementById('spKritikList');
+    if(!tbl || !wrap) return;
+    var rows = tbl.querySelectorAll('tbody tr[data-f="kismi"]');
+    var html = '';
+    rows.forEach(function(tr){
+      var noEl = tr.querySelector('.sp-info b'); var no = noEl ? noEl.textContent : '—';
+      var tdrEl = tr.querySelector('[data-col="tedarikci"]'); var tdr = tdrEl ? tdrEl.textContent.trim() : '—';
+      var tutarEl = tr.querySelector('[data-col="tutar"]'); var tutar = tutarEl ? tutarEl.textContent.trim() : '—';
+      var terminEl = tr.querySelector('.kalan-pill'); var termin = terminEl ? terminEl.textContent.trim() : '—';
+      html += '<div class="hl-row risk-warn"><i class="fa-solid fa-triangle-exclamation"></i><span><b>' + no + ' · ' + tdr + '</b> — ' + tutar + ' — ' + termin + ' (kısmi teslim, yüksek tutarlı sipariş henüz tam kapanmadı).</span></div>';
+    });
+    wrap.innerHTML = html || '<div class="hl-row"><i class="fa-solid fa-check"></i><span>Kısmi teslim / kritik durumda sipariş yok.</span></div>';
+    var sayiEl = document.getElementById('spKritikSayisi');
+    if(sayiEl) sayiEl.textContent = rows.length;
+  }
+  function renderSpBekleyen(){
+    var tbl = document.getElementById('tblSiparis'); var wrap = document.getElementById('spBekleyenList');
+    if(!tbl || !wrap) return;
+    var rows = tbl.querySelectorAll('tbody tr[data-f="taslak"]');
+    var html = '';
+    rows.forEach(function(tr){
+      var noEl = tr.querySelector('.sp-info b'); var no = noEl ? noEl.textContent : '—';
+      var tdrEl = tr.querySelector('[data-col="tedarikci"]'); var tdr = tdrEl ? tdrEl.textContent.trim() : '—';
+      var tutarEl = tr.querySelector('[data-col="tutar"]'); var tutar = tutarEl ? tutarEl.textContent.trim() : '—';
+      html += '<div class="hl-row risk-warn"><i class="fa-solid fa-hourglass-half"></i><span><b>' + no + ' · ' + tdr + '</b> — ' + tutar + ' — taslak durumda, henüz onaylanmadı; termin belirlenmedi.</span></div>';
+    });
+    wrap.innerHTML = html || '<div class="hl-row"><i class="fa-solid fa-check"></i><span>Onay bekleyen (taslak) sipariş yok.</span></div>';
+    var sayiEl = document.getElementById('spBekleyenSayisi');
+    if(sayiEl) sayiEl.textContent = rows.length;
+  }
+  function renderSpSonHareket(){
+    var tbl = document.getElementById('tblSiparis'); var wrap = document.getElementById('spSonHareketList');
+    if(!tbl || !wrap) return;
+    var rows = Array.prototype.slice.call(tbl.querySelectorAll('tbody tr[data-tarih]'));
+    rows.sort(function(a, b){ return b.getAttribute('data-tarih').localeCompare(a.getAttribute('data-tarih')); });
+    var son = rows.slice(0, 4);
+    wrap.innerHTML = son.map(function(tr){
+      var noEl = tr.querySelector('.sp-info b'); var no = noEl ? noEl.textContent : '—';
+      var tarihEl = tr.querySelector('.sp-info span'); var tarih = tarihEl ? tarihEl.textContent.trim() : '—';
+      var tdrEl = tr.querySelector('[data-col="tedarikci"]'); var tdr = tdrEl ? tdrEl.textContent.trim() : '—';
+      var tutarEl = tr.querySelector('[data-col="tutar"]'); var tutar = tutarEl ? tutarEl.textContent.trim() : '—';
+      var durumEl = tr.querySelector('[data-badge2]'); var durum = durumEl ? durumEl.textContent.trim() : '—';
+      return '<div class="act-row"><div class="act-ico"><i class="fa-solid fa-cart-flatbed"></i></div>'
+        + '<div class="act-info"><b>' + no + ' · ' + tdr + '</b><span>' + tutar + ' — ' + durum + '</span></div>'
+        + '<div class="act-time">' + tarih + '</div></div>';
+    }).join('');
+    var sayiEl = document.getElementById('spSonHareketSayisi');
+    if(sayiEl) sayiEl.textContent = son.length;
+  }
+
+  /* Uyarılar tab'ındaki özet kartları — ilgili .gv-botsec bölümüne kaydırır (gerçek
+     işlev, placeholder değil) — crm-operasyon-puantaj.html'in BİREBİR devraldığı desen. */
+  document.addEventListener('click', function(e){
+    var jb = e.target.closest('[data-jump]');
+    if(!jb) return;
+    var target = document.querySelector(jb.getAttribute('data-jump'));
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
   redrawSpCharts();
   renderSpGecikme();
+  renderSpKritik();
+  renderSpBekleyen();
+  renderSpSonHareket();
   if(window.gvTabs){
     gvTabs.init({
       mount: '#spTabs', screen: 'siparisler', varsayilan: 'liste',

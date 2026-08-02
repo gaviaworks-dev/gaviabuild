@@ -47,6 +47,17 @@
 
 /* §17 arşiv — görünürlük tblTedarikciApply() (tr.hidden) tarafından karar verilir;
    ayrı bir data-arsiv/gv-show-arsiv CSS kuralı YOK (K-220 dersi: tek motor). */
+
+/* ============ T-B1 Dalga 6 / §15.3 — .gv-botsec içerik deseni (crm-operasyon-
+   puantaj.html'in hl-list/hl-row'ının BİREBİR devralımı; ui.css'te PAYLAŞILMAZ,
+   K-220 dersi gereği her sayfa kendi <style>'ına kopyalar). ============ */
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
 </style>
 </head>
 <body data-sec="satinalma" data-screen="tedarikciler">
@@ -209,6 +220,41 @@
       </div>
     </div>
 
+    <!-- ============ T-B1 Dalga 6 — §13.2/§15.3 alt bölüm (spec-v3a-ortak.md §4, Denetim
+         Bulgu #1: bu dosyada tek botsec vardı ama içeriği 7 kanonik alandan hiçbiriyle
+         eşleşmiyordu). Ana tablodan (#tblTedarikci) SONRA, sayfanın gerçek altında —
+         hangi tab açık olursa olsun HER ZAMAN görünür. Üç blok TDR dizisinden GERÇEKTEN
+         türetilir (renderTdrGecikme/renderTdrKritik/renderTdrSonHareket, aşağıdaki
+         betik), uydurma sayı yok. "Bekleyen Onaylar" bilinçli olarak EKLENMEDİ: TDR
+         dizisinde onay durumu alanı YOK, gerçek bir bekleyen onay verisi yok (bkz
+         tasks/kararlar.md). ============ -->
+    <div class="gv-botsec" id="botsecTdrGecikme">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-truck-ramp-box"></i> Gecikmeler</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="tdrGecikmeList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecTdrKritik">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+        <div class="gc-body">
+          <div class="hl-list" id="tdrKritikList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecTdrSonHareket">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="tdrSonHareketList"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ §13.2/§15.3 alt bölüm — tedarikçi karşılaştırma (T-Y4 Dalga 3). Bu
          sayfada §8.3'ün saydığı "tedarikçi karşılaştırma" kalemi anlamlıdır; TDR
          dizisinden performans sırasına göre GERÇEKTEN türetilir. ============ -->
@@ -349,9 +395,42 @@
     }).join('');
     document.getElementById('tdrKarsilastirma').innerHTML = html;
   }
+
+  /* ============ T-B1 Dalga 6 — §15.3 "Gecikmeler"/"Kritik Uyarılar"/"Son Hareketler"
+     alt bölümleri. TDR dizisinden (yukarıdaki kanonik mock veri) GERÇEKTEN türetilir —
+     renderTdrKarsilastirma()'nın AYNI kaynağını okur, uydurma sayı yok. ============ */
+  function renderTdrGecikme(){
+    var wrap = document.getElementById('tdrGecikmeList'); if(!wrap) return;
+    var gecikmeli = TDR.filter(function(t){ return t.gecikme; });
+    wrap.innerHTML = gecikmeli.map(function(t){
+      var not = t.warn ? 'Aktif gecikme riski taşıyor' : 'Geçmişte gecikme kaydı var';
+      return '<div class="act-row"><div class="act-ico ' + (t.warn ? 'danger' : 'warn') + '"><i class="fa-solid fa-truck-ramp-box"></i></div>'
+        + '<div class="act-info"><b>' + t.ad + ' — ' + t.kat + '</b><span>' + not + (t.aktifSip ? ' · ' + t.aktifSip : '') + '</span></div></div>';
+    }).join('') || '<div class="act-row"><div class="act-ico ok"><i class="fa-solid fa-circle-check"></i></div><div class="act-info"><b>Gecikme kaydı yok</b><span>Tüm tedarikçiler zamanında teslim ediyor.</span></div></div>';
+  }
+  function renderTdrKritik(){
+    var wrap = document.getElementById('tdrKritikList'); if(!wrap) return;
+    var kritikler = TDR.filter(function(t){ return t.warn; });
+    wrap.innerHTML = kritikler.map(function(t){
+      return '<div class="hl-row risk"><i class="fa-solid fa-gauge-high"></i><span><b>' + t.ad + '</b> performans skoru %' + t.skor + ' — aktif gecikme riski taşıyor (' + (t.aktifSip || '—') + '), ' + t.kat + ' kategorisinde.</span></div>';
+    }).join('') || '<div class="hl-row"><i class="fa-solid fa-check"></i><span>Kritik seviyede tedarikçi yok.</span></div>';
+  }
+  function renderTdrSonHareket(){
+    var wrap = document.getElementById('tdrSonHareketList'); if(!wrap) return;
+    var aktifSiparisli = TDR.filter(function(t){ return t.aktifSip; })
+      .slice().sort(function(a, b){ return b.aktifSip.localeCompare(a.aktifSip); });
+    wrap.innerHTML = aktifSiparisli.map(function(t){
+      return '<div class="act-row"><div class="act-ico"><i class="fa-solid fa-cart-flatbed"></i></div>'
+        + '<div class="act-info"><b>' + t.ad + '</b><span>' + t.kat + ' — aktif sipariş</span></div>'
+        + '<div class="act-time">' + t.aktifSip + '</div></div>';
+    }).join('');
+  }
   redrawTdrCharts();
   renderTdrOzet();
   renderTdrKarsilastirma();
+  renderTdrGecikme();
+  renderTdrKritik();
+  renderTdrSonHareket();
   if(window.gvTabs){
     gvTabs.init({
       mount: '#tdrTabs', screen: 'tedarikciler', varsayilan: 'liste',

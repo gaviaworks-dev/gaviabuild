@@ -94,6 +94,29 @@ a.gcell-sub:hover{color:var(--acc-ink)}
 .av-modal-ov.open{opacity:1;pointer-events:auto}
 .av-modal-ov .gv-modal{transform:translateY(10px) scale(.985);transition:transform .22s var(--ease)}
 .av-modal-ov.open .gv-modal{transform:none}
+
+/* ============ Dalga 6 (Denetim Bulgu #1, §8.3/§15.3) — "Uyarılar" tab'ı özet-düğme
+   görünümüne çevrildi (crm-operasyon-puantaj.html deseni). stat-grid/hstat/hstat-btn
+   ui.css'te YOK — sayfa-lokal (K-220 dersi), puantaj'ın tanımıyla BİREBİR. ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:640px){ .stat-grid{grid-template-columns:1fr} }
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.warn .hstat-num{color:var(--warn)}
+.hstat.danger .hstat-num{color:var(--danger)}
+.hstat-btn{border:none;background:var(--bg);cursor:pointer;text-align:left;font:inherit;width:100%;transition:.15s var(--ease)}
+.hstat-btn:hover{background:var(--paper);box-shadow:var(--sh-sm)}
+.hstat-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* Son Hareketler/Kritik Uyarılar botsec içeriği için — hl-list/hl-row ui.css'te YOK
+   (K-220), crm-finans-kurum.html'in sayfa-lokal pattern'i devralındı. */
+.hl-list{display:flex;flex-direction:column;gap:2px}
+.hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
+.hl-row:last-child{border-bottom:none}
+.hl-row i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none;width:14px;text-align:center}
+.hl-row b{color:var(--ink);font-weight:700}
+.hl-row.risk i{color:var(--danger)}
+.hl-row.risk-warn i{color:var(--warn)}
 </style>
 </head>
 <body data-sec="personel" data-screen="avans">
@@ -339,11 +362,20 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       </div>
     </div>
 
+    <!-- ============ Dalga 6 (Denetim Bulgu #1) — "Uyarılar" tab'ı artık özet-düğme
+         görünümü (crm-operasyon-puantaj.html çözümü); ham içerik aşağıdaki .gv-botsec
+         bloklarına TAŞINDI. Sayılar botsec'lerle BİREBİR: bekleyen 2 (Musa Erdem, Ali
+         Vural), son hareket 3, kritik 2 (Baran Yıldız reddedildi + Aylin Koç revize). ============ -->
     <div class="gv-tabpanel" id="panel-avans-uyarilar">
       <div class="gv-card">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Bekleyen Onaylar</div></div>
-        <div class="gc-body flush">
-          <div class="act-list" id="avansUyariList"></div>
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Avans Uyarıları</div></div>
+        <div class="gc-body">
+          <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Bekleyen onaylar, son hareketler ve kritik uyarılar sayfanın en altında toplanır — karta tıklayınca ilgili bölüme inersiniz.</p>
+          <div class="stat-grid">
+            <button type="button" class="hstat hstat-btn warn" data-jump="#botsecAvansBekleyen"><div class="hstat-num">2</div><div class="hstat-lbl">Onay bekleyen avans talebi — Musa Erdem, Ali Vural</div></button>
+            <button type="button" class="hstat hstat-btn" data-jump="#botsecAvansSonHareket"><div class="hstat-num">3</div><div class="hstat-lbl">Son hareket kaydı</div></button>
+            <button type="button" class="hstat hstat-btn danger" data-jump="#botsecAvansKritik"><div class="hstat-num">2</div><div class="hstat-lbl">Kritik uyarı — reddedilen + revize istenen</div></button>
+          </div>
         </div>
       </div>
     </div>
@@ -366,6 +398,47 @@ a.gcell-sub:hover{color:var(--acc-ink)}
       <div class="gc-foot avans-detail-acts" id="avansDetailActs" hidden></div>
       <div class="avans-detail-note" id="avansDetailNote" hidden><i class="fa-solid fa-circle-info"></i> <span>Bu kayıtta sıradaki onay adımı sizde değil.</span></div>
     </div>
+    </div>
+
+    <!-- ============ Dalga 6 (Denetim Bulgu #1) — Bekleyen Onaylar (eski "Uyarılar" tab
+         içeriği, #avansUyariList id/JS DEĞİŞMEDİ — yalnız konumu tab'dan botsec'e
+         taşındı, renderAvUyarilar() aynı elemana yazmaya devam eder). ============ -->
+    <div class="gv-botsec" id="botsecAvansBekleyen">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Bekleyen Onaylar</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="avansUyariList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Dalga 6 — Son Hareketler: AVANS nesnesinin steps[].tarih alanlarından
+         en yeni 3 hareket TÜRETİLDİ (uydurma yok). ============ -->
+    <div class="gv-botsec" id="botsecAvansSonHareket">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row"><i class="fa-solid fa-file-pen"></i><span><b>AVN-2026-015</b> · Musa Erdem — 1 Temmuz'da oluşturuldu, Şantiye Şefi onayında bekliyor.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-thumbs-up"></i><span><b>AVN-2026-014</b> · Ali Vural — 29 Haziran'da Şantiye Şefi onayladı, Muhasebe onayında bekliyor.</span></div>
+            <div class="hl-row"><i class="fa-solid fa-check"></i><span><b>AVN-2026-013</b> · Hasan Demirci — 20 Haziran'da ödendi, banka listesine eklendi.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Dalga 6 — Kritik Uyarılar: reddedilen + revize istenen avans talepleri,
+         AVANS nesnesindeki steps[].not gerekçeleriyle BİREBİR (uydurma yok). ============ -->
+    <div class="gv-botsec" id="botsecAvansKritik">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
+        <div class="gc-body">
+          <div class="hl-list">
+            <div class="hl-row risk"><i class="fa-solid fa-xmark"></i><span><b>AVN-2026-012</b> · Baran Yıldız — reddedildi (11 Haziran): Haziran ayı kasa limiti bu tutar (₺6.500) için yetersiz; Temmuz bordrosunda değerlendirilecek.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-rotate-left"></i><span><b>AVN-2026-011</b> · Aylin Koç — revize istendi (4 Haziran): Tutar gerekçesi eksik, hangi harcama kalemi için olduğu belirtilip yeniden gönderilmeli.</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -1055,6 +1128,15 @@ a.gcell-sub:hover{color:var(--acc-ink)}
   }
   document.getElementById('avDosyaClose').addEventListener('click', function(){ dosyaOv.classList.remove('open'); });
   dosyaOv.addEventListener('click', function(e){ if(e.target === dosyaOv) dosyaOv.classList.remove('open'); });
+
+  /* ============ Dalga 6 (Denetim Bulgu #1) — Uyarılar tab'ındaki özet düğmeleri
+     ilgili .gv-botsec bölümüne kaydırır (puantaj'ın data-jump deseniyle BİREBİR). ============ */
+  document.addEventListener('click', function(e){
+    var jb = e.target.closest('[data-jump]');
+    if(!jb) return;
+    var target = document.querySelector(jb.getAttribute('data-jump'));
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  });
 })();
 </script>
 </body>

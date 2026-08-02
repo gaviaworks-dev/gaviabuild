@@ -50,6 +50,13 @@
 .hstat.ok .hstat-num{color:var(--ok)}
 .hstat.warn .hstat-num{color:var(--warn)}
 .hstat.danger .hstat-num{color:var(--danger)}
+/* ============ T-B1 Dalga 6 — "Uyarılar" tab'ının .hstat kartları tıklanabilir
+   butona dönüşür ("o bölüme götürür", crm-operasyon-puantaj.html'in BİREBİR
+   devraldığı desen); .stat-grid/.hstat tanımı yukarıda zaten var, yalnız buton
+   varyantı eklenir. ============ */
+.hstat-btn{border:none;cursor:pointer;text-align:left;font:inherit;width:100%;transition:.15s var(--ease)}
+.hstat-btn:hover{background:var(--paper);box-shadow:var(--sh-sm)}
+.hstat-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .hl-list{display:flex;flex-direction:column;gap:2px}
 .hl-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--line)}
 .hl-row:last-child{border-bottom:none}
@@ -511,16 +518,60 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     </div>
 
     <div class="gv-tabpanel" id="panel-plx-uyarilar">
-    <!-- ============ Dalga 4 / T-S4 / §12.1 madde 6 — gerçek uyarılar: pasif kart, düşük
-         bakiye, uzun süredir kullanılmayan kart. Hepsi buildUyarilar() ile KARTLAR/PASIF
-         verisinden TÜRETİLDİ (aşağıdaki betik), uydurma metin YOK. ============ -->
+    <!-- ============ T-B1 Dalga 6 / §15.3 (Denetim Bulgu #1) — Uyarılar tab'ının içeriği
+         (Dalga 4/T-S4'ün 4 gerçek uyarısı: 1 pasif kart, 2 düşük bakiyeli, 1 en uzun
+         süredir kullanılmayan) `.gv-botsec`'e TAŞINDI (#botsecPlxUyari, sayfa altı) —
+         puantaj'ın çözümü: tab SİLİNMEDİ, burada yalnız o bölüme (ve YENİ eklenen Son
+         Hareketler botsec'ine) scrollIntoView ile götüren özet kartları kalır (data-jump,
+         aşağıdaki betikte dinlenir). buildUyarilar() JS DEĞİŞMEDİ, yalnız mount'un DOM
+         konumu taşındı — id'ler AYNI (#plxUyariList). Sayılar gerçek DOM'dan okunur. ============ -->
     <div class="gv-card">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kart Uyarıları</div></div>
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Pluxee Uyarıları</div></div>
       <div class="gc-body">
-        <div class="hl-list" id="plxUyariList"></div>
-        <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Kaynak: Kart Listesi'ndeki 13 kaydın kendi bakiye/durum/son işlem alanları — pasif kart (durum), düşük bakiye (eşik ₺850, dönem başı yüklemesi ₺1.250'nin altı) ve en eski "son işlem" tarihi bu veriden türetildi, uydurma sayı yok.</div>
+        <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Kart uyarıları ve son hareketler sayfanın en altında toplanır — karta tıklayınca ilgili bölüme inersiniz.</p>
+        <div class="stat-grid cols-2">
+          <button type="button" class="hstat hstat-btn warn" data-jump="#botsecPlxUyari"><div class="hstat-num" id="plxUyariSayisi">4</div><div class="hstat-lbl">Kart uyarısı — pasif kart, düşük bakiye, uzun süredir kullanılmayan kart</div></button>
+          <button type="button" class="hstat hstat-btn" data-jump="#botsecPlxSonHareket"><div class="hstat-num" id="plxSonHareketSayisi">4</div><div class="hstat-lbl">Son hareket kaydı</div></button>
+        </div>
       </div>
     </div>
+    </div>
+
+    <!-- ============ T-B1 Dalga 6 — §8.3/§15.3 alt bölüm (spec-v3a-ortak.md §4). Ana
+         tablodan (#tblPlxKart) SONRA, sayfanın gerçek altında — hangi tab açık olursa
+         olsun HER ZAMAN görünür (tab sistemi dışında). Kart Uyarıları TAŞINDI (yukarıdaki
+         yorum); Son Hareketler YENİ — KARTLAR[].tx dizisinin tamamından tarihe göre
+         azalan ilk 4 kayıt (buildPlxSonHareket(), aşağıdaki betik), uydurma sayı yok.
+         "Bekleyen Onaylar" bilinçli olarak EKLENMEDİ: ONAY_LBL eşlemesi gereği tüm
+         hareketler otomatik onaylı (yükleme→Onaylandı, harcama→Otomatik Onaylı),
+         gerçek bir bekleyen onay YOK (bkz tasks/kararlar.md). ============ -->
+    <div class="gv-botsec" id="botsecPlxUyari">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kart Uyarıları</div></div>
+        <div class="gc-body">
+          <div class="hl-list" id="plxUyariList">
+            <div class="hl-row risk-warn"><i class="fa-solid fa-ban"></i><span><b>Sadık Öz •6253</b> kartı pasif — kayıp bildirimi, 30 Haz 2026'den beri kullanılmıyor.</span></div>
+            <div class="hl-row risk"><i class="fa-solid fa-wallet"></i><span><b>Ali Vural •4471</b> bakiyesi ₺830 — dönem başı yüklemenin (₺1.250) altında, kartlar arasında en düşük bakiyelerden biri (eşik: ₺850).</span></div>
+            <div class="hl-row risk"><i class="fa-solid fa-wallet"></i><span><b>Şükrü Aslan •5871</b> bakiyesi ₺840 — dönem başı yüklemenin (₺1.250) altında, kartlar arasında en düşük bakiyelerden biri (eşik: ₺850).</span></div>
+            <div class="hl-row"><i class="fa-solid fa-clock-rotate-left"></i><span><b>Halil Güneş •5882</b> son işlemini 30 Haz 2026'te gördü — dönemin diğer kartlarına göre en durgun kart (en eski "son işlem" tarihi).</span></div>
+          </div>
+          <div class="rep-src"><i class="fa-solid fa-circle-info"></i> Kaynak: Kart Listesi'ndeki 13 kaydın kendi bakiye/durum/son işlem alanları — pasif kart (durum), düşük bakiye (eşik ₺850, dönem başı yüklemesi ₺1.250'nin altı) ve en eski "son işlem" tarihi bu veriden türetildi, uydurma sayı yok.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gv-botsec" id="botsecPlxSonHareket">
+      <div class="gv-card" style="margin:0">
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-clock-rotate-left"></i> Son Hareketler</div></div>
+        <div class="gc-body flush">
+          <div class="act-list" id="plxSonHareketList">
+            <div class="act-row"><div class="act-ico"><i class="fa-solid fa-arrow-down"></i></div><div class="act-info"><b>Selim Doğan •4504 — Harcama ₺360</b><span>Öğle yemeği — PLX-2026-048</span></div><div class="act-time">2 Tem</div></div>
+            <div class="act-row"><div class="act-ico"><i class="fa-solid fa-arrow-down"></i></div><div class="act-info"><b>Veli Şimşek •4526 — Harcama ₺340</b><span>Sarf malzeme — PLX-2026-051</span></div><div class="act-time">2 Tem</div></div>
+            <div class="act-row"><div class="act-ico"><i class="fa-solid fa-arrow-down"></i></div><div class="act-info"><b>Osman Polat •5904 — Harcama ₺350</b><span>Bakkal alışverişi — PLX-2026-049</span></div><div class="act-time">2 Tem</div></div>
+            <div class="act-row"><div class="act-ico"><i class="fa-solid fa-arrow-down"></i></div><div class="act-info"><b>İlyas Kurt •6242 — Harcama ₺340</b><span>Ekmek/pastane alışverişi — PLX-2026-050</span></div><div class="act-time">2 Tem</div></div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -1361,25 +1412,61 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
   }
   function buildUyarilar(){
     var el = document.getElementById('plxUyariList'); if(!el) return;
-    var h = '';
+    var h = '', cnt = 0;
     KARTLAR.filter(function(k){ return k.kartDurum === 'pasif'; }).forEach(function(k){
+      cnt++;
       h += '<div class="hl-row risk-warn"><i class="fa-solid fa-ban"></i><span><b>' + k.ad + ' •' + k.no + '</b> kartı pasif — yönetim tarafından pasife alındı, yeni yükleme/harcama işlenemiyor.</span></div>';
     });
+    cnt++;
     h += '<div class="hl-row risk-warn"><i class="fa-solid fa-ban"></i><span><b>' + PASIF.ad + ' •' + PASIF.no + '</b> kartı pasif — kayıp bildirimi, ' + PASIF.son + '\'den beri kullanılmıyor.</span></div>';
     var DUSUK_ESIK = 850;
     KARTLAR.filter(function(k){ return k.kartDurum === 'aktif' && k.bakiye < DUSUK_ESIK; })
       .sort(function(a, b){ return a.bakiye - b.bakiye; })
       .forEach(function(k){
+        cnt++;
         h += '<div class="hl-row risk"><i class="fa-solid fa-wallet"></i><span><b>' + k.ad + ' •' + k.no + '</b> bakiyesi ' + fmtTL(k.bakiye) + ' — dönem başı yüklemenin (' + fmtTL(1250) + ') altında, kartlar arasında en düşük bakiyelerden biri (eşik: ' + fmtTL(DUSUK_ESIK) + ').</span></div>';
       });
     var aktifKartlar = KARTLAR.filter(function(k){ return k.kartDurum === 'aktif'; });
     if(aktifKartlar.length){
       var enEski = aktifKartlar.reduce(function(a, b){ return sonSiraKey(a.son) <= sonSiraKey(b.son) ? a : b; });
+      cnt++;
       h += '<div class="hl-row"><i class="fa-solid fa-clock-rotate-left"></i><span><b>' + enEski.ad + ' •' + enEski.no + '</b> son işlemini ' + enEski.son + '\'te gördü — dönemin diğer kartlarına göre en durgun kart (en eski "son işlem" tarihi).</span></div>';
     }
     el.innerHTML = h || '<div class="hl-row"><i class="fa-solid fa-check"></i><span>Uyarı yok — tüm kartlar aktif ve dönem başı yüklemesine yakın bakiyede.</span></div>';
+    var sayiEl = document.getElementById('plxUyariSayisi');
+    if(sayiEl) sayiEl.textContent = cnt;
   }
   buildUyarilar();
+
+  /* ============ T-B1 Dalga 6 — §15.3 "Son Hareketler" alt bölümü. KARTLAR[].tx
+     dizisinin TAMAMINDAN (12 aktif kart) tarihe göre azalan sırayla ilk 4 kayıt —
+     statik HTML bake'iyle BİREBİR aynı içeriği üretir (D18-B2 idiyomu), uydurma
+     sayı yok. ============ */
+  function buildPlxSonHareket(){
+    var el = document.getElementById('plxSonHareketList'); if(!el) return;
+    var tumTx = [];
+    KARTLAR.forEach(function(k){ k.tx.forEach(function(t){ tumTx.push({k:k, t:t}); }); });
+    tumTx.sort(function(a, b){ return isoFromUzun(b.t.tarihUzun).localeCompare(isoFromUzun(a.t.tarihUzun)); });
+    var son4 = tumTx.slice(0, 4);
+    el.innerHTML = son4.map(function(x){
+      var isYukleme = x.t.tur === 'yukleme';
+      return '<div class="act-row"><div class="act-ico'+(isYukleme ? ' ok' : '')+'"><i class="fa-solid fa-arrow-'+(isYukleme ? 'up' : 'down')+'"></i></div>'
+        + '<div class="act-info"><b>'+x.k.ad+' •'+x.k.no+' — '+(isYukleme ? 'Yükleme' : 'Harcama')+' '+fmtTL(x.t.tutar)+'</b><span>'+x.t.desc+' — '+x.t.no+'</span></div>'
+        + '<div class="act-time">'+x.t.tarih+'</div></div>';
+    }).join('');
+    var sayiEl = document.getElementById('plxSonHareketSayisi');
+    if(sayiEl) sayiEl.textContent = son4.length;
+  }
+  buildPlxSonHareket();
+
+  /* Uyarılar tab'ındaki özet kartları — ilgili .gv-botsec bölümüne kaydırır (gerçek
+     işlev, placeholder değil) — crm-operasyon-puantaj.html'in BİREBİR devraldığı desen. */
+  document.addEventListener('click', function(e){
+    var jb = e.target.closest('[data-jump]');
+    if(!jb) return;
+    var target = document.querySelector(jb.getAttribute('data-jump'));
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  });
 
   /* ---- Çıktılar tab — [§12.1 madde 5] mevcut crm-operasyon-pluxee-cikti.html bağlantısı
      ve gvExport akışına PROXY (T-Y1/K-341 emsali: "btnCiktiTabOpen → btnHaftalikCikti.
