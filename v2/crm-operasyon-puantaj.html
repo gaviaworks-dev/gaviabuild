@@ -310,43 +310,10 @@ th.is-today .dh-d{color:var(--acc-ink)}
   .pt-bulkbar .bb-acts .btn{flex:1}
 }
 
-/* ============ §11.2 — Puantaj Çıktısı Al modalı. Overlay/kutu SINIFLARI kasıtlı olarak
-   ui.css .gv-modal-ov'dan FARKLI (.ck-modal-ov/.ck-modal) — gvConfirm() kendi modalını
-   açmadan önce document.querySelector('.gv-modal-ov') ile çakışma kontrolü yapıyor;
-   sayfada DAİMA DOM'da duran statik bir modal aynı sınıfı taşırsa gvConfirm KALICI
-   OLARAK bloklanır. Görsel dil ui.css .gv-modal ile birebir, yalnız isim ayrıştırıldı. ---- */
-.ck-modal-ov{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:22px;
-  background:rgba(2,8,55,.55);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
-  opacity:0;pointer-events:none;transition:opacity .2s var(--ease)}
-.ck-modal-ov.open{opacity:1;pointer-events:auto}
-/* max-height/overflow-y KASITLI OLARAK YOK — gvDateRange popover'ı (§13) position:absolute
-   ile en yakın konumlanmış atadan taşar; bir overflow:auto ata bu popover'ı KIRPAR (tıklama
-   hedefi görünmez hâle gelir). İçerik yüksekliği (seçili kişi listesi) bu yüzden AŞAĞIDA
-   satır sayısıyla sınırlanır (renderCiktiModal), modal kendisi taşmaz. */
-.ck-modal{width:min(620px,100%);background:var(--paper);border:1px solid var(--line);
-  border-radius:var(--r-lg);box-shadow:var(--sh-lg);padding:26px 26px 22px;
-  transform:translateY(10px) scale(.985);transition:transform .22s var(--ease)}
-.ck-modal-ov.open .ck-modal{transform:none}
-.ck-modal h3{font-size:18px;margin-bottom:4px;letter-spacing:-.01em}
-.ck-modal>p{font-size:12.5px;color:var(--muted);margin-bottom:18px}
-.ck-sec{margin-bottom:18px}
-.ck-sec-lbl{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
-.ck-opts{display:flex;flex-wrap:wrap;gap:8px}
-.ck-opt{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:var(--r-pill);
-  border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
-.ck-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
-.ck-opt.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
-.ck-opt.is-off{opacity:.42;cursor:not-allowed}
-.ck-detay{margin-top:11px;padding:12px 14px;background:var(--bg);border-radius:var(--r-md);font-size:12.5px;color:var(--ink-2);line-height:1.55}
-.ck-detay b{color:var(--ink)}
-.ck-detay .gfield{margin-top:8px}
-.ck-warn{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:12px;font-weight:700;color:var(--warn)}
-.ck-modal-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;padding-top:16px;border-top:1px solid var(--line)}
-@media(max-width:640px){
-  .ck-modal{padding:20px 18px 18px}
-  .ck-opts{flex-direction:column}
-  .ck-opt{width:100%;justify-content:center}
-}
+/* [G-1] §11.2'nin sayfaya özel "Puantaj Çıktısı Al" modali (.ck-modal-ov/.ck-modal +
+   .ck-opt/.ck-sec/.ck-detay/.ck-warn sınıfları) KALDIRILDI — dışa aktarma artık ortak
+   gvExport modali (ui.js/ui.css .gv-export-modal) üzerinden yürüyor, sayfada ikinci bir
+   çıktı modali kalmadı. Sınıflar başka yerde kullanılmadığı için CSS'i de gitti. */
 
 /* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği: KPI/grafik/devamsızlık/son
    hareketler. hstat/stat-grid/hl-list ui.css'te YOK — crm-panel-rapor-santiye.html'in
@@ -541,7 +508,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
         <span class="bb-count" id="ptBulkCount">0 kişi seçildi</span>
         <div class="bb-acts">
           <button type="button" class="btn btn-ghost btn-sm" id="ptBulkClear" data-no-confirm><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
-          <button type="button" class="btn btn-acc btn-sm" id="ptBulkCikti" data-no-confirm><i class="fa-solid fa-print"></i> Seçili Kişilerin Çıktısını Al</button>
+          <button type="button" class="btn btn-acc btn-sm" id="ptBulkCikti" data-no-confirm><i class="fa-solid fa-download"></i> Seçili Kişileri Dışa Aktar</button>
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
@@ -710,18 +677,18 @@ th.is-today .dh-d{color:var(--acc-ink)}
       </div>
     </section>
 
-    <!-- ============ T-Y1 — "Çıktılar" tab'ı (§9.1 madde 5). Gerçek çıktı akışı: mevcut
-         çıktı modalını (id=ciktiModalOv, sayfa sonunda — sabit konumlu overlay olduğu
-         için taşınmadı) AÇAR + crm-operasyon-puantaj-cikti.html'e doğrudan bağlantı verir.
-         Placeholder DEĞİL — btnCiktiTabOpen mevcut btnHaftalikCikti'nin TÜM onay/seçim
-         mantığını tetikler (script bloğunda click() proxy). ============ -->
+    <!-- ============ T-Y1 — "Çıktılar" tab'ı (§9.1 madde 5). Gerçek çıktı akışı: liste
+         çubuğundaki TEK #btnPtDisaAktar tetikleyicisine PROXY yapar (script bloğunda
+         click()) + crm-operasyon-puantaj-cikti.html'e doğrudan bağlantı verir.
+         Placeholder DEĞİL, ayrı bir çıktı motoru da DEĞİL — [G-1] sonrası sayfada tek
+         dışa aktarma modali var, iki sekme de aynı kapsam/seçim durumunu okur. ============ -->
     <section class="gv-tabpanel" id="panel-ciktilar" role="tabpanel" aria-label="Çıktılar">
       <div class="gv-card">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-print"></i> Puantaj Çıktıları</div></div>
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-download"></i> Puantaj Çıktıları</div></div>
         <div class="gc-body">
-          <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Seçili kişiler, şantiye veya tüm liste için PDF/Excel çıktı alın; ya da tam kanonik roster'ı (93 kişi) kapsayan ayrı çıktı sayfasını açın.</p>
+          <p style="margin:0 0 16px;font-size:13px;color:var(--ink-2);line-height:1.6">Seçili kişiler, şantiye veya tüm liste için PDF/Excel/yazdırma çıktısı alın; ya da tam kanonik roster'ı (93 kişi) kapsayan ayrı çıktı sayfasını açın.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <button type="button" class="btn btn-acc" id="btnCiktiTabOpen" data-no-confirm><i class="fa-solid fa-print"></i> Çıktı Al</button>
+            <button type="button" class="btn btn-acc" id="btnCiktiTabOpen" data-no-confirm><i class="fa-solid fa-download"></i> Dışa Aktar</button>
             <a class="btn btn-ghost" href="crm-operasyon-puantaj-cikti.html?kapsam=tumu&amp;donem=haftalik&amp;hafta=2026-06-29"><i class="fa-solid fa-arrow-up-right-from-square"></i> Puantaj Çıktı Sayfasını Aç</a>
           </div>
         </div>
@@ -872,8 +839,8 @@ th.is-today .dh-d{color:var(--acc-ink)}
      Bireysel'de mevcut #ptSantiye seçiciyi tetikler (aynı motor); Personel Tipi
      ilgili sekmeye geçer; Çalışma Durumu/Departman görünen sekmedeki satırları
      data-durum-bugun/data-departman özniteliğine göre süzer; Tarih Aralığı satırları
-     DEĞİŞTİRMEZ (hafta gezinme onun işi) — yalnız §11.2 Çıktı Al modalının varsayılan
-     kapsamına taşınır (openCiktiModal/syncCiktiAralikWidget). ============ -->
+     DEĞİŞTİRMEZ (hafta gezinme onun işi) — yalnız Dışa Aktar akışının kapsamına
+     taşınır (ptCiktiHref: donem=aralik&bas&bit). ============ -->
 <div class="gv-fpanel-ov" id="fpPuantajOv">
   <aside class="gv-fpanel" id="fpPuantaj" role="dialog" aria-modal="true" aria-label="Gelişmiş Filtre">
     <div class="gv-fpanel-head">
@@ -925,7 +892,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
       <div class="gfield">
         <label>Tarih Aralığı</label>
         <div data-gvdaterange data-fp-key="fptarih" data-fp-label="Tarih Aralığı"></div>
-        <p style="margin-top:7px;font-size:11.5px;color:var(--muted)">Haftalık ızgarayı değiştirmez — yalnız "Çıktı Al" ekranının varsayılan kapsamını belirler.</p>
+        <p style="margin-top:7px;font-size:11.5px;color:var(--muted)">Haftalık ızgarayı değiştirmez — yalnız "Dışa Aktar" çıktısının kapsamını belirler.</p>
       </div>
     </div>
     <div class="gv-fpanel-foot">
@@ -935,52 +902,10 @@ th.is-today .dh-d{color:var(--acc-ink)}
   </aside>
 </div>
 
-<!-- ============ §11.2 — Puantaj Çıktısı Al modalı [MOCK-SİM]. Kapsam (tüm/tek/seçili/
-     şantiye/taşeron) + dönem (günlük/haftalık/aylık/tarih aralığı) + format (PDF/Excel)
-     seçilir; crm-operasyon-puantaj-cikti.html'e yönlendirir veya (Excel) doğrudan CSV
-     indirir. Referans: crm-operasyon-kasa-cikti.html birebir devralınan yazdırma deseni,
-     üretim BU modaldan tetiklenir. ============ -->
-<div class="ck-modal-ov" id="ciktiModalOv">
-  <div class="ck-modal" role="dialog" aria-modal="true" aria-labelledby="ciktiModalTitle">
-    <h3 id="ciktiModalTitle"><i class="fa-solid fa-print"></i> Puantaj Çıktısı Al</h3>
-    <p id="ciktiOzet">Kapsam, dönem ve format seçin.</p>
-
-    <div class="ck-sec">
-      <div class="ck-sec-lbl">Kapsam</div>
-      <div class="ck-opts" id="ckKapsamOpts">
-        <label class="ck-opt" data-kapsam="secili"><input type="radio" name="ckKapsam" value="secili"><i class="fa-solid fa-user-check"></i> <span id="ckOptSeciliLbl">Seçili Personeller</span></label>
-        <label class="ck-opt" data-kapsam="santiye"><input type="radio" name="ckKapsam" value="santiye"><i class="fa-solid fa-building"></i> Şantiye Bazlı</label>
-        <label class="ck-opt" data-kapsam="taseron"><input type="radio" name="ckKapsam" value="taseron"><i class="fa-solid fa-people-group"></i> Taşeron Bazlı</label>
-        <label class="ck-opt" data-kapsam="tumu"><input type="radio" name="ckKapsam" value="tumu"><i class="fa-solid fa-globe"></i> Tüm Puantaj</label>
-      </div>
-      <div class="ck-detay" id="ckKapsamDetay"></div>
-    </div>
-
-    <div class="ck-sec">
-      <div class="ck-sec-lbl">Dönem</div>
-      <div class="ck-opts" id="ckDonemOpts">
-        <label class="ck-opt" data-donem="gunluk"><input type="radio" name="ckDonem" value="gunluk"><i class="fa-solid fa-calendar-day"></i> Günlük</label>
-        <label class="ck-opt is-on" data-donem="haftalik"><input type="radio" name="ckDonem" value="haftalik" checked><i class="fa-solid fa-calendar-week"></i> Haftalık</label>
-        <label class="ck-opt" data-donem="aylik"><input type="radio" name="ckDonem" value="aylik"><i class="fa-solid fa-calendar"></i> Aylık</label>
-        <label class="ck-opt" data-donem="aralik"><input type="radio" name="ckDonem" value="aralik"><i class="fa-solid fa-calendar-days"></i> Tarih Aralığı</label>
-      </div>
-      <div class="ck-detay" id="ckDonemDetay"></div>
-    </div>
-
-    <div class="ck-sec" style="margin-bottom:6px">
-      <div class="ck-sec-lbl">Format</div>
-      <div class="ck-opts" id="ckFormatOpts">
-        <label class="ck-opt is-on" data-format="pdf"><input type="radio" name="ckFormat" value="pdf" checked><i class="fa-solid fa-file-pdf"></i> PDF (Yazdır)</label>
-        <label class="ck-opt" data-format="excel"><input type="radio" name="ckFormat" value="excel"><i class="fa-solid fa-file-excel"></i> Excel (İndir)</label>
-      </div>
-    </div>
-
-    <div class="ck-modal-acts">
-      <button type="button" class="btn btn-ghost btn-sm" id="ciktiVazgec" data-no-confirm>Vazgeç</button>
-      <button type="button" class="btn btn-acc btn-sm" id="ciktiOlustur" data-no-confirm><i class="fa-solid fa-arrow-right"></i> Çıktıyı Oluştur</button>
-    </div>
-  </div>
-</div>
+<!-- [G-1] §11.2'nin sayfaya özel "Puantaj Çıktısı Al" modali (id=ciktiModalOv) KALDIRILDI.
+     Sayfada tek dışa aktarma akışı var: ortak gvExport modali (#btnPtDisaAktar). Kapsam
+     seçimi (Tümü / Filtrelenmiş / Seçili) ve format (PDF / Excel / Yazdır) orada;
+     crm-operasyon-puantaj-cikti.html'e giden parametreler ptCiktiHref() ile üretilir. -->
 
 <script src="assets/js/shell.js"></script>
 <script src="assets/js/ui.js"></script>
@@ -1279,7 +1204,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
      Mevcut motor (şantiye select + hafta nav + sekme) BOZULMAZ — bu 5 değişken yalnız
      ONApply ile o motoru sürer (şantiye/tip) veya render() sonrası ikinci bir süzme
      katmanı (durum/departman) uygular. Tarih aralığı grid'i hiç değiştirmez — yalnız
-     §11.2 Çıktı Al modaline taşınır (bkz. openCiktiModal). ---- */
+     Dışa Aktar akışının kapsamına taşınır (bkz. ptCiktiHref). ---- */
   var fpSantiye = '', fpTip = '', fpDurum = '', fpDep = '', fpTarihAraligi = null, fpSearchTerm = '';
   function ptDepartmanOf(poz){ return poz === 'Şantiye Şefi' ? 'sef' : 'saha'; }
   function ptFilterDayIdx(){ return WEEK === -1 ? 6 : TODAY_IDX; }
@@ -1679,14 +1604,28 @@ th.is-today .dh-d{color:var(--acc-ink)}
     if(opening) renderGunluk();
   });
 
-  /* Puantaj Çıktısı Al — yalnız sef/ik/yonetim/sahip/superadmin görür; yalnız kanonik
-     haftada (WEEK 0) anlamlı olduğundan arşivde gizlenir. Modal açar (bkz. aşağıdaki
-     §11.2 çıktı modalı bloğu) — kapsam/dönem/format burada seçilir. */
+  /* Dışa Aktar — yalnız sef/ik/yonetim/sahip/superadmin görür; yalnız kanonik haftada
+     (WEEK 0) anlamlı olduğundan arşivde gizlenir. [G-1] Bu budama eskiden ayrı "Çıktı Al"
+     butonundaydı; iki buton tek #btnPtDisaAktar'da birleşince yetki kuralı da ona geçti —
+     çıktı yolu (crm-operasyon-puantaj-cikti.html) artık bu butonun içinden gidiyor. */
   var CIKTI_ROLLER = ['sef','ik','yonetim','sahip','superadmin'];
-  var btnCikti = document.getElementById('btnHaftalikCikti');
+  var btnCikti = document.getElementById('btnPtDisaAktar');
   var ciktiRolYetkili = CIKTI_ROLLER.indexOf(GV.role) !== -1;
+  /* [Beyar kararı] Dışa Aktar HERKESE görünür. Eskiden bu buton `!ciktiRolYetkili ||
+     WEEK!==0` iken tamamen gizleniyordu — ama o kural birleşme ÖNCESİ yalnız "Çıktı Al"
+     (basılı döküm) butonuna aitti; "Dışa Aktar" herkese açıktı. İki buton birleşince
+     kısıt yanlışlıkla tüm dışa aktarmayı kapatmıştı. Artık EN GENİŞ ERİŞİM korunuyor:
+     buton görünür, kısıt YALNIZ modal içindeki "Yazdır" formatına uygulanıyor
+     (ptFormatKilit → gvExport formatKilit). */
   function updateCiktiBtn(){
-    btnCikti.hidden = !ciktiRolYetkili || WEEK !== 0;
+    btnCikti.hidden = false;
+  }
+  /* Yazdır = basılı döküm; eski CIKTI_ROLLER + kanonik hafta kuralı BURADA yaşıyor. */
+  function ptFormatKilit(fmt){
+    if(fmt !== 'yazdir') return null;
+    if(!ciktiRolYetkili) return 'Basılı döküm yetkiniz yok — PDF veya Excel olarak dışa aktarabilirsiniz.';
+    if(WEEK !== 0) return 'Basılı döküm yalnız güncel haftada alınır — geçmiş haftalar arşivdir.';
+    return null;
   }
 
   /* Personel Getir — aynı yetki tabanı (Haftalık Çıktı ile), yalnız kanonik haftada
@@ -1894,7 +1833,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
 
   /* V3A — arama kutusu applyPtFpFilters() TEK motoruna eklenir (K-220 dersi: ui.js'in
      genel data-table-search kablolaması KASITLI kullanılmaz, bkz. yukarı .gv-listhead
-     yorumu). Dışa Aktar (data-gv-export) generic gvExport primitifiyle bağlanır. */
+     yorumu). Dışa Aktar tetikleyicisi aşağıda gvExport.init ile bağlanır (ptCiktiHref). */
   var ptSearchInp = document.getElementById('ptSearchInp');
   if(ptSearchInp){
     ptSearchInp.addEventListener('input', function(){
@@ -2129,188 +2068,133 @@ th.is-today .dh-d{color:var(--acc-ink)}
   });
   document.getElementById('btnCiktiTabOpen').addEventListener('click', function(){ btnCikti.click(); });
 
-  /* ============ §11.2 — Puantaj Çıktısı Al modalı [MOCK-SİM]. Kapsam/dönem/format
-     seçilip crm-operasyon-puantaj-cikti.html'e yönlendirilir (PDF = yazdırmaya hazır
-     görünüm) veya (Excel) aynı sayfaya format=excel ile gidilip CSV otomatik indirilir
-     — tam kanonik 93 kişilik roster yalnız çıktı sayfasında bulunduğundan (bu sayfanın
-     PERSONEL/TASERON dizileri yalnız 40 adı geçen kişi taşır), Excel üretimi HER ZAMAN
-     o sayfadan yapılır; bu sayfa yalnız parametre üretir. ---- */
-  var TASERON_FIRMALAR = [
-    {key:'demir-beton',       ad:'Demir-Beton İnş. Ltd.', santiye:'vadi',  sayi:10},
-    {key:'elektromek',        ad:'ElektroMek Taahhüt',    santiye:'vadi',  sayi:6},
-    {key:'yalitim-kardesler', ad:'Yalıtım Kardeşler',     santiye:'liman', sayi:8}
-  ];
-  var ciktiOv = document.getElementById('ciktiModalOv');
-  var ciktiKapsam = 'secili', ciktiDonem = 'haftalik', ciktiFormat = 'pdf';
-  var ciktiTaseronSecili = TASERON_FIRMALAR[0].key;
-  var ciktiSantiyeSecili = sel.value;
-  var ciktiAralik = null; /* {from:Date, to:Date, label} — yalnız donem=aralik'te dolar */
+  /* ============ [G-1/R-13/R-14] §11.2 — dışa aktarma akışı. Eskiden burada sayfaya ÖZEL
+     bir "Puantaj Çıktısı Al" modali (kapsam/dönem/format) + liste çubuğunda ayrı bir
+     "Çıktı Al" butonu + 0 seçiliyken sorulan ayrı "Tüm liste mi çıktı alınsın?" gvConfirm'i
+     vardı. ÜÇÜ DE kaldırıldı: tek #btnPtDisaAktar tetikleyicisi ortak gvExport modalini
+     açar, kapsam sorusu o modalin Kapsam bölümü, yazdırma da Format bölümündeki "Yazdır".
 
-  function ciktiKapsamGecerli(){ return ciktiKapsam !== 'secili' || selCount() > 0; }
+     Parametre üretimi KORUNDU — crm-operasyon-puantaj-cikti.html kapsam/donem/hafta/
+     bas/bit/kisiler/santiye/firma sözlüğünü aynen okumaya devam eder; tam kanonik 93
+     kişilik roster yalnız o sayfada bulunduğundan (bu sayfanın PERSONEL/TASERON dizileri
+     yalnız 40 adı geçen kişi taşır) üretim HER ZAMAN oradan yapılır, bu sayfa yalnız
+     parametre üretir.
 
-  function renderCiktiModal(){
-    Array.prototype.forEach.call(ciktiOv.querySelectorAll('.ck-opt[data-kapsam]'), function(lbl){
-      var on = lbl.getAttribute('data-kapsam') === ciktiKapsam;
-      lbl.classList.toggle('is-on', on);
-      lbl.querySelector('input').checked = on;
-    });
-    Array.prototype.forEach.call(ciktiOv.querySelectorAll('.ck-opt[data-donem]'), function(lbl){
-      var on = lbl.getAttribute('data-donem') === ciktiDonem;
-      lbl.classList.toggle('is-on', on);
-      lbl.querySelector('input').checked = on;
-    });
-    Array.prototype.forEach.call(ciktiOv.querySelectorAll('.ck-opt[data-format]'), function(lbl){
-      var on = lbl.getAttribute('data-format') === ciktiFormat;
-      lbl.classList.toggle('is-on', on);
-      lbl.querySelector('input').checked = on;
-    });
-
-    var n = selCount();
-    document.getElementById('ckOptSeciliLbl').textContent = n === 1 ? 'Tek Personel Çıktısı' : (n > 1 ? 'Seçili Personeller (' + n + ' kişi)' : 'Seçili Personeller');
-    ciktiOv.querySelector('.ck-opt[data-kapsam="secili"]').classList.toggle('is-off', n === 0);
-
-    var kd = document.getElementById('ckKapsamDetay');
-    if(ciktiKapsam === 'secili'){
-      if(n === 0){
-        kd.innerHTML = '<div class="ck-warn"><i class="fa-solid fa-triangle-exclamation"></i> Listeden en az bir personel seçin — yoksa "Şantiye Bazlı" ya da "Tüm Puantaj" kapsamını kullanın.</div>';
-      } else {
-        /* modal yüksekliği sınırlı tutulur (bkz. .ck-modal notu) — uzun isim listesi kısaltılır */
-        var adGoster = selNames();
-        var adMetni = adGoster.length > 8 ? (adGoster.slice(0, 8).join(', ') + ' + ' + (adGoster.length - 8) + ' diğer') : adGoster.join(', ');
-        kd.innerHTML = '<b>' + n + ' kişi</b> seçildi: ' + adMetni;
-      }
-    } else if(ciktiKapsam === 'santiye'){
-      kd.innerHTML = '<b>' + SANTIYE_ADI[ciktiSantiyeSecili] + '</b> — bu şantiyenin tüm puantaj listesi (öz kadro + taşeron).';
-    } else if(ciktiKapsam === 'taseron'){
-      var topts = TASERON_FIRMALAR.map(function(f){
-        return '<option value="' + f.key + '"' + (f.key === ciktiTaseronSecili ? ' selected' : '') + '>' + f.ad + ' — ' + SANTIYE_ADI[f.santiye] + ' (' + f.sayi + ' kişi)</option>';
-      }).join('');
-      kd.innerHTML = 'Taşeron firma seçin:<div class="gfield"><select id="ckTaseronSec" aria-label="Taşeron firma seç">' + topts + '</select></div>';
-      document.getElementById('ckTaseronSec').addEventListener('change', function(){ ciktiTaseronSecili = this.value; });
-    } else if(ciktiKapsam === 'tumu'){
-      kd.innerHTML = '<b>Tüm şantiyeler</b> — 93 personel (69 öz kadro + 24 taşeron), 3 şantiye konsolide.';
-    }
-
-    var dd = document.getElementById('ckDonemDetay');
-    if(ciktiDonem === 'gunluk'){
-      dd.innerHTML = '<b>Bugün</b> — 2 Temmuz 2026, Perşembe.';
-    } else if(ciktiDonem === 'haftalik'){
-      dd.innerHTML = '<b>29 Haziran – 5 Temmuz 2026</b> — işlenen kanonik hafta.';
-    } else if(ciktiDonem === 'aylik'){
-      dd.innerHTML = '<b>Temmuz 2026</b> — ay içindeki veri kapsamı, mock veri setinde işlenmiş hafta ile sınırlıdır.';
-    } else if(ciktiDonem === 'aralik'){
-      dd.innerHTML = '<div data-gvdaterange id="ciktiTarihAralik" data-fp-label="Tarih Aralığı"></div>';
-      var drEl = document.getElementById('ciktiTarihAralik');
-      if(window.gvDateRange && drEl && !drEl._gvDr){
-        window.gvDateRange(drEl, {onChange:function(val){ ciktiAralik = val; }});
-      }
-    }
-
-    var olustur = document.getElementById('ciktiOlustur');
-    var gecerli = ciktiKapsamGecerli();
-    olustur.disabled = !gecerli;
-    olustur.style.opacity = gecerli ? '' : '.5';
-    olustur.style.cursor = gecerli ? '' : 'not-allowed';
-    document.getElementById('ciktiOzet').textContent = 'Kapsam, dönem ve format seçin — çıktı '
-      + (ciktiFormat === 'pdf' ? 'yazdırmaya hazır PDF görünümü' : 'CSV/Excel dosyası') + ' olarak üretilecek.';
-  }
-
-  /* ============ §9/§13 — Gelişmiş Filtre panelinde seçilen tarih aralığı, açıldığında
-     Çıktı Al modalının varsayılan kapsamına TAŞINIR (LEAD talimatı). Modal kendi
-     gvDateRange widget'ını renderCiktiModal()'da ZATEN kuruyor (dd.innerHTML +
-     window.gvDateRange çağrısı) — burada yalnız o widget'ın görünür durumunu
-     (buton etiketi/aktif preset/iç değeri) fpanel'in seçtiği değere göre EŞİTLERİZ;
-     ui.js'e dokunmadan, DOM'u kendi ürettiği sınıf adlarıyla (.dr-lbl/.gv-drange-trigger)
-     güncelleriz. ---- */
-  function syncCiktiAralikWidget(){
-    var drEl = document.getElementById('ciktiTarihAralik');
-    if(!drEl || !drEl._gvDr || !ciktiAralik) return;
-    drEl._gvValue = ciktiAralik;
-    var lbl = drEl.querySelector('.dr-lbl'); if(lbl) lbl.textContent = ciktiAralik.label;
-    var trig = drEl.querySelector('.gv-drange-trigger'); if(trig) trig.classList.add('is-set');
-    if(ciktiAralik.key){
-      var onBtn = drEl.querySelector('[data-dr="' + ciktiAralik.key + '"]');
-      if(onBtn) onBtn.classList.add('is-on');
-    }
-  }
-  function openCiktiModal(defaultKapsam){
-    ciktiKapsam = defaultKapsam || (selCount() > 0 ? 'secili' : 'santiye');
-    ciktiFormat = 'pdf';
-    ciktiSantiyeSecili = sel.value;
-    if(fpTarihAraligi){
-      /* Gelişmiş Filtre'de bir tarih aralığı seçiliyse çıktı ONU varsayılan kapsam alır */
-      ciktiDonem = 'aralik';
-      ciktiAralik = fpTarihAraligi;
-    } else {
-      ciktiDonem = 'haftalik';
-      ciktiAralik = null;
-    }
-    renderCiktiModal();
-    if(ciktiDonem === 'aralik' && ciktiAralik) syncCiktiAralikWidget();
-    ciktiOv.classList.add('open');
-  }
-  function closeCiktiModal(){ ciktiOv.classList.remove('open'); }
-
-  ciktiOv.addEventListener('click', function(e){
-    if(e.target === ciktiOv){ closeCiktiModal(); return; }
-    var kOpt = e.target.closest('.ck-opt[data-kapsam]');
-    if(kOpt){
-      var kv = kOpt.getAttribute('data-kapsam');
-      if(kv === 'secili' && selCount() === 0){ gvToast('Önce listeden personel seçin.', {type:'warn'}); return; }
-      ciktiKapsam = kv; renderCiktiModal(); return;
-    }
-    var dOpt = e.target.closest('.ck-opt[data-donem]');
-    if(dOpt){ ciktiDonem = dOpt.getAttribute('data-donem'); renderCiktiModal(); return; }
-    var fOpt = e.target.closest('.ck-opt[data-format]');
-    if(fOpt){ ciktiFormat = fOpt.getAttribute('data-format'); renderCiktiModal(); return; }
-  });
-  document.getElementById('ciktiVazgec').addEventListener('click', closeCiktiModal);
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && ciktiOv.classList.contains('open')) closeCiktiModal(); });
-
+     gvExport kapsam kelimeleri → çıktı sayfasının kapsam sözlüğü:
+       tumu     → kapsam=tumu     (3 şantiye konsolide, 93 kişi)
+       filtreli → Gelişmiş Filtre'de Personel Tipi=Taşeron ise kapsam=taseron,
+                  değilse kapsam=santiye (fpSantiye seçiliyse o, yoksa üstteki şantiye)
+       secili   → kapsam=secili + kisiler=… (seçim boşsa filtreli kapsamına düşer)
+     Dönem: Gelişmiş Filtre'de tarih aralığı seçiliyse donem=aralik&bas&bit, aksi hâlde
+     kanonik hafta (donem=haftalik&hafta=2026-06-29). ---- */
+  /* [G-1] Eski renderCiktiModal/syncCiktiAralikWidget/openCiktiModal/closeCiktiModal
+     ve sayfaya özel kapsam-dönem durum değişkenleri (ciktiKapsam/ciktiDonem/ciktiFormat/
+     ciktiAralik/ciktiTaseronSecili/TASERON_FIRMALAR) KALDIRILDI — kapsam/format seçimi
+     artık ortak gvExport modalinde, tarih aralığı da doğrudan Gelişmiş Filtre'den
+     (fpTarihAraligi) okunuyor; ayrı bir widget senkronu gerekmiyor. */
   function isoDate(d){
     if(!d) return '';
     var dt = (d instanceof Date) ? d : new Date(d);
     return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
   }
-  document.getElementById('ciktiOlustur').addEventListener('click', function(){
-    if(!ciktiKapsamGecerli()){ gvToast('Listeden en az bir personel seçin.', {type:'warn'}); return; }
+
+  /* gvExport kapsamını çıktı sayfasının parametrelerine çeviren TEK yer. ciktiHref
+     FONKSİYON olarak verilir (ui.js [G-1/R-13]) — böylece aktif filtreler ve seçim,
+     eski openCiktiModal'da olduğu gibi çıktıya taşınır. fmt='excel' de parametreye
+     yazılır: çıktı sayfası ?format=excel ile açıldığında CSV'yi kendisi indirir. */
+  function ptCiktiHref(kapsam, fmt, ek){
+    ek = ek || {};
+    var k = (kapsam === 'secili' && selCount() === 0) ? 'filtreli' : kapsam;
     var params = new URLSearchParams();
-    params.set('kapsam', ciktiKapsam);
-    if(ciktiKapsam === 'santiye'){
-      params.set('santiye', ciktiSantiyeSecili);
-    } else if(ciktiKapsam === 'secili'){
+    if(k === 'tumu'){
+      params.set('kapsam', 'tumu');
+    } else if(k === 'secili'){
+      params.set('kapsam', 'secili');
       params.set('santiye', sel.value);
       params.set('kisiler', selNames().join('|'));
-    } else if(ciktiKapsam === 'taseron'){
-      params.set('firma', ciktiTaseronSecili);
-    }
-    params.set('donem', ciktiDonem);
-    params.set('hafta', '2026-06-29');
-    if(ciktiDonem === 'aralik' && ciktiAralik && ciktiAralik.from && ciktiAralik.to){
-      params.set('bas', isoDate(ciktiAralik.from));
-      params.set('bit', isoDate(ciktiAralik.to));
-    }
-    if(ciktiFormat === 'excel') params.set('format', 'excel');
-    closeCiktiModal();
-    location.href = 'crm-operasyon-puantaj-cikti.html?' + params.toString();
-  });
-
-  /* Tetikleyiciler — toolbar butonu (0 seçiliyken "tüm liste" uyarısı) + seçim çubuğu
-     butonu (yalnız N>0'ken görünür, doğrudan seçili kapsamla açılır). */
-  btnCikti.addEventListener('click', function(){
-    if(selCount() === 0){
-      gvConfirm({
-        icon:'fa-list-check',
-        title:'Tüm liste mi çıktı alınsın?',
-        message:'Hiç personel seçilmedi. ' + SANTIYE_ADI[sel.value] + ' şantiyesinin tüm puantaj listesi çıktı alınacak.',
-        ok:'Evet, Tüm Listeyi Al', cancel:'Vazgeç',
-        onConfirm:function(){ openCiktiModal('santiye'); }
-      });
     } else {
-      openCiktiModal('secili');
+      /* filtreli — Gelişmiş Filtre'nin ekseni çıktı kapsamına çevrilir: Personel Tipi
+         "Taşeron" ise şantiyenin taşeron kadrosu, aksi hâlde şantiyenin tüm listesi */
+      params.set('kapsam', fpTip === 'taseron' ? 'taseron' : 'santiye');
+      params.set('santiye', fpSantiye || sel.value);
     }
+    /* [Beyar kararı — R-14 işlev iadesi] Dönem ekseni. Eski sayfaya-özel çıktı
+       sihirbazında Haftalık/Günlük/Aylık presetleri vardı; ortak modale devredilirken
+       UI kaybolmuştu (çıktı sayfasının motoru parametreleri desteklemeye devam
+       ediyordu). Modalin "Dönem" ek ekseninden geri geldi. */
+    var donem = ek.donem || (fpTarihAraligi && fpTarihAraligi.from ? 'aralik' : 'haftalik');
+    if(donem === 'aralik' && fpTarihAraligi && fpTarihAraligi.from && fpTarihAraligi.to){
+      params.set('donem', 'aralik');
+      params.set('bas', isoDate(fpTarihAraligi.from));
+      params.set('bit', isoDate(fpTarihAraligi.to));
+    } else {
+      params.set('donem', donem === 'aralik' ? 'haftalik' : donem);   /* aralık yoksa haftalığa düş */
+    }
+    params.set('hafta', '2026-06-29');
+    /* Taşeron firma seçici — aynı gerekçe: motor `firma` slug'ını okuyor, UI eksikti. */
+    if(ek.firma && ek.firma !== 'hepsi') params.set('firma', ek.firma);
+    if(fmt === 'excel') params.set('format', 'excel');
+    return 'crm-operasyon-puantaj-cikti.html?' + params.toString();
+  }
+  /* modalin filtre özeti şeridi — hangi şantiye/dönem/seçimle çıkılacağı açıkça yazılır */
+  var PT_TIP_LBL = {oz:'Öz kadro', taseron:'Taşeron', tedarikci:'Tedarikçi'};
+  function ptFiltreOzeti(){
+    var p = [SANTIYE_ADI[fpSantiye || sel.value] || 'Tüm şantiyeler'];
+    if(fpTip) p.push('Personel tipi: ' + (PT_TIP_LBL[fpTip] || fpTip));
+    p.push(fpTarihAraligi ? fpTarihAraligi.label : '29 Haziran – 5 Temmuz 2026');
+    if(selCount() > 0) p.push(selCount() + ' kişi seçili');
+    return p.join(' · ');
+  }
+  /* [Beyar kararı] Eski sihirbazın Dönem ve Taşeron Firma eksenleri ortak modale
+     ek alan olarak geri geldi (gvExport.ekAlanlar). Çıktı sayfasının motoru bu
+     parametreleri zaten okuyordu — kaybolan yalnız UI'ydı. */
+  var PT_TASERON_FIRMALAR = [
+    {deger:'hepsi',              etiket:'Tüm firmalar'},
+    {deger:'demir-beton',        etiket:'Demir-Beton İnş.'},
+    {deger:'elektromek',         etiket:'ElektroMek Taahhüt'},
+    {deger:'yalitim-kardesler',  etiket:'Yalıtım Kardeşler'}
+  ];
+  var PT_EXPORT = {
+    baslik: 'Puantaj listesi',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['tumu', 'filtreli', 'secili'],
+    ciktiHref: ptCiktiHref,
+    secimSayisi: selCount,
+    filtreOzeti: ptFiltreOzeti,
+    formatKilit: ptFormatKilit,
+    ekAlanlar: [
+      {
+        key: 'donem', etiket: 'Dönem', varsayilan: 'haftalik',
+        secenekler: function(){
+          var s = [
+            {deger:'haftalik', etiket:'Haftalık', ikon:'fa-calendar-week'},
+            {deger:'gunluk',   etiket:'Günlük',   ikon:'fa-calendar-day'},
+            {deger:'aylik',    etiket:'Aylık',    ikon:'fa-calendar-days'}
+          ];
+          /* "Filtre aralığı" YALNIZ Gelişmiş Filtre'de tarih aralığı seçiliyken anlamlı */
+          if(fpTarihAraligi && fpTarihAraligi.from && fpTarihAraligi.to){
+            s.push({deger:'aralik', etiket:'Filtre aralığı', ikon:'fa-calendar-check'});
+          }
+          return s;
+        }
+      },
+      {
+        key: 'firma', etiket: 'Taşeron Firma', varsayilan: 'hepsi',
+        secenekler: PT_TASERON_FIRMALAR
+      }
+    ]
+  };
+  if(window.gvExport) gvExport.init(btnCikti, PT_EXPORT);
+  /* seçim çubuğu — AYNI modal, yalnız kapsam sırası "seçili" ile başlar. gvExport.ac
+     tetikleyicisiz açar; sayfada ikinci bir çıktı akışı YOK. */
+  document.getElementById('ptBulkCikti').addEventListener('click', function(){
+    if(!window.gvExport) return;
+    /* AYNI yapılandırma, yalnız kapsam sırası "seçili" ile başlar — ek alanlar ve
+       format kilidi de birebir aynı (tek kaynak: PT_EXPORT). */
+    var cfg = {}; for(var k in PT_EXPORT) cfg[k] = PT_EXPORT[k];
+    cfg.kapsam = ['secili', 'filtreli', 'tumu'];
+    gvExport.ac(cfg);
   });
-  document.getElementById('ptBulkCikti').addEventListener('click', function(){ openCiktiModal('secili'); });
 
   /* ============ §9/§13 — Gelişmiş Filtre paneli kurulumu (LEAD talimatı, Dalga 6
      Denetim-B). opts.table VERİLMEZ (spec-filtre-tarih.md §3) — sayfanın kendi çok

@@ -83,7 +83,7 @@
   .kpi-num.compact{font-size:16px !important}
 }
 
-/* ============ §17 — Revizyon Ekle (taslak) + Çıktı Al ============ */
+/* ============ §17 — Revizyon Ekle (taslak) + Yazdır ============ */
 .rev-card.is-taslak{border-style:dashed;border-color:var(--line-2)}
 .rev-card.is-taslak .rev-head span{color:var(--warn);font-weight:700}
 @media print{
@@ -132,8 +132,10 @@
       <div class="ph-actions">
         <button type="button" class="btn btn-ghost btn-sm" id="btnRevEkle"><i class="fa-solid fa-file-circle-plus"></i> Revizyon Ekle</button>
         <a class="btn btn-ghost btn-sm" href="crm-finans-maliyet.html" id="btnMaliyet"><i class="fa-solid fa-chart-column"></i> Gerçekleşen Maliyet</a>
-        <a class="btn btn-ghost btn-sm" href="#" data-export="Proje bütçe detayı"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
-        <button type="button" class="btn btn-ghost btn-sm" id="btnButceYazdir"><i class="fa-solid fa-print"></i> Çıktı Al</button>
+        <!-- [G-1] Eskiden burada İKİ buton vardı: "Dışa Aktar" (eski mini format
+             menüsü) + "Yazdır" (window.print()). Tek butonda birleşti — yazdırma artık
+             modalin Yazdır dalı (gvExport.yazdirFn), patronun istediği yapı. -->
+        <a class="btn btn-ghost btn-sm" href="#" id="btnButceExport" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-ghost btn-sm" id="btnButceGecmis" href="crm-ayarlar-log.html"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişini Gör</a>
       </div>
     </div>
@@ -398,7 +400,7 @@
     t.addEventListener('click', function(){ activateTab(t.getAttribute('data-tab')); });
   });
 
-  /* ============ §17 — Revizyon Ekle (taslak) + Çıktı Al + İşlem Geçmişini Gör ============ */
+  /* ============ §17 — Revizyon Ekle (taslak) + Yazdır + İşlem Geçmişini Gör ============ */
   var rvKatSel = document.getElementById('rvKategori');
   if(rvKatSel) rvKatSel.innerHTML = KATEGORI_ADI.map(function(k){ return '<option>' + k + '</option>'; }).join('');
 
@@ -449,8 +451,12 @@
     gvToast(kod + ' taslak olarak kaydedildi — onaylandığında bütçeye yansıtılır.', {type:'info'});
   });
 
-  var btnButceYazdir = document.getElementById('btnButceYazdir');
-  if(btnButceYazdir) btnButceYazdir.addEventListener('click', function(){ window.print(); });
+  gvExport.init('#btnButceExport', {
+    baslik: 'Proje bütçe detayı',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['tumu'],
+    yazdirFn: function(){ window.print(); }   /* eski #btnButceYazdir davranışı */
+  });
 })();
 </script>
 </body>

@@ -894,15 +894,18 @@
   /* ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri (gvBulk, spec-v2-core.md §6).
      "Pasife Al" B §9.3'ün "şantiye arşivleme" kritik aksiyonu — tehlikeli:true ile
      gvConfirm'den geçer (gvBulk kendi toplu onay metnini gösterir), tekil satır
-     aksiyonuyla AYNI convertRowToPasif() dönüşümünü kullanır. "Çıktı Al" üstteki
-     Dışa Aktar/gvExport ile AYNI dil — statik prototip bilgilendirmesi (gvResult). */
+     aksiyonuyla AYNI convertRowToPasif() dönüşümünü kullanır. "Dışa Aktar" üstteki
+     Dışa Aktar butonuyla AYNI modali açar (gvExport.ac) — tek fark, kapsam varsayılanı
+     "seçili kayıtlar"dır; format seçimi (PDF/Excel/Yazdır) modalin içindedir. */
   if(window.gvBulk && tblSantiye){
     gvBulk.init('#tblSantiye', {
       aksiyonlar: [
-        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
-          gvResult('cikti-hazir', {
-            mesaj: rows.length + ' şantiye için çıktı hazırlandı. (statik prototip — gerçek dosya üretilmez)',
-            aksiyonlar: [{etiket:'Kapat', birincil:true}]
+        {etiket:'Dışa Aktar', ikon:'fa-download', onClick:function(rows){
+          gvExport.ac({
+            baslik: 'Şantiye listesi',
+            formatlar: ['pdf','excel','yazdir'],
+            kapsam: ['secili','filtreli','tumu'],
+            secimSayisi: function(){ return rows.length; }
           });
         }},
         {etiket:'Pasife Al', ikon:'fa-power-off', tehlikeli:true, onClick:function(rows){

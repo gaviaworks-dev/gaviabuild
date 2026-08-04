@@ -403,7 +403,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         <span class="bb-count" id="plxBbCount">0 kayıt seçildi</span>
         <div class="bb-acts">
           <button type="button" class="btn btn-ghost btn-sm" id="plxBbClear"><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
-          <button type="button" class="btn btn-acc btn-sm" id="plxBbCikti"><i class="fa-solid fa-print"></i> Seçili Kayıtların Çıktısını Al</button>
+          <button type="button" class="btn btn-acc btn-sm" id="plxBbCikti"><i class="fa-solid fa-download"></i> Seçili Kayıtları Dışa Aktar</button>
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
@@ -503,14 +503,13 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     <!-- ============ Dalga 4 / T-S4 / §12.1 madde 5 — mevcut crm-operasyon-pluxee-cikti.html
          bağlantısı ve gvExport akışına PROXY (T-Y1/K-341 emsali: "btnCiktiTabOpen →
          btnHaftalikCikti.click() proxy'si") — yeni bir çıktı motoru İCAT EDİLMEDİ,
-         Hareketler tab'ındaki #btnPlxCikti/#btnPlxDisaAktar'a delegasyon. ============ -->
+         Hareketler tab'ındaki tek #btnPlxDisaAktar tetikleyicisine delegasyon. ============ -->
     <div class="gv-card">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-print"></i> Çıktı Al ve Dışa Aktar</div></div>
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-download"></i> Dışa Aktar</div></div>
       <div class="gc-body">
         <p style="font-size:13px;color:var(--ink-2);line-height:1.6;margin:0 0 16px">Hareketler sekmesindeki aktif kart/tür/şantiye/tarih filtreleri ve varsa seçili kayıtlar buradaki çıktı ve dışa aktarma işlemlerine de uygulanır — iki ayrı motor YOK, aynı akış.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-          <button type="button" class="btn btn-acc btn-sm" id="plxCiktiTabBtn"><i class="fa-solid fa-print"></i> Kart Defteri Çıktısı Al</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="plxDisaAktarTabBtn"><i class="fa-solid fa-download"></i> Hareketleri Dışa Aktar (CSV)</button>
+          <button type="button" class="btn btn-acc btn-sm" id="plxDisaAktarTabBtn"><i class="fa-solid fa-download"></i> Hareketleri Dışa Aktar</button>
         </div>
         <div class="rep-src"><i class="fa-solid fa-circle-info"></i> <span id="plxCiktiInfo">—</span></div>
       </div>
@@ -990,7 +989,9 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     document.getElementById('plxEmpty').hidden = shown !== 0;
     document.getElementById('plxFoot').textContent = shown + ' hareket gösteriliyor · toplam ' + total + ' kayıt';
     syncSelectAllState();
-    if(typeof syncCiktiHref === 'function') syncCiktiHref();
+    /* [G-1] syncCiktiHref() kaldırıldı — çıktı URL'i artık statik href'te değil,
+       gvExport modali "Çıktıyı Hazırla"ya basıldığı anda plxCiktiHref() ile
+       hesaplanıyor; filtre her değiştiğinde href'i tazelemeye gerek yok. */
     gvPagerRefresh('#tblPluxee', true);
   }
   function setCard(no){
@@ -1266,26 +1267,24 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     }
     return 'crm-operasyon-pluxee-cikti.html?' + p.toString();
   }
-  function syncCiktiHref(){
-    var btn = document.getElementById('btnPlxCikti');
-    if(btn) btn.href = buildOutputUrl(false);
-  }
-  document.getElementById('btnPlxCikti').addEventListener('click', function(e){
-    if(selPlxCount() > 0){
-      e.preventDefault();
-      location.href = buildOutputUrl(true);
-      return;
-    }
-    e.preventDefault();
-    gvConfirm({
-      title:'Tüm liste mi çıktı alınsın?',
-      message:'Hiç kayıt seçilmedi. Aktif filtrelere göre TÜM hareketlerin çıktısı alınacak.',
-      ok:'Evet, Tümünü Al', cancel:'Vazgeç',
-      onConfirm:function(){ location.href = buildOutputUrl(false); }
-    });
+  /* [G-1/R-13] İki buton (Çıktı Al + Dışa Aktar) ve "Tüm liste mi çıktı alınsın?"
+     ayrı gvConfirm'i KALDIRILDI. Tek gvExport modali: kapsamı kullanıcı seçer,
+     PDF/Yazdır → buildOutputUrl() ile çıktı sayfası, Excel → GV_EXPORTERS gerçek
+     indirmesi (baslik anahtarı 'Pluxee hareketleri' ile eşleşir). */
+  function plxCiktiHref(kapsam){ return buildOutputUrl(kapsam === 'secili'); }
+  gvExport.init('#btnPlxDisaAktar', {
+    baslik: 'Pluxee hareketleri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['tumu', 'filtreli', 'secili'],
+    ciktiHref: plxCiktiHref,
+    secimSayisi: selPlxCount
   });
-  document.getElementById('plxBbCikti').addEventListener('click', function(){
-    location.href = buildOutputUrl(true);
+  gvExport.init('#plxBbCikti', {
+    baslik: 'Pluxee hareketleri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['secili', 'filtreli', 'tumu'],
+    ciktiHref: plxCiktiHref,
+    secimSayisi: selPlxCount
   });
 
   /* ---- Dışa Aktar — gerçek CSV/Excel indirme (kasa.html GV_EXPORTERS deseninin devralımı;
@@ -1491,11 +1490,9 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
   /* ---- Çıktılar tab — [§12.1 madde 5] mevcut crm-operasyon-pluxee-cikti.html bağlantısı
      ve gvExport akışına PROXY (T-Y1/K-341 emsali: "btnCiktiTabOpen → btnHaftalikCikti.
      click() proxy'si") — yeni bir çıktı motoru İCAT EDİLMEDİ, Hareketler tab'ındaki
-     #btnPlxCikti/#btnPlxDisaAktar'a delegasyon; iki tab arasında state (curPlx/filtre/
+     tek #btnPlxDisaAktar'a delegasyon; iki tab arasında state (curPlx/filtre/
      seçim) TEK kaynaktan okunur. ---- */
-  var plxCiktiTabBtn = document.getElementById('plxCiktiTabBtn');
   var plxDisaAktarTabBtn = document.getElementById('plxDisaAktarTabBtn');
-  if(plxCiktiTabBtn) plxCiktiTabBtn.addEventListener('click', function(){ document.getElementById('btnPlxCikti').click(); });
   if(plxDisaAktarTabBtn) plxDisaAktarTabBtn.addEventListener('click', function(){ document.getElementById('btnPlxDisaAktar').click(); });
   function syncCiktiTabInfo(){
     var info = document.getElementById('plxCiktiInfo'); if(!info) return;

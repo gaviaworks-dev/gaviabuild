@@ -562,7 +562,7 @@
       });
     }
 
-    /* ============ B §2.1 madde 9 — Çıktı Al (gvExport). ciktiHref VERİLMEZ:
+    /* ============ B §2.1 madde 9 — Dışa Aktar (gvExport). ciktiHref VERİLMEZ:
        crm-finans-hakedis-cikti.html tek-kayıt (?hkd=/?th=) yazdırma önizlemesidir,
        liste-seviyesi kapsam/format navigasyonunu ANLAMAZ (bkz tasks/celiskiler.md) —
        bu yüzden pdf/yazdir dalı da gvResult "çıktı hazırlandı" akışına düşer; excel
@@ -592,10 +592,14 @@
     if(window.gvBulk){
       gvBulk.init('#tblKurum', {
         aksiyonlar: [
-          {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
-            gvResult('cikti-hazir', {
-              mesaj: rows.length + ' hakediş için çıktı hazırlandı. (statik prototip — gerçek dosya üretilmez)',
-              aksiyonlar: [{etiket:'Kapat', birincil:true}]
+          /* [G-1] Toplu seçim de üst çubukla AYNI Dışa Aktar modalini açar
+             (gvExport.ac), yalnız kapsam "seçili" ile başlar. */
+          {etiket:'Dışa Aktar', ikon:'fa-download', onClick:function(rows){
+            gvExport.ac({
+              baslik: 'Seçili kurum hakedişleri',
+              formatlar: ['pdf', 'excel', 'yazdir'],
+              kapsam: ['secili', 'filtreli', 'tumu'],
+              secimSayisi: function(){ return rows.length; }
             });
           }},
           {etiket:'Arşivle', ikon:'fa-box-archive', tehlikeli:true, onClick:function(rows){

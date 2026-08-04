@@ -226,7 +226,7 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2): arama
            solda, sabit aksiyon grubu sağda (Gelişmiş Filtre/Kolonlar/Arşiv toggle/
-           Çıktı Al). Eski tekil "Tarih" `data-gvdaterange` widget'ı Gelişmiş Filtre
+           Dışa Aktar). Eski tekil "Tarih" `data-gvdaterange` widget'ı Gelişmiş Filtre
            panelinin bir alanı oldu (fpState.tarihRange, script). -->
       <div class="gv-listhead">
         <div class="lh-row">
@@ -565,7 +565,17 @@ tr.gd-detail-row td{background:var(--bg);padding:14px 22px;border-top:none}
     btn.classList.toggle('is-open', !el.hidden);
   });
   document.getElementById('gdSearch').addEventListener('input', renderTable);
-  document.getElementById('btnCikti').addEventListener('click', function(){ window.print(); });
+  /* [G-1] Tek "Dışa Aktar" tetikleyicisi — eski doğrudan window.print() çağrısı
+     KALDIRILDI; yazdırma artık ortak gvExport modalinin Format bölümündeki
+     "Yazdır" seçeneği. Kapsam (Tümü/Filtrelenmiş) da aynı modalde sorulur. */
+  gvExport.init('#btnCikti', {
+    baslik: 'Araç giderleri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['tumu', 'filtreli'],
+    /* bu ekranın dedike -cikti.html sayfası YOK; eski window.print() davranışı
+       modalin "Yazdır" dalına taşındı (gvExport.yazdirFn, ui.js) */
+    yazdirFn: function(){ window.print(); }
+  });
 
   /* V3A — Gelişmiş Filtre (gvFilterDrawer, config-driven; opts.table VERİLMEDİ —
      sayfanın kendi renderTable() motoru TEK karar mercii kalır) */

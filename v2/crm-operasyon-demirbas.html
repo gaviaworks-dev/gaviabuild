@@ -321,7 +321,7 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
           <button type="button" class="btn btn-ghost btn-sm" id="bbBarkodBtn" data-no-confirm><i class="fa-solid fa-barcode"></i> Barkod Oluştur</button>
           <button type="button" class="btn btn-ghost btn-sm" id="bbEtiketBtn" data-no-confirm><i class="fa-solid fa-qrcode"></i> Toplu Etiket Yazdır</button>
           <button type="button" class="btn btn-ghost btn-sm" id="bbArsivBtn" data-no-confirm><i class="fa-solid fa-box-archive"></i> Toplu Arşivle</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="bbExportBtn" data-export="Seçili demirbaşlar" data-no-confirm><i class="fa-solid fa-download"></i> Seçilenleri Dışa Aktar</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="bbExportBtn" data-no-confirm><i class="fa-solid fa-download"></i> Seçilenleri Dışa Aktar</button>
           <button type="button" class="btn btn-ghost btn-sm" id="bbClearBtn" data-no-confirm><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
         </div>
       </div>
@@ -916,6 +916,17 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
       allChk.indeterminate = !allChk.checked && visibleChks.some(function(c){ return c.checked; });
     }
   }
+  /* [G-1] "Seçilenleri Dışa Aktar" da ortak modale taşındı. Bu buton deklaratif
+     `data-gv-export` ile taşınamadı: kapsamı "seçili kayıtlar" olduğu için modalin
+     seçim sayısını bilmesi gerekiyor (`secimSayisi` verilmezse "Seçili" çipi kilitli
+     açılır). GV_EXPORTERS['Seçili demirbaşlar'] kaydı korundu — Excel dalı hâlâ
+     gerçek dosya indirir, yalnız artık PDF/Yazdır ve kapsam özeti de var. */
+  gvExport.init('#bbExportBtn', {
+    baslik: 'Seçili demirbaşlar',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['secili'],
+    secimSayisi: function(){ return Object.keys(selectedNos).length; }
+  });
   document.addEventListener('change', function(e){
     var chk = e.target.closest('.dm-chk'); if(!chk) return;
     var no = chk.getAttribute('data-no');

@@ -156,7 +156,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
   .df-mobile-list{display:block}
 }
 
-/* Dalga 5/T-R16 — Dışa Aktar butonu artık rapor tablosu gc-head'inde, rapor sayısı
+/* Dalga 5/T-R16 — Rapor & Onay Dışa Aktar butonu rapor tablosu gc-head'inde, rapor sayısı
    metninin yanında; gc-head'in ortak (kilitli) space-between kuralı 2 çocuk bekler,
    bu yüzden metin+buton TEK bir sağ-taraf grubuna sarıldı (gc-head'e 3. çocuk EKLENMEDİ). */
 .ks-rapor-head{flex-wrap:wrap;row-gap:8px}
@@ -361,6 +361,11 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
         <div class="gc-title"><i class="fa-solid fa-book"></i> Kasa Defteri — <span id="dfSantiye">Vadi Konakları</span></div>
         <div class="df-head-tools">
           <span class="df-donem"><i class="fa-solid fa-calendar-days"></i> 01 – 15 Temmuz 2026 · cari dönem</span>
+          <!-- [G-1/R-18] Kasa Defteri'nin KENDİ Dışa Aktar'ı. Eskiden bu iş, Rapor &
+               Onay listesinin .lh-acts'ındaki "Çıktı Al" butonuyla yapılıyordu —
+               iki farklı kapsam tek satırda karışıyordu. Artık her bölüm kendi
+               butonunu taşır; kapsam etiketi ("Kasa defteri") modalde görünür. -->
+          <a class="btn btn-ghost btn-sm" href="#" id="btnCikti" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         </div>
       </div>
       <!-- §12.1 — seçili kayıt çıktısı bulk bar (kredikarti/pluxee emsali) -->
@@ -368,7 +373,7 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
         <span class="bb-count" id="ksBbCount">0 kayıt seçildi</span>
         <div class="bb-acts">
           <button type="button" class="btn btn-ghost btn-sm" id="ksBbClear"><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
-          <button type="button" class="btn btn-acc btn-sm" id="ksBbCikti"><i class="fa-solid fa-print"></i> Seçili Kayıtların Çıktısını Al</button>
+          <button type="button" class="btn btn-acc btn-sm" id="ksBbCikti"><i class="fa-solid fa-download"></i> Seçili Kayıtları Dışa Aktar</button>
         </div>
       </div>
       <div class="gc-body flush">
@@ -431,16 +436,16 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
 
     <div class="gv-card">
       <!-- Dalga 5/T-R16 — "Dışa Aktar" .lh-acts'tan buraya taşındı: .lh-acts §2.2'nin
-           4 standart kontrolünü (Gelişmiş Filtre/Kolonlar/Arşiv toggle/Çıktı Al) aynı
-           satırda taşıyamıyordu (tablet-yatay 1024px'te 1024→1051 taşma, bkz.
-           tasks/kararlar.md K-344) — kasa sayfasında Çıktı Al VE Dışa Aktar birlikte
-           5. kontrolü oluşturuyordu. Dışa Aktar, tablo başlığı satırına (rapor sayısı
-           metninin yanına) taşındı; href/data-export/id DEĞİŞMEDİ. -->
+           4 standart kontrolünü aynı satırda taşıyamıyordu (tablet-yatay 1024px'te
+           1024→1051 taşma, bkz. tasks/kararlar.md K-344).
+           [G-1] O taşmanın asıl sebebi olan 5. kontrol — "Çıktı Al" — artık YOK:
+           Kasa Defteri'nin çıktısı kendi kart başlığındaki Dışa Aktar'a taşındı,
+           buradaki buton yalnız Rapor & Onay listesinin kapsamını dışa aktarır. -->
       <div class="gc-head ks-rapor-head">
         <div class="gc-title"><i class="fa-solid fa-stamp"></i> Rapor &amp; Onay Akışı</div>
         <div class="ks-rapor-head-acts">
           <span class="gc-link" style="cursor:default"><span data-table-count>16</span> rapor · onay zincirli kasa raporları ve merkez giriş kayıtları</span>
-          <a class="btn btn-ghost btn-sm" href="#" data-export="Kasa hareketleri" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+          <a class="btn btn-ghost btn-sm" href="#" id="btnKasaRaporExport" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         </div>
       </div>
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Durum/
@@ -744,7 +749,7 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     });
   }
 
-  /* ============ §13 — kasa listesindeki aktif tarih aralığı Çıktı Al'a taşınır ============
+  /* ============ §13 — kasa listesindeki aktif tarih aralığı Dışa Aktar'a taşınır ======
      Gelişmiş Filtre panelinin (fpKasa) tarih state'i burada erken tanımlanır ki setKasa()
      ve ciktiHref() aşağıda — gvFilterPanel.init() daha geç çağrılmadan önce bile —
      güvenle okuyabilsin. */
@@ -942,16 +947,20 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     syncDfBulkBar();
     syncDfSelectAllState();
   });
-  var ksBbCikti = document.getElementById('ksBbCikti');
-  if(ksBbCikti) ksBbCikti.addEventListener('click', function(){
-    location.href = 'crm-operasyon-kasa-cikti.html?ids=' + Object.keys(selectedDefter).join(',');
+  /* [G-1] Toplu seçim çubuğu da aynı Dışa Aktar modalini açar; kapsam "seçili"
+     ile başlar. ciktiHref aşağıda ciktiHref()/defterCiktiHref() ile paylaşılır. */
+  gvExport.init('#ksBbCikti', {
+    baslik: 'Kasa defteri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['secili', 'filtreli', 'tumu'],
+    ciktiHref: function(kapsam){ return defterCiktiHref(kapsam); },
+    secimSayisi: selDefterCount
   });
 
   /* ============ D8 (1.2) — defter: şantiye kartı seçimi + ?santiye= paramı ============ */
   var KS_ADLAR = { vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye' };
   var dfSantiye = document.getElementById('dfSantiye');
-  var btnCikti = document.getElementById('btnCikti');
-  /* §13 — Çıktı Al linki: şantiye + (varsa) aktif Gelişmiş Filtre tarih aralığı, emsal
+  /* §13 — çıktı URL'i: şantiye + (varsa) aktif Gelişmiş Filtre tarih aralığı, emsal
      kredikarti/pluxee çıktı butonlarının aynı query-string taşıma yaklaşımı. */
   function isoDate(d){ return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2); }
   function ciktiHref(ks){
@@ -964,6 +973,28 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     }
     return url;
   }
+  /* [G-1/R-18] Kasa sayfasında İKİ AYRI kapsam var ve her biri kendi Dışa Aktar'ını
+     taşır — videoda [05:23] şikayet edilen "iki yapı tek satırda karışıyor" durumu:
+       · #btnCikti           → Kasa Defteri (şantiye bazlı: Vadi/Liman/Merkez)
+       · #btnKasaRaporExport → Rapor & Onay Akışı listesi
+     İkisi de aynı gvExport modalini kullanır (tek tip akış), yalnız başlık/kapsam
+     farklıdır. PDF/Yazdır çıktı sayfasına, Excel GV_EXPORTERS'a gider. */
+  function defterCiktiHref(kapsam){
+    if(kapsam === 'secili') return 'crm-operasyon-kasa-cikti.html?ids=' + Object.keys(selectedDefter).join(',');
+    return ciktiHref(curKsKey());
+  }
+  gvExport.init('#btnCikti', {
+    baslik: 'Kasa defteri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['tumu', 'filtreli', 'secili'],
+    ciktiHref: defterCiktiHref,
+    secimSayisi: selDefterCount
+  });
+  gvExport.init('#btnKasaRaporExport', {
+    baslik: 'Kasa hareketleri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['tumu', 'filtreli']
+  });
   function setKasa(ks){
     if(!KS_ADLAR[ks]) return;
     document.querySelectorAll('#ksGrid .ks-card[data-ks]').forEach(function(c){
@@ -973,7 +1004,6 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
       tr.hidden = tr.getAttribute('data-ks') !== ks;
     });
     if(dfSantiye) dfSantiye.textContent = KS_ADLAR[ks];
-    if(btnCikti) btnCikti.href = ciktiHref(ks);
     /* Y17: şantiye değişince kart listesi de senkron kalır (masaüstü tr.hidden emsali) */
     buildDefterCards();
     /* D17: şantiye değişince defter satır seti değişir → pager sayfa 1'e döner (RB §5) */
@@ -1083,11 +1113,9 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     activeRow: '#achipsKasa',
     onApply: function(state){
       kasaFpState = state; applyKasaCombinedFilter();
-      if(btnCikti) btnCikti.href = ciktiHref(curKsKey());
     },
     onClear: function(){
       kasaFpState = {};
-      if(btnCikti) btnCikti.href = ciktiHref(curKsKey());
     }
   });
   /* V3A §3.2 — "Arşivlenenleri Göster" artık panelin İÇİNDE değil, .lh-acts'ta

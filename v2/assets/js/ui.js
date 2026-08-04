@@ -162,7 +162,7 @@
     {ic:'fa-file-pdf',   lbl:'PDF (.pdf)',    f:'PDF'},
     {ic:'fa-file-csv',   lbl:'CSV (.csv)',    f:'CSV'}
   ];
-  var EXP_FMT_REAL = [                 /* gerçek indirmede PDF yok — basılı döküm "Çıktı Al" ekranlarının işi */
+  var EXP_FMT_REAL = [                 /* gerçek indirmede PDF yok — basılı döküm `-cikti.html` ekranlarının işi */
     {ic:'fa-file-excel', lbl:'Excel (.xlsx)', f:'Excel'},
     {ic:'fa-file-csv',   lbl:'CSV (.csv)',    f:'CSV'}
   ];
@@ -1891,6 +1891,18 @@
     return Array.prototype.map.call(chips, function(c){ return c.textContent.replace(/\s+/g, ' ').trim(); }).join(' · ');
   }
   window.gvExport = {
+    /* [G-1] Tetikleyicisiz açma. Toplu-seçim (gvBulk) aksiyonları bir DOM elemanına
+       değil bir callback'e bağlıdır; `init` ise elemana ihtiyaç duyar. `ac` aynı
+       modali doğrudan açar, böylece 12 liste sayfasındaki "seçili kayıtları dışa
+       aktar" akışı 12 ayrı çözüm yerine TEK desende toplanır:
+         gvExport.ac({baslik:'Cari kayıtları', kapsam:['secili'], secimSayisi:function(){ return rows.length; }})
+       Modal/format/kapsam mantığı `init` ile BİREBİR aynıdır — kopya kod yok. */
+    ac: function(opts){
+      var el = document.createElement('span');
+      var h = window.gvExport.init(el, opts);
+      if(h) h.open();
+      return h;
+    },
     init: function(triggerSelector, opts){
       var trigger = typeof triggerSelector === 'string' ? document.querySelector(triggerSelector) : triggerSelector;
       if(!trigger){ console.warn('gvExport: tetikleyici bulunamadı', triggerSelector); return null; }
@@ -1925,12 +1937,31 @@
         var ov = document.createElement('div'); ov.className = 'gv-modal-ov'; ov.setAttribute('data-gv-export', '');
         var m = document.createElement('div'); m.className = 'gv-modal gv-export-modal';
         m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
-        var fmtHtml = formatlar.map(gvxFormatChip).join('');
+        var fmtHtml = formatlar.map(function(f){
+          var kilit = formatKilit ? formatKilit(f) : null;
+          if(!kilit) return gvxFormatChip(f);
+          var v = GVX_FMT_META[f] || {ico:'fa-file', lbl:f};
+          return '<button type="button" class="chip is-locked" data-fmt="' + f + '" disabled title="' + kilit.replace(/"/g, '&quot;') + '">'
+            + '<i class="fa-solid fa-lock"></i> ' + v.lbl + '</button>';
+        }).join('');
         var kapsamHtml = kapsamList.map(function(k){ return gvxScopeChip(k, secimSayisi); }).join('');
+        /* ek eksenler — Format/Kapsam ile AYNI çip dili, ayrı bir görsel dil İCAT EDİLMEZ */
+        var ekHtml = ekAlanlar.filter(function(a){ return !(typeof a.gizle === 'function' && a.gizle()); }).map(function(a){
+          /* secenekler FONKSİYON da olabilir — sayfa durumuna göre değişen eksenler için
+             (ör. puantajda "Filtre aralığı" yalnız Gelişmiş Filtre'de tarih seçiliyken) */
+          var sec = typeof a.secenekler === 'function' ? (a.secenekler() || []) : (a.secenekler || []);
+          var chips = sec.map(function(o){
+            return '<button type="button" class="chip" data-ek="' + a.key + '" data-deger="' + o.deger + '">'
+              + (o.ikon ? '<i class="fa-solid ' + o.ikon + '"></i> ' : '') + o.etiket + '</button>';
+          }).join('');
+          return '<div class="gvx-section"><span class="gvx-lbl">' + a.etiket + '</span>'
+            + '<div class="gvx-chips gvx-ek" data-ekkey="' + a.key + '" role="radiogroup" aria-label="' + a.etiket + '">' + chips + '</div></div>';
+        }).join('');
         m.innerHTML = '<div class="gv-modal-ico"><i class="fa-solid fa-file-export"></i></div>'
           + '<h3>Dışa Aktar</h3><p></p>'
           + '<div class="gvx-section"><span class="gvx-lbl">Format</span><div class="gvx-chips gvx-fmt" role="radiogroup" aria-label="Format">' + fmtHtml + '</div></div>'
           + '<div class="gvx-section"><span class="gvx-lbl">Kapsam</span><div class="gvx-chips gvx-scope" role="radiogroup" aria-label="Kapsam">' + kapsamHtml + '</div></div>'
+          + ekHtml
           + '<div class="gvx-summary"><i class="fa-solid fa-filter"></i><span></span></div>'
           + '<div class="gv-modal-acts">'
           +   '<button type="button" class="btn btn-ghost btn-sm gv-m-cancel">Vazgeç</button>'
@@ -1944,10 +1975,26 @@
 
         var fmtChips = m.querySelectorAll('.gvx-fmt .chip');
         var scopeChips = m.querySelectorAll('.gvx-scope .chip:not(.is-locked)');
-        if(fmtChips.length) fmtChips[0].classList.add('is-on');
+        /* varsayılan seçim KİLİTLİ olmayan ilk çip — kilitli bir format açılışta seçili
+           gelirse "Çıktıyı Hazırla" yetkisiz bir işi tetiklerdi */
+        var ilkAcik = m.querySelector('.gvx-fmt .chip:not(.is-locked)');
+        if(ilkAcik) ilkAcik.classList.add('is-on');
         if(scopeChips.length) scopeChips[0].classList.add('is-on');
+        /* ek eksenlerin varsayılanı */
+        ekAlanlar.forEach(function(a){
+          var grup = m.querySelector('.gvx-ek[data-ekkey="' + a.key + '"]'); if(!grup) return;
+          var hedef = a.varsayilan ? grup.querySelector('.chip[data-deger="' + a.varsayilan + '"]') : null;
+          (hedef || grup.querySelector('.chip') || {classList:{add:function(){}}}).classList.add('is-on');
+        });
+        m.querySelectorAll('.gvx-ek').forEach(function(grup){
+          grup.addEventListener('click', function(e){
+            var c = e.target.closest('.chip'); if(!c || c.hasAttribute('disabled')) return;
+            grup.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
+            c.classList.add('is-on');
+          });
+        });
         m.querySelector('.gvx-fmt').addEventListener('click', function(e){
-          var c = e.target.closest('.chip'); if(!c) return;
+          var c = e.target.closest('.chip'); if(!c || c.hasAttribute('disabled')) return;
           Array.prototype.forEach.call(fmtChips, function(x){ x.classList.remove('is-on'); });
           c.classList.add('is-on');
         });
@@ -1967,8 +2014,13 @@
           var scopeEl = m.querySelector('.gvx-scope .chip.is-on');
           var fmt = fmtEl ? fmtEl.getAttribute('data-fmt') : formatlar[0];
           var kapsam = scopeEl ? scopeEl.getAttribute('data-scope') : kapsamList[0];
+          var ek = {};
+          m.querySelectorAll('.gvx-ek').forEach(function(g){
+            var on = g.querySelector('.chip.is-on');
+            if(on) ek[g.getAttribute('data-ekkey')] = on.getAttribute('data-deger');
+          });
           close();
-          runGvExport(fmt, kapsam);
+          runGvExport(fmt, kapsam, ek);
         });
       }
 
@@ -1991,6 +2043,14 @@
       });
     }
   };
+
+  /* [G-1] Oto-bağlama: `data-gv-export` taşıyan her tetikleyici, sayfa scripti
+     ayrıca `gvExport.bind()` çağırmasa da çalışır. `bind` idempotenttir
+     (`el._gvExport` nöbetçisi), bu yüzden kendi bind'ini çağıran 23 sayfada
+     çifte kayıt OLUŞTURMAZ. Revizyonda 30+ "Çıktı Al" butonu deklaratif
+     `data-gv-export`'a taşındığı için bu kanca olmadan sessizce ölü kalırlardı. */
+  function wireGvExports(){ window.gvExport.bind(); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireGvExports); else wireGvExports();
 
   /* ============================================================================
      gvEmpty — YÖNLENDİREN boş durum (B §9.1) + yükleniyor/hata/boş/kayıt durum
@@ -2423,7 +2483,7 @@
         if(cfg.arsiv.onToggle) chk.addEventListener('change', function(){ cfg.arsiv.onToggle(chk.checked); });
         handles.arsiv = { input: chk, get checked(){ return chk.checked; } };
       }
-      /* Çıktı Al / Dışa Aktar — mevcut gvExport'u çağırır */
+      /* Dışa Aktar — mevcut gvExport'u çağırır */
       if(cfg.export){
         var ebtn = cfg.export.trigger ? document.querySelector(cfg.export.trigger) : null;
         if(!ebtn){

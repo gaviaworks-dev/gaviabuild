@@ -331,7 +331,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         <span class="bb-count" id="kkBbCount">0 kayıt seçildi</span>
         <div class="bb-acts">
           <button type="button" class="btn btn-ghost btn-sm" id="kkBbClear"><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
-          <button type="button" class="btn btn-acc btn-sm" id="kkBbCikti"><i class="fa-solid fa-print"></i> Seçili Kayıtların Çıktısını Al</button>
+          <button type="button" class="btn btn-acc btn-sm" id="kkBbCikti"><i class="fa-solid fa-download"></i> Seçili Kayıtları Dışa Aktar</button>
         </div>
       </div>
       <div class="gc-body flush gv-cards-pad">
@@ -1202,22 +1202,24 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     var btn = document.getElementById('btnKkCikti');
     if(btn) btn.href = buildOutputUrl(false);
   }
-  document.getElementById('btnKkCikti').addEventListener('click', function(e){
-    if(selKKCount() > 0){
-      e.preventDefault();
-      location.href = buildOutputUrl(true);
-      return;
-    }
-    e.preventDefault();
-    gvConfirm({
-      title:'Tüm liste mi çıktı alınsın?',
-      message:'Hiç kayıt seçilmedi. Aktif filtrelere göre TÜM hareketlerin çıktısı alınacak.',
-      ok:'Evet, Tümünü Al', cancel:'Vazgeç',
-      onConfirm:function(){ location.href = buildOutputUrl(false); }
-    });
+  /* [G-1/R-13] "Tüm liste mi çıktı alınsın?" ayrı gvConfirm'i KALDIRILDI — o soru
+     artık Dışa Aktar modalinin Kapsam bölümü. buildOutputUrl() korundu, gvExport'a
+     fonksiyon ciktiHref olarak veriliyor (aktif banka/durum/tarih filtreleri ve
+     seçim çıktı sayfasına eskisi gibi taşınır). */
+  function kkCiktiHref(kapsam){ return buildOutputUrl(kapsam === 'secili'); }
+  gvExport.init('#btnKkCikti', {
+    baslik: 'Kredi kartı hareketleri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['tumu', 'filtreli', 'secili'],
+    ciktiHref: kkCiktiHref,
+    secimSayisi: selKKCount
   });
-  document.getElementById('kkBbCikti').addEventListener('click', function(){
-    location.href = buildOutputUrl(true);
+  gvExport.init('#kkBbCikti', {
+    baslik: 'Seçili kredi kartı hareketleri',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['secili', 'filtreli', 'tumu'],
+    ciktiHref: kkCiktiHref,
+    secimSayisi: selKKCount
   });
   syncCiktiHref();
 

@@ -523,7 +523,7 @@
     });
   }
 
-  /* ============ B §2.1 madde 9 — Çıktı Al (gvExport, deklaratif). data-export
+  /* ============ B §2.1 madde 9 — Dışa Aktar (gvExport, deklaratif). data-export
      "İşlem kayıtları" mock-sim akışından data-gv-export'a taşındı (K-200) — format
      + kapsam seçen zengin modal (B §6.4). GV_EXPORTERS kaydı YOK, o yüzden pdf/
      yazdir/excel dalları da gvResult('cikti-hazir', …) akışına düşer (normal). ============ */
@@ -537,10 +537,15 @@
     gvBulk.init('#tblLog', {
       skipRowSelector: '.log-day',
       aksiyonlar: [
-        {etiket:'Seçili Kayıtların Çıktısını Al', ikon:'fa-file-arrow-down', onClick:function(rows){
-          gvResult('cikti-hazir', {
-            mesaj: rows.length + ' işlem kaydı için çıktı hazırlandı. (statik prototip — gerçek dosya üretilmez)',
-            aksiyonlar: [{etiket:'Kapat', birincil:true}]
+        /* [G-1] Diğer 12 liste sayfasıyla aynı desen: ortak Dışa Aktar modali, kapsam
+           "seçili" ile açılır. Bu aksiyon ilk taramada gözden kaçmıştı — etiketi
+           "Çıktısını Al" olduğu için "Çıktı Al" araması yakalamamıştı. */
+        {etiket:'Seçili Kayıtları Dışa Aktar', ikon:'fa-download', onClick:function(rows){
+          gvExport.ac({
+            baslik: 'İşlem kayıtları',
+            formatlar: ['pdf', 'excel', 'yazdir'],
+            kapsam: ['secili', 'filtreli', 'tumu'],
+            secimSayisi: function(){ return rows.length; }
           });
         }}
       ]

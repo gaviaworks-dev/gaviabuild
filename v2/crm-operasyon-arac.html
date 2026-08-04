@@ -354,7 +354,7 @@
             <option value="pasif">Pasif Yap</option>
           </select>
           <button type="button" class="btn btn-ghost btn-sm" id="bbPasifBtn" data-no-confirm><i class="fa-solid fa-pause"></i> Toplu Pasife Al</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="bbExportBtn" data-export="Seçili araçlar" data-no-confirm><i class="fa-solid fa-download"></i> Seçilenleri Dışa Aktar</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="bbExportBtn" data-no-confirm><i class="fa-solid fa-download"></i> Seçilenleri Dışa Aktar</button>
           <button type="button" class="btn btn-ghost btn-sm" id="bbClearBtn" data-no-confirm><i class="fa-solid fa-xmark"></i> Seçimi Temizle</button>
         </div>
       </div>
@@ -1078,6 +1078,17 @@
       allChk.indeterminate = !allChk.checked && visibleChks.some(function(c){ return c.checked; });
     }
   }
+  /* [G-1] "Seçilenleri Dışa Aktar" da ortak modale taşındı. Bu buton deklaratif
+     `data-gv-export` ile taşınamadı: kapsamı "seçili kayıtlar" olduğu için modalin
+     seçim sayısını bilmesi gerekiyor (`secimSayisi` verilmezse "Seçili" çipi kilitli
+     açılır). GV_EXPORTERS['Seçili araçlar'] kaydı korundu — Excel dalı hâlâ
+     gerçek dosya indirir, yalnız artık PDF/Yazdır ve kapsam özeti de var. */
+  gvExport.init('#bbExportBtn', {
+    baslik: 'Seçili araçlar',
+    formatlar: ['pdf', 'excel', 'yazdir'],
+    kapsam: ['secili'],
+    secimSayisi: function(){ return Object.keys(selectedNos).length; }
+  });
   document.addEventListener('change', function(e){
     var chk = e.target.closest('.ar-chk'); if(!chk) return;
     var no = chk.getAttribute('data-no');

@@ -577,15 +577,18 @@
 
   /* ============ B §2.1 madde 10 — Seçili Kayıt İşlemleri (gvBulk). "Pasife Al"
      B §9.3'ün "sözleşme pasife alma" kritik aksiyonu — tehlikeli:true ile gvConfirm'den
-     geçer (gvBulk kendi toplu onay metnini gösterir). "Çıktı Al" statik prototip
-     bilgilendirmesi (gvResult) — sayfanın üst Dışa Aktar butonuyla AYNI dille. ============ */
+     geçer (gvBulk kendi toplu onay metnini gösterir). "Dışa Aktar" [G-1] ortak Dışa Aktar
+     modalini (gvExport.ac) kapsam "seçili" ile açar — sayfanın üst Dışa Aktar
+     butonuyla AYNI akış; ayrı bir "Çıktı Al" aksiyonu YOK. ============ */
   if(window.gvBulk && tblSozlesme){
     gvBulk.init('#tblSozlesme', {
       aksiyonlar: [
-        {etiket:'Çıktı Al', ikon:'fa-print', onClick:function(rows){
-          gvResult('cikti-hazir', {
-            mesaj: rows.length + ' sözleşme için çıktı hazırlandı. (statik prototip — gerçek dosya üretilmez)',
-            aksiyonlar: [{etiket:'Kapat', birincil:true}]
+        {etiket:'Dışa Aktar', ikon:'fa-download', onClick:function(rows){
+          gvExport.ac({
+            baslik: 'Seçili sözleşmeler',
+            formatlar: ['pdf', 'excel', 'yazdir'],
+            kapsam: ['secili', 'filtreli', 'tumu'],
+            secimSayisi: function(){ return rows.length; }
           });
         }},
         {etiket:'Pasife Al', ikon:'fa-power-off', tehlikeli:true, onClick:function(rows){
