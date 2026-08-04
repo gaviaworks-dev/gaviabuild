@@ -149,6 +149,16 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
         <div class="ph-sub">14 irsaliye · 9 fatura · sipariş bazlı mal kabul ve faturalandırma eşleştirmesi</div>
       </div>
       <div class="ph-actions">
+        <!-- [G-2] Dışa Aktar, liste üstündeki filtre şeridinden (.lh-acts) BURAYA,
+             birincil aksiyonların yanına taşındı. Ev stili: ghost aksiyonlar önce,
+             accent birincil en sağda (bu sayfada accent buton yok, hepsi ghost).
+             [G-2/R-18] Sayfa iki AYRI kapsam taşıyor (İrsaliyeler / Faturalar sekmesi),
+             bu yüzden kapsam başına bir buton kondu — kasa sayfasındaki "her kapsam
+             kendi butonunu taşır" kararının sekmeli karşılığı. Sekme motoru
+             (activate()) aktif sekmenin butonunu gösterir, diğerini gizler; başlıkta
+             asla iki özdeş "Dışa Aktar" yan yana durmaz. -->
+        <a class="btn btn-ghost btn-sm" href="#" data-tab-act="irsaliye" data-gv-export='{"baslik":"İrsaliye listesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-ghost btn-sm" href="#" data-tab-act="fatura" data-gv-export='{"baslik":"Fatura listesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar" hidden><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <button type="button" class="btn btn-ghost btn-sm" id="btnUplIrs" data-no-confirm><i class="fa-solid fa-upload"></i> İrsaliye Yükle</button>
         <button type="button" class="btn btn-ghost btn-sm" id="btnUplFtr" data-no-confirm><i class="fa-solid fa-upload"></i> Fatura Yükle</button>
       </div>
@@ -210,9 +220,6 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
                 <input type="checkbox" id="chkArsivIrs">
                 <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
               </label>
-              <a class="btn btn-ghost btn-sm" href="#" data-export="İrsaliye listesi" aria-label="Dışa Aktar">
-                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
-              </a>
             </div>
           </div>
           <div class="lh-achips gv-achips-row" id="irsAchips" hidden>
@@ -279,9 +286,6 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
                 <input type="checkbox" id="chkArsivFtr">
                 <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
               </label>
-              <a class="btn btn-ghost btn-sm" href="#" data-export="Fatura listesi" aria-label="Dışa Aktar">
-                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
-              </a>
             </div>
           </div>
           <div class="lh-achips gv-achips-row" id="ftrAchips" hidden>
@@ -420,6 +424,11 @@ tr.is-mismatch td{background:rgba(var(--danger-rgb,209,67,67),.05)}
       t.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    /* [G-2] Başlıktaki kapsam-özel Dışa Aktar butonları sekmeyle birlikte değişir —
+       aktif sekmenin kapsamı görünür, diğeri gizli kalır. */
+    document.querySelectorAll('.ph-actions [data-tab-act]').forEach(function(a){
+      a.hidden = a.getAttribute('data-tab-act') !== id;
+    });
   }
   tabs.forEach(function(t){
     t.addEventListener('click', function(){

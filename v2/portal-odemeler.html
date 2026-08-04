@@ -49,7 +49,17 @@ a{color:inherit;text-decoration:none}
 
 .pf-wrap{max-width:1080px;margin:0 auto;padding:22px 16px 8px}
 @media (min-width:900px){ .pf-wrap{padding:34px 32px 8px} }
-.pf-hero{margin-bottom:24px}
+/* [G-2] Portal kabuğu `.gv-page-head` DEĞİL `.pf-hero` kullanır; shell.css'teki
+   `.gv-page-head .ph-actions` kuralı buraya ERİŞMEZ. Aynı hizalamayı sayfa-lokal
+   olarak kuruyoruz (assets/ dosyalarına dokunmadan): hero flex olur, aksiyon grubu
+   sağa yaslanır, 640px altında tam genişlikte sarar. portal-talepler.html zaten
+   bu flex düzenindeydi — üç portal sayfası artık aynı. */
+.pf-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.pf-hero .ph-actions{display:flex;gap:10px;flex:none}
+@media (max-width:640px){
+  .pf-hero .ph-actions{flex-wrap:wrap;width:100%}
+  .pf-hero .ph-actions .btn{flex:1 1 auto;justify-content:center}
+}
 .pf-eyebrow{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--acc-ink);margin-bottom:7px}
 .pf-hero h1{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:var(--ink)}
 .pf-hero p{font-size:13.5px;color:var(--muted);margin:0;max-width:58ch;line-height:1.55}
@@ -146,9 +156,18 @@ a{color:inherit;text-decoration:none}
 <main class="pf-wrap">
 
   <div class="pf-hero">
-    <div class="pf-eyebrow">Ödeme Planı — VK-C-18</div>
-    <h1>Vadi Konakları C Blok 18</h1>
-    <p>SSZ-2026-003 sözleşmesi kapsamındaki taksit takviminiz ve tahsilat makbuzlarınız aşağıdadır.</p>
+    <div>
+      <div class="pf-eyebrow">Ödeme Planı — VK-C-18</div>
+      <h1>Vadi Konakları C Blok 18</h1>
+      <p>SSZ-2026-003 sözleşmesi kapsamındaki taksit takviminiz ve tahsilat makbuzlarınız aşağıdadır.</p>
+    </div>
+    <!-- [G-2/vaka B] Bu sayfada "Yeni …" butonu YOK, ama patron açıkça "yeni evrak
+         yapısı var gibi AYNI HİZADA duracak" dedi. Taksit tablosunun filtre şeridinden
+         (.lh-acts) alınan Dışa Aktar BURAYA taşındı; .ph-actions kabı tek çocukla
+         kuruldu. Emsal: crm-personel-ozluk.html. -->
+    <div class="ph-actions">
+      <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Taksit tablosu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+    </div>
   </div>
 
   <div class="kpi-grid">
@@ -203,9 +222,6 @@ a{color:inherit;text-decoration:none}
             <input type="checkbox" id="tksArsivGoster">
             <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
           </label>
-          <a class="btn btn-ghost btn-sm" href="#" data-export="Taksit tablosu" aria-label="Dışa Aktar">
-            <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
-          </a>
         </div>
       </div>
       <div class="lh-achips gv-achips-row" id="tksAchips" hidden>

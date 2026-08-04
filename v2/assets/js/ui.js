@@ -1914,16 +1914,55 @@
       var kapsamList = (opts.kapsam && opts.kapsam.length) ? opts.kapsam : ['tumu', 'filtreli'];
       var filtreOzeti = typeof opts.filtreOzeti === 'function' ? opts.filtreOzeti : gvxDefaultFilterSummary;
       var secimSayisi = typeof opts.secimSayisi === 'function' ? opts.secimSayisi : null;
+      /* [G-1] yazdirFn — "Yazdır" formatı seçildiğinde ÇAĞRILIR ve ciktiHref'i geçersiz
+         kılar. Dedike bir `-cikti.html` ekranı OLMAYAN, bunun yerine sayfayı @media print
+         ile kendisi basan sayfalar için: eskiden bu sayfalarda `window.print()` çağıran
+         AYRI bir buton duruyordu; G-1 tek buton istediği için o davranış modalin Yazdır
+         dalına taşınır. Verilmezse davranış aynen eskisi gibi (ciktiHref → çıktı sayfası). */
+      var yazdirFn = typeof opts.yazdirFn === 'function' ? opts.yazdirFn : null;
+      /* [G-2/R-14] ekAlanlar — Format ve Kapsam'ın ALTINA, aynı çip dilinde ek seçim
+         eksenleri koyar. Sayfaya özel bir çıktı sihirbazı ortak modale devredilirken
+         sihirbazın kendine has eksenleri (ör. puantajda Dönem: Haftalık/Günlük/Aylık,
+         Taşeron Firma) burada geri kazanılır — İŞLEV KAYBETTİRMEME kuralı.
+         Biçim: [{key:'donem', etiket:'Dönem', secenekler:[{deger,etiket,ikon}],
+                  varsayilan:'haftalik', gizle:function(){...}}]
+         Seçilen değerler ciktiHref'e 3. argüman olarak bir nesneyle geçer. */
+      var ekAlanlar = Array.isArray(opts.ekAlanlar) ? opts.ekAlanlar : [];
+      /* [G-2] formatKilit(fmt) — bir formatı KİLİTLER ve sebebini tooltip'te gösterir.
+         İki aksiyon birleşip yetki kuralları farklı kaldığında kullanılır: buton
+         herkese görünür (en geniş erişim korunur), kısıt YALNIZ kısıtlı formata
+         uygulanır. Dönüş: null/'' → serbest, string → kilitli + sebep. */
+      var formatKilit = typeof opts.formatKilit === 'function' ? opts.formatKilit : null;
 
-      function runGvExport(fmt, kapsam){
-        if(ciktiHref && (fmt === 'pdf' || fmt === 'yazdir')){
-          var qs = ciktiHref.indexOf('?') === -1 ? '?' : '&';
-          location.href = ciktiHref + qs + 'kapsam=' + encodeURIComponent(kapsam) + '&format=' + encodeURIComponent(fmt);
-          return;
-        }
+      function runGvExport(fmt, kapsam, ek){
+        ek = ek || {};
+        /* [G-1/R-13] ciktiHref FONKSİYON da olabilir: (kapsam, fmt) => url. Aktif
+           filtreleri/seçimi çıktı sayfasına taşıyan sayfalar (avans, kredi kartı,
+           kasa, pluxee…) böylece kendi buildOutputUrl() mantığını korur — eskiden
+           bunu ayrı bir "Tüm liste mi çıktı alınsın?" gvConfirm'i ile yapıyorlardı,
+           o soru artık modalin Kapsam bölümü. Statik string davranışı DEĞİŞMEDİ. */
+        if(fmt === 'yazdir' && yazdirFn){ yazdirFn(kapsam, ek); return; }
+        /* Gerçek indirme motoru HER ZAMAN önce denenir (mevcut davranış korunur). */
         if(fmt === 'excel'){
           var exporter = window.GV_EXPORTERS && window.GV_EXPORTERS[baslik];
-          if(exporter){ runExport(exporter, 'Excel'); return; }   /* mevcut gerçek indirme motoru — bkz. yukarı [data-export] bloğu */
+          if(exporter){ runExport(exporter, 'Excel'); return; }   /* bkz. yukarı [data-export] bloğu */
+        }
+        var href = typeof ciktiHref === 'function' ? ciktiHref(kapsam, fmt, ek) : ciktiHref;
+        /* [G-1] Excel de ciktiHref'e DÜŞEBİLİR. Eskiden yalnız pdf/yazdir düşerdi;
+           GV_EXPORTERS kaydı olmayan ama çıktı sayfası `?format=excel` üreten sayfalar
+           (ör. puantaj — kanonik roster liste sayfasında değil çıktı sayfasında) böylece
+           demo ekranına düşmek yerine gerçek dökümü verir. Exporter varsa yukarıda zaten
+           dönüldü, dolayısıyla mevcut gerçek indirmeler etkilenmez. */
+        if(href){
+          /* ciktiHref fonksiyonu kapsam/format'ı KENDİSİ eşlemiş olabilir (sayfaya özel
+             sözlükle, ör. kapsam=taseron). O durumda üstüne ham değeri EKLEMEYİZ — yoksa
+             URL'de aynı parametre iki kez görünür (ilki kazanır ama çıktı kirli olur). */
+          var qs = href.indexOf('?') === -1 ? '?' : '&';
+          var ek = '';
+          if(!/[?&]kapsam=/.test(href)) ek += 'kapsam=' + encodeURIComponent(kapsam) + '&';
+          if(!/[?&]format=/.test(href)) ek += 'format=' + encodeURIComponent(fmt) + '&';
+          location.href = ek ? href + qs + ek.slice(0, -1) : href;
+          return;
         }
         gvResult('cikti-hazir', {
           baslik: 'Çıktı hazırlandı',

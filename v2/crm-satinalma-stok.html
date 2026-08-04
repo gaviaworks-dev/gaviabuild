@@ -115,6 +115,18 @@
         <div class="ph-sub" id="phSub">23 kalem · 4 depo · ₺4.860.000 toplam stok değeri · 3 kalem min-stok altı</div>
       </div>
       <div class="ph-actions">
+        <!-- [G-2] Dışa Aktar, liste üstündeki filtre şeridinden (.lh-acts) BURAYA,
+             birincil ekleme butonunun yanına taşındı. Ev stili: ghost aksiyonlar
+             önce, accent birincil en sağda.
+             [G-2/R-18] Sayfa iki AYRI kapsam taşıyor (Kalemler / Hareketler sekmesi);
+             kapsam başına bir buton kondu, sekme motoru (activate()) yalnız aktif
+             sekmenin butonunu gösterir. Depolar sekmesi kart görünümü olduğu için
+             çıktı butonu YOK — o sekmede başlıkta da görünmez. -->
+        <a class="btn btn-ghost btn-sm" href="#" data-tab-act="kalemler" data-gv-export='{"baslik":"Stok kalemleri","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-ghost btn-sm" href="#" data-tab-act="hareketler" data-gv-export='{"baslik":"Stok hareketleri","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar" hidden><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <!-- [G-2] Depolar sekmesinin export'u eksikti (diğer iki sekmede vardı) —
+             tutarsızlık, tekdüzeliğe çekildi. -->
+        <a class="btn btn-ghost btn-sm" href="#" data-tab-act="depolar" data-gv-export='{"baslik":"Depo listesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar" hidden><i class="fa-solid fa-download"></i> Dışa Aktar</a>
         <a class="btn btn-acc btn-sm" href="crm-satinalma-stok-form.html" data-view="olusturabilir" hidden><i class="fa-solid fa-plus"></i> Yeni Hareket</a>
       </div>
     </div>
@@ -172,9 +184,6 @@
                 <input type="checkbox" id="chkArsivKalem">
                 <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
               </label>
-              <a class="btn btn-ghost btn-sm" href="#" data-export="Stok kalemleri" aria-label="Dışa Aktar">
-                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
-              </a>
             </div>
           </div>
           <div class="lh-achips gv-achips-row" id="kmAchips" hidden>
@@ -282,9 +291,6 @@
                 <input type="checkbox" id="chkArsivHareket">
                 <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
               </label>
-              <a class="btn btn-ghost btn-sm" href="#" data-export="Stok hareketleri" aria-label="Dışa Aktar">
-                <i class="fa-solid fa-download"></i> <span class="lh-lbl">Dışa Aktar</span>
-              </a>
             </div>
           </div>
           <div class="lh-achips gv-achips-row" id="hkAchips" hidden>
@@ -638,6 +644,11 @@
       t.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    /* [G-2] Başlıktaki kapsam-özel Dışa Aktar butonları sekmeyle birlikte değişir —
+       aktif sekmenin kapsamı görünür, diğerleri gizli kalır. */
+    document.querySelectorAll('.ph-actions [data-tab-act]').forEach(function(a){
+      a.hidden = a.getAttribute('data-tab-act') !== id;
+    });
   }
   tabs.forEach(function(t){
     t.addEventListener('click', function(){
