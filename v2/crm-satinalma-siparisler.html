@@ -148,7 +148,9 @@
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
            .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
-           çipleri) → .lh-tabs (durum tabları + malzeme kategori çipleri, §13.3). -->
+           çipleri) → .lh-tabs (TEK satır: durum tabları, §13.3).
+           [G-4] Malzeme kategorisi çip şeridi buradan KALDIRILDI, Gelişmiş Filtre
+           panelinde "Malzeme Kategorisi" select'i olarak yaşıyor. -->
       <div class="gv-listhead">
         <div class="lh-row">
           <div class="lh-search">
@@ -194,20 +196,12 @@
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <!-- §13.3 — malzeme kategorisi çipleri (sayfanın kendi sipariş kalemi mock
-               verisinden türetilmiştir: beton/demir-çelik/elektrik/hırdavat/yapı market) -->
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="katChipsSiparis" data-target="#tblSiparis">
-              <button class="chip is-on" data-filter="hepsi"><i class="fa-solid fa-layer-group"></i> Tüm Kategoriler <span class="ch-cnt">8</span></button>
-              <button class="chip" data-filter="beton">Beton <span class="ch-cnt">3</span></button>
-              <button class="chip" data-filter="demir">Demir &amp; Çelik <span class="ch-cnt">1</span></button>
-              <button class="chip" data-filter="elektrik">Elektrik <span class="ch-cnt">1</span></button>
-              <button class="chip" data-filter="hirdavat">Hırdavat <span class="ch-cnt">1</span></button>
-              <button class="chip" data-filter="yapi">Yapı Market <span class="ch-cnt">2</span></button>
-            </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
+          <!-- [G-4 — patron 01:27: "İSG tutanaklarında olduğu gibi tür, şantiye — bunların
+               tamamı gelişmiş filtrenin içerisinde olsun."] §13.3 malzeme kategorisi çip
+               şeridi BURADAN KALDIRILDI; ikinci bir filtre satırı olarak duruyordu. Eksen
+               YOK OLMADI: Gelişmiş Filtre panelinde `data-fp-key="kategori"` select'i
+               olarak yaşıyor (satırların data-kategori özniteliğini okur, aynı 5 değer).
+               Seçim yapılınca #achipsSiparisler'de aktif-filtre çipi olarak görünür. -->
         </div>
       </div>
       <div class="gc-body flush">
@@ -435,6 +429,20 @@
             <option value="kapandi">Kapandı</option>
           </select>
         </div>
+        <!-- [G-4] Liste üstündeki malzeme kategorisi çip şeridinin YENİ EVİ. Değerler
+             çiplerden birebir devralındı; gvFilterPanel satırın data-kategori
+             özniteliğiyle jenerik eşleştirme yapar (ui.js gvFpMakeEngine.applyToTable). -->
+        <div class="gfield">
+          <label>Malzeme Kategorisi</label>
+          <select data-fp-key="kategori" data-fp-label="Kategori">
+            <option value="">Tüm Kategoriler</option>
+            <option value="beton">Beton</option>
+            <option value="demir">Demir &amp; Çelik</option>
+            <option value="elektrik">Elektrik</option>
+            <option value="hirdavat">Hırdavat</option>
+            <option value="yapi">Yapı Market</option>
+          </select>
+        </div>
         <div class="gfield">
           <label>Tarih Aralığı</label>
           <div data-gvdaterange data-fp-key="tarih" data-fp-label="Sipariş Tarihi"></div>
@@ -477,16 +485,12 @@
       if(tr.getAttribute('data-santiye') !== 'vadi') tr.remove();
     });
     var counts = {hepsi:0, gecikme:0, kismi:0, tedarikcide:0, onaylandi:0, taslak:0, teslim:0, kapandi:0};
-    var katCounts = {hepsi:0, beton:0, demir:0, elektrik:0, hirdavat:0, yapi:0};
     var OPEN_F = ['gecikme', 'kismi', 'tedarikcide', 'onaylandi', 'taslak'];
     var acikTutar = 0, buAy = 0;
     document.querySelectorAll('#tblSiparis tbody tr').forEach(function(tr){
       counts.hepsi++;
       var f = tr.getAttribute('data-f');
       if(counts[f] !== undefined) counts[f]++;
-      katCounts.hepsi++;
-      var k = tr.getAttribute('data-kategori');
-      if(katCounts[k] !== undefined) katCounts[k]++;
       if(OPEN_F.indexOf(f) !== -1) acikTutar += parseInt(tr.getAttribute('data-tutar'), 10) || 0;
       if(tr.getAttribute('data-buay') === '1') buAy++;
     });
@@ -494,10 +498,7 @@
       var c = ch.querySelector('.ch-cnt');
       if(c) c.textContent = counts[ch.getAttribute('data-filter')] || 0;
     });
-    document.querySelectorAll('#katChipsSiparis .chip[data-filter]').forEach(function(ch){
-      var c = ch.querySelector('.ch-cnt');
-      if(c) c.textContent = katCounts[ch.getAttribute('data-filter')] || 0;
-    });
+    /* [G-4] kategori çip sayacı YOK — eksen Gelişmiş Filtre paneline taşındı. */
     var sub = document.getElementById('phSub');
     if(sub) sub.innerHTML = '<span data-table-count>' + counts.hepsi + '</span> sipariş · Vadi Konakları ekibiniz';
 
@@ -531,21 +532,50 @@
   }
 
   /* ============ §17 — Gelişmiş Filtre paneli ============
-     Durum (select) + Tarih Aralığı (daterange) alanları `gvFpMakeEngine`'in kendi
-     `.gv-fp-hide` mekanizmasıyla tabloya bağlanır (data-durum/data-tarih eşleşmesi) —
-     bu, aşağıdaki durum-tab/kategori-çip/arama/arşiv bileşik motorunun (tblSiparisApply,
-     tr.hidden) YANINDA bağımsız bir katman olarak çalışır; ikisi CSS'te AND'lenir
-     (.gv-fp-hide{display:none!important} + [hidden]) — K-220 dersi: iki motor AYNI
-     mülke (satırın hidden özniteliği) yazmaz, her biri kendi mekanizmasını kullanır. */
+     Durum (select) + Malzeme Kategorisi (select — [G-4] ile liste üstündeki çip
+     şeridinden BURAYA taşındı) + Tarih Aralığı (daterange) alanları `gvFpMakeEngine`'in
+     `.gv-fp-hide` mekanizmasıyla tabloya bağlanır (data-durum/data-kategori/data-tarih).
+     Kategori artık liste üstünde çip DEĞİL, bu yüzden panelin durumu aşağıdaki bileşik
+     motora (tblSiparisApply) da okutulur — kayıt sayacı ve boş durum panel süzmesini de
+     yansıtsın diye. K-220 dersi korunur: satırın `hidden` özniteliğine YALNIZ bileşik
+     motor yazar, panel kendi `.gv-fp-hide` sınıfını kullanır; ikisi CSS'te AND'lenir ve
+     her tblSiparisApply sonunda fpSiparis.refresh() ile senkronlanır (aksi hâlde çip
+     değişince eski `.gv-fp-hide` bayat kalır, satır geri açılmazdı). */
   document.querySelectorAll('#tblSiparis tbody tr[data-f]').forEach(function(tr){
     tr.setAttribute('data-durum', (tr.getAttribute('data-f') || '').split(' ')[0]);
   });
 
+  var fpSiparis = null;
   if(window.gvFilterPanel){
-    window.gvFilterPanel.init('#fpSiparisler', { table: '#tblSiparis' });
+    fpSiparis = window.gvFilterPanel.init('#fpSiparisler', {
+      table: '#tblSiparis',
+      onApply: function(){ tblSiparisApply(); }
+    });
+  }
+  /* panel durumunu satıra uygula — crm-santiye-isg.html'deki advMatch() ile aynı desen:
+     'tarih' daterange, geri kalan alanlar data-<key> eşitliği. */
+  function fpMatch(tr){
+    if(!fpSiparis) return true;
+    var st = fpSiparis.state() || {};
+    var keys = Object.keys(st);
+    for(var i = 0; i < keys.length; i++){
+      var k = keys[i], raw = st[k].raw;
+      if(k === 'tarih'){
+        var ds = tr.getAttribute('data-tarih');
+        if(ds && raw && raw.from){
+          var d = new Date(ds + 'T00:00:00');
+          if(d < raw.from || d > raw.to) return false;
+        }
+      } else {
+        var attr = tr.getAttribute('data-' + k);
+        if(attr !== null && attr !== st[k].value) return false;
+      }
+    }
+    return true;
   }
 
-  /* ============ V3A — durum tabı + malzeme kategorisi + arama + arşiv (§13.3) ============
+  /* ============ V3A — durum tabı + arama + arşiv + gelişmiş filtre (§13.3) ============
+     [G-4] malzeme kategorisi ekseni buradan çıktı, fpMatch() üzerinden panelden geliyor.
      `.chip[data-filter]` tıklaması ve arama input'u zaten ui.js'in wireTables()'ı
      tarafından dinlenir; BURADA yalnız tblSiparis._gvApply KAYDEDİLİR — D18 bileşik-motor
      delegasyonu (applyFilters, ui.js ~satır 686) bunu otomatik çağırır, iki bağımsız
@@ -555,18 +585,16 @@
     var card = tbl.closest('.gv-card');
     var durumOn = document.querySelector('#durumChipsSiparis .chip.is-on[data-filter]');
     var durum = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
-    var katOn = document.querySelector('#katChipsSiparis .chip.is-on[data-filter]');
-    var kat = katOn ? katOn.getAttribute('data-filter') : 'hepsi';
     var inp = card ? card.querySelector('input[data-table-search]') : null;
     var term = inp ? inp.value.trim().toLocaleLowerCase('tr') : '';
     var showArsiv = (document.getElementById('fltArsivGosterSiparis') || {}).checked;
     var shown = 0;
     tbl.querySelectorAll('tbody tr').forEach(function(tr){
       var okDurum = durum === 'hepsi' || tr.getAttribute('data-f') === durum;
-      var okKat = kat === 'hepsi' || tr.getAttribute('data-kategori') === kat;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okArsiv = showArsiv || tr.getAttribute('data-arsiv') !== '1';
-      var show = okDurum && okKat && okTerm && okArsiv;
+      var okFp = fpMatch(tr);   /* [G-4] malzeme kategorisi + durum/tarih paneli */
+      var show = okDurum && okTerm && okArsiv && okFp;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -574,6 +602,9 @@
     if(empty) empty.hidden = shown !== 0;
     var cnt = (card && card.querySelector('[data-table-count]')) || document.querySelector('[data-table-count]');
     if(cnt) cnt.textContent = shown;
+    /* panelin .gv-fp-hide katmanını taze `hidden` durumuna göre yeniden hesapla —
+       bayat sınıf yüzünden satırın geri açılamaması sorununu kapatır (yukarıdaki not). */
+    if(fpSiparis) fpSiparis.refresh();
   }
   var tblSiparisEl = document.getElementById('tblSiparis');
   if(tblSiparisEl) tblSiparisEl._gvApply = tblSiparisApply;

@@ -63,14 +63,9 @@
    tablosunun İÇİNDE "Pasifleri Göster" ile açılıp kapanan 4 satır. Eski kart CSS'i
    ve DOM'u KALDIRILDI (bkz tasks/kararlar.md). */
 
-/* Şantiye Türü ikinci chip satırı artık `.lh-tabs` İÇİNDE, durum sekmelerinin
-   ALTINDA kendi satırı (§2.1/§2.3) — Gelişmiş Filtre/Kolonlar `.lh-acts`'a taşındı,
-   bu yüzden bu alt satırda artık yalnız etiket + chip slider kalıyor. */
-.lh-tabs{flex-direction:column;align-items:stretch;gap:10px}
-.tur-sub-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.tur-sub-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none}
-.tur-sub-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-@media(max-width:640px){ .tur-sub-row .frow-lbl{width:100%} }
+/* [G-3/G-4] Şantiye Türü alt çip satırı kaldırıldı (eksen Gelişmiş Filtre'de) —
+   `.lh-tabs` artık tek satır: durum sekmeleri slider'ı. Sütun düzeni ve
+   `.tur-sub-row` kuralları gereksizleşti, silindi. */
 </style>
 </head>
 <body data-sec="santiye" data-screen="liste">
@@ -112,7 +107,13 @@
     <!-- ============ B §2.1 madde 3 — Özet Bilgi Kartları (kpi-grid), sayılar
          shell.js "V2 SAYIM KANONİĞİ" bloğuyla KİLİTLİ: 9 toplam · 5 aktif görünüm ·
          3 aktif · 1 planlama · 1 tamamlanan · 4 pasif/arşiv. ============ -->
-    <div class="kpi-grid" id="santiyeKpiGrid">
+    <!-- [G-3] KPI şeridi 5 kart taşıyor; 4-sütun ızgarada 5. kart ikinci satıra
+         öksüz düşüyordu — patronun [01:03]'te işaret ettiği tam bu. Ortak `.kpi-rail`
+         (gvChipBar motoru) ile tek satır + yatay kaydırma. Kart sayısı satırı düzgün
+         dolduran sayfalarda (4, 8, 12) ızgara KORUNDU, gereksiz yere slider yapılmadı. -->
+    <div class="kpi-rail-wrap" data-chipbar>
+      <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="kpi-rail" id="santiyeKpiGrid">
       <div class="kpi-card">
         <div class="kpi-ico"><i class="fa-solid fa-helmet-safety"></i></div>
         <div><div class="kpi-num num">9</div><div class="kpi-lbl">Toplam şantiye</div>
@@ -138,6 +139,8 @@
         <div><div class="kpi-num num">4</div><div class="kpi-lbl">Pasif / Arşiv</div>
         <div class="kpi-delta down"><i class="fa-solid fa-power-off"></i> Pasif · Askıda · Arşiv · İptal</div></div>
       </div>
+    </div>
+      <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 
     <div class="gv-card">
@@ -192,19 +195,14 @@
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <div class="tur-sub-row" id="turFilterRow">
-            <span class="frow-lbl">Şantiye Türü</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="turChips">
-                <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">9</span></button>
-                <button class="chip" data-tur="yapsat">Yapsat <span class="ch-cnt">4</span></button>
-                <button class="chip" data-tur="kamu">Kamu <span class="ch-cnt">2</span></button>
-                <button class="chip" data-tur="taahhut">Taahhüt <span class="ch-cnt">3</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
+          <!-- [G-3/G-4] "Şantiye Türü" ikinci çip satırı KALDIRILDI. Patron [01:03]:
+               "Liste sayfalandırmalarında hiçbir şekilde ikinci bir satıra geçmesin.
+               Bu tarz satırlardaki içerikler gelişmiş filtre içerisinde oluşsun."
+               Bu eksen Gelişmiş Filtre panelinde ZATEN vardı (alan key:'tur') — yani
+               çift duruyordu (G-4: "aynı filtre hem üstte hem gelişmiş filtrede çift
+               durmayacak"). Üstte tek satır kaldı: durum sekmeleri (zaten slider).
+               İşlev kaybı YOK — türe göre süzme paneldeki alandan yapılıyor ve
+               advMatch() data-tur özniteliğini aynı şekilde okuyor. -->
         </div>
       </div>
 
@@ -586,9 +584,9 @@
     });
     var sub = document.querySelector('.ph-sub');
     if(sub) sub.innerHTML = 'Vadi Konakları · sorumlu olduğunuz şantiye';
-    /* şef tek şantiyesini görür — Şantiye Türü filtresinin bir anlamı kalmıyor,
-       gelişmiş filtre paneli ve tetikleyici tümüyle kaldırılır (§4.1 "Görebilenler" emsali). */
-    var turRow = document.getElementById('turFilterRow'); if(turRow) turRow.remove();
+    /* şef tek şantiyesini görür — aktif filtre çipi şeridi anlamsız kalır.
+       [G-4] Eski `turFilterRow` kaldırması burada gereksizleşti; o satırın kendisi
+       artık yok (eksen Gelişmiş Filtre'de). */
     var achRow = document.getElementById('achipsSantiye'); if(achRow) achRow.remove();
   }
   var isAdminRole = GV.role === 'superadmin' || GV.role === 'sahip' || GV.role === 'yonetim';
@@ -655,24 +653,9 @@
     });
   }
 
-  /* Şantiye Türü hızlı çip satırı — bağımsız hızlı eksen, mevcut kalır. */
-  var curTur = 'hepsi';
-  var turChips = document.getElementById('turChips');
-
-  function setTur(tur){
-    curTur = tur || 'hepsi';
-    if(turChips){
-      turChips.querySelectorAll('.chip').forEach(function(c){
-        c.classList.toggle('is-on', c.getAttribute('data-tur') === curTur);
-      });
-    }
-    reApply();
-  }
-  if(turChips){
-    turChips.querySelectorAll('.chip[data-tur]').forEach(function(ch){
-      ch.addEventListener('click', function(){ setTur(ch.getAttribute('data-tur')); });
-    });
-  }
+  /* [G-4] Şantiye Türü hızlı çip satırı kaldırıldı — eksen Gelişmiş Filtre'nin
+     `tur` alanında yaşıyor ve advMatch() onu data-tur'dan okuyor. Ayrı bir curTur
+     durumu tutmaya gerek kalmadı (iki kontrol tek ekseni sürmez, K-306b ilkesi). */
 
   /* ============ §6.4 — Gelişmiş Filtre (gvFilterDrawer, 14 alan) ============
      opts.table BİLİNÇLİ OLARAK verilmedi: paylaşılan applyToTable motoru daterange
@@ -811,12 +794,11 @@
       var shown = 0;
       tblSantiye.querySelectorAll('tbody tr').forEach(function(tr){
         var okF = f === 'hepsi' || tr.getAttribute('data-f') === f;
-        var okTur = curTur === 'hepsi' || tr.getAttribute('data-tur') === curTur;
         var okT = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-        var okAdv = advMatch(tr);
+        var okAdv = advMatch(tr);   /* [G-4] tür ekseni artık burada */
         var isPasif = tr.getAttribute('data-aktifpasif') === 'pasif';
         var okPasif = !isPasif || showPasif || PASIF_FILTERS.indexOf(f) !== -1;
-        var show = okF && okTur && okT && okAdv && okPasif;
+        var show = okF && okT && okAdv && okPasif;
         tr.hidden = !show;
         if(show) shown++;
       });

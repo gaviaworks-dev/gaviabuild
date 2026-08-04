@@ -38,10 +38,9 @@
 .kanal-cell i{font-size:11px;color:var(--muted)}
 .kanal-portal{background:var(--info-tint);color:var(--info);border-color:transparent}
 
-/* iki grup filtre çubuğu (tür + durum) — chip motoru custom JS ile çalışır */
-.filter-bar2{display:flex;flex-direction:column;gap:10px;padding:16px 22px;border-bottom:1px solid var(--line)}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .fr-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none}
+/* [G-4] `.filter-bar2` / `.filter-row` / `.fr-lbl` KALDIRILDI — "tür + durum" iki
+   grup filtre çubuğu tek durum şeridine indi (tür Gelişmiş Filtre'ye taşındı),
+   başlıklı iki-satırlı çubuk artık hiçbir yerde kullanılmıyor. */
 
 @media(max-width:640px){
   .kpi-num{font-size:19px}
@@ -110,10 +109,16 @@
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
            .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
-           çipleri, gvFilterDrawer tarafından doldurulur) → .lh-tabs (tür + durum
-           sekmeleri, iki eşdeğer birincil eksen — doküman §2.1 örneğindeki
-           "kategori/durum menüleri" ile birebir, ikisi de üst kontrol satırında
-           kalabalık YARATMADAN alt satırda kalır). -->
+           çipleri, gvFilterDrawer tarafından doldurulur) → .lh-tabs (TEK çip şeridi:
+           durum).
+           [G-4] "Tür" çip şeridi (7 çip + "TÜR" başlık satırı) BURADAN KALDIRILDI,
+           Gelişmiş Filtre panelinde `key:'tur'` select alanına taşındı. Patron [01:27]:
+           "İSG tutanaklarında olduğu gibi tür, şantiye — bunların tamamı gelişmiş
+           filtrenin içerisinde olsun." Süzme kaybı YOK: satırlardaki `data-tur`
+           özniteliği aynı, yalnız değerin kaynağı çip yerine panel.
+           [G-3] Kalan durum şeridi zaten `.gv-chipbar` slider'ında — sarmaz, kayar.
+           Başlık satırları (.filter-row > .fr-lbl) tek eksen kalınca gereksizleşti,
+           crm-santiye.html emsalindeki gibi kaldırıldı. -->
       <div class="gv-listhead">
         <div class="lh-row">
           <div class="lh-search">
@@ -140,25 +145,6 @@
           </div>
         </div>
         <div class="lh-tabs">
-          <div class="filter-row" style="padding:10px 22px 0">
-            <span class="fr-lbl">Tür</span>
-          </div>
-          <div class="gv-chipbar-wrap" data-chipbar>
-            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="gv-chipbar chips" id="chipsTur">
-              <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">12</span></button>
-              <button class="chip" data-tur="eksik">Eksik İş <span class="ch-cnt">5</span></button>
-              <button class="chip" data-tur="garanti">Garanti <span class="ch-cnt">2</span></button>
-              <button class="chip" data-tur="bakim">Bakım <span class="ch-cnt">2</span></button>
-              <button class="chip" data-tur="sikayet">Şikayet <span class="ch-cnt">1</span></button>
-              <button class="chip" data-tur="bilgi">Bilgi <span class="ch-cnt">1</span></button>
-              <button class="chip" data-tur="teslimat">Teslimat Problemi <span class="ch-cnt">1</span></button>
-            </div>
-            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-          <div class="filter-row" style="padding:10px 22px 0">
-            <span class="fr-lbl">Durum</span>
-          </div>
           <div class="gv-chipbar-wrap" data-chipbar>
             <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
             <div class="gv-chipbar chips" id="chipsDurum">
@@ -320,19 +306,22 @@
     });
   });
 
-  /* SST'de temsilci budaması YOK (matris: temsilci + teknik tam görür) — yalnız
-     tür + durum çift chip filtresi çalışır; genel .chip[data-filter] motoruyla
-     ÇAKIŞMASIN diye burada data-tur/data-durum özel öznitelikleriyle custom JS. */
+  /* SST'de temsilci budaması YOK (matris: temsilci + teknik tam görür) — liste
+     üstünde YALNIZ durum chip şeridi kalır (G-4: tür ekseni Gelişmiş Filtre'ye
+     taşındı); genel .chip[data-filter] motoruyla ÇAKIŞMASIN diye burada
+     data-durum özel özniteliğiyle custom JS. */
   var rows = Array.prototype.slice.call(document.querySelectorAll('#tblSst tbody tr'));
-  var turOn = 'hepsi', durumOn = 'hepsi';
+  var durumOn = 'hepsi';
   var searchInp = document.getElementById('sstSearch');
   var emptyEl = document.querySelector('[data-table-empty]');
   var cntEl = document.querySelector('[data-table-count]');
 
   /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
-     Kanal ve Atanan, tabloda zaten gösterilen ama tür/durum sekmeleriyle
-     KAPSANMAYAN iki gerçek boyuttur (§4.3 örnekleri: "Belge durumu"na karşılık
-     gelen kanal, "Personel"e karşılık gelen atanan). */
+     Kanal ve Atanan, tabloda zaten gösterilen ama durum sekmesiyle KAPSANMAYAN
+     iki gerçek boyuttur (§4.3 örnekleri: "Belge durumu"na karşılık gelen kanal,
+     "Personel"e karşılık gelen atanan).
+     [G-4] Tür ekseni de artık burada — eski çip şeridinin etiket/değer çiftleri
+     birebir korunarak `key:'tur'` select alanına geçti. */
   var sstFd = null;
   function sstFv(key){
     if(!sstFd) return null;
@@ -342,12 +331,13 @@
 
   function apply(){
     var term = searchInp.value.trim().toLocaleLowerCase('tr');
+    var tur = sstFv('tur');
     var kanal = sstFv('kanal');
     var atanan = sstFv('atanan');
     var showArsiv = (document.getElementById('sstArsivGoster') || {}).checked;
     var shown = 0;
     rows.forEach(function(tr){
-      var okTur = turOn === 'hepsi' || tr.getAttribute('data-tur') === turOn;
+      var okTur = !tur || tr.getAttribute('data-tur') === tur;
       var okDurum = durumOn === 'hepsi' || tr.getAttribute('data-durum') === durumOn;
       var okArsiv = showArsiv || tr.getAttribute('data-recstat') !== 'arsiv';
       var okKanal = true;
@@ -369,14 +359,6 @@
     cntEl.textContent = shown;
   }
 
-  document.querySelectorAll('#chipsTur .chip').forEach(function(ch){
-    ch.addEventListener('click', function(){
-      document.querySelectorAll('#chipsTur .chip').forEach(function(x){ x.classList.remove('is-on'); });
-      ch.classList.add('is-on');
-      turOn = ch.getAttribute('data-tur');
-      apply();
-    });
-  });
   document.querySelectorAll('#chipsDurum .chip').forEach(function(ch){
     ch.addEventListener('click', function(){
       document.querySelectorAll('#chipsDurum .chip').forEach(function(x){ x.classList.remove('is-on'); });
@@ -394,6 +376,10 @@
       title: 'Gelişmiş Filtre',
       chipsMount: '#sstAchips',
       fields: [
+        {key:'tur', type:'select', label:'Tür', options:[
+          {v:'eksik', l:'Eksik İş'}, {v:'garanti', l:'Garanti'}, {v:'bakim', l:'Bakım'},
+          {v:'sikayet', l:'Şikayet'}, {v:'bilgi', l:'Bilgi'}, {v:'teslimat', l:'Teslimat Problemi'}
+        ]},
         {key:'kanal', type:'select', label:'Kanal', options:[
           {v:'Portal', l:'Portal'}, {v:'Telefon', l:'Telefon'}, {v:'Teslim Kontrolü', l:'Teslim Kontrolü'}
         ]},

@@ -19,8 +19,17 @@
 /* ============ SAYFAYA ÖZEL — Kredi Kartı ============ */
 
 /* kart seçici şerit — D19/S12: kasa .ks-card gibi SEÇİCİ, tıklanınca alttaki Kart
-   Defteri o karta filtrelenir (banka filtre chip'leriyle senkron kalır — syncBankaUI) */
-.kk-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}
+   Defteri o karta filtrelenir (banka filtre chip'leriyle senkron kalır — syncBankaUI).
+   [R-20 · G-3/G-4] Patron [06:09]: "kredi kartları… slider olacak." 4-sütun ızgara
+   ≤980px'te 2, ≤640px'te 4 satıra sarıyordu ve yeni kart eklendikçe masaüstünde de
+   ikinci satıra taşacaktı. Izgara YERİNE ortak `.kpi-rail` rayı (gvChipBar motoru,
+   ui.css) — ayrı bir kaydırma motoru İCAT EDİLMEDİ; kartlar .kpi-card değil .kk-card
+   olduğu için ölçü kuralları burada, sayfa-lokal veriliyor (brief Vaka 4). */
+.kk-strip{gap:14px}
+.kpi-rail>.kk-card{flex:0 0 calc((100% - 42px)/4);min-width:230px;scroll-snap-align:start}
+@media(max-width:1180px){ .kpi-rail>.kk-card{flex:0 0 calc((100% - 28px)/3);min-width:220px} }
+@media(max-width:980px){  .kpi-rail>.kk-card{flex:0 0 calc((100% - 14px)/2);min-width:200px} }
+@media(max-width:640px){  .kpi-rail>.kk-card{flex:0 0 84%;min-width:0} }
 .kk-card{
   background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);
   padding:18px;text-align:left;font-family:inherit;cursor:pointer;transition:.22s var(--ease);
@@ -83,25 +92,16 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
    masaüstü tablo hücresinin ellipsis/nowrap kısıtlaması burada gerekmiyor, sarmalansın. */
 @media(max-width:640px){ #tblKK .df-desc{max-width:none;white-space:normal;overflow:visible;text-overflow:clip} }
 
-/* [T5A/Dalga5] display:flex;flex-direction:column YERİNE display:block + margin-bottom —
-   sütun-yönlü flex konteynerde iç içe geçmiş .filter-row (satır-yönlü flex + flex-wrap)
-   390px'te KENDİ min-content genişliğine göre büyüyüp konteyneri taşırıyordu (nested flex
-   stretch/shrink algoritması çakışması — min-width:0 TEK BAŞINA yetmedi). Block context'te
-   her çocuk zaten blok-seviye tam genişlik alır, taşma riski YOK; görsel boşluk gap yerine
-   margin-bottom ile korunur. */
-.filter-bar.stack{display:block}
-.filter-bar.stack > *:not(:last-child){margin-bottom:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-/* [T5A/Dalga5] .filter-bar.stack SÜTUN yönlü olduğundan .filter-row bir cross-axis flex
-   item'ı — min-width:0 OLMADAN uzun chip etiketleri satırı 390px konteynerin dışına
-   TAŞIRIR (flex item min-width:auto tuzağının bir üst seviyedeki hali). Banka/Durum
-   satırlarındaki gv-chipbar-wrap ise frow-lbl + (Banka satırında) Arşivlenenleri Göster
-   ile AYNI flex satırını paylaşır — o da kendi min-width:auto tuzağına düşmesin diye
-   esner (spec-liste-mimarisi.md §1 notu). */
-.filter-bar.stack .filter-row{min-width:0}
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-@media(max-width:640px){ .filter-row .gv-chipbar-wrap{width:100%} }
+/* [G-3/G-4] Liste üstündeki ÜÇ satırlık filtre yığını (Banka / Durum / Tarih Aralığı)
+   TEK satıra indi. Patron [01:03]: "Liste sayfalandırmalarında hiçbir şekilde ikinci
+   bir satıra geçmesin. Bu tarz satırlardaki içerikler gelişmiş filtre içerisinde olsun."
+   · Durum çip satırı SİLİNDİ — panelin "Onay Durumu" alanı aynı üç değeri (ok/onaylandi/
+     bekliyor) aynı data-durum eşleşmesiyle zaten süzüyordu (çift temsil).
+   · Tarih Aralığı Gelişmiş Filtre paneline TAŞINDI (crm-operasyon-kasa.html emsali:
+     panelde `data-gvdaterange data-fp-key="tarih"`).
+   · Geriye Banka çip şeridi kaldı — kart şeridiyle senkron PRİMER kapsam, "Tümü"ye
+     dönüşün tek yolu olduğu için kaldırılmadı.
+   Böylece .filter-bar.stack / .filter-row / .frow-lbl yardımcıları gereksizleşti. */
 
 /* satır seçimi + detay paneli (Dalga 18 — ?islem= master-detail); yalnız data-id
    taşıyan gerçek işlem satırları tıklanabilir — df-devir/df-total/df-mevcut hariç */
@@ -115,10 +115,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
 .gdg-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .gdg-val{font-size:14px;color:var(--ink);font-weight:600;line-height:1.4}
 
-@media(max-width:980px){.kk-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){
-  .kk-strip{grid-template-columns:1fr}
-  .filter-row .frow-lbl{min-width:0;width:100%}
   .gv-detail-grid{grid-template-columns:1fr;padding:16px}
 }
 
@@ -234,7 +231,11 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
 
     <!-- kart seçici şerit — tıklanınca alttaki tablo filtrelenir -->
     <!-- statik bake (D18-B2): JS load'da aynı mount'u kanonik veriden yeniden basar -->
-    <div class="kk-strip" id="kkStrip"><button type="button" class="kk-card" data-banka="garanti"><div class="kk-top"><div class="kk-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">G</div><div class="kk-id"><div class="kk-bank">Garanti BBVA</div><span class="kk-no">•4512</span></div></div><div class="kk-owner">Hasan Demirci</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:78%"></div></div><span class="gbar-val">%78</span></div><div class="kk-avail">Kullanılabilir ₺32.600</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 8'i</div></button><button type="button" class="kk-card" data-banka="akbank"><div class="kk-top"><div class="kk-mark" style="background:var(--info-tint);color:var(--info)">A</div><div class="kk-id"><div class="kk-bank">Akbank</div><span class="kk-no">•7789</span></div></div><div class="kk-owner">Baran Yıldız</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:41%"></div></div><span class="gbar-val">%41</span></div><div class="kk-avail">Kullanılabilir ₺58.700</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 15'i</div></button><button type="button" class="kk-card" data-banka="is"><div class="kk-top"><div class="kk-mark" style="background:var(--ok-tint);color:var(--ok)">İ</div><div class="kk-id"><div class="kk-bank">İş Bankası</div><span class="kk-no">•2301</span></div></div><div class="kk-owner">Merkez (Nesrin Aydın)</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:32%"></div></div><span class="gbar-val">%32</span></div><div class="kk-avail">Kullanılabilir ₺136.200</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 20'si</div></button><button type="button" class="kk-card" data-banka="ykb"><div class="kk-top"><div class="kk-mark" style="background:var(--bg);color:var(--ink-2)">Y</div><div class="kk-id"><div class="kk-bank">Yapı Kredi</div><span class="kk-no">•9944</span></div></div><div class="kk-owner">Elif Sarıkaya</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:16%"></div></div><span class="gbar-val">%16</span></div><div class="kk-avail">Kullanılabilir ₺62.850</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 25'i</div></button></div>
+    <div class="kpi-rail-wrap" data-chipbar>
+      <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+      <div class="kk-strip kpi-rail" id="kkStrip"><button type="button" class="kk-card" data-banka="garanti"><div class="kk-top"><div class="kk-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">G</div><div class="kk-id"><div class="kk-bank">Garanti BBVA</div><span class="kk-no">•4512</span></div></div><div class="kk-owner">Hasan Demirci</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:78%"></div></div><span class="gbar-val">%78</span></div><div class="kk-avail">Kullanılabilir ₺32.600</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 8'i</div></button><button type="button" class="kk-card" data-banka="akbank"><div class="kk-top"><div class="kk-mark" style="background:var(--info-tint);color:var(--info)">A</div><div class="kk-id"><div class="kk-bank">Akbank</div><span class="kk-no">•7789</span></div></div><div class="kk-owner">Baran Yıldız</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:41%"></div></div><span class="gbar-val">%41</span></div><div class="kk-avail">Kullanılabilir ₺58.700</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 15'i</div></button><button type="button" class="kk-card" data-banka="is"><div class="kk-top"><div class="kk-mark" style="background:var(--ok-tint);color:var(--ok)">İ</div><div class="kk-id"><div class="kk-bank">İş Bankası</div><span class="kk-no">•2301</span></div></div><div class="kk-owner">Merkez (Nesrin Aydın)</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:32%"></div></div><span class="gbar-val">%32</span></div><div class="kk-avail">Kullanılabilir ₺136.200</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 20'si</div></button><button type="button" class="kk-card" data-banka="ykb"><div class="kk-top"><div class="kk-mark" style="background:var(--bg);color:var(--ink-2)">Y</div><div class="kk-id"><div class="kk-bank">Yapı Kredi</div><span class="kk-no">•9944</span></div></div><div class="kk-owner">Elif Sarıkaya</div><div class="gbar"><div class="gbar-track"><div class="gbar-fill " style="width:16%"></div></div><span class="gbar-val">%16</span></div><div class="kk-avail">Kullanılabilir ₺62.850</div><div class="kk-ekstre"><i class="fa-regular fa-calendar"></i> Ekstre kesim: Ayın 25'i</div></button></div>
+      <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
 
     <!-- ============ V3A (tasks/spec-v3a-ortak.md §3) — Liste/Grafikler/Özet tab iskeleti,
          T-Y4 Dalga 3. kk-strip kart seçici (üstte) bir TAB DEĞİL, KORUNDU. gvTabs.init
@@ -292,45 +293,20 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
             </button>
           </div>
         </div>
+        <!-- [G-3/G-4] TEK çip satırı: Banka (kart şeridiyle senkron primer kapsam).
+             Durum → panelin "Onay Durumu" alanı, Tarih Aralığı → panelin "Tarih Aralığı"
+             alanı. Satır sarmaz, yatay kayar. -->
         <div class="lh-tabs">
-          <!-- 3 sıra (Banka/Durum/Tarih) tek flex-item olarak .lh-tabs'a verilir — .lh-tabs
-               yatay tek-satır flex konteynerdir (yalnız TEK gv-chipbar-wrap için tasarlı);
-               birden çok .filter-row'u kendi içinde DİKEY yığmak için mevcut sayfa-lokal
-               `.filter-bar.stack{display:block}` kuralı (K-220 öncesi, DOKUNULMADI) yeniden
-               kullanılır — yalnız width:100% eklendi, çünkü artık üstteki flex-item genişliği
-               içerik-genişliğine değil .lh-tabs'ın verdiği alana göre belirlenmeli. -->
-          <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
-          <div class="filter-row">
-            <span class="frow-lbl">Banka</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="kkBankaChips">
-                <button class="chip is-on" data-banka="hepsi">Tümü <span class="ch-cnt">16</span></button>
-                <button class="chip" data-banka="garanti">Garanti BBVA <span class="ch-cnt">7</span></button>
-                <button class="chip" data-banka="akbank">Akbank <span class="ch-cnt">4</span></button>
-                <button class="chip" data-banka="is">İş Bankası <span class="ch-cnt">3</span></button>
-                <button class="chip" data-banka="ykb">Yapı Kredi <span class="ch-cnt">2</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="kkBankaChips">
+              <button class="chip is-on" data-banka="hepsi">Tümü <span class="ch-cnt">16</span></button>
+              <button class="chip" data-banka="garanti">Garanti BBVA <span class="ch-cnt">7</span></button>
+              <button class="chip" data-banka="akbank">Akbank <span class="ch-cnt">4</span></button>
+              <button class="chip" data-banka="is">İş Bankası <span class="ch-cnt">3</span></button>
+              <button class="chip" data-banka="ykb">Yapı Kredi <span class="ch-cnt">2</span></button>
             </div>
-          </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Durum</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="kkDurumChips">
-                <button class="chip is-on" data-durum="hepsi">Tümü</button>
-                <button class="chip" data-durum="ok">Kayıtlı</button>
-                <button class="chip" data-durum="onaylandi">Onaylandı</button>
-                <button class="chip" data-durum="bekliyor">Onay Bekliyor</button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Tarih Aralığı</span>
-            <div id="kkDateRange"></div>
-          </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
       </div>
@@ -538,7 +514,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
 </div>
 
 <!-- ============ §9/T-G1 — sağ off-canvas gelişmiş filtre paneli (tasks/spec-filtre-tarih.md).
-     Sayfanın kendi çok eksenli filtre motoru (banka/durum/tarih/arama) zaten curBanka/curDurum/
+     Sayfanın kendi çok eksenli filtre motoru (banka/arama + panel eksenleri) zaten curBanka/
      curTarih ile çalışıyor — bu yüzden opts.table VERİLMEZ; panel alanları BAĞIMSIZ ek eksenler
      olarak applyFilter() içinde AND mantığıyla eklenir (crm-personel.html/crm-santiye.html'deki
      "sayfanın kendi motoru varsa onApply kullan" deseninin devralımı). "Kart" ve "Personel"
@@ -614,6 +590,8 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <option value="Belge Yükleniyor">Belge Yükleniyor</option>
         </select>
       </div>
+      <!-- [G-3/G-4] Liste üstündeki "Durum" hızlı çip satırının tek temsili artık BU alan
+           (aynı üç değer, aynı data-durum eşleşmesi — çift kontrol kaldırıldı). -->
       <div class="gfield">
         <label>Onay Durumu</label>
         <select data-fp-key="onay" data-fp-label="Onay Durumu">
@@ -622,6 +600,13 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <option value="onaylandi">Onaylandı</option>
           <option value="bekliyor">Onay Bekliyor</option>
         </select>
+      </div>
+      <!-- [G-3/G-4] Tarih Aralığı liste üstünden BURAYA taşındı (crm-operasyon-kasa.html
+           emsali). Değer applyFilter()'ın curTarih'ine onApply üzerinden akar — süzme
+           mantığı DEĞİŞMEDİ, yalnız kontrolün yeri değişti. -->
+      <div class="gfield">
+        <label>Tarih Aralığı</label>
+        <div data-gvdaterange data-fp-key="tarih" data-fp-label="Tarih Aralığı"></div>
       </div>
     </div>
     <div class="gv-fpanel-foot">
@@ -918,8 +903,11 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
      Banka PRİMER kapsamdır (kasa .ks-card→#tblDefter idiyomu); "hepsi" seçiliyken
      4 bankanın defteri art arda görünür. devir/toplam/mevcut çerçeve satırları yalnız
      banka eşleşmesine bakar, Durum/arama filtresinden etkilenmez. ---- */
-  var curBanka = 'hepsi', curDurum = 'hepsi', curTarih = null;   /* curTarih: {key,from:Date,to:Date,label} | null */
-  /* [§9/T-G1] gelişmiş filtre panelinin BAĞIMSIZ ek eksenleri — mevcut curBanka/curDurum
+  /* [G-3/G-4] curDurum (Durum hızlı çipi) SİLİNDİ — o eksen artık yalnız panelin
+     "Onay Durumu" alanında (fpOnay). curTarih KORUNDU, ama değerini artık liste
+     üstündeki widget değil panelin Tarih Aralığı alanı besliyor. */
+  var curBanka = 'hepsi', curTarih = null;   /* curTarih: {key,from:Date,to:Date,label} | null */
+  /* [§9/T-G1] gelişmiş filtre panelinin BAĞIMSIZ ek eksenleri — mevcut curBanka
      ile AYNI değişkeni PAYLAŞMAZ, applyFilter() içinde AND ile eklenir (bkz panel yorumu). */
   var fpKart = '', fpKartDurum = '', fpSantiye = '', fpPersonel = '', fpKategori = '', fpBelge = '', fpOnay = '';
   var dfBanka = document.getElementById('dfBanka');
@@ -960,7 +948,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
   }
   function setKartDurum(key, yeni){
     KARTLAR[key].kartDurum = yeni;
-    if(yeni === 'arsiv' && curBanka === key){ curBanka = 'hepsi'; curDurum = 'hepsi'; }
+    if(yeni === 'arsiv' && curBanka === key){ curBanka = 'hepsi'; }
     renderStrip();
     syncBankaChipsVisibility();
     syncBankaUI();
@@ -1015,7 +1003,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       if(!okBanka){ tr.hidden = true; return; }
       if(!tr.hasAttribute('data-id')){ tr.hidden = false; return; }   /* devir/toplam/mevcut çerçevesi */
       total++;
-      var okDurum = curDurum === 'hepsi' || tr.getAttribute('data-durum') === curDurum;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okTarih = true;
       if(curTarih){
@@ -1031,7 +1018,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       var okFpKategori = !fpKategori || tr.getAttribute('data-kategori') === fpKategori;
       var okFpBelge = !fpBelge || tr.getAttribute('data-belge') === fpBelge;
       var okFpOnay = !fpOnay || tr.getAttribute('data-durum') === fpOnay;
-      var show = okDurum && okTerm && okTarih && okFpKart && okFpKartDurum && okFpSantiye && okFpPersonel && okFpKategori && okFpBelge && okFpOnay;
+      var show = okTerm && okTarih && okFpKart && okFpKartDurum && okFpSantiye && okFpPersonel && okFpKategori && okFpBelge && okFpOnay;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -1053,18 +1040,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     syncBankaUI();
     applyFilter();
   });
-  document.getElementById('kkDurumChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-durum]'); if(!ch) return;
-    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curDurum = ch.getAttribute('data-durum');
-    applyFilter();
-  });
   document.getElementById('kkSearch').addEventListener('input', applyFilter);
-  window.gvDateRange('#kkDateRange', {
-    emptyLabel:'Tüm zamanlar',
-    onChange:function(val){ curTarih = val; applyFilter(); }
-  });
 
   /* [§9/T-G1] gelişmiş filtre paneli — sayfanın kendi çok eksenli motoru (applyFilter)
      olduğu için opts.table VERİLMEZ; panel yalnız UI/aktif-çip/badge yönetir, gerçek
@@ -1081,6 +1057,11 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         fpKategori = state.kategori ? state.kategori.value : '';
         fpBelge = state.belge ? state.belge.value : '';
         fpOnay = state.onay ? state.onay.value : '';
+        /* [G-3/G-4] Tarih Aralığı artık panelde — daterange alanının ham değeri
+           ({key,from,to,label}) doğrudan applyFilter()'ın beklediği biçimde geliyor.
+           Panelin Temizle'si ve tekil çip kaldırma da onApply'ı çağırdığı için
+           curTarih burada her seferinde yeniden hesaplanır (kalıntı filtre kalmaz). */
+        curTarih = (state.tarih && state.tarih.raw) ? state.tarih.raw : null;
         applyFilter();
       }
     });
@@ -1196,7 +1177,9 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       p.set('ids', Object.keys(selectedKK).join(','));
     } else {
       p.set('banka', curBanka);
-      p.set('durum', curDurum);
+      /* [G-3/G-4] eski Durum hızlı çipinin yerine panelin Onay Durumu alanı — çıktı
+         sayfasına taşınan sözleşme (durum=hepsi|ok|onaylandi|bekliyor) DEĞİŞMEDİ. */
+      p.set('durum', fpOnay || 'hepsi');
       if(curTarih){
         p.set('from', isoLocal(curTarih.from));
         p.set('to', isoLocal(curTarih.to));

@@ -115,25 +115,9 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
    masaüstü tablo hücresinin ellipsis/nowrap kısıtlaması burada gerekmiyor, sarmalansın. */
 @media(max-width:640px){ #tblPluxee .df-desc{max-width:none;white-space:normal;overflow:visible;text-overflow:clip} }
 
-/* [T5A/Dalga5] display:flex;flex-direction:column YERİNE display:block + margin-bottom —
-   sütun-yönlü flex konteynerde iç içe geçmiş .filter-row (satır-yönlü flex + flex-wrap)
-   390px'te KENDİ min-content genişliğine göre büyüyüp konteyneri taşırıyordu (nested flex
-   stretch/shrink algoritması çakışması — min-width:0 TEK BAŞINA yetmedi). Block context'te
-   her çocuk zaten blok-seviye tam genişlik alır, taşma riski YOK; görsel boşluk gap yerine
-   margin-bottom ile korunur. */
-.filter-bar.stack{display:block}
-.filter-bar.stack > *:not(:last-child){margin-bottom:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-/* [T5A/Dalga5] .filter-bar.stack SÜTUN yönlü olduğundan .filter-row bir cross-axis flex
-   item'ı — min-width:0 OLMADAN uzun chip etiketleri satırı 390px konteynerin dışına
-   TAŞIRIR (flex item min-width:auto tuzağının bir üst seviyedeki hali). Tür/Şantiye
-   satırlarındaki gv-chipbar-wrap ise frow-lbl + (Tür satırında) Arşivlenenleri Göster
-   ile AYNI flex satırını paylaşır — o da kendi min-width:auto tuzağına düşmesin diye
-   esner (spec-liste-mimarisi.md §1 notu). */
-.filter-bar.stack .filter-row{min-width:0}
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-@media(max-width:640px){ .filter-row .gv-chipbar-wrap{width:100%} }
+/* [G-3/G-4 · R-22] Hareketler listesinin üstündeki üç filtre satırı (Tür/Şantiye/Tarih
+   Aralığı) Gelişmiş Filtre'ye taşındı — onları dikey yığmak için var olan
+   `.filter-bar.stack` / `.filter-row` kuralları gereksizleşti, silindi. */
 
 /* satır seçimi + detay paneli (Dalga 18 — ?islem= master-detail); yalnız data-id
    taşıyan gerçek işlem satırları tıklanabilir — df-devir/df-total/df-mevcut hariç */
@@ -148,7 +132,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
 .gdg-val{font-size:14px;color:var(--ink);font-weight:600;line-height:1.4}
 
 @media(max-width:640px){
-  .filter-row .frow-lbl{min-width:0;width:100%}
   .gv-detail-grid{grid-template-columns:1fr;padding:16px}
 }
 
@@ -375,42 +358,17 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
             </button>
           </div>
         </div>
-        <div class="lh-tabs">
-          <!-- 3 sıra (Tür/Şantiye/Tarih) — bkz. crm-operasyon-kredikarti.html'deki AYNI
-               yorum: .lh-tabs tek-satır flex konteyner, birden çok filter-row'u DİKEY
-               yığmak için mevcut sayfa-lokal `.filter-bar.stack` yeniden kullanılır. -->
-          <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
-          <div class="filter-row">
-            <span class="frow-lbl">Tür</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="plxTurChips">
-                <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">2</span></button>
-                <button class="chip" data-tur="yukleme">Yükleme <span class="ch-cnt">1</span></button>
-                <button class="chip" data-tur="harcama">Harcama <span class="ch-cnt">1</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Şantiye</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="plxSantiyeChips">
-                <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">2</span></button>
-                <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
-                <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">0</span></button>
-                <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">0</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Tarih Aralığı</span>
-            <div id="plxDateRange"></div>
-          </div>
-          </div>
-        </div>
+        <!-- [G-3/G-4 · R-22, patron 06:59] "Hareketler bölümündeki liste yapısında tarih
+             aralığı, şantiye, tür gibi birden fazla içerik var. Bunları daha minimize
+             etmemiz lazım. Yani şantiye, tür dediğimiz yapıyı gelişmiş filtrenin
+             içerisine alabiliriz."
+             Üç filtre satırı (TÜR / ŞANTİYE / TARİH ARALIĞI) BURADAN KALDIRILDI:
+               · Tür   → panele YENİ alan (data-fp-key="tur"), seçenekler çiplerle birebir
+               · Şantiye → panelde ZATEN vardı (data-fp-key="fpsantiye") — çift duruyordu,
+                 yalnız üstteki silindi (G-4 "sistemde burada varsa ... gerek yok")
+               · Tarih Aralığı → panele taşındı (data-fp-key="tarih", aynı gvDateRange
+                 bileşeni), applyFilter() curTarih'i AYNI şekilde okuyor.
+             Liste üstünde artık hiç çip satırı yok; kabuk arama + aksiyon grubundan ibaret. -->
       </div>
       <div class="plx-bulk-bar" id="plxBulkBar" hidden>
         <span class="bb-count" id="plxBbCount">0 kayıt seçildi</span>
@@ -640,6 +598,17 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <option value="6242">İlyas Kurt •6242</option>
         </select>
       </div>
+      <!-- [G-3/G-4 · R-22] Liste üstündeki "TÜR" çip satırından TAŞINAN eksen —
+           seçenekler eski çiplerle birebir; applyFilter() satırın `data-tur`
+           özniteliğini AYNI şekilde okur (curTur). -->
+      <div class="gfield">
+        <label>Tür</label>
+        <select data-fp-key="tur" data-fp-label="Tür">
+          <option value="">Tümü</option>
+          <option value="yukleme">Yükleme</option>
+          <option value="harcama">Harcama</option>
+        </select>
+      </div>
       <div class="gfield">
         <label>Kart Tipi</label>
         <select data-fp-key="tip" data-fp-label="Kart Tipi">
@@ -672,6 +641,14 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
           <option value="haftalik">Haftalık (son 7 gün)</option>
           <option value="aylik">Aylık</option>
         </select>
+      </div>
+      <!-- [G-3/G-4 · R-22] Liste üstündeki "TARİH ARALIĞI" satırından TAŞINAN eksen.
+           Aynı gvDateRange bileşeni ([data-gvdaterange] deklaratif kurulumla) —
+           applyFilter() curTarih.from/.to'yu AYNI şekilde okur, Çıktı Al kapsamına
+           da (buildOutputUrl) eskisi gibi taşınır. -->
+      <div class="gfield">
+        <label>Tarih Aralığı</label>
+        <div data-gvdaterange data-fp-key="tarih" data-fp-label="Tarih Aralığı"></div>
       </div>
     </div>
     <div class="gv-fpanel-foot">
@@ -951,30 +928,21 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
   });
   renderKartTable();   /* [Dalga 4 / T-S4] OLUSTURABILIR artık tanımlı — bkz yukarıdaki not */
 
-  /* ============ D19/S12 — kart seçimi + üç boyutlu filtre (Kart + Tür + Şantiye) + serbest
-     metin; kart seçimi PRİMER kapsam (kasa .ks-card→#tblDefter idiyomu), Tür/Şantiye/arama
-     yalnız seçili kartın işlem satırlarını daraltır — devir/toplam/mevcut çerçeve satırları
-     kart seçimiyle görünür kalır, alt-filtreden etkilenmez. ============ */
-  var curPlx = '4471', curTur = 'hepsi', curSantiye = 'hepsi', curTarih = null;   /* curTarih: {key,from:Date,to:Date,label} | null */
+  /* ============ D19/S12 — kart seçimi + çok boyutlu filtre (Kart + Tür + Şantiye + tarih)
+     + serbest metin; kart seçimi PRİMER kapsam (kasa .ks-card→#tblDefter idiyomu), diğer
+     eksenler yalnız seçili kartın işlem satırlarını daraltır — devir/toplam/mevcut çerçeve
+     satırları kart seçimiyle görünür kalır, alt-filtreden etkilenmez.
+     [G-3/G-4 · R-22] Tür/Şantiye/Tarih artık liste üstünde ÇİP SATIRI DEĞİL, Gelişmiş
+     Filtre panelinin alanları. `curTur`/`curTarih` değişkenleri KORUNDU (Çıktı Al kapsamı
+     buildOutputUrl'de bunları okuyor) — yalnız kaynakları panel oldu. Şantiye ekseni
+     panelde ZATEN vardı (fpSantiyeAdv), ayrı `curSantiye` durumu KALDIRILDI. ============ */
+  var curPlx = '4471', curTur = 'hepsi', curTarih = null;   /* curTarih: {key,from:Date,to:Date,label} | null */
   /* [§9/T-G1] gelişmiş filtre panelinin BAĞIMSIZ ek eksenleri (Kart Sahibi hariç — o
      setCard() navigasyonunu tetikler, bkz gvFilterPanel.init) — applyFilter() içinde AND
-     ile eklenir; mevcut curTur/curSantiye/curTarih ile AYNI değişkeni PAYLAŞMAZLAR. */
+     ile eklenir. */
   var fpTip = '', fpSantiyeAdv = '', fpOnay = '', fpDonemAdv = '';
   var BUGUN_ISO = '2026-07-02';   /* kanonik "bugün" — dönem toggle GÜNLÜK yorumuyla aynı referans */
   var dfKart = document.getElementById('dfKart');
-  function recalcChips(){
-    var rows = document.querySelectorAll('#tblPluxee tbody tr[data-plx="'+curPlx+'"][data-tur]');
-    document.querySelectorAll('#plxTurChips .chip[data-tur]').forEach(function(ch){
-      var t = ch.getAttribute('data-tur'), n = 0;
-      rows.forEach(function(tr){ if(t === 'hepsi' || tr.getAttribute('data-tur') === t) n++; });
-      var cnt = ch.querySelector('.ch-cnt'); if(cnt) cnt.textContent = n;
-    });
-    document.querySelectorAll('#plxSantiyeChips .chip[data-santiye]').forEach(function(ch){
-      var s = ch.getAttribute('data-santiye'), n = 0;
-      rows.forEach(function(tr){ if(s === 'hepsi' || tr.getAttribute('data-santiye') === s) n++; });
-      var cnt = ch.querySelector('.ch-cnt'); if(cnt) cnt.textContent = n;
-    });
-  }
   function applyFilter(){
     var term = document.getElementById('plxSearch').value.trim().toLocaleLowerCase('tr');
     var shown = 0, total = 0;
@@ -983,7 +951,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       if(!tr.hasAttribute('data-tur')){ tr.hidden = false; return; }   /* devir/total/mevcut çerçevesi */
       total++;
       var okTur = curTur === 'hepsi' || tr.getAttribute('data-tur') === curTur;
-      var okSantiye = curSantiye === 'hepsi' || tr.getAttribute('data-santiye') === curSantiye;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okTarih = true;
       if(curTarih){
@@ -995,7 +962,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
       var okFpSantiye = !fpSantiyeAdv || tr.getAttribute('data-santiye') === fpSantiyeAdv;
       var okFpOnay = !fpOnay || tr.getAttribute('data-onay') === fpOnay;
       var okFpDonem = !fpDonemAdv || fpDonemAdv !== 'gunluk' || tr.getAttribute('data-tarih') === BUGUN_ISO;
-      var show = okTur && okSantiye && okTerm && okTarih && okFpTip && okFpSantiye && okFpOnay && okFpDonem;
+      var show = okTur && okTerm && okTarih && okFpTip && okFpSantiye && okFpOnay && okFpDonem;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -1014,7 +981,6 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
        artık kart-karo değil, Kart Listesi tablosunda bir satır olduğundan görsel "seçili
        kart" vurgusu dfKart (gc-head başlığı, aşağıda) üzerinden veriliyor. */
     if(dfKart) dfKart.textContent = cardName(KARTLAR_BY_NO[no]);
-    recalcChips();
     applyFilter();
     syncCardActs();
   }
@@ -1111,24 +1077,9 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     if(arsivBtn){ promptArsivToggle(arsivBtn.getAttribute('data-plx-arsiv')); return; }
   });
   document.getElementById('plxSearch').addEventListener('input', applyFilter);
-  document.getElementById('plxTurChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-tur]'); if(!ch) return;
-    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curTur = ch.getAttribute('data-tur');
-    applyFilter();
-  });
-  document.getElementById('plxSantiyeChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
-    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curSantiye = ch.getAttribute('data-santiye');
-    applyFilter();
-  });
-  window.gvDateRange('#plxDateRange', {
-    emptyLabel:'Tüm zamanlar',
-    onChange:function(val){ curTarih = val; applyFilter(); }
-  });
+  /* [G-3/G-4 · R-22] Tür/Şantiye çip dinleyicileri ve #plxDateRange imperatif kurulumu
+     KALDIRILDI — üç eksen de artık Gelişmiş Filtre panelinde; panelin daterange'i
+     ui.js'in deklaratif [data-gvdaterange] kurulumuyla kendiliğinden ayağa kalkar. */
 
   /* [§9/T-G1] gelişmiş filtre paneli — Kart Defteri TEK karta scope'lu olduğundan (D19/S12)
      opts.table VERİLMEZ; "Kart Sahibi" alanı setCard() navigasyonunu tetikler (seçili kart
@@ -1142,6 +1093,10 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
         fpSantiyeAdv = state.fpsantiye ? state.fpsantiye.value : '';
         fpOnay = state.onay ? state.onay.value : '';
         fpDonemAdv = state.donem ? state.donem.value : '';
+        /* [G-3/G-4 · R-22] liste üstünden taşınan iki eksen — applyFilter() ile
+           buildOutputUrl() AYNI değişkenleri okumaya devam eder */
+        curTur = state.tur ? state.tur.value : 'hepsi';
+        curTarih = state.tarih ? state.tarih.raw : null;
         if(state.sahip && state.sahip.value && state.sahip.value !== curPlx){
           setCard(state.sahip.value);
           gvUrlState.set({kart: curPlx});
@@ -1271,7 +1226,7 @@ tr.df-mevcut .df-bak{color:var(--acc-deep)}
     } else {
       p.set('kart', curPlx);
       p.set('tur', curTur);
-      p.set('santiye', curSantiye);
+      p.set('santiye', fpSantiyeAdv || 'hepsi');   /* [G-3/G-4] şantiye ekseni artık yalnız panelde */
       if(curTarih){
         p.set('from', isoLocal(curTarih.from));
         p.set('to', isoLocal(curTarih.to));

@@ -37,22 +37,16 @@
 
 .ig-konu{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 
-/* V3A (tasks/spec-v3a-ortak.md, T-L1 Dalga 2A) — üst alan artık ORTAK
-   `.gv-listhead/.lh-row/.lh-acts/.lh-toggle/.lh-achips/.lh-tabs` sınıflarıyla kurulu;
-   sayfaya özel eski `.filter-bar.stack`/`.filter-row` satır kuralları KALDIRILDI
-   (K-219 sızıntısının kök nedeni oydu — yeni `.lh-*` ailesi ui.css'te ayrıca
-   `flex-wrap:nowrap` ile tanımlı, bu sızıntıya kapalı). `.lh-tabs` içinde ARTIK üç
-   alt satır üst üste dizilir: durum chip'leri → Şantiye chip'leri → Tür chip'leri;
-   bu yüzden `.lh-tabs` bu sayfada BİLİNÇLİ OLARAK column yönüne çevrilir (spec §4
-   notu "gerekirse sayfa-lokal <style>" izniyle, crm-santiye.html emsaliyle TUTARLI). */
-.lh-tabs{flex-direction:column;align-items:stretch;gap:10px}
-.tur-sub-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.tur-sub-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-.tur-sub-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
+/* V3A (tasks/spec-v3a-ortak.md, T-L1 Dalga 2A) — üst alan ORTAK
+   `.gv-listhead/.lh-row/.lh-acts/.lh-toggle/.lh-achips/.lh-tabs` sınıflarıyla kurulu.
+   [G-3/G-4 — patron 01:27, bu ekranı ADIYLA örnek gösterdi] `.lh-tabs` içindeki
+   "Şantiye" ve "Tür" alt çip satırları KALDIRILDI: her iki eksen de Gelişmiş Filtre
+   panelinde (`key:'san'`, `key:'tur'`) ZATEN vardı, yani çift duruyordu. Geriye TEK
+   satır (durum şeridi) kaldığı için `.lh-tabs`'ın column override'ı + `.tur-sub-row`
+   kuralları da gereksizleşti ve silindi — ui.css'in tek satırlık nowrap varsayılanı
+   geçerli (crm-santiye.html pilotuyla BİREBİR aynı hamle). */
 @media(max-width:640px){
-  .tur-sub-row .gv-chipbar-wrap{width:100%}
   .ig-konu{max-width:150px}
-  .tur-sub-row .frow-lbl{min-width:0;width:100%}
   /* gtable-cards modunda "Konu" kartın tam genişliğini kullanır — masaüstü hücresinin
      ellipsis/nowrap kısıtlaması burada gerekmiyor, sarmalansın (kasa'nın .rp-desc emsali). */
   #tblIsg .ig-konu{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
@@ -135,9 +129,9 @@ tr.is-arsiv{opacity:.62}
     <div class="gv-card">
       <!-- V3A (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3) — standart liste üst alanı:
            .lh-row (arama solda, sabit aksiyon grubu sağda: Gelişmiş Filtre · Kolonlar ·
-           Arşivlenenleri Göster) → .lh-achips → .lh-tabs (durum sekmeleri → Şantiye
-           alt-sekmesi → Tür alt-sekmesi, üç satır üst üste).
-           [G-2] Dışa Aktar bu şeritten ÇIKARILDI, sayfa başlığındaki .ph-actions'a taşındı. -->
+           Arşivlenenleri Göster) → .lh-achips → .lh-tabs (TEK satır: durum şeridi).
+           [G-2] Dışa Aktar bu şeritten ÇIKARILDI, sayfa başlığındaki .ph-actions'a taşındı.
+           [G-4] Şantiye ve Tür alt-şeritleri KALDIRILDI → Gelişmiş Filtre paneli. -->
       <div class="gv-listhead">
         <div class="lh-row">
           <div class="lh-search">
@@ -181,32 +175,13 @@ tr.is-arsiv{opacity:.62}
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-
-          <div class="tur-sub-row">
-            <span class="frow-lbl">Şantiye</span>
-            <div class="chips" id="igSanChips">
-              <button class="chip is-on" data-san="hepsi">Tümü <span class="ch-cnt">11</span></button>
-              <button class="chip" data-san="vadi">Vadi Konakları <span class="ch-cnt">5</span></button>
-              <button class="chip" data-san="liman">Liman Lojistik <span class="ch-cnt">3</span></button>
-              <button class="chip" data-san="merkez">Merkez Şantiye <span class="ch-cnt">3</span></button>
-            </div>
-          </div>
-
-          <div class="tur-sub-row">
-            <span class="frow-lbl">Tür</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="igTurChips">
-                <button class="chip is-on" data-tur="hepsi">Tümü</button>
-                <button class="chip" data-tur="toolbox">Toolbox Eğitimi</button>
-                <button class="chip" data-tur="ramakkala">Ramak Kala</button>
-                <button class="chip" data-tur="denetim">Denetim</button>
-                <button class="chip" data-tur="uygunsuzluk">Uygunsuzluk</button>
-                <button class="chip" data-tur="kaza">Kaza Raporu</button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
+          <!-- [G-4 — patron 01:27: "İSG tutanaklarında olduğu gibi tür, şantiye — bunların
+               tamamı gelişmiş filtrenin içerisinde olsun. Varsa buradan kaldırabiliriz."]
+               "Şantiye" ve "Tür" alt çip satırları BURADAN KALDIRILDI. Aynı iki eksen
+               gvFilterDrawer alan listesinde `key:'san'` ve `key:'tur'` olarak zaten
+               tanımlıydı ve advMatch() onları data-san/data-tur'dan okuyor → süzme
+               işlevi KAYBOLMADI, tek yere (panele) indi. Seçim yapılınca #achipsIsg
+               aktif-filtre çipi olarak görünür. -->
         </div>
       </div>
 
@@ -244,10 +219,11 @@ tr.is-arsiv{opacity:.62}
   if(!window.GV) return;
 
   /* ---- mock İSG tutanak verisi — numaralama Dalga 3'te doğdu (ISG-2026-###, bkz. shell.js
-     kanonik yorum bloğu). Şantiye/kişi adları kanonik listeden. Üç boyutlu (şantiye+tür+durum)
-     filtre + arama + arşiv görünürlüğü + gelişmiş filtre AND'lenir — durum ekseni ui.js'in
-     native .chip[data-filter] delegasyonuna bırakıldı, şantiye/tür sayfa-lokal JS ile bağlı
-     (ui.js DEĞİŞTİRİLMEDİ, sadece tblIsg._gvApply delegasyonu ÜZERİNDEN akıtılıyor). ---- */
+     kanonik yorum bloğu). Şantiye/kişi adları kanonik listeden. Durum çipi + arama +
+     arşiv görünürlüğü + gelişmiş filtre AND'lenir — durum ekseni ui.js'in native
+     .chip[data-filter] delegasyonuna bırakıldı (ui.js DEĞİŞTİRİLMEDİ, sadece
+     tblIsg._gvApply delegasyonu ÜZERİNDEN akıtılıyor). [G-4] Şantiye ve tür eksenleri
+     artık sayfa-lokal çip motorunda değil, yalnız advMatch() içinde yaşıyor. ---- */
   var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
   var TUR = {
     toolbox:    {ic:'fa-chalkboard-user',      lbl:'Toolbox Eğitimi'},
@@ -303,35 +279,28 @@ tr.is-arsiv{opacity:.62}
   function renderBody(){ body.innerHTML = KAYITLAR.map(rowHTML).join(''); }
   renderBody();
 
-  /* şef tek şantiye görür — diğer satırlar kalıcı kaldırılır, şantiye chip grubu tekile iner */
+  /* şef tek şantiye görür — diğer satırlar kalıcı kaldırılır. [G-4] Şantiye çip grubu
+     kalktığı için budanacak çip kalmadı; şefin panelindeki Şantiye alanı da tek
+     seçeneğe indirilir (aşağıda, gvFilterDrawer.init'te). */
   if(GV.role === 'sef'){
     document.querySelectorAll('#tblIsg tbody tr').forEach(function(tr){
       if(tr.getAttribute('data-san') !== 'vadi') tr.remove();
-    });
-    document.querySelectorAll('#igSanChips .chip').forEach(function(ch){
-      var v = ch.getAttribute('data-san');
-      if(v !== 'hepsi' && v !== 'vadi') ch.remove();
     });
   }
 
   function refreshChipCounts(){
     var rows = document.querySelectorAll('#tblIsg tbody tr');
-    var bySan = {hepsi:0}, byTur = {hepsi:0}, byDurum = {hepsi:0};
+    var byTur = {hepsi:0}, byDurum = {hepsi:0};
     rows.forEach(function(tr){
-      bySan.hepsi++; byTur.hepsi++; byDurum.hepsi++;
-      var s = tr.getAttribute('data-san'); bySan[s] = (bySan[s]||0) + 1;
+      byTur.hepsi++; byDurum.hepsi++;
       var t = tr.getAttribute('data-tur'); byTur[t] = (byTur[t]||0) + 1;
       var d = tr.getAttribute('data-f');   byDurum[d] = (byDurum[d]||0) + 1;
-    });
-    document.querySelectorAll('#igSanChips .chip').forEach(function(ch){
-      var c = ch.querySelector('.ch-cnt');
-      if(c) c.textContent = bySan[ch.getAttribute('data-san')] || 0;
     });
     document.querySelectorAll('#igDurumChips .chip').forEach(function(ch){
       var c = ch.querySelector('.ch-cnt');
       if(c) c.textContent = byDurum[ch.getAttribute('data-filter')] || 0;
     });
-    return {bySan:bySan, byTur:byTur, byDurum:byDurum, toplam:rows.length};
+    return {byTur:byTur, byDurum:byDurum, toplam:rows.length};
   }
 
   /* ============ B §2.1 madde 3 — Kolonlar (gvCols) ============ */
@@ -401,8 +370,14 @@ tr.is-arsiv{opacity:.62}
   }
 
   /* ============ B §2.1 madde 7 — Gelişmiş Filtre (gvFilterDrawer) ============
-     Şantiye/Tür/Durum alanları quick-chip eksenleriyle AYNI data-* özniteliklerini
-     okur (data-san/data-tur/data-durum) — çift veri kaynağı İCAT EDİLMEDİ. */
+     [G-4] Şantiye ve Tür süzmesinin TEK yeri burası (liste üstündeki alt çip satırları
+     kaldırıldı). Alanlar satırların data-san/data-tur/data-durum özniteliklerini okur —
+     çift veri kaynağı İCAT EDİLMEDİ, advMatch() jenerik `data-<key>` eşleştirmesi yapar. */
+  var SAN_OPTS = [
+    {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'}, {v:'merkez', l:'Merkez Şantiye'}
+  ];
+  /* şef yalnız kendi şantiyesini görür — çip grubunda yapılan budama artık panelde yapılır */
+  if(GV.role === 'sef') SAN_OPTS = SAN_OPTS.filter(function(o){ return o.v === 'vadi'; });
   var advState = {};
   var ADV_DATE_KEYS = ['tarih'];
   function advMatch(el){
@@ -430,9 +405,7 @@ tr.is-arsiv{opacity:.62}
         {key:'durum', type:'select', label:'Durum', options:[
           {v:'kapali', l:'Kapalı'}, {v:'aksiyon', l:'Aksiyon Bekliyor'}, {v:'inceleniyor', l:'İnceleniyor'}
         ]},
-        {key:'san', type:'select', label:'Şantiye', options:[
-          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik Merkezi'}, {v:'merkez', l:'Merkez Şantiye'}
-        ]},
+        {key:'san', type:'select', label:'Şantiye', options: SAN_OPTS},
         {key:'tur', type:'select', label:'Tutanak Türü', options:[
           {v:'toolbox', l:'Toolbox Eğitimi'}, {v:'ramakkala', l:'Ramak Kala'}, {v:'denetim', l:'Denetim'},
           {v:'uygunsuzluk', l:'Uygunsuzluk'}, {v:'kaza', l:'Kaza Raporu'}
@@ -451,11 +424,10 @@ tr.is-arsiv{opacity:.62}
     });
   }
 
-  /* ---- özel çok boyutlu filtre — şantiye chip + tür chip + durum chip(native) + serbest
-     metin + arşiv switch + gelişmiş filtre hepsi AND'lenir; D18 delegasyon deseni:
-     tblIsg._gvApply ile ui.js'e kayıtlı (durum chip'i + arama kutusu native ui.js
-     delegasyonundan buraya akar, tur/san chip'leri sayfa dinler). ---- */
-  var curSan = 'hepsi', curTur = 'hepsi';
+  /* ---- özel çok boyutlu filtre — durum chip(native) + serbest metin + arşiv switch +
+     gelişmiş filtre hepsi AND'lenir; D18 delegasyon deseni: tblIsg._gvApply ile ui.js'e
+     kayıtlı (durum chip'i + arama kutusu native ui.js delegasyonundan buraya akar).
+     [G-4] şantiye/tür için ayrı curSan/curTur durumu YOK — advMatch() süzüyor. ---- */
   var swArsiv = document.getElementById('swArsivIsg');
   var tblIsg = document.getElementById('tblIsg');
   function renderIgCount(shown){
@@ -473,13 +445,11 @@ tr.is-arsiv{opacity:.62}
     var curDurum = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
     var shown = 0;
     document.querySelectorAll('#tblIsg tbody tr').forEach(function(tr){
-      var okSan = curSan === 'hepsi' || tr.getAttribute('data-san') === curSan;
-      var okTur = curTur === 'hepsi' || tr.getAttribute('data-tur') === curTur;
       var okDurum = curDurum === 'hepsi' || tr.getAttribute('data-f') === curDurum;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okArsiv = showArsiv || tr.getAttribute('data-arsiv') !== '1';
-      var okAdv = advMatch(tr);
-      var show = okSan && okTur && okDurum && okTerm && okArsiv && okAdv;
+      var okAdv = advMatch(tr);   /* [G-4] şantiye + tür eksenleri artık burada */
+      var show = okDurum && okTerm && okArsiv && okAdv;
       tr.hidden = !show;
       if(show) shown++;
     });
@@ -493,20 +463,6 @@ tr.is-arsiv{opacity:.62}
   }
   tblIsg._gvApply = applyIsgFilter;
 
-  document.getElementById('igSanChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-san]'); if(!ch) return;
-    document.querySelectorAll('#igSanChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curSan = ch.getAttribute('data-san');
-    if(window.gvApplyFilters) gvApplyFilters(tblIsg, true); else applyIsgFilter();
-  });
-  document.getElementById('igTurChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-tur]'); if(!ch) return;
-    document.querySelectorAll('#igTurChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curTur = ch.getAttribute('data-tur');
-    if(window.gvApplyFilters) gvApplyFilters(tblIsg, true); else applyIsgFilter();
-  });
   if(swArsiv){
     swArsiv.addEventListener('click', function(){
       var on = swArsiv.getAttribute('aria-checked') !== 'true';

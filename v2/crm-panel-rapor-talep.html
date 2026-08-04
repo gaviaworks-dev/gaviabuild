@@ -111,24 +111,13 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
       </div>
     </div>
 
-    <!-- ============ TOOLBAR — tarih aralığı + şantiye filtresi (B §6.2 madde 3+4); 3 tabloyu birden süzer ============ -->
-    <div class="rp-toolbar">
-      <div class="rp-tb-group">
-        <span class="frow-lbl" style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Tarih Aralığı</span>
-        <div data-gvdaterange id="tlDateRange"></div>
-      </div>
-      <div class="rp-tb-group" data-view="yonetim" id="tlSantiyeRow">
-        <span class="frow-lbl" style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">Şantiye</span>
-        <div class="chips" id="tlSantiyeChips">
-          <button type="button" class="chip is-on" data-santiye="tumu">Tümü</button>
-          <button type="button" class="chip" data-santiye="vadi">Vadi Konakları</button>
-          <button type="button" class="chip" data-santiye="liman">Liman Lojistik</button>
-          <button type="button" class="chip" data-santiye="merkez">Merkez Şantiye</button>
-        </div>
-      </div>
-      <div class="rp-tb-spacer"></div>
-      <div class="rp-tb-acts"><span class="ph-sub" id="tlFiltreOzet" style="margin:0"><i class="fa-solid fa-circle-info"></i> Tüm şantiyeler gösteriliyor</span></div>
-    </div>
+    <!-- [G-3/G-4] Sayfa-üstü `.rp-toolbar` (Tarih Aralığı + Şantiye çip şeridi) KALDIRILDI.
+         Patron: "Bu tarz satırlardaki içerikler gelişmiş filtre içerisinde oluşsun" —
+         her iki eksen de aşağıdaki Gelişmiş Filtre panelinin alanı oldu (`tarih` daterange
+         + `santiye` select). Panel bu sayfada SAYFA KAPSAMLIDIR: tetikleyici talep
+         listesinin başlığında durur ama onApply üç tabloyu birden süzer (tlRenderAll) —
+         eski toolbar'ın kapsamı birebir korundu. Şantiye alanı yalnız yönetim görünümünde
+         kurulur; şef görünümü zaten Vadi'ye daraltılmıştır (rol kapısı korundu). -->
 
     <!-- statik bake — DEFAULT (rol-agnostic) yönetim görünümü; JS yüklenince aynı
          mount'lar innerHTML/textContent ile ezilir (renderTalep/renderSat/renderTeslim) — D18-B2 -->
@@ -159,9 +148,8 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     <!-- kaynak: crm-satinalma-talepler.html tbody :133-249, 13 kayıt birebir. -->
     <div class="gv-card" style="margin-bottom:24px">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Durum chip'leri
-           arama+aksiyonların ALTINA taşındı. Sayfa-üstü Tarih/Şantiye toolbar'ı (bu tablonun yanı
-           sıra Satın Alma Formları + Termin Takibi tablolarını da birlikte süzdüğü için sayfa-geneli
-           kapsam taşır) KASITLI OLARAK burada TEKRARLANMADI/taşınmadı, yerinde kaldı. Arşiv/pasif
+           arama+aksiyonların ALTINA taşındı. [G-3/G-4] Sayfa-üstü Tarih/Şantiye toolbar'ı
+           kaldırıldı; iki eksen de Gelişmiş Filtre panelinde (panel sayfa kapsamlı süzer). Arşiv/pasif
            toggle KONMADI — Tamamlandı/Reddedildi/Revize zaten durum chip'inde, ayrı bir arşiv
            ekseni yok (K-326 emsali). -->
       <div class="gv-listhead">
@@ -185,15 +173,21 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
             <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
           </div>
         </div>
+        <!-- [G-3] Tek çip şeridi: durum ekseni. 7 çip 390px'te sarardı — gvChipBar
+             slider'ına sarıldı ("hiçbir şekilde ikinci bir satıra geçmesin"). -->
         <div class="lh-tabs">
-          <div class="chips" data-target="#tblTalep" id="durumChips">
-            <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt" id="cntHepsi">13</span></button>
-            <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt" id="cntBekliyor">7</span></button>
-            <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt" id="cntOnaylandi">2</span></button>
-            <button class="chip" data-filter="tedarik">Tedarik Sürecinde <span class="ch-cnt" id="cntTedarik">1</span></button>
-            <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt" id="cntTamamlandi">1</span></button>
-            <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt" id="cntReddedildi">1</span></button>
-            <button class="chip" data-filter="revize">Revize İstendi <span class="ch-cnt" id="cntRevize">1</span></button>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblTalep" id="durumChips">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt" id="cntHepsi">13</span></button>
+              <button class="chip" data-filter="bekliyor">Onay Bekliyor <span class="ch-cnt" id="cntBekliyor">7</span></button>
+              <button class="chip" data-filter="onaylandi">Onaylandı <span class="ch-cnt" id="cntOnaylandi">2</span></button>
+              <button class="chip" data-filter="tedarik">Tedarik Sürecinde <span class="ch-cnt" id="cntTedarik">1</span></button>
+              <button class="chip" data-filter="tamamlandi">Tamamlandı <span class="ch-cnt" id="cntTamamlandi">1</span></button>
+              <button class="chip" data-filter="reddedildi">Reddedildi <span class="ch-cnt" id="cntReddedildi">1</span></button>
+              <button class="chip" data-filter="revize">Revize İstendi <span class="ch-cnt" id="cntRevize">1</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
       </div>
@@ -644,22 +638,25 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
 
   function fmtTL(n){ return '₺' + n.toLocaleString('tr-TR'); }
 
-  /* ============ TOOLBAR — tarih aralığı + şantiye filtresi, 3 tabloyu birden süzer ============ */
-  var tlSantiye = 'tumu', tlDateFilter = null;
+  /* ============ SAYFA KAPSAMLI SÜZGEÇ — 3 tabloyu birden süzer ============
+     [G-3/G-4] Kaynağı artık sayfa-üstü toolbar DEĞİL, Gelişmiş Filtre panelidir
+     (`tarih` daterange + `santiye` select alanları). Eşleştirme mantığı birebir korundu. */
   function tlBaseVisible(tr){
-    var okS = tlSantiye === 'tumu' || tr.getAttribute('data-santiye') === tlSantiye;
+    var sanFv = tlFv('santiye');
+    var okS = !sanFv || tr.getAttribute('data-santiye') === sanFv.value;
     var okT = true;
-    if(tlDateFilter){
+    var tarihFv = tlFv('tarih');
+    if(tarihFv && tarihFv.raw && tarihFv.raw.from){
       var iso = tr.getAttribute('data-tarih');
-      okT = !!iso && (function(){ var t = new Date(iso + 'T12:00:00'); return t >= tlDateFilter.from && t <= tlDateFilter.to; })();
+      okT = !!iso && (function(){ var t = new Date(iso + 'T12:00:00'); return t >= tarihFv.raw.from && t <= tarihFv.raw.to; })();
     }
     return okS && okT;
   }
 
   /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
-     Şantiye/Tarih zaten sayfa-üstü toolbar'da, Durum zaten .lh-tabs chip'inde — burada
-     TEKRAR EDİLMEDİ. Öncelik (Acil/Normal/Planlı) hiçbir kontrolle filtrelenemiyordu,
-     yalnız satır içi rozet olarak görünüyordu — tek yeni alan olarak eklendi (data-oncelik). */
+     Durum zaten .lh-tabs chip'inde — burada TEKRAR EDİLMEDİ. Tarih Aralığı ve Şantiye
+     [G-4] ile sayfa-üstü toolbar'dan BURAYA taşındı. Öncelik (Acil/Normal/Planlı) hiçbir
+     kontrolle filtrelenemiyordu, satır içi rozet olarak duruyordu — alan olarak eklendi. */
   var tlFd = null;
   function tlFv(key){
     if(!tlFd) return null;
@@ -699,7 +696,7 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     document.getElementById('kpiBekleyenNum').textContent = counts.bekliyor;
     document.getElementById('kpiBekleyenSub').innerHTML = '<i class="fa-solid fa-clock"></i> ' + (view === 'sef' ? 'Vadi Konakları' : 'En eski 6 gündür bekliyor');
     document.getElementById('kpiToplamNum').textContent = counts.hepsi;
-    document.getElementById('kpiToplamSub').innerHTML = '<i class="fa-solid fa-helmet-safety"></i> ' + (view === 'sef' ? 'Vadi Konakları ekibiniz' : (tlSantiye === 'tumu' ? '3 şantiyeden' : 'daraltıldı'));
+    document.getElementById('kpiToplamSub').innerHTML = '<i class="fa-solid fa-helmet-safety"></i> ' + (view === 'sef' ? 'Vadi Konakları ekibiniz' : (tlFv('santiye') ? 'daraltıldı' : '3 şantiyeden'));
     var redRev = counts.reddedildi + counts.revize;
     document.getElementById('kpiRedNum').textContent = redRev;
     document.getElementById('kpiRedSub').innerHTML = '<i class="fa-solid fa-arrow-trend-down"></i> Revize: ' + counts.revize + ' · Red: ' + counts.reddedildi;
@@ -780,27 +777,8 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
     }
   }
 
-  /* ============ TOOLBAR olayları — 3 tabloyu da tekrar render eder ============ */
+  /* ============ Panel uygulandığında 3 tabloyu da tekrar render eder ============ */
   function tlRenderAll(){ renderTalep(); renderSat(); renderTermin(); }
-  if(window.gvDateRange){
-    gvDateRange('#tlDateRange', {
-      emptyLabel: 'Tüm tarihler',
-      onChange: function(val){ tlDateFilter = val ? {from:val.from, to:val.to} : null; tlRenderAll(); }
-    });
-  }
-  if(view === 'yonetim'){
-    document.getElementById('tlSantiyeChips').addEventListener('click', function(e){
-      var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
-      this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-      ch.classList.add('is-on');
-      tlSantiye = ch.getAttribute('data-santiye');
-      var lbl = {tumu:'Tüm şantiyeler gösteriliyor', vadi:'Vadi Konakları için daraltıldı', liman:'Liman Lojistik Merkezi için daraltıldı', merkez:'Merkez Şantiye için daraltıldı'}[tlSantiye];
-      document.getElementById('tlFiltreOzet').innerHTML = '<i class="fa-solid fa-circle-info"></i> ' + lbl;
-      tlRenderAll();
-    });
-  } else {
-    document.getElementById('tlSantiyeRow').hidden = true;
-  }
 
   /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
   var btnTlHataDemo = document.getElementById('btnTlHataDemo');
@@ -839,18 +817,28 @@ tr.is-iptal .fr-info b{color:var(--ink-2);text-decoration:line-through;text-deco
   document.getElementById('tblTalep')._gvApply = renderTalep;
 
   if(window.gvFilterDrawer){
+    /* Alan sırası: Tarih Aralığı → Şantiye → Öncelik. İlk ikisi [G-4] ile sayfa-üstü
+       toolbar'dan taşındı; `santiye` YALNIZ yönetim görünümünde kurulur (şef zaten
+       Vadi'ye daraltılmış — rol kapısı korundu). onApply 3 tabloyu birden süzer. */
+    var tlFields = [
+      {key:'tarih', type:'daterange', label:'Tarih Aralığı', emptyLabel:'Tüm tarihler'}
+    ];
+    if(view === 'yonetim'){
+      tlFields.push({key:'santiye', type:'select', label:'Şantiye', options:[
+        {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik'}, {v:'merkez', l:'Merkez Şantiye'}
+      ]});
+    }
+    tlFields.push({key:'oncelik', type:'select', label:'Öncelik', options:[
+      {v:'acil', l:'Acil'}, {v:'normal', l:'Normal'}, {v:'planli', l:'Planlı'}
+    ]});
     tlFd = gvFilterDrawer.init({
       mount: '#tlFiltreBtn',
       screen: 'rapor-talep',
       title: 'Gelişmiş Filtre',
       chipsMount: '#tlAchips',
-      fields: [
-        {key:'oncelik', type:'select', label:'Öncelik', options:[
-          {v:'acil', l:'Acil'}, {v:'normal', l:'Normal'}, {v:'planli', l:'Planlı'}
-        ]}
-      ],
-      onApply: function(){ renderTalep(); },
-      onClear: function(){ renderTalep(); }
+      fields: tlFields,
+      onApply: function(){ tlRenderAll(); },
+      onClear: function(){ tlRenderAll(); }
     });
   }
   if(window.gvCols){

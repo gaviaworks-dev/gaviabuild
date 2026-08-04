@@ -139,30 +139,20 @@
 .gv-empty-cards h4{font-size:13.5px;color:var(--ink);margin-bottom:5px}
 .gv-empty-cards p{font-size:12px;color:var(--muted);margin:0}
 
-/* iki boyutlu filtre — şantiye grubu + durum grubu (demirbaş/isg deseninin aynısı) */
-/* Dalga 5/T5C — flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali, satır 78): ui.css'in
-   temel .filter-bar{flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-
-   direction + flex-wrap:wrap kombinasyonu satırların align-items:stretch ile 356px'e
-   kısıtlanması yerine İÇERİK genişliğine göre büyümesine sebep oluyor (390px'te chipbar
-   satırı 529px'e taşıyordu, gerçek doc-level yatay taşma — bulundu ve düzeltildi). */
-.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-/* Dalga 5/T5C — flex-basis:0 ZORUNLU (crm-santiye.html emsali): min-width:0 TEK
-   BAŞINA yetmez, flex-basis:auto kalınca chipbar-wrap kendi İÇERİK genişliğine göre
-   hypothetical main size hesaplar ve satırı taşırır (390px'te 172px doc-level taşma
-   olarak doğrulandı, düzeltildi) — flex:1 1 0 ile taşma satırı gerçekten paylaşıyor. */
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
+/* [G-3/G-4 · R-32] İKİNCİ ÇİP SATIRI (Durum) KALDIRILDI. Patron [09:21]/[09:56]:
+   "durum kısmında… bunlar gelişmiş filtrelerin içerisine eklenilebilir" · "Araç
+   seçeneğinde ise şu an durum kısmı direkt gelişmiş filtrenin içerisinde oluşturulur."
+   Aynı eksen Gelişmiş Filtre panelinde ZATEN iki alan olarak duruyordu (Durum =
+   yaşam-döngüsü, Operasyonel Durum = Kullanımda/Bakımda/Arızalı/Beklemede) — çip satırı
+   çift temsildi, silindi; yalnız "Arşivli (tümü)" toplu seçeneği panelin Durum alanına
+   EKLENDİ ki hiçbir süzme işlevi kaybolmasın. Geriye tek satır kalıyor: Şantiye çip
+   şeridi, doğrudan .lh-tabs içinde (crm-santiye.html pilotuyla aynı iskelet).
+   Sütun düzeni (.arc-tabs-2row) ve .filter-bar.stack/.filter-row/.frow-lbl
+   yardımcıları böylece gereksizleşti, silindi. */
 
 @media(max-width:640px){
   .arc-info b,.arc-info .arc-sub{max-width:160px}
-  .filter-row .frow-lbl{min-width:0;width:100%}
 }
-/* V3A — .lh-tabs iki bağımsız çip grubunu (Şantiye/Durum) alt alta gösterir; ui.css'in
-   paylaşılan .lh-tabs{display:flex} satırı değiştirilmedi (K-220), yalnız bu sayfaya
-   özel bir modifier sınıf EKLENDİ (tasks/spec-v3a-ortak.md "sayfa-özel .lh-* varyantı
-   üretme" yasağı ui.css'i kapsar — page-local <style> içindeki modifier bu yasağın dışı). */
-.lh-tabs.arc-tabs-2row{flex-direction:column;align-items:stretch;gap:10px}
 
 /* ============ T-O1 (B §7.2/§7.3) — operasyon derinliği. hstat/stat-grid/hl-list ui.css'te
    YOK — crm-panel-rapor-santiye.html'in sayfa-lokal pattern'i devralındı (K-220 dersi). ============ */
@@ -262,7 +252,8 @@
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
            .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
-           çipleri, gvFilterPanel'in activeRow'u) → .lh-tabs (Şantiye + Durum çip grupları).
+           çipleri, gvFilterPanel'in activeRow'u) → .lh-tabs (TEK çip grubu: Şantiye —
+           Durum ekseni G-3/G-4 · R-32 ile Gelişmiş Filtre paneline devredildi).
            Liste/Kart görünüm anahtarı TAB DEĞİL — aynı verinin render toggle'ı; Dalga 5/
            T-R16 ÖNCESİ .lh-acts İÇİNDEYDİ (K-ARC-TOP), tablet-yatay (1024px) ölçümünde
            .lh-acts §2.2'nin 4 standart kontrolü + bu 5. kontrolü aynı satırda taşıyamadığı
@@ -305,35 +296,19 @@
             </button>
           </div>
         </div>
-        <div class="lh-tabs arc-tabs-2row">
-          <div class="filter-row">
-            <span class="frow-lbl">Şantiye</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="arSantiyeChips">
-                <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">10</span></button>
-                <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
-                <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">2</span></button>
-                <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">4</span></button>
-                <button class="chip" data-santiye="genelmerkez">Genel Merkez <span class="ch-cnt">2</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        <!-- [G-3/G-4 · R-32] TEK çip satırı: Şantiye. Durum ekseni Gelişmiş Filtre
+             panelinde (Durum + Operasyonel Durum). Satır sarmaz, yatay kayar. -->
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="arSantiyeChips">
+              <button class="chip is-on" data-santiye="hepsi">Tümü <span class="ch-cnt">10</span></button>
+              <button class="chip" data-santiye="vadi">Vadi <span class="ch-cnt">2</span></button>
+              <button class="chip" data-santiye="liman">Liman <span class="ch-cnt">2</span></button>
+              <button class="chip" data-santiye="merkez">Merkez <span class="ch-cnt">4</span></button>
+              <button class="chip" data-santiye="genelmerkez">Genel Merkez <span class="ch-cnt">2</span></button>
             </div>
-          </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Durum</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="arDurumChips">
-                <button class="chip is-on" data-durum="hepsi">Tümü</button>
-                <button class="chip" data-durum="aktif">Aktif</button>
-                <button class="chip" data-durum="bakimda">Bakımda</button>
-                <button class="chip" data-durum="arizali">Arızalı</button>
-                <button class="chip" data-durum="beklemede">Beklemede</button>
-                <button class="chip" data-durum="arsivli">Arşivli <span class="ch-cnt">3</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
       </div>
@@ -515,6 +490,10 @@
           <option value="">Tümü</option>
           <option value="aktif">Aktif</option>
           <option value="pasif">Pasif</option>
+          <!-- [G-3/G-4 · R-32] kaldırılan "Arşivli" hızlı çipinin karşılığı — dört arşiv
+               tipini (arşivlendi/satıldı/hurda/kiralama bitti) TEK seçenekte toplar,
+               böylece çip silinirken hiçbir süzme işlevi kaybolmuyor. -->
+          <option value="arsivli">Arşivli (tümü)</option>
           <option value="arsivlendi">Arşivlendi</option>
           <option value="satildi">Satıldı</option>
           <option value="hurda">Hurdaya Ayrıldı</option>
@@ -946,8 +925,8 @@
       var c = ch.querySelector('.ch-cnt');
       if(c) c.textContent = bySantiye[ch.getAttribute('data-santiye')] || 0;
     });
-    var arsivChipCnt = document.querySelector('#arDurumChips .chip[data-durum="arsivli"] .ch-cnt');
-    if(arsivChipCnt) arsivChipCnt.textContent = arsivSayisi;
+    /* [G-3/G-4 · R-32] "Arşivli" çip sayacı KALDIRILDI — arşiv adedi zaten hem
+       kpiFiloSub'da hem sayfa alt-başlığında (#arSub) yazıyor. */
     document.getElementById('kpiFilo').textContent = aktifSayisi;
     document.getElementById('kpiFiloSub').textContent = Object.keys(santiyeSetAktif).length + ' konum · ' + arsivSayisi + ' arşivde';
     document.getElementById('kpiMuayene').textContent = uyariList.length;
@@ -966,24 +945,17 @@
   }
   refresh();
 
-  /* çok-eksenli filtre — şantiye chip + durum chip + serbest metin + gelişmiş filtre
-     paneli (Durum/Tip/Yakıt/Operasyonel Durum/Arşivlenenleri Göster) AND'lenir; arşiv-
+  /* çok-eksenli filtre — şantiye chip + serbest metin + gelişmiş filtre paneli
+     (Durum/Tip/Yakıt/Operasyonel Durum) + "Arşivlenenleri Göster" AND'lenir; arşiv-
      tipi durumlar (arsivlendi/satildi/hurda/kiralamaBitti) varsayılan listede GİZLİDİR —
-     yalnız "Arşivli" hızlı çipi, panel "Arşivlenenleri Göster" onayı veya panelde açıkça
-     o durumun seçilmesiyle gösterilir (§12 kabul kriteri). ARAC dizisi ÜZERİNDE (DOM
+     yalnız "Arşivlenenleri Göster" onayı veya panelde açıkça o durumun (ya da "Arşivli
+     (tümü)"nün) seçilmesiyle gösterilir (§12 kabul kriteri). ARAC dizisi ÜZERİNDE (DOM
      attribute string-parse ETMEDEN) çalışır — liste VE kart görünümü AYNI predikatı
-     paylaşır, iki ayrı filtre mantığı YOK. */
-  var curSantiye = 'hepsi', curDurumChip = 'hepsi', fpState = {};
+     paylaşır, iki ayrı filtre mantığı YOK.
+     [G-3/G-4 · R-32] Durum çip motoru (curDurumChip/matchDurumChip) SİLİNDİ; süzme
+     artık yalnız panelin durum + altdurum alanlarından geliyor. */
+  var curSantiye = 'hepsi', fpState = {};
   function isArchived(a){ return ARCHIVE_STATES.indexOf(a.durum) !== -1; }
-  function matchDurumChip(a){
-    if(curDurumChip === 'hepsi') return true;
-    if(curDurumChip === 'aktif') return a.durum === 'aktif' && !a.altDurum;
-    if(curDurumChip === 'bakimda') return a.altDurum === 'bakimda';
-    if(curDurumChip === 'arizali') return a.altDurum === 'arizali';
-    if(curDurumChip === 'beklemede') return a.altDurum === 'beklemede';
-    if(curDurumChip === 'arsivli') return isArchived(a);
-    return true;
-  }
   function passesFilters(a){
     var term = document.getElementById('arSearch').value.trim().toLocaleLowerCase('tr');
     var arArsivChk = document.getElementById('arArsivGoster');
@@ -993,16 +965,17 @@
     var fpYakit = fpState.yakit ? fpState.yakit.value : '';
     var fpAlt = fpState.altdurum ? fpState.altdurum.value : '';
     var okS = curSantiye === 'hepsi' || a.santiye === curSantiye;
-    var okD = matchDurumChip(a);
     var hay = [a.no, a.plaka, a.marka, a.model, a.zimmet || '', SANTIYE_ADI[a.santiye] || '', DURUM_LBL[a.durum].lbl].join(' ').toLocaleLowerCase('tr');
     var okT = !term || hay.indexOf(term) !== -1;
     var archived = isArchived(a);
-    var okArsivGorunurluk = !archived || showArchived || curDurumChip === 'arsivli' || (fpDurum && fpDurum === a.durum);
-    var okFpDurum = !fpDurum || a.durum === fpDurum;
+    /* fpDurum === 'arsivli' — dört arşiv tipini birlikte süzen toplu seçenek
+       (eski "Arşivli" hızlı çipinin panel karşılığı, G-3/G-4 · R-32). */
+    var okArsivGorunurluk = !archived || showArchived || (fpDurum && (fpDurum === 'arsivli' || fpDurum === a.durum));
+    var okFpDurum = !fpDurum || (fpDurum === 'arsivli' ? archived : a.durum === fpDurum);
     var okFpTip = !fpTip || a.tip === fpTip;
     var okFpYakit = !fpYakit || a.yakit === fpYakit;
     var okFpAlt = !fpAlt || (a.durum === 'aktif' && (fpAlt === 'kullanimda' ? !a.altDurum : a.altDurum === fpAlt));
-    return okS && okD && okT && okArsivGorunurluk && okFpDurum && okFpTip && okFpYakit && okFpAlt;
+    return okS && okT && okArsivGorunurluk && okFpDurum && okFpTip && okFpYakit && okFpAlt;
   }
   function applyFilter(){
     var shown = 0;
@@ -1032,14 +1005,7 @@
     curSantiye = ch.getAttribute('data-santiye');
     applyFilter();
   });
-  document.getElementById('arDurumChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-durum]'); if(!ch) return;
-    document.querySelectorAll('#arDurumChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curDurumChip = ch.getAttribute('data-durum');
-    applyFilter();
-  });
-  /* V3A §3.2 — "Arşivlenenleri Göster" artık .lh-acts'ta bağımsız bir toggle (eskiden
+  /* V3A §3.2— "Arşivlenenleri Göster" artık .lh-acts'ta bağımsız bir toggle (eskiden
      Gelişmiş Filtre panelinde gizliydi, gorev.html pilotuyla aynı gerekçe: tek kontrol). */
   var arArsivGosterEl = document.getElementById('arArsivGoster');
   if(arArsivGosterEl) arArsivGosterEl.addEventListener('change', applyFilter);

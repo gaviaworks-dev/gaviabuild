@@ -43,29 +43,18 @@
    (statik .gstat, shell.js DALGA 4C kanonik bloğunda "muted" olarak tanımlı) */
 .gstat.hurda{background:var(--line);color:var(--ink-2)}
 
-/* iki boyutlu filtre — kategori grubu + durum grubu (crm-santiye-isg.html deseninin
-   aynısı; ui.js'in tekil data-filter primitifi iki grubu birlikte AND edemediği için
-   bu sayfada özel JS ile bağlanır, bkz. script — ui.js DEĞİŞTİRİLMEDİ) */
-/* Dalga 5/T5C — flex-wrap:nowrap ZORUNLU (crm-santiye.html emsali): ui.css'in temel
-   .filter-bar{flex-wrap:wrap} kuralı .stack varyantında override EDİLMEZSE, column-
-   direction + flex-wrap:wrap kombinasyonu satırların align-items:stretch ile kart
-   genişliğine kısıtlanması yerine İÇERİK genişliğine göre büyümesine sebep oluyor
-   (yeni eklenen gv-chipbar-wrap satırlarında 390px'te gerçek doc-level yatay taşmaya
-   yol açtığı bulundu ve düzeltildi). */
-.filter-bar.stack{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-.filter-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
+/* [G-3/G-4 · R-32] İKİNCİ ÇİP SATIRI (Durum) KALDIRILDI. Patron [09:21]: "durum
+   kısmında… bunlar gelişmiş filtrelerin içerisine eklenilebilir." Aynı eksen Gelişmiş
+   Filtre panelinin "Durum" alanında BİREBİR aynı beş değerle (zimmetli/depoda/serviste/
+   hurda/iade) ZATEN vardı — çip satırı çift temsildi, silindi; süzme panelin fdurum
+   alanından yürüyor (işlev kaybı YOK). Geriye tek satır kalıyor: Kategori çip şeridi,
+   doğrudan .lh-tabs içinde (crm-santiye.html pilotuyla aynı iskelet). Sütun düzeni
+   (.dm-tabs-2row) ve .filter-bar.stack/.filter-row/.frow-lbl yardımcıları böylece
+   gereksizleşti, silindi. */
 
 @media(max-width:640px){
   .dm-info b{max-width:180px}
-  .filter-row .frow-lbl{min-width:0;width:100%}
 }
-/* V3A — .lh-tabs iki bağımsız çip grubunu (Kategori/Durum) alt alta gösterir; ui.css'in
-   paylaşılan .lh-tabs{display:flex} satırı değiştirilmedi (K-220), yalnız bu sayfaya
-   özel bir modifier sınıf EKLENDİ (page-local <style>, ui.css'e sayfa-özel kural
-   EKLENMEDİ — tasks/spec-v3a-ortak.md "Bunu YAPMA" listesi bunu kapsamaz). */
-.lh-tabs.dm-tabs-2row{flex-direction:column;align-items:stretch;gap:10px}
 
 /* T-UX §6 denetimi — 5. ph-actions butonu (Bildirim Merkezi) eklendiğince 641-980px
    arası (ui.css'in ortak .ph-actions sarma kuralı yalnız ≤640px'te devreye giriyor,
@@ -226,8 +215,9 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     <div class="gv-card">
       <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3):
            .lh-row (arama solda, sabit aksiyon grubu sağda) → .lh-achips (aktif filtre
-           çipleri, gvFilterPanel'in activeRow'u) → .lh-tabs (Kategori + Durum çip
-           grupları). Gelişmiş Filtre panelindeki "Arşivlenenleri Göster" checkbox'ı
+           çipleri, gvFilterPanel'in activeRow'u) → .lh-tabs (TEK çip grubu: Kategori —
+           Durum ekseni G-3/G-4 · R-32 ile Gelişmiş Filtre paneline devredildi).
+           Gelişmiş Filtre panelindeki "Arşivlenenleri Göster" checkbox'ı
            §3.2 gereği ayrı .lh-toggle'a taşındı; panelde artık YOK (gorev.html
            pilotuyla aynı gerekçe: tek kontrol, çift temsil değil). -->
       <div class="gv-listhead">
@@ -260,37 +250,21 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
             </button>
           </div>
         </div>
-        <div class="lh-tabs dm-tabs-2row">
-          <div class="filter-row">
-            <span class="frow-lbl">Kategori</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="dmKatChips">
-                <button class="chip is-on" data-kat="hepsi">Tümü <span class="ch-cnt">10</span></button>
-                <button class="chip" data-kat="telefon">Telefon &amp; İletişim <span class="ch-cnt">3</span></button>
-                <button class="chip" data-kat="tablet">Tablet <span class="ch-cnt">1</span></button>
-                <button class="chip" data-kat="elaleti">El Aleti <span class="ch-cnt">2</span></button>
-                <button class="chip" data-kat="guvenlik">Güvenlik Ekipmanı <span class="ch-cnt">1</span></button>
-                <button class="chip" data-kat="arac">Araç <span class="ch-cnt">1</span></button>
-                <button class="chip" data-kat="makine">Makine-Ekipman <span class="ch-cnt">2</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        <!-- [G-3/G-4 · R-32] TEK çip satırı: Kategori. Durum ekseni Gelişmiş Filtre
+             panelinde ("Durum" alanı). Satır sarmaz, yatay kayar. -->
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="dmKatChips">
+              <button class="chip is-on" data-kat="hepsi">Tümü <span class="ch-cnt">10</span></button>
+              <button class="chip" data-kat="telefon">Telefon &amp; İletişim <span class="ch-cnt">3</span></button>
+              <button class="chip" data-kat="tablet">Tablet <span class="ch-cnt">1</span></button>
+              <button class="chip" data-kat="elaleti">El Aleti <span class="ch-cnt">2</span></button>
+              <button class="chip" data-kat="guvenlik">Güvenlik Ekipmanı <span class="ch-cnt">1</span></button>
+              <button class="chip" data-kat="arac">Araç <span class="ch-cnt">1</span></button>
+              <button class="chip" data-kat="makine">Makine-Ekipman <span class="ch-cnt">2</span></button>
             </div>
-          </div>
-          <div class="filter-row">
-            <span class="frow-lbl">Durum</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="dmDurumChips">
-                <button class="chip is-on" data-durum="hepsi">Tümü</button>
-                <button class="chip" data-durum="zimmetli">Zimmetli</button>
-                <button class="chip" data-durum="depoda">Depoda</button>
-                <button class="chip" data-durum="serviste">Serviste</button>
-                <button class="chip" data-durum="hurda">Hurda</button>
-                <button class="chip" data-durum="iade">İade Edildi</button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
       </div>
@@ -758,12 +732,13 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
   var counts0 = refreshCounts();
   document.getElementById('dmSub').textContent = counts0.hepsi + ' kalem · ' + (counts0.zimmetli||0) + ' aktif zimmet · 2 Temmuz 2026, Perşembe';
 
-  /* iki boyutlu hızlı filtre (kategori chip + durum chip + serbest metin) + §9
-     Gelişmiş Filtre panelinden gelen fpState AND'lenir. Bu sayfa kendi karmaşık
-     filtre motorunu kullandığı için gvFilterPanel'e opts.table VERİLMEDİ — spec-
-     filtre-tarih.md §3 "sayfa-lokal motor" durumu; panel yalnız UI/çip/badge yönetir,
-     eşleşme burada yapılır. */
-  var curKat = 'hepsi', curDurum = 'hepsi';
+  /* hızlı filtre (kategori chip + serbest metin) + §9 Gelişmiş Filtre panelinden gelen
+     fpState AND'lenir. Bu sayfa kendi karmaşık filtre motorunu kullandığı için
+     gvFilterPanel'e opts.table VERİLMEDİ — spec-filtre-tarih.md §3 "sayfa-lokal motor"
+     durumu; panel yalnız UI/çip/badge yönetir, eşleşme burada yapılır.
+     [G-3/G-4 · R-32] Durum çip motoru (curDurum) SİLİNDİ — süzme artık yalnız panelin
+     fdurum alanından geliyor (aynı beş değer, aynı data-durum eşleşmesi). */
+  var curKat = 'hepsi';
   var fpState = {fdurum:'', fsantiye:'', fkisi:'', fkategori:'', faltkat:'', fmarka:'', fgaranti:'', fbakim:''};
   function applyFilter(){
     var term = document.getElementById('dmSearch').value.trim().toLocaleLowerCase('tr');
@@ -771,7 +746,6 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     var shown = 0, shownArsiv = 0;
     document.querySelectorAll('#tblDemirbas tbody tr').forEach(function(tr){
       var okKat = curKat === 'hepsi' || tr.getAttribute('data-kat') === curKat;
-      var okDurum = curDurum === 'hepsi' || tr.getAttribute('data-durum') === curDurum;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var okFDurum = !fpState.fdurum || tr.getAttribute('data-durum') === fpState.fdurum;
       var okFSantiye = !fpState.fsantiye || tr.getAttribute('data-santiye') === fpState.fsantiye;
@@ -781,7 +755,7 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
       var okFMarka = !fpState.fmarka || tr.getAttribute('data-marka') === fpState.fmarka;
       var okFGaranti = !fpState.fgaranti || tr.getAttribute('data-garantidurum') === fpState.fgaranti;
       var okFBakim = !fpState.fbakim || tr.getAttribute('data-bakim') === fpState.fbakim;
-      var show = okKat && okDurum && okTerm && okFDurum && okFSantiye && okFKisi && okFKategori && okFAltkat && okFMarka && okFGaranti && okFBakim;
+      var show = okKat && okTerm && okFDurum && okFSantiye && okFKisi && okFKategori && okFAltkat && okFMarka && okFGaranti && okFBakim;
       var isArsiv = tr.getAttribute('data-arsiv') === '1';
       if(isArsiv){ if(show) shownArsiv++; if(!showArsiv) show = false; }
       tr.hidden = !show;
@@ -802,13 +776,6 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     document.querySelectorAll('#dmKatChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
     ch.classList.add('is-on');
     curKat = ch.getAttribute('data-kat');
-    applyFilter();
-  });
-  document.getElementById('dmDurumChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-durum]'); if(!ch) return;
-    document.querySelectorAll('#dmDurumChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curDurum = ch.getAttribute('data-durum');
     applyFilter();
   });
 

@@ -1664,7 +1664,10 @@
         : (sel ? [sel] : document.querySelectorAll('[data-chipbar]'));
       Array.prototype.forEach.call(wraps, function(wrap){
         if(wrap._gvCb) return;
-        var track = wrap.classList && wrap.classList.contains('gv-chipbar') ? wrap : wrap.querySelector('.gv-chipbar');
+        /* [G-3] `.kpi-rail` de geçerli bir iz — KPI şeridi aynı kaydırma/ok/kenar-solması
+           motorunu tüketir, ayrı bir primitif yazılmadı. */
+        var track = wrap.classList && (wrap.classList.contains('gv-chipbar') || wrap.classList.contains('kpi-rail')) ? wrap
+          : (wrap.querySelector('.gv-chipbar') || wrap.querySelector('.kpi-rail'));
         if(!track) return;
         var prev = wrap.querySelector('.cb-prev'), next = wrap.querySelector('.cb-next');
         track._gvScrollHintWired = true;   /* wireScrollHints ile çifte 'scroll' bağlama olmasın */

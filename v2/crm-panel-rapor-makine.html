@@ -120,13 +120,12 @@
 
     <!-- ============ YÖNETİM GÖRÜNÜMÜ ============ -->
     <section data-view="yonetim">
-      <div class="rp-toolbar">
-        <div class="rp-tb-group">
-          <span style="font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase">Bakım/muayene dönemi</span>
-          <div data-gvdaterange style="margin-left:4px"></div>
-        </div>
-      </div>
-
+      <!-- [G-4] Sayfa-üstü `.rp-toolbar` ("Bakım/muayene dönemi" tarih aralığı) KALDIRILDI.
+           Patron: "Sistemde burada varsa ekstra olarak burada göstermeye gerek yok."
+           Bu kontrol sayfanın ana listesini DEĞİL, aşağıdaki Bakım Takvimi tablosunu
+           süzüyordu — yani o kartın kendi "Dönem" çip şeridiyle AYNI ekseni ikinci kez
+           sunuyordu. Çip şeridi (Tümü/Haziran/Temmuz) 5 kaydın tamamını kapsar
+           (Haziran 4 + Temmuz 1), dolayısıyla süzme yeteneği kaybolmadı. -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-truck-pickup"></i></div>
@@ -181,26 +180,19 @@
               <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
             </div>
           </div>
+          <!-- [G-3/G-4] İkinci çip satırı (Şantiye) KALDIRILDI — eksen Gelişmiş Filtre'ye
+               `santiye` select alanı olarak taşındı (satır eşleştirmesi hâlâ data-santiye
+               okuyor). Kalan tek şerit durum eksenidir, gvChipBar slider'ına sarıldı. -->
           <div class="lh-tabs">
-            <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
-              <div class="filter-row">
-                <span class="frow-lbl">Şantiye</span>
-                <div class="chips" id="santiyeChips">
-                  <button class="chip is-on" data-santiye="tumu">Tümü <span class="ch-cnt">6</span></button>
-                  <button class="chip" data-santiye="vadi">Vadi Konakları <span class="ch-cnt">3</span></button>
-                  <button class="chip" data-santiye="liman">Liman Lojistik <span class="ch-cnt">2</span></button>
-                  <button class="chip" data-santiye="merkez">Merkez Şantiye <span class="ch-cnt">1</span></button>
-                </div>
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="durumChips">
+                <button class="chip is-on" data-durum="tumu">Tümü <span class="ch-cnt">6</span></button>
+                <button class="chip" data-durum="calisti">Çalışıyor <span class="ch-cnt">4</span></button>
+                <button class="chip" data-durum="bosta">Boşta <span class="ch-cnt">1</span></button>
+                <button class="chip" data-durum="arizali">Arızalı <span class="ch-cnt">1</span></button>
               </div>
-              <div class="filter-row">
-                <span class="frow-lbl">Durum</span>
-                <div class="chips" id="durumChips">
-                  <button class="chip is-on" data-durum="tumu">Tümü <span class="ch-cnt">6</span></button>
-                  <button class="chip" data-durum="calisti">Çalışıyor <span class="ch-cnt">4</span></button>
-                  <button class="chip" data-durum="bosta">Boşta <span class="ch-cnt">1</span></button>
-                  <button class="chip" data-durum="arizali">Arızalı <span class="ch-cnt">1</span></button>
-                </div>
-              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
             </div>
           </div>
         </div>
@@ -260,11 +252,17 @@
           <div class="gc-head">
             <div class="gc-title"><i class="fa-solid fa-calendar-check"></i> Bakım Takvimi</div>
           </div>
+          <!-- [G-3] Bakım Takvimi'nin TEK ekseni (Dönem). Dar sütunda sarmasın diye
+               gvChipBar slider'ına sarıldı. -->
           <div class="filter-bar" style="border-bottom:1px solid var(--line)">
-            <div class="chips" id="bakimDonemChips">
-              <button class="chip is-on" data-donem="tumu">Tümü <span class="ch-cnt">5</span></button>
-              <button class="chip" data-donem="haziran">Haziran <span class="ch-cnt">4</span></button>
-              <button class="chip" data-donem="temmuz">Temmuz <span class="ch-cnt">1</span></button>
+            <div class="gv-chipbar-wrap" data-chipbar style="width:100%">
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" id="bakimDonemChips">
+                <button class="chip is-on" data-donem="tumu">Tümü <span class="ch-cnt">5</span></button>
+                <button class="chip" data-donem="haziran">Haziran <span class="ch-cnt">4</span></button>
+                <button class="chip" data-donem="temmuz">Temmuz <span class="ch-cnt">1</span></button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
             </div>
           </div>
           <div class="gc-body flush">
@@ -493,13 +491,14 @@
      UYDURULMAZ. loading|error|empty|content dördü yalnız gvEmpty.durum() üzerinden
      yönetilir (elle .hidden atanmaz), ikisi asla aynı anda görünmez. */
   var mkShownCount = 0;
-  var curSantiye = 'tumu', curDurum = 'tumu';
+  var curDurum = 'tumu';
 
   /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
-     Şantiye/Durum zaten kendi chip satırında (§2.1 kategori/durum sekmesi) — burada
-     TEKRAR EDİLMEDİ. Mülkiyet (Öz Mal/Kiralık/Hizmet Alımı) hiçbir kontrolle
-     filtrelenemiyordu, tek yeni alan olarak eklendi (data-own, mekanik olarak MAKINE[]
-     kaynağından üretildi). Arşiv/pasif toggle KONMADI — K-326 emsali (yukarı bkz). */
+     Durum zaten kendi chip satırında (§2.1 durum sekmesi) — burada TEKRAR EDİLMEDİ.
+     [G-4] Şantiye ekseni ikinci çip satırından BURAYA taşındı. Mülkiyet (Öz Mal/
+     Kiralık/Hizmet Alımı) hiçbir kontrolle filtrelenemiyordu, alan olarak eklendi
+     (data-own, mekanik olarak MAKINE[] kaynağından üretildi).
+     Arşiv/pasif toggle KONMADI — K-326 emsali (yukarı bkz). */
   var mkFd = null;
   function mkFv(key){
     if(!mkFd) return null;
@@ -508,11 +507,12 @@
   }
   function applyFilter(){
     var ownFv = mkFv('own');
+    var sanFv = mkFv('santiye');
     var searchInp = document.querySelector('input[data-table-search]');
     var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
     var shown = 0;
     document.querySelectorAll('#tblMkRapor tbody tr').forEach(function(tr){
-      var okS = curSantiye === 'tumu' || tr.getAttribute('data-santiye') === curSantiye;
+      var okS = !sanFv || tr.getAttribute('data-santiye') === sanFv.value;
       var okD = curDurum === 'tumu' || tr.getAttribute('data-durum') === curDurum;
       var okOwn = !ownFv || tr.getAttribute('data-own') === ownFv.value;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
@@ -531,13 +531,6 @@
   });
   if(btnMkHataRetry) btnMkHataRetry.addEventListener('click', function(){
     gvEmpty.durum('#mkStateWrap', { sonucSayisi: mkShownCount });
-  });
-  document.getElementById('santiyeChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
-    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    curSantiye = ch.getAttribute('data-santiye');
-    applyFilter();
   });
   document.getElementById('durumChips').addEventListener('click', function(e){
     var ch = e.target.closest('.chip[data-durum]'); if(!ch) return;
@@ -558,6 +551,9 @@
       title: 'Gelişmiş Filtre',
       chipsMount: '#mkAchips',
       fields: [
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik'}, {v:'merkez', l:'Merkez Şantiye'}
+        ]},
         {key:'own', type:'select', label:'Mülkiyet', options:[
           {v:'ozmal', l:'Öz Mal'}, {v:'kiralik', l:'Kiralık'}, {v:'hizmet', l:'Hizmet Alımı'}
         ]}
@@ -599,19 +595,9 @@
   /* ============ T-R3 — Araç Filosu (B §7.3 Araçlar) ============
      kaynak: shell.js DALGA 9 kanonik ARC-## filo BİREBİR — crm-operasyon-arac-dashboard.html
      ile aynı rakamlar, yeni sayı UYDURULMADI. */
-  var AY_MAP = {Oca:0,Şub:1,Mar:2,Nis:3,May:4,Haz:5,Tem:6,Ağu:7,Eyl:8,Eki:9,Kas:10,Ara:11};
-  function parseTarih(s){
-    var m = /(\d{1,2})[.\s](Oca|Şub|Mar|Nis|May|Haz|Tem|Ağu|Eyl|Eki|Kas|Ara|\d{2})[.\s](\d{4})/.exec(s.replace(/\./g,' '));
-    if(m && AY_MAP.hasOwnProperty(m[2])) return new Date(parseInt(m[3],10), AY_MAP[m[2]], parseInt(m[1],10));
-    var d2 = /(\d{2})\.(\d{2})\.(\d{4})/.exec(s);
-    if(d2) return new Date(parseInt(d2[3],10), parseInt(d2[2],10)-1, parseInt(d2[1],10));
-    return null;
-  }
-  document.querySelectorAll('#tblBakim tbody tr').forEach(function(tr){
-    var t = parseTarih(tr.children[1].textContent);
-    if(t) tr.setAttribute('data-ts', t.getTime());
-  });
-
+  /* [G-4] AY_MAP/parseTarih/data-ts damgalaması KALDIRILDI — tek tüketicisi sayfa-üstü
+     `.rp-toolbar` tarih aralığıydı; o kontrol Bakım Takvimi'nin kendi Dönem çip
+     şeridiyle aynı ekseni tekrarladığı için kaldırıldı (yukarı bkz). */
   var ARAC = [
     {no:'ARC-01', ad:'Ford Ranger 4x4 pikap', santiye:'Vadi Konakları', zilyet:'Hasan Demirci', muayene:'29.07.2026', muayeneGun:18, bakimKm:42300, bakimLimit:50000, durum:'warn', durumLbl:'Muayene yaklaşıyor', aylik:9640},
     {no:'ARC-02', ad:'Mercedes Sprinter 316 servis', santiye:'Vadi Konakları', zilyet:'İbrahim Sönmez', muayene:'14.02.2027', muayeneGun:227, bakimKm:61200, bakimLimit:70000, durum:'ok', durumLbl:'Aktif', aylik:11280},
@@ -659,18 +645,6 @@
     document.querySelectorAll('#tblBakim tbody tr').forEach(function(tr){ if(!tr.hidden) vis++; });
     document.getElementById('bakimFoot').innerHTML = '<i class="fa-solid fa-circle-info"></i> Seçili aralıkta ' + vis + ' bakım kaydı gösteriliyor · MKN-03 (hizmet alımı) bu takvimde yer almaz.';
   }
-  window.gvDateRange('[data-gvdaterange]', {
-    emptyLabel: 'Tüm zamanlar',
-    onChange: function(val){
-      document.querySelectorAll('#tblBakim tbody tr[data-ts]').forEach(function(tr){
-        if(!val){ tr.hidden = false; return; }
-        var ts = +tr.getAttribute('data-ts');
-        tr.hidden = !(ts >= val.from.getTime() && ts <= val.to.getTime());
-      });
-      document.querySelectorAll('#bakimDonemChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
-      bakimRangeShown();
-    }
-  });
   bakimRangeShown();
 
   gvExport.bind();

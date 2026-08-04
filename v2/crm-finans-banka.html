@@ -20,10 +20,16 @@
 
 /* hesap kart şeridi — kasa.html ks-grid emsalinin banka hesabı yorumu:
    tıklanınca hesap detayına gider (kasa'daki gibi defteri BURADA filtrelemez —
-   hareketler ayrı bir sayfada, doc §14 "Banka Hesabı Detay" ayrı ekran istiyor) */
-.bnk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
-@media(max-width:1280px){.bnk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.bnk-grid{grid-template-columns:minmax(0,1fr)}}
+   hareketler ayrı bir sayfada, doc §14 "Banka Hesabı Detay" ayrı ekran istiyor)
+
+   [G-3/R-19] Patron [05:42]: "Banka hesapları birden fazla oluşabilir. O bakımdan
+   buradan ikinci satırdan sonra ekstra satır koymadan slider şeklinde adım atalım."
+   Eski 4-sütun ızgara 8 hesapta 2 satır ediyordu ve hesap sayısıyla büyüyordu;
+   şerit ortak `.kpi-rail` rayına çevrildi (ui.css, gvChipBar motorunu tüketir).
+   Kart ölçüsü .kpi-card'dan farklı olduğu için genişlik BURADA veriliyor. */
+.kpi-rail>.bnk-card{flex:0 0 calc((100% - 48px)/4);min-width:222px;scroll-snap-align:start}
+@media(max-width:1280px){ .kpi-rail>.bnk-card{flex:0 0 calc((100% - 16px)/2)} }
+@media(max-width:640px){ .kpi-rail>.bnk-card{flex:0 0 82%;min-width:0} }
 .bnk-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 18px;
   text-decoration:none;display:block;transition:.22s var(--ease);position:relative}
 .bnk-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--line-2)}
@@ -52,7 +58,7 @@
 .bh-cell b{display:block;font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap}
 .bh-cell span{display:block;font-size:11px;color:var(--muted)}
 
-@media(max-width:640px){ .bnk-grid{gap:10px} }
+@media(max-width:640px){ #bnkGrid{gap:10px} }
 
 /* filter-bar iki satırlı: (1) arama + gelişmiş filtre + kolonlar butonları,
    (2) durum chip slider KENDİ satırında (spec-liste-mimarisi.md §1 notu,
@@ -126,8 +132,14 @@
       </div>
     </div>
 
-    <!-- ============ hesap kart şeridi — hızlı bakış, tıkla → hesap detayı ============ -->
-    <div class="bnk-grid" id="bnkGrid">
+    <!-- ============ hesap kart şeridi — hızlı bakış, tıkla → hesap detayı ============
+         [G-3/R-19] Hesap sayısı sınırsız büyüyebildiği için ızgara DEĞİL yatay ray:
+         ikinci satıra hiç geçmez, oklarla/kaydırarak adım atılır. `id` ve
+         `data-hesap` öznitelikleri KORUNDU — applyState() kart rozetlerini bunlarla
+         güncelliyor, tıklama davranışı (hesap detayına <a>) değişmedi. -->
+    <div class="kpi-rail-wrap" data-chipbar>
+      <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+      <div class="kpi-rail" id="bnkGrid">
       <a class="bnk-card" href="crm-finans-banka-detay.html?hesap=is-bankasi-ana" data-hesap="is-bankasi-ana">
         <span class="bnk-star" title="Varsayılan hesap"><i class="fa-solid fa-star"></i></span>
         <div class="bnk-top"><div class="bnk-mark" style="background:var(--info-tint);color:var(--info)">İB</div><div class="bnk-id"><div class="bnk-bank">İş Bankası</div><div class="bnk-ad">Merkez Ana İşletme Hesabı</div></div></div>
@@ -177,6 +189,8 @@
         <div class="bnk-bak-lbl">Proje teslim edildi</div>
         <div class="bnk-foot"><span>Diğer</span><span class="gstat info">Arşivde</span></div>
       </a>
+      </div>
+      <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 
     <div class="gv-card">

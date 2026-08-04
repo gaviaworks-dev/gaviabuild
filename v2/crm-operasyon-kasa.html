@@ -24,21 +24,10 @@
 /* gvCols/gtable-cards ile eklenen boş hizalama hücreleri (rapor tablosunda YOK ama
    ileride eklenirse) kart modunda boş satır bırakmasın — sayfa genelinde güvenli varsayılan. */
 @media(max-width:640px){ .gtable-cards td:empty{display:none} }
-/* [T5A/Dalga5] Durum/Tür hızlı filtre satırlarının sağına Gelişmiş Filtre + Kolonlar
-   aksiyon grubu — crm-santiye.html .tur-row/.tur-row-acts deseninin birebir devralımı. */
-/* [T5A/Dalga5] .filter-bar.stack SÜTUN yönlü olduğundan .filter-row bir cross-axis flex
-   item'ı — min-width:0 OLMADAN uzun chip etiketleri (ör. "Onay Bekliyor"/"Revize İstendi")
-   satırı 390px konteynerin dışına TAŞIRIR (flex item min-width:auto tuzağının bir üst
-   seviyedeki hali — spec-liste-mimarisi.md §1 notunun genellemesi). */
-.filter-bar.stack .filter-row{min-width:0}
-.filter-row.tur-row{justify-content:space-between}
-.filter-row.tur-row .gv-chipbar-wrap{flex:1 1 0;min-width:0}
-.tur-row-acts{display:flex;align-items:center;gap:8px;flex:none}
-@media(max-width:640px){
-  .filter-row.tur-row{align-items:stretch}
-  .filter-row.tur-row .gv-chipbar-wrap{width:100%}
-  .tur-row-acts{width:100%}
-}
+/* [G-3/G-4 · R-17] "Tür" ikinci çip satırı KALDIRILDI (eksen Gelişmiş Filtre'de) —
+   .filter-bar.stack / .filter-row / .tur-row / .tur-row-acts kuralları yalnız o ikinci
+   satırı dikey yığmak için vardı, hepsi gereksizleşti ve silindi. Liste üstünde artık
+   TEK satır var: durum çipleri slider'ı (.gv-chipbar-wrap, zaten yatay kayıyor). */
 .col-tutar{width:120px}
 .col-durum{width:130px}
 .col-olusturan{width:125px}
@@ -61,18 +50,6 @@
 tr.is-taslak td{color:var(--muted)}
 tr.is-taslak .rp-info b{color:var(--ink-2)}
 
-/* iki boyutlu filtre — durum grubu (mevcut) + tür grubu (5C, demirbaş/santiye-isg deseni) */
-/* [T5A/Dalga5] display:flex;flex-direction:column YERİNE display:block + margin-bottom —
-   sütun-yönlü flex konteynerde iç içe geçmiş .filter-row.tur-row (satır-yönlü flex +
-   flex-wrap + justify-content:space-between) 390px'te KENDİ min-content genişliğine göre
-   büyüyüp konteyneri taşırıyordu (nested flex stretch/shrink algoritması çakışması —
-   min-width:0 TEK BAŞINA yetmedi). Block context'te her çocuk zaten blok-seviye tam
-   genişlik alır, taşma riski YOK; görsel boşluk gap yerine margin-bottom ile korunur. */
-.filter-bar.stack{display:block}
-.filter-bar.stack > *:not(:last-child){margin-bottom:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-
 /* dönem toggle — KPI şeridi üstü (madde 8.2, [MOCK] statik 3 set arası geçiş) */
 .donem-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .donem-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -81,7 +58,6 @@ tr.is-taslak .rp-info b{color:var(--ink-2)}
   /* [T5A/Dalga5] gtable-cards modunda "Kalem Özeti" kartın tam genişliğini kullanır —
      masaüstü tablo hücresinin ellipsis/nowrap kısıtlaması burada gerekmiyor, sarmalansın. */
   #tblKasa .rp-desc{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
-  .filter-row .frow-lbl{min-width:0;width:100%}
 }
 
 /* ============ D8 (1.2) — şantiye kasa kartları + kasa defteri ============ */
@@ -477,10 +453,13 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
           </div>
         </div>
         <div class="lh-tabs">
-          <!-- 2 sıra (Durum çipleri + Tür alt-satırı) — .lh-tabs tek-satır flex konteyner,
-               ikinci sırayı DİKEY yığmak için mevcut sayfa-lokal `.filter-bar.stack`
-               yeniden kullanılır (bkz. crm-operasyon-kredikarti.html'deki AYNI yorum). -->
-          <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
+          <!-- [G-3/G-4 · R-17, patron 05:23] "Kasa bölümünde altta rapor ve onay kısmında
+               bu tür yapılar gelişmiş filtrenin içerisinde gösterilecek."
+               "Tür" alt çip satırı (Giriş/Tahsilat/Ödeme/Avans Ödemesi) BURADAN KALDIRILDI
+               ve Gelişmiş Filtre paneline `data-fp-key="tur"` alanı olarak taşındı; süzme
+               aynı `data-tur` özniteliğini okuyor, işlev kaybı YOK. Üstte TEK satır kaldı:
+               durum çipleri slider'ı (G-3 [01:03] "hiçbir şekilde ikinci bir satıra
+               geçmesin"). `.filter-bar.stack` sarmalayıcısı da gereksizleşti, silindi. -->
           <div class="gv-chipbar-wrap" data-chipbar>
             <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
             <div class="gv-chipbar chips" data-target="#tblKasa">
@@ -493,21 +472,6 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
               <button class="chip" data-filter="kayitli">Kayıtlı <span class="ch-cnt">6</span></button>
             </div>
             <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-          <div class="filter-row tur-row">
-            <span class="frow-lbl">Tür</span>
-            <div class="gv-chipbar-wrap" data-chipbar>
-              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-              <div class="gv-chipbar chips" id="turChips">
-                <button class="chip is-on" data-tur="hepsi">Tümü <span class="ch-cnt">16</span></button>
-                <button class="chip" data-tur="giris">Giriş <span class="ch-cnt">3</span></button>
-                <button class="chip" data-tur="tahsilat">Tahsilat <span class="ch-cnt">3</span></button>
-                <button class="chip" data-tur="odeme">Ödeme <span class="ch-cnt">9</span></button>
-                <button class="chip" data-tur="avans">Avans Ödemesi <span class="ch-cnt">1</span></button>
-              </div>
-              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-          </div>
           </div>
         </div>
       </div>
@@ -676,6 +640,19 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
         <button type="button" class="gv-fpanel-close" aria-label="Kapat"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="gv-fpanel-body">
+        <!-- [G-3/G-4 · R-17] Liste üstündeki "Tür" çip satırından TAŞINAN eksen.
+             Seçenekler eski çiplerle birebir (etiket + değer aynı); applyKasaCombinedFilter()
+             satırın `data-tur` özniteliğini AYNI şekilde okur. -->
+        <div class="gfield">
+          <label>Tür</label>
+          <select data-fp-key="tur" data-fp-label="Tür">
+            <option value="">Tümü</option>
+            <option value="giris">Giriş</option>
+            <option value="tahsilat">Tahsilat</option>
+            <option value="odeme">Ödeme</option>
+            <option value="avans">Avans Ödemesi</option>
+          </select>
+        </div>
         <div class="gfield">
           <label>Kayıt Durumu</label>
           <select data-fp-key="kdurum" data-fp-label="Kayıt Durumu">
@@ -771,13 +748,12 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     document.querySelectorAll('#tblDefter tbody tr').forEach(function(tr){
       if(tr.getAttribute('data-ks') !== 'vadi') tr.remove();
     });
-    /* chip sayaçları kalan (Vadi) satırlara göre yeniden hesaplanır */
-    document.querySelectorAll('.chips[data-target="#tblKasa"] .chip[data-filter], #turChips .chip[data-tur]').forEach(function(ch){
-      var f = ch.getAttribute('data-filter'), t = ch.getAttribute('data-tur');
-      var n = 0;
+    /* chip sayaçları kalan (Vadi) satırlara göre yeniden hesaplanır
+       ([G-3/G-4] Tür çipleri kalktı — yalnız durum çipleri sayılır) */
+    document.querySelectorAll('.chips[data-target="#tblKasa"] .chip[data-filter]').forEach(function(ch){
+      var f = ch.getAttribute('data-filter'), n = 0;
       document.querySelectorAll('#tblKasa tbody tr').forEach(function(tr){
-        if(f){ if(f === 'hepsi' || tr.getAttribute('data-f') === f) n++; }
-        else { if(t === 'hepsi' || tr.getAttribute('data-tur') === t) n++; }
+        if(f === 'hepsi' || tr.getAttribute('data-f') === f) n++;
       });
       var cnt = ch.querySelector('.ch-cnt');
       if(cnt) cnt.textContent = n;
@@ -1024,13 +1000,15 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     el.hidden = OLUSTURABILIR.indexOf(GV.role) === -1;
   });
 
-  /* ============ 8.1 — Tür filtresi (iki boyutlu: mevcut Durum + yeni Tür) ============
+  /* ============ 8.1 — iki boyutlu filtre: Durum (üstteki tek çip satırı) + Tür ============
      D18 delegasyon deseni: motor tblKasa._gvApply ile ui.js'e kayıtlı. Durum chip'leri
      + arama listener'ları ui.js'te (setTimeout öteleme hack'i KALKTI — çifte-listener
-     bulgusu kapandı); Tür chip'leri data-tur olduğundan ui.js bağlamaz, sayfa dinler
-     ve gvApplyFilters(tblKasa, true) üzerinden akıtır. */
+     bulgusu kapandı).
+     [G-3/G-4 · R-17] Tür ekseni artık çip satırı DEĞİL, Gelişmiş Filtre panelinin
+     `tur` alanı — ayrı bir chip motoru (turChipsWrap/listener) tutulmuyor; değer
+     kasaFpState.tur üzerinden AYNI bileşik motora akıyor (K-306b: bir ekseni iki
+     kontrol sürmez). */
   var tblKasa = document.getElementById('tblKasa');
-  var turChipsWrap = document.getElementById('turChips');
   var durumChipsWrap = document.querySelector('.chips[data-target="#tblKasa"]');
   var kasaSearch = document.querySelector('[data-table-search="#tblKasa"]');
 
@@ -1071,16 +1049,21 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
   function applyKasaCombinedFilter(){
     var durumOn = durumChipsWrap.querySelector('.chip.is-on[data-filter]');
     var f = durumOn ? durumOn.getAttribute('data-filter') : 'hepsi';
-    var turOn = turChipsWrap.querySelector('.chip.is-on[data-tur]');
-    var t = turOn ? turOn.getAttribute('data-tur') : 'hepsi';
+    var t = kasaFpState.tur ? kasaFpState.tur.value : '';   /* [G-3/G-4] Gelişmiş Filtre'den */
     var term = kasaSearch ? kasaSearch.value.trim().toLocaleLowerCase('tr') : '';
     var kd = kasaFpState.kdurum ? kasaFpState.kdurum.value : '';
-    var showArsiv = !!kasaFpState.arsiv;
+    /* [G-3/G-4] "Arşivlenenleri Göster" .lh-acts'taki BAĞIMSIZ bir toggle — durumu
+       doğrudan kutudan okunur. Eskiden kasaFpState.arsiv'de tutuluyordu ama panelin
+       onApply'ı state nesnesini TÜMÜYLE değiştiriyor; Tür ekseni panele taşındığı için
+       artık her Tür seçimi o bayrağı sessizce sıfırlardı (kutu işaretli kalırken süzme
+       çalışmazdı). Tek kaynak = kutunun kendisi. */
+    var arsivBox = document.getElementById('kasaArsivGoster');
+    var showArsiv = !!(arsivBox && arsivBox.checked);
     var dr = kasaFpState.tarih ? kasaFpState.tarih.raw : null;
     var shown = 0;
     tblKasa.querySelectorAll('tbody tr').forEach(function(tr){
       var okF = (f === 'hepsi') || (tr.getAttribute('data-f') === f);
-      var okT = (t === 'hepsi') || (tr.getAttribute('data-tur') === t);
+      var okT = !t || (tr.getAttribute('data-tur') === t);
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
       var arsivDurum = tr.getAttribute('data-arsiv') || 'aktif';
       var isArsivli = (arsivDurum === 'arsivlendi' || arsivDurum === 'iptal');
@@ -1118,14 +1101,11 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     }
   });
   /* V3A §3.2 — "Arşivlenenleri Göster" artık panelin İÇİNDE değil, .lh-acts'ta
-     tekil bir toggle; applyKasaCombinedFilter() aynı kasaFpState.arsiv anahtarını
-     okumaya devam eder (K-305/K-306 tekilleştirme deseniyle aynı). */
+     tekil bir toggle (K-305/K-306 tekilleştirme deseniyle aynı); durumu
+     applyKasaCombinedFilter() doğrudan kutudan okur (bkz. oradaki [G-3/G-4] notu). */
   var kasaArsivGoster = document.getElementById('kasaArsivGoster');
   if(kasaArsivGoster){
-    kasaArsivGoster.addEventListener('change', function(){
-      kasaFpState.arsiv = kasaArsivGoster.checked;
-      applyKasaCombinedFilter();
-    });
+    kasaArsivGoster.addEventListener('change', applyKasaCombinedFilter);
   }
 
   /* ============ T5A/Dalga5 — Kolonlar (gvCols), §8.4/§14-9 ============
@@ -1149,12 +1129,6 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     });
   }
 
-  turChipsWrap.addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-tur]'); if(!ch) return;
-    turChipsWrap.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    gvApplyFilters(tblKasa, true);
-  });
   applyKasaCombinedFilter();
 
   /* ============ 8.2 — Dönem toggle [MOCK] ============

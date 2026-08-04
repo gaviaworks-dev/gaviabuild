@@ -260,13 +260,23 @@
               <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
             </div>
           </div>
-          <div class="lh-tabs" style="flex-wrap:wrap;gap:14px">
-            <div class="chips" data-target="#tblEkstre" id="ekstreChips">
-              <button class="chip is-on" data-filter="hepsi">Tümü</button>
-              <button class="chip" data-filter="borc">Borç</button>
-              <button class="chip" data-filter="alacak">Alacak</button>
+          <!-- [G-3/G-4] Patron [06:59]: "Hareketler bölümündeki liste yapısında tarih
+               aralığı, şantiye, tür gibi birden fazla içerik var. Bunları daha minimize
+               etmemiz lazım." Bu satırda ARTIK tek eksen var: hareket türü çipleri.
+               Tarih aralığı widget'ı (`#ekstreDr`) buradan Gelişmiş Filtre çekmecesine
+               `key:'tarih'` daterange alanı olarak TAŞINDI — süzme kaybolmadı, yer
+               değiştirdi. Kalan tek şerit `.gv-chipbar` rayına sarıldı ki çip sayısı
+               artsa bile ikinci satıra geçmesin. `id` ve `data-target` KORUNDU. -->
+          <div class="lh-tabs">
+            <div class="gv-chipbar-wrap" data-chipbar>
+              <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="gv-chipbar chips" data-target="#tblEkstre" id="ekstreChips">
+                <button class="chip is-on" data-filter="hepsi">Tümü</button>
+                <button class="chip" data-filter="borc">Borç</button>
+                <button class="chip" data-filter="alacak">Alacak</button>
+              </div>
+              <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div id="ekstreDr"></div>
           </div>
         </div>
         <div class="gc-body flush">
@@ -601,8 +611,9 @@
   sel.addEventListener('change', function(){ render(sel.value); });
 
   /* ============ V3A — standart üst alan: arama (§2.1) + Gelişmiş Filtre (§4.3,
-     Tutar Aralığı — tarih zaten §13'ün her-zaman-görünür `#ekstreDr` widget'ıyla
-     kapsanıyor, mükerrer alan İCAT EDİLMEDİ) + Kolonlar (§4.4) + Dışa Aktar (§2.2).
+     Tarih Aralığı + Tutar Aralığı — [G-4] tarih eskiden liste üstünde her zaman
+     görünen ayrı bir `#ekstreDr` widget'ıydı, panele TAŞINDI) + Kolonlar (§4.4)
+     + Dışa Aktar (§2.2).
      §9 — hızlı hareket türü çipleri (Tümü/Borç/Alacak) mevcut generic
      .chip[data-filter] motorunu (ui.js) kullanır, yeni bileşen İCAT EDİLMEDİ.
      TEK KARAR MERCİİ: applyEkstreAdvanced() — tarih VE tutar aynı `.gv-fp-hide`
@@ -637,7 +648,6 @@
     });
     syncEkstreEmpty();
   }
-  var ekstreDr = window.gvDateRange('#ekstreDr', { emptyLabel:'Tüm zamanlar', onChange: function(val){ ekstreDateVal = val; applyEkstreAdvanced(); } });
   document.getElementById('ekstreChips').querySelectorAll('.chip[data-filter]').forEach(function(ch){
     ch.addEventListener('click', function(){ syncEkstreEmpty(); });
   });
@@ -649,9 +659,15 @@
       title: 'Gelişmiş Filtre',
       chipsMount: '#ekstreAchips',
       fields: [
+        /* [G-4] Liste üstünden taşınan tarih ekseni. `opts.table` VERİLMEDİĞİ için
+           çekmecenin kendi tablo süzgeci devrede değil — süzmeyi eskisi gibi tek
+           merci olan applyEkstreAdvanced() yapar; `raw` alanı gvDateRange'in
+           {key,from,to,label} değeriyle BİREBİR aynı nesnedir. */
+        {key:'tarih', type:'daterange', label:'Tarih Aralığı', emptyLabel:'Tüm zamanlar'},
         {key:'tutar', type:'numrange', label:'Tutar Aralığı', prefix:'₺'}
       ],
       onApply: function(state){
+        ekstreDateVal = state.tarih ? state.tarih.raw : null;
         ekstreTutarVal = state.tutar ? state.tutar.value : null;
         applyEkstreAdvanced();
       }
@@ -698,8 +714,9 @@
   if(ekstreSearchInp) ekstreSearchInp.addEventListener('input', applyEkstreSearch);
 
   function resetEkstreFilters(){
-    if(ekstreDr) ekstreDr.clear();
     ekstreDateVal = null;
+    /* [G-4] Tarih artık çekmecenin bir alanı — ayrı bir `#ekstreDr` temizliği YOK,
+       çekmecenin clear()'ı tarih + tutar alanlarının ikisini birden sıfırlar. */
     var ekstreFiltreBtn = document.getElementById('ekstreFiltreBtn');
     if(ekstreFiltreBtn && ekstreFiltreBtn._gvFd) ekstreFiltreBtn._gvFd.clear();
     ekstreTutarVal = null;

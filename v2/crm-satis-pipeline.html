@@ -20,7 +20,10 @@
 
 /* özet şerit — Sözleşme / Kazanıldı / Kaybedildi (7 aktif kolonun dışında) */
 .pipe-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-bottom:22px}
-.pipe-seg{padding:18px 22px;display:flex;flex-direction:column;gap:10px}
+/* min-width:0 — çip rayı (aşağıda) yatay kaydığı için grid item'ın `min-width:auto`
+   varsayılanı kalırsa segment kendi içerik genişliğine şişer ve SAYFAYI yatay
+   taşırır (§5.3/§13.3'teki flex/grid min-width tuzağı). */
+.pipe-seg{padding:18px 22px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .pipe-seg + .pipe-seg{border-left:1px solid var(--line)}
 .pipe-seg-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .pipe-seg-lbl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
@@ -33,7 +36,15 @@
 .pipe-seg.kazanildi .pipe-seg-num{color:var(--ok)}
 .pipe-seg.kaybedildi .pipe-seg-num{color:var(--danger)}
 .pipe-seg-sum{font-size:11.5px;color:var(--muted);font-weight:600}
-.pipe-chips{display:flex;flex-wrap:wrap;gap:6px}
+/* [G-3] Özet şeridin fırsat çipleri SARMAZ, yatay kayar. Patron [01:03]:
+   "Tek satırda gözükeceğinden dolayı … slider şeklinde gözükebilir. Hiçbir şekilde
+   ikinci bir satıra geçmesin." Kazanıldı 5, Kaybedildi 3 çip taşıyordu ve 1/3
+   genişlikteki segmentte 3 satıra yayılıyordu — üç segment de artık ortak
+   `.gv-chipbar` rayını (gvChipBar motoru, ok + kenar-solması) tüketiyor, ayrı bir
+   kaydırma motoru İCAT EDİLMEDİ. Yalnız ölçü/boşluk sayfa-yerel veriliyor. */
+.pipe-chips{display:flex;flex-wrap:nowrap;gap:6px}
+.pipe-chips>.pipe-chip,.pipe-chips>.pipe-empty{flex:none;white-space:nowrap;scroll-snap-align:start}
+.pipe-seg .cb-arrow{width:26px;height:26px;font-size:10px}
 .pipe-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:var(--r-pill);background:var(--bg);color:var(--ink-2);border:1px solid var(--line)}
 .pipe-chip.reason{color:var(--danger);background:var(--danger-tint);border-color:transparent}
 a.pipe-chip{transition:.18s var(--ease)}
@@ -146,8 +157,12 @@ a.pipe-chip:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
           <span class="pipe-seg-num" id="szNum">1</span>
         </div>
         <div class="pipe-seg-sum">İmza aşamasında — kanban dışı</div>
-        <div class="pipe-chips" id="szChips">
-          <a class="pipe-chip" href="crm-satis-firsat-detay.html?frs=002" data-tems="selin">Korkut · VK-D-05</a>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="pipe-chips gv-chipbar" id="szChips">
+            <a class="pipe-chip" href="crm-satis-firsat-detay.html?frs=002" data-tems="selin">Korkut · VK-D-05</a>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
       </div>
       <div class="pipe-seg kazanildi">
@@ -156,12 +171,16 @@ a.pipe-chip:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
           <span class="pipe-seg-num" id="kzNum">5</span>
         </div>
         <div class="pipe-seg-sum" id="kzSum">Son 90 gün · ₺25.905.000</div>
-        <div class="pipe-chips" id="kzChips">
-          <a class="pipe-chip" href="crm-satis-firsat-detay.html?frs=001" data-tems="okan">Onaran · VK-C-18</a>
-          <span class="pipe-chip" data-tems="okan">Toprak · A-03</span>
-          <span class="pipe-chip" data-tems="okan">Toprak · A-09</span>
-          <span class="pipe-chip" data-tems="okan">Toprak · C-21</span>
-          <span class="pipe-chip" data-tems="okan">Demirel · VK-D-14</span>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="pipe-chips gv-chipbar" id="kzChips">
+            <a class="pipe-chip" href="crm-satis-firsat-detay.html?frs=001" data-tems="okan">Onaran · VK-C-18</a>
+            <span class="pipe-chip" data-tems="okan">Toprak · A-03</span>
+            <span class="pipe-chip" data-tems="okan">Toprak · A-09</span>
+            <span class="pipe-chip" data-tems="okan">Toprak · C-21</span>
+            <span class="pipe-chip" data-tems="okan">Demirel · VK-D-14</span>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
       </div>
       <div class="pipe-seg kaybedildi">
@@ -170,10 +189,14 @@ a.pipe-chip:hover{border-color:var(--acc-ink);color:var(--acc-ink)}
           <span class="pipe-seg-num" id="kbNum">3</span>
         </div>
         <div class="pipe-seg-sum">Son 90 gün — neden rozetli</div>
-        <div class="pipe-chips" id="kbChips">
-          <a class="pipe-chip reason" href="crm-satis-firsat-detay.html?frs=004" data-tems="selin">Ilgaz · VK-B-07 — Fiyat</a>
-          <span class="pipe-chip reason" data-tems="selin">Kavukçu · GE2-V15 — Finansman</span>
-          <span class="pipe-chip reason" data-tems="okan">Tokgöz · VK-A-21 — Rakip proje</span>
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="pipe-chips gv-chipbar" id="kbChips">
+            <a class="pipe-chip reason" href="crm-satis-firsat-detay.html?frs=004" data-tems="selin">Ilgaz · VK-B-07 — Fiyat</a>
+            <span class="pipe-chip reason" data-tems="selin">Kavukçu · GE2-V15 — Finansman</span>
+            <span class="pipe-chip reason" data-tems="okan">Tokgöz · VK-A-21 — Rakip proje</span>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
         </div>
       </div>
     </div>
