@@ -15,6 +15,12 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 *{box-sizing:border-box}
+/* [R-44] `[hidden]` guard'ı. Bu kural ORTAK shell.css'te var (satır ~29) ama portal
+   sayfaları standalone çalışır ve shell.css YÜKLEMEZ — sonuç: eşit özgüllükteki
+   `.cb-arrow{display:inline-flex}` UA'nın `[hidden]` varsayılanını ezip gizli
+   çip-bar oklarını görünür bırakıyordu (aynı kusur portal-odemeler ve
+   portal-belgeler'de de var; ortak dosya kilitli olduğu için sayfa-yerel çözüldü). */
+[hidden]{display:none !important}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;padding-bottom:48px}
 a{color:inherit;text-decoration:none}
 :focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px;border-radius:4px}
@@ -37,9 +43,13 @@ a{color:inherit;text-decoration:none}
 @media (max-width:560px){ .pf-chip span{display:none} .pf-chip{padding:6px;border-radius:50%} }
 
 .pf-tabs{position:sticky;top:var(--top-h);z-index:19;background:var(--paper);border-bottom:1px solid var(--line);display:flex}
-.pf-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 10px;
+.pf-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 10px;min-width:0;
   font-size:11px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;transition:.2s var(--ease)}
 .pf-tab i{font-size:15px}
+/* Navigasyon beşinci sekmeyle (Raporum) genişledi: 390px'te beş etiketin toplamı
+   sınıra yaklaşıyor. `min-width:0` + ellipsis, dar ekranda taşma yerine kırpma
+   garanti eder — G-9 ölçütü yatay taşmayı yasaklıyor. */
+.pf-tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pf-tab:hover{color:var(--ink-2)}
 .pf-tab.active{color:var(--acc-ink);border-color:var(--acc-ink)}
 @media (min-width:641px){
@@ -94,16 +104,61 @@ a{color:inherit;text-decoration:none}
 .cmt-text{font-size:13px;color:var(--ink-2);line-height:1.55}
 .cmt-text a{color:var(--acc-ink);font-weight:700}
 
-/* ---- yeni talep formu ---- */
-.gv-field{margin-bottom:16px}
-.gv-field label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
-.gv-field select,.gv-field textarea{width:100%;font-family:inherit;font-size:13.5px;color:var(--ink);
-  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 12px;outline:none;transition:.2s var(--ease)}
-.gv-field select:focus,.gv-field textarea:focus{border-color:var(--acc-ink);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.15)}
-.gv-field textarea{resize:vertical;min-height:96px;font-family:inherit}
-.form-row{display:grid;grid-template-columns:1fr;gap:0}
-@media (min-width:640px){ .form-row{grid-template-columns:1fr 1fr;gap:16px} }
-.form-foot{display:flex;justify-content:flex-end;gap:10px}
+/* =====================================================================
+   [R-45] YENİ TALEP OLUŞTURMA
+   Patron: "Yeni bir talep oluşturma içeriği için daha güzel bir tasarım."
+   Eski hâli iki <select> + bir textarea idi; alıcı talep türünü okumadan
+   seçemiyordu. Şimdi ikonlu döşeme seçimi + birim seçimi + aciliyet +
+   açıklama + dosya ekleme.
+   Sayfa-yerel `.gv-field` / `.form-row` / `.form-foot` KOPYALARI KALKTI:
+   alan dizilimi ortak `.gfield`, alt aksiyon barı ortak `.form-foot`
+   (ui.css) — ghost "Vazgeç" solda, TEK accent buton en sağda.
+   Kategori (tür/aciliyet) kodlamada marka ya da durum RENGİ kullanılmaz;
+   ayrım ikon + etiketle, seçili döşeme yumuşak accent tint'iyle verilir.
+   ===================================================================== */
+.nt-grp{margin-bottom:22px}
+.nt-grp:last-child{margin-bottom:0}
+.nt-lbl{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;font-size:12px;font-weight:700;
+  color:var(--ink-2);letter-spacing:.02em;margin-bottom:10px}
+.nt-lbl small{font-size:11px;font-weight:500;color:var(--muted)}
+.nt-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px}
+.nt-tiles.units{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.nt-tile{position:relative;display:flex;align-items:center;gap:11px;min-width:0;cursor:pointer;
+  padding:12px 13px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--paper);transition:.18s var(--ease)}
+.nt-tile input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.nt-ico{width:32px;height:32px;flex:none;border-radius:var(--r-sm);background:var(--bg);color:var(--ink-2);
+  display:grid;place-items:center;font-size:13px;transition:.18s var(--ease)}
+.nt-tile-txt{min-width:0;line-height:1.35}
+.nt-tile-txt b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+/* alt satır KIRPILMAZ, sarar: 158px'lik döşemede "Ödeme, belge, süreç" tek satıra
+   sığmıyor ve ellipsis okunabilirliği bitiriyordu; ızgara zaten eşit yükseklik veriyor */
+.nt-tile-txt span{display:block;font-size:11px;color:var(--muted);line-height:1.4}
+.nt-tile:hover{border-color:var(--line-2);background:var(--bg)}
+/* seçili durum — JS `.is-on` sınıfı yazar */
+.nt-tile.is-on{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.07);box-shadow:inset 0 0 0 1px var(--acc-ink)}
+.nt-tile.is-on .nt-ico{background:rgba(var(--acc-rgb),.16);color:var(--acc-ink)}
+/* JS kapalıyken de seçim görünür kalsın — ayrı blok, çünkü desteklenmeyen
+   bir seçici virgüllü listede kuralın TAMAMINI geçersiz kılar */
+.nt-tile:has(input:checked){border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.07);box-shadow:inset 0 0 0 1px var(--acc-ink)}
+.nt-tile:has(input:checked) .nt-ico{background:rgba(var(--acc-rgb),.16);color:var(--acc-ink)}
+.nt-tile:focus-within{outline:2px solid var(--acc-ink);outline-offset:2px}
+
+.nt-drop{display:flex;align-items:center;gap:13px;padding:15px 16px;border:1.5px dashed var(--line-2);
+  border-radius:var(--r-md);background:var(--bg);cursor:pointer;transition:.18s var(--ease);min-width:0}
+.nt-drop:hover,.nt-drop.is-over{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.06)}
+.nt-drop > i{font-size:17px;color:var(--acc-ink);flex:none}
+.nt-drop-txt{min-width:0}
+.nt-drop-txt b{display:block;font-size:13px;color:var(--ink)}
+.nt-drop-txt span{font-size:11.5px;color:var(--muted)}
+.nt-files{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.nt-file{display:flex;align-items:center;gap:10px;min-width:0;font-size:12.5px;color:var(--ink-2);
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px}
+.nt-file > i{color:var(--muted);font-size:12px;flex:none}
+.nt-file-x{margin-left:auto;border:none;background:none;color:var(--muted);cursor:pointer;
+  font-size:12px;padding:3px 5px;border-radius:5px;flex:none;font-family:inherit}
+.nt-file-x:hover{color:var(--danger);background:var(--danger-tint)}
+.nt-hint{font-size:11.5px;color:var(--muted);margin-top:7px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#yeni-talep{scroll-margin-top:140px}
 </style>
 </head>
 <body data-page="talepler">
@@ -124,6 +179,7 @@ a{color:inherit;text-decoration:none}
   <a class="pf-tab" href="portal-odemeler.html"><i class="fa-solid fa-file-invoice-dollar"></i><span>Ödemelerim</span></a>
   <a class="pf-tab" href="portal-belgeler.html"><i class="fa-solid fa-folder-open"></i><span>Belgelerim</span></a>
   <a class="pf-tab active" href="portal-talepler.html"><i class="fa-solid fa-comment-dots"></i><span>Taleplerim</span></a>
+  <a class="pf-tab" href="portal-rapor.html"><i class="fa-solid fa-chart-pie"></i><span>Raporum</span></a>
 </nav>
 
 <main class="pf-wrap">
@@ -145,12 +201,19 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="pf-section-lbl"><i class="fa-solid fa-list-check"></i> Taleplerim (<span id="reqVisCount">3</span>)</div>
-
   <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Bu
        portal sayfası CRM shell'i DEĞİL kendi `.pf-*` kabuğunu kullanır, ama tokens.css
        + ui.css'i CRM ile AYNI (açık zemin) yükler — `.gv-listhead/.lh-*` doğrudan
-       kullanılabilir (koyu Platform Konsolu'ndaki gibi bir sayfa-lokal varyant GEREKMEZ). -->
+       kullanılabilir (koyu Platform Konsolu'ndaki gibi bir sayfa-lokal varyant GEREKMEZ).
+       [R-44] İKİ DEĞİŞİKLİK:
+       (1) `.lh-toggle` "Arşivlenenleri Göster" KALKTI — arşiv artık bir onay kutusu
+           değil, kendi sekmesi. İkisi birlikte kalsa aynı işi iki farklı yerden
+           yapan çelişkili iki kontrol olurdu.
+       (2) Durum çip ekseni (Tümü/İşlemde/Tamamlandı) KALKTI: "Tamamlandı" çipi
+           Arşiv sekmesiyle bire bir aynı kümeyi veriyordu. Durum ekseni Gelişmiş
+           Filtre paneline devredildi — emsal G-3/G-4 · R-32 (crm-operasyon-demirbas).
+       Üst alan sekmelerin ÜSTÜNDE tek örnek olarak durur; arama ve filtre iki
+       sekmedeki kartlara birlikte uygulanır, sekme sayaçları sonuca göre güncellenir. -->
   <div class="gv-card" style="margin-bottom:18px">
     <div class="gv-listhead">
       <div class="lh-row">
@@ -165,10 +228,6 @@ a{color:inherit;text-decoration:none}
           <button type="button" class="btn btn-ghost btn-sm" id="reqColsBtn" data-demo="Talep kartları kolon bazlı değil — yorum akışı olan bir talep defteridir, ayrıntı kartın içinde." aria-label="Kolonlar">
             <i class="fa-solid fa-table-columns"></i> <span class="lh-lbl">Kolonlar</span>
           </button>
-          <label class="lh-toggle" for="reqArsivGoster">
-            <input type="checkbox" id="reqArsivGoster">
-            <i class="fa-solid fa-box-archive"></i> <span class="lh-lbl">Arşivlenenleri Göster</span>
-          </label>
         </div>
       </div>
       <div class="lh-achips gv-achips-row" id="reqAchips" hidden>
@@ -177,19 +236,17 @@ a{color:inherit;text-decoration:none}
           <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
         </div>
       </div>
-      <div class="lh-tabs">
-        <div class="gv-chipbar-wrap" data-chipbar>
-          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="gv-chipbar chips" id="reqDurumChips">
-            <button type="button" class="chip is-on" data-durum="hepsi">Tümü <span class="ch-cnt">3</span></button>
-            <button type="button" class="chip" data-durum="islemde">İşlemde <span class="ch-cnt">2</span></button>
-            <button type="button" class="chip" data-durum="tamam">Tamamlandı <span class="ch-cnt">1</span></button>
-          </div>
-          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-      </div>
     </div>
   </div>
+
+  <!-- [R-44] Sekme mount'u — ORTAK `gvTabs` primitifi (ui.js) doldurur; emsal
+       crm-operasyon-demirbas.html `#dmTabs`. Yeni sekme mekanizması kurulmadı.
+       Paneller statik HTML'de İKİSİ DE görünürdür; `hidden` yalnız çalışma
+       zamanında yazılır (gvTabs progressive enhancement sözleşmesi) — JS kapalıysa
+       hiçbir talep kaybolmaz, alt alta okunur. -->
+  <div id="reqTabs"></div>
+
+  <div class="gv-tabpanel" id="panel-req-acik">
 
   <div class="gv-card req-card" id="sst-007" data-tur="garanti" data-durum="islemde">
     <div class="req-top">
@@ -230,38 +287,6 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="gv-card req-card" id="sst-010" data-tur="bilgi" data-durum="tamam">
-    <div class="req-top">
-      <div class="req-titles">
-        <div class="req-no">SST-2026-010</div>
-        <div class="req-title">Taksit planı bilgi talebi</div>
-      </div>
-      <div class="req-badges"><span class="gtag">Bilgi</span><span class="gstat ok">Tamamlandı</span></div>
-    </div>
-    <div class="req-meta-row">
-      <span><b>Birim:</b> VK-C-18</span>
-      <span><b>Açılış:</b> 2 Temmuz 2026</span>
-      <span><b>Kapanış:</b> 2 Temmuz 2026</span>
-    </div>
-    <div class="req-desc">Ödeme planındaki kalan taksit sayısı ve toplam kalan tutarla ilgili bilgi talep edildi; satış ekibi güncel bilgiyi paylaştı.</div>
-    <div class="req-thread">
-      <div class="cmt-row me">
-        <div class="cmt-ava me">SO</div>
-        <div class="cmt-body">
-          <div class="cmt-head"><b>Siz</b><span>2 Temmuz 2026, 09:10</span></div>
-          <div class="cmt-text">36 taksitlik ödeme planımda kalan taksit sayısını ve toplam kalan tutarı öğrenebilir miyim?</div>
-        </div>
-      </div>
-      <div class="cmt-row">
-        <div class="cmt-ava">OE</div>
-        <div class="cmt-body">
-          <div class="cmt-head"><b>Okan Eren</b><span>Satış Müdürü · 2 Temmuz 2026, 10:00</span></div>
-          <div class="cmt-text">Merhaba Selçuk Bey, SSZ-2026-003 sözleşmeniz kapsamında 14 taksit ödendi, kalan tutar ₺3.592.000. Güncel ödeme planını <a href="portal-odemeler.html">Ödemelerim</a> sayfasından inceleyebilirsiniz.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="gv-card req-card" id="sst-012" data-tur="eksik" data-durum="islemde">
     <div class="req-top">
       <div class="req-titles">
@@ -294,41 +319,233 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="pf-section-lbl"><i class="fa-solid fa-circle-plus"></i> Yeni Talep</div>
-  <div class="gv-card">
-    <div class="gc-body">
-      <form id="newReqForm">
-        <div class="form-row">
-          <div class="gv-field">
-            <label for="reqTur">Talep türü</label>
-            <select id="reqTur" required>
-              <option value="" disabled selected>Seçiniz</option>
-              <option value="eksik">Eksik İş</option>
-              <option value="garanti">Garanti</option>
-              <option value="bakim">Bakım</option>
-              <option value="sikayet">Şikayet</option>
-              <option value="bilgi">Bilgi</option>
-              <option value="teslimat">Teslimat Problemi</option>
-            </select>
-          </div>
-          <div class="gv-field">
-            <label for="reqBirim">İlgili birim</label>
-            <select id="reqBirim" required>
-              <option value="" disabled selected>Seçiniz</option>
-              <option value="KO-B-304">KO-B-304 — Kule Ofis B Blok</option>
-              <option value="VK-C-18">VK-C-18 — Vadi Konakları</option>
-            </select>
-          </div>
-        </div>
-        <div class="gv-field">
-          <label for="reqAciklama">Açıklama</label>
-          <textarea id="reqAciklama" placeholder="Talebinizi kısaca açıklayın…" required></textarea>
-        </div>
-        <div class="form-foot">
-          <button type="submit" class="btn btn-acc"><i class="fa-solid fa-paper-plane"></i> Talebi Gönder</button>
-        </div>
-      </form>
+  <div class="gv-empty" id="reqAcikBos" hidden>
+    <div class="ge-ico"><i class="fa-solid fa-comment-dots"></i></div>
+    <h4>Açık talebiniz görünmüyor.</h4>
+    <p>Arama ya da filtre ölçütlerinizi genişletin, ya da aşağıdan yeni bir talep açın.</p>
+  </div>
+
+  </div><!-- panel-req-acik -->
+
+  <div class="gv-tabpanel" id="panel-req-arsiv">
+
+  <div class="gv-card req-card" id="sst-010" data-tur="bilgi" data-durum="tamam" data-arsiv="1">
+    <div class="req-top">
+      <div class="req-titles">
+        <div class="req-no">SST-2026-010</div>
+        <div class="req-title">Taksit planı bilgi talebi</div>
+      </div>
+      <div class="req-badges"><span class="gtag">Bilgi</span><span class="gstat ok">Tamamlandı</span></div>
     </div>
+    <div class="req-meta-row">
+      <span><b>Birim:</b> VK-C-18</span>
+      <span><b>Açılış:</b> 2 Temmuz 2026</span>
+      <span><b>Kapanış:</b> 2 Temmuz 2026</span>
+    </div>
+    <div class="req-desc">Ödeme planındaki kalan taksit sayısı ve toplam kalan tutarla ilgili bilgi talep edildi; satış ekibi güncel bilgiyi paylaştı.</div>
+    <div class="req-thread">
+      <div class="cmt-row me">
+        <div class="cmt-ava me">SO</div>
+        <div class="cmt-body">
+          <div class="cmt-head"><b>Siz</b><span>2 Temmuz 2026, 09:10</span></div>
+          <div class="cmt-text">36 taksitlik ödeme planımda kalan taksit sayısını ve toplam kalan tutarı öğrenebilir miyim?</div>
+        </div>
+      </div>
+      <div class="cmt-row">
+        <div class="cmt-ava">OE</div>
+        <div class="cmt-body">
+          <div class="cmt-head"><b>Okan Eren</b><span>Satış Müdürü · 2 Temmuz 2026, 10:00</span></div>
+          <div class="cmt-text">Merhaba Selçuk Bey, SSZ-2026-003 sözleşmeniz kapsamında 14 taksit ödendi, kalan tutar ₺3.592.000. Güncel ödeme planını <a href="portal-odemeler.html">Ödemelerim</a> sayfasından inceleyebilirsiniz.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gv-card req-card" id="sst-004" data-tur="eksik" data-durum="tamam" data-arsiv="1">
+    <div class="req-top">
+      <div class="req-titles">
+        <div class="req-no">SST-2026-004</div>
+        <div class="req-title">Salon duvarında boya rötuşu</div>
+      </div>
+      <div class="req-badges"><span class="gtag">Eksik İş</span><span class="gstat ok">Tamamlandı</span></div>
+    </div>
+    <div class="req-meta-row">
+      <span><b>Birim:</b> KO-B-304</span>
+      <span><b>Açılış:</b> 22 Mart 2026</span>
+      <span><b>Kapanış:</b> 30 Mart 2026</span>
+    </div>
+    <div class="req-desc">Teslim sonrası taşınma sırasında oluşan yüzey izleri için rötuş talep edildi; boya ekibi 30 Mart'ta işi tamamladı.</div>
+    <div class="req-thread">
+      <div class="cmt-row me">
+        <div class="cmt-ava me">SO</div>
+        <div class="cmt-body">
+          <div class="cmt-head"><b>Siz</b><span>22 Mart 2026, 16:40</span></div>
+          <div class="cmt-text">Taşınma sırasında salon duvarında iki noktada iz oluştu. Teslim tutanağındaki eksik iş kapsamında rötuş yapılabilir mi?</div>
+        </div>
+      </div>
+      <div class="cmt-row">
+        <div class="cmt-ava">ES</div>
+        <div class="cmt-body">
+          <div class="cmt-head"><b>Elif Sarıkaya</b><span>Teknik Müdür · 30 Mart 2026, 15:05</span></div>
+          <div class="cmt-text">Rötuş bugün tamamlandı, ekip alanı teslim etti. Talebi kapatıyorum — memnun kalmadığınız bir nokta olursa yeniden açabilirsiniz.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gv-card req-card" id="sst-002" data-tur="bilgi" data-durum="tamam" data-arsiv="1">
+    <div class="req-top">
+      <div class="req-titles">
+        <div class="req-no">SST-2026-002</div>
+        <div class="req-title">Otopark kartı ve aidat bilgisi</div>
+      </div>
+      <div class="req-badges"><span class="gtag">Bilgi</span><span class="gstat ok">Tamamlandı</span></div>
+    </div>
+    <div class="req-meta-row">
+      <span><b>Birim:</b> KO-B-304</span>
+      <span><b>Açılış:</b> 18 Mart 2026</span>
+      <span><b>Kapanış:</b> 19 Mart 2026</span>
+    </div>
+    <div class="req-desc">Teslim sonrası otopark kartı teslimi ve ortak alan aidat tutarı soruldu; site yönetimi bilgileri iletti.</div>
+    <div class="req-thread">
+      <div class="cmt-row me">
+        <div class="cmt-ava me">SO</div>
+        <div class="cmt-body">
+          <div class="cmt-head"><b>Siz</b><span>18 Mart 2026, 10:15</span></div>
+          <div class="cmt-text">Otopark kartımı nereden alacağım ve aylık ortak alan aidatı ne kadar olacak?</div>
+        </div>
+      </div>
+      <div class="cmt-row">
+        <div class="cmt-ava">OE</div>
+        <div class="cmt-body">
+          <div class="cmt-head"><b>Okan Eren</b><span>Satış Müdürü · 19 Mart 2026, 09:30</span></div>
+          <div class="cmt-text">Kartınızı B Blok girişindeki site yönetiminden alabilirsiniz. Ofis aidatı 2026 için aylık ₺1.850 olarak belirlendi, faturası her ayın 5'inde düzenlenir.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gv-empty" id="reqArsivBos" hidden>
+    <div class="ge-ico"><i class="fa-solid fa-box-archive"></i></div>
+    <h4>Arşivde eşleşen talep yok.</h4>
+    <p>Kapanan talepleriniz burada saklanır. Arama ya da filtre ölçütlerinizi genişletmeyi deneyin.</p>
+  </div>
+
+  </div><!-- panel-req-arsiv -->
+
+  <!-- [R-45] Yeni talep. Ayrı sayfa AÇILMADI (R-50: "ek sayfalandırmaları çıkart") —
+       akış bu sayfanın içinde. Panel'deki "Yeni talep aç" kısayolu #yeni-talep'e gelir.
+       Buton yerleşimi kanonu: ghost "Vazgeç" solda, TEK accent buton en sağda. -->
+  <div class="pf-section-lbl" id="yeni-talep"><i class="fa-solid fa-circle-plus"></i> Yeni talep oluştur</div>
+  <div class="gv-card">
+    <form id="newReqForm" novalidate>
+      <div class="gc-body">
+        <div class="nt-grp">
+          <div class="nt-lbl" id="lblTur">Talep türü <small>Konuyu en iyi anlatan başlığı seçin</small></div>
+          <div class="nt-tiles" role="radiogroup" aria-labelledby="lblTur">
+            <label class="nt-tile">
+              <input type="radio" name="reqTur" value="eksik">
+              <i class="nt-ico fa-solid fa-list-check"></i>
+              <span class="nt-tile-txt"><b>Eksik iş</b><span>Yapılmamış imalat</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqTur" value="garanti">
+              <i class="nt-ico fa-solid fa-shield-halved"></i>
+              <span class="nt-tile-txt"><b>Garanti</b><span>Arıza ya da kusur</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqTur" value="bakim">
+              <i class="nt-ico fa-solid fa-screwdriver-wrench"></i>
+              <span class="nt-tile-txt"><b>Bakım</b><span>Servis, periyodik iş</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqTur" value="bilgi">
+              <i class="nt-ico fa-solid fa-circle-info"></i>
+              <span class="nt-tile-txt"><b>Bilgi</b><span>Ödeme, belge, süreç</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqTur" value="teslimat">
+              <i class="nt-ico fa-solid fa-truck-ramp-box"></i>
+              <span class="nt-tile-txt"><b>Teslimat problemi</b><span>Teslim ve anahtar</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqTur" value="sikayet">
+              <i class="nt-ico fa-solid fa-comment-dots"></i>
+              <span class="nt-tile-txt"><b>Şikayet</b><span>Hizmet, iletişim</span></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="nt-grp">
+          <div class="nt-lbl" id="lblBirim">İlgili birim</div>
+          <div class="nt-tiles units" role="radiogroup" aria-labelledby="lblBirim">
+            <label class="nt-tile">
+              <input type="radio" name="reqBirim" value="KO-B-304">
+              <i class="nt-ico fa-solid fa-building"></i>
+              <span class="nt-tile-txt"><b>KO-B-304</b><span>Kule Ofis B Blok · 3. kat · Ataşehir</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqBirim" value="VK-C-18">
+              <i class="nt-ico fa-solid fa-house"></i>
+              <span class="nt-tile-txt"><b>VK-C-18</b><span>Vadi Konakları · C Blok, 5. kat · Çekmeköy</span></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="nt-grp">
+          <div class="nt-lbl" id="lblAcil">Aciliyet <small>Ekibin sıralaması için</small></div>
+          <div class="nt-tiles" role="radiogroup" aria-labelledby="lblAcil">
+            <label class="nt-tile is-on">
+              <input type="radio" name="reqAcil" value="normal" checked>
+              <i class="nt-ico fa-regular fa-clock"></i>
+              <span class="nt-tile-txt"><b>Normal</b><span>Planlanan sırada</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqAcil" value="oncelikli">
+              <i class="nt-ico fa-solid fa-arrow-up-right-dots"></i>
+              <span class="nt-tile-txt"><b>Öncelikli</b><span>Kullanımı zorlaştırıyor</span></span>
+            </label>
+            <label class="nt-tile">
+              <input type="radio" name="reqAcil" value="acil">
+              <i class="nt-ico fa-solid fa-triangle-exclamation"></i>
+              <span class="nt-tile-txt"><b>Acil</b><span>Su, elektrik, güvenlik</span></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="nt-grp">
+          <div class="gfield">
+            <label for="reqAciklama">Açıklama</label>
+            <textarea id="reqAciklama" rows="5" maxlength="600" style="resize:vertical;min-height:110px"
+              placeholder="Ne olduğunu, hangi odada ya da alanda olduğunu ve ne zaman fark ettiğinizi yazın."></textarea>
+            <div class="nt-hint">
+              <span>Ayrıntı yazdıkça ekibin ilk dönüşü hızlanır.</span>
+              <span><span id="reqCharCnt">0</span> / 600</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nt-grp">
+          <div class="nt-lbl">Dosya ekle <small>İsteğe bağlı — fotoğraf ya da belge</small></div>
+          <label class="nt-drop" id="reqDrop">
+            <input type="file" id="reqFiles" multiple hidden accept="image/*,.pdf,.doc,.docx">
+            <i class="fa-solid fa-paperclip"></i>
+            <span class="nt-drop-txt"><b>Dosya seçin ya da buraya bırakın</b><span>JPG, PNG, PDF · dosya başına en çok 10 MB</span></span>
+          </label>
+          <div class="nt-files" id="reqFileList"></div>
+          <div class="nt-hint"><span>Talebiniz açıldığında bildirim alırsınız; yazışma bu sayfadan sürer.</span></div>
+        </div>
+      </div>
+
+      <!-- Bilgilendirme notu `.form-foot > .foot-left` yerine gövdenin sonunda: 390px'te
+           not butonları sarmaya zorluyor, "Vazgeç" yarım satırda asılı kalıyordu.
+           Notsuz foot'ta iki buton ortak kuralla (`.form-foot .btn{flex:1 1 auto}`)
+           mobilde eşit bölünüyor. -->
+      <div class="form-foot">
+        <button type="button" class="btn btn-ghost" id="reqVazgec">Vazgeç</button>
+        <button type="submit" class="btn btn-acc"><i class="fa-solid fa-paper-plane"></i> Talebi gönder</button>
+      </div>
+    </form>
   </div>
 
 </main>
@@ -359,26 +576,142 @@ a{color:inherit;text-decoration:none}
   window.addEventListener('hashchange', flashHedef);
   setTimeout(flashHedef, 60);
 
-  /* ---- yeni talep gönderimi — gerçek sonuç ekranına yönlendirir (§23 "Talep
-     tamamlandı"), yalnız toast'la yetinmez. Talep no'su mevcut listedeki en yükseğin
-     (SST-2026-012) bir sonrası — sabit demo sayacı, gerçek backend'de otomatik olur. ---- */
+  /* ============ [R-45] YENİ TALEP FORMU ============
+     Döşeme seçimi: `<label>` içindeki radio görsel olarak gizli, seçili durumu
+     `.is-on` sınıfı taşır (`:has()` desteklemeyen motorda da çalışır). */
   var form = document.getElementById('newReqForm');
   var SONRAKI_TALEP_NO = 'SST-2026-013';
   var BUGUN = '22 Temmuz 2026';
+
+  function tileSenkron(name){
+    var inputs = form.querySelectorAll('input[name="' + name + '"]');
+    Array.prototype.forEach.call(inputs, function(inp){
+      var tile = inp.closest('.nt-tile');
+      if(tile) tile.classList.toggle('is-on', inp.checked);
+    });
+  }
+  ['reqTur','reqBirim','reqAcil'].forEach(function(name){
+    var inputs = form.querySelectorAll('input[name="' + name + '"]');
+    Array.prototype.forEach.call(inputs, function(inp){
+      inp.addEventListener('change', function(){ tileSenkron(name); });
+    });
+    tileSenkron(name);
+  });
+  function secili(name){
+    var inp = form.querySelector('input[name="' + name + '"]:checked');
+    return inp ? inp.value : '';
+  }
+
+  /* açıklama karakter sayacı */
+  var aciklama = document.getElementById('reqAciklama');
+  var charCnt = document.getElementById('reqCharCnt');
+  aciklama.addEventListener('input', function(){ charCnt.textContent = aciklama.value.length; });
+
+  /* dosya ekleme — tıklama + sürükle-bırak. Statik prototip: dosya yüklenmez,
+     yalnız seçilen dosyaların adı/boyutu listelenir ve tek tek çıkarılabilir. */
+  var dropEl = document.getElementById('reqDrop');
+  var fileInput = document.getElementById('reqFiles');
+  var fileListEl = document.getElementById('reqFileList');
+  var secilenler = [];
+  function boyut(b){
+    if(b < 1024) return b + ' B';
+    if(b < 1024 * 1024) return Math.round(b / 1024) + ' KB';
+    return (b / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB';
+  }
+  function dosyalariCiz(){
+    fileListEl.innerHTML = '';
+    secilenler.forEach(function(f, i){
+      var row = document.createElement('div');
+      row.className = 'nt-file';
+      var ic = document.createElement('i');
+      ic.className = 'fa-solid ' + (/^image\//.test(f.type) ? 'fa-image' : 'fa-file-lines');
+      var nm = document.createElement('span');
+      nm.className = 'gv-ellip';
+      nm.textContent = f.name + ' · ' + boyut(f.size);
+      var x = document.createElement('button');
+      x.type = 'button'; x.className = 'nt-file-x'; x.setAttribute('aria-label', f.name + ' ekini çıkar');
+      x.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      x.addEventListener('click', function(){ secilenler.splice(i, 1); dosyalariCiz(); });
+      row.appendChild(ic); row.appendChild(nm); row.appendChild(x);
+      fileListEl.appendChild(row);
+    });
+  }
+  function dosyaEkle(list){
+    Array.prototype.forEach.call(list, function(f){ secilenler.push(f); });
+    dosyalariCiz();
+  }
+  fileInput.addEventListener('change', function(){ dosyaEkle(fileInput.files); fileInput.value = ''; });
+  ['dragenter','dragover'].forEach(function(ev){
+    dropEl.addEventListener(ev, function(e){ e.preventDefault(); dropEl.classList.add('is-over'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    dropEl.addEventListener(ev, function(e){ e.preventDefault(); dropEl.classList.remove('is-over'); });
+  });
+  dropEl.addEventListener('drop', function(e){
+    if(e.dataTransfer && e.dataTransfer.files) dosyaEkle(e.dataTransfer.files);
+  });
+
+  document.getElementById('reqVazgec').addEventListener('click', function(){
+    form.reset();
+    secilenler = []; dosyalariCiz();
+    charCnt.textContent = '0';
+    ['reqTur','reqBirim','reqAcil'].forEach(tileSenkron);
+    gvToast('Talep formu temizlendi.', {type:'info', icon:'fa-eraser'});
+  });
+
+  /* Gönderim — sonuç ekranına yönlendirir (§23 "Talep tamamlandı"), yalnız toast'la
+     yetinmez. Talep no'su mevcut listedeki en yükseğin (SST-2026-012) bir sonrası. */
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    var turSel = document.getElementById('reqTur');
-    var birimSel = document.getElementById('reqBirim');
-    if(!turSel.value || !birimSel.value){ gvToast('Talep türü ve ilgili birimi seçin.', {type:'danger'}); return; }
+    var tur = secili('reqTur'), birim = secili('reqBirim');
+    if(!tur){ gvToast('Talep türünü seçin.', {type:'danger'}); return; }
+    if(!birim){ gvToast('İlgili birimi seçin.', {type:'danger'}); return; }
+    if(!aciklama.value.trim()){
+      gvToast('Talebinizi kısaca açıklayın.', {type:'danger'});
+      aciklama.focus();
+      return;
+    }
     location.href = 'portal-talep-tamamlandi.html'
       + '?no=' + encodeURIComponent(SONRAKI_TALEP_NO)
-      + '&tur=' + encodeURIComponent(turSel.value)
-      + '&birim=' + encodeURIComponent(birimSel.value)
+      + '&tur=' + encodeURIComponent(tur)
+      + '&birim=' + encodeURIComponent(birim)
+      + '&aciliyet=' + encodeURIComponent(secili('reqAcil'))
       + '&tarih=' + encodeURIComponent(BUGUN);
   });
 
-  /* ============ V3A — arama + Gelişmiş Filtre + durum sekmeleri ============
-     <table> yok — kartlar (`.req-card[data-tur][data-durum]`) doğrudan gizlenir/gösterilir. */
+  /* ============ [R-44] AÇIK / ARŞİV SEKMELERİ ============
+     Ortak `gvTabs` primitifi (ui.js) — iki panel, varsayılan "Açık Talepler".
+     Sayaç: gvTabs etiketi gvEscHtml ile kaçırıldığı için HTML enjekte edilemez;
+     kanonik `.ch-cnt` pili init SONRASI çip düğmesine DOM ile eklenir ve filtre
+     her uygulandığında güncellenir. Yeni bir sekme mekanizması kurulmadı. */
+  var acikPanel = document.getElementById('panel-req-acik');
+  var arsivPanel = document.getElementById('panel-req-arsiv');
+  var reqTabsH = null, cntAcik = null, cntArsiv = null;
+  if(window.gvTabs){
+    reqTabsH = gvTabs.init({
+      mount: '#reqTabs', screen: 'portaltalep', varsayilan: 'acik',
+      tabs: [
+        {key:'acik',  etiket:'Açık Talepler', ikon:'fa-comment-dots',  panel:'#panel-req-acik'},
+        {key:'arsiv', etiket:'Arşiv',         ikon:'fa-box-archive',   panel:'#panel-req-arsiv'}
+      ]
+    });
+    cntAcik = sayacEkle('acik');
+    cntArsiv = sayacEkle('arsiv');
+  }
+  function sayacEkle(key){
+    var btn = document.querySelector('#reqTabs [data-tab="' + key + '"]');
+    if(!btn) return null;
+    var s = document.createElement('span');
+    s.className = 'ch-cnt';
+    btn.appendChild(document.createTextNode(' '));
+    btn.appendChild(s);
+    return s;
+  }
+
+  /* ============ V3A — arama + Gelişmiş Filtre ============
+     <table> yok — kartlar (`.req-card[data-tur][data-durum]`) doğrudan gizlenir.
+     Üst alan tek örnek olduğu için filtre İKİ panele birlikte uygulanır; sekme
+     sayaçları görünen kart sayısını gösterir. */
   var reqCards = Array.prototype.slice.call(document.querySelectorAll('.req-card'));
   var reqFd = null;
   function reqFv(key){
@@ -388,33 +721,23 @@ a{color:inherit;text-decoration:none}
   }
   function applyReqFilter(){
     var term = (document.getElementById('reqSearch').value || '').trim().toLocaleLowerCase('tr');
-    var onChip = document.querySelector('#reqDurumChips .chip.is-on');
-    var durum = onChip ? onChip.getAttribute('data-durum') : 'hepsi';
     var tur = reqFv('tur');
-    var showArsiv = (document.getElementById('reqArsivGoster') || {}).checked;
-    var shown = 0;
+    var durum = reqFv('durum');
+    var nAcik = 0, nArsiv = 0;
     reqCards.forEach(function(card){
-      var okDurum = (durum === 'hepsi') || (card.getAttribute('data-durum') === durum);
       var okTur = !tur || card.getAttribute('data-tur') === tur;
-      var okArsiv = showArsiv || card.getAttribute('data-recstat') !== 'arsiv';
+      var okDurum = !durum || card.getAttribute('data-durum') === durum;
       var okTerm = !term || card.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-      var show = okDurum && okTur && okArsiv && okTerm;
+      var show = okTur && okDurum && okTerm;
       card.hidden = !show;
-      if(show) shown++;
+      if(show){ if(card.getAttribute('data-arsiv') === '1') nArsiv++; else nAcik++; }
     });
-    var cntEl = document.getElementById('reqVisCount');
-    if(cntEl) cntEl.textContent = shown;
+    if(cntAcik) cntAcik.textContent = nAcik;
+    if(cntArsiv) cntArsiv.textContent = nArsiv;
+    document.getElementById('reqAcikBos').hidden = nAcik > 0;
+    document.getElementById('reqArsivBos').hidden = nArsiv > 0;
   }
   document.getElementById('reqSearch').addEventListener('input', applyReqFilter);
-  document.querySelectorAll('#reqDurumChips .chip[data-durum]').forEach(function(ch){
-    ch.addEventListener('click', function(){
-      document.querySelectorAll('#reqDurumChips .chip').forEach(function(x){ x.classList.remove('is-on'); });
-      ch.classList.add('is-on');
-      applyReqFilter();
-    });
-  });
-  var reqArsivToggle = document.getElementById('reqArsivGoster');
-  if(reqArsivToggle) reqArsivToggle.addEventListener('change', applyReqFilter);
   if(window.gvFilterDrawer){
     reqFd = gvFilterDrawer.init({
       mount: '#reqFiltreBtn',
@@ -425,11 +748,27 @@ a{color:inherit;text-decoration:none}
         {key:'tur', type:'select', label:'Tür', options:[
           {v:'eksik', l:'Eksik İş'}, {v:'garanti', l:'Garanti'}, {v:'bakim', l:'Bakım'},
           {v:'sikayet', l:'Şikayet'}, {v:'bilgi', l:'Bilgi'}, {v:'teslimat', l:'Teslimat Problemi'}
+        ]},
+        {key:'durum', type:'select', label:'Durum', options:[
+          {v:'islemde', l:'İşlemde'}, {v:'tamam', l:'Tamamlandı'}
         ]}
       ],
       onApply: applyReqFilter
     });
   }
+  applyReqFilter();
+
+  /* Hash bir arşiv talebine işaret ediyorsa (ör. panelden gelen bağlantı) o kartın
+     sekmesi açılır — yoksa kart görünmez bir panelde kalır ve bağlantı "kırık" olur. */
+  function hashSekmesi(){
+    var id = location.hash.slice(1);
+    if(!id || !reqTabsH) return;
+    var el = document.getElementById(id);
+    if(!el || !el.classList.contains('req-card')) return;
+    reqTabsH.activate(el.getAttribute('data-arsiv') === '1' ? 'arsiv' : 'acik');
+  }
+  window.addEventListener('hashchange', hashSekmesi);
+  hashSekmesi();
 })();
 </script>
 </body>

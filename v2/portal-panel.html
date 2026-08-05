@@ -21,6 +21,11 @@
    sayfasındaki taksit ilerleme şeridiyle aynı görsel dili paylaşır.
    ===================================================================== */
 *{box-sizing:border-box}
+/* `[hidden]` guard'ı — ortak shell.css'teki kuralın (satır ~29) sayfa-yerel ikizi.
+   Portal sayfaları standalone çalışır ve shell.css YÜKLEMEZ; o kural olmadan
+   eşit özgüllükteki bir class kuralı (ör. `.cb-arrow{display:inline-flex}`) UA'nın
+   `[hidden]` varsayılanını eziyor ve gizlenmesi gereken öğe görünür kalıyor. */
+[hidden]{display:none !important}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;padding-bottom:48px}
 a{color:inherit;text-decoration:none}
 :focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px;border-radius:4px}
@@ -45,9 +50,13 @@ a{color:inherit;text-decoration:none}
 
 /* ---- tab nav ---- */
 .pf-tabs{position:sticky;top:var(--top-h);z-index:19;background:var(--paper);border-bottom:1px solid var(--line);display:flex}
-.pf-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 10px;
+.pf-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 10px;min-width:0;
   font-size:11px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;transition:.2s var(--ease)}
 .pf-tab i{font-size:15px}
+/* Navigasyon beşinci sekmeyle (Raporum) genişledi: 390px'te beş etiketin toplamı
+   sınıra yaklaşıyor. `min-width:0` + ellipsis, dar ekranda taşma yerine kırpma
+   garanti eder — G-9 ölçütü yatay taşmayı yasaklıyor. */
+.pf-tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pf-tab:hover{color:var(--ink-2)}
 .pf-tab.active{color:var(--acc-ink);border-color:var(--acc-ink)}
 @media (min-width:641px){
@@ -103,8 +112,16 @@ a{color:inherit;text-decoration:none}
 .mini-info{flex:1;min-width:0}
 .mini-name{font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mini-meta{font-size:11.5px;color:var(--muted);margin-top:1px}
-.two-col{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
-@media (min-width:820px){ .two-col{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+.mini-amt{font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;flex:none}
+/* [G-6] Sayfa-yerel `.two-col` KALKTI — yan yana kutu satırları ortak `.dash-cols`
+   primitifini tüketiyor (ui.css). Kazanç: kısa kutu artık yukarıda asılı kalmıyor
+   (align-items:stretch), gövde kalan yüksekliği alıyor ve gerekirse `.gv-cap` ile
+   kendi içinde kayıyor. Eşleşen kutuların başlığı bu yüzden `.pf-section-lbl`
+   yerine kartın kendi `.gc-head` başlığına taşındı: ızgaranın doğrudan çocuğu
+   kart olmalı ki hiza kuralı işlesin. Tam genişlikteki bölümler `.pf-section-lbl`
+   kullanmayı sürdürür. Kutu satırının ortak 16px alt boşluğu, başlıksız satırlar
+   art arda geldiğinde bölüm ritmini kısaltıyor — sayfa yalnız bu ölçüyü ayarlar. */
+.pf-wrap > .dash-cols{margin-bottom:24px}
 
 /* ---- bildirimlerim (§23 içerik alanı) — mini-row aile diliyle, okunmamış nokta ---- */
 .notif-dot{width:7px;height:7px;flex:none;border-radius:50%;background:var(--acc-ink)}
@@ -118,6 +135,94 @@ a{color:inherit;text-decoration:none}
   .kpi-card{flex-direction:column;align-items:flex-start;gap:8px;padding:16px}
   .kpi-num{font-size:19px}
 }
+
+/* =====================================================================
+   [R-43] KARŞILAMA BLOĞU
+   Patron: "burası bizim müşterinin kendi sayfası. Burada bir hoş geldiniz
+   içeriğiyle beraber yapıyı göstererek…"
+   Neden koyu: Gaviaworks kimliği dark-first; portalın açık zeminli içerik
+   akışında TEK koyu yüzey sayfanın açılış cümlesini işaretler. Gradyan
+   `.uc-visual.ko` birim kartındaki gradyanın AYNISIDIR — yeni bir görsel
+   dil icat edilmedi, var olanı büyük ölçekte kullanıyor.
+   Accent dolgu bu sayfada YALNIZ `.pw-act.primary` (Yeni talep) üzerinde.
+   ===================================================================== */
+.pf-welcome{position:relative;overflow:hidden;border-radius:var(--r-lg);color:var(--gv-on-dark);
+  padding:26px 22px;margin-bottom:26px;box-shadow:var(--sh-md);
+  background:radial-gradient(circle at 88% 6%,rgba(63,213,173,.18),transparent 54%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 26px),
+    linear-gradient(150deg,#1B1D45,#020837 74%)}
+@media (min-width:900px){ .pf-welcome{padding:32px 34px} }
+/* koyu zeminde odak halkası: --acc-ink (açık zemin türevi) lacivertte görünmez */
+.pf-welcome :focus-visible{outline-color:var(--gv-mint)}
+.pw-eyebrow{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--gv-mint);margin-bottom:9px}
+.pw-title{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 9px;color:#fff;line-height:1.2}
+@media (min-width:900px){ .pw-title{font-size:27px} }
+.pw-sub{font-size:13.5px;line-height:1.6;color:var(--on-dark);margin:0;max-width:58ch}
+.pw-facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pw-fact{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--gv-on-dark);
+  background:rgba(255,255,255,.07);border:1px solid var(--hair);padding:6px 12px;border-radius:var(--r-pill)}
+.pw-fact i{font-size:11px;color:var(--gv-mint)}
+.pw-next{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:20px;padding:14px 16px;
+  background:rgba(255,255,255,.06);border:1px solid var(--hair);border-radius:var(--r-md);transition:.2s var(--ease)}
+.pw-next:hover{background:rgba(255,255,255,.1);border-color:rgba(var(--acc-rgb),.35)}
+.pw-next-ico{width:38px;height:38px;flex:none;border-radius:var(--r-md);background:rgba(var(--acc-rgb),.16);
+  color:var(--gv-mint);display:grid;place-items:center;font-size:15px}
+.pw-next-txt{flex:1;min-width:150px}
+.pw-next-txt b{display:block;font-size:13.5px;color:#fff}
+.pw-next-txt span{font-size:12px;color:var(--on-dark-mut)}
+.pw-next-amt{font-size:17px;font-weight:800;color:var(--gv-mint);font-variant-numeric:tabular-nums;flex:none}
+.pw-acts{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-top:18px}
+.pw-act{display:flex;align-items:center;gap:10px;min-width:0;padding:12px 14px;border-radius:var(--r-md);
+  border:1px solid var(--hair);background:rgba(255,255,255,.05);color:var(--gv-on-dark);
+  font-size:13px;font-weight:700;transition:.2s var(--ease)}
+.pw-act i{font-size:13px;color:var(--gv-mint);flex:none}
+.pw-act:hover{background:rgba(255,255,255,.11);border-color:rgba(var(--acc-rgb),.4);transform:translateY(-2px)}
+.pw-act.primary{background:var(--acc);color:#052A20;border-color:var(--acc)}
+.pw-act.primary i{color:#052A20}
+.pw-act.primary:hover{background:var(--gv-mint-bright);border-color:var(--gv-mint-bright)}
+
+/* =====================================================================
+   [R-43] SÜREÇ ŞERİDİ — sözleşmeden garantiye 5 durak
+   Bir daire alıcısının portala girip sorduğu ilk soru "hangi aşamadayım,
+   sırada ne var". Bu GERÇEK bir sıra olduğu için sıralı gösterim bilgi
+   taşır (süsleme değil). Mobilde dikey, 860px üstünde yatay.
+   ===================================================================== */
+.jr{display:grid;grid-template-columns:1fr;padding:20px 22px}
+.jr-step{position:relative;display:flex;gap:13px;padding-bottom:18px}
+.jr-step:last-child{padding-bottom:0}
+.jr-step::before{content:'';position:absolute;left:13px;top:30px;bottom:2px;width:2px;background:var(--line);border-radius:2px}
+.jr-step.done::before{background:rgba(var(--acc-rgb),.4)}
+.jr-step:last-child::before{display:none}
+.jr-node{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11px;
+  background:var(--bg);border:1px solid var(--line);color:var(--muted);position:relative;z-index:1}
+.jr-step.done .jr-node{background:rgba(var(--acc-rgb),.14);border-color:rgba(var(--acc-rgb),.4);color:var(--acc-ink)}
+.jr-step.now .jr-node{background:var(--acc-ink);border-color:var(--acc-ink);color:#fff;box-shadow:0 0 0 4px rgba(var(--acc-rgb),.16)}
+.jr-body{min-width:0;padding-top:3px}
+.jr-lbl{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.jr-step.todo .jr-lbl{color:var(--ink-2)}
+.jr-meta{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+.jr-now-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--acc-deep);
+  background:rgba(var(--acc-rgb),.13);padding:2px 7px;border-radius:var(--r-pill);margin-top:5px}
+@media (min-width:860px){
+  .jr{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .jr-step{flex-direction:column;gap:11px;padding:0}
+  .jr-step::before{left:30px;right:-8px;top:13px;bottom:auto;width:auto;height:2px}
+  .jr-body{padding-top:0}
+}
+
+/* ---- [R-43] iletişim / yetkili kişi kartı ---- */
+.ct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:18px;padding:20px 22px}
+.ct-card{display:flex;gap:12px;align-items:flex-start;min-width:0}
+.ct-ava{width:42px;height:42px;flex:none;border-radius:var(--r-md);background:rgba(var(--acc-rgb),.12);
+  color:var(--acc-ink);display:grid;place-items:center;font-size:13px;font-weight:800}
+.ct-info{min-width:0;flex:1}
+.ct-info b{display:block;font-size:13.5px;color:var(--ink)}
+.ct-role{display:block;font-size:11.5px;color:var(--muted);margin-bottom:8px}
+.ct-lines{display:flex;flex-direction:column;gap:5px;min-width:0}
+.ct-lines a,.ct-lines span.ct-line{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;
+  color:var(--acc-ink);min-width:0}
+.ct-lines span.ct-line{color:var(--ink-2);font-weight:500}
+.ct-lines i{font-size:11px;color:var(--muted);flex:none;width:12px;text-align:center}
 </style>
 </head>
 <body data-page="panel">
@@ -138,14 +243,83 @@ a{color:inherit;text-decoration:none}
   <a class="pf-tab" href="portal-odemeler.html"><i class="fa-solid fa-file-invoice-dollar"></i><span>Ödemelerim</span></a>
   <a class="pf-tab" href="portal-belgeler.html"><i class="fa-solid fa-folder-open"></i><span>Belgelerim</span></a>
   <a class="pf-tab" href="portal-talepler.html"><i class="fa-solid fa-comment-dots"></i><span>Taleplerim</span></a>
+  <a class="pf-tab" href="portal-rapor.html"><i class="fa-solid fa-chart-pie"></i><span>Raporum</span></a>
 </nav>
 
 <main class="pf-wrap">
 
-  <div class="pf-hero">
-    <div class="pf-eyebrow">Müşteri Özeti</div>
-    <h1>Selçuk Onaran</h1>
-    <p>Yapıtaş İnşaat'taki birimleriniz, ödeme durumunuz ve açık talepleriniz aşağıda özetlenmiştir.</p>
+  <!-- [R-43] Karşılama. Eski `.pf-hero` (eyebrow + ad + tek satır) buraya taşındı ve
+       genişletildi: ad, birimler, sözleşme durumu, sıradaki önemli tarih ve dört
+       kısayol. Sayfanın tek accent dolgulu öğesi buradaki "Yeni talep aç". -->
+  <section class="pf-welcome" aria-labelledby="pwTitle">
+    <div class="pw-eyebrow">Hoş geldiniz</div>
+    <h1 class="pw-title" id="pwTitle">Merhaba Selçuk Bey</h1>
+    <p class="pw-sub">Yapıtaş İnşaat'taki iki biriminizin ödeme, belge, inşaat ve talep durumu bu sayfada toplanıyor. Sözleşmeleriniz yürürlükte, gecikmiş ödemeniz yok.</p>
+    <div class="pw-facts">
+      <span class="pw-fact"><i class="fa-solid fa-building-user"></i> KO-B-304 · Kule Ofis B Blok</span>
+      <span class="pw-fact"><i class="fa-solid fa-building-user"></i> VK-C-18 · Vadi Konakları</span>
+      <span class="pw-fact"><i class="fa-solid fa-file-signature"></i> 2 sözleşme yürürlükte</span>
+      <span class="pw-fact"><i class="fa-solid fa-circle-check"></i> Gecikmiş ödeme yok</span>
+    </div>
+    <a class="pw-next" href="portal-odemeler.html#tks-next">
+      <span class="pw-next-ico"><i class="fa-solid fa-calendar-day"></i></span>
+      <span class="pw-next-txt"><b>Sıradaki ödeme vadeniz: 15 Temmuz 2026</b><span>15. taksit · VK-C-18 · son 7 gün</span></span>
+      <span class="pw-next-amt">₺115.000</span>
+    </a>
+    <div class="pw-acts">
+      <a class="pw-act" href="portal-odemeler.html"><i class="fa-solid fa-file-invoice-dollar"></i> Ödemelerim</a>
+      <a class="pw-act" href="portal-belgeler.html"><i class="fa-solid fa-folder-open"></i> Belgelerim</a>
+      <a class="pw-act" href="portal-rapor.html"><i class="fa-solid fa-chart-pie"></i> Raporum</a>
+      <a class="pw-act primary" href="portal-talepler.html#yeni-talep"><i class="fa-solid fa-circle-plus"></i> Yeni talep aç</a>
+    </div>
+  </section>
+
+  <!-- [R-43] "eksik kalan ihtiyaç" — teslim ve inşaat ilerlemesi, süreç konumu.
+       Sıra gerçek: sözleşme → ödeme → inşaat → teslim → garanti. -->
+  <div class="pf-section-lbl"><i class="fa-solid fa-route"></i> Süreciniz — VK-C-18</div>
+  <div class="gv-card" style="margin-bottom:6px">
+    <div class="jr">
+      <div class="jr-step done">
+        <span class="jr-node"><i class="fa-solid fa-check"></i></span>
+        <div class="jr-body">
+          <div class="jr-lbl">Sözleşme</div>
+          <div class="jr-meta">SSZ-2026-003 · 3 Mayıs 2025 imzalandı</div>
+        </div>
+      </div>
+      <div class="jr-step done">
+        <span class="jr-node"><i class="fa-solid fa-check"></i></span>
+        <div class="jr-body">
+          <div class="jr-lbl">Peşinat</div>
+          <div class="jr-meta">₺918.000 tahsil edildi</div>
+        </div>
+      </div>
+      <div class="jr-step now">
+        <span class="jr-node"><i class="fa-solid fa-helmet-safety"></i></span>
+        <div class="jr-body">
+          <div class="jr-lbl">İnşaat ve taksitler</div>
+          <div class="jr-meta">İnşaat %68 · 14 / 36 taksit ödendi</div>
+          <span class="jr-now-tag">Şu an buradasınız</span>
+        </div>
+      </div>
+      <div class="jr-step todo">
+        <span class="jr-node"><i class="fa-solid fa-key"></i></span>
+        <div class="jr-body">
+          <div class="jr-lbl">Teslim</div>
+          <div class="jr-meta">Aralık 2026 hedefi · teslim bedeli ₺1.062.000</div>
+        </div>
+      </div>
+      <div class="jr-step todo">
+        <span class="jr-node"><i class="fa-solid fa-shield-halved"></i></span>
+        <div class="jr-body">
+          <div class="jr-lbl">Garanti</div>
+          <div class="jr-meta">Teslimden sonra 2 yıl</div>
+        </div>
+      </div>
+    </div>
+    <div class="gc-foot">
+      <span>Kule Ofis B Blok (KO-B-304) süreci 15 Mart 2026'da teslimle tamamlandı.</span>
+      <a class="gc-link" href="portal-rapor.html">Ayrıntılı rapor <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
   </div>
 
   <div class="pf-section-lbl"><i class="fa-solid fa-building-user"></i> Birimlerim</div>
@@ -191,7 +365,7 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="pf-section-lbl"><i class="fa-solid fa-wallet"></i> Ödeme Özeti — VK-C-18</div>
+  <div class="pf-section-lbl"><i class="fa-solid fa-wallet"></i> Ödeme özeti — VK-C-18</div>
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-ico"><i class="fa-solid fa-list-check"></i></div>
@@ -211,10 +385,83 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
-  <div class="two-col">
-    <div>
-      <div class="pf-section-lbl"><i class="fa-solid fa-file-lines"></i> Son Belgeler</div>
-      <div class="gv-card"><div class="gc-body">
+  <!-- [R-43] "eksik kalan ihtiyaç" — ödeme planı takvimi (kalan taksitler) +
+       teslim/inşaat durumu. İkisi yan yana çünkü alıcının tek sorusunun iki yüzü:
+       ne zaman ne ödeyeceğim, karşılığında iş nerede. Ortak `.dash-cols` (G-6). -->
+  <div class="dash-cols">
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Ödeme planı takvimi</div>
+        <a class="gc-link" href="portal-odemeler.html">Tüm plan <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="gc-body">
+        <a class="mini-row" href="portal-odemeler.html#tks-next">
+          <div class="mini-ico"><i class="fa-solid fa-calendar-day"></i></div>
+          <div class="mini-info"><div class="mini-name">15. taksit — 15 Temmuz 2026</div><div class="mini-meta">VK-C-18 · sıradaki vade</div></div>
+          <span class="mini-amt">₺115.000</span>
+        </a>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-regular fa-calendar"></i></div>
+          <div class="mini-info"><div class="mini-name">16. taksit — 15 Ağustos 2026</div><div class="mini-meta">VK-C-18 · planlandı</div></div>
+          <span class="mini-amt">₺115.000</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-regular fa-calendar"></i></div>
+          <div class="mini-info"><div class="mini-name">17. taksit — 15 Eylül 2026</div><div class="mini-meta">VK-C-18 · planlandı</div></div>
+          <span class="mini-amt">₺115.000</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-regular fa-calendar"></i></div>
+          <div class="mini-info"><div class="mini-name">18. taksit — 15 Ekim 2026</div><div class="mini-meta">VK-C-18 · planlandı</div></div>
+          <span class="mini-amt">₺115.000</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-solid fa-key"></i></div>
+          <div class="mini-info"><div class="mini-name">Teslim bedeli — Aralık 2026</div><div class="mini-meta">VK-C-18 · teslimde ödenir</div></div>
+          <span class="mini-amt">₺1.062.000</span>
+        </div>
+      </div>
+      <div class="gc-foot"><span>22 taksit kaldı · ₺2.530.000 + teslim bedeli</span><span class="gstat ok">Gecikme yok</span></div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-helmet-safety"></i> Teslim ve inşaat durumu</div>
+        <span class="gstat ok">Planında</span>
+      </div>
+      <div class="gc-body">
+        <div class="limit-row">
+          <div class="limit-top"><b>Genel ilerleme</b><span>ağırlıklı ortalama</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:68%"></div></div><span class="gbar-val">%68</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>Kaba yapı</b><span>tamamlandı</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div><span class="gbar-val">%100</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>Mekanik ve elektrik</b><span>sürüyor</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:70%"></div></div><span class="gbar-val">%70</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>İnce yapı</b><span>sürüyor</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:45%"></div></div><span class="gbar-val">%45</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>Peyzaj ve ortak alan</b><span>başladı</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:20%"></div></div><span class="gbar-val">%20</span></div>
+        </div>
+      </div>
+      <div class="gc-foot"><span>Teslim hedefi Aralık 2026 — sözleşmede 4. çeyrek 2026</span><a class="gc-link" href="portal-rapor.html">Rapor <i class="fa-solid fa-arrow-right"></i></a></div>
+    </div>
+  </div>
+
+  <div class="dash-cols">
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-file-lines"></i> Son belgeler</div>
+        <a class="gc-link" href="portal-belgeler.html">Tümü <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="gc-body">
         <a class="mini-row" href="portal-belgeler.html#ssz-2026-003">
           <div class="mini-ico"><i class="fa-solid fa-file-signature"></i></div>
           <div class="mini-info"><div class="mini-name">SSZ-2026-003 — Satış Sözleşmesi</div><div class="mini-meta">VK-C-18 · 3 Mayıs 2025</div></div>
@@ -230,12 +477,16 @@ a{color:inherit;text-decoration:none}
           <div class="mini-info"><div class="mini-name">MKB-2026-014 — Tahsilat Makbuzu</div><div class="mini-meta">14. taksit · 15 Haziran 2026 · ₺115.000</div></div>
           <i class="fa-solid fa-chevron-right" style="color:var(--muted);font-size:12px"></i>
         </a>
-      </div></div>
+      </div>
+      <div class="gc-foot"><span>18 belge · 4 kategori</span><a class="gc-link" href="portal-rapor.html">Belge durumu <i class="fa-solid fa-arrow-right"></i></a></div>
     </div>
 
-    <div>
-      <div class="pf-section-lbl"><i class="fa-solid fa-comment-dots"></i> Açık Taleplerim</div>
-      <div class="gv-card"><div class="gc-body">
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-comment-dots"></i> Açık taleplerim</div>
+        <a class="gc-link" href="portal-talepler.html#yeni-talep">Yeni talep <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="gc-body">
         <a class="mini-row" href="portal-talepler.html#sst-007">
           <div class="mini-ico"><i class="fa-solid fa-shield-halved"></i></div>
           <div class="mini-info"><div class="mini-name">SST-2026-007 · Klima drenaj sızıntısı</div><div class="mini-meta">Garanti · KO-B-304 · 30 Haziran 2026</div></div>
@@ -246,44 +497,129 @@ a{color:inherit;text-decoration:none}
           <div class="mini-info"><div class="mini-name">SST-2026-012 · Mutfak dolap kapağı hizası</div><div class="mini-meta">Eksik İş · VK-C-18 · 20 Temmuz 2026</div></div>
           <span class="gstat warn">İşlemde</span>
         </a>
-        <a class="mini-row" href="portal-talepler.html#sst-010">
-          <div class="mini-ico"><i class="fa-solid fa-circle-info"></i></div>
-          <div class="mini-info"><div class="mini-name">SST-2026-010 · Taksit planı bilgi talebi</div><div class="mini-meta">Bilgi · VK-C-18 · 2 Temmuz 2026</div></div>
-          <span class="gstat ok">Tamamlandı</span>
+        <a class="mini-row" href="portal-talepler.html#sst-007">
+          <div class="mini-ico"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="mini-info"><div class="mini-name">Servis randevusu · 8 Temmuz 2026, 10:00</div><div class="mini-meta">SST-2026-007 · KO-B-304 · teknik ekip</div></div>
+          <span class="gstat info">Planlandı</span>
         </a>
       </div>
-      <div class="gc-foot"><span>3 talep — 2 işlemde · 1 tamamlandı</span><a class="gc-link" href="portal-talepler.html">Tümünü gör <i class="fa-solid fa-arrow-right"></i></a></div>
+      <div class="gc-foot"><span>2 açık talep · 3 talep arşivde</span><a class="gc-link" href="portal-talepler.html">Tümünü gör <i class="fa-solid fa-arrow-right"></i></a></div>
+    </div>
+  </div>
+
+  <!-- [R-43] Bildirimlerim (kişisel, okundu/okunmadı) ile Duyurular (şantiye/birim
+       bazlı, herkese açık) AYRI iki kutu: biri bana olan bir gelişmeyi, diğeri
+       birimimi etkileyen bir programı bildirir. Eskiden tek listede karışıyorlardı —
+       "Vadi Konakları ortak alan bakım çalışması" satırı buradan Duyurular'a taşındı. -->
+  <div class="dash-cols">
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-bell"></i> Bildirimlerim</div>
+        <span class="gtag">2 okunmamış</span>
+      </div>
+      <div class="gc-body">
+        <a class="mini-row" href="portal-odemeler.html#tks-next">
+          <div class="notif-dot"></div>
+          <div class="mini-ico"><i class="fa-solid fa-calendar-day"></i></div>
+          <div class="mini-info"><div class="mini-name">15. taksitiniz yaklaşıyor</div><div class="mini-meta">VK-C-18 · 15 Temmuz 2026 · ₺115.000</div></div>
+          <span class="mini-time unread">2 saat önce</span>
+        </a>
+        <a class="mini-row" href="portal-talepler.html#sst-007">
+          <div class="notif-dot"></div>
+          <div class="mini-ico"><i class="fa-solid fa-comment-dots"></i></div>
+          <div class="mini-info"><div class="mini-name">SST-2026-007 talebinize yanıt geldi</div><div class="mini-meta">Elif Sarıkaya · servis randevusu planlandı</div></div>
+          <span class="mini-time unread">1 gün önce</span>
+        </a>
+        <a class="mini-row" href="portal-teslim-tutanagi-detay.html">
+          <div class="notif-dot read"></div>
+          <div class="mini-ico"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div class="mini-info"><div class="mini-name">Teslim tutanağınız hazır</div><div class="mini-meta">TSL-2026-001 · KO-B-304</div></div>
+          <span class="mini-time">15 Mart 2026</span>
+        </a>
+        <a class="mini-row" href="portal-belgeler.html#mkb-014">
+          <div class="notif-dot read"></div>
+          <div class="mini-ico"><i class="fa-solid fa-receipt"></i></div>
+          <div class="mini-info"><div class="mini-name">14. taksit makbuzunuz yüklendi</div><div class="mini-meta">MKB-2026-014 · ₺115.000</div></div>
+          <span class="mini-time">15 Haz 2026</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-bullhorn"></i> Duyurular</div>
+        <span class="gtag">Birimlerime özel</span>
+      </div>
+      <div class="gc-body">
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-solid fa-list-check"></i></div>
+          <div class="mini-info"><div class="mini-name">Daire içi seçenek bildirimi — son 30 Eylül 2026</div><div class="mini-meta">Mutfak ve banyo seçeneklerinizi talep açarak bildirin</div></div>
+          <span class="gtag">VK-C-18</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-solid fa-helmet-safety"></i></div>
+          <div class="mini-info"><div class="mini-name">C Blok cephe iskelesi sökümü</div><div class="mini-meta">12 - 20 Temmuz 2026 · saha turu bu tarihlerde yapılamaz</div></div>
+          <span class="gtag">VK-C-18</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-solid fa-people-group"></i></div>
+          <div class="mini-info"><div class="mini-name">Alıcı bilgilendirme toplantısı</div><div class="mini-meta">5 Ağustos 2026, 19:00 · Vadi Konakları satış ofisi</div></div>
+          <span class="gtag">VK-C-18</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-solid fa-broom"></i></div>
+          <div class="mini-info"><div class="mini-name">Ortak alan bakım çalışması</div><div class="mini-meta">27 Haziran - 3 Temmuz 2026 arası · tamamlandı</div></div>
+          <span class="gtag">VK-C-18</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini-ico"><i class="fa-solid fa-square-parking"></i></div>
+          <div class="mini-info"><div class="mini-name">Otopark kartı yenileme</div><div class="mini-meta">1 Ağustos 2026'ya kadar site yönetiminden alınmalı</div></div>
+          <span class="gtag">KO-B-304</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="pf-section-lbl"><i class="fa-solid fa-bell"></i> Bildirimlerim</div>
-  <div class="gv-card"><div class="gc-body">
-    <a class="mini-row" href="portal-odemeler.html#tks-next">
-      <div class="notif-dot"></div>
-      <div class="mini-ico"><i class="fa-solid fa-calendar-day"></i></div>
-      <div class="mini-info"><div class="mini-name">15. taksitiniz yaklaşıyor</div><div class="mini-meta">VK-C-18 · 15 Temmuz 2026 · ₺115.000</div></div>
-      <span class="mini-time unread">2 saat önce</span>
-    </a>
-    <a class="mini-row" href="portal-talepler.html#sst-007">
-      <div class="notif-dot"></div>
-      <div class="mini-ico"><i class="fa-solid fa-comment-dots"></i></div>
-      <div class="mini-info"><div class="mini-name">SST-2026-007 talebinize yanıt geldi</div><div class="mini-meta">Elif Sarıkaya · servis randevusu planlandı</div></div>
-      <span class="mini-time unread">1 gün önce</span>
-    </a>
-    <a class="mini-row" href="portal-teslim-tutanagi-detay.html">
-      <div class="notif-dot read"></div>
-      <div class="mini-ico"><i class="fa-solid fa-clipboard-check"></i></div>
-      <div class="mini-info"><div class="mini-name">Teslim tutanağınız hazır</div><div class="mini-meta">TSL-2026-001 · KO-B-304</div></div>
-      <span class="mini-time">15 Mart 2026</span>
-    </a>
-    <div class="mini-row">
-      <div class="notif-dot read"></div>
-      <div class="mini-ico"><i class="fa-solid fa-bullhorn"></i></div>
-      <div class="mini-info"><div class="mini-name">Vadi Konakları ortak alan bakım çalışması</div><div class="mini-meta">Duyuru · 27 Haziran 2026 - 3 Temmuz 2026 arası</div></div>
-      <span class="mini-time">4 hafta önce</span>
+  <!-- [R-43] "eksik kalan ihtiyaç" — yetkili kişi kartı. Portalda talep açmak
+       yeterli değil: alıcı acil bir durumda kimi arayacağını görmek ister. -->
+  <div class="pf-section-lbl"><i class="fa-solid fa-headset"></i> Size ayrılmış iletişim</div>
+  <div class="gv-card">
+    <div class="ct-grid">
+      <div class="ct-card">
+        <div class="ct-ava">ES</div>
+        <div class="ct-info">
+          <b>Elif Sarıkaya</b>
+          <span class="ct-role">Teknik Müdür · garanti, eksik iş, servis</span>
+          <div class="ct-lines">
+            <a href="tel:+902163498240"><i class="fa-solid fa-phone"></i> <span class="gv-ellip">0216 349 82 40</span></a>
+            <a href="mailto:elif.sarikaya@yapitas.com.tr"><i class="fa-solid fa-envelope"></i> <span class="gv-ellip">elif.sarikaya@yapitas.com.tr</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="ct-card">
+        <div class="ct-ava">OE</div>
+        <div class="ct-info">
+          <b>Okan Eren</b>
+          <span class="ct-role">Satış Müdürü · sözleşme, ödeme planı, teslim</span>
+          <div class="ct-lines">
+            <a href="tel:+902163498241"><i class="fa-solid fa-phone"></i> <span class="gv-ellip">0216 349 82 41</span></a>
+            <a href="mailto:okan.eren@yapitas.com.tr"><i class="fa-solid fa-envelope"></i> <span class="gv-ellip">okan.eren@yapitas.com.tr</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="ct-card">
+        <div class="ct-ava"><i class="fa-solid fa-headset"></i></div>
+        <div class="ct-info">
+          <b>Müşteri hizmetleri</b>
+          <span class="ct-role">Hafta içi 09:00 - 18:00</span>
+          <div class="ct-lines">
+            <a href="tel:+902163498200"><i class="fa-solid fa-phone"></i> <span class="gv-ellip">0216 349 82 00</span></a>
+            <span class="ct-line"><i class="fa-solid fa-clock"></i> <span class="gv-ellip">Talepler 7/24 portaldan açılabilir</span></span>
+          </div>
+        </div>
+      </div>
     </div>
-  </div></div>
+  </div>
 
 </main>
 

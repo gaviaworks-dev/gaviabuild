@@ -86,6 +86,8 @@ body{font-family:var(--font);color:var(--on-dark)}
 /* ---- buttons (dark surface CTA) ---- */
 .btn-mint{background:var(--gv-mint);color:var(--gv-deep)}
 .btn-mint:hover{background:var(--gv-mint-bright);transform:translateY(-2px)}
+/* ortak `.btn` text-decoration tanımlamıyor — bağlantı olarak kullanıldığında altı çizili kalır */
+a.btn{text-decoration:none}
 .btn-ghost-dk{background:transparent;color:var(--on-dark);border:1px solid var(--gv-border-dark)}
 .btn-ghost-dk:hover{border-color:var(--gv-mint);color:#fff;transform:translateY(-2px)}
 .btn-warn-dk{background:transparent;color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent)}
@@ -112,8 +114,76 @@ body{font-family:var(--font);color:var(--on-dark)}
 .pc-kpi:hover{transform:translateY(-2px);border-color:rgba(63,213,173,.32)}
 .pc-kpi-ico{width:42px;height:42px;flex:none;border-radius:var(--r-md);background:var(--gv-mint-glow);
   color:var(--gv-mint-bright);display:grid;place-items:center;font-size:16px}
+/* [R-47] Uyarı taşıyan KPI'ların ikonu durum tonuna geçer — durum rengi yalnız
+   rozet ve UYARI yüzeyinde kullanılır, bu iki kart tam olarak o tanıma girer. */
+.pc-kpi-ico.warn{background:rgba(169,121,8,.20);color:#E4B84E}
+.pc-kpi-ico.danger{background:rgba(209,67,67,.18);color:#F09292}
 .pc-kpi-num{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .pc-kpi-lbl{font-size:12px;color:var(--on-dark-mut);margin-top:4px}
+.pc-kpi-note{font-size:11px;color:var(--on-dark-faint);margin-top:5px;line-height:1.4}
+
+/* [G-2] birincil eylem, CRM tarafındaki .ph-actions ile aynı sarma davranışı */
+.pc-head-acts{display:flex;gap:10px;flex:none;align-items:center}
+@media (max-width:640px){ .pc-head-acts{flex-wrap:wrap;width:100%} .pc-head-acts>*{flex:1 1 auto;justify-content:center} }
+
+/* ---- durum rozetleri (koyu zemin türevleri; gavia-firmalar.html ile aynı) ---- */
+.pc-stat{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+  padding:4px 10px;border-radius:var(--r-sm);white-space:nowrap;border:1px solid transparent}
+.pc-stat::before{content:"";width:6px;height:6px;border-radius:var(--r-circle);background:currentColor;flex:none}
+.pc-stat.ok{background:rgba(46,158,107,.16);color:#5BD8A2}
+.pc-stat.warn{background:rgba(169,121,8,.22);color:#E4B84E}
+.pc-stat.danger{background:rgba(209,67,67,.18);color:#F09292}
+.pc-stat.info{background:rgba(59,111,212,.22);color:#8FB4F4}
+.pc-stat.off{background:rgba(255,255,255,.05);color:var(--on-dark-mut);border-color:var(--gv-border-dark)}
+
+/* ---- abonelik durumu sayaçları — beş durumun dağılımı, her biri firma
+   listesini o durumla süzen bir bağlantı.
+   [G-3] Şerit İKİNCİ SATIRA SARMAZ: sığmadığında ortak `.kpi-rail` rayında
+   (gvChipBar motoru, ui.css/ui.js) yatay kayar — ayrı bir kaydırma mekanizması
+   yazılmadı, yalnız kart ölçüsü ve koyu tema kenar solması eklendi. ---- */
+.sub-tiles.kpi-rail{margin-bottom:0;gap:10px}
+.sub-tiles-wrap{margin-bottom:0}
+.kpi-rail>.sub-tile{flex:0 0 calc((100% - 40px)/5);min-width:158px;scroll-snap-align:start}
+.sub-tiles.kpi-rail::after{background:linear-gradient(to right,transparent,var(--gv-night))}
+.sub-tiles.kpi-rail::before{background:linear-gradient(to left,transparent,var(--gv-night))}
+.sub-tiles-wrap .cb-arrow{background:var(--gv-night);border-color:var(--gv-border-dark);color:var(--on-dark-mut)}
+.sub-tiles-wrap .cb-arrow:hover{border-color:var(--gv-mint);color:var(--gv-mint-bright)}
+/* ui.css'teki `.cb-arrow{display:inline-flex}` UA `[hidden]` ile eşit özgüllükte
+   olduğu için oklar gerekmediğinde de görünür kalıyordu */
+.sub-tiles-wrap .cb-arrow[hidden]{display:none}
+.sub-tile{display:flex;flex-direction:column;gap:9px;
+  padding:14px 15px;border:1px solid var(--gv-border-dark);border-radius:var(--r-md);
+  background:rgba(255,255,255,.022);text-decoration:none;transition:.2s var(--ease)}
+.sub-tile:hover{transform:translateY(-2px);border-color:rgba(63,213,173,.34);background:rgba(255,255,255,.04)}
+.sub-tile .pc-stat{align-self:flex-start}   /* sütun yönlü flex çocuğu germesin — rozet kompakt kalır */
+.sub-tile b{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.sub-tile .st-note{font-size:11px;color:var(--on-dark-mut);line-height:1.4}
+.sub-tile b .st-unit{font-size:12px;font-weight:700;color:var(--on-dark-mut);margin-left:4px}
+
+/* ---- dikkat gerektiren kayıtlar ---- */
+.pc-att{display:flex;gap:12px;align-items:flex-start;padding:14px 22px;border-bottom:1px solid var(--gv-border-dark);
+  text-decoration:none;transition:background .16s var(--ease)}
+.pc-att:last-child{border-bottom:none}
+.pc-att:hover{background:rgba(255,255,255,.03)}
+.pc-att-ico{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:12px}
+.pc-att-ico.warn{background:rgba(169,121,8,.20);color:#E4B84E}
+.pc-att-ico.danger{background:rgba(209,67,67,.18);color:#F09292}
+.pc-att-ico.info{background:rgba(59,111,212,.22);color:#8FB4F4}
+.pc-att-txt{flex:1;min-width:0;line-height:1.42}
+.pc-att-txt b{display:block;font-size:13px;font-weight:700;color:#fff}
+.pc-att-txt span{font-size:11.5px;color:var(--on-dark-mut)}
+.pc-att>i.fa-chevron-right{flex:none;font-size:10px;color:var(--on-dark-faint);margin-top:11px}
+.pc-att:hover>i.fa-chevron-right{color:var(--gv-mint-bright)}
+/* tam genişlik kartta uyarılar iki kolona bölünür — geniş ekranda tek uzun
+   kolonun bıraktığı ölü alan kapanır, 980px altında tek kolona döner. */
+.pc-att-grid{overflow-x:visible}
+@media(min-width:981px){
+  .pc-att-grid{display:grid;grid-template-columns:1fr 1fr}
+  .pc-att-grid .pc-att:nth-child(odd){border-right:1px solid var(--gv-border-dark)}
+  .pc-att-grid .pc-att:nth-last-child(-n+2){border-bottom:none}
+}
+.pc-card-foot a{color:var(--gv-mint-bright);text-decoration:none;font-weight:700}
+.pc-card-foot a:hover{text-decoration:underline}
 
 /* ---- layout helpers ---- */
 .pc-grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start}
@@ -193,25 +263,103 @@ body{font-family:var(--font);color:var(--on-dark)}
         <h1 class="pc-h1">Genel Bakış</h1>
         <p class="pc-sub">Gavia CRM'i kiralayan tüm firmalar, gelir ve platform aktivitesi — 2 Temmuz 2026 itibarıyla.</p>
       </div>
+      <div class="pc-head-acts">
+        <a class="btn btn-mint" href="gavia-firmalar.html"><i class="fa-solid fa-building"></i> Firma listesini aç</a>
+      </div>
     </div>
 
+    <!-- [R-47] KPI şeridi firma listesindeki alanlarla aynı ekseni ölçer: kayıt
+         sayısı, gelir, ödeme uyarısı, kayıt bütünlüğü. Kullanıcı sayısı ve aktif
+         deneme sayısı SİLİNMEDİ — bağlamına, aşağıdaki "Abonelik durumu"
+         kartına taşındı (deneme kendi sayacında, kullanıcı kart altlığında). -->
     <div class="pc-kpis">
       <div class="pc-kpi">
         <div class="pc-kpi-ico"><i class="fa-solid fa-building"></i></div>
-        <div><div class="pc-kpi-num">5 <span style="font-size:14px;font-weight:700;color:var(--on-dark-mut)">(+2 alt şirket)</span></div><div class="pc-kpi-lbl">Kayıtlı firma</div></div>
+        <div><div class="pc-kpi-num">7 <span style="font-size:14px;font-weight:700;color:var(--on-dark-mut)">(+2 alt şirket)</span></div><div class="pc-kpi-lbl">Firma kaydı</div><div class="pc-kpi-note">5 aktif abonelik · 1 askıda · 1 iptal</div></div>
       </div>
       <div class="pc-kpi">
         <div class="pc-kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div>
-        <div><div class="pc-kpi-num">₺61.700</div><div class="pc-kpi-lbl">Aylık yinelenen gelir (MRR)</div></div>
+        <div><div class="pc-kpi-num">₺61.700</div><div class="pc-kpi-lbl">Aylık yinelenen gelir (MRR)</div><div class="pc-kpi-note">3 ücretli firma · deneme ve demo ₺0 katkı</div></div>
       </div>
       <div class="pc-kpi">
-        <div class="pc-kpi-ico"><i class="fa-solid fa-hourglass-half"></i></div>
-        <div><div class="pc-kpi-num">1</div><div class="pc-kpi-lbl">Aktif deneme süreci</div></div>
+        <div class="pc-kpi-ico danger"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+        <div><div class="pc-kpi-num">2</div><div class="pc-kpi-lbl">Ödeme uyarısı</div><div class="pc-kpi-note">1 gecikmiş · 1 ödenmemiş (₺34.800 açık bakiye)</div></div>
       </div>
       <div class="pc-kpi">
-        <div class="pc-kpi-ico"><i class="fa-solid fa-users"></i></div>
-        <div><div class="pc-kpi-num">78</div><div class="pc-kpi-lbl">Platform genelinde kullanıcı</div></div>
+        <div class="pc-kpi-ico warn"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div><div class="pc-kpi-num">5</div><div class="pc-kpi-lbl">Kayıt bütünlüğü eksik firma</div><div class="pc-kpi-note">12 zorunlu alan boş (vergi, e-posta, ödeme yöntemi)</div></div>
       </div>
+    </div>
+
+    <!-- [R-47] Abonelik durumu dağılımı — firma listesindeki beş rozetin birebir
+         karşılığı. Her sayaç listeyi o durumla süzerek açar (?f=…). -->
+    <div class="pc-card" style="margin-bottom:24px">
+      <div class="pc-card-head">
+        <div><div class="pc-card-title"><i class="fa-solid fa-layer-group"></i> Abonelik durumu</div>
+        <div class="pc-card-sub">7 firma kaydının durum dağılımı — sayaca tıklayın, firma listesi o durumla süzülür</div></div>
+        <a class="pc-card-link" href="gavia-firmalar.html">Firma listesini aç <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="pc-card-body">
+        <div class="kpi-rail-wrap sub-tiles-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="sub-tiles kpi-rail">
+          <a class="sub-tile" href="gavia-firmalar.html?f=ucretli">
+            <span class="pc-stat ok">Ücretli</span><b>3<span class="st-unit">firma</span></b>
+            <span class="st-note">₺61.700 aylık yinelenen gelir</span>
+          </a>
+          <a class="sub-tile" href="gavia-firmalar.html?f=deneme">
+            <span class="pc-stat warn">Deneme</span><b>1<span class="st-unit">firma</span></b>
+            <span class="st-note">Kuzey Proje · 8 Tem'de bitiyor</span>
+          </a>
+          <a class="sub-tile" href="gavia-firmalar.html?f=demo">
+            <span class="pc-stat info">Demo</span><b>1<span class="st-unit">firma</span></b>
+            <span class="st-note">Çınar İnşaat · ücretsiz paket</span>
+          </a>
+          <a class="sub-tile" href="gavia-firmalar.html?f=askida">
+            <span class="pc-stat danger">Askıda</span><b>1<span class="st-unit">firma</span></b>
+            <span class="st-note">Deniz Yapı · ödeme alınamadı</span>
+          </a>
+          <a class="sub-tile" href="gavia-firmalar.html?f=iptal">
+            <span class="pc-stat off">İptal</span><b>1<span class="st-unit">firma</span></b>
+            <span class="st-note">Batı Anadolu · kayıt arşivde</span>
+          </a>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> Aktif aboneliklerdeki toplam kullanıcı 78 · askıya alınan kayıttaki 9 kullanıcının erişimi kapalı.</div>
+    </div>
+
+    <!-- [R-47] Dikkat gerektiren kayıtlar — ödeme ve kayıt bütünlüğü uyarıları.
+         Her satır firma listesini açar ve ilgili kaydın panelini gösterir. -->
+    <div class="pc-card" style="margin-bottom:24px">
+      <div class="pc-card-head">
+        <div><div class="pc-card-title"><i class="fa-solid fa-triangle-exclamation"></i> Dikkat gerektiren kayıtlar</div>
+        <div class="pc-card-sub">Ödeme ve abonelik uyarıları · en kritik olan başta</div></div>
+      </div>
+      <div class="pc-card-body flush pc-att-grid">
+        <a class="pc-att" href="gavia-firmalar.html?firma=deniz">
+          <div class="pc-att-ico danger"><i class="fa-solid fa-ban"></i></div>
+          <div class="pc-att-txt"><b>Deniz Yapı Ltd. aboneliği askıda</b><span>Haziran faturası ₺14.900 · 34 gün gecikmede · 9 kullanıcının erişimi kapalı</span></div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="pc-att" href="gavia-firmalar.html?firma=ege">
+          <div class="pc-att-ico warn"><i class="fa-solid fa-clock"></i></div>
+          <div class="pc-att-txt"><b>Ege Modern İnşaat ödemesi gecikmiş</b><span>Temmuz faturası ₺19.900 · 4 gün gecikmede · fatura e-postası tanımlı değil</span></div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="pc-att" href="gavia-firmalar.html?firma=kuzey">
+          <div class="pc-att-ico warn"><i class="fa-solid fa-hourglass-half"></i></div>
+          <div class="pc-att-txt"><b>Kuzey Proje Ltd. denemesi 5 gün sonra bitiyor</b><span>Ödeme yöntemi tanımlı değil — bitişte hesap salt-okunura düşer</span></div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a class="pc-att" href="gavia-firmalar.html?firma=cinar">
+          <div class="pc-att-ico info"><i class="fa-solid fa-user-group"></i></div>
+          <div class="pc-att-txt"><b>Çınar İnşaat kullanıcı limitini doldurdu</b><span>3 / 3 kullanıcı · ücretli pakete geçiş için fatura bilgileri gerekiyor</span></div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+      </div>
+      <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> 5 firmada toplam 12 zorunlu kayıt alanı boş — <a href="gavia-firmalar.html">firma listesinde Gelişmiş filtre &gt; Kayıt bütünlüğü</a> ile süzebilirsiniz.</div>
     </div>
 
     <div class="pc-grid-2">
@@ -220,7 +368,7 @@ body{font-family:var(--font);color:var(--on-dark)}
         <!-- MRR Kırılımı — signature: segmented composition bar -->
         <div class="pc-card">
           <div class="pc-card-head">
-            <div><div class="pc-card-title"><i class="fa-solid fa-chart-pie"></i> MRR Kırılımı</div><div class="pc-card-sub">3 ücretli firma · deneme ve ücretsiz pakette ₺0 katkı</div></div>
+            <div><div class="pc-card-title"><i class="fa-solid fa-chart-pie"></i> MRR Kırılımı</div><div class="pc-card-sub">3 ücretli firma · deneme, demo, askıda ve iptal kayıtların katkısı ₺0</div></div>
           </div>
           <div class="pc-card-body">
             <div class="mrr-bar">
@@ -240,20 +388,20 @@ body{font-family:var(--font);color:var(--on-dark)}
         <!-- Firma Büyümesi -->
         <div class="pc-card">
           <div class="pc-card-head">
-            <div><div class="pc-card-title"><i class="fa-solid fa-arrow-trend-up"></i> Firma Büyümesi</div><div class="pc-card-sub">Ocak – Temmuz 2026 · dönem sonu kayıtlı ana firma sayısı</div></div>
+            <div><div class="pc-card-title"><i class="fa-solid fa-arrow-trend-up"></i> Firma Büyümesi</div><div class="pc-card-sub">Ocak – Temmuz 2026 · dönem sonu kayıtlı firma sayısı (iptal edilen kayıt arşivde kalır)</div></div>
           </div>
           <div class="pc-card-body">
             <div class="growth-chart">
-              <div class="growth-col"><div class="growth-bar-track" style="height:60%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">3</div><div class="growth-lbl">Oca</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:60%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">3</div><div class="growth-lbl">Şub</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:60%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">3</div><div class="growth-lbl">Mar</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:60%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">3</div><div class="growth-lbl">Nis</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:80%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">4</div><div class="growth-lbl">May</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:100%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">5</div><div class="growth-lbl">Haz</div></div>
-              <div class="growth-col"><div class="growth-bar-track" style="height:100%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">5</div><div class="growth-lbl">Tem</div></div>
+              <div class="growth-col"><div class="growth-bar-track" style="height:71%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">5</div><div class="growth-lbl">Oca</div></div>
+              <div class="growth-col"><div class="growth-bar-track" style="height:71%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">5</div><div class="growth-lbl">Şub</div></div>
+              <div class="growth-col"><div class="growth-bar-track" style="height:71%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">5</div><div class="growth-lbl">Mar</div></div>
+              <div class="growth-col"><div class="growth-bar-track" style="height:71%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">5</div><div class="growth-lbl">Nis</div></div>
+              <div class="growth-col"><div class="growth-bar-track" style="height:86%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">6</div><div class="growth-lbl">May</div></div>
+              <div class="growth-col"><div class="growth-bar-track" style="height:100%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">7</div><div class="growth-lbl">Haz</div></div>
+              <div class="growth-col"><div class="growth-bar-track" style="height:100%"><div class="growth-bar" style="height:100%"></div></div><div class="growth-val">7</div><div class="growth-lbl">Tem</div></div>
             </div>
           </div>
-          <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> Mayıs: Çınar İnşaat ücretsiz pakete katıldı · Haziran: Kuzey Proje Ltd. deneme sürecini başlattı.</div>
+          <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> Mayıs: Çınar İnşaat ücretsiz pakete katıldı, Batı Anadolu İnşaat aboneliğini iptal etti · Haziran: Kuzey Proje Ltd. deneme başlattı, Deniz Yapı Ltd. ödeme askısına düştü.</div>
         </div>
 
       </div>
@@ -270,6 +418,11 @@ body{font-family:var(--font);color:var(--on-dark)}
             <div class="pc-act-time">1 Tem</div>
           </div>
           <div class="pc-act-row">
+            <div class="pc-act-ico warn"><i class="fa-solid fa-ban"></i></div>
+            <div class="pc-act-txt"><b>Deniz Yapı Ltd. aboneliği askıya alındı</b><span>Haziran faturası tahsil edilemedi · 9 kullanıcının erişimi kapatıldı</span></div>
+            <div class="pc-act-time">26 Haz</div>
+          </div>
+          <div class="pc-act-row">
             <div class="pc-act-ico warn"><i class="fa-solid fa-hourglass-half"></i></div>
             <div class="pc-act-txt"><b>Kuzey Proje Ltd. deneme süreci başlatıldı</b><span>Basic paket · 14 günlük deneme</span></div>
             <div class="pc-act-time">24 Haz</div>
@@ -283,6 +436,11 @@ body{font-family:var(--font);color:var(--on-dark)}
             <div class="pc-act-ico"><i class="fa-solid fa-sack-dollar"></i></div>
             <div class="pc-act-txt"><b>Miray Yapı Group Haziran faturası tahsil edildi</b><span>₺26.900 · eski fiyat garantisi</span></div>
             <div class="pc-act-time">1 Haz</div>
+          </div>
+          <div class="pc-act-row">
+            <div class="pc-act-ico warn"><i class="fa-solid fa-circle-xmark"></i></div>
+            <div class="pc-act-txt"><b>Batı Anadolu İnşaat aboneliğini iptal etti</b><span>19 ay müşteriydi · kayıt 10 Ağu 2026'ya kadar arşivde</span></div>
+            <div class="pc-act-time">12 May</div>
           </div>
           <div class="pc-act-row">
             <div class="pc-act-ico"><i class="fa-solid fa-user-plus"></i></div>

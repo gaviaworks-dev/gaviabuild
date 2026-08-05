@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Raporum — Müşteri Portalı — Yapıtaş İnşaat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* =====================================================================
+   MÜŞTERİ PORTALI — RAPORUM (R-46). shell.js/shell.css YOK, standalone;
+   kabuk (topbar + sekme navigasyonu) portal-panel.html'den BİREBİR
+   devralındı. tokens.css + ui.css üstüne kurulur — yeni ortak CSS dosyası
+   açılmaz, yeni dışa aktarma arayüzü yazılmaz (ortak gvExport tüketilir).
+   Rapor gövdesi ortak rapor primitiflerini kullanır: .rp-kpis · .rp-note ·
+   .limit-row + .gbar · .stat-grid · .gtable · .dash-cols (G-6).
+   ===================================================================== */
+*{box-sizing:border-box}
+/* `[hidden]` guard'ı — ortak shell.css'teki kuralın (satır ~29) sayfa-yerel ikizi.
+   Portal sayfaları standalone çalışır ve shell.css YÜKLEMEZ; o kural olmadan
+   eşit özgüllükteki bir class kuralı (ör. `.cb-arrow{display:inline-flex}`) UA'nın
+   `[hidden]` varsayılanını eziyor ve gizlenmesi gereken öğe görünür kalıyor. */
+[hidden]{display:none !important}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;padding-bottom:48px}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+
+/* ---- topbar ---- */
+.pf-top{position:sticky;top:0;z-index:20;height:var(--top-h);background:var(--paper);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px}
+.pf-brand{display:flex;align-items:center;gap:11px;min-width:0}
+.pf-mark{width:36px;height:36px;flex:none;border-radius:10px;background:linear-gradient(155deg,var(--gv-night),var(--gv-deep));
+  color:var(--gv-mint);display:grid;place-items:center;font-weight:800;font-size:16px;letter-spacing:-.02em}
+.pf-brandtext{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.pf-brandtext b{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+.pf-brandtext span{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.02em}
+.pf-user{display:flex;align-items:center;gap:8px;flex:none}
+.pf-chip{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-pill);padding:6px 12px 6px 6px}
+.pf-ava{width:26px;height:26px;flex:none;border-radius:50%;background:rgba(var(--acc-rgb),.16);color:var(--acc-ink);display:grid;place-items:center;font-size:10.5px;font-weight:800}
+.pf-chip span{font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.pf-logout{width:36px;height:36px;flex:none;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);transition:.2s var(--ease)}
+.pf-logout:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-tint)}
+@media (max-width:560px){ .pf-chip span{display:none} .pf-chip{padding:6px;border-radius:50%} }
+
+/* ---- tab nav ---- */
+.pf-tabs{position:sticky;top:var(--top-h);z-index:19;background:var(--paper);border-bottom:1px solid var(--line);display:flex}
+.pf-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 10px;min-width:0;
+  font-size:11px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;transition:.2s var(--ease)}
+.pf-tab i{font-size:15px}
+.pf-tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-tab:hover{color:var(--ink-2)}
+.pf-tab.active{color:var(--acc-ink);border-color:var(--acc-ink)}
+@media (min-width:641px){
+  .pf-tabs{gap:2px;padding:0 18px}
+  .pf-tab{flex:none;flex-direction:row;padding:14px 18px;font-size:13px}
+}
+
+/* ---- shell ---- */
+.pf-wrap{max-width:1080px;margin:0 auto;padding:22px 16px 8px}
+@media (min-width:900px){ .pf-wrap{padding:34px 32px 8px} }
+/* [G-2] Portal kabuğu `.gv-page-head` DEĞİL `.pf-hero` kullanır; shell.css'teki
+   `.gv-page-head .ph-actions` kuralı buraya ERİŞMEZ — aksiyon grubu sayfa-lokal. */
+.pf-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.pf-hero .ph-actions{display:flex;gap:10px;flex:none}
+@media (max-width:640px){
+  .pf-hero .ph-actions{flex-wrap:wrap;width:100%}
+  .pf-hero .ph-actions .btn{flex:1 1 auto;justify-content:center}
+}
+.pf-eyebrow{font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--acc-ink);margin-bottom:7px}
+.pf-hero h1{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;color:var(--ink)}
+.pf-hero p{font-size:13.5px;color:var(--muted);margin:0;max-width:58ch;line-height:1.55}
+.pf-section-lbl{font-size:12px;font-weight:800;letter-spacing:.02em;color:var(--ink-2);margin:30px 0 13px;display:flex;align-items:center;gap:8px}
+.pf-section-lbl i{color:var(--acc-ink)}
+.pf-wrap > .dash-cols{margin-bottom:24px}
+
+/* ---- rapor künyesi: raporun neyi, kimi, hangi tarihi kapsadığı ---- */
+.rk{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:16px 20px;padding:18px 22px}
+.rk-item{min-width:0}
+.rk-item dt{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--muted);margin-bottom:3px}
+.rk-item dd{font-size:13.5px;font-weight:700;color:var(--ink);margin:0;line-height:1.4}
+/* Belge/sözleşme kodu satır ortasından kırılmasın; kırılma ayıraçta olur */
+.rk-nw{white-space:nowrap}
+
+/* ---- kpi-card mobil (portal ailesiyle aynı): ₺ tutarları satır kıramaz ---- */
+@media (max-width:480px){
+  .kpi-card{flex-direction:column;align-items:flex-start;gap:8px;padding:16px}
+  /* NOT: seçici `.rp-kpis .kpi-num` ile aynı özgüllüğe çıkarıldı (0-2-0) — aşağıdaki
+     G-9 kuralı 0-2-0 olduğu için düz `.kpi-num` (0-1-0) burada kaybederdi. */
+  .rp-kpis .kpi-num{font-size:19px}
+}
+
+/* ---- [G-9] Bu sayfanın dört KPI değeri de 8-9 haneli ₺ tutarı. Ortak katmanın 25px
+   puntosunda en uzunu ("₺10.220.000") 142px'lik kutuda 151px istiyor ve KIRPILIYOR
+   (1024 ve 1440'ta ölçüldü) — G-9 ölçütü "içerik kesilmesi 0". Punto 23px'e iniyor:
+   en uzun değer 139px'e düşüp sığıyor, dördü aynı boyda kalıyor ve başlık hiyerarşisi
+   korunuyor. Değeri kısaltmak veya ellipsis'le gizlemek YAPILMADI — gizlemek kesmenin
+   devamı olurdu. Ev usulü bu: uzun parasal değerde karta daha küçük punto verilir. ---- */
+.rp-kpis .kpi-num{font-size:23px}
+/* 1279px altında kart 242px'ten 228px'e iniyor ve 23px'te en uzun değer yine kırpılıyordu
+   (kutu 128px / gereken 139px, ölçüldü) — o bantta 20px'e iniyor: 121px, rahat sığıyor. */
+@media (max-width:1279px){ .rp-kpis .kpi-num{font-size:20px} }
+
+/* ---- ödeme dağılımı şeridi: tek çubukta ödenen / kalan / teslim payı.
+   Grafik kütüphanesi yok — ödemeler sayfasındaki taksit şeridiyle aynı
+   görsel dil (dolu/boş segment), yalnız oranlı tek şerit hâli. ---- */
+.sp{padding:20px 22px}
+.sp-track{display:flex;height:26px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--line);background:var(--bg)}
+.sp-seg{min-width:2px}
+.sp-seg.paid{background:var(--acc-ink)}
+.sp-seg.rest{background:rgba(var(--acc-rgb),.28)}
+.sp-seg.hold{background:var(--line-2)}
+.sp-legend{display:flex;flex-wrap:wrap;gap:14px 20px;margin-top:14px}
+.sp-lg{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.sp-lg i{width:10px;height:10px;border-radius:3px;flex:none;margin-top:4px}
+.sp-lg i.paid{background:var(--acc-ink)}
+.sp-lg i.rest{background:rgba(var(--acc-rgb),.28)}
+.sp-lg i.hold{background:var(--line-2)}
+.sp-lg-txt b{display:block;font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.sp-lg-txt span{display:block;font-size:11.5px;color:var(--muted)}
+
+/* ---- teslim takvimi: dört duraklı dikey sıra (gerçek bir sıra, süsleme değil) ---- */
+.tl{padding:8px 22px 20px}
+.tl-row{position:relative;display:flex;gap:13px;padding:12px 0 12px}
+.tl-row::before{content:'';position:absolute;left:11px;top:32px;bottom:-4px;width:2px;background:var(--line)}
+.tl-row:last-child::before{display:none}
+.tl-row.done::before{background:rgba(var(--acc-rgb),.4)}
+.tl-node{width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:10px;
+  background:var(--bg);border:1px solid var(--line);color:var(--muted);position:relative;z-index:1;margin-top:2px}
+.tl-row.done .tl-node{background:rgba(var(--acc-rgb),.14);border-color:rgba(var(--acc-rgb),.4);color:var(--acc-ink)}
+.tl-row.now .tl-node{background:var(--acc-ink);border-color:var(--acc-ink);color:#fff;box-shadow:0 0 0 4px rgba(var(--acc-rgb),.16)}
+.tl-body{min-width:0;flex:1}
+.tl-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tl-top b{font-size:13.5px;font-weight:800;color:var(--ink)}
+.tl-date{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.tl-note{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5}
+
+/* ---- talep / belge özet döşemeleri ---- */
+.sg-tile{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:14px}
+.sg-tile b{display:block;font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.sg-tile span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+
+/* ---- belge satırı ---- */
+.dc-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.dc-row:last-child{border-bottom:none}
+.dc-ico{width:34px;height:34px;flex:none;border-radius:9px;background:var(--bg);color:var(--acc-ink);display:grid;place-items:center;font-size:13px}
+.dc-info{flex:1;min-width:0}
+.dc-info b{display:block;font-size:13px;font-weight:700;color:var(--ink)}
+.dc-info span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+
+/* ---- talep özeti tablosu: ORTAK `.gtable` primitifi, `.gc-body.flush` içinde.
+   Sayfa-yerel bir tablo kopyası yazılmadı: flush gövde hem kasıtlı yatay
+   kaydırmayı hem paylaşılan kenar-solması ipucunu (.gv-scroll-r) getirir. ---- */
+.rq-no{font-weight:700;color:var(--ink);white-space:nowrap}
+.rq-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body data-page="rapor">
+
+<header class="pf-top">
+  <div class="pf-brand">
+    <div class="pf-mark">Y</div>
+    <div class="pf-brandtext"><b>Yapıtaş İnşaat</b><span>Müşteri Portalı</span></div>
+  </div>
+  <div class="pf-user">
+    <div class="pf-chip"><div class="pf-ava">SO</div><span>Selçuk Onaran</span></div>
+    <a class="pf-logout" href="index.html" title="Çıkış" aria-label="Çıkış"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+  </div>
+</header>
+
+<nav class="pf-tabs" aria-label="Portal sekmeleri">
+  <a class="pf-tab" href="portal-panel.html"><i class="fa-solid fa-house"></i><span>Panel</span></a>
+  <a class="pf-tab" href="portal-odemeler.html"><i class="fa-solid fa-file-invoice-dollar"></i><span>Ödemelerim</span></a>
+  <a class="pf-tab" href="portal-belgeler.html"><i class="fa-solid fa-folder-open"></i><span>Belgelerim</span></a>
+  <a class="pf-tab" href="portal-talepler.html"><i class="fa-solid fa-comment-dots"></i><span>Taleplerim</span></a>
+  <a class="pf-tab active" href="portal-rapor.html"><i class="fa-solid fa-chart-pie"></i><span>Raporum</span></a>
+</nav>
+
+<main class="pf-wrap">
+
+  <div class="pf-hero">
+    <div>
+      <div class="pf-eyebrow">Müşteri Raporu</div>
+      <h1>Raporum</h1>
+      <p>Birimlerinizin ödeme, inşaat, teslim, talep ve belge durumu tek sayfada özetlendi. Raporu indirip saklayabilir ya da yazdırabilirsiniz.</p>
+    </div>
+    <!-- [R-46] Dışa Aktar — ORTAK gvExport primitifi (data-gv-export). Sistemde tek
+         dışa aktarma arayüzü var; sayfaya özel yeni bir çıktı akışı yazılmadı.
+         Kapsam yalnız "tumu": bu sayfada liste filtresi yoktur, "filtreli" kapsam
+         seçeneği kullanıcıya boş bir söz verirdi. -->
+    <div class="ph-actions">
+      <a class="btn btn-ghost btn-sm" href="#" data-gv-export='{"baslik":"Müşteri raporu — Selçuk Onaran","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+    </div>
+  </div>
+
+  <div class="gv-card" style="margin-bottom:22px">
+    <dl class="rk">
+      <div class="rk-item"><dt>Müşteri</dt><dd>Selçuk Onaran</dd></div>
+      <div class="rk-item"><dt>Birim sayısı</dt><dd>2 birim</dd></div>
+      <div class="rk-item"><dt>Sözleşmeler</dt><dd><span class="rk-nw">SSZ-2025-042</span> · <span class="rk-nw">SSZ-2026-003</span></dd></div>
+      <div class="rk-item"><dt>Rapor tarihi</dt><dd>22 Temmuz 2026</dd></div>
+      <div class="rk-item"><dt>Kapsam</dt><dd>Tüm kayıt geçmişi</dd></div>
+    </dl>
+  </div>
+
+  <div class="pf-section-lbl"><i class="fa-solid fa-wallet"></i> Ödeme özeti</div>
+  <div class="rp-kpis">
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-file-contract"></i></div>
+      <div><div class="kpi-num">₺10.220.000</div><div class="kpi-lbl">Toplam sözleşme bedeli</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-circle-check"></i></div>
+      <div><div class="kpi-num">₺6.628.000</div><div class="kpi-lbl">Ödenen tutar</div>
+      <div class="kpi-delta up"><i class="fa-solid fa-check"></i> Bedelin %65'i</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div>
+      <div><div class="kpi-num">₺3.592.000</div><div class="kpi-lbl">Kalan tutar — 22 taksit + teslim bedeli</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-ico"><i class="fa-solid fa-clock-rotate-left"></i></div>
+      <div><div class="kpi-num">₺0</div><div class="kpi-lbl">Gecikmiş tutar</div>
+      <div class="kpi-delta up"><i class="fa-solid fa-check"></i> 15 taksit zamanında ödendi</div></div>
+    </div>
+  </div>
+
+  <div class="gv-card" style="margin-bottom:22px">
+    <div class="gc-head">
+      <div class="gc-title"><i class="fa-solid fa-chart-simple"></i> Toplam bedelin dağılımı</div>
+      <span class="gstat ok">Gecikme yok</span>
+    </div>
+    <div class="sp">
+      <div class="sp-track" role="img" aria-label="Toplam bedelin %65'i ödendi, %24'ü taksitlerde, %11'i teslim bedelinde">
+        <div class="sp-seg paid" style="width:64.9%"></div>
+        <div class="sp-seg rest" style="width:24.8%"></div>
+        <div class="sp-seg hold" style="width:10.3%"></div>
+      </div>
+      <div class="sp-legend">
+        <div class="sp-lg"><i class="paid"></i><span class="sp-lg-txt"><b>₺6.628.000</b><span>Ödendi · peşinat, 14 taksit ve KO-B-304 bedelinin tamamı</span></span></div>
+        <div class="sp-lg"><i class="rest"></i><span class="sp-lg-txt"><b>₺2.530.000</b><span>Kalan taksitler · 22 ay boyunca aylık ₺115.000</span></span></div>
+        <div class="sp-lg"><i class="hold"></i><span class="sp-lg-txt"><b>₺1.062.000</b><span>Teslim bedeli · anahtar teslimiyle birlikte ödenir</span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-cols">
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-building-user"></i> Birim bazında ödeme</div>
+        <a class="gc-link" href="portal-odemeler.html">Ödemelerim <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="gc-body">
+        <div class="limit-row">
+          <div class="limit-top"><b>KO-B-304 · Kule Ofis B Blok</b><span><strong>₺4.100.000</strong> / ₺4.100.000</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div><span class="gbar-val">%100</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>VK-C-18 · Vadi Konakları</b><span><strong>₺2.528.000</strong> / ₺6.120.000</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:41%"></div></div><span class="gbar-val">%41</span></div>
+        </div>
+        <div class="stat-grid" style="margin-top:18px">
+          <div class="sg-tile"><b>14 / 36</b><span>Ödenen taksit — VK-C-18</span></div>
+          <div class="sg-tile"><b>₺115.000</b><span>Aylık taksit tutarı</span></div>
+          <div class="sg-tile"><b>15 Tem 2026</b><span>Sıradaki vade</span></div>
+          <div class="sg-tile"><b>15 Nis 2028</b><span>Son taksit vadesi</span></div>
+        </div>
+      </div>
+      <div class="gc-foot"><span>Peşinat ₺918.000 · 3 Mayıs 2025'te tahsil edildi</span><span class="gtag">14 makbuz</span></div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-helmet-safety"></i> İnşaat ilerlemesi — VK-C-18</div>
+        <span class="gstat ok">Planında</span>
+      </div>
+      <div class="gc-body">
+        <div class="limit-row">
+          <div class="limit-top"><b>Genel ilerleme</b><span>ağırlıklı ortalama</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:68%"></div></div><span class="gbar-val">%68</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>Kaba yapı</b><span>tamamlandı</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:100%"></div></div><span class="gbar-val">%100</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>Mekanik ve elektrik</b><span>sürüyor</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:70%"></div></div><span class="gbar-val">%70</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>İnce yapı</b><span>sürüyor</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:45%"></div></div><span class="gbar-val">%45</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>Cephe</b><span>sürüyor</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:62%"></div></div><span class="gbar-val">%62</span></div>
+        </div>
+        <div class="limit-row">
+          <div class="limit-top"><b>Peyzaj ve ortak alan</b><span>başladı</span></div>
+          <div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:20%"></div></div><span class="gbar-val">%20</span></div>
+        </div>
+      </div>
+      <div class="gc-foot"><span>Oranlar onaylı hakediş imalatlarına göre hesaplanır</span><span class="gtag">Haziran 2026 hakedişi</span></div>
+    </div>
+  </div>
+
+  <div class="pf-section-lbl"><i class="fa-solid fa-key"></i> Teslim durumu</div>
+  <div class="dash-cols">
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-timeline"></i> VK-C-18 teslim takvimi</div>
+        <span class="gstat info">Aralık 2026</span>
+      </div>
+      <div class="tl">
+        <div class="tl-row done">
+          <span class="tl-node"><i class="fa-solid fa-check"></i></span>
+          <div class="tl-body">
+            <div class="tl-top"><b>Kaba yapı bitişi</b><span class="tl-date">Mart 2026</span></div>
+            <div class="tl-note">Betonarme imalat tamamlandı, iskele cephe işine devredildi.</div>
+          </div>
+        </div>
+        <div class="tl-row now">
+          <span class="tl-node"><i class="fa-solid fa-helmet-safety"></i></span>
+          <div class="tl-body">
+            <div class="tl-top"><b>İnce yapı ve cephe</b><span class="tl-date">Temmuz 2026</span></div>
+            <div class="tl-note">Sürüyor. Daire içi seçenek bildirimleri 30 Eylül 2026'ya kadar alınıyor.</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <span class="tl-node"><i class="fa-solid fa-clipboard-list"></i></span>
+          <div class="tl-body">
+            <div class="tl-top"><b>Ön kabul ve eksik iş turu</b><span class="tl-date">Kasım 2026</span></div>
+            <div class="tl-note">Birimi ekiple birlikte gezip eksik iş listesi oluşturulur.</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <span class="tl-node"><i class="fa-solid fa-key"></i></span>
+          <div class="tl-body">
+            <div class="tl-top"><b>Anahtar teslimi</b><span class="tl-date">Aralık 2026</span></div>
+            <div class="tl-note">Teslim bedeli ₺1.062.000 ödenir, teslim tutanağı imzalanır, 2 yıl garanti başlar.</div>
+          </div>
+        </div>
+      </div>
+      <div class="gc-foot"><span>Sözleşmede taahhüt edilen dönem: 4. çeyrek 2026</span><a class="gc-link" href="portal-panel.html">Süreç özeti <i class="fa-solid fa-arrow-right"></i></a></div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-clipboard-check"></i> KO-B-304 teslim edildi</div>
+        <span class="gstat ok">Tamamlandı</span>
+      </div>
+      <div class="gc-body">
+        <div class="stat-grid">
+          <div class="sg-tile"><b>15 Mar 2026</b><span>Teslim tarihi</span></div>
+          <div class="sg-tile"><b>TSL-2026-001</b><span>Teslim tutanağı</span></div>
+          <div class="sg-tile"><b>15 Mar 2028</b><span>Garanti bitişi</span></div>
+          <div class="sg-tile"><b>2</b><span>Kapanan eksik iş kaydı</span></div>
+        </div>
+        <div class="rp-note" style="margin:18px 0 0">
+          <i class="fa-solid fa-circle-info"></i><strong>Garanti kapsamı:</strong> yapısal ve tesisat kusurları teslimden itibaren 2 yıl, taşıyıcı sistem 10 yıl güvence altındadır. Kusur fark ettiğinizde portaldan garanti talebi açmanız yeterli.
+        </div>
+      </div>
+      <div class="gc-foot"><span>Ödemesi teslim öncesinde tamamlandı</span><a class="gc-link" href="portal-teslim-tutanagi-detay.html">Tutanağı görüntüle <i class="fa-solid fa-arrow-right"></i></a></div>
+    </div>
+  </div>
+
+  <div class="pf-section-lbl"><i class="fa-solid fa-comment-dots"></i> Talep geçmişi</div>
+  <div class="gv-card" style="margin-bottom:22px">
+    <div class="gc-body" style="padding-bottom:6px">
+      <div class="stat-grid">
+        <div class="sg-tile"><b>5</b><span>Toplam talep</span></div>
+        <div class="sg-tile"><b>2</b><span>Açık talep</span></div>
+        <div class="sg-tile"><b>3</b><span>Arşivdeki talep</span></div>
+        <div class="sg-tile"><b>1,2 gün</b><span>Ortalama ilk dönüş</span></div>
+      </div>
+    </div>
+    <div class="gc-body flush">
+      <table class="gtable">
+        <thead><tr><th>Talep</th><th>Tür</th><th>Birim</th><th>Açılış</th><th>Durum</th></tr></thead>
+        <tbody>
+          <tr><td><a class="rq-no" href="portal-talepler.html#sst-012">SST-2026-012</a><div class="rq-sub">Mutfak dolap kapağı hizası</div></td><td>Eksik iş</td><td>VK-C-18</td><td>20 Tem 2026</td><td><span class="gstat warn">İşlemde</span></td></tr>
+          <tr><td><a class="rq-no" href="portal-talepler.html#sst-010">SST-2026-010</a><div class="rq-sub">Taksit planı bilgi talebi</div></td><td>Bilgi</td><td>VK-C-18</td><td>2 Tem 2026</td><td><span class="gstat ok">Tamamlandı</span></td></tr>
+          <tr><td><a class="rq-no" href="portal-talepler.html#sst-007">SST-2026-007</a><div class="rq-sub">Klima drenaj sızıntısı</div></td><td>Garanti</td><td>KO-B-304</td><td>30 Haz 2026</td><td><span class="gstat warn">İşlemde</span></td></tr>
+          <tr><td><a class="rq-no" href="portal-talepler.html#sst-004">SST-2026-004</a><div class="rq-sub">Salon duvarında boya rötuşu</div></td><td>Eksik iş</td><td>KO-B-304</td><td>22 Mar 2026</td><td><span class="gstat ok">Tamamlandı</span></td></tr>
+          <tr><td><a class="rq-no" href="portal-talepler.html#sst-002">SST-2026-002</a><div class="rq-sub">Otopark kartı ve aidat bilgisi</div></td><td>Bilgi</td><td>KO-B-304</td><td>18 Mar 2026</td><td><span class="gstat ok">Tamamlandı</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="gc-foot"><span>Kapanan talepler Taleplerim sayfasındaki Arşiv sekmesinde saklanır</span><a class="gc-link" href="portal-talepler.html">Taleplerim <i class="fa-solid fa-arrow-right"></i></a></div>
+  </div>
+
+  <div class="pf-section-lbl"><i class="fa-solid fa-folder-open"></i> Belge durumu</div>
+  <div class="dash-cols">
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-folder-tree"></i> Portalda hazır belgeler</div>
+        <span class="gtag">18 belge</span>
+      </div>
+      <div class="gc-body">
+        <div class="dc-row">
+          <div class="dc-ico"><i class="fa-solid fa-file-signature"></i></div>
+          <div class="dc-info"><b>Satış sözleşmeleri</b><span>SSZ-2025-042 · SSZ-2026-003</span></div>
+          <span class="gtag">2</span>
+        </div>
+        <div class="dc-row">
+          <div class="dc-ico"><i class="fa-solid fa-clipboard-check"></i></div>
+          <div class="dc-info"><b>Teslim tutanağı</b><span>TSL-2026-001 · KO-B-304</span></div>
+          <span class="gtag">1</span>
+        </div>
+        <div class="dc-row">
+          <div class="dc-ico"><i class="fa-solid fa-file-invoice"></i></div>
+          <div class="dc-info"><b>Ödeme planı çıktısı</b><span>VK-C-18 · 36 taksit</span></div>
+          <span class="gtag">1</span>
+        </div>
+        <div class="dc-row">
+          <div class="dc-ico"><i class="fa-solid fa-receipt"></i></div>
+          <div class="dc-info"><b>Tahsilat makbuzları</b><span>MKB-2026-001 — MKB-2026-014</span></div>
+          <span class="gtag">14</span>
+        </div>
+      </div>
+      <div class="gc-foot"><span>Tümü indirilebilir</span><a class="gc-link" href="portal-belgeler.html">Belgelerim <i class="fa-solid fa-arrow-right"></i></a></div>
+    </div>
+
+    <div class="gv-card">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-hourglass-half"></i> Sırada bekleyen belgeler</div>
+        <span class="gtag">3 belge</span>
+      </div>
+      <div class="gc-body">
+        <div class="dc-row">
+          <div class="dc-ico"><i class="fa-solid fa-clipboard-list"></i></div>
+          <div class="dc-info"><b>Ön kabul kontrol listesi</b><span>VK-C-18 · ön kabul turunda oluşur</span></div>
+          <span class="gstat wait">Kasım 2026</span>
+        </div>
+        <div class="dc-row">
+          <div class="dc-ico"><i class="fa-solid fa-key"></i></div>
+          <div class="dc-info"><b>Teslim tutanağı</b><span>VK-C-18 · anahtar tesliminde imzalanır</span></div>
+          <span class="gstat wait">Aralık 2026</span>
+        </div>
+        <div class="dc-row">
+          <div class="dc-ico"><i class="fa-solid fa-stamp"></i></div>
+          <div class="dc-info"><b>İskân (yapı kullanma izni)</b><span>Vadi Konakları · idare onayı sonrası paylaşılır</span></div>
+          <span class="gstat wait">Aralık 2026</span>
+        </div>
+        <div class="rp-note" style="margin:18px 0 0">
+          <i class="fa-solid fa-circle-info"></i>Bu belgeler hazır olduğunda portalınıza yüklenir ve bildirim alırsınız; ayrıca talep açmanız gerekmez.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rp-note" style="margin-top:26px">
+    <i class="fa-solid fa-circle-info"></i><strong>Rapor 22 Temmuz 2026 tarihli kayıtlara göre hazırlandı.</strong> Tutarlar sözleşme ve tahsilat kayıtlarından, inşaat oranları onaylı hakedişlerden alınır. Bir kalemde uyuşmazlık görürseniz Taleplerim'den bilgi talebi açabilirsiniz.
+  </div>
+
+</main>
+
+<script src="assets/js/ui.js"></script>
+</body>
+</html>
