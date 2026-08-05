@@ -136,6 +136,50 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
 .hl-row.risk-warn i{color:var(--warn)}
 .rep-src{font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-wrap:wrap;align-items:flex-start;gap:7px}
 .rep-src i{margin-top:2px;flex:none}
+
+/* ============ [R-36 devamı] SİLİNEN crm-operasyon-demirbas-dashboard.html'in üç
+   paneli "Grafikler" sekmesine taşındı: değer (kategori bazında) · bakım maliyetleri ·
+   garanti-kalibrasyon takvimi. Aşağıdaki rank-row, tv-item ve tblDm tablo kuralları o
+   sayfanın sayfa-yerel dilinden BİREBİR devralındı; .gbar/.dash-cols/.gv-empty/
+   .rp-error/.gstat ui.css primitifleri olduğu gibi tüketiliyor — yeni bileşen dili
+   İCAT EDİLMEDİ.
+   NOT: yıldız-eğikçizgi ikilisi CSS yorumunu KAPATIR; bu blokta joker seçici
+   ("rank yıldız") yazımı bilerek kullanılmadı — ilk denemede o ikili yorumu erken
+   kapatıp .rank-row kuralını yutmuştu. ============ */
+.rank-row{display:flex;align-items:center;gap:12px;padding:10px 22px}
+.rank-row:first-child{padding-top:16px}
+.rank-row:last-child{padding-bottom:16px}
+.rank-rank{width:20px;flex:none;font-size:11px;font-weight:800;color:var(--muted);text-align:center}
+.rank-name{width:150px;flex:none;font-size:12.5px;font-weight:700;color:var(--ink)}
+.rank-name span{display:block;font-size:10.5px;font-weight:600;color:var(--muted)}
+.rank-row .gbar{flex:1;min-width:0}
+.rank-row .gbar-val{min-width:96px;text-align:right}
+@media(max-width:640px){
+  .rank-row{padding-left:16px;padding-right:16px}
+  .rank-name{width:104px}
+  .rank-row .gbar-val{min-width:76px;font-size:11.5px}
+}
+
+#tblDmDeger .num,#tblDmTakvim .num{text-align:right;white-space:nowrap}
+#tblDmDeger tr.dm-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--line-2)}
+.tv-item{display:flex;flex-direction:column;line-height:1.35}
+.tv-item b{font-size:13px;font-weight:700;color:var(--ink)}
+.tv-item span{font-size:11.5px;color:var(--muted)}
+/* ui.css'in .gtable primitifi 720px min-width taşır — 13 kolonlu envanter tablosu için
+   doğru, ama bu iki tablo için DEĞİL. Değer tablosu 2 kolonludur ve .dash-cols'un
+   ~510px'lik yarım sütununa SIĞAR: min-width sıfırlanır, yoksa tutar kolonu kartın
+   dışına kayıyor (ilk denemede öyle oldu). Takvim tablosu 4 kolonlu ve tam genişlikte:
+   620px tavan masaüstünde rahat okunur, ≤640px'te .gc-body.flush İÇİNDE yatay kayar
+   (doc-level taşma üretmez — #tblDemirbas'ta izlenen aynı yol, kararlar 189). */
+#tblDmDeger{min-width:0}
+#tblDmTakvim{min-width:620px}
+
+/* .gc-body.flush gövdesi padding taşımaz — bu üç kartın kaynak notu kendi yatay
+   boşluğunu taşımak zorunda (sayfanın diğer .rep-src'leri padding'li .gc-body içinde). */
+.rep-src.rs-pad{padding:0 22px 18px}
+@media(max-width:640px){ .rep-src.rs-pad{padding:0 16px 16px} }
+/* Kart başlığındaki hata-durumu demo butonu ≤640px'te tam satıra iner */
+@media(max-width:640px){ .rp-gc-head-wrap{flex-wrap:wrap} .rp-gc-head-wrap .btn{width:100%} }
 </style>
 </head>
 <body data-sec="varlik" data-screen="demirbas">
@@ -365,7 +409,7 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
           <div class="rp-chart-body" id="chartDmSantiye"></div>
         </div>
       </div>
-      <div class="rp-charts-2">
+      <div class="rp-charts-2" style="margin-bottom:20px">
         <div class="rp-chart" style="margin:0">
           <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Bakım / Arşiv Durumları</h3></div>
           <div class="rp-chart-body" id="chartDmDurum"></div>
@@ -374,6 +418,69 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
           <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Teslim/Kayıt Tarihine Göre Aylık Dağılım — 2026</h3></div>
           <div class="rp-chart-body" id="chartDmAylik"></div>
         </div>
+      </div>
+
+      <!-- ============ [R-36 devamı] SİLİNEN crm-operasyon-demirbas-dashboard.html'den
+           TAŞINAN ÜÇ PANEL. R-36 dashboard SAYFASINI kaldırdı ("dashboard dediğimiz yapı
+           zaten ana içerikte olması lazım"), içeriği değil — bu üç panelin bu sayfada
+           karşılığı yoktu, o yüzden geri getirildi.
+           Sekme içi sıralama gerekçesi: yukarıdaki dört grafik "kim/nerede/hangi durumda/
+           hangi ay" sorularını (adet ekseni) yanıtlıyor; buradan sonra eksen PARAYA
+           (değer + bakım masrafı), en sonda ZAMANA/RİSKE (garanti-kalibrasyon takvimi)
+           geçiyor. Takvim en altta ve tam genişlikte: 4 kolonlu, satır sayısı en yüksek
+           tablo ve 4-durumlu (yükleniyor/hata/boş/kayıt) hata-durumu demosunu taşıyor. ============ -->
+      <div class="dash-cols" style="margin-bottom:20px">
+        <div class="gv-card">
+          <div class="gc-head">
+            <div class="gc-title"><i class="fa-solid fa-sack-dollar"></i> Toplam Demirbaş Değeri — Kategori Bazında</div>
+            <span class="ph-sub" style="margin:0" id="dmDegerSub">—</span>
+          </div>
+          <div class="gc-body flush">
+            <table class="gtable" id="tblDmDeger">
+              <thead><tr><th>Ana kategori</th><th class="num">Tutar</th></tr></thead>
+              <tbody id="dmDegerBody"></tbody>
+            </table>
+          </div>
+          <div class="rep-src rs-pad"><i class="fa-solid fa-circle-info"></i> <span>Tutarlar <b>crm-operasyon-demirbas-detay.html</b> satın alma bedellerinden gelir. Araç kaydı (ZMT-2026-044) hariç — bedeli araç modülünde izlenir. <b>Tüm envanter üzerinden</b> hesaplanır; Liste sekmesindeki arama, kategori çipi, Gelişmiş Filtre ve arşiv seçimleri bu tabloya uygulanmaz.</span></div>
+        </div>
+        <div class="gv-card">
+          <div class="gc-head">
+            <div class="gc-title"><i class="fa-solid fa-screwdriver-wrench"></i> Demirbaş Bakım Maliyetleri</div>
+            <!-- Kardeş karttaki dmDegerSub ile SİMETRİK: başlık satırı kartın tek
+                 cümlelik özetini taşır (toplam masraf · kapsam), gövde kırılımı verir. -->
+            <span class="ph-sub" style="margin:0" id="dmBakimSub">—</span>
+          </div>
+          <div class="gc-body flush" id="dmBakimWrap"></div>
+          <div class="rep-src rs-pad"><i class="fa-solid fa-circle-info"></i> <span id="dmBakimNot">—</span></div>
+        </div>
+      </div>
+
+      <div class="gv-card">
+        <div class="gc-head rp-gc-head-wrap">
+          <div class="gc-title"><i class="fa-solid fa-calendar-days"></i> Garanti ve Kalibrasyon Takvimi</div>
+          <span class="ph-sub" style="margin:0">Yaklaşan tarihe göre sıralı</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnDmTakvimHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
+        </div>
+        <!-- 4 durum (gvEmpty.durum sözleşmesi): yükleniyor → hata → boş → kayıt.
+             İkisi ASLA aynı anda görünmez; geçiş `hidden` özniteliğiyle yapılır. -->
+        <div class="gc-body flush" id="dmTakvimStateWrap">
+          <div data-gv-state="loading" class="gv-empty" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <h4>Yükleniyor…</h4>
+          </div>
+          <div data-gv-state="error" class="gv-empty rp-error" hidden>
+            <div class="ge-ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h4>Takvim verisi yüklenemedi</h4>
+            <p>Garanti ve kalibrasyon tarihleri şu an alınamadı. Bağlantınızı kontrol edip tekrar deneyin.</p>
+            <button type="button" class="btn btn-acc btn-sm" id="btnDmTakvimRetry" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Tekrar Dene</button>
+          </div>
+          <div data-gv-state="empty" class="gv-empty" hidden></div>
+          <table class="gtable" id="tblDmTakvim" data-gv-state="content" hidden>
+            <thead><tr><th>Kalem</th><th>Tür</th><th>Tarih</th><th class="num">Durum</th></tr></thead>
+            <tbody id="dmTakvimBody"></tbody>
+          </table>
+        </div>
+        <div class="rep-src rs-pad"><i class="fa-solid fa-circle-info"></i> <span>Tarihler demirbaş kayıtlarının kendi garanti bitiş ve kalibrasyon alanlarından okunur; ikinci bir "doğru tarih" kaynağı yoktur. Rozet eşikleri: ≤15 gün kırmızı, ≤30 gün turuncu, daha uzağı nötr. ZMT-2026-046'nın garanti bitişi 20.01.2027 olduğu için yaklaşan aralıkta görünmez — o kalemde yalnız kalibrasyon kontrolü (20.07.2026) eşik içindedir. <b>Tüm envanter üzerinden</b>; Liste sekmesi filtreleri bu takvime uygulanmaz.</span></div>
       </div>
     </div>
 
@@ -410,7 +517,7 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-triangle-exclamation"></i> Kritik Uyarılar</div></div>
         <div class="gc-body">
           <div class="hl-list">
-            <div class="hl-row risk-warn"><i class="fa-solid fa-screwdriver-wrench"></i><span><b>ZMT-2026-047</b> 7 gündür serviste — bakım süresi uzarsa Bildirim Merkezi'nden takip edilmeli.</span></div>
+            <div class="hl-row risk-warn"><i class="fa-solid fa-screwdriver-wrench"></i><span><b>ZMT-2026-047</b> 7 gündür serviste — bakım süresi uzarsa uyarı eşiği <a href="crm-ayarlar-bildirim-tercih.html" style="color:var(--acc-ink);font-weight:700;text-decoration:none">Ayarlar &gt; Bildirim Tercihleri</a>'nden ayarlanır.</span></div>
             <div class="hl-row risk-warn"><i class="fa-solid fa-qrcode"></i><span><b>ZMT-2026-043</b> (Güvenlik Ekipmanı, Hasan Demirci) için etiket henüz oluşturulmadı — barkod/QR okutması yapılamıyor.</span></div>
             <div class="hl-row"><i class="fa-solid fa-check"></i><span>Diğer göstergeler sakin — hurda/kayıp artışı yok, garanti süresi dolan kalem yok.</span></div>
           </div>
@@ -583,47 +690,57 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
   /* Alt kategori/DMR kod türetme kararlar.md madde 108/110 — DMR-{KAT-KISALTMA}-{MARKA-
      KISALTMA}-{ZMT son 3 hane}, ZMT numarasından deterministik türetilir, yeni sayaç YOK.
      "Araç" (044) geçiş-kategorisi kendi DMR/seri kodunu TAŞIMAZ — araç modülüne (ARC-01,
-     plaka 34 ABC 123) yönlenir, kopya kayıt açılmaz. */
+     plaka 34 ABC 123) yönlenir, kopya kayıt açılmaz.
+     [R-36 devamı] `bedel` / `kalibrasyon` / `bakim` alanları SİLİNEN
+     crm-operasyon-demirbas-dashboard.html'in DEMIRBAS dizisinden BİREBİR taşındı (ZMT
+     kodu üzerinden eşleştirildi); kaynakları crm-operasyon-demirbas-detay.html'in
+     satınAlma.bedel ve Bakım Geçmişi alanlarıydı — tek kuruş/tek tarih uydurulmadı.
+     `garanti` alanı iki dizide ZATEN aynıydı (10/10 kayıt birebir), dokunulmadı.
+       · bedel: satın alma bedeli. ZMT-2026-044 (Araç) bedel:null — bedeli araç
+         modülünde izlenir, değer tablosuna DAHİL EDİLMEZ (kararlar madde 110).
+       · kalibrasyon: yalnız ZMT-2026-046 (Lazer Metre) periyodik kalibrasyon taşır.
+       · bakim: yalnız ZMT-2026-047 ve ZMT-2025-009'da ücretli bakım/onarım masrafı
+         var; kalan 8 kalemde masraf kaydı YOK (dürüst empty-state, sayı şişirilmedi). */
   var DEMIRBAS_ALL = [
     {no:'ZMT-2026-041', ad:'İş Telefonu', alt:'Samsung Galaxy A54, 64GB', kat:'telefon', altKat:'Cep Telefonu',
      marka:'Samsung', model:'Galaxy A54, 64GB', seriNo:'SN-A54-2K7719X', dmrKod:'DMR-TEL-SAMSU-000041',
-     garanti:'2028-01-03', bakimGerekli:false,
+     garanti:'2028-01-03', bakimGerekli:false, bedel:24500,
      kisi:'Hasan Demirci', santiye:'vadi', tarih:'3 Oca 2026', durum:'zimmetli'},
     {no:'ZMT-2026-042', ad:'El Aleti Seti', alt:'Bosch GSB 18V-55, 18 parça', kat:'elaleti', altKat:'Şarjlı Matkap',
      marka:'Bosch', model:'GSB 18V-55, 18 parça', seriNo:'SN-GSB18-4471X', dmrKod:'DMR-SARJ-BOSCH-000042',
-     garanti:'2027-01-03', bakimGerekli:true,
+     garanti:'2027-01-03', bakimGerekli:true, bedel:8750,
      kisi:'Hasan Demirci', santiye:'vadi', tarih:'3 Oca 2026', durum:'zimmetli', zmt:'042'},
     {no:'ZMT-2026-043', ad:'Güvenlik Ekipmanı', alt:'baret + yelek + bot seti', kat:'guvenlik', altKat:'Kişisel Koruyucu Donanım Seti',
      marka:'3M', model:'Baret + Yelek + Bot Seti', seriNo:null, dmrKod:'DMR-ISG-3M-000043',
-     garanti:null, bakimGerekli:false,
+     garanti:null, bakimGerekli:false, bedel:3200,
      kisi:'Hasan Demirci', santiye:'vadi', tarih:'3 Oca 2026', durum:'zimmetli', zmt:'043'},
     {no:'ZMT-2026-044', ad:'Araç', alt:'Ford Ranger pikap, 34 ABC 123', kat:'arac', altKat:null,
      marka:'Ford', model:'Ranger 4x4 Pikap (2023)', seriNo:null, seriNot:'Araç modülünde (Şasi No)', dmrKod:null, dmrNot:'Araç modülünde (plaka 34 ABC 123)',
-     garanti:null, garantiNot:'Araç modülünde izlenir', bakimGerekli:false,
+     garanti:null, garantiNot:'Araç modülünde izlenir', bakimGerekli:false, bedel:null, bedelNot:'Araç modülünde izlenir',
      kisi:'Hasan Demirci', santiye:'vadi', tarih:'3 Oca 2026', durum:'zimmetli', arac:'ARC-01', zmt:'044'},
     {no:'ZMT-2026-045', ad:'Tablet', alt:'Samsung Galaxy Tab A9, 64GB', kat:'tablet', altKat:'Tablet',
      marka:'Samsung', model:'Galaxy Tab A9, 64GB', seriNo:'SN-TABA9-7K3841L', dmrKod:'DMR-TAB-SAMSU-000045',
-     garanti:'2028-02-15', bakimGerekli:false,
+     garanti:'2028-02-15', bakimGerekli:false, bedel:9800,
      kisi:'Aylin Koç', santiye:'liman', tarih:'15 Şub 2026', durum:'zimmetli', zmt:'045'},
     {no:'ZMT-2026-046', ad:'Lazer Metre', alt:'Bosch GLM 50 C', kat:'elaleti', altKat:'Lazer Metre',
      marka:'Bosch', model:'GLM 50 C', seriNo:'SN-GLM50C-9910M', dmrKod:'DMR-OLCU-BOSCH-000046',
-     garanti:'2027-01-20', bakimGerekli:true,
+     garanti:'2027-01-20', bakimGerekli:true, bedel:6400, kalibrasyon:'2026-07-20',
      kisi:'Ömer Taşkın', santiye:'merkez', tarih:'20 Oca 2026', durum:'zimmetli', zmt:'046'},
     {no:'ZMT-2026-047', ad:'Kırıcı-Delici', alt:'Hilti TE 60-A36', kat:'makine', altKat:'Kırıcı ve Deliciler',
      marka:'Hilti', model:'TE 60-A36', seriNo:'SN-TE60-8842X', dmrKod:'DMR-ELALT-HILTI-000047',
-     garanti:'2027-11-10', bakimGerekli:true,
+     garanti:'2027-11-10', bakimGerekli:true, bedel:42500, bakim:650,
      kisi:null, santiye:'depo', tarih:'25 Haz 2026', tarihNot:'gönderim', durum:'serviste', zmt:'047'},
     {no:'ZMT-2026-048', ad:'El Telsizi Seti', alt:'Motorola CP040, 4 adet', kat:'telefon', altKat:'Telsiz/İletişim',
      marka:'Motorola', model:'CP040 (4 adet)', seriNo:null, seriNot:'Set — ortak seri no yok (bkz. etiket no)', dmrKod:'DMR-BT-MOTOR-000048',
-     garanti:'2028-03-01', bakimGerekli:false,
+     garanti:'2028-03-01', bakimGerekli:false, bedel:14000,
      kisi:null, santiye:'depo', tarih:'—', durum:'depoda', zmt:'048'},
     {no:'ZMT-2025-017', ad:'El Telsizi', alt:'Motorola CP040 — iade: 3 Oca 2026', kat:'telefon', altKat:'Telsiz/İletişim',
      marka:'Motorola', model:'CP040', seriNo:'SN-CP040-2231H', dmrKod:'DMR-BT-MOTOR-000017',
-     garanti:null, garantiNot:'İade edilmiş kayıt — garanti takibi tutulmuyor', bakimGerekli:false,
+     garanti:null, garantiNot:'İade edilmiş kayıt — garanti takibi tutulmuyor', bakimGerekli:false, bedel:3600,
      kisi:'Hasan Demirci', santiye:null, tarih:'10 Mar 2025', durum:'iade', zmt:'2025-017'},
     {no:'ZMT-2025-009', ad:'Jeneratör', alt:'Honda EU22i — hurda kararı: 12 May 2026', kat:'makine', altKat:'Jeneratör',
      marka:'Honda', model:'EU22i', seriNo:'SN-EU22I-5510H', dmrKod:'DMR-MKN-HONDA-000009',
-     garanti:null, garantiNot:'Hurdaya ayrıldı', bakimGerekli:true,
+     garanti:null, garantiNot:'Hurdaya ayrıldı', bakimGerekli:true, bedel:38500, bakim:1200,
      kisi:null, santiye:null, tarih:'8 Nis 2025', durum:'hurda', zmt:'2025-009'}
   ];
   window.__GV_DEMIRBAS__ = DEMIRBAS_ALL; /* diğer ekranlar (kategori/marka yönetimi, raporlar) TAM envanteri okur — rol budamasından bağımsız */
@@ -716,6 +833,125 @@ tr.is-checked{background:rgba(var(--acc-rgb),.05)}
     }
   }
   redrawDmCharts();
+
+  /* ============ [R-36 devamı] SİLİNEN dashboard'ın üç paneli — Grafikler sekmesi
+     ============================================================================
+     Sayılar DEMIRBAS'ın kendi `bedel`/`garanti`/`kalibrasyon`/`bakim` alanlarından
+     okunur (o alanlar dashboard'dan birebir transfer edildi, bkz. DEMIRBAS_ALL
+     üstündeki not) — bu blokta sabit tutar/tarih YAZILMADI.
+
+     FİLTRE BAĞLAMA KARARI (bilinçli): bu üç panel Liste sekmesinin filtrelerine
+     (arama · kategori çipi · Gelişmiş Filtre · "Arşivlenenleri Göster") BAĞLANMADI.
+     Gerekçe: sayfanın filtre motoru DOM satırı gizleyerek çalışıyor (applyFilter →
+     tr.hidden), veri kümesi üzerinden değil; panelleri ona bağlamak motoru yeniden
+     yazmayı gerektirirdi ve mevcut liste/sayfalama/toplu-seçim davranışını riske
+     atardı. Paneller rol-budanmış TAM envanteri (DEMIRBAS) okur — `sef` rolü yine
+     yalnız kendi şantiyesini görür, çünkü budama DEMIRBAS_ALL → DEMIRBAS aşamasında
+     yapılıyor. Her kartın altındaki kaynak notu "Tüm envanter üzerinden" diyerek
+     bunu açıkça yazar; sayı içeren notlar (bakım) JS'ten üretilir ki rol budaması
+     halinde metin yalan söylemesin.
+
+     YARDIMCILAR: BUGUN · gunFarki() · ddmmyyyy() sayfada ZATEN vardı (aynı kanonik
+     bugün: 2 Temmuz 2026) — yeniden tanımlanmadı. tl() · durumMetni() · rozetCls() ·
+     renderRankList() sayfada YOKTU, dashboard'dan taşındı. ============ */
+  function tl(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
+  function durumMetni(g){ return g < 0 ? (-g) + ' gün geçti' : (g === 0 ? 'Bugün' : g + ' gün kaldı'); }
+  /* Dashboard'daki `if(g<0) 'danger'; if(g<=15) 'danger'` iki dalı tek koşulda
+     birleştirildi — davranış BİREBİR aynı (g<0 zaten g<=15'i sağlar). */
+  function rozetCls(g){ if(g <= 15) return 'danger'; if(g <= 30) return 'warn'; return 'off'; }
+  function renderRankList(id, rows, max, suffix){
+    var el = document.getElementById(id); if(!el) return;
+    var mx = Math.max.apply(null, rows.map(function(r){ return r.val; }).concat([max || 1]));
+    el.innerHTML = rows.map(function(r, i){
+      var pct = mx ? Math.round(r.val / mx * 100) : 0;
+      return '<div class="rank-row"><span class="rank-rank">#' + (i + 1) + '</span>'
+        + '<span class="rank-name">' + r.name + (r.sub ? '<span>' + r.sub + '</span>' : '') + '</span>'
+        + '<div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:' + pct + '%"></div></div></div>'
+        + '<span class="gbar-val">' + (suffix ? r.val + suffix : (r.val ? tl(r.val) : '—')) + '</span></div>';
+    }).join('');
+  }
+
+  /* ---- Panel 1: Toplam Demirbaş Değeri — Kategori Bazında ----
+     Gruplama sayfanın KENDİ kategori ekseninde (KATEGORI[].lbl) yapılır; ikinci bir
+     kategori taksonomisi getirilmedi, böylece tablo satırları kategori çip şeridiyle
+     ve Gelişmiş Filtre'nin "Demirbaş Türü" alanıyla aynı adları kullanır.
+     Toplam satırı, satır tutarlarının aritmetik toplamıdır (aynı `degerli` kümesi). */
+  function renderDmDeger(){
+    var degerli = DEMIRBAS.filter(function(d){ return d.bedel; });
+    var byKat = {};
+    degerli.forEach(function(d){ byKat[d.kat] = (byKat[d.kat] || 0) + d.bedel; });
+    var rows = Object.keys(byKat).map(function(k){ return {ad:KATEGORI[k].lbl, val:byKat[k]}; })
+      .sort(function(a, b){ return b.val - a.val; });
+    var toplam = rows.reduce(function(s, r){ return s + r.val; }, 0);
+    document.getElementById('dmDegerSub').textContent = tl(toplam) + ' · ' + degerli.length + ' kayıt';
+    document.getElementById('dmDegerBody').innerHTML = rows.length
+      ? rows.map(function(r){ return '<tr><td>' + r.ad + '</td><td class="num">' + tl(r.val) + '</td></tr>'; }).join('')
+        + '<tr class="dm-total"><td>Toplam</td><td class="num">' + tl(toplam) + '</td></tr>'
+      : '<tr><td colspan="2" style="text-align:center;color:var(--muted);padding:18px">Bu envanterde satın alma bedeli işlenmiş kalem yok.</td></tr>';
+  }
+
+  /* ---- Panel 2: Demirbaş Bakım Maliyetleri ---- */
+  function renderDmBakim(){
+    var bakimli = DEMIRBAS.filter(function(d){ return d.bakim; });
+    var rows = bakimli.map(function(d){ return {name:d.no, sub:d.ad, val:d.bakim}; })
+      .sort(function(a, b){ return b.val - a.val; });
+    var notEl = document.getElementById('dmBakimNot');
+    var subEl = document.getElementById('dmBakimSub');
+    var toplam = rows.reduce(function(s, r){ return s + r.val; }, 0);
+    subEl.textContent = rows.length ? tl(toplam) + ' · tüm zamanlar' : 'Tüm zamanlar';
+    if(rows.length){
+      renderRankList('dmBakimWrap', rows, Math.max.apply(null, rows.map(function(r){ return r.val; })), null);
+      notEl.innerHTML = 'Envanterdeki ' + DEMIRBAS.length + ' kalemden ' + rows.length + ' tanesinde ('
+        + rows.map(function(r){ return r.name; }).join(', ') + ') ücretli bakım/onarım masrafı işlenmiş; kalan '
+        + (DEMIRBAS.length - rows.length) + ' kalemde masraf kaydı yok — bkz. <b>crm-operasyon-demirbas-detay.html</b> Bakım Geçmişi sekmesi. Tüm envanter üzerinden; Liste sekmesi filtreleri uygulanmaz.';
+    } else if(window.gvEmpty){
+      gvEmpty.render('#dmBakimWrap', {
+        ikon:'fa-screwdriver-wrench', baslik:'Ücretli bakım kaydı yok',
+        aciklama:'Bu envanterde bakım veya onarım masrafı işlenmiş bir demirbaş kalemi bulunmuyor.'
+      });
+      notEl.textContent = 'Masraf kaydı, kalemin detay sayfasındaki Bakım Geçmişi sekmesinden işlenir.';
+    }
+  }
+
+  /* ---- Panel 3: Garanti ve Kalibrasyon Takvimi (4 durumlu) ---- */
+  var dmTakvimHata = false;
+  function renderDmTakvim(){
+    var takvim = [];
+    DEMIRBAS.forEach(function(d){
+      if(d.garanti) takvim.push({no:d.no, ad:d.ad, tur:'Garanti Bitiş', tarih:d.garanti});
+      if(d.kalibrasyon) takvim.push({no:d.no, ad:d.ad, tur:'Kalibrasyon Kontrolü', tarih:d.kalibrasyon});
+    });
+    takvim.sort(function(x, y){ return gunFarki(x.tarih) - gunFarki(y.tarih); });
+    if(takvim.length){
+      document.getElementById('dmTakvimBody').innerHTML = takvim.map(function(t){
+        var g = gunFarki(t.tarih);
+        return '<tr><td><div class="tv-item"><b>' + t.no + '</b><span>' + t.ad + '</span></div></td>'
+          + '<td>' + t.tur + '</td><td>' + ddmmyyyy(t.tarih) + '</td>'
+          + '<td class="num"><span class="gstat ' + rozetCls(g) + '">' + durumMetni(g) + '</span></td></tr>';
+      }).join('');
+    } else if(window.gvEmpty){
+      /* Aksiyonsuz: bu panel filtreye bağlı DEĞİL, dolayısıyla "Filtreleri Temizle"
+         gibi bir çıkış yolu yanlış olurdu (silinen dashboard'daki aksiyon o sayfaya
+         link veriyordu — o href artık yok, taşınmadı). */
+      gvEmpty.render('#dmTakvimStateWrap [data-gv-state="empty"]', {
+        ikon:'fa-calendar-check', baslik:'Takip edilen tarih yok',
+        aciklama:'Bu envanterde garanti bitişi veya kalibrasyon kontrolü tarihi girilmiş bir demirbaş kalemi bulunmuyor.'
+      });
+    }
+    if(window.gvEmpty) gvEmpty.durum('#dmTakvimStateWrap', {yukleniyor:false, hata:dmTakvimHata, sonucSayisi:takvim.length});
+  }
+
+  /* Hata durumu demo önizlemesi — diğer rapor ekranlarındaki "Hata Durumunu Gör" /
+     "Tekrar Dene" ikilisiyle AYNI desen (crm-finans-maliyet.html emsali). */
+  var btnDmTakvimHataDemo = document.getElementById('btnDmTakvimHataDemo');
+  var btnDmTakvimRetry = document.getElementById('btnDmTakvimRetry');
+  if(btnDmTakvimHataDemo) btnDmTakvimHataDemo.addEventListener('click', function(){ dmTakvimHata = true; renderDmTakvim(); });
+  if(btnDmTakvimRetry) btnDmTakvimRetry.addEventListener('click', function(){ dmTakvimHata = false; renderDmTakvim(); });
+
+  renderDmDeger();
+  renderDmBakim();
+  renderDmTakvim();
+
   if(window.gvTabs){
     gvTabs.init({
       mount: '#dmTabs', screen: 'demirbas', varsayilan: 'liste',

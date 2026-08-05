@@ -17,7 +17,63 @@
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
 /* ============ SAYFAYA ÖZEL — Bildirim Merkezi (zaman gruplu akış) ============ */
-.notif-shell{max-width:660px}
+
+/* ============ [R-01] MASAÜSTÜ DÜZENİ — Yasin Bey, video [00:19] ============
+   *"Bildirimler kısmı mobil sayfa şeklinde gözüküyor. Bunu masaüstünde komple
+   yayarak gösterelim."*
+
+   Sebep tek satırdı: `.notif-shell{max-width:660px}`. `.notif-shell` sınıfı
+   `<main class="gv-main notif-shell">` üzerinde, yani yalnız listeyi değil sayfa
+   başlığını ve filtre şeridini de 660px'e sıkıştırıyordu — 1440px ekranda sağda
+   ~700px boş alan kalıyordu. Kapak KALDIRILDI.
+
+   Ama kapağı kaldırmak tek başına yetmez: 660px'lik dikey akış 1440px'e
+   gerildiğinde başlık ile saatin arası uçsuz bir boşluğa dönüşür, satırlar
+   ince-uzun olur — "yayılmış" değil "gerilmiş" görünür. Bu yüzden ≥981px'te satır
+   düzeni de değişiyor: başlık · açıklama · saat AYNI satırda üç kolona oturuyor,
+   böylece her bildirim tek satıra iner ve liste taranabilir hâle gelir (masaüstü
+   davranışı). ≤980px'te mevcut yığılmış mobil düzen AYNEN kalır.
+
+   HTML'e dokunulmadı — `.notif-top` `display:contents` ile şeffaflaşıyor, içindeki
+   `.notif-title` ve `.notif-time` bir üstteki `.notif-body` ızgarasına çıkıyor;
+   `grid-column` ile başlık(1) · açıklama(2) · saat(3) sırasına diziliyor
+   (DOM sırası başlık, saat, açıklama olduğu için açık atama şart).
+   Okunmamış şeridi (`::before`) ve nokta yerinde kalıyor. */
+.notif-shell{max-width:none}
+
+/* ≥981px — geniş düzen. Satır iç yapısı DEĞİŞMİYOR: başlık kendi satırında tam
+   genişliğe yayılıyor, saat sağ uca sabit, açıklama altta. Kapak kalktığı için bu
+   zaten "masaüstünde yayılmış" hâl; ek olarak yalnız yoğunluk artırılıyor ve zaman
+   grubu etiketi tam genişlikte bir ayırıcıya dönüyor. */
+@media(min-width:981px){
+  .notif-row{padding:13px 22px}
+  .notif-glabel{display:flex;align-items:center;gap:12px}
+  .notif-glabel::after{content:"";flex:1;height:1px;background:var(--line)}
+}
+
+/* ≥1440px — başlık · açıklama · saat AYNI satırda üç kolon.
+   Kırılım neden 1440 ve 981 değil: iki yan panel ~340px yediği için içerik alanı
+   981px'te 641px, 1280px'te 940px kalıyor ve bu genişliklerde başlık 2–3 satıra
+   sarıyordu (ölçüldü: 63px / 42px yükseklik). Üç kolonu oraya zorlamak "yaymak"
+   değil sıkıştırmak olurdu. 1440px'te içerik 1100px ve başlık TEK satıra sığıyor
+   (21px) — üç kolon ancak burada kazanç sağlıyor, satır 73px'ten 67px'e iniyor.
+   Aşağısında yukarıdaki geniş tek-kolon düzeni geçerli; ikisi de mobil kolon
+   DEĞİL, R-01 her iki bantta da karşılanıyor. */
+@media(min-width:1440px){
+  .notif-row{align-items:center;gap:14px}
+  .notif-body{
+    display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) auto;
+    align-items:center;gap:20px;
+  }
+  .notif-top{display:contents}
+  .notif-title{grid-column:1;flex:none}
+  .notif-meta{grid-column:2;margin-top:0}
+  .notif-time{grid-column:3;text-align:right;min-width:52px}
+}
+/* çok geniş ekranda satırlar okunamayacak kadar uzamasın — ferah ama sınırlı */
+@media(min-width:1601px){
+  .notif-shell{max-width:1560px}
+}
 
 .notif-group+.notif-group{margin-top:26px}
 .notif-glabel{font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--muted);margin-bottom:10px;padding-left:2px}
