@@ -1027,3 +1027,46 @@ tr.is-checked td{background:rgba(var(--acc-rgb),.05)}
 }
 .gcol-save-go:hover{background:var(--acc-deep)}
 .gcol-save-go:disabled{opacity:.4;cursor:default;background:var(--muted);border-color:var(--muted)}
+
+/* ============================================================================
+   [G-6] YAN YANA KUTU HİZASI · İÇ KAYDIRMA · GRAFİK ÖLÇÜSÜ
+   Patron [03:52]: "Bazı liste sayfalarında bulunan grafikler ya da uyarılar gibi
+   alanlarda çift satır olan yerlerde hizalama oluşturacağız. Gerekiyorsa
+   kutuların kendi içerisine scrollbar ekleyeceğiz."
+   [06:09]: "kredi kartlarındaki grafikler bölümünde olduğu gibi bu alan biraz
+   büyük gözüküyor."
+
+   `.dash-cols` ve `.stat-grid` ~20'şer sayfada AYRI AYRI tanımlıydı; davranış
+   sayfadan sayfaya kayıyordu. Tanım buraya alındı — sayfalar yalnız gerekiyorsa
+   sütun ORANINI override eder (tek satır). `.kpi-rail`de izlenen yolun aynısı:
+   sayfa başına çözüm icat edilmez, tek sınıf ailesi tüketilir.
+   ========================================================================== */
+
+/* Yan yana kutu satırı. Eski sayfa-yerel tanımlardaki `align-items:start`
+   yüzünden kısa kutu yukarıda asılı kalıyor, satır hizasız görünüyordu. */
+.dash-cols{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px;
+  align-items:stretch;
+}
+/* Kart bir flex kolona dönüşür ki gövde kalan yüksekliği alsın ve İÇİNDE kaysın.
+   `min-height:0` olmadan flex çocuk kendi içeriğinden küçülemez — scroll çalışmaz. */
+.dash-cols>.gv-card{display:flex;flex-direction:column;min-height:0}
+.dash-cols>.gv-card>.gc-body{flex:1 1 auto;min-height:0}
+@media(max-width:1100px){ .dash-cols{grid-template-columns:minmax(0,1fr)} }
+
+/* Kutu gövdesini sınırla + kendi içinde dikey kaydırma. Yükseklik `--gv-cap` ile
+   kutu başına ayarlanabilir; varsayılan iki ekran kutusunun rahat okunduğu değer. */
+.gv-cap{max-height:var(--gv-cap,340px);overflow-y:auto;overscroll-behavior:contain}
+.gv-cap-sm{--gv-cap:240px}
+.gv-cap-lg{--gv-cap:460px}
+
+/* Kutu içi döşeme ızgarası — öksüz kart bırakmaz. Eski sabit `repeat(3,…)`
+   4 döşemede 3+1 kırılması üretiyordu (sağlık raporları uyarı kutusu). */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+@media(max-width:640px){ .stat-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))} }
+
+/* SVG grafik ölçüsü. viewBox'lı SVG kapsayıcı genişliğine ölçekleniyor; 4 çubuklu
+   bir grafik bile geniş ekranda kartı kaplıyordu. Genişlik tavanı oranı bozmadan
+   grafiği makul boya çeker (preserveAspectRatio="xMidYMid meet" korunur). */
+.rp-chart-body{width:100%;max-width:var(--gv-chart-w,720px)}
+.rp-chart-body svg{display:block;width:100%;height:auto;max-height:var(--gv-chart-h,300px)}
