@@ -111,9 +111,11 @@
              başlığı aksiyon grubuna taşındı. Ev stili: ghost aksiyonlar önce, accent
              birincil en sağda. Rapor sayfalarında birincil aksiyon raporu okumaktır;
              dışa aktarma ikincildir — bu yüzden ghost kalır (G-8 tek tip rapor kuralı).
-             data-view="yonetim": buton daha önce yalnız yönetim bölümünün içindeydi,
-             şef görünümünde görünmüyordu — kapsam aynen korundu. -->
-        <button class="btn btn-ghost btn-sm" type="button" id="btnCiktiSantiye" data-view="yonetim" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+             [ŞEF DIŞA AKTARMA — Yasin Bey kararı, 5 Ağustos 2026] Butondaki
+             data-view="yonetim" kapısı KALDIRILDI: şef de raporunu dışa aktarabilir.
+             Yetki açıldı, KAPSAM açılmadı — aşağıdaki gvExport.init'te şef rolünde
+             kapsam ekseni kendi şantiyesine kilitlenir. -->
+        <button class="btn btn-ghost btn-sm" type="button" id="btnCiktiSantiye" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
@@ -748,12 +750,22 @@
     applySrTblFilter();
   }
 
-  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============ */
+  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============
+     [ŞEF DIŞA AKTARMA — Yasin Bey kararı, 5 Ağustos 2026] Şef artık butonu görüyor,
+     kapsamı ise kendi şantiyesine KİLİTLİ. Bu sayfada kapsam sızıntısı riski en yüksekti:
+     yönetim görünümünün Gelişmiş Filtre panelinde bir `santiye` alanı VAR ve şefte de
+     kurulur (panel yönetim bölümünde, `hidden`). Eski filtreOzeti o panelden okuyordu;
+     şef dalı artık paneli HİÇ OKUMAZ, sabit şantiye metnini döner. Ayrıca kapsam ekseni
+     'tumu' sunmaz (tek çip 'santiyem'), 'filtreli' de sunmaz — böylece şefin ulaşabildiği
+     tek kapsam kendi şantiyesi olur. Yeni yetki mekanizması yazılmadı. */
   if(window.gvExport){
+    var srSef = GV.role === 'sef';
     gvExport.init('#btnCiktiSantiye', {
       baslik: 'Şantiye Raporu',
-      kapsam: ['tumu', 'filtreli'],
-      filtreOzeti: function(){
+      kapsam: srSef ? ['santiyem'] : ['tumu', 'filtreli'],
+      filtreOzeti: srSef ? function(){
+        return 'Şantiye: Vadi Konakları — yetki kapsamınız bununla sınırlı.';
+      } : function(){
         var dOn = document.querySelector('.chips[data-target="#tblSrDurum"] .chip.is-on');
         var parts = [];
         if(dOn && dOn.getAttribute('data-filter') !== 'hepsi') parts.push('Durum: ' + dOn.textContent.replace(/\s+/g,' ').trim());

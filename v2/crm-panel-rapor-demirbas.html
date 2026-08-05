@@ -93,9 +93,12 @@
              başlığı aksiyon grubuna taşındı. Ev stili: ghost aksiyonlar önce, accent
              birincil en sağda. Rapor sayfalarında birincil aksiyon raporu okumaktır;
              dışa aktarma ikincildir — bu yüzden ghost kalır (G-8 tek tip rapor kuralı).
-             data-view="yonetim": buton daha önce yalnız yönetim bölümünün içindeydi,
-             şef görünümünde görünmüyordu — kapsam aynen korundu. -->
-        <button type="button" class="btn btn-ghost btn-sm" id="btnDmExport" data-view="yonetim" data-gv-export='{"baslik":"Demirbaş Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+             [ŞEF DIŞA AKTARMA — Yasin Bey kararı, 5 Ağustos 2026] Butondaki
+             data-view="yonetim" kapısı KALDIRILDI: şef de raporunu dışa aktarabilir.
+             Öznitelikteki kapsam ("tumu","filtreli") YÖNETİM kapsamıdır; şef rolünde
+             buton aşağıdaki scriptte kendi şantiyesine kilitli kapsamla BAĞLANIR ve
+             ui.js'in oto-bağlaması bu ham kapsamı okumaya HİÇ SIRA BULMAZ. -->
+        <button type="button" class="btn btn-ghost btn-sm" id="btnDmExport" data-gv-export='{"baslik":"Demirbaş Raporu","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
@@ -354,6 +357,29 @@
   document.querySelectorAll('[data-view]').forEach(function(el){
     el.hidden = el.getAttribute('data-view') !== view;
   });
+  /* ============ [ŞEF DIŞA AKTARMA — Yasin Bey kararı, 5 Ağustos 2026] ============
+     KRİTİK SIRA: bu blok AŞAĞIDAKİ erken return'ün ÖNÜNDE durmak zorunda. Şef
+     görünümünde sayfanın yönetim kablolaması hiç kurulmaz (return), dolayısıyla
+     sayfanın kendi `gvExport.bind()` çağrısına da varılmaz — buton yalnız ui.js'in
+     DOMContentLoaded oto-bağlamasına kalırdı ve o, öznitelikteki HAM kapsamı
+     ("tumu" + "filtreli") bağlardı. Yani kapı kaldırıldığı an şef "Tümü" kapsamıyla
+     10 kalemlik tüm envanteri (Liman/Merkez/depo dahil) dışa aktarabilirdi.
+     Butonu burada, return'den ÖNCE, kapsamı kilitleyerek bağlıyoruz; `_gvExport`
+     nöbetçisi sayesinde oto-bağlama sonradan üstüne yazamaz.
+     Kapsam neden tek çip: şef görünümünde veri zaten yalnız Vadi Konakları (yönetim
+     bölümü `hidden`) ve filtre arayüzü YOK — 'tumu' genişletme kapısı, 'filtreli' ise
+     temizlenince tüm listeyi ima eden bir kapsam olurdu. Yeni yetki mekanizması
+     yazılmadı; kısıt mevcut kapsam listesiyle uygulandı. */
+  if(view === 'sef' && window.gvExport){
+    gvExport.init('#btnDmExport', {
+      baslik: 'Demirbaş Raporu',
+      formatlar: ['pdf', 'excel', 'yazdir'],
+      kapsam: ['santiyem'],
+      filtreOzeti: function(){
+        return 'Şantiye: Vadi Konakları — yetki kapsamınız bununla sınırlı.';
+      }
+    });
+  }
   if(view !== 'yonetim') return;
 
   var KATEGORI = {

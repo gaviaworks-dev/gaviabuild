@@ -79,9 +79,11 @@
              başlığı aksiyon grubuna taşındı. Ev stili: ghost aksiyonlar önce, accent
              birincil en sağda. Rapor sayfalarında birincil aksiyon raporu okumaktır;
              dışa aktarma ikincildir — bu yüzden ghost kalır (G-8 tek tip rapor kuralı).
-             data-view="yonetim": buton daha önce yalnız yönetim bölümünün içindeydi,
-             şef görünümünde görünmüyordu — kapsam aynen korundu. -->
-        <button type="button" class="btn btn-ghost btn-sm" id="btnCiktiEm" data-view="yonetim" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
+             [ŞEF DIŞA AKTARMA — Yasin Bey kararı, 5 Ağustos 2026] Butondaki
+             data-view="yonetim" kapısı KALDIRILDI: şef de raporunu dışa aktarabilir.
+             Yetki açıldı, KAPSAM açılmadı — aşağıdaki gvExport.init'te şef rolünde
+             kapsam ekseni kendi şantiyesine kilitlenir. -->
+        <button type="button" class="btn btn-ghost btn-sm" id="btnCiktiEm" aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</button>
       </div>
     </div>
 
@@ -330,12 +332,27 @@
     ], {yon:'yatay', baslik:'EM kaydı — ay karşılaştırması', labelWidth:70});
   }
 
-  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============ */
+  /* ============ B §6.2 madde 10-12 — çıktı al / PDF / Excel / Yazdır (gvExport) ============
+     [ŞEF DIŞA AKTARMA — Yasin Bey kararı, 5 Ağustos 2026] Şef artık butonu görüyor,
+     kapsamı ise kendi şantiyesine KİLİTLİ. İki ayaklı garanti:
+       (1) Veri: şef görünümünde yönetim bölümü `hidden`, ekranda YALNIZ şefin
+           Vadi Konakları verisi var (bkz. yukarıdaki data-view uygulaması) —
+           çıktı bu görünümün kapsamını anlatır.
+       (2) Kapsam ekseni: 'tumu' ŞEFE HİÇ SUNULMAZ, tek çip 'santiyem'. 'filtreli' de
+           sunulmaz — şef görünümünde filtre arayüzü YOK (çip şeridi ve Gelişmiş Filtre
+           yönetim bölümünün içinde kalır), dolayısıyla "filtreyi temizleyip genişletme"
+           yolu da kapalı; sunulsa boş filtre tüm listeyi ima ederdi.
+     Yeni bir yetki mekanizması yazılmadı: mevcut `data-view` görünüm ayrımı + gvExport'un
+     kapsam listesi kullanıldı (crm-santiye-isg'deki SAN_OPTS budamasının rapor karşılığı —
+     orada seçenek listesi tek şantiyeye iniyor, burada kapsam listesi). */
   if(window.gvExport){
+    var emSef = GV.role === 'sef';
     gvExport.init('#btnCiktiEm', {
       baslik: 'Eksik Mesai (EM) Raporu',
-      kapsam: ['tumu', 'filtreli'],
-      filtreOzeti: function(){
+      kapsam: emSef ? ['santiyem'] : ['tumu', 'filtreli'],
+      filtreOzeti: emSef ? function(){
+        return 'Şantiye: Vadi Konakları — yetki kapsamınız bununla sınırlı.';
+      } : function(){
         var santiyeWrap2 = document.querySelector('.chips[data-target="#tblEm"]');
         var sOn = santiyeWrap2 ? santiyeWrap2.querySelector('.chip.is-on[data-filter]') : null;
         var parts = [];

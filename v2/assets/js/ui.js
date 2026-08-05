@@ -1869,7 +1869,15 @@
   var GVX_SCOPE_META = {
     tumu:     {ico:'fa-layer-group',   lbl:'Tümü'},
     filtreli: {ico:'fa-filter',        lbl:'Filtrelenmiş liste'},
-    secili:   {ico:'fa-square-check',  lbl:'Seçili kayıtlar'}
+    secili:   {ico:'fa-square-check',  lbl:'Seçili kayıtlar'},
+    /* [ŞEF-KAPSAM — Yasin Bey kararı, 5 Ağustos 2026] Rolün yetkisi kendi şantiyesiyle
+       sınırlı olduğunda kapsam ekseni BU TEK çipe iner: 'tumu' hiç sunulmaz, dolayısıyla
+       genişletilebilir bir kapsam seçeneği KALMAZ. Ayrı bir yetki mekanizması değil,
+       yalnız mevcut kapsam listesinin bir değeri — kısıtı sayfa `kapsam:['santiyem']`
+       vererek uygular. `msg`: sonuç mesajında 1. tekil çip etiketi ("Kendi şantiyem")
+       yerine 2. çoğul anlatım kullanılsın diye ("… yalnız kendi şantiyeniz kapsamıyla
+       hazırlandı"); diğer anahtarlarda `msg` yoktur, davranışları DEĞİŞMEDİ. */
+    santiyem: {ico:'fa-helmet-safety', lbl:'Kendi şantiyem', msg:'yalnız kendi şantiyeniz'}
   };
   function gvxFormatChip(f){
     var v = GVX_FMT_META[f] || {ico:'fa-file', lbl:f};
@@ -1886,6 +1894,7 @@
   function gvxScopeLabel(k, secimSayisi){
     var v = GVX_SCOPE_META[k] || {lbl:k};
     if(k === 'secili' && typeof secimSayisi === 'function') return gvFmtNum(secimSayisi()) + ' seçili kayıt';
+    if(v.msg) return v.msg;   /* bkz. GVX_SCOPE_META.santiyem — çip etiketi ≠ mesaj anlatımı */
     return v.lbl.toLocaleLowerCase('tr');
   }
   function gvxDefaultFilterSummary(){
