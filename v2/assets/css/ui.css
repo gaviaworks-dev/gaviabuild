@@ -42,7 +42,14 @@
 .gc-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted)}
 
 /* ============ KPI KARTLARI ============ */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
+/* [G-9] Sabit 4 sütun yerine içerik-tabanlı akış. Eski kural 4 sütunu 980px'e kadar
+   koruyordu; 1024px'te kartlar 144–224px'e iniyordu ve iki ayrı hata doğuruyordu:
+   (1) `.kpi-num` kırpılması — "₺342.000.000" 126px istiyor, kart o genişliği ikon
+       + dolgu ile birlikte veremiyordu (crm-finans-kurum'da 4 kart, maliyet'te 1),
+   (2) 1024'te yatay taşma (banka 20px, demirbas 12px) — 980 eşiği ölü bant bırakıyordu.
+   `auto-fit` + `minmax(210px,1fr)` ikisini birden çözer: kart hiçbir zaman 210px'in
+   altına inmez, sığmayınca sütun sayısı KENDİ düşer. 1440'ta yine 4 sütun. */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:24px}
 .kpi-card{
   background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm);
   padding:20px;display:flex;align-items:flex-start;gap:14px;transition:.25s var(--ease);
@@ -362,8 +369,15 @@
 .gv-pop a.danger:hover{background:var(--danger-tint)}
 
 /* ============ RESPONSIVE YOĞUNLUK ============ */
+/* [G-9] 981–1279 bandı: ızgara 3 sütuna düşüyor ama .kpi-num hâlâ 25px'ti ve
+   "₺342.000.000" gibi uzun tutarlar karta sığmayıp kırpılıyordu (crm-finans-kurum'da
+   3 kart, banka/maliyet'te 1'er). Punto zaten 640 ve 480'de küçülüyordu — aradaki
+   boş bant kapatıldı. */
+@media(max-width:1280px){
+  .kpi-num{font-size:22px}
+}
 @media(max-width:980px){
-  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}   /* [G-9] dar ekranda 2 sütun SABİT — auto-fit burada 1'e düşerdi */
   .gform{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:640px){
