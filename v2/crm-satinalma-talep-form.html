@@ -22,8 +22,8 @@
 .gv-crumb a:hover{color:var(--acc-deep)}
 .gv-crumb i{font-size:9px;color:var(--line-2)}
 
-.frm-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
-@media(max-width:980px){.frm-grid{grid-template-columns:minmax(0,1fr)}}
+/* [G-7] .frm-grid → .form-grid, .frm-acts → .form-foot: aynı işi yapan ikinci isim
+   ailesi kaldırıldı, ikisi de ui.css'teki TEK KAYNAK iskeletten geliyor. */
 
 .gd-block{padding:22px}
 .gd-block + .gd-block{border-top:1px solid var(--line)}
@@ -42,16 +42,18 @@
   .kal-remove{justify-self:end;width:34px}
 }
 
-/* öncelik seçici — pil grubu */
+/* öncelik seçici — pil grubu.
+   [G-7 ölçüt 4] Öncelik bir KATEGORİ eksenidir; nokta/şerit olarak durum rengiyle
+   boyanmaz. Nokta artık yalnız radyo işareti: seçilmemişte nötr, seçilide accent
+   (.rt-box / .row-chk işaretli-dolgu deseniyle aynı). "Acil" ayrımı etiket metniyle
+   yapılır; --danger bu ekranda yalnız doğrulama uyarısı (toast) tarafında kalır. */
 .pri-group{display:flex;gap:8px;flex-wrap:wrap}
 .pri-opt{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
 /* .gfield input{width:100%} (ui.css, ortak) sızmasın diye genişlik/konum burada sıfırlanır */
 .pri-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;left:auto;right:auto}
-.pri-opt::before{content:"";width:7px;height:7px;border-radius:var(--r-circle);background:var(--muted)}
-.pri-opt[data-p="acil"]::before{background:var(--danger)}
-.pri-opt[data-p="normal"]::before{background:var(--info)}
-.pri-opt[data-p="planli"]::before{background:var(--muted)}
+.pri-opt::before{content:"";width:7px;height:7px;border-radius:var(--r-circle);background:var(--line-2);transition:.18s var(--ease)}
 .pri-opt.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
+.pri-opt.is-on::before{background:var(--acc-ink)}
 
 .sum-card{background:var(--bg);border-radius:var(--r-md);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px}
 .sum-card b{font-size:20px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
@@ -59,9 +61,6 @@
 
 .sub-note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:14px}
 .sub-note i{color:var(--acc-ink);margin-right:5px}
-
-.frm-acts{display:flex;flex-direction:column;gap:10px}
-.frm-acts .btn{width:100%;justify-content:center}
 </style>
 </head>
 <body data-sec="satinalma" data-screen="talepler">
@@ -100,7 +99,7 @@
       </div>
     </div>
 
-    <div class="frm-grid">
+    <div class="form-grid">
       <!-- ============ SOL: form ============ -->
       <div class="gv-card">
         <div class="gd-block">
@@ -170,20 +169,22 @@
             <textarea id="fNot" rows="3" placeholder="Onaycıya iletmek istediğiniz açıklama (opsiyonel)">Kalıp ekibi Cuma günü hazır olacak, dökümün gecikmemesi için acil işaretlendi.</textarea>
           </div>
         </div>
+        <!-- [G-7] kanonik alt aksiyon barı: dikey yığın sağ kolondan buraya taşındı,
+             sıra ghost → ghost → accent (birincil en sağda, sayfada tek accent). -->
+        <div class="form-foot">
+          <a class="btn btn-ghost btn-sm" href="crm-satinalma-talepler.html" data-no-confirm>Vazgeç</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="btnDraft" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Taslak Olarak Kaydet</button>
+          <button type="button" class="btn btn-acc btn-sm" id="btnSend"><i class="fa-solid fa-paper-plane"></i> Onaya Gönder</button>
+        </div>
       </div>
 
-      <!-- ============ SAĞ: özet + gönder ============ -->
+      <!-- ============ SAĞ: özet ============ -->
       <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
         <div class="gv-card">
           <div class="gd-block">
             <div class="gd-label">Özet</div>
             <div class="sum-card"><span>Kalem sayısı</span><b id="totKalem">2</b></div>
             <p class="sub-note"><i class="fa-solid fa-circle-info"></i>Gönderdiğinizde talep Satın Alma Sorumlusu onayına düşer; onay zinciri talep detayında görüntülenir.</p>
-          </div>
-          <div class="gd-block frm-acts">
-            <button type="button" class="btn btn-acc btn-sm" id="btnSend"><i class="fa-solid fa-paper-plane"></i> Onaya Gönder</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="btnDraft" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Taslak Olarak Kaydet</button>
-            <a class="btn btn-ghost btn-sm" href="crm-satinalma-talepler.html" data-no-confirm>Vazgeç</a>
           </div>
         </div>
       </div>

@@ -233,6 +233,39 @@
 }
 .gfield .gf-hint{font-size:11.5px;color:var(--muted)}
 
+/* ============ [G-7] EKLEME FORMU İSKELETİ — TEK KAYNAK ============
+   Beyar ölçütü: "tek modal iskeleti, aynı alan dizilimi, aynı buton yerleşimi."
+   Sorun neydi: `.gfield` bu dosyada tanımlı olduğu için 35 form sayfasının ALAN
+   dizilimi zaten tekdüzeydi; ama sayfa gövdesini saran `.form-grid` 22 sayfada,
+   alt aksiyon barı `.form-foot` 23 sayfada AYRI AYRI tanımlıydı (üstüne 12 sayfa
+   aynı işi `.frm-grid`/`.frm-acts` adıyla yapıyordu — iki isim ailesi, tek işlev).
+   Toplam 68 sayfa-yerel kopya → tek kaynak. Değerler çoğunluk varyantından alındı;
+   iki yerde bilinçli olarak DAHA GÜVENLİ olan seçildi:
+     · `minmax(0,1fr)` (19 sayfadaki `1fr` yerine) — grid çocuğunun içeriğiyle
+       şişip yatay taşma yapmasını engeller, G-9 ölçütü bunu istiyor.
+     · `flex-wrap:wrap` (15 sayfada yoktu, 7'sinde vardı) — dar ekranda buton
+       satırı sarar, sığdığında sıfır görsel etki yapar.
+   Sayfa-yerel override beklendiği için kritik mobil kural specificity'si bir tık
+   yükseltildi (`.form-grid.form-grid`) — G-6'da öğrenilen tuzak: sayfa <style>
+   bloğu ui.css'ten SONRA geldiği için eşit specificity'de sayfa kazanır. */
+.form-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.form-grid > *{min-width:0}
+.form-foot{
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  padding:18px 22px;border-top:1px solid var(--line);flex-wrap:wrap;
+}
+/* Buton yerleşimi: ikincil/ghost aksiyonlar solda, BİRİNCİL accent en sağda.
+   Sola yerleşmesi gereken yardımcı bilgi/aksiyon için `.form-foot > .foot-left`
+   kullanılır (auto margin ile birincili sağ uca iter). */
+.form-foot > .foot-left{margin-right:auto;display:flex;align-items:center;gap:10px;min-width:0}
+@media(max-width:1100px){
+  .form-grid.form-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:640px){
+  .form-foot{padding:14px 16px}
+  .form-foot .btn{flex:1 1 auto;justify-content:center}
+}
+
 /* ============ AKTİVİTE / FEED LİSTESİ ============ */
 .act-list{display:flex;flex-direction:column}
 .act-row{display:flex;align-items:center;gap:13px;padding:13px 22px;border-bottom:1px solid var(--line);transition:background .15s}

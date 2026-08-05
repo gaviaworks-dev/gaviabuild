@@ -22,8 +22,9 @@
 .gv-crumb a:hover{color:var(--acc-deep)}
 .gv-crumb i{font-size:9px;color:var(--line-2)}
 
-.frm-grid{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
-@media(max-width:980px){.frm-grid{grid-template-columns:minmax(0,1fr)}}
+/* [G-7] `.frm-grid`/`.frm-acts` isim ailesi bırakıldı — kanon `.form-grid`/`.form-foot`,
+   tanımı ui.css'te tek kaynak. Aksiyonlar yan sütundaki dikey yığından çıkarılıp
+   kartın altındaki kanonik yatay `.form-foot` barına taşındı. */
 
 .gd-block{padding:22px}
 .gd-block + .gd-block{border-top:1px solid var(--line)}
@@ -33,9 +34,10 @@
 .tip-group{display:flex;gap:8px;flex-wrap:wrap}
 .tip-opt{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:var(--r-pill);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.18s var(--ease);background:var(--paper)}
 .tip-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
-.tip-opt::before{content:"";width:7px;height:7px;border-radius:var(--r-circle);background:var(--muted)}
-.tip-opt[data-t="kurum"]::before{background:var(--acc-ink)}
-.tip-opt[data-t="taseron"]::before{background:var(--info)}
+/* [G-7 ölçüt 4] hakediş türünü kodlayan renkli noktalar (accent / --info) kaldırıldı —
+   nokta nötr, tür bilgisini etiket metni taşıyor, seçim `.is-on` tint'iyle veriliyor. */
+.tip-opt::before{content:"";width:7px;height:7px;border-radius:var(--r-circle);background:var(--line-2)}
+.tip-opt.is-on::before{background:var(--muted)}
 .tip-opt.is-on{border-color:var(--acc-ink);color:var(--acc-ink);background:rgba(var(--acc-rgb),.09)}
 
 /* kalem satırları — dinamik ekle/çıkar, satinalma-talep-form kal-row dilinin 5-kolon uyarlaması */
@@ -69,11 +71,14 @@
 .sum-card{background:var(--bg);border-radius:var(--r-md);padding:16px 18px;margin-bottom:4px}
 .sum-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted);padding:4px 0}
 .sum-line b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
-.sum-line.kesinti b{color:var(--danger)}
+/* [G-7 ölçüt 4] kesinti tutarı `--danger` ile yazılıyordu; durum rengi yalnız rozet ve
+   uyarıda kalır. Eksi işareti bilgiyi tek başına taşıyor, renk gerekmiyor. */
 .sum-line.kesinti b::before{content:"− "}
 .sum-net{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;margin-top:6px;border-top:1px solid var(--line)}
 .sum-net span{font-size:11.5px;font-weight:700;letter-spacing:.01em;color:var(--muted)}
-.sum-net b{font-size:19px;font-weight:800;color:var(--acc-ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+/* [G-7 ölçüt 4] net tutar accent renkte yazılıyordu — marka rengi birincil eylem
+   butonuna ayrıldı; vurgu punto ve kalınlıkla veriliyor. */
+.sum-net b{font-size:19px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 
 .sub-note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:14px}
 .sub-note i{color:var(--acc-ink);margin-right:5px}
@@ -85,9 +90,6 @@
 .attach-zone span{font-size:11.5px;color:var(--muted)}
 .attach-zone:hover,.attach-zone:focus-visible{border-color:var(--acc);background:rgba(var(--acc-rgb),.05)}
 .attach-zone:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-
-.frm-acts{display:flex;flex-direction:column;gap:10px}
-.frm-acts .btn{width:100%;justify-content:center}
 
 /* §18 revizyon (D4/Finans) — Kayıt Notları kartı (sozlesme-form.html side-tip diliyle
    ortak idiyom) + Kümülatif Durum önizleme kartı */
@@ -152,7 +154,7 @@
       </div>
     </div>
 
-    <div class="frm-grid">
+    <div class="form-grid">
       <!-- ============ SOL: form ============ -->
       <div class="gv-card">
         <div class="gd-block">
@@ -260,9 +262,19 @@
             <span>PDF, JPG, PNG — sürükle bırak veya tıkla (demo)</span>
           </div>
         </div>
+
+        <!-- [G-7] kanonik alt bar: ghost/ikincil önce, accent birincil en sağda.
+             "Taslak Olarak Kaydet" yardımcı eylem olduğu için `.foot-left`te. -->
+        <div class="form-foot">
+          <div class="foot-left">
+            <button type="button" class="btn btn-ghost btn-sm" id="btnDraft" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Taslak Olarak Kaydet</button>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="crm-finans-taseron.html" id="btnCancel" data-no-confirm>Vazgeç</a>
+          <button type="button" class="btn btn-acc btn-sm" id="btnSend"><i class="fa-solid fa-paper-plane"></i> Hakedişi Oluştur</button>
+        </div>
       </div>
 
-      <!-- ============ SAĞ: özet + gönder ============ -->
+      <!-- ============ SAĞ: özet ============ -->
       <div class="gv-side-stack" style="display:flex;flex-direction:column;gap:16px">
         <div class="gv-card">
           <div class="gd-block">
@@ -274,11 +286,6 @@
               <div class="sum-net"><span>Net Tutar</span><b id="sNet">₺48.403</b></div>
             </div>
             <p class="sub-note"><i class="fa-solid fa-circle-info"></i>Oluşturduğunuzda hakediş onay sürecine düşer; hakediş numarası onay adımında atanır.</p>
-          </div>
-          <div class="gd-block frm-acts">
-            <button type="button" class="btn btn-acc btn-sm" id="btnSend"><i class="fa-solid fa-paper-plane"></i> Hakedişi Oluştur</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="btnDraft" data-no-confirm><i class="fa-solid fa-floppy-disk"></i> Taslak Olarak Kaydet</button>
-            <a class="btn btn-ghost btn-sm" href="crm-finans-taseron.html" id="btnCancel" data-no-confirm>Vazgeç</a>
           </div>
         </div>
 
