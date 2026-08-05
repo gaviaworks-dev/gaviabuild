@@ -19,8 +19,9 @@
 /* ============ SAYFAYA ÖZEL — Hakediş Raporu (kurum tahsilat + taşeron ödeme, iki ayrı taraf) ============ */
 .rp-back{display:inline-flex;align-items:center;gap:7px}
 
-.donem-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.donem-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--muted);flex:none;min-width:64px}
+/* [G-8] `.donem-row` / `.frow-lbl` KALDIRILDI — üç katlı filtre şeridini oluşturan
+   sayfa-yerel sınıflardı. Filtreler artık ortak `.gv-listhead` + Gelişmiş Filtre
+   panelinde (Talep Raporu referans düzeni), sayfa-yerel filtre CSS'i GEREKMİYOR. */
 
 .rp-sect-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:32px 0 12px}
 .rp-sect-head:first-of-type{margin-top:0}
@@ -103,27 +104,53 @@
       </div>
     </div>
 
-    <!-- ============ FİLTRE — tarih aralığı + dönem + şantiye (kayıt dönemleri Mart-Haziran; Temmuz hakedişi yok, chip'e eklenmedi) ============ -->
-    <div class="donem-row">
-      <span class="frow-lbl">Tarih Aralığı</span>
-      <div data-gvdaterange id="hkDateRange"></div>
-    </div>
-    <div class="donem-row">
-      <span class="frow-lbl">Dönem</span>
-      <div class="chips" id="donemChips">
-        <button class="chip is-on" data-donem="tumu">Tümü</button>
-        <button class="chip" data-donem="mart">Mart</button>
-        <button class="chip" data-donem="nisan">Nisan</button>
-        <button class="chip" data-donem="mayis">Mayıs</button>
-        <button class="chip" data-donem="haziran">Haziran</button>
+    <!-- ============ [G-8 / R-40] FİLTRE — Talep Raporu düzenine getirildi ============
+         Patron [11:28]: *"hakediş raporunda bir tasarımsal bozukluk var … talep
+         raporundaki gibi bir tasarım olması gerek. Bütün sayfalandırmalarda tek tip
+         bir yapıyla beraber hamle yapalım."*
+
+         ÖNCE: `Tarih Aralığı`, `Dönem` ve `Şantiye` üç ayrı `.donem-row` satırına
+         yayılmıştı — sayfa başlığının altında üç kat filtre şeridi. Referans
+         (crm-panel-rapor-talep.html) düzeninde bunlar TEK `.gv-listhead` bloğunda:
+         aksiyonlar bir satırda, aktif filtre çipleri altında, ve liste üstünde
+         YALNIZ bir çip şeridi (en kritik eksen).
+
+         SONRA: Dönem liste üstündeki tek çip şeridi olarak kaldı (hakediş raporunun
+         birincil ekseni bu); Tarih Aralığı ve Şantiye Gelişmiş Filtre panelinin
+         içine girdi. Tarih alanı ortak `gvDateRange` bileşeniyle çiziliyor — G-8'in
+         "tarih aralığı seçici tek ortak bileşen olacak" şartı (sistemdeki olgun hâli
+         Puantaj Raporu'ndaki dropdown, aynı `gvDateRange`). Çip şeridi `gvChipBar`
+         sarmalayıcısında: 5 çip 390px'te sarıyordu, artık yatay kayıyor (G-3). -->
+    <div class="gv-listhead">
+      <div class="lh-row">
+        <div class="lh-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="hkSearch" placeholder="Hakediş no, şantiye veya taşeron ara">
+        </div>
+        <div class="lh-acts">
+          <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="hkFiltreBtn" aria-label="Gelişmiş Filtre">
+            <i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span>
+          </button>
+        </div>
       </div>
-    </div>
-    <div class="donem-row">
-      <span class="frow-lbl">Şantiye</span>
-      <div class="chips" id="hkSantiyeChips">
-        <button class="chip is-on" data-santiye="tumu">Tümü</button>
-        <button class="chip" data-santiye="vadi">Vadi Konakları</button>
-        <button class="chip" data-santiye="liman">Liman Lojistik</button>
+      <div class="lh-achips gv-achips-row" id="hkAchips" hidden>
+        <div class="gv-achips"></div>
+        <div class="gv-achips-acts">
+          <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
+        </div>
+      </div>
+      <div class="lh-tabs">
+        <div class="gv-chipbar-wrap" data-chipbar>
+          <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="gv-chipbar chips" id="donemChips">
+            <button class="chip is-on" data-donem="tumu">Tümü</button>
+            <button class="chip" data-donem="mart">Mart</button>
+            <button class="chip" data-donem="nisan">Nisan</button>
+            <button class="chip" data-donem="mayis">Mayıs</button>
+            <button class="chip" data-donem="haziran">Haziran</button>
+          </div>
+          <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
       </div>
     </div>
 
@@ -459,17 +486,32 @@
     return t >= hkDateFilter.from && t <= hkDateFilter.to;
   }
 
+  /* [G-8] Şantiye ekseni artık liste üstünde çip DEĞİL, Gelişmiş Filtre alanı.
+     Panelin durumu tek yerden okunuyor (crm-panel-rapor-santiye.html'deki srFv
+     emsali) — çift veri kaynağı yok. Panel hiç açılmadıysa değer yok = "tümü". */
+  var hkFd = null;
+  function hkFv(key){
+    if(!hkFd) return null;
+    var st = hkFd.values();
+    return st && st[key] ? st[key] : null;
+  }
+  function hkAra(tr){
+    var q = (document.getElementById('hkSearch').value || '').trim().toLocaleLowerCase('tr');
+    if(!q) return true;
+    return tr.textContent.toLocaleLowerCase('tr').indexOf(q) !== -1;
+  }
+
   function render(){
     var donemOn = document.querySelector('#donemChips .chip.is-on');
     var donem = donemOn ? donemOn.getAttribute('data-donem') : 'tumu';
-    var santiyeOn = document.querySelector('#hkSantiyeChips .chip.is-on');
-    var santiye = santiyeOn ? santiyeOn.getAttribute('data-santiye') : 'tumu';
+    var sv = hkFv('santiye');
+    var santiye = sv ? sv.value : 'tumu';
 
     var kVis = [], kBekliyor = 0, kTahsil = 0, kToplam = 0;
     kBody.querySelectorAll('tr').forEach(function(tr){
       var show = (donem === 'tumu' || tr.getAttribute('data-donem') === donem)
         && (santiye === 'tumu' || tr.getAttribute('data-santiye') === santiye)
-        && okTarih(tr);
+        && okTarih(tr) && hkAra(tr);
       tr.hidden = !show;
       if(!show) return;
       kVis.push(tr);
@@ -495,7 +537,7 @@
     tBody.querySelectorAll('tr').forEach(function(tr){
       var show = (donem === 'tumu' || tr.getAttribute('data-donem') === donem)
         && (santiye === 'tumu' || tr.getAttribute('data-santiye') === santiye)
-        && okTarih(tr);
+        && okTarih(tr) && hkAra(tr);
       tr.hidden = !show;
       if(!show) return;
       tVis.push(tr);
@@ -539,12 +581,31 @@
     ], {yon:'dikey', baslik:'Hakediş dönem grafiği'});
   }
 
-  /* ============ TARİH ARALIĞI — gerçek Date karşılaştırması ============ */
+  /* ============ [G-8] GELİŞMİŞ FİLTRE — Tarih Aralığı + Şantiye ============
+     Üç ayrı `.donem-row` şeridinden ikisi buraya taşındı. Tarih alanı `type:'daterange'`
+     → gvFilterDrawer bu alanı ORTAK `gvDateRange` bileşeniyle çiziyor, yani sayfa artık
+     kendi tarih seçicisini kurmuyor (G-8: "tek ortak bileşen").
+     `table:` VERİLMEDİ: bu sayfada iki ayrı tablo var ve süzme sayfanın kendi
+     `render()` motorunda yapılıyor; panel yalnız UI/çip/durum yönetiyor, eşleşmeyi
+     `render()` üstlenir (crm-panel-rapor-santiye.html emsali).
+     `hkDateFilter` artık panelin daterange değerinden türüyor — tek kaynak. */
   var hkDateFilter = null;
-  if(window.gvDateRange){
-    gvDateRange('#hkDateRange', {
-      emptyLabel: 'Tüm tarihler',
-      onChange: function(val){ hkDateFilter = val ? {from:val.from, to:val.to} : null; render(); }
+  function hkTarihSenkron(){
+    var tv = hkFv('tarih');
+    hkDateFilter = (tv && tv.raw && tv.raw.from && tv.raw.to) ? {from:tv.raw.from, to:tv.raw.to} : null;
+  }
+  if(window.gvFilterDrawer){
+    hkFd = gvFilterDrawer.init({
+      mount: '#hkFiltreBtn', title: 'Gelişmiş Filtre', screen: 'rapor-hakedis',
+      chipsMount: '#hkAchips',
+      fields: [
+        {key:'tarih', type:'daterange', label:'Tarih Aralığı'},
+        {key:'santiye', type:'select', label:'Şantiye', options:[
+          {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik'}
+        ]}
+      ],
+      onApply: function(){ hkTarihSenkron(); render(); },
+      onClear: function(){ hkTarihSenkron(); render(); }
     });
   }
 
@@ -554,12 +615,7 @@
     ch.classList.add('is-on');
     render();
   });
-  document.getElementById('hkSantiyeChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
-    this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-    ch.classList.add('is-on');
-    render();
-  });
+  document.getElementById('hkSearch').addEventListener('input', function(){ render(); });
 
   /* ============ B §6.2 madde 15 — hata durumu demo önizlemesi ============ */
   var btnHkHataDemo = document.getElementById('btnHkHataDemo');
