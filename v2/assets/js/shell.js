@@ -1469,8 +1469,8 @@
                     bu yüzden ik'nin zaten sahip olduğu arac/puantaj görünürlüğü BURADA
                     açıkça tekrarlanmazsa scrOk bu alt-ekranları 403'e düşürür.
                     [Dalga 4 / Araç-Demirbaş] AYNI sebepten araç/demirbaş alt-ekranları
-                    EKLENDİ — arac-bildirim/arac-yakit/arac-gider ve demirbas-kategori/
-                    demirbas-etiket/demirbas-bildirim hepsi KENDİ benzersiz data-screen
+                    EKLENDİ — arac-yakit/arac-gider ve demirbas-kategori/
+                    demirbas-etiket hepsi KENDİ benzersiz data-screen
                     kimliğini taşıyor (ana ekranı miraslamıyor), ik zaten araç/demirbaş
                     görüyor — eklenmezse hepsinde 403'e düşerdi. [v3-Dalga2] 'makine'
                     BİLİNÇLİ EKLENMEDİ — ik bunu operasyon'da da hiç görmüyordu
@@ -1485,12 +1485,14 @@
                     KALANLAR bilinçli: 'arac-bakim'/'arac-evrak'/'demirbas-etiket' menüden
                     çıktı ama SAYFALARI duruyor (alt-akış) — ik bu ekranlara ana kayıttan
                     girmeye devam ediyor, o yüzden scr listesinde KALMALI.
-                    'arac-bildirim'/'demirbas-bildirim' de duruyor: R-35 butonu kaldırdı,
-                    sayfayı değil (eşik/kanal ayarlarının başka evi yok — bkz. handoff). */
+                    'arac-bildirim'/'demirbas-bildirim' de DÜŞTÜ: Beyar kararıyla iki sayfa
+                    silindi. Eşik/kanal ayarları önce Ayarlar > Bildirim Tercihleri'ne
+                    taşındı (ayar kaybolmadı, sayfa kayboldu); ik o ekrana `hesap`
+                    bölümünden erişiyor, varlık scr listesinde karşılığı gerekmiyor. */
                  scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'],
                        varlik:['demirbas','arac','arac-form','arac-arsiv','arac-bakim','arac-evrak','arac-kullanim',
-                                  'arac-bildirim','arac-yakit','arac-gider',
-                                  'demirbas-kategori','demirbas-etiket','demirbas-bildirim'],
+                                  'arac-yakit','arac-gider',
+                                  'demirbas-kategori','demirbas-etiket'],
                        finans:['kasa','pluxee'],
                        personel:['liste','izin','rapor','avans','ozluk','puantaj','puantaj-form'] } },
     personel:  { name:'Ali Vural',        role:'Saha Personeli',            ini:'AV',
