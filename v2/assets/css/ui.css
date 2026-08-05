@@ -266,6 +266,35 @@
   .form-foot .btn{flex:1 1 auto;justify-content:center}
 }
 
+/* ============ [G-9] DETAY SAYFASI İSKELETİ — TEK KAYNAK ============
+   G-9 taramasında 13 detay sayfası **1024px'te yatay taşıyordu** (1px–208px).
+   Kök sebep tekti ve `.form-grid` ile aynı sınıftaydı: `.gd-grid` ui.css'te HİÇ
+   tanımlı değildi, **32 sayfada ayrı ayrı** yazılmıştı ve iki kusuru birlikte
+   taşıyordu:
+     (a) sol kolon `1fr` (25 sayfada) — `minmax(0,1fr)` değil. `1fr` minimum
+         içerik genişliğinin altına inemez, uzun tablo/e-posta/tutar kolonu
+         ızgarayı dışa doğru şişirir.
+     (b) tek kolona düşme eşiği **980px** — yani 1024px'te sayfa hâlâ iki kolon
+         ve sağda 320–360px'lik sabit sütun varken sol kolona 640px kalıyor;
+         G-9'un ölçtüğü bant tam orası.
+   Kanon: sol kolon `minmax(0,1fr)`, sağ sütun 340px, eşik **1100px**
+   (`.form-grid` ile aynı bant — iki iskelet aynı noktada tek kolona düşsün).
+   Yan sütun yığınına `min-width:0` — `crm-finans-banka-detay.html` bunu zaten
+   sayfa-yerel olarak keşfetmişti, kural ortak katmana alındı.
+   Mobil kural `.gd-grid.gd-grid` specificity'siyle yazıldı: sayfa <style> bloğu
+   ui.css'ten SONRA geldiği için eşit specificity'de sayfa kazanıyor (G-6 tuzağı). */
+.gd-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.gd-grid > *{min-width:0}
+.gv-side-stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media(max-width:1100px){
+  .gd-grid.gd-grid{grid-template-columns:minmax(0,1fr)}
+}
+/* [G-9] Tanım listesi değeri: uzun e-posta/IBAN gibi BÖLÜNME FIRSATI OLMAYAN diziler
+   dar sütunda kırpılıyordu (ör. `hasan.demirci@yapitas.com.tr` 1024px'te 122px kutuda
+   201px istiyordu — ne sarıyor ne kaydırılabiliyordu, yani içerik erişilemezdi).
+   `anywhere` bu dizileri sardırır; normal metin davranışı değişmez. */
+dd{overflow-wrap:anywhere}
+
 /* ============ AKTİVİTE / FEED LİSTESİ ============ */
 .act-list{display:flex;flex-direction:column}
 .act-row{display:flex;align-items:center;gap:13px;padding:13px 22px;border-bottom:1px solid var(--line);transition:background .15s}

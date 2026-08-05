@@ -70,6 +70,12 @@ a{color:inherit;text-decoration:none}
 .a-banner.info{background:var(--info-tint);color:#2A4E96}
 .a-banner.info i,.a-banner.info b{color:var(--info)}
 
+/* [R-48] tek giriş akışının yönlendirme kuralını görünür kılan ipucu şeridi */
+.auth-hint{display:flex;align-items:flex-start;gap:9px;margin-top:14px;padding:11px 13px;
+  background:rgba(20,21,51,.5);border:1px solid var(--gv-border-dark);border-radius:var(--r-md);
+  font-size:11.5px;line-height:1.6;color:var(--on-dark-soft)}
+.auth-hint i{color:var(--gavia-mint);margin-top:3px;flex:none}
+.auth-hint b{color:var(--on-dark);font-weight:700}
 .divider{display:flex;align-items:center;gap:10px;margin:22px 0 14px;color:var(--on-dark-faint);font-size:11px;font-weight:700;letter-spacing:.01em}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--gv-border-dark)}
 
@@ -140,10 +146,21 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 
+  <!-- [R-48] Tek giriş akışı e-posta alan adına göre yönlendirdiği için hangi adresin
+       nereye düştüğü GÖRÜNÜR olmalı — yoksa prototipi deneyen kişi kuralı bilemez.
+       Rol seçim ekranı bağlantısı KALDIRILMADI, ikincil yol olarak duruyor. -->
+  <div class="auth-hint">
+    <i class="fa-solid fa-circle-info"></i>
+    <span>Giriş yaptığınız <b>e-posta alan adı</b> sizi doğru yere götürür:
+      <b>@yapitas.com.tr</b> → firma paneli ·
+      <b>@gaviaworks.com</b> → platform konsolu ·
+      diğer adresler → müşteri portalı.</span>
+  </div>
+
   <div class="divider">veya</div>
   <a class="demo-link" href="index.html">
     <div class="dl-ico"><i class="fa-solid fa-flask"></i></div>
-    <div class="dl-info"><b>Demo ortamı</b><span>Gerçek kimlik doğrulama olmadan rol seçerek keşfedin.</span></div>
+    <div class="dl-info"><b>Demo ortamı</b><span>11 personanın hepsini rol seçerek keşfedin.</span></div>
     <span class="dl-tag">DEMO</span>
   </a>
 
@@ -175,14 +192,47 @@ a{color:inherit;text-decoration:none}
     pwToggle.innerHTML = '<i class="fa-solid ' + (show ? 'fa-eye-slash' : 'fa-eye') + '"></i>';
   });
 
+  /* ============ [R-48] TEK GİRİŞ AKIŞI — Yasin Bey, video [15:09] ============
+     *"Biz burada bir müşteri olarak adım attığımız zaman, nasıl 'giriş yap' diyerek
+     sayfalandırma içerisinde giriş yaparak bir işlem yapıyorsa; sistem tarafında
+     müşteri de direkt giriş yaparak müşteri portalına giriş yapacak."*
+
+     ÖNCE: "Giriş Yap" hiçbir yere götürmüyordu — yalnız "aşağıdan bir demo rolü seç"
+     toast'ı basıp rol seçim bağlantısını sallıyordu. Yani müşteri portala girmek için
+     ayrı bir link aramak zorundaydı; patronun şikayeti tam bu.
+
+     SONRA: tek "Giriş Yap" akışı, girilen e-postanın ALAN ADINA göre doğru yere
+     düşürüyor. Statik prototipte gerçek kimlik doğrulama yok, o yüzden "kim olduğun"
+     bilgisini taşıyan tek sinyal e-posta alan adı — Parasüt'teki tek giriş akışının
+     prototip karşılığı bu. Üç hedef (REVIZYON.md R-48'in doğal devamı olarak
+     adlandırdığı üç aktör):
+       · tenant firma kullanıcısı  → CRM paneli
+       · platform sahibi           → Süper Admin konsolu
+       · müşteri (diğer her alan)  → Müşteri Portalı
+     Rol seçim ekranı KALDIRILMADI: hâlâ alttaki bağlantıdan erişilebilir, çünkü
+     prototipin 11 personayı denetleme yolu o. Yalnız artık ZORUNLU değil. */
+  var GIRIS_YOLU = [
+    { test: /@gaviaworks\.com$/i,   href: 'gavia-panel.html?role=superadmin',
+      ad: 'Süper Admin · Platform Konsolu' },
+    { test: /@yapitas\.com\.tr$/i,  href: 'crm-panel.html?role=sahip',
+      ad: 'Gavia CRM · Firma Paneli' }
+  ];
+  function girisHedefi(email){
+    for(var i = 0; i < GIRIS_YOLU.length; i++){
+      if(GIRIS_YOLU[i].test.test(email)) return GIRIS_YOLU[i];
+    }
+    /* tanınmayan alan adı = firmanın MÜŞTERİSİ → doğrudan portal */
+    return { href: 'portal-panel.html', ad: 'Müşteri Portalı' };
+  }
+
   document.getElementById('loginSubmit').addEventListener('click', function(){
     var email = document.getElementById('fEmail').value.trim();
     var pass = document.getElementById('fPass').value;
     if(!email || email.indexOf('@') === -1){ gvToast('Geçerli bir e-posta girin.', {type:'danger'}); return; }
     if(!pass){ gvToast('Şifrenizi girin.', {type:'danger'}); return; }
-    gvToast('Bu prototipte gerçek kimlik doğrulama yoktur — aşağıdan bir demo rolüyle devam edin.', {type:'info', icon:'fa-flask', ms:3600});
-    var dl = document.querySelector('.demo-link');
-    if(dl){ dl.animate([{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}],{duration:520,easing:'cubic-bezier(.22,.61,.36,1)'}); dl.scrollIntoView({behavior:'smooth', block:'center'}); }
+    var hedef = girisHedefi(email);
+    gvToast(hedef.ad + '\'e yönlendiriliyorsunuz…', {type:'ok', icon:'fa-arrow-right-to-bracket', ms:1400});
+    setTimeout(function(){ location.href = hedef.href; }, 700);
   });
 })();
 </script>
