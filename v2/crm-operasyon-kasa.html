@@ -1091,13 +1091,27 @@ tr.is-checked td:first-child,.df-mrow.is-checked{background:rgba(var(--acc-rgb),
     var on = document.querySelector('#ksGrid .ks-card.is-on[data-ks]');
     return on ? on.getAttribute('data-ks') : 'vadi';
   }
+  /* [G-3/G-4 regresyon] kasaFpState PANEL'in tek malı DEĞİL — ileride panel-dışı bir
+     anahtar eklenirse (eskiden `arsiv` böyleydi) `kasaFpState = state` onu sessizce
+     silerdi. O yüzden state TOPTAN atanmaz, panelin sahiplendiği anahtarlar üzerinden
+     BİRLEŞTİRİLİR: önce panel anahtarları temizlenir (gvFilterPanel.readValues() boş
+     alanları state'e HİÇ koymadığı için düz Object.assign yanlış olurdu — kaldırılan
+     bir filtre state'te yapışık kalırdı), sonra gelen anahtarlar yazılır. Panel-dışı
+     anahtarlar her iki geri çağrıda da KORUNUR. */
+  var KASA_FP_KEYS = ['tur','kdurum','tarih'];   /* #fpKasa'daki data-fp-key alanları */
+  function kasaFpMerge(state){
+    KASA_FP_KEYS.forEach(function(k){ delete kasaFpState[k]; });
+    Object.keys(state || {}).forEach(function(k){ kasaFpState[k] = state[k]; });
+  }
   window.gvFilterPanel.init('#fpKasa', {
     activeRow: '#achipsKasa',
     onApply: function(state){
-      kasaFpState = state; applyKasaCombinedFilter();
+      kasaFpMerge(state); applyKasaCombinedFilter();
     },
     onClear: function(){
-      kasaFpState = {};
+      /* yalnız panelin kendi eksenleri sıfırlanır; "Arşivlenenleri Göster" gibi
+         panel-dışı kullanıcı seçimleri Temizle'den ETKİLENMEZ */
+      kasaFpMerge(null);
     }
   });
   /* V3A §3.2 — "Arşivlenenleri Göster" artık panelin İÇİNDE değil, .lh-acts'ta
