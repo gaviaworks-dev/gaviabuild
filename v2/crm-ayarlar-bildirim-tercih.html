@@ -42,6 +42,48 @@
   background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;outline:none;
 }
 .qh-row select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+
+/* ============ varlık/araç bildirim eşikleri ============
+   Kaynak: crm-operasyon-arac-bildirim.html + crm-operasyon-demirbas-bildirim.html
+   (ikisi de kaldırıldı). O sayfaların "Bildirim Eşiği" ve "Bildirim Kanalları"
+   kartları buraya taşındı; esik-preset / esik-custom / esik-current / kanal-item
+   sınıf dili kaynaktan BİREBİR devralındı — yeni görsel dil icat edilmedi.
+   İki sayfa aynı deseni paylaştığı için burada TEK bölüm + iki alt grup var. */
+.esk-below{margin-top:16px}
+.esk-lead{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:18px;max-width:76ch}
+.esk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(max-width:860px){.esk-grid{grid-template-columns:minmax(0,1fr)}}
+.esk-group{min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 17px}
+.esk-gh{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.esk-gh i{width:26px;height:26px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;
+  font-size:12px;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.esk-gh b{font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.esk-axes{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.esk-axis{font-size:10.5px;font-weight:700;color:var(--ink-2);background:var(--paper);
+  border:1px solid var(--line);border-radius:7px;padding:3px 8px}
+
+/* kaynaktan devralınan eşik kontrolleri */
+.esik-presets{display:flex;flex-wrap:wrap;gap:8px}
+.esik-preset{font-size:12px;font-weight:700;padding:7px 12px;border-radius:var(--r-pill);border:1.5px solid var(--line);background:var(--paper);color:var(--ink-2);cursor:pointer;transition:.15s var(--ease)}
+.esik-preset:hover{border-color:var(--line-2)}
+.esik-preset.is-on{border-color:var(--acc-ink);background:rgba(var(--acc-rgb),.1);color:var(--acc-ink)}
+.esik-preset:focus-visible{outline:2px solid var(--acc-ink);outline-offset:2px}
+.esik-custom{display:flex;align-items:center;gap:8px;margin-top:12px}
+.esik-custom input{width:74px;font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 9px;outline:none}
+.esik-custom input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
+.esik-current{margin-top:12px;font-size:12px;color:var(--muted);padding-top:12px;border-top:1px solid var(--line)}
+.esik-current b{color:var(--ink)}
+
+/* kaynaktan devralınan kanal listesi — tek grup, toggle'lı */
+.esk-chans{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.esk-chans-h{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:800;color:var(--ink);margin-bottom:4px}
+.esk-chans-h i{color:var(--acc-ink);font-size:12.5px}
+.esk-chans-sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;max-width:76ch}
+.esk-chan-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-top:12px}
+.kanal-item{display:flex;align-items:center;gap:10px;min-width:0;font-size:12.5px;color:var(--ink-2);
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:11px 13px}
+.kanal-item > i{width:16px;flex:none;text-align:center;color:var(--acc-ink)}
+.kanal-item span{flex:1;min-width:0}
 </style>
 </head>
 <body data-sec="hesap" data-screen="bildirim">
@@ -173,6 +215,114 @@
         </div>
       </div>
     </div>
+
+    <!-- ============ Varlık ve araç bildirim eşikleri ============
+         Kaldırılan crm-operasyon-arac-bildirim.html + crm-operasyon-demirbas-bildirim.html
+         sayfalarının "Bildirim Eşiği" ve "Bildirim Kanalları" ayarları buraya taşındı.
+         İki kaynak aynı deseni paylaşıyordu; burada tek bölüm + iki alt grup (araç /
+         demirbaş) olarak birleştirildi. Eşik değerleri kaynaktaki localStorage
+         anahtarlarını (gv_arac_bildirim_esik / gv_demirbas_bildirim_esik) korur, böylece
+         daha önce yapılmış tercih kaybolmaz. Bildirim LİSTESİ taşınmadı — o bir akış,
+         ayar değil. -->
+    <div class="gv-card esk-below">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-sliders"></i> Varlık ve Araç Bildirim Eşikleri</div>
+      </div>
+      <div class="gc-body">
+        <p class="esk-lead">Süreli kayıtlar için kaç gün önceden hatırlatılacağınızı seçin. Seçtiğiniz gün sayısının içinde kalan (veya süresi zaten geçmiş) kayıtlar hatırlatma üretir; dışında kalanlar sessiz bekler. Araç ve demirbaş eşikleri ayrı tutulur, tercihiniz bu tarayıcıda kalıcıdır.</p>
+
+        <div class="esk-grid">
+          <!-- araç eşiği — kaynak: crm-operasyon-arac-bildirim.html -->
+          <div class="esk-group" data-esik-scope="arac" data-esik-key="gv_arac_bildirim_esik">
+            <div class="esk-gh"><i class="fa-solid fa-truck-pickup"></i><b>Araç hatırlatmaları</b></div>
+            <div class="esk-axes">
+              <span class="esk-axis">Muayene</span>
+              <span class="esk-axis">Kasko</span>
+              <span class="esk-axis">Trafik sigortası</span>
+              <span class="esk-axis">Bakım tarihi/km</span>
+              <span class="esk-axis">MTV ödemesi</span>
+              <span class="esk-axis">Kiralama sözleşmesi</span>
+              <span class="esk-axis">Anormal yakıt tüketimi</span>
+              <span class="esk-axis">Araç belgesi</span>
+            </div>
+            <div class="esik-presets" data-esik-presets>
+              <button type="button" class="esik-preset" data-g="60">60 gün</button>
+              <button type="button" class="esik-preset is-on" data-g="30">30 gün</button>
+              <button type="button" class="esik-preset" data-g="15">15 gün</button>
+              <button type="button" class="esik-preset" data-g="7">7 gün</button>
+              <button type="button" class="esik-preset" data-g="0">Süresi geçenler</button>
+            </div>
+            <div class="esik-custom">
+              <input type="number" id="esikOzelArac" data-esik-ozel min="0" max="365" placeholder="Özel" aria-label="Araç için özel gün sayısı">
+              <button type="button" class="btn btn-ghost btn-sm" data-esik-uygula>Uygula</button>
+            </div>
+            <div class="esik-current">Aktif eşik: <b data-esik-gosterge>30 gün</b></div>
+          </div>
+
+          <!-- demirbaş eşiği — kaynak: crm-operasyon-demirbas-bildirim.html -->
+          <div class="esk-group" data-esik-scope="demirbas" data-esik-key="gv_demirbas_bildirim_esik">
+            <div class="esk-gh"><i class="fa-solid fa-toolbox"></i><b>Demirbaş hatırlatmaları</b></div>
+            <div class="esk-axes">
+              <span class="esk-axis">Garanti süresi</span>
+              <span class="esk-axis">Bakım tarihi</span>
+              <span class="esk-axis">Kalibrasyon</span>
+              <span class="esk-axis">Periyodik kontrol</span>
+              <span class="esk-axis">Zimmet iadesi</span>
+              <span class="esk-axis">Arızalı/kayıp</span>
+              <span class="esk-axis">Uzun süre kullanılmayan</span>
+              <span class="esk-axis">Eksik belge</span>
+            </div>
+            <div class="esik-presets" data-esik-presets>
+              <button type="button" class="esik-preset" data-g="60">60 gün</button>
+              <button type="button" class="esik-preset is-on" data-g="30">30 gün</button>
+              <button type="button" class="esik-preset" data-g="15">15 gün</button>
+              <button type="button" class="esik-preset" data-g="7">7 gün</button>
+              <button type="button" class="esik-preset" data-g="0">Süresi geçenler</button>
+            </div>
+            <div class="esik-custom">
+              <input type="number" id="esikOzelDemirbas" data-esik-ozel min="0" max="365" placeholder="Özel" aria-label="Demirbaş için özel gün sayısı">
+              <button type="button" class="btn btn-ghost btn-sm" data-esik-uygula>Uygula</button>
+            </div>
+            <div class="esik-current">Aktif eşik: <b data-esik-gosterge>30 gün</b></div>
+          </div>
+        </div>
+
+        <!-- kanallar — iki kaynakta liste birebir aynıydı; tek fark 5. satırın adıydı
+             ("Araç Sorumlusu" / "Demirbaş Sorumlusu"), o da tek satırda birleştirildi.
+             Bu grup yukarıdaki "Olay Bazlı Tercihler" matrisinden ayrı duruyor: orada
+             kanal seçimi (uygulama/e-posta/SMS) yapılır, burada ek olarak hatırlatmanın
+             hangi SORUMLUYA gideceği belirlenir — matrise sığmayan bir eksen. -->
+        <div class="esk-chans">
+          <div class="esk-chans-h"><i class="fa-solid fa-share-nodes"></i> Bildirim kanalları ve alıcıları</div>
+          <p class="esk-chans-sub">Araç ve demirbaş hatırlatmaları bu kanallardan gider. Kanal listesi iki varlık türü için ortaktır.</p>
+          <div class="esk-chan-list">
+            <div class="kanal-item">
+              <i class="fa-solid fa-display"></i><span>Sistem içi</span>
+              <label class="gv-toggle"><input type="checkbox" checked data-kanal="sistem" data-nt="Sistem içi kanalı"><span class="tg-track"></span></label>
+            </div>
+            <div class="kanal-item">
+              <i class="fa-solid fa-envelope"></i><span>E-posta</span>
+              <label class="gv-toggle"><input type="checkbox" checked data-kanal="eposta" data-nt="E-posta kanalı"><span class="tg-track"></span></label>
+            </div>
+            <div class="kanal-item">
+              <i class="fa-solid fa-mobile-screen-button"></i><span>Mobil (push)</span>
+              <label class="gv-toggle"><input type="checkbox" checked data-kanal="mobil" data-nt="Mobil push kanalı"><span class="tg-track"></span></label>
+            </div>
+            <div class="kanal-item">
+              <i class="fa-solid fa-user-tie"></i><span>İlgili yönetici</span>
+              <label class="gv-toggle"><input type="checkbox" checked data-kanal="yonetici" data-nt="İlgili yöneticiye kopya"><span class="tg-track"></span></label>
+            </div>
+            <div class="kanal-item">
+              <i class="fa-solid fa-user-gear"></i><span>Araç / demirbaş sorumlusu</span>
+              <label class="gv-toggle"><input type="checkbox" checked data-kanal="sorumlu" data-nt="Varlık sorumlusuna kopya"><span class="tg-track"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="gc-foot">
+        <span style="display:flex;align-items:center;gap:8px"><i class="fa-solid fa-circle-info" style="color:var(--acc-ink)"></i> Prototipte görsel simülasyon; gerçek e-posta, SMS veya push gönderimi yapılmaz.</span>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -185,6 +335,75 @@ document.querySelectorAll('input[data-nt]').forEach(function(inp){
     gvToast(inp.getAttribute('data-nt') + (inp.checked ? ' açıldı.' : ' kapatıldı.'), {type: inp.checked ? 'ok' : 'info'});
   });
 });
+
+/* ============ varlık/araç bildirim eşikleri ============
+   Kaldırılan arac-bildirim / demirbas-bildirim sayfalarındaki eşik mantığı buraya
+   taşındı. İki kaynak birbirinin kopyasıydı; burada TEK mekanizma, iki örnek:
+   her .esk-group kendi localStorage anahtarını data-esik-key ile taşır (kaynaktaki
+   anahtarların aynısı — eski tercih kaybolmaz). */
+(function(){
+  document.querySelectorAll('.esk-group[data-esik-key]').forEach(function(grup){
+    var KEY = grup.getAttribute('data-esik-key');
+    var presets = grup.querySelector('[data-esik-presets]');
+    var ozel = grup.querySelector('[data-esik-ozel]');
+    var uygula = grup.querySelector('[data-esik-uygula]');
+    var gosterge = grup.querySelector('[data-esik-gosterge]');
+    var etiket = grup.querySelector('.esk-gh b').textContent.replace(' hatırlatmaları', '');
+
+    function metin(g){ return g === 0 ? 'Süresi geçenler' : g + ' gün'; }
+    function oku(){
+      try{ var v = parseInt(localStorage.getItem(KEY), 10); return isNaN(v) ? 30 : v; }catch(e){ return 30; }
+    }
+    function yaz(g, presetMi){
+      try{ localStorage.setItem(KEY, String(g)); }catch(e){}
+      senkron(g, presetMi);
+    }
+    function senkron(g, presetMi){
+      var eslesen = false;
+      presets.querySelectorAll('.esik-preset').forEach(function(b){
+        var on = parseInt(b.getAttribute('data-g'), 10) === g;
+        if(on) eslesen = true;
+        b.classList.toggle('is-on', on);
+      });
+      if(!eslesen && ozel && presetMi !== true) ozel.value = g;
+      gosterge.textContent = metin(g);
+    }
+
+    presets.addEventListener('click', function(e){
+      var btn = e.target.closest('.esik-preset'); if(!btn) return;
+      if(ozel) ozel.value = '';
+      var g = parseInt(btn.getAttribute('data-g'), 10);
+      yaz(g, true);
+      gvToast(etiket + ' bildirim eşiği ' + metin(g) + ' olarak kaydedildi.');
+    });
+
+    uygula.addEventListener('click', function(){
+      var v = parseInt(ozel.value, 10);
+      if(isNaN(v) || v < 0 || v > 365){ gvToast('0 ile 365 arasında bir gün sayısı girin.', {type:'danger'}); return; }
+      yaz(v, true);
+      gvToast(etiket + ' bildirim eşiği ' + v + ' gün olarak kaydedildi.');
+    });
+
+    /* ilk yükleme — kayıtlı eşiği göstergeye ve preset'lere yansıt */
+    senkron(oku());
+  });
+
+  /* kanal tercihleri — aynı desende kalıcı (toast'ı yukarıdaki data-nt kancası atar) */
+  var KANAL_KEY = 'gv_varlik_bildirim_kanal';
+  function kanalOku(){
+    try{ return JSON.parse(localStorage.getItem(KANAL_KEY)) || {}; }catch(e){ return {}; }
+  }
+  var kayitli = kanalOku();
+  document.querySelectorAll('input[data-kanal]').forEach(function(inp){
+    var k = inp.getAttribute('data-kanal');
+    if(Object.prototype.hasOwnProperty.call(kayitli, k)) inp.checked = !!kayitli[k];
+    inp.addEventListener('change', function(){
+      var s = kanalOku();
+      s[k] = inp.checked;
+      try{ localStorage.setItem(KANAL_KEY, JSON.stringify(s)); }catch(e){}
+    });
+  });
+})();
 </script>
 </body>
 </html>
