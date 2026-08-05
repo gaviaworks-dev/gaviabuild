@@ -202,7 +202,7 @@ body{font-family:var(--font);color:var(--on-dark)}
       <h1 class="pc-h1">MRR / ARR Detay Raporu</h1>
       <p class="pc-sub">Aylık yinelenen gelir trendi, paket bazlı kırılım ve tenant bazlı katkı — 2 Temmuz 2026 itibarıyla.</p>
       <!-- ============ B §6.2 madde 2 — rapor açıklaması ============ -->
-      <p class="pc-desc"><i class="fa-solid fa-circle-info"></i>MRR (Aylık Yinelenen Gelir), o an aktif olan tüm <b>ücretli</b> tenant aboneliklerinin aylık sözleşme bedelleri toplamıdır — deneme ve ücretsiz pakette olan firmalar ₺0 katkı sayılır. ARR, MRR × 12 ile hesaplanır (yıllık projeksiyon, ayrı bir sözleşme değeri DEĞİLDİR). Bir firmanın paketi değiştiğinde veya promosyon fiyatı sözleşme fiyatına döndüğünde MRR o ay için yeniden hesaplanır; aşağıdaki trend bu aylık dönem-sonu MRR değerlerini gösterir.</p>
+      <p class="pc-desc"><i class="fa-solid fa-circle-info"></i>MRR (Aylık Yinelenen Gelir), o an aktif olan tüm <b>ücretli</b> tenant aboneliklerinin aylık sözleşme bedelleri toplamıdır — deneme, demo, askıya alınmış ve iptal edilmiş kayıtlar ₺0 katkı sayılır. ARR, MRR × 12 ile hesaplanır (yıllık projeksiyon, ayrı bir sözleşme değeri DEĞİLDİR). Bir firmanın paketi değiştiğinde veya promosyon fiyatı sözleşme fiyatına döndüğünde MRR o ay için yeniden hesaplanır; aşağıdaki trend bu aylık dönem-sonu MRR değerlerini gösterir.</p>
       <div class="ph-actions" style="margin-top:14px"><button type="button" class="btn btn-ghost-dk btn-sm" id="btnMrrCikti"><i class="fa-solid fa-download"></i> Dışa Aktar</button></div>
     </div>
 
@@ -239,8 +239,8 @@ body{font-family:var(--font);color:var(--on-dark)}
       </div>
       <div class="pc-kpi">
         <div class="pc-kpi-ico"><i class="fa-solid fa-building"></i></div>
-        <div><div class="pc-kpi-num">3 <span style="font-size:14px;font-weight:700;color:var(--on-dark-mut)">/ 5</span></div><div class="pc-kpi-lbl">Ücretli firma</div>
-        <div class="pc-kpi-delta flat"><i class="fa-solid fa-circle-info"></i> 1 deneme · 1 ücretsiz</div></div>
+        <div><div class="pc-kpi-num">3 <span style="font-size:14px;font-weight:700;color:var(--on-dark-mut)">/ 7</span></div><div class="pc-kpi-lbl">Ücretli firma</div>
+        <div class="pc-kpi-delta flat"><i class="fa-solid fa-circle-info"></i> 1 deneme · 1 demo · 1 askıda · 1 iptal</div></div>
       </div>
       <div class="pc-kpi">
         <div class="pc-kpi-ico"><i class="fa-solid fa-scale-balanced"></i></div>
@@ -294,12 +294,15 @@ body{font-family:var(--font);color:var(--on-dark)}
               <tfoot><tr id="tenantFoot"><td colspan="2">Toplam MRR</td><td class="num">₺61.700</td><td class="num">%100</td></tr></tfoot>
             </table>
           </div>
+          <!-- Sayım uzlaşması: KPI "3 / 7" tüm firma kayıtlarını sayar; bu tablo
+               yalnız MRR katkısı hesaplanan 5 aktif aboneliği listeler. -->
+          <div class="pc-card-foot"><i class="fa-solid fa-circle-info"></i> Tabloda MRR hesabına giren 5 aktif abonelik listelenir. Askıya alınmış (Deniz Yapı Ltd.) ve iptal edilmiş (Batı Anadolu İnşaat) kayıtlar tahsil edilmediği için burada yer almaz; ikisinin de katkısı ₺0'dır.</div>
         </div>
       </div>
 
       <div class="pc-stack">
         <div class="pc-card">
-          <div class="pc-card-head"><div><div class="pc-card-title"><i class="fa-solid fa-chart-pie"></i> Paket Bazlı Kırılım</div><div class="pc-card-sub">3 ücretli firma · deneme ve ücretsiz pakette ₺0 katkı</div></div></div>
+          <div class="pc-card-head"><div><div class="pc-card-title"><i class="fa-solid fa-chart-pie"></i> Paket Bazlı Kırılım</div><div class="pc-card-sub">3 ücretli firma · kalan 4 kayıt (deneme · demo · askıda · iptal) ₺0 katkı</div></div></div>
           <div class="pc-card-body">
             <div id="paketDonutWrap"></div>
           </div>
@@ -391,7 +394,10 @@ body{font-family:var(--font);color:var(--on-dark)}
     msgs.push('Platform MRR\'ı <b>' + tl(MRR_TOPLAM) + '</b> — en büyük katkı <b>' + enBuyuk.ad + '</b> (' + tl(enBuyuk.katki) + ', %' + Math.round(enBuyuk.katki/MRR_TOPLAM*100) + ').');
     msgs.push('Haziran artışı (+₺1.500) Yapıtaş\'ın dönemsel promosyon fiyatının (₺13.400) sözleşme fiyatına (₺14.900) dönmesinden geldi — yeni tenant eklenmedi.');
     if(deneme.length) msgs.push(deneme.map(function(t){return t.ad;}).join(', ') + ' hâlâ deneme sürecinde — dönüşürse MRR\'a katkısı henüz platform toplamına YANSIMADI.');
-    msgs.push('3 ücretli / 5 firma (%60 dönüşüm oranı) — 2 firma (deneme + ücretsiz) toplamda ₺0 katkı yapıyor.');
+    /* Sayım gerçeği: platformda 7 firma kaydı var — 5'i aktif abonelik (3 ücretli
+       + 1 deneme + 1 demo), 2'si kapalı (1 askıda, 1 iptal). Dönüşüm oranı AKTİF
+       abonelikler üzerinden okunur: 3 / 5. ₺0 katkı yapan kayıt sayısı 4. */
+    msgs.push('5 aktif abonelik / 7 firma kaydı — 3\'ü ücretli (aktif aboneliklerde %60 dönüşüm oranı). Deneme, demo, askıda ve iptal olmak üzere 4 kayıt toplamda ₺0 katkı yapıyor.');
     document.getElementById('mrrEval').innerHTML = '<ul style="margin:0;padding-left:18px"><li style="margin-bottom:6px">' + msgs.join('</li><li style="margin-bottom:6px">') + '</li></ul>';
   }
 
