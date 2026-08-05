@@ -122,7 +122,34 @@
 @media(max-width:980px){ .yp-grid{grid-template-columns:minmax(0,1fr)} }
 @media(max-width:640px){
   .cash{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .fnl-row{grid-template-columns:64px 1fr 20px}
+  /* [G-9] 64px → 82px. Etiket kolonu 64px'e daraltılmıştı ama .fnl-row .fl
+     `white-space:nowrap` taşıyor: en uzun huni etiketi "Sunum / Gezi" 11.5px'te 74px
+     ister → 390px'te 10px kırpılma. Etiket KISALTILMADI ve nowrap kaldırılmadı
+     (sarma, çubukların satır hizasını bozuyor: her .fnl-row kendi grid'i olduğu için
+     satır yükseklikleri ayrışır). Kolon 82px'e çıktı → 8px pay; ölçüldü, en dar payı
+     olan "Müzakere" (53.8px) dahil 7 etiketin hepsi sığıyor. 390px'te çubuk kolonu
+     yine ~198px kalıyor, huni okunurluğu korunuyor. */
+  .fnl-row{grid-template-columns:82px 1fr 20px}
+}
+
+/* [G-9] 981–1279 ÖLÜ BANT — .cash 4 sabit kolon ve tek kırılma noktası ≤640px.
+   Bu bantta .yp-grid iki kolona bölündüğü için nakit bloğu yalnız 268px genişlik
+   alıyor; 4 kolona bölününce hücre 59.5px, 12px×2 dolgu düşünce metin kutusu 35px
+   kalıyor. "−₺2.990.000" boşluksuz tek token ve 13.5px'te 76px ister → 4 hücrenin
+   HEPSİ kırpık (+₺670.000 / +₺710.000 / −₺2.990.000 / −₺465.000).
+   Ölçü: bu bantta 2 kolon — ≤640px'te sayfanın kendi verdiği kolon sayısının aynısı,
+   yeni düzen icat edilmedi. Hücre 129px, metin kutusu 103px → en geniş ihtiyaç 76px,
+   27px pay. 4 hücre 2×2 dizilir; 7/30/60/90 gün etiketleri ve tutarların HEPSİ yerinde.
+   Bant alt sınırı 981px: 641–980'de .yp-grid tek kolona iner, nakit bloğu genişler ve
+   4 kolon zaten sığıyor (768px'te ölçüldü, kırpılma yok) — o aralığa dokunulmadı.
+   ÜST SINIR 1419px, tahminle değil ölçümle: .yp-grid iki kolonlu kaldığı için hücre
+   viewport'la birlikte yavaş büyüyor ve 4 kolon ancak ~1395px'ten sonra sığıyor
+   (metin kutusu 1280px→66px, 1320→71, 1360→76, 1400→81, 1440→86; ihtiyaç 76.4px).
+   Yani 1280–1394 aralığı da kırpıktı — Beyar'ın ölçtüğü dört genişlikten biri
+   olmadığı için listede görünmüyordu, aynı kök sebep olduğu için bantla kapsandı.
+   1420px'te 4 kolona dönülür (pay 6.6px), 1440px'te pay 9.6px. */
+@media(min-width:981px) and (max-width:1419px){
+  .cash{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
 </head>

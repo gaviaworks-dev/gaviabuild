@@ -46,6 +46,21 @@ a.hstat .hstat-lbl i{font-size:10px;margin-left:3px;color:var(--acc-ink)}
   .tdr-hero-meta{grid-template-columns:1fr}
 }
 
+/* [G-9] 981–1279 ÖLÜ BANT — çift sidebar açıkken içerik kolonu 684px'e iner, hero'nun
+   sağ kolonu (1fr) 201px kalır, .hero-stats onu 2'ye bölünce kutu 95px, iç metin alanı
+   63px olur. "₺54.900" boşluksuz tek token (kırılamaz) ve 17px'te 68px ister →
+   5px kırpılma. ≤980'de hero tek kolona indiği için sorun yok, ≥1280'de kolon geniş.
+   Ölçü: yalnız .hero-stats bu bantta tek kolona iner — 4 kutu alt alta, iç metin alanı
+   63→167px (aynı değer 68.5px ister, ~99px pay). Hero'nun kolon ORANINA DOKUNULMADI,
+   sol kolon 359px'te kalıyor (adres/ödeme vadesi blokları daralmıyor). Punto bu sayfada
+   zaten 17px ve DEĞİŞTİRİLMEDİ. Kolon oranını daraltma denemesi ölçüldü ve BIRAKILDI:
+   sol kolonu 291px'e düşürüp meta değerlerini gereksizce sarıyordu.
+   4 stat kutusu da yerinde — hiçbiri gizlenmedi, değer/etiket DEĞİŞTİRİLMEDİ.
+   Aynı çözüm: crm-cari-detay + crm-operasyon-arac-detay (4 kutulu kardeş hero'lar). */
+@media(min-width:981px) and (max-width:1279px){
+  .hero-stats{grid-template-columns:minmax(0,1fr)}
+}
+
 .warn-band{margin:0 0 16px;padding:16px 20px;border-radius:var(--r-md);border:1px solid var(--danger);background:var(--danger-tint);display:flex;gap:12px;align-items:flex-start}
 .warn-band i{color:var(--danger);font-size:16px;margin-top:2px;flex:none}
 .warn-band p{font-size:13px;line-height:1.65;color:var(--ink-2)}
@@ -85,7 +100,15 @@ a.hstat .hstat-lbl i{font-size:10px;margin-left:3px;color:var(--acc-ink)}
 .gecikme-body span{font-size:12px;color:var(--muted)}
 
 /* §17 aksiyon çubuğu — birden çok buton mobilde/dar ekranda sarmalanabilsin */
-.gv-page-head .ph-actions{flex-wrap:wrap}
+/* [G-9] KÖK SEBEP: buradaki `flex-wrap:wrap` ÖLÜ bir kuraldı ve 1024px'te doc-level
+   17px yatay taşma sürüyordu. Sebep wrap'in yokluğu değil, shell.css'in verdiği
+   `.gv-page-head .ph-actions{flex:none}` — flex-shrink:0 + flex-basis:auto, yani
+   kutunun taban ölçüsü max-content'e ÇİVİLİ. Kutu hiç daralmadığı için içindeki
+   butonlar sarma fırsatı BULAMAZ; wrap hiç tetiklenmez. Bu sayfa kanıtın kendisiydi:
+   wrap zaten vardı, taşma yine vardı. Ölçüm 1024px: kutu 673px / kapsayıcı 628px.
+   Eksik parça daralma iznidir → flex-shrink:1 + min-width:0. Buton sayısı/etiketi
+   DEĞİŞMEDİ, hiçbiri gizlenmedi. */
+.gv-page-head .ph-actions{flex-wrap:wrap;flex-shrink:1;min-width:0}
 
 /* belge ekleme — crm-operasyon-arac-arsiv.html deseni BİREBİR (§17 Dosya Ekle; bu
    sayfada Belgeler bloğu YOKTU, yeni açıldı) */

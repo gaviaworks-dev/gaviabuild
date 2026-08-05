@@ -47,6 +47,26 @@ a.hstat .hstat-lbl i{font-size:10px;margin-left:3px;color:var(--acc-ink)}
   .cari-hero-meta{grid-template-columns:1fr}
 }
 
+/* [G-9] 981–1279 ÖLÜ BANT — çift sidebar açıkken içerik kolonu 684px'e iner, hero'nun
+   sağ kolonu (1fr) yalnız 201px kalır, .hero-stats onu 2'ye bölünce kutu 95px, iç metin
+   alanı 63px olur. "₺342.000" boşluksuz tek token (kırılamaz) ve 19px'te 88px ister →
+   25px kırpılma. ≤980'de hero tek kolona indiği için sorun yok, ≥1280'de kolon geniş.
+   Ölçü: yalnız .hero-stats bu bantta tek kolona iner — 4 kutu alt alta, iç metin alanı
+   63→169px (aynı değer 88px ister, 81px pay). Hero'nun kolon ORANINA DOKUNULMADI,
+   yani sol kolon 359px'te kalıyor ve kimlik/iletişim bloğu hiç daralmıyor; üstelik
+   "SZL-2025-T05" artık tek satıra sığıyor (öncesinde iki satıra kırılıyordu).
+   Punto da 19px'te KALDI — 63px'lik kutuya sığdırmak 13.6px isterdi, bu etiket
+   puntosunun (11.5px) dibine iner ve hiyerarşiyi çökertirdi; doğru çözüm kutuyu
+   büyütmek. Kolon oranını daraltma denemesi ölçüldü ve BIRAKILDI: sol kolonu 291px'e
+   düşürüp meta değerlerini gereksiz yere sarıyordu.
+   4 stat kutusu da yerinde — hiçbiri gizlenmedi, değer/etiket DEĞİŞTİRİLMEDİ.
+   Kardeş sayfalar: crm-satinalma-tedarikci-detay + crm-operasyon-arac-detay aynı
+   çözümü kullanır (4 kutu). crm-santiye-detay'da kutu sayısı 8-11 olduğu için orada
+   tek kolon hero'yu aşırı uzatıyordu — o sayfa oran ayarıyla çözüldü. */
+@media(min-width:981px) and (max-width:1279px){
+  .hero-stats{grid-template-columns:minmax(0,1fr)}
+}
+
 /* sekme çubuğu — santiye-detay ile birebir dil */
 .gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
 .gv-tabs::-webkit-scrollbar{display:none}
@@ -200,6 +220,20 @@ a.hstat .hstat-lbl i{font-size:10px;margin-left:3px;color:var(--acc-ink)}
   .ph-actions{flex-wrap:wrap;width:100%}
   .ph-actions .btn{flex:1 1 auto;justify-content:center}
 }
+/* ---- [G-9] KÖK SEBEP: yukarıdaki ≤980 kuralı 981px ÜSTÜNÜ kapsamıyordu ve orada
+   doc-level 198px yatay taşma kalıyordu (1024px'te ölçüldü). Taşmanın sebebi
+   flex-wrap DEĞİL: shell.css `.gv-page-head .ph-actions{flex:none}` veriyor, yani
+   flex-shrink:0 + flex-basis:auto → kutunun taban ölçüsü max-content'e ÇİVİLENİYOR.
+   Kutu hiç daralmadığı için içindeki butonlar sarma fırsatı bulamaz; `flex-wrap:wrap`
+   tek başına ölü kalır (kardeş sayfa crm-satinalma-tedarikci-detay'da flex-wrap
+   zaten vardı, taşma yine sürüyordu — kanıt). ≤980 kuralının çalışmasını sağlayan
+   şey wrap değil `width:100%`'ti; o da taban ölçüyü ezdiği için.
+   Ölçüm 1024px: kutu 854px (7 aksiyon, max-content) / kapsayıcı 628px.
+   Düzeltme daralmayı serbest bırakır — flex-shrink:1 + min-width:0 + wrap; kutu
+   628px'e iner ve butonlar iki satıra sarar (ölçüm sonrası scrollWidth 628 = 0 taşma).
+   Koşulsuz verildi: sığdığı genişliklerde (1440px) shrink devreye girmez, davranış
+   birebir aynı kalır. Buton SAYISI ve etiketleri DEĞİŞMEDİ, hiçbiri gizlenmedi. ---- */
+.gv-page-head .ph-actions{flex-wrap:wrap;flex-shrink:1;min-width:0}
 </style>
 </head>
 <body data-sec="cari" data-screen="rehber">

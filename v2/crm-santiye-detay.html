@@ -58,6 +58,30 @@ a.hstat .hstat-lbl i{font-size:10px;margin-left:3px;color:var(--acc-ink)}
   .site-hero-meta{grid-template-columns:1fr}
 }
 
+/* [G-9] 981–1279 ÖLÜ BANT — çift sidebar açıkken içerik kolonu 684px'e iner, hero'nun
+   sağ kolonu (1fr) 201px kalır, .hero-stats onu 2'ye bölünce kutu 95px, iç metin alanı
+   61px olur. "₺81.920" boşluksuz tek token (kırılamaz) ve 19px'te 77px ister →
+   16px kırpılma. ≤980'de hero tek kolona indiği için sorun yok, ≥1280'de kolon geniş.
+   Ölçü: kolon oranı 1.7fr→1.15fr (kutu 120px, iç alan 87px) + sayı 19→17px (aynı
+   değer 68.5px ister) → 18px pay. 11 hstat'ın hepsi ölçüldü, en dar payı olan
+   "₺81.920" bile sığıyor. Sol kolon 359→291px; site-hero-meta 2 kolonlu kalır, uzun
+   dd değerleri ortak dd{overflow-wrap:anywhere} ile sarar — kırpılma yok.
+   Değer/etiket DEĞİŞTİRİLMEDİ, hiçbir kutu gizlenmedi.
+   Aynı bant düzeltmesi: crm-cari-detay + crm-satinalma-tedarikci-detay (aynı desen). */
+@media(min-width:981px) and (max-width:1279px){
+  .site-hero{grid-template-columns:1.15fr 1fr}
+  .hstat-num{font-size:17px}
+}
+
+/* [G-9] KÖK SEBEP (crm-cari-detay ile aynı): shell.css `.gv-page-head .ph-actions`
+   `flex:none` veriyor → flex-shrink:0 + basis:auto, kutunun taban ölçüsü max-content'e
+   çivilenir; daralamadığı için içindeki butonlar sarma fırsatı bulamaz ve flex-wrap
+   tek başına ölü kalır. Ölçüm 1024px: kutu 664px / kapsayıcı 628px → doc-level 8px
+   taşma. Düzeltme daralmayı serbest bırakır (shrink:1 + min-width:0 + wrap).
+   Koşulsuz: sığdığı genişliklerde shrink devreye girmez. Buton sayısı/etiketi
+   DEĞİŞMEDİ, hiçbiri gizlenmedi. */
+.gv-page-head .ph-actions{flex-wrap:wrap;flex-shrink:1;min-width:0}
+
 /* §16 — süre uzatım belge çipi; crm-ayarlar-imza-form.html'deki doc-item dili
    BİREBİR (read-only görünüm — çalışan yükleme arayüzü crm-santiye-sure-uzatim-form.html'de) */
 .doc-item{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
