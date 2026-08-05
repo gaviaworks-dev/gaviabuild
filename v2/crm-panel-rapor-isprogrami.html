@@ -19,8 +19,10 @@
 /* ============ SAYFAYA ÖZEL — İş Programı Raporu (plan vs gerçek çift bar) ============ */
 .rp-back{display:inline-flex;align-items:center;gap:7px}
 
-.santiye-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
-.santiye-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.santiye-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;min-width:0}
+.santiye-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none}
+/* [G-3] çip şeridi tek satırda kalır, taşarsa yatay kayar (gvChipBar) */
+.santiye-row .ip-chipbar{flex:1 1 auto;min-width:0}
 
 #tblProgram{min-width:840px}
 .pg-kalem{font-weight:700;color:var(--ink);font-size:13.5px}
@@ -95,17 +97,21 @@
       </div>
     </div>
 
+    <!-- [G-3/G-4] TEK çip şeridi: Şantiye (sayfa kapsamlı bağlam seçici — KPI/grafik/not
+         ve tabloyu birlikte değiştirir, bu yüzden liste içine taşınmadı). Şerit artık
+         gvChipBar slider'ında: 390px'te ikinci satıra geçmez. İkinci satırdaki
+         "Tarih Aralığı" kaldırıldı — Gelişmiş Filtre panelindeki `tarih` alanına taşındı. -->
     <div class="santiye-row">
       <span class="frow-lbl">Şantiye</span>
-      <div class="chips" id="ipChips">
-        <button class="chip is-on" data-santiye="vadi">Vadi Konakları</button>
-        <button class="chip" data-santiye="liman">Liman Lojistik Merkezi</button>
-        <button class="chip" data-santiye="merkez">Merkez Şantiye</button>
+      <div class="gv-chipbar-wrap ip-chipbar" data-chipbar>
+        <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="gv-chipbar chips" id="ipChips">
+          <button class="chip is-on" data-santiye="vadi">Vadi Konakları</button>
+          <button class="chip" data-santiye="liman">Liman Lojistik Merkezi</button>
+          <button class="chip" data-santiye="merkez">Merkez Şantiye</button>
+        </div>
+        <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
       </div>
-    </div>
-    <div class="santiye-row">
-      <span class="frow-lbl">Tarih Aralığı</span>
-      <div data-gvdaterange id="ipDateRange"></div>
     </div>
 
     <div class="kpi-grid">
@@ -140,9 +146,9 @@
            taşınmadı. Durum (Tamamlandı/Programında/Gecikme vb.) satır bazlı gerçek
            bir eksen olduğu için Gelişmiş Filtre'ye eklendi. Arşiv toggle EKLENMEDİ —
            "Tamamlandı" zaten Durum ekseninin bir değeri, ayrı bir arşiv kavramı yok
-           (K-326 emsali). Tarih Aralığı (sayfa üstünde) satırları FİLTRELEMEZ (kaynakta
-           belgelenmiş bilinçli karar, bkz. gvDateRange onChange yorumu) — bu yüzden
-           Gelişmiş Filtre'ye taşınmadı, ikinci bir anlamsız kontrol üretilmedi. -->
+           (K-326 emsali). [G-4] Tarih Aralığı sayfa üstündeki ikinci satırdan BURAYA,
+           Gelişmiş Filtre'ye taşındı; satırları FİLTRELEMEZ (kaynakta belgelenmiş
+           bilinçli karar — çok-aylık kalemler), seçim bir bilgi notuna dönüşür. -->
       <div class="gv-listhead">
         <div class="lh-row">
           <div class="lh-search">
@@ -363,8 +369,9 @@
 
     document.getElementById('ipBackWrap').innerHTML = '<a class="gc-link" href="' + R.backHref + '"><i class="fa-solid fa-arrow-right"></i> ' + R.backLbl + '</a>';
 
-    /* ============ YORUM / DEĞERLENDİRME — şantiyeye göre CANLI ============ */
-    document.getElementById('ipNoteText').innerHTML = NOTE[k];
+    /* ============ YORUM / DEĞERLENDİRME — şantiyeye göre CANLI (aktif tarih aralığı
+       notu varsa o korunur, bkz. ipNoteSync) ============ */
+    ipNoteSync();
 
     /* ============ GRAFİK ALANI (B §6.2 madde 6) — kalem durum dağılımı + karşılaştırma ============ */
     if(window.gvDonut){
@@ -415,6 +422,23 @@
      kaybolmasın. ============ */
   var fpDurum = '';
   var tblProgram = document.getElementById('tblProgram');
+
+  /* ============ TARİH ARALIĞI — [G-4] sayfa üstündeki ikinci satırdan Gelişmiş Filtre
+     paneline taşındı (bileşen aynı: gvDateRange, panelin `daterange` alan tipi).
+     İş programı kalemleri ay/yıl bazlı uzun aralıklar kapsar (ör. 2024-2027); tekil gün
+     filtresi anlamlı olmadığından seçim, kapsanan aralığı anlatan bir bilgi notuna
+     dönüşür (gerçek DOM etkisi — veri UYDURULMAZ). Davranış birebir korundu. */
+  var ipTarihVal = null;
+  function ipNoteSync(){
+    var noteEl = document.getElementById('ipNoteText');
+    if(!noteEl) return;
+    if(ipTarihVal){
+      noteEl.innerHTML = 'Seçilen aralık: <b>' + ipTarihVal.label + '</b> — iş programı kalemleri çok-aylık planlar içerdiğinden (ör. 2024–2027) bu rapor tekil tarih aralığına göre filtrelenmez; kalem bazlı plan/gerçek tarihleri yukarıdaki tabloda görüntülenir.';
+    } else {
+      noteEl.innerHTML = NOTE[key];
+    }
+  }
+
   function ipApplyFilter(){
     var searchInp = document.querySelector('input[data-table-search="#tblProgram"]');
     var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
@@ -426,19 +450,35 @@
   }
   window.ipApplyFilter = ipApplyFilter;
   tblProgram._gvApply = ipApplyFilter;
+  var ipFd = null;
   if(window.gvFilterDrawer){
-    gvFilterDrawer.init({
+    ipFd = gvFilterDrawer.init({
       mount: '#ipFiltreBtn', title: 'Gelişmiş Filtre', screen: 'rapor-isprogrami',
       chipsMount: '#ipAchips',
       fields: [
         {key:'durum', type:'select', label:'Durum', options:[
           {v:'ok', l:'Tamamlandı / Önde'}, {v:'info', l:'Programında'},
           {v:'off', l:'Planlandı'}, {v:'warn', l:'Hafif Gecikme'}, {v:'danger', l:'Gecikme'}
-        ]}
+        ]},
+        {key:'tarih', type:'daterange', label:'Tarih Aralığı', emptyLabel:'Tüm program süresi'}
       ],
-      onApply: function(state){ fpDurum = state.durum ? state.durum.raw : ''; ipApplyFilter(); },
-      onClear: function(){ fpDurum = ''; ipApplyFilter(); }
+      onApply: function(state){
+        fpDurum = state.durum ? state.durum.raw : '';
+        ipTarihVal = state.tarih ? state.tarih.raw : null;
+        ipNoteSync(); ipApplyFilter();
+      },
+      onClear: function(){ fpDurum = ''; ipTarihVal = null; ipNoteSync(); ipApplyFilter(); }
     });
+    /* localStorage'dan geri yüklenen filtre onApply'ı tetiklemez (ui.js) — açılışta
+       kayıtlı seçimle senkron kalmak için tek seferlik uygulanır. */
+    if(ipFd){
+      var ipSt = ipFd.values();
+      if(ipSt && (ipSt.durum || ipSt.tarih)){
+        fpDurum = ipSt.durum ? ipSt.durum.raw : '';
+        ipTarihVal = ipSt.tarih ? ipSt.tarih.raw : null;
+        ipNoteSync(); ipApplyFilter();
+      }
+    }
   }
   if(window.gvCols){
     gvCols.init({
@@ -449,21 +489,6 @@
         {key:'sapma', lbl:'Sapma', def:true},
         {key:'durum', lbl:'Durum', def:true}
       ]
-    });
-  }
-
-  /* ============ TARİH ARALIĞI — iş programı kalemleri ay/yıl bazlı uzun aralıklar
-     kapsar (ör. 2024-2027); tekil gün filtresi anlamlı olmadığından seçim, seçili
-     şantiyenin programı içinde hangi aralığın kapsandığını gösteren bir bilgi
-     notuna dönüşür (gerçek DOM etkisi — veri UYDURULMAZ). */
-  if(window.gvDateRange){
-    gvDateRange('#ipDateRange', {
-      emptyLabel: 'Tüm program süresi',
-      onChange: function(val){
-        var noteEl = document.getElementById('ipNoteText');
-        if(!val){ noteEl.innerHTML = NOTE[key]; return; }
-        noteEl.innerHTML = 'Seçilen aralık: <b>' + val.label + '</b> — iş programı kalemleri çok-aylık planlar içerdiğinden (ör. 2024–2027) bu rapor tekil tarih aralığına göre filtrelenmez; kalem bazlı plan/gerçek tarihleri yukarıdaki tabloda görüntülenir.';
-      }
     });
   }
 

@@ -19,11 +19,8 @@
 /* ============ SAYFAYA ÖZEL — İzin Raporu ============ */
 .rp-back{display:inline-flex;align-items:center;gap:7px}
 
-/* iki boyutlu dönem/şantiye filtresi — crm-operasyon-kasa.html .filter-bar.stack deseni */
-.filter-bar.stack{flex-direction:column;align-items:stretch;gap:12px}
-.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.filter-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
-@media(max-width:640px){ .filter-row .frow-lbl{min-width:0;width:100%} }
+/* [G-3/G-4] Dönem/Şantiye .filter-bar.stack satırları kaldırıldı (iki eksen de Gelişmiş
+   Filtre panelinde); geride tek bir Durum çip şeridi kaldı, o da gvChipBar slider'ında. */
 
 .kpi-card.is-empty{opacity:.5}
 .kpi-card.is-empty:hover{transform:none;box-shadow:none}
@@ -149,9 +146,9 @@
         <div class="gc-title"><i class="fa-solid fa-umbrella-beach"></i> Durum Kırılımı</div><span class="ph-sub" style="margin:0">crm-personel-izin.html</span>
         <button type="button" class="btn btn-ghost btn-sm" id="btnIzinHataDemo" style="margin-left:auto"><i class="fa-solid fa-triangle-exclamation"></i> Hata Durumunu Gör</button>
       </div>
-      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3). Dönem/Şantiye
-           chip'leri (eskiden sayfa başında ayrı bir .gv-card) buraya, arama+aksiyonların ALTINA
-           taşındı (§2.1/§2.3) — çok satırlı içerik K-325 deseniyle .filter-bar.stack sarmalayıcısında. -->
+      <!-- V3A — standart liste üst alanı (tasks/spec-v3a-ortak.md §2.1/§2.2/§2.3).
+           [G-3/G-4] Buradaki iki satırlı Dönem/Şantiye çip bloğu TEK bir Durum şeridine
+           indirgendi; Dönem/Şantiye Gelişmiş Filtre panelinde. -->
       <div class="gv-listhead">
         <div class="lh-row">
           <div class="lh-search">
@@ -173,26 +170,21 @@
             <button type="button" class="btn btn-ghost btn-sm gv-fd-clear-all"><i class="fa-solid fa-filter-circle-xmark"></i> Filtreleri Temizle</button>
           </div>
         </div>
+        <!-- [G-3/G-4] TEK çip şeridi: durum ekseni (KPI kartlarıyla aynı eksen, en kritik
+             ayrım). Dönem + Şantiye çip satırları ve sayfa içi gvDateRange kaldırıldı —
+             üçü de Gelişmiş Filtre panelinde (Tarih Aralığı → Dönem eşlemesi birebir
+             korundu). Şerit gvChipBar slider'ında; 390px'te ikinci satıra geçmez. -->
         <div class="lh-tabs">
-          <div class="filter-bar stack" style="width:100%;min-width:0;padding:0;border:none">
-            <div class="filter-row">
-              <span class="frow-lbl">Dönem</span>
-              <div class="chips" id="donemChips">
-                <button class="chip is-on" data-donem="tumu">Tümü</button>
-                <button class="chip" data-donem="haziran">Haziran</button>
-                <button class="chip" data-donem="temmuz">Temmuz</button>
-              </div>
-              <div data-gvdaterange id="izinDateRange" style="margin-left:8px"></div>
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" id="durumChips">
+              <button class="chip is-on" data-durum="tumu">Tümü <span class="ch-cnt" id="cntTumu">5</span></button>
+              <button class="chip" data-durum="bekliyor">Bekliyor <span class="ch-cnt" id="cntBekliyor">1</span></button>
+              <button class="chip" data-durum="onaylandi">Onaylandı <span class="ch-cnt" id="cntOnaylandi">2</span></button>
+              <button class="chip" data-durum="reddedildi">Reddedildi <span class="ch-cnt" id="cntReddedildi">1</span></button>
+              <button class="chip" data-durum="revize">Revize <span class="ch-cnt" id="cntRevize">1</span></button>
             </div>
-            <div class="filter-row" data-view="yonetim" id="santiyeRow">
-              <span class="frow-lbl">Şantiye</span>
-              <div class="chips" id="santiyeChips">
-                <button class="chip is-on" data-santiye="tumu">Tümü</button>
-                <button class="chip" data-santiye="vadi">Vadi Konakları</button>
-                <button class="chip" data-santiye="liman">Liman Lojistik</button>
-                <button class="chip" data-santiye="merkez">Merkez</button>
-              </div>
-            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
         <div class="filtre-ozet" id="filtreOzet"><i class="fa-solid fa-circle-info"></i> <span>—</span></div>
@@ -261,7 +253,7 @@
         <div class="gv-empty" id="izinEmpty" hidden>
           <div class="ge-ico"><i class="fa-solid fa-umbrella-beach"></i></div>
           <h4>Bu filtrede izin talebi yok</h4>
-          <p>Dönem veya şantiye seçimini değiştirin.</p>
+          <p>Durum çipini veya Gelişmiş Filtre seçimlerini değiştirin.</p>
         </div>
       </div>
     </div>
@@ -340,9 +332,10 @@
   }
 
   /* ============ V3A — Gelişmiş Filtre (gvFilterDrawer) ============
-     Durum ve Tür şu ana kadar hiçbir kontrolle filtrelenemiyordu (yalnız rozet/kırılım
-     olarak görünüyorlardı) — Dönem/Şantiye zaten kendi chip satırlarında olduğu için
-     BURADA TEKRAR EDİLMEDİ (K-220/K-326 dersi: aynı ekseni iki kontrolle sunma). */
+     [G-3/G-4] Alanlar: Tarih Aralığı (daterange) → Dönem · Şantiye · Tür. İlk ikisi
+     sayfa üstündeki çip satırlarından BURAYA taşındı; Durum tek çip şeridi olarak
+     listenin üstünde kaldığı için panelde TEKRAR EDİLMEDİ (K-220/K-326 dersi:
+     aynı ekseni iki kontrolle sunma). */
   var izinFd = null;
   function izinFv(key){
     if(!izinFd) return null;
@@ -350,26 +343,40 @@
     return st && st[key] ? st[key] : null;
   }
 
+  /* Tarih Aralığı → Dönem eşlemesi: eskiden sayfa içi gvDateRange onChange'inde olan
+     kısayol eşlemesi BİREBİR korundu (bu ay/son7 → Temmuz, geçen ay/son15/son30 →
+     Haziran, diğer/özel → tüm dönem). Mock veri Haz–Tem 2026 penceresinde. */
+  function izinDonem(){
+    var fv = izinFv('tarih');
+    if(!fv || !fv.raw) return 'tumu';
+    var k = fv.raw.key;
+    if(k === 'bu_ay' || k === 'son7') return 'temmuz';
+    if(k === 'gecen_ay' || k === 'son15' || k === 'son30') return 'haziran';
+    return 'tumu';
+  }
+
   function render(){
-    var donemOn = document.querySelector('#donemChips .chip.is-on');
-    var donem = donemOn ? donemOn.getAttribute('data-donem') : 'tumu';
-    var santiyeWrap = document.getElementById('santiyeChips');
-    var santiyeVisible = view === 'yonetim';
-    var santiyeOn = santiyeVisible ? santiyeWrap.querySelector('.chip.is-on') : null;
-    var santiye = santiyeOn ? santiyeOn.getAttribute('data-santiye') : 'tumu';
-    var durumFv = izinFv('durum'), turFv = izinFv('tur');
+    var donem = izinDonem();
+    var sanFv = view === 'yonetim' ? izinFv('santiye') : null;
+    var santiye = sanFv ? sanFv.value : 'tumu';
+    var durumOn = document.querySelector('#durumChips .chip.is-on');
+    var durum = durumOn ? durumOn.getAttribute('data-durum') : 'tumu';
+    var turFv = izinFv('tur');
     var searchInp = document.querySelector('input[data-table-search]');
     var term = searchInp ? searchInp.value.trim().toLocaleLowerCase('tr') : '';
 
-    var vis = [];
+    /* base = durum ÇİPİ hariç tüm süzgeçlerden geçen satırlar → çip sayaçları + KPI
+       kartları buradan hesaplanır (çip seçimi sayaçları sıfırlamasın, talep raporu deseni). */
+    var base = [], vis = [];
     tbody.querySelectorAll('tr').forEach(function(tr){
       var okD = donem === 'tumu' || tr.getAttribute('data-donem') === donem;
       var okS = santiye === 'tumu' || tr.getAttribute('data-santiye') === santiye;
-      var okDurumF = !durumFv || tr.getAttribute('data-durum') === durumFv.value;
       var okTurF = !turFv || tr.getAttribute('data-tur') === turFv.value;
       var okTerm = !term || tr.textContent.toLocaleLowerCase('tr').indexOf(term) !== -1;
-      var show = okD && okS && okDurumF && okTurF && okTerm;
+      var inBase = okD && okS && okTurF && okTerm;
+      var show = inBase && (durum === 'tumu' || tr.getAttribute('data-durum') === durum);
       tr.hidden = !show;
+      if(inBase) base.push(tr);
       if(show) vis.push(tr);
     });
     document.getElementById('izinEmpty').hidden = vis.length !== 0;
@@ -378,14 +385,26 @@
       bekliyor:{n:0, gun:0, ad:[]}, onaylandi:{n:0, gun:0, ad:[]},
       reddedildi:{n:0, gun:0, ad:[]}, revize:{n:0, gun:0, ad:[]}
     };
+    base.forEach(function(tr){
+      var d = tr.getAttribute('data-durum');
+      if(!durumlar[d]) return;
+      durumlar[d].n++;
+      durumlar[d].gun += +tr.getAttribute('data-gun');
+      durumlar[d].ad.push(tr.getAttribute('data-personel'));
+    });
+
+    /* çip sayaçları */
+    document.getElementById('cntTumu').textContent = base.length;
+    ['bekliyor','onaylandi','reddedildi','revize'].forEach(function(k){
+      var el = document.getElementById('cnt' + k.charAt(0).toUpperCase() + k.slice(1));
+      if(el) el.textContent = durumlar[k].n;
+    });
+
     var turler = {};
     var toplamGun = 0;
     vis.forEach(function(tr){
-      var d = tr.getAttribute('data-durum');
       var gun = +tr.getAttribute('data-gun');
-      var ad = tr.getAttribute('data-personel');
       toplamGun += gun;
-      if(durumlar[d]){ durumlar[d].n++; durumlar[d].gun += gun; durumlar[d].ad.push(ad); }
       var t = tr.getAttribute('data-tur');
       if(!turler[t]) turler[t] = {n:0, gun:0, label: tr.getAttribute('data-tur-label')};
       turler[t].n++; turler[t].gun += gun;
@@ -426,46 +445,45 @@
       var lbl = {vadi:'Vadi Konakları', liman:'Liman Lojistik', merkez:'Merkez'}[santiye];
       scopeParts.push(lbl);
     }
+    if(durum !== 'tumu') scopeParts.push(durumOn.childNodes[0].textContent.trim());
     document.getElementById('turScopeLbl').textContent = scopeParts.length ? scopeParts.join(' · ') : 'tüm kayıtlar';
     document.getElementById('filtreOzet').querySelector('span').innerHTML =
       '<b>' + vis.length + '</b> kayıt gösteriliyor · <b>' + toplamGun + '</b> gün toplam' +
       (scopeParts.length ? ' (' + scopeParts.join(' · ') + ')' : '');
   }
 
-  document.getElementById('donemChips').addEventListener('click', function(e){
-    var ch = e.target.closest('.chip[data-donem]'); if(!ch) return;
+  document.getElementById('durumChips').addEventListener('click', function(e){
+    var ch = e.target.closest('.chip[data-durum]'); if(!ch) return;
     this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
     ch.classList.add('is-on');
     render();
   });
-  if(view === 'yonetim'){
-    document.getElementById('santiyeChips').addEventListener('click', function(e){
-      var ch = e.target.closest('.chip[data-santiye]'); if(!ch) return;
-      this.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-      ch.classList.add('is-on');
-      render();
-    });
-  }
 
   /* D18 bileşik-motor delegasyonu — arama kutusu data-table-search taşıdığı için
      ui.js'in genel motoru bu tabloda tbl._gvApply'a devreder (çifte-listener YOK). */
   document.getElementById('tblIzinKirilim')._gvApply = render;
 
   if(window.gvFilterDrawer){
+    /* Alan sırası: Tarih Aralığı → Şantiye → Tür. `santiye` YALNIZ yönetim görünümünde
+       kurulur (şef zaten Vadi'ye budanmış — rol kapısı korundu). `table` VERİLMEDİ:
+       eşleştirmenin tek mercii render(). */
+    var izinFields = [
+      {key:'tarih', type:'daterange', label:'Tarih Aralığı', emptyLabel:'Tüm dönem'}
+    ];
+    if(view === 'yonetim'){
+      izinFields.push({key:'santiye', type:'select', label:'Şantiye', options:[
+        {v:'vadi', l:'Vadi Konakları'}, {v:'liman', l:'Liman Lojistik'}, {v:'merkez', l:'Merkez'}
+      ]});
+    }
+    izinFields.push({key:'tur', type:'select', label:'Tür', options:[
+      {v:'yillik', l:'Yıllık İzin'}, {v:'raporlu', l:'Raporlu'}, {v:'babalik', l:'Babalık İzni'}
+    ]});
     izinFd = gvFilterDrawer.init({
       mount: '#izinFiltreBtn',
       screen: 'rapor-izin',
       title: 'Gelişmiş Filtre',
       chipsMount: '#izinAchips',
-      fields: [
-        {key:'durum', type:'select', label:'Durum', options:[
-          {v:'bekliyor', l:'Bekliyor'}, {v:'onaylandi', l:'Onaylandı'},
-          {v:'reddedildi', l:'Reddedildi'}, {v:'revize', l:'Revize'}
-        ]},
-        {key:'tur', type:'select', label:'Tür', options:[
-          {v:'yillik', l:'Yıllık İzin'}, {v:'raporlu', l:'Raporlu'}, {v:'babalik', l:'Babalık İzni'}
-        ]}
-      ],
+      fields: izinFields,
       onApply: function(){ render(); },
       onClear: function(){ render(); }
     });
@@ -485,23 +503,9 @@
 
   render();
 
-  /* ============ B §6.2 madde 3 — tarih aralığı (gvDateRange) gerçek Dönem chip'ini tetikler ============ */
-  var izinDonemChips = document.getElementById('donemChips');
-  if(window.gvDateRange && izinDonemChips){
-    var izinDr = document.getElementById('izinDateRange');
-    gvDateRange(izinDr, {
-      emptyLabel: 'Tüm dönem',
-      onChange: function(val){
-        var key = 'tumu';
-        if(val){
-          if(val.key === 'bu_ay' || val.key === 'son7') key = 'temmuz';
-          else if(val.key === 'gecen_ay' || val.key === 'son15' || val.key === 'son30') key = 'haziran';
-        }
-        var btn = izinDonemChips.querySelector('[data-donem="' + key + '"]');
-        if(btn) btn.click();
-      }
-    });
-  }
+  /* ============ B §6.2 madde 3 — tarih aralığı: [G-4] ile sayfa içi gvDateRange
+     kaldırıldı, Gelişmiş Filtre panelindeki `tarih` daterange alanına taşındı.
+     Dönem eşlemesi izinDonem()'de birebir korunuyor (bkz. yukarısı). ============ */
 
   /* ============ B §6.2 madde 6 — grafik alanı (tüm kayıtlar sabit set, filtre-bağımsız gösterim) ============ */
   if(window.gvDonut) gvDonut('#chartIzinTur', [

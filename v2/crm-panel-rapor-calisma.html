@@ -19,8 +19,9 @@
 /* ============ SAYFAYA ÖZEL — Personel Çalışma Raporu (kişi × durum + şantiye/taşeron kırılımı) ============ */
 .rp-back{display:inline-flex;align-items:center;gap:7px}
 
-.donem-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.donem-row .frow-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);flex:none;min-width:64px}
+/* [G-3/G-4] .donem-row (Dönem çipleri + sayfa içi gvDateRange) kaldırıldı — Dönem
+   ekseni Gelişmiş Filtre panelindeki Tarih Aralığı alanına taşındı; sayfada tek
+   çip şeridi (Şantiye, .gv-chipbar slider'ı) kaldı. */
 
 #tblCalisma{min-width:820px}
 #tblCalisma td.num,#tblCalisma th.num{text-align:right}
@@ -92,22 +93,15 @@
 
     <!-- ============ YÖNETİM GÖRÜNÜMÜ (superadmin·sahip·yonetim·teknik·muhasebe·ik) ============ -->
     <section data-view="yonetim">
-      <!-- Dönem chip'i yalnız KPI özetini değiştirir (crm-operasyon-kasa.html donem-row emsali,
-           önceden hesaplanmış MOCK setler). Kişi×durum tablosu her zaman haftanın tamamını (4 gün)
+      <!-- Dönem seçimi (artık Gelişmiş Filtre > Tarih Aralığı) yalnız KPI özetini
+           değiştirir (önceden hesaplanmış MOCK setler). Kişi×durum tablosu her zaman haftanın tamamını (4 gün)
            gösterir — kaynak sayfa (crm-operasyon-puantaj.html) her personelin hangi durumun hangi
            güne denk geldiğini yalnızca bazı öne çıkan kayıtlar için (FM/EM/yarım/devamsız) belirtir;
            kişi bazında ay ayrımı bu yüzden özet düzeyinde tutulur, tabloya yansıtılmaz (uydurma yok). -->
-      <!-- ============ B §6.2 madde 3 — tarih aralığı seçimi: gvDateRange + mevcut Dönem chip'i AYNI motoru sürer ============ -->
-      <div class="donem-row">
-        <span class="frow-lbl">Dönem</span>
-        <div class="chips" id="donemChips">
-          <button class="chip is-on" data-donem="tumu">Tümü</button>
-          <button class="chip" data-donem="haziran">Haziran (29–30)</button>
-          <button class="chip" data-donem="temmuz">Temmuz (1–2)</button>
-        </div>
-        <div data-gvdaterange id="calDateRange" style="margin-left:8px"></div>
-      </div>
-
+      <!-- ============ B §6.2 madde 3 — tarih aralığı seçimi: [G-3/G-4] sayfa üstündeki
+           Dönem çip satırı + gvDateRange KALDIRILDI; ikisi de aşağıdaki listenin
+           Gelişmiş Filtre panelinde tek bir "Tarih Aralığı" alanına indirgendi
+           (Haziran/Temmuz KPI setleri aynı kısayol eşlemesiyle sürülüyor). ============ -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-ico"><i class="fa-solid fa-users"></i></div>
@@ -131,7 +125,7 @@
         </div>
       </div>
 
-      <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> Dönem chip'i Haziran (29–30) / Temmuz (1–2) ayrımını crm-panel-rapor-puantaj.html "Ay Karşılaştırması" tablosundan (Haz/Tem toplamları) alır; kaynak sayfa kişi bazında ay kırılımı vermediği için alttaki kişi × durum tablosu dönemden bağımsız, her zaman 4 günlük haftayı gösterir.</div>
+      <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> Gelişmiş Filtre'deki Tarih Aralığı seçimi Haziran (29–30) / Temmuz (1–2) ayrımını crm-panel-rapor-puantaj.html "Ay Karşılaştırması" tablosundan (Haz/Tem toplamları) alır; kaynak sayfa kişi bazında ay kırılımı vermediği için alttaki kişi × durum tablosu dönemden bağımsız, her zaman 4 günlük haftayı gösterir.</div>
 
       <!-- ============ B §6.2 madde 6 — grafik alanı (gvBar/gvDonut, spec-v2-core.md §7) ============ -->
       <div class="rp-charts-2" style="margin-bottom:20px">
@@ -289,7 +283,7 @@
         <div class="rp-compare-item"><span class="rc-lbl">İzinli/Raporlu kayıt — Haziran → Temmuz</span><span class="rc-val">4 → 8</span><span class="rp-compare-delta down"><i class="fa-solid fa-arrow-trend-up"></i> +4 kayıt</span></div>
         <div class="rp-compare-item"><span class="rc-lbl">Devamsız kayıt — Haziran → Temmuz</span><span class="rc-val">2 → 0</span><span class="rp-compare-delta up"><i class="fa-solid fa-arrow-trend-down"></i> −2 kayıt</span></div>
       </div>
-      <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> Kaynak: bu sayfanın Dönem chip verisi (Haziran/Temmuz KPI setleri) — bkz. aşağıdaki script'teki CALISMA_DONEM sabiti.</div>
+      <div class="rep-src" style="margin-bottom:20px"><i class="fa-solid fa-circle-info"></i> Kaynak: bu sayfanın dönem verisi (Haziran/Temmuz KPI setleri) — bkz. aşağıdaki script'teki CALISMA_DONEM sabiti.</div>
 
       <!-- ============ B §6.2 madde 9 — yorum/değerlendirme alanı ============ -->
       <div class="rp-note">
@@ -417,44 +411,33 @@
     haziran: { katilim:'%81', katilimSub:'26 / 32 kişi-gün', izinli:'4',  izinliSub:'4 izin · 0 rapor', devamsiz:'2', devamsizSub:'İki ayrı şantiyede' },
     temmuz:  { katilim:'%75', katilimSub:'24 / 32 kişi-gün', izinli:'8',  izinliSub:'5 izin · 3 rapor', devamsiz:'0', devamsizSub:'Bu dönemde kayıt yok' }
   };
-  var donemChips = document.getElementById('donemChips');
-  if(donemChips){
+  /* [G-3/G-4] Dönem artık çip satırında değil, Gelişmiş Filtre'deki Tarih Aralığı
+     alanında. Kısayol → dönem eşlemesi eski gvDateRange onChange'inden BİREBİR
+     alındı (bu ay/son7 → Temmuz, geçen ay/son15/son30 → Haziran, diğer → Tümü). */
+  var calDonem = 'tumu';
+  function calDonemFromRange(raw){
+    if(!raw) return 'tumu';
+    if(raw.key === 'bu_ay' || raw.key === 'son7') return 'temmuz';
+    if(raw.key === 'gecen_ay' || raw.key === 'son15' || raw.key === 'son30') return 'haziran';
+    return 'tumu';
+  }
+  function applyDonem(k){
+    var d = CALISMA_DONEM[k] || CALISMA_DONEM.tumu;
+    calDonem = k;
     var kNum = document.getElementById('kpiKatilimNum'), kSub = document.getElementById('kpiKatilimSub');
     var iNum = document.getElementById('kpiIzinliNum'), iSub = document.getElementById('kpiIzinliSub');
     var dNum = document.getElementById('kpiDevamsizNum'), dSub = document.getElementById('kpiDevamsizSub');
     var dCard = document.getElementById('kpiDevamsizCard');
-    donemChips.addEventListener('click', function(e){
-      var ch = e.target.closest('.chip[data-donem]'); if(!ch) return;
-      donemChips.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('is-on'); });
-      ch.classList.add('is-on');
-      var d = CALISMA_DONEM[ch.getAttribute('data-donem')];
-      kNum.textContent = d.katilim;
-      kSub.innerHTML = '<i class="fa-solid fa-calendar-check"></i> ' + d.katilimSub;
-      iNum.textContent = d.izinli;
-      iSub.innerHTML = '<i class="fa-solid fa-file-medical"></i> ' + d.izinliSub;
-      dNum.textContent = d.devamsiz;
-      dSub.innerHTML = (d.devamsiz === '0' ? '<i class="fa-solid fa-check"></i> ' : '<i class="fa-solid fa-triangle-exclamation"></i> ') + d.devamsizSub;
-      dCard.classList.toggle('danger', d.devamsiz !== '0');
-      dSub.classList.toggle('down', d.devamsiz !== '0');
-      dSub.classList.toggle('flat', d.devamsiz === '0');
-    });
-  }
-
-  /* ============ B §6.2 madde 3 — tarih aralığı (gvDateRange) gerçek Dönem chip'ini tetikler ============ */
-  if(window.gvDateRange && donemChips){
-    var calDr = document.getElementById('calDateRange');
-    gvDateRange(calDr, {
-      emptyLabel: 'Tüm dönem',
-      onChange: function(val){
-        var key = 'tumu';
-        if(val){
-          if(val.key === 'bu_ay' || val.key === 'son7') key = 'temmuz';
-          else if(val.key === 'gecen_ay' || val.key === 'son15' || val.key === 'son30') key = 'haziran';
-        }
-        var btn = donemChips.querySelector('[data-donem="' + key + '"]');
-        if(btn) btn.click();
-      }
-    });
+    if(!kNum) return;   /* şef görünümünde bu KPI'lar DOM'da yok */
+    kNum.textContent = d.katilim;
+    kSub.innerHTML = '<i class="fa-solid fa-calendar-check"></i> ' + d.katilimSub;
+    iNum.textContent = d.izinli;
+    iSub.innerHTML = '<i class="fa-solid fa-file-medical"></i> ' + d.izinliSub;
+    dNum.textContent = d.devamsiz;
+    dSub.innerHTML = (d.devamsiz === '0' ? '<i class="fa-solid fa-check"></i> ' : '<i class="fa-solid fa-triangle-exclamation"></i> ') + d.devamsizSub;
+    dCard.classList.toggle('danger', d.devamsiz !== '0');
+    dSub.classList.toggle('down', d.devamsiz !== '0');
+    dSub.classList.toggle('flat', d.devamsiz === '0');
   }
 
   /* ============ B §6.2 madde 6 — grafik alanı ============ */
@@ -477,11 +460,16 @@
      Kolonlar. `table` VERİLDİ — Şantiye chip'i (tr.hidden) + arama (generic, tr.hidden)
      + Unvan fp alanı (.gv-fp-hide) bağımsız katmanlar, CSS'te birleşir; bileşik motor
      GEREKMEDİ (K-220 dersi). ============ */
+  var calFd = null;
   if(window.gvFilterDrawer){
-    gvFilterDrawer.init({
+    calFd = gvFilterDrawer.init({
       mount: '#calFiltreBtn', title: 'Gelişmiş Filtre', screen: 'rapor-calisma',
       chipsMount: '#calAchips', table: '#tblCalisma',
       fields: [
+        /* [G-4] Sayfa üstündeki Dönem çipleri + gvDateRange BURAYA taşındı. Satırlar
+           `data-tarih` taşımadığı için jenerik daterange tablo eşleşmesi no-op'tur;
+           seçim KPI dönem setini sürer (applyDonem) — eski davranışla birebir. */
+        {key:'tarih', type:'daterange', label:'Tarih Aralığı', emptyLabel:'Tüm dönem'},
         {key:'unvan', type:'select', label:'Unvan', options:[
           {v:'santiye-sefi', l:'Şantiye Şefi'}, {v:'saha-personeli', l:'Saha Personeli'},
           {v:'formen', l:'Formen'}, {v:'kalipci', l:'Kalıpçı'}, {v:'demir-ustasi', l:'Demir Ustası'},
@@ -489,8 +477,18 @@
           {v:'operator', l:'Operatör'}, {v:'kaynakci', l:'Kaynakçı'}, {v:'marangoz', l:'Marangoz'}
         ]}
       ],
-      onApply: function(){ syncCalismaEmpty(); }, onClear: function(){ syncCalismaEmpty(); }
+      onApply: function(state){
+        applyDonem(calDonemFromRange(state && state.tarih ? state.tarih.raw : null));
+        syncCalismaEmpty();
+      },
+      onClear: function(){ applyDonem('tumu'); syncCalismaEmpty(); }
     });
+    /* localStorage'dan geri yüklenen filtre onApply'ı tetiklemez (ui.js) — dönem KPI'ları
+       sayfa açılışında da kayıtlı seçimle senkron olsun diye tek seferlik uygulanır. */
+    if(calFd){
+      var calSt = calFd.values();
+      if(calSt && calSt.tarih) applyDonem(calDonemFromRange(calSt.tarih.raw));
+    }
   }
   if(window.gvCols){
     gvCols.init({
@@ -541,10 +539,12 @@
       kapsam: ['tumu', 'filtreli'],
       filtreOzeti: function(){
         var sOn = document.querySelector('.chips[data-target="#tblCalisma"] .chip.is-on');
-        var dOn = donemChips ? donemChips.querySelector('.chip.is-on') : null;
+        var st = calFd ? calFd.values() : null;
         var parts = [];
         if(sOn && sOn.getAttribute('data-filter') !== 'hepsi') parts.push('Şantiye: ' + sOn.textContent.replace(/\s+/g,' ').trim());
-        if(dOn && dOn.getAttribute('data-donem') !== 'tumu') parts.push('Dönem: ' + dOn.textContent.trim());
+        if(st && st.tarih) parts.push(st.tarih.label);
+        if(calDonem !== 'tumu') parts.push('Dönem: ' + (calDonem === 'haziran' ? 'Haziran (29–30)' : 'Temmuz (1–2)'));
+        if(st && st.unvan) parts.push(st.unvan.label);
         return parts.length ? parts.join(' · ') : 'Aktif filtre yok — tüm kayıtlar kapsamda.';
       }
     });
