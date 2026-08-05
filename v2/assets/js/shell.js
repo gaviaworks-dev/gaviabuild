@@ -1223,27 +1223,28 @@
        arac/demirbas/makine ailesi → aşağıdaki YENİ "varlik" bölümü. Dosya adları DEĞİŞMEDİ,
        yalnız <body data-sec> değerleri güncellendi. Eski yorum bloklarının (Dalga 4/
        Dalga 20) muhtevası aşağıya, ilgili kalemlerin yanına taşındı. */
+    /* [Bölüm 2.7 · R-27/R-28 — Yasin Bey, video 08:57/10:19] Varlık menüsü ÜÇ ana kayda
+       indirildi. Önceki turlarda burada 6 satır vardı; patron bunların üçünün ANA KAYDIN
+       İÇİNDE yaşamasını istedi, ayrı menü kalemi olarak değil:
+         · Demirbaş Etiketleri (R-27/R-30) → Demirbaşlar sayfasındaki "Etiketleri Yönet"
+           butonundan girilir. Patron: "demirbaş etiketleri dediğimiz yapı demirbaşın
+           içerisinde olması lazım" + "etiket yönet dediğimiz yapı olduğundan dolayı
+           buradaki sayfalandırmayı oraya yönlendirebiliyoruz".
+         · Araç Evrakları (R-28) → araç detayında ZATEN sekme (`lnkEvrakTam` CTA'sı ile
+           tam yönetim ekranına açılır). Patron: "araç evrakları araçların içerisinde
+           bir sekmede".
+         · Bakım / Muayene Takibi (R-28) → araç detayında ZATEN sekme (`lnkBakimTam`).
+           Patron: "bakım muayene kısmı da aynı şekilde onun içerisinde bir sekmede".
+       ÜÇ SAYFA DA SİLİNMEDİ — menüsüz alt-akış oldular; barındırdıkları tam yönetim
+       ekranları (etiket listesi, versiyonlu evrak yükleme, kronolojik bakım kaydı)
+       yerinde duruyor ve ana kayıttan link alıyor. Bu, v3-Dalga2'de bunları üst-seviye
+       menü kalemi yapan kararın patron talimatıyla GERİ ALINMASIDIR.
+       NOT: `arac-detay`/`demirbas-detay` kendi benzersiz data-screen'ini taşımaz, ana
+       ekranı (`arac`/`demirbas`) miraslar — bu yüzden menü budaması rol erişimini
+       daraltmıyor, evrak/bakım sekmelerine giden yol her rolde açık kalıyor. */
     varlik:{ ic:'fa-cubes', eyebrow:'Varlık', title:'Varlık ve Araç Yönetimi', menu:[
       {ic:'fa-toolbox',        lbl:'Demirbaşlar',         href:'crm-operasyon-demirbas.html',  screen:'demirbas'},
-      /* [Dalga 4 / Araç-Demirbaş] Demirbaş Etiketleri (barkod/QR yazdırma) — disk taraması
-         `crm-operasyon-demirbas.html`/`-demirbas-detay.html`'de hiçbir gerçek href linki
-         bulunmadığını gösterdi (yalnız düz metin "Demirbaş Etiketleri ekranı kullanılır"
-         notu + `crm-ayarlar-log.html`'in 2 geçmiş-kayıt linki — bunlar tasarlanmış
-         navigasyon değil, arşiv-kaydı tesadüfü). Madde 83'ün (`crm-ayarlar-arsiv.html`)
-         AYNI kriteri: "hiçbir sayfadan link verilmiyor" → kendi menü satırı gerekir.
-         Diğer 8 ekran (arac-bildirim/arac-yakit/arac-gider/arac-dashboard,
-         demirbas-kategori/demirbas-marka/demirbas-bildirim/demirbas-dashboard) zaten
-         arac.html/arac-detay.html/arac-form.html/demirbas.html üzerinde GERÇEK üst-aksiyon
-         veya sekme linkine sahip — bu yüzden alt-akış olarak menüsüz KALDI (bkz.
-         tasks/kararlar.md madde 149). */
-      {ic:'fa-tags',           lbl:'Demirbaş Etiketleri', href:'crm-operasyon-demirbas-etiket.html', screen:'demirbas-etiket'},
       {ic:'fa-car-side',       lbl:'Araçlar',             href:'crm-operasyon-arac.html',      screen:'arac'},
-      /* [v3-Dalga2] spec §4.7 — Araç Evrakları / Bakım-Muayene Takibi bu tura kadar yalnız
-         arac.html içi sekme/aksiyon olarak erişilebiliyordu (alt-akış); doküman §10.2
-         Varlık bölümünde bunları AÇIKÇA birer üst-seviye menü kalemi olarak adlandırıyor
-         — bu yüzden burada gerçek menü satırı olarak eklendi (alt-akış erişimi de kalır). */
-      {ic:'fa-clipboard-check',lbl:'Araç Evrakları',      href:'crm-operasyon-arac-evrak.html', screen:'arac-evrak'},
-      {ic:'fa-screwdriver-wrench', lbl:'Bakım / Muayene Takibi', href:'crm-operasyon-arac-bakim.html', screen:'arac-bakim'},
       {ic:'fa-truck-pickup',   lbl:'Makine Puantajı',     href:'crm-operasyon-makine.html',    screen:'makine'}
     ]},
     /* [D12] sipariş zinciri + stok & depo + tedarikçi — 8 dosya diskte, unlock dalga sonunda */
@@ -1467,17 +1468,29 @@
                     kimliğini kullanıyor (demirbaş-form/detay gibi ana ekranı MİRASLAMIYOR) —
                     bu yüzden ik'nin zaten sahip olduğu arac/puantaj görünürlüğü BURADA
                     açıkça tekrarlanmazsa scrOk bu alt-ekranları 403'e düşürür.
-                    [Dalga 4 / Araç-Demirbaş] AYNI sebepten 9 yeni ekran EKLENDİ —
-                    arac-bildirim/arac-yakit/arac-gider/arac-dashboard ve demirbas-kategori/
-                    demirbas-marka/demirbas-etiket/demirbas-bildirim/demirbas-dashboard hepsi
-                    KENDİ benzersiz data-screen kimliğini taşıyor (ana ekranı miraslamıyor),
-                    ik zaten operasyon bölümünde araç/demirbaş görüyor — eklenmezse bu 9
-                    ekranın hepsinde 403'e düşerdi. [v3-Dalga2] 'makine' BİLİNÇLİ EKLENMEDİ
-                    — ik bunu operasyon'da da hiç görmüyordu (spec §5 notu). */
+                    [Dalga 4 / Araç-Demirbaş] AYNI sebepten araç/demirbaş alt-ekranları
+                    EKLENDİ — arac-bildirim/arac-yakit/arac-gider ve demirbas-kategori/
+                    demirbas-etiket/demirbas-bildirim hepsi KENDİ benzersiz data-screen
+                    kimliğini taşıyor (ana ekranı miraslamıyor), ik zaten araç/demirbaş
+                    görüyor — eklenmezse hepsinde 403'e düşerdi. [v3-Dalga2] 'makine'
+                    BİLİNÇLİ EKLENMEDİ — ik bunu operasyon'da da hiç görmüyordu
+                    (spec §5 notu). Bu listenin Bölüm 2.7'de kısalan hâli için alttaki
+                    [R-31/R-36] notuna bak. */
+                 /* [Bölüm 2.7 · R-31/R-36] Listeden DÜŞENLER ve sebebi:
+                      · 'demirbas-marka'     → sayfa Kategori Yönetimi'ne sekme olarak
+                                               birleşti (R-31), ekran kimliği kalmadı.
+                      · 'arac-dashboard' /
+                        'demirbas-dashboard' → sayfalar SİLİNDİ (R-36); özet göstergeler
+                                               ana listelerin "Grafikler" sekmesinde.
+                    KALANLAR bilinçli: 'arac-bakim'/'arac-evrak'/'demirbas-etiket' menüden
+                    çıktı ama SAYFALARI duruyor (alt-akış) — ik bu ekranlara ana kayıttan
+                    girmeye devam ediyor, o yüzden scr listesinde KALMALI.
+                    'arac-bildirim'/'demirbas-bildirim' de duruyor: R-35 butonu kaldırdı,
+                    sayfayı değil (eşik/kanal ayarlarının başka evi yok — bkz. handoff). */
                  scr:{ panel:['panel','ozet','ajanda','onaylar','bildirimler','duyurular','operasyon-kiosk'],
                        varlik:['demirbas','arac','arac-form','arac-arsiv','arac-bakim','arac-evrak','arac-kullanim',
-                                  'arac-bildirim','arac-yakit','arac-gider','arac-dashboard',
-                                  'demirbas-kategori','demirbas-marka','demirbas-etiket','demirbas-bildirim','demirbas-dashboard'],
+                                  'arac-bildirim','arac-yakit','arac-gider',
+                                  'demirbas-kategori','demirbas-etiket','demirbas-bildirim'],
                        finans:['kasa','pluxee'],
                        personel:['liste','izin','rapor','avans','ozluk','puantaj','puantaj-form'] } },
     personel:  { name:'Ali Vural',        role:'Saha Personeli',            ini:'AV',
