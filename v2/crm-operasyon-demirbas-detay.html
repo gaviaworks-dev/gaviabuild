@@ -101,6 +101,36 @@
 .gv-tab i{font-size:13px}
 .gv-tab:hover{color:var(--ink)}
 .gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+
+/* üst grup şeridi (M-10/D) — `.gv-tab` dilinden türetildi ama ondan ayrışsın diye
+   hap formunda: alt seviye alt-çizgi kalır, üst seviye dolu hap olur. İkonlar yalnız
+   alt şeritte; iki kademede birden ikon şeridi gürültü yapıyordu.
+   crm-santiye-detay + crm-operasyon-arac-detay ile BİREBİR AYNI blok. */
+/* [Dalga 2 / K-5] Üst grup şeridi — SEGMENTED CONTROL.
+   crm-santiye-detay.html ve crm-operasyon-arac-detay.html ile BİREBİR AYNI blok.
+   Aktif grupta dolu --acc-ink zemin KULLANILMAZ: bu projede accent dolgu birincil
+   butona (btn-acc) ayrılmıştır — CLAUDE.md'de .gbar-fill bunun "tek istisnası" diye
+   ayrıca not edilmiştir. Navigasyon şeridi o ağırlığı taşırsa hem birincil aksiyonla
+   yarışır hem de altındaki alt-çizgili sekme şeridiyle üst üste ezici durur.
+   Hiyerarşi iki farklı FORMLA kurulur: üst seviye = kapsayıcı içinde beyaz pill,
+   alt seviye = mevcut alt-çizgili .gv-tab şeridi (değişmedi). */
+.gv-tabgroups{display:flex;gap:3px;align-items:center;width:max-content;max-width:100%;
+  margin-bottom:6px;padding:4px;background:var(--bg);border:1px solid var(--line);
+  border-radius:var(--r-pill);overflow-x:auto;scrollbar-width:none}
+.gv-tabgroups::-webkit-scrollbar{display:none}
+.gv-tabgroups.is-solo{margin-bottom:22px}
+.gv-tabgroup{flex:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);
+  background:none;border:none;border-radius:var(--r-pill);padding:7px 15px;
+  white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tabgroup:hover{color:var(--ink)}
+.gv-tabgroup.is-active{background:var(--paper);color:var(--acc-ink);box-shadow:var(--sh-sm)}
+.gv-tabgroup[hidden]{display:none}
+/* tek sekmeli grupta alt şerit gizlenir — boşluğu .is-solo taşır (demirbaşta tek
+   sekmeli grup yok; kural motor/CSS özdeşliği için duruyor).
+   Focus ring shell.css'teki global :focus-visible kuralından gelir, tekrarlanmaz. */
+.gv-tabs.is-single{display:none}
+@media(max-width:640px){.gv-tabgroup{padding:7px 13px;font-size:12px}}
+
 .tab-panel{animation:tabIn .22s var(--ease)}
 @keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
@@ -222,19 +252,35 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
     <!-- ============ SEKMELER (§2.9, 12 sekme — bkz. tasks/kararlar.md madde 126:
          plan başlığı "11 sekme" der ama §7.5'in ok'lu listesi 12 adı sayar; bu dosya
          listenin TAMAMINI uygular) ============ -->
+    <!-- M-10/Faz D — 12 sekme dört ÜST GRUBA ayrıldı; araç detayıyla simetrik
+         (brief demirbaş için grup listesi vermiyor, "aynı yaklaşım" diyor).
+         Hiçbir sekme kaldırılmadı, birleştirilmedi, gizlenmedi; yalnız erişim
+         düzenlendi. Belgeler burada da GENEL grubunda — araç detayındaki
+         gerekçenin aynısı: demirbaş evrakı yalnız yasal belge değil (fatura,
+         garanti, satın alma evrakı). Demirbaşta tek sekmeli grup yok. -->
+    <div class="gv-tabgroups" role="tablist" aria-label="Sekme grupları">
+      <button class="gv-tabgroup is-active" data-tabgroup="genel" role="tab" aria-selected="true">Genel</button>
+      <button class="gv-tabgroup" data-tabgroup="operasyon" role="tab" aria-selected="false">Operasyon</button>
+      <button class="gv-tabgroup" data-tabgroup="finans" role="tab" aria-selected="false">Finans</button>
+      <button class="gv-tabgroup" data-tabgroup="gecmis" role="tab" aria-selected="false">Geçmiş</button>
+    </div>
     <div class="gv-tabs" role="tablist" aria-label="Demirbaş detay sekmeleri">
-      <button class="gv-tab is-active" data-tab="genel" role="tab" aria-selected="true"><i class="fa-solid fa-circle-info"></i> Genel Bilgiler</button>
-      <button class="gv-tab" data-tab="teknik" role="tab" aria-selected="false"><i class="fa-solid fa-sliders"></i> Teknik Özellikler</button>
-      <button class="gv-tab" data-tab="satinalma" role="tab" aria-selected="false"><i class="fa-solid fa-file-invoice-dollar"></i> Satın Alma Bilgileri</button>
-      <button class="gv-tab" data-tab="zimmetbilgi" role="tab" aria-selected="false"><i class="fa-solid fa-user-shield"></i> Zimmet Bilgileri</button>
-      <button class="gv-tab" data-tab="zimmetgecmis" role="tab" aria-selected="false"><i class="fa-solid fa-clock-rotate-left"></i> Zimmet Geçmişi</button>
-      <button class="gv-tab" data-tab="konum" role="tab" aria-selected="false"><i class="fa-solid fa-route"></i> Konum ve Transfer Geçmişi</button>
-      <button class="gv-tab" data-tab="bakim" role="tab" aria-selected="false"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım Geçmişi</button>
-      <button class="gv-tab" data-tab="ariza" role="tab" aria-selected="false"><i class="fa-solid fa-bug"></i> Arıza Geçmişi</button>
-      <button class="gv-tab" data-tab="kalibrasyon" role="tab" aria-selected="false"><i class="fa-solid fa-gauge-high"></i> Kalibrasyon ve Kontrol</button>
-      <button class="gv-tab" data-tab="evrak" role="tab" aria-selected="false"><i class="fa-solid fa-folder-open"></i> Belgeler</button>
-      <button class="gv-tab" data-tab="maliyet" role="tab" aria-selected="false"><i class="fa-solid fa-sack-dollar"></i> Maliyet Geçmişi</button>
-      <button class="gv-tab" data-tab="islem" role="tab" aria-selected="false"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Kayıtları</button>
+      <!-- Genel -->
+      <button class="gv-tab is-active" data-tabgroup="genel" data-tab="genel" role="tab" aria-selected="true"><i class="fa-solid fa-circle-info"></i> Genel Bilgiler</button>
+      <button class="gv-tab" data-tabgroup="genel" data-tab="teknik" role="tab" aria-selected="false"><i class="fa-solid fa-sliders"></i> Teknik Özellikler</button>
+      <button class="gv-tab" data-tabgroup="genel" data-tab="evrak" role="tab" aria-selected="false"><i class="fa-solid fa-folder-open"></i> Belgeler</button>
+      <!-- Operasyon -->
+      <button class="gv-tab" data-tabgroup="operasyon" data-tab="zimmetbilgi" role="tab" aria-selected="false"><i class="fa-solid fa-user-shield"></i> Zimmet Bilgileri</button>
+      <button class="gv-tab" data-tabgroup="operasyon" data-tab="zimmetgecmis" role="tab" aria-selected="false"><i class="fa-solid fa-clock-rotate-left"></i> Zimmet Geçmişi</button>
+      <button class="gv-tab" data-tabgroup="operasyon" data-tab="bakim" role="tab" aria-selected="false"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım Geçmişi</button>
+      <button class="gv-tab" data-tabgroup="operasyon" data-tab="ariza" role="tab" aria-selected="false"><i class="fa-solid fa-bug"></i> Arıza Geçmişi</button>
+      <button class="gv-tab" data-tabgroup="operasyon" data-tab="kalibrasyon" role="tab" aria-selected="false"><i class="fa-solid fa-gauge-high"></i> Kalibrasyon ve Kontrol</button>
+      <!-- Finans -->
+      <button class="gv-tab" data-tabgroup="finans" data-tab="satinalma" role="tab" aria-selected="false"><i class="fa-solid fa-file-invoice-dollar"></i> Satın Alma Bilgileri</button>
+      <button class="gv-tab" data-tabgroup="finans" data-tab="maliyet" role="tab" aria-selected="false"><i class="fa-solid fa-sack-dollar"></i> Maliyet Geçmişi</button>
+      <!-- Geçmiş -->
+      <button class="gv-tab" data-tabgroup="gecmis" data-tab="konum" role="tab" aria-selected="false"><i class="fa-solid fa-route"></i> Konum ve Transfer Geçmişi</button>
+      <button class="gv-tab" data-tabgroup="gecmis" data-tab="islem" role="tab" aria-selected="false"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Kayıtları</button>
     </div>
 
     <!-- ============ 1. GENEL BİLGİLER (mevcut Fotoğraf + Kalem Bilgileri kartı KORUNUR) ============ -->
@@ -1297,29 +1343,72 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
   var btnPrint = document.getElementById('btnDmPrint');
   if(btnPrint) btnPrint.addEventListener('click', function(){ window.print(); });
 
-  /* ============ sekme motoru — crm-operasyon-arac-detay.html ile AYNI desen
-     (kaynak-transfer, sayfa-lokal kopya) ============ */
+  /* ============ sekme motoru + üst grup katmanı (M-10/D)
+     Mevcut activate(id) mantığı korundu, üstüne grup katmanı geldi.
+     crm-santiye-detay + crm-operasyon-arac-detay ile BİREBİR AYNI motor;
+     yalnız replaceState'in query anahtarı sayfaya özgü. ============ */
   (function(){
-    var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
-    var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+    var groupBtns = Array.prototype.slice.call(document.querySelectorAll('.gv-tabgroup'));
+    var groupBar  = document.querySelector('.gv-tabgroups');
+    var tabBar    = document.querySelector('.gv-tabs');
+    var tabs      = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+    var panels    = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+
+    /* rol budaması sekmeyi hidden yaparsa grup filtresi onu görmez (style.display
+       ayrı kanal, hidden'ı ezmez) */
+    function tabsOf(g){
+      return tabs.filter(function(t){ return t.getAttribute('data-tabgroup') === g && !t.hidden; });
+    }
+    function groupOf(id){
+      var hit = tabs.filter(function(t){ return t.getAttribute('data-tab') === id; })[0];
+      return hit ? hit.getAttribute('data-tabgroup') : null;
+    }
+    /* tüm sekmeleri budanmış grubun düğmesi de gizlenir */
+    groupBtns.forEach(function(b){ b.hidden = tabsOf(b.getAttribute('data-tabgroup')).length === 0; });
+
     function activate(id){
+      var g = groupOf(id);
+      if(!g) return;
+      /* ÖNCE grup, sonra sekme — #bakim / #zimmetgecmis / #konum derin linkleri için şart */
+      groupBtns.forEach(function(b){
+        var on = b.getAttribute('data-tabgroup') === g;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
       tabs.forEach(function(t){
-        var on = t.getAttribute('data-tab') === id;
+        var mine = t.getAttribute('data-tabgroup') === g;
+        t.style.display = mine ? '' : 'none';
+        var on = mine && t.getAttribute('data-tab') === id;
         t.classList.toggle('is-active', on);
         t.setAttribute('aria-selected', on ? 'true' : 'false');
       });
+      var solo = tabsOf(g).length < 2;           /* demirbaşta tek sekmeli grup yok; desen ortak */
+      if(tabBar)   tabBar.classList.toggle('is-single', solo);
+      if(groupBar) groupBar.classList.toggle('is-solo', solo);
       panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
     }
+
+    function go(id){
+      activate(id);
+      history.replaceState(null, '', '?zmt=' + key + '#' + id);
+    }
     tabs.forEach(function(t){
-      t.addEventListener('click', function(){
-        var id = t.getAttribute('data-tab');
-        activate(id);
-        history.replaceState(null, '', '?zmt=' + key + '#' + id);
+      t.addEventListener('click', function(){ go(t.getAttribute('data-tab')); });
+    });
+    groupBtns.forEach(function(b){
+      b.addEventListener('click', function(){
+        var first = tabsOf(b.getAttribute('data-tabgroup'))[0];   /* grup değişince ilk sekme açılır */
+        if(first) go(first.getAttribute('data-tab'));
       });
     });
+
     var initial = (location.hash || '').replace('#', '');
-    var valid = tabs.some(function(t){ return t.getAttribute('data-tab') === initial; });
-    activate(valid ? initial : 'genel');
+    var valid = tabs.some(function(t){ return t.getAttribute('data-tab') === initial && !t.hidden; });
+    if(!valid){
+      var firstVisible = tabs.filter(function(t){ return !t.hidden; })[0];
+      initial = firstVisible ? firstVisible.getAttribute('data-tab') : 'genel';
+    }
+    activate(initial);
   })();
 })();
 </script>
