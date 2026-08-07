@@ -30,17 +30,45 @@
 .gd-label{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--muted);margin-bottom:10px}
 
 /* kalem satırları — dinamik ekle/çıkar */
-.kal-row{display:grid;grid-template-columns:1fr 130px 100px 34px;gap:10px;align-items:center;margin-bottom:10px}
+.kal-item{margin-bottom:14px}
+.kal-item + .kal-item{padding-top:14px;border-top:1px dashed var(--line)}
+.kal-row{display:grid;grid-template-columns:1fr 130px 100px 34px;gap:10px;align-items:center}
 .kal-row input,.kal-row select{font-family:inherit;font-size:13px;font-weight:500;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 11px;outline:none;transition:.2s var(--ease);width:100%}
 .kal-row input:focus,.kal-row select:focus{border-color:var(--acc);background:var(--paper);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
 .kal-row .kal-miktar-inp{text-align:right;font-variant-numeric:tabular-nums}
+.kal-mlz-cell{min-width:0}
+.kal-mlz-free{margin-top:8px}
+.kal-mlz-free[hidden]{display:none}
 .kal-remove{width:34px;height:34px;flex:none;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--paper);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s var(--ease)}
 .kal-remove:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-tint)}
 .kal-add{margin-top:2px}
 @media(max-width:640px){
-  .kal-row{grid-template-columns:1fr;gap:8px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px dashed var(--line)}
+  .kal-row{grid-template-columns:1fr;gap:8px}
   .kal-remove{justify-self:end;width:34px}
 }
+
+/* [Dalga 2 / M-2] Stok Durumu — kalem satırının altında küçük bir alan; satın alma
+   sürecine geçmeden önce talep edilen miktarın depolardaki karşılığını gösterir.
+   Durum rengi accent'ten BAĞIMSIZ sabit semantik ölçek (.gstat dili): sol şerit +
+   rozet taşır, zemin nötr kalır — blok bir "kart" değil, alan içi bir not. */
+.stok-box{display:none;margin-top:10px;padding:11px 13px 12px;background:var(--bg);border-radius:var(--r-sm);border-left:3px solid var(--line-2)}
+.stok-box.is-on{display:block}
+.stok-box.st-ok{border-left-color:var(--ok)}
+.stok-box.st-warn{border-left-color:var(--warn)}
+.stok-box.st-danger{border-left-color:var(--danger)}
+.sb-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}
+.sb-ttl{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--muted);margin-right:auto}
+.sb-top .gstat{font-size:11px;padding:3px 9px}
+.sb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px 16px;margin:0}
+.sb-cell{min-width:0;line-height:1.3}
+.sb-cell dt{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-cell dd{margin:3px 0 0;font-size:13.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.sb-cell dd.is-zero{color:var(--muted);font-weight:600}
+.sb-sub{display:block;margin-top:2px;font-size:10.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:11px;padding-top:10px;border-top:1px dashed var(--line-2)}
+.sb-note{flex:1;min-width:150px;font-size:11.5px;line-height:1.55;color:var(--muted)}
+.sb-link{font-size:11.5px;font-weight:700;color:var(--acc-ink);white-space:nowrap}
+.sb-link:hover{color:var(--acc-deep)}
 
 /* öncelik seçici — pil grubu.
    [G-7 ölçüt 4] Öncelik bir KATEGORİ eksenidir; nokta/şerit olarak durum rengiyle
@@ -131,33 +159,123 @@
         <div class="gd-block">
           <div class="gd-label">Kalem Dökümü</div>
           <div id="kalWrap">
-            <div class="kal-row">
-              <input type="text" placeholder="Malzeme adı" value="Hazır beton C30">
-              <select>
-                <option>m³</option>
-                <option>ton</option>
-                <option>m²</option>
-                <option>metre</option>
-                <option>adet</option>
-                <option>torba</option>
-                <option>paket</option>
-              </select>
-              <input type="text" class="kal-miktar-inp" placeholder="Miktar" value="30">
-              <button type="button" class="kal-remove" aria-label="Satırı kaldır" data-no-confirm><i class="fa-solid fa-xmark"></i></button>
+            <div class="kal-item">
+              <div class="kal-row">
+                <div class="kal-mlz-cell">
+                  <select class="kal-mlz" aria-label="Malzeme">
+                    <option value="">Malzeme seçin</option>
+                    <optgroup label="Demir &amp; Çelik">
+                      <option value="demir-o10">Ø10 Nervürlü İnşaat Demiri</option>
+                      <option value="demir-o12">Ø12 Nervürlü İnşaat Demiri</option>
+                      <option value="demir-o16">Ø16 Nervürlü İnşaat Demiri</option>
+                      <option value="demir-o20">Ø20 Nervürlü İnşaat Demiri</option>
+                      <option value="hasir-celik">Hasır Çelik — Q131</option>
+                    </optgroup>
+                    <optgroup label="Yapı Malzemesi">
+                      <option value="cimento">Çimento — CEM I 42.5R (50 kg)</option>
+                      <option value="tugla">Tuğla — Delikli</option>
+                      <option value="sap-betonu">Şap Betonu Kuru Karışım</option>
+                      <option value="alci-siva">Alçı Sıva Malzemesi (30 kg)</option>
+                      <option value="seramik">Seramik — Yer/Duvar</option>
+                      <option value="pvc-dograma">PVC Doğrama Profil Seti</option>
+                      <option value="yalitim-levhasi">Yalıtım Levhası — XPS 5cm</option>
+                      <option value="cephe-boyasi">İç/Dış Cephe Boyası — 20L</option>
+                      <option value="ic-kapi-seti">İç Kapı Seti</option>
+                    </optgroup>
+                    <optgroup label="Elektrik Malzemesi">
+                      <option value="elektrik-panosu">Elektrik Dağıtım Panosu</option>
+                      <option value="nya-kablo">NYA 3×4 Kablo</option>
+                      <option value="kablo-nym">NYM 3×2,5 Kablo</option>
+                    </optgroup>
+                    <optgroup label="İSG Malzemesi">
+                      <option value="isg-kkd">İSG KKD Seti — Baret + Yelek</option>
+                      <option value="isg-eldiven-bot">İSG KKD Seti — Eldiven + Bot</option>
+                    </optgroup>
+                    <optgroup label="Hırdavat &amp; Sarf">
+                      <option value="hirdavat-sarf">Hırdavat &amp; Sarf Paketi (vida-dübel-bant)</option>
+                      <option value="kaynak-teli">Kaynak Teli / Elektrot</option>
+                      <option value="arac-bakim-sarf">Araç Bakım Sarf Seti (yağ/filtre)</option>
+                      <option value="jenerator-el-aleti">Jeneratör Yakıt Varili + El Aleti Seti</option>
+                    </optgroup>
+                    <option value="__free" selected>Listede yok — elle gir</option>
+                  </select>
+                  <input type="text" class="kal-mlz-free" placeholder="Malzeme adı" value="Hazır beton C30" aria-label="Malzeme adı (elle)">
+                </div>
+                <select class="kal-birim" aria-label="Birim">
+                  <option>m³</option>
+                  <option>ton</option>
+                  <option>m²</option>
+                  <option>metre</option>
+                  <option>adet</option>
+                  <option>torba</option>
+                  <option>paket</option>
+                  <option>kg</option>
+                  <option>set</option>
+                  <option>kova</option>
+                </select>
+                <input type="text" class="kal-miktar-inp" placeholder="Miktar" value="30" aria-label="Miktar">
+                <button type="button" class="kal-remove" aria-label="Satırı kaldır" data-no-confirm><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="stok-box" aria-live="polite"></div>
             </div>
-            <div class="kal-row">
-              <input type="text" placeholder="Malzeme adı" value="İnşaat demiri Ø12">
-              <select>
-                <option>m³</option>
-                <option selected>ton</option>
-                <option>m²</option>
-                <option>metre</option>
-                <option>adet</option>
-                <option>torba</option>
-                <option>paket</option>
-              </select>
-              <input type="text" class="kal-miktar-inp" placeholder="Miktar" value="2">
-              <button type="button" class="kal-remove" aria-label="Satırı kaldır" data-no-confirm><i class="fa-solid fa-xmark"></i></button>
+            <div class="kal-item">
+              <div class="kal-row">
+                <div class="kal-mlz-cell">
+                  <select class="kal-mlz" aria-label="Malzeme">
+                    <option value="">Malzeme seçin</option>
+                    <optgroup label="Demir &amp; Çelik">
+                      <option value="demir-o10">Ø10 Nervürlü İnşaat Demiri</option>
+                      <option value="demir-o12" selected>Ø12 Nervürlü İnşaat Demiri</option>
+                      <option value="demir-o16">Ø16 Nervürlü İnşaat Demiri</option>
+                      <option value="demir-o20">Ø20 Nervürlü İnşaat Demiri</option>
+                      <option value="hasir-celik">Hasır Çelik — Q131</option>
+                    </optgroup>
+                    <optgroup label="Yapı Malzemesi">
+                      <option value="cimento">Çimento — CEM I 42.5R (50 kg)</option>
+                      <option value="tugla">Tuğla — Delikli</option>
+                      <option value="sap-betonu">Şap Betonu Kuru Karışım</option>
+                      <option value="alci-siva">Alçı Sıva Malzemesi (30 kg)</option>
+                      <option value="seramik">Seramik — Yer/Duvar</option>
+                      <option value="pvc-dograma">PVC Doğrama Profil Seti</option>
+                      <option value="yalitim-levhasi">Yalıtım Levhası — XPS 5cm</option>
+                      <option value="cephe-boyasi">İç/Dış Cephe Boyası — 20L</option>
+                      <option value="ic-kapi-seti">İç Kapı Seti</option>
+                    </optgroup>
+                    <optgroup label="Elektrik Malzemesi">
+                      <option value="elektrik-panosu">Elektrik Dağıtım Panosu</option>
+                      <option value="nya-kablo">NYA 3×4 Kablo</option>
+                      <option value="kablo-nym">NYM 3×2,5 Kablo</option>
+                    </optgroup>
+                    <optgroup label="İSG Malzemesi">
+                      <option value="isg-kkd">İSG KKD Seti — Baret + Yelek</option>
+                      <option value="isg-eldiven-bot">İSG KKD Seti — Eldiven + Bot</option>
+                    </optgroup>
+                    <optgroup label="Hırdavat &amp; Sarf">
+                      <option value="hirdavat-sarf">Hırdavat &amp; Sarf Paketi (vida-dübel-bant)</option>
+                      <option value="kaynak-teli">Kaynak Teli / Elektrot</option>
+                      <option value="arac-bakim-sarf">Araç Bakım Sarf Seti (yağ/filtre)</option>
+                      <option value="jenerator-el-aleti">Jeneratör Yakıt Varili + El Aleti Seti</option>
+                    </optgroup>
+                    <option value="__free">Listede yok — elle gir</option>
+                  </select>
+                  <input type="text" class="kal-mlz-free" placeholder="Malzeme adı" aria-label="Malzeme adı (elle)" hidden>
+                </div>
+                <select class="kal-birim" aria-label="Birim">
+                  <option>m³</option>
+                  <option selected>ton</option>
+                  <option>m²</option>
+                  <option>metre</option>
+                  <option>adet</option>
+                  <option>torba</option>
+                  <option>paket</option>
+                  <option>kg</option>
+                  <option>set</option>
+                  <option>kova</option>
+                </select>
+                <input type="text" class="kal-miktar-inp" placeholder="Miktar" value="2" aria-label="Miktar">
+                <button type="button" class="kal-remove" aria-label="Satırı kaldır" data-no-confirm><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="stok-box" aria-live="polite"></div>
             </div>
           </div>
           <button type="button" class="btn btn-ghost btn-sm kal-add" id="kalAdd" data-no-confirm><i class="fa-solid fa-plus"></i> Kalem Ekle</button>
@@ -184,7 +302,9 @@
           <div class="gd-block">
             <div class="gd-label">Özet</div>
             <div class="sum-card"><span>Kalem sayısı</span><b id="totKalem">2</b></div>
-            <p class="sub-note"><i class="fa-solid fa-circle-info"></i>Gönderdiğinizde talep Satın Alma Sorumlusu onayına düşer; onay zinciri talep detayında görüntülenir.</p>
+            <div class="sum-card" style="margin-top:10px"><span>Stoktan karşılanabilir</span><b id="totStok">0 / 2</b></div>
+            <p class="sub-note"><i class="fa-solid fa-circle-info"></i>Her kalem için önce depo stoğu kontrol edilir. Malzeme başka bir depoda varsa transfer talebiyle karşılanabilir; stok yetersizse talep Satın Alma Sorumlusu onayına düşer ve satın alma süreci başlar.</p>
+            <p class="sub-note" style="margin-top:8px"><i class="fa-solid fa-warehouse"></i>Stok rakamları <a href="crm-satinalma-stok.html" style="color:var(--acc-ink);font-weight:700">Stok &amp; Depo</a> kayıtlarından gelir.</p>
           </div>
         </div>
       </div>
@@ -227,22 +347,232 @@
 
   var wrap = document.getElementById('kalWrap');
   var totEl = document.getElementById('totKalem');
+  var totStokEl = document.getElementById('totStok');
 
-  function recalc(){ totEl.textContent = wrap.querySelectorAll('.kal-row').length; }
+  /* ============================================================================
+     [Dalga 2 / M-2] STOK KONTROLÜ — talep satın alma sürecine geçmeden önce
+     ============================================================================
+     Stok verisi — kanonik kaynak crm-satinalma-stok.html; BİREBİR kopya.
+     (DEPO tanımları ve KALEM listesinin slug/ad/kat/depo/mevcut/olcu alanları
+     değiştirilmeden alındı; min/birim/toplam alanları bu ekranda kullanılmadığı
+     için taşınmadı — rakamlar kaynakla birebir aynıdır, yeni kalem eklenmedi.)
+
+     Veri gerçeği: her kalem TEK depoya bağlıdır — aynı malzeme birden fazla
+     depoda tutulmaz. Bu yüzden "başka depoda var mı?" sorusu, kalemin deposunun
+     talep eden şantiyenin deposundan farklı olmasına indirgenir. */
+  var DEPO = {
+    'D-MRK':{ad:'Merkez Ana Depo', kisa:'Merkez Ana Depo'},
+    'D-VDI':{ad:'Vadi Şantiye Deposu', kisa:'Vadi Şantiye Deposu'},
+    'D-LMN':{ad:'Liman Şantiye Deposu', kisa:'Liman Şantiye Deposu'},
+    'D-ARC':{ad:'Araç Deposu (mobil — ARC-06 üstü)', kisa:'Araç Deposu'}
+  };
+  var KALEM = [
+    {slug:'demir-o10',        ad:'Ø10 Nervürlü İnşaat Demiri',              kat:'demir',    depo:'D-VDI', mevcut:9.5,    olcu:'t'},
+    {slug:'demir-o12',        ad:'Ø12 Nervürlü İnşaat Demiri',              kat:'demir',    depo:'D-VDI', mevcut:13.0,   olcu:'t'},
+    {slug:'demir-o16',        ad:'Ø16 Nervürlü İnşaat Demiri',              kat:'demir',    depo:'D-VDI', mevcut:1.7,    olcu:'t'},
+    {slug:'demir-o20',        ad:'Ø20 Nervürlü İnşaat Demiri',              kat:'demir',    depo:'D-VDI', mevcut:13.4,   olcu:'t'},
+    {slug:'sap-betonu',       ad:'Şap Betonu Kuru Karışım',                 kat:'yapi',     depo:'D-VDI', mevcut:320,    olcu:'torba'},
+    {slug:'seramik',          ad:'Seramik — Yer/Duvar',                     kat:'yapi',     depo:'D-VDI', mevcut:2000,   olcu:'m²'},
+    {slug:'pvc-dograma',      ad:'PVC Doğrama Profil Seti',                 kat:'yapi',     depo:'D-VDI', mevcut:60,     olcu:'set'},
+    {slug:'yalitim-levhasi',  ad:'Yalıtım Levhası — XPS 5cm',               kat:'yapi',     depo:'D-VDI', mevcut:1050,   olcu:'m²'},
+    {slug:'cephe-boyasi',     ad:'İç/Dış Cephe Boyası — 20L',               kat:'yapi',     depo:'D-VDI', mevcut:110,    olcu:'kova'},
+    {slug:'ic-kapi-seti',     ad:'İç Kapı Seti',                            kat:'yapi',     depo:'D-VDI', mevcut:40,     olcu:'adet'},
+    {slug:'hasir-celik',      ad:'Hasır Çelik — Q131',                      kat:'demir',    depo:'D-VDI', mevcut:1804.2, olcu:'m²'},
+    {slug:'cimento',          ad:'Çimento — CEM I 42.5R (50 kg)',           kat:'yapi',     depo:'D-MRK', mevcut:1800,   olcu:'torba'},
+    {slug:'tugla',            ad:'Tuğla — Delikli',                         kat:'yapi',     depo:'D-MRK', mevcut:45000,  olcu:'adet'},
+    {slug:'elektrik-panosu',  ad:'Elektrik Dağıtım Panosu',                 kat:'elektrik', depo:'D-MRK', mevcut:30,     olcu:'adet'},
+    {slug:'isg-kkd',          ad:'İSG KKD Seti — Baret + Yelek',            kat:'isg',      depo:'D-MRK', mevcut:9,      olcu:'adet'},
+    {slug:'hirdavat-sarf',    ad:'Hırdavat & Sarf Paketi (vida-dübel-bant)',kat:'sarf',     depo:'D-MRK', mevcut:340,    olcu:'paket'},
+    {slug:'alci-siva',        ad:'Alçı Sıva Malzemesi (30 kg)',             kat:'yapi',     depo:'D-MRK', mevcut:420,    olcu:'torba'},
+    {slug:'nya-kablo',        ad:'NYA 3×4 Kablo',                           kat:'elektrik', depo:'D-LMN', mevcut:1400,   olcu:'m'},
+    {slug:'isg-eldiven-bot',  ad:'İSG KKD Seti — Eldiven + Bot',            kat:'isg',      depo:'D-LMN', mevcut:68,     olcu:'set'},
+    {slug:'kaynak-teli',      ad:'Kaynak Teli / Elektrot',                  kat:'sarf',     depo:'D-LMN', mevcut:750,    olcu:'kg'},
+    {slug:'kablo-nym',        ad:'NYM 3×2,5 Kablo',                         kat:'elektrik', depo:'D-LMN', mevcut:180,    olcu:'m'},
+    {slug:'arac-bakim-sarf',  ad:'Araç Bakım Sarf Seti (yağ/filtre)',       kat:'sarf',     depo:'D-ARC', mevcut:26,     olcu:'set'},
+    {slug:'jenerator-el-aleti',ad:'Jeneratör Yakıt Varili + El Aleti Seti', kat:'sarf',     depo:'D-ARC', mevcut:18,     olcu:'adet'}
+  ];
+  /* şantiye → kendi deposu (crm-satinalma-stok.html depo listesiyle aynı eşleme) */
+  var SANTIYE_DEPO = {
+    'Vadi Konakları':         'D-VDI',
+    'Liman Lojistik Merkezi': 'D-LMN',
+    'Merkez Şantiye':         'D-MRK'
+  };
+  /* stok ölçü birimi → formdaki birim seçeneği */
+  var OLCU_BIRIM = {'t':'ton', 'm':'metre', 'm²':'m²', 'kg':'kg', 'set':'set', 'kova':'kova', 'torba':'torba', 'adet':'adet', 'paket':'paket'};
+
+  function kalemBul(slug){
+    for(var i = 0; i < KALEM.length; i++){ if(KALEM[i].slug === slug) return KALEM[i]; }
+    return null;
+  }
+  function sayi(n){ return Number(n).toLocaleString('tr-TR', {maximumFractionDigits:1}); }
+  function miktarOku(v){
+    var s = String(v == null ? '' : v).trim(); if(!s) return 0;
+    if(s.indexOf(',') > -1) s = s.replace(/\./g, '').replace(',', '.');
+    s = s.replace(/[^\d.]/g, '');
+    var n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  }
+  function esc(t){ var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+
+  /* tek kalemin stok durumunu hesaplar — render'dan bağımsız, saf fonksiyon */
+  function stokHesapla(item){
+    var slug = item.querySelector('.kal-mlz').value;
+    var k = slug && slug !== '__free' ? kalemBul(slug) : null;
+    var sanDepo = SANTIYE_DEPO[santiyeSel.value] || 'D-MRK';
+    var talep = miktarOku(item.querySelector('.kal-miktar-inp').value);
+    var d = {
+      kalem:k, sanDepo:sanDepo, talep:talep,
+      birim: k ? k.olcu : (item.querySelector('.kal-birim').value || ''),
+      yerinde:0, merkez:0, diger:0, digerDepo:null, transfer:false
+    };
+    if(!k) return d;
+    if(k.depo === sanDepo)   d.yerinde = k.mevcut;
+    if(k.depo === 'D-MRK')   d.merkez  = k.mevcut;
+    if(k.depo !== sanDepo && k.depo !== 'D-MRK'){ d.diger = k.mevcut; d.digerDepo = k.depo; }
+    /* "başka depoda var mı?" — kalemin deposu talep eden şantiyenin deposu değilse */
+    d.transfer = k.depo !== sanDepo && k.mevcut > 0;
+    return d;
+  }
+
+  function stokCiz(item){
+    var box = item.querySelector('.stok-box');
+    var d = stokHesapla(item);
+    var slug = item.querySelector('.kal-mlz').value;
+    var free = item.querySelector('.kal-mlz-free');
+    var adGirildi = slug === '__free' ? free.value.trim() !== '' : slug !== '';
+
+    box.classList.remove('is-on', 'st-ok', 'st-warn', 'st-danger');
+    if(!adGirildi){ box.innerHTML = ''; return d; }   /* malzeme henüz belirtilmedi */
+
+    var stat, lbl, not;
+    if(!d.kalem){
+      stat = 'off';  lbl = 'Stok kaydı yok';
+      not  = 'Bu malzeme stok listesinde tanımlı değil; talep doğrudan satın alma sürecine gider.';
+    } else if(!d.talep){
+      stat = 'off';  lbl = 'Miktar bekleniyor';
+      not  = 'Karşılaştırma için miktar girin.';
+    } else if(d.yerinde >= d.talep){
+      stat = 'ok';   lbl = 'Şantiyede yeterli';
+      not  = DEPO[d.sanDepo].kisa + ' stoğu talebi karşılıyor — satın almaya gerek olmayabilir.';
+    } else if(d.transfer){
+      stat = 'warn'; lbl = d.yerinde > 0 ? 'Şantiyede kısmen var' : 'Başka depoda var';
+      not  = DEPO[d.kalem.depo].kisa + ' stoğunda ' + sayi(d.kalem.mevcut) + ' ' + d.kalem.olcu
+           + ' bulunuyor; transfer talebiyle karşılanabilir.';
+    } else {
+      stat = 'danger'; lbl = 'Stok yetersiz';
+      not  = 'Hiçbir depoda yeterli stok yok — talep satın alma sürecine devam eder.';
+    }
+
+    var merkezAyni = d.sanDepo === 'D-MRK';
+    var h = '<div class="sb-top"><span class="sb-ttl">Stok Durumu</span><span class="gstat ' + stat + '">' + lbl + '</span></div>'
+      + '<dl class="sb-grid">'
+      +   '<div class="sb-cell"><dt>Talep edilen</dt><dd' + (d.talep ? '' : ' class="is-zero"') + '>'
+      +     (d.talep ? sayi(d.talep) + ' ' + esc(d.birim) : '—') + '</dd></div>'
+      +   '<div class="sb-cell"><dt>' + esc(DEPO[d.sanDepo].kisa) + '</dt><dd' + (d.yerinde ? '' : ' class="is-zero"') + '>'
+      +     (d.yerinde ? sayi(d.yerinde) + ' ' + esc(d.kalem.olcu) : '0') + '</dd>'
+      +     '<span class="sb-sub">Talep edilen şantiye</span></div>'
+      /* talep eden şantiye zaten merkez ise satır tekrar sayıma girmesin — miktar
+         üstteki hücrede duruyor, burada yalnız aynı depo olduğu belirtilir */
+      +   '<div class="sb-cell"><dt>Merkez Ana Depo</dt>'
+      +     (merkezAyni
+            ? '<dd class="is-zero">—</dd><span class="sb-sub">Şantiye deposu ile aynı</span>'
+            : '<dd' + (d.merkez ? '' : ' class="is-zero"') + '>' + (d.merkez ? sayi(d.merkez) + ' ' + esc(d.kalem.olcu) : '0') + '</dd>')
+      +   '</div>'
+      +   '<div class="sb-cell"><dt>Diğer şantiyeler</dt><dd' + (d.diger ? '' : ' class="is-zero"') + '>'
+      +     (d.diger ? sayi(d.diger) + ' ' + esc(d.kalem.olcu) : '0') + '</dd>'
+      +     (d.digerDepo ? '<span class="sb-sub">' + esc(DEPO[d.digerDepo].kisa) + '</span>' : '') + '</div>'
+      + '</dl>'
+      + '<div class="sb-foot"><p class="sb-note">' + esc(not) + '</p>'
+      +   (d.transfer && d.talep
+            ? (item.dataset.trf === '1'
+                ? '<span class="gstat ok">Transfer talebi oluşturuldu</span>'
+                : '<button type="button" class="btn btn-ghost btn-sm" data-transfer data-no-confirm><i class="fa-solid fa-right-left"></i> Transfer Talebi Oluştur</button>')
+            : '')
+      +   (d.kalem ? '<a class="sb-link" href="crm-satinalma-stok-detay.html?kalem=' + d.kalem.slug + '">Stok kartı</a>' : '')
+      + '</div>';
+
+    box.innerHTML = h;
+    box.classList.add('is-on');
+    if(stat !== 'off') box.classList.add('st-' + stat);
+    return d;
+  }
+
+  function recalc(){
+    var items = wrap.querySelectorAll('.kal-item');
+    var karsilanan = 0;
+    Array.prototype.forEach.call(items, function(it){
+      var d = stokCiz(it);
+      if(d.talep && d.yerinde >= d.talep) karsilanan++;
+    });
+    totEl.textContent = items.length;
+    totStokEl.textContent = karsilanan + ' / ' + items.length;
+  }
+
+  /* malzeme seçimi: "Listede yok" → serbest metin alanı; poz seçilince birim otomatik dolar */
+  wrap.addEventListener('change', function(e){
+    var sel = e.target.closest('.kal-mlz');
+    if(sel){
+      var item = sel.closest('.kal-item');
+      var free = item.querySelector('.kal-mlz-free');
+      free.hidden = sel.value !== '__free';
+      if(sel.value !== '__free') free.value = '';
+      var k = kalemBul(sel.value);
+      if(k){
+        var birimSel = item.querySelector('.kal-birim');
+        var hedef = OLCU_BIRIM[k.olcu];
+        if(hedef) Array.prototype.forEach.call(birimSel.options, function(o){ if(o.value === hedef || o.text === hedef) birimSel.value = o.value; });
+      }
+      delete item.dataset.trf;
+      recalc();
+      if(sel.value === '__free') free.focus();
+      return;
+    }
+    if(e.target.closest('.kal-birim')) recalc();
+  });
+  wrap.addEventListener('input', function(e){
+    var f = e.target.closest('.kal-miktar-inp, .kal-mlz-free'); if(!f) return;
+    delete f.closest('.kal-item').dataset.trf;
+    recalc();
+  });
+
+  /* transfer talebi — bu prototipte transfer kaydı ekranı yok, simülasyon toast'ı */
+  wrap.addEventListener('click', function(e){
+    var t = e.target.closest('[data-transfer]'); if(!t) return;
+    var item = t.closest('.kal-item');
+    var d = stokHesapla(item);
+    if(!d.kalem || !d.transfer) return;
+    var kaynak = d.kalem.depo, hedef = d.sanDepo;
+    var mik = Math.min(d.talep, d.kalem.mevcut);
+    item.dataset.trf = '1';
+    recalc();
+    gvToast('Transfer talebi oluşturuldu: ' + kaynak + ' ' + DEPO[kaynak].kisa + ' → ' + hedef + ' '
+      + DEPO[hedef].kisa + ' · ' + d.kalem.ad + ' ' + sayi(mik) + ' ' + d.kalem.olcu, {icon:'fa-right-left', ms:4200});
+  });
+
+  /* şantiye değişince tüm kalemlerin stok durumu yeniden hesaplanır */
+  santiyeSel.addEventListener('change', function(){
+    Array.prototype.forEach.call(wrap.querySelectorAll('.kal-item'), function(it){ delete it.dataset.trf; });
+    recalc();
+  });
 
   wrap.addEventListener('click', function(e){
     var btn = e.target.closest('.kal-remove'); if(!btn) return;
-    var rows = wrap.querySelectorAll('.kal-row');
-    if(rows.length <= 1){ gvToast('En az bir kalem satırı kalmalı.', {type:'info'}); return; }
-    btn.closest('.kal-row').remove();
+    var items = wrap.querySelectorAll('.kal-item');
+    if(items.length <= 1){ gvToast('En az bir kalem satırı kalmalı.', {type:'info'}); return; }
+    btn.closest('.kal-item').remove();
     recalc();
   });
   document.getElementById('kalAdd').addEventListener('click', function(){
-    var row = wrap.querySelector('.kal-row').cloneNode(true);
-    row.querySelectorAll('input').forEach(function(i){ i.value = ''; });
-    row.querySelector('select').selectedIndex = 0;
-    wrap.appendChild(row);
-    row.querySelector('input').focus();
+    var item = wrap.querySelector('.kal-item').cloneNode(true);
+    item.querySelectorAll('input').forEach(function(i){ i.value = ''; });
+    item.querySelector('.kal-mlz').value = '';
+    item.querySelector('.kal-mlz-free').hidden = true;
+    item.querySelector('.kal-birim').selectedIndex = 0;
+    item.querySelector('.stok-box').innerHTML = '';
+    item.querySelector('.stok-box').className = 'stok-box';
+    delete item.dataset.trf;
+    wrap.appendChild(item);
+    item.querySelector('.kal-mlz').focus();
     recalc();
   });
 
@@ -262,8 +592,11 @@
     });
   });
   document.getElementById('btnSend').addEventListener('click', function(){
-    var anyName = Array.prototype.some.call(wrap.querySelectorAll('.kal-row input[type="text"]'), function(i){ return i.value.trim(); });
-    if(!anyName){ gvToast('En az bir malzeme adı girin.', {type:'danger'}); return; }
+    var anyName = Array.prototype.some.call(wrap.querySelectorAll('.kal-item'), function(it){
+      var v = it.querySelector('.kal-mlz').value;
+      return v === '__free' ? it.querySelector('.kal-mlz-free').value.trim() !== '' : v !== '';
+    });
+    if(!anyName){ gvToast('En az bir malzeme seçin.', {type:'danger'}); return; }
     if(revNo){
       gvResult('onaya-gonderildi', {
         mesaj: revNo + ' kaydının revizyonu (v2) onaya gönderildi — önceki hâli işlem geçmişinde saklanır.',
