@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>Proje Bütçesi — Gavia CRM</title>
+<title>Şantiye Bütçesi — Gavia CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -16,8 +16,11 @@
 <link rel="stylesheet" href="assets/css/shell.css">
 <link rel="stylesheet" href="assets/css/ui.css">
 <style>
-/* ============ SAYFAYA ÖZEL — Proje Bütçesi (3 proje özet kartı) ============ */
-/* .butce-grid EN FAZLA 3 kart taşır (PROJE_ORDER) ve 3 sütun → satırı tam doldurur,
+/* ============ SAYFAYA ÖZEL — Şantiye Bütçesi (3 şantiye özet kartı) ============ */
+/* [Dalga 2 / M-3a] Bu ekran ŞANTİYE bazlı bütçedir; M-1 ile gerçek Proje katmanı
+   doğduğu için "Proje" adlandırması yanıltıcı hale geldi ve netleştirildi.
+   URL parametresi ?proje= geriye dönük uyum için KORUNDU (130+ sayfada link var). */
+/* .butce-grid EN FAZLA 3 kart taşır (SANTIYE_BUTCE_ORDER) ve 3 sütun → satırı tam doldurur,
    ikinci satıra hiç geçmez. Bu yüzden [G-3] rayına ÇEVRİLMEDİ; ızgara korundu. */
 .butce-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 @media(max-width:980px){.butce-grid{grid-template-columns:minmax(0,1fr)}}
@@ -114,20 +117,24 @@
     <div class="gv-page-head">
       <div>
         <div class="ph-eyebrow">Finans</div>
-        <h1>Proje Bütçesi</h1>
-        <div class="ph-sub">3 proje · orijinal, revize ve gerçekleşen bütçe karşılaştırması</div>
+        <h1>Şantiye Bütçesi</h1>
+        <div class="ph-sub">3 şantiye · orijinal, revize ve gerçekleşen bütçe karşılaştırması</div>
       </div>
       <!-- [G-2/R-11] Bu sayfada "Yeni …" butonu YOK, ama patron açıkça "yeni evrak
            yapısı var gibi AYNI HİZADA duracak" dedi. Bu yüzden .ph-actions kabı, tek
            çocuğu Dışa Aktar olacak şekilde dolduruldu — buton diğer liste
            sayfalarıyla piksel hizasında durur. -->
       <div class="ph-actions">
-        <a class="btn btn-ghost btn-sm" href="#" id="btnButceExport" data-gv-export='{"baslik":"Proje Bütçesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
+        <a class="btn btn-ghost btn-sm" href="#" id="btnButceExport" data-gv-export='{"baslik":"Şantiye Bütçesi","formatlar":["pdf","excel","yazdir"],"kapsam":["tumu","filtreli"]}' aria-label="Dışa Aktar"><i class="fa-solid fa-download"></i> Dışa Aktar</a>
       </div>
     </div>
 
     <div class="rp-toolbar">
-      <!-- [G-3] Proje kapsam çipleri 5 adet ve proje sayısıyla büyüyor; dönem
+      <!-- [Dalga 2 / M-3a] Çiplerin `id="projeChips"` / `data-proje` öznitelikleri
+           KASITLI olarak DEĞİŞTİRİLMEDİ — bunlar ?proje= URL sözleşmesiyle aynı
+           kelimeyi paylaşır ve geriye dönük uyum için korunur; görünen metinler
+           ise şantiye adlarıdır (zaten öyleydi).
+           [G-3] Şantiye kapsam çipleri 5 adet ve şantiye sayısıyla büyüyor; dönem
            seçiciyle aynı satırda olduğu için 1440'ta bile sarma riski vardı.
            Şerit `.gv-chipbar` rayına sarıldı: ikinci satıra geçmez, oklarla kayar.
            `id="projeChips"` ve `data-proje` öznitelikleri KORUNDU (sayfa JS'i
@@ -161,7 +168,7 @@
       <div class="kpi-card">
         <div class="kpi-ico"><i class="fa-solid fa-sack-dollar"></i></div>
         <div><div class="kpi-num num compact" id="kpiRevize" style="font-size:19px">₺342.000.000</div><div class="kpi-lbl">Toplam revize bütçe</div>
-        <div class="kpi-delta flat" id="kpiRevizeDelta"><i class="fa-solid fa-layer-group"></i> 3 proje</div></div>
+        <div class="kpi-delta flat" id="kpiRevizeDelta"><i class="fa-solid fa-layer-group"></i> 3 şantiye</div></div>
       </div>
       <div class="kpi-card">
         <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-coins"></i></div>
@@ -183,11 +190,11 @@
     <!-- ============ GRAFİK ALANI (B §6.2 madde 6, spec-v2-core.md §7) ============ -->
     <div class="rp-charts-2" id="btChartsWrap" style="margin-bottom:20px">
       <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Proje Bazlı Bütçe Dağılımı</h3><span class="ph-sub" style="margin:0">revize bütçe</span></div>
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-column"></i> Şantiye Bazlı Bütçe Dağılımı</h3><span class="ph-sub" style="margin:0">revize bütçe</span></div>
         <div class="rp-chart-body" id="chartBtProje"></div>
       </div>
       <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Harcanan / Kalan</h3><span class="ph-sub" style="margin:0" id="chartBtHkSub">3 proje</span></div>
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Harcanan / Kalan</h3><span class="ph-sub" style="margin:0" id="chartBtHkSub">3 şantiye</span></div>
         <div class="rp-chart-body" id="chartBtHk"></div>
       </div>
     </div>
@@ -208,12 +215,12 @@
     <div class="butce-grid" id="butceGrid"></div>
 
     <div class="gv-card" style="margin-top:20px">
-      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Proje Bazlı Bütçe Dökümü</div></div>
+      <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Şantiye Bazlı Bütçe Dökümü</div></div>
       <div class="gv-listhead">
         <div class="lh-row">
           <div class="lh-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Proje ara" data-table-search="#tblButceDetay">
+            <input type="text" placeholder="Şantiye ara" data-table-search="#tblButceDetay">
           </div>
           <div class="lh-acts">
             <button type="button" class="btn btn-ghost btn-sm gv-fp-open" id="btFiltreBtn" aria-label="Gelişmiş Filtre"><i class="fa-solid fa-sliders"></i> <span class="lh-lbl">Gelişmiş Filtre</span></button>
@@ -229,7 +236,7 @@
       </div>
       <div class="gc-body flush rp-table-wrap" style="box-shadow:none;border:none;margin-bottom:0">
         <table class="gtable" id="tblButceDetay">
-          <thead><tr><th>Proje</th><th class="num" data-col="orijinal">Orijinal</th><th class="num" data-col="revize">Revize</th><th class="num" data-col="gerceklesen">Gerçekleşen</th><th class="num" data-col="kalan">Kalan</th><th class="num" data-col="kullanim">Kullanım</th></tr></thead>
+          <thead><tr><th>Şantiye</th><th class="num" data-col="orijinal">Orijinal</th><th class="num" data-col="revize">Revize</th><th class="num" data-col="gerceklesen">Gerçekleşen</th><th class="num" data-col="kalan">Kalan</th><th class="num" data-col="kullanim">Kullanım</th></tr></thead>
           <tbody id="tblButceDetayBody"></tbody>
         </table>
       </div>
@@ -274,23 +281,29 @@
 
   /* kaynak: mevcut pb-card'lardaki (D18) rakamlarla + crm-finans-maliyet.html
      PROJE nesnesinin revize/gerçekleşen alanlarıyla BİREBİR — tek gerçek kaynak
-     burada TÜRETİLDİ, iki ekran birbirini tutar. */
-  var PROJE = {
+     burada TÜRETİLDİ, iki ekran birbirini tutar. (crm-finans-maliyet.html BAŞKA bir
+     dosyadır ve oradaki değişken adı bu turda DEĞİŞTİRİLMEDİ — kasıtlı.)
+     [Dalga 2 / M-3a] Bu ekran ŞANTİYE bazlı bütçedir; M-1 ile gerçek Proje katmanı
+     doğduğu için "Proje" adlandırması yanıltıcı hale geldi ve netleştirildi:
+     PROJE → SANTIYE_BUTCE, PROJE_ORDER → SANTIYE_BUTCE_ORDER. Anahtarlar (vadi/liman/
+     merkez) zaten ŞANTİYE anahtarlarıydı; veri DEĞİŞMEDİ, yalnız ad netleşti.
+     URL parametresi ?proje= geriye dönük uyum için KORUNDU (130+ sayfada link var). */
+  var SANTIYE_BUTCE = {
     vadi:  {ad:'Vadi Konakları',          kisa:'VK', tip:'Konut · Çekmeköy',        orij:176500000, rev:184000000, ger:127400000, fizik:68, revizyon:2, asimKat:'Betonarme', asimPct:104, tag:{cls:'warn', lbl:'R2 revize'}, danger:true, href:'crm-finans-butce-detay.html?proje=vadi'},
     liman: {ad:'Liman Lojistik Merkezi',  kisa:'LL', tip:'Ticari · Aliağa',         orij:97000000,  rev:97000000,  ger:40700000,  fizik:41, revizyon:0, asimKat:null, asimPct:0, tag:{cls:'off', lbl:'Revizyon yok'}, danger:false, href:'crm-finans-butce-detay.html?proje=liman'},
     merkez:{ad:'Merkez Şantiye',          kisa:'MS', tip:'Depo & Atölye · Gebze',   orij:61000000,  rev:61000000,  ger:53100000,  fizik:86, revizyon:0, asimKat:null, asimPct:0, tag:{cls:'off', lbl:'Revizyon yok'}, danger:false, href:'crm-finans-butce-detay.html?proje=merkez'}
   };
-  var PROJE_ORDER = ['vadi','liman','merkez'];
+  var SANTIYE_BUTCE_ORDER = ['vadi','liman','merkez'];
 
   function keysFor(filter){
-    if(filter === 'tumu') return PROJE_ORDER;
+    if(filter === 'tumu') return SANTIYE_BUTCE_ORDER;
     if(filter === 'diger') return [];
     return [filter];
   }
 
   function gridHtml(keys){
     return keys.map(function(k){
-      var P = PROJE[k];
+      var P = SANTIYE_BUTCE[k];
       var u = pct(P.ger, P.rev);
       return '<div class="gv-card pb-card' + (P.danger ? ' is-danger' : '') + '">'
         + '<div class="pb-head"><div class="pb-mark">' + P.kisa + '</div><div class="pb-id"><h3>' + P.ad + '</h3>'
@@ -308,7 +321,7 @@
     var h = '';
     var tOrij=0, tRev=0, tGer=0;
     keys.forEach(function(k){
-      var P = PROJE[k];
+      var P = SANTIYE_BUTCE[k];
       tOrij += P.orij; tRev += P.rev; tGer += P.ger;
       h += '<tr data-durum="' + (P.asimKat ? 'asim' : 'normal') + '"><td>' + P.ad + '</td><td class="num" data-col="orijinal">' + tl(P.orij) + '</td><td class="num" data-col="revize">' + tl(P.rev) + '</td>'
         + '<td class="num" data-col="gerceklesen">' + tl(P.ger) + '</td><td class="num" data-col="kalan">' + tl(P.rev - P.ger) + '</td><td class="num" data-col="kullanim">%' + pct(P.ger, P.rev) + '</td></tr>';
@@ -322,10 +335,10 @@
 
   function compareHtml(keys){
     if(keys.length < 2) return '';
-    var best = keys.reduce(function(a,b){ return pct(PROJE[a].ger,PROJE[a].rev) > pct(PROJE[b].ger,PROJE[b].rev) ? a : b; });
-    var worst = keys.reduce(function(a,b){ return pct(PROJE[a].ger,PROJE[a].rev) < pct(PROJE[b].ger,PROJE[b].rev) ? a : b; });
+    var best = keys.reduce(function(a,b){ return pct(SANTIYE_BUTCE[a].ger,SANTIYE_BUTCE[a].rev) > pct(SANTIYE_BUTCE[b].ger,SANTIYE_BUTCE[b].rev) ? a : b; });
+    var worst = keys.reduce(function(a,b){ return pct(SANTIYE_BUTCE[a].ger,SANTIYE_BUTCE[a].rev) < pct(SANTIYE_BUTCE[b].ger,SANTIYE_BUTCE[b].rev) ? a : b; });
     function item(lbl, k, deltaCls, deltaIco){
-      var P = PROJE[k];
+      var P = SANTIYE_BUTCE[k];
       return '<div class="rp-compare-item"><span class="rc-lbl">' + lbl + '</span><span class="rc-val">' + P.ad + ' · %' + pct(P.ger,P.rev) + '</span>'
         + '<span class="rp-compare-delta ' + deltaCls + '"><i class="fa-solid ' + deltaIco + '"></i>' + tl(P.ger) + ' / ' + tl(P.rev) + (P.asimKat ? ' · ' + P.asimKat + ' aşımda' : '') + '</span></div>';
     }
@@ -337,16 +350,16 @@
 
   function noteHtml(keys, filter){
     if(!keys.length) return '';
-    var tGer=0, tRev=0; keys.forEach(function(k){ tGer+=PROJE[k].ger; tRev+=PROJE[k].rev; });
+    var tGer=0, tRev=0; keys.forEach(function(k){ tGer+=SANTIYE_BUTCE[k].ger; tRev+=SANTIYE_BUTCE[k].rev; });
     var u = pct(tGer,tRev);
-    var asimVar = keys.some(function(k){ return PROJE[k].asimKat; });
+    var asimVar = keys.some(function(k){ return SANTIYE_BUTCE[k].asimKat; });
     var txt = '<i class="fa-solid fa-lightbulb"></i> ';
     if(filter === 'tumu'){
-      txt += '<strong>3 projenin toplam bütçe kullanımı %' + u + '.</strong> Vadi Konakları fiziksel ilerlemenin (%68) hafif önünde harcıyor ve Betonarme kategorisinde %104 ile bütçeyi aştı — BTC-2026-R2 revizyonuna rağmen demir fiyat artışı etkisini sürdürüyor, izleme önerilir. Merkez Şantiye %87 kullanımla teslime en yakın proje; Liman Lojistik %42 ile erken safhada, aşım riski yok.';
+      txt += '<strong>3 şantiyenin toplam bütçe kullanımı %' + u + '.</strong> Vadi Konakları fiziksel ilerlemenin (%68) hafif önünde harcıyor ve Betonarme kategorisinde %104 ile bütçeyi aştı — BTC-2026-R2 revizyonuna rağmen demir fiyat artışı etkisini sürdürüyor, izleme önerilir. Merkez Şantiye %87 kullanımla teslime en yakın şantiye; Liman Lojistik %42 ile erken safhada, aşım riski yok.';
     } else if(asimVar){
-      txt += '<strong>Seçili projede bütçe kullanımı %' + u + ' ve 1 kategori aşımda.</strong> Fiziksel ilerlemeyle (%' + PROJE[keys[0]].fizik + ') karşılaştırıldığında harcama hafif önde — kalan bütçenin kalan işi karşılayıp karşılamadığı kategori bazında (Gerçekleşen Maliyet ekranından) izlenmeli.';
+      txt += '<strong>Seçili şantiyede bütçe kullanımı %' + u + ' ve 1 kategori aşımda.</strong> Fiziksel ilerlemeyle (%' + SANTIYE_BUTCE[keys[0]].fizik + ') karşılaştırıldığında harcama hafif önde — kalan bütçenin kalan işi karşılayıp karşılamadığı kategori bazında (Gerçekleşen Maliyet ekranından) izlenmeli.';
     } else {
-      txt += '<strong>Seçili projede bütçe kullanımı %' + u + ', aşımda kategori yok.</strong> Fiziksel ilerleme (%' + PROJE[keys[0]].fizik + ') ile harcama oranı tutarlı seyrediyor.';
+      txt += '<strong>Seçili şantiyede bütçe kullanımı %' + u + ', aşımda kategori yok.</strong> Fiziksel ilerleme (%' + SANTIYE_BUTCE[keys[0]].fizik + ') ile harcama oranı tutarlı seyrediyor.';
     }
     return txt;
   }
@@ -362,23 +375,23 @@
       gvEmpty.render('#butceEmpty', {
         ikon:'fa-folder-open',
         baslik:'Bu kapsamda bütçe kaydı yok',
-        aciklama:'Tamamlanan (Kule Ofis B Blok) ve planlama aşamasındaki (Göl Evleri 2. Etap) projeler için henüz bütçe takibi açılmadı.',
+        aciklama:'Tamamlanan (Kule Ofis B Blok) ve planlama aşamasındaki (Göl Evleri 2. Etap) şantiyeler için henüz bütçe takibi açılmadı.',
         aksiyon:{etiket:'Şantiye Kaydına Git', href:'crm-santiye.html'}
       });
       return;
     }
 
-    /* ============ GRAFİK ALANI — seçili kapsamdaki (keys) projelerden CANLI türetilir ============ */
+    /* ============ GRAFİK ALANI — seçili kapsamdaki (keys) şantiyelerden CANLI türetilir ============ */
     if(window.gvBar){
       gvBar('#chartBtProje', keys.map(function(k){
-        var P = PROJE[k];
+        var P = SANTIYE_BUTCE[k];
         return {lbl:P.ad, val:P.rev, valLbl:tlKisa(P.rev), tone: P.asimKat ? 'danger' : undefined};
-      }), {yon:'yatay', baslik:'Proje bazlı revize bütçe dağılımı', labelWidth:150});
+      }), {yon:'yatay', baslik:'Şantiye bazlı revize bütçe dağılımı', labelWidth:150});
     }
     if(window.gvDonut){
       var gToplam = 0, rToplam = 0;
-      keys.forEach(function(k){ gToplam += PROJE[k].ger; rToplam += PROJE[k].rev; });
-      document.getElementById('chartBtHkSub').textContent = keys.length > 1 ? keys.length + ' proje' : PROJE[keys[0]].ad;
+      keys.forEach(function(k){ gToplam += SANTIYE_BUTCE[k].ger; rToplam += SANTIYE_BUTCE[k].rev; });
+      document.getElementById('chartBtHkSub').textContent = keys.length > 1 ? keys.length + ' şantiye' : SANTIYE_BUTCE[keys[0]].ad;
       gvDonut('#chartBtHk', [
         {lbl:'Harcanan', val:gToplam, tone:'acc'},
         {lbl:'Kalan', val:Math.max(rToplam - gToplam, 0), tone:'muted'}
@@ -390,19 +403,19 @@
     document.getElementById('butceCompare').innerHTML = compareHtml(keys);
     document.getElementById('butceCompare').hidden = keys.length < 2;
     document.getElementById('butceNote').innerHTML = noteHtml(keys, filter);
-    /* proje kapsamı değiştikçe tbody satırları YENİDEN yazılır — gvCols'un kayıtlı
+    /* şantiye kapsamı değiştikçe tbody satırları YENİDEN yazılır — gvCols'un kayıtlı
        kolon tercihini (varsa) taze satırlara da uygula (aksi halde yalnız ilk
        render'da uygulanmış olurdu). btColsHandle ilk render()'dan SONRA atanır. */
     if(window.btColsHandle) window.btColsHandle.apply();
 
     var tRev=0, tGer=0, revizyon=0, asim=0, asimLbl='Aşımda kategori yok';
     keys.forEach(function(k){
-      var P = PROJE[k];
+      var P = SANTIYE_BUTCE[k];
       tRev += P.rev; tGer += P.ger; revizyon += P.revizyon;
       if(P.asimKat){ asim++; asimLbl = P.asimKat + ' — ' + P.ad + ' %' + P.asimPct; }
     });
     document.getElementById('kpiRevize').textContent = tl(tRev);
-    document.getElementById('kpiRevizeDelta').innerHTML = '<i class="fa-solid fa-layer-group"></i> ' + keys.length + ' proje';
+    document.getElementById('kpiRevizeDelta').innerHTML = '<i class="fa-solid fa-layer-group"></i> ' + keys.length + ' şantiye';
     document.getElementById('kpiGercek').textContent = tl(tGer);
     document.getElementById('kpiGercekDelta').innerHTML = '<i class="fa-solid fa-percent"></i> Revizenin %' + pct(tGer,tRev) + "'i";
     document.getElementById('kpiAsim').textContent = asim;
@@ -419,7 +432,7 @@
 
   /* ============ T-FIX1 — hata durumu demo (B §6.2 madde 15) ============
      Demo tetiklendiğinde grafik alanı da (butceWrap dışında, render() tarafından
-     ayrıca yönetilen btChartsWrap) gizlenir; "Tekrar Dene" o an seçili proje
+     ayrıca yönetilen btChartsWrap) gizlenir; "Tekrar Dene" o an seçili şantiye
      chip'iyle render()'ı yeniden çalıştırır — sabit sonucSayisi UYDURULMAZ.
      loading|error|empty|content dördü yalnız gvEmpty.durum() üzerinden yönetilir. */
   var btnBtHataDemo = document.getElementById('btnBtHataDemo');
@@ -435,21 +448,21 @@
 
   gvHelp.metinler['butce-revize-nedir'] = {
     baslik: 'Revize Bütçe Nedir?',
-    mesaj: 'Revize bütçe, proje başlangıcında onaylanan orijinal bütçenin; malzeme fiyat artışı, kapsam değişikliği veya süre uzatımı gibi gerekçelerle resmi bir revizyon kaydı (BTC-2026-R#) üzerinden güncellenmiş hâlidir. Gerçekleşen harcama her zaman revize bütçeyle karşılaştırılır — orijinal bütçeyle karşılaştırma yalnızca sapma analizinde kullanılır.'
+    mesaj: 'Revize bütçe, şantiye başlangıcında onaylanan orijinal bütçenin; malzeme fiyat artışı, kapsam değişikliği veya süre uzatımı gibi gerekçelerle resmi bir revizyon kaydı (BTC-2026-R#) üzerinden güncellenmiş hâlidir. Gerçekleşen harcama her zaman revize bütçeyle karşılaştırılır — orijinal bütçeyle karşılaştırma yalnızca sapma analizinde kullanılır.'
   };
   gvHelp.init();
   gvExport.bind();
 
   render('tumu');
 
-  /* ============ V3A — "Proje Bazlı Bütçe Dökümü" tablosu için Gelişmiş Filtre/
+  /* ============ V3A — "Şantiye Bazlı Bütçe Dökümü" tablosu için Gelişmiş Filtre/
      Kolonlar (tasks/spec-v3a-ortak.md). render('tumu') İLK ÇALIŞTIRILIR (tbody
      satırları burada doğar) — primitifler ONDAN SONRA bağlanır, yoksa ilk
      apply()/applyToTable() boş tabloya karşı çalışır ve kayıtlı kolon/filtre
-     tercihi ilk render'a yansımaz. Tablo yalnız 3 satır barındırdığından (proje
-     bazında) tek anlamlı facet "Bütçe Durumu" (aşımda/aşımda değil) — Proje
+     tercihi ilk render'a yansımaz. Tablo yalnız 3 satır barındırdığından (şantiye
+     bazında) tek anlamlı facet "Bütçe Durumu" (aşımda/aşımda değil) — Şantiye
      zaten üstteki rp-toolbar chip'leriyle kapsam olarak seçiliyor, ikinci bir
-     Proje alanı DUPLICATE olurdu (crm-gorev.html K-220 dersiyle tutarlı —
+     Şantiye alanı DUPLICATE olurdu (crm-gorev.html K-220 dersiyle tutarlı —
      tasks/kararlar.md). ============ */
   if(window.gvFilterDrawer){
     gvFilterDrawer.init({
