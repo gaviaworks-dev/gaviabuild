@@ -1187,6 +1187,10 @@
          (crm-panel-raporlar.html) DEĞİŞMEDİ, yalnız data-sec="raporlar" oldu. */
     ]},
     santiye:{ ic:'fa-helmet-safety', eyebrow:'Saha', title:'Şantiye Yönetimi', menu:[
+      /* [Dalga 2 / M-1] Proje katmanı — hiyerarşi Firma → Proje → Şantiye/Etap olduğu için
+         kalem Şantiye Listesi'nin ÜSTÜNDE. Yeni BÖLÜM açılmadı (K-2: "menü yapısını
+         gereksiz büyütme"), mevcut Saha bölümüne tek kalem eklendi. */
+      {ic:'fa-diagram-project', lbl:'Projeler',          href:'crm-santiye-proje.html', screen:'proje'},
       {ic:'fa-helmet-safety',  lbl:'Şantiye Listesi',    href:'crm-santiye.html', screen:'liste'},
       {ic:'fa-camera',         lbl:'Saha Bildirimleri',  href:'crm-santiye-bildirimler.html', screen:'bildirimler', cnt:'4'},
       {ic:'fa-calendar-days',  lbl:'İş Programı',        href:'crm-santiye-ajanda.html', screen:'ajanda'},
@@ -1349,7 +1353,11 @@
          yonetim/muhasebe) — teknik/sef/ik'nin scr.finans listesine EKLENMEDİ, KASITLI,
          ROLES'a dokunulmadı. */
       {seclbl:'Bütçe & Nakit', tag:'Faz 2'},
-      {ic:'fa-coins',          lbl:'Proje Bütçesi',        href:'crm-finans-butce.html',       screen:'butce'},
+      /* [Dalga 2 / M-3a] "Proje Bütçesi" → "Şantiye Bütçesi". Bu ekran ŞANTİYE bazlıdır
+         (crm-finans-butce.html'deki veri anahtarları şantiye anahtarlarıdır); M-1 ile
+         gerçek Proje katmanı doğduğu için eski ad iki farklı şeyi gösteriyordu.
+         Dosya adı ve ?proje= URL parametresi DEĞİŞMEDİ — yalnız etiket netleşti. */
+      {ic:'fa-coins',          lbl:'Şantiye Bütçesi',      href:'crm-finans-butce.html',       screen:'butce'},
       {ic:'fa-chart-pie',      lbl:'Gerçekleşen Maliyet',  href:'crm-finans-maliyet.html',     screen:'maliyet', cnt:'1'},
       {ic:'fa-money-bill-trend-up', lbl:'Nakit Akışı',     href:'crm-finans-nakit.html',       screen:'nakit'},
       /* [v2-Dalga2/LEAD] Mizan "Sözleşmeler" grubunun ALTINDAN çıkarıldı ve listenin
