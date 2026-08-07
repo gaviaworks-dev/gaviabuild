@@ -115,7 +115,92 @@
 .ig-row{padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px}
 .ig-row:last-child{border-bottom:none}
 
-@media print{ .gv-rail,.gv-menu,.gv-divider,.gv-top,.ph-actions,.gv-fpanel-ov{display:none!important} }
+/* ============ M-8 · MAL KABUL (Sipariş → Mal Kabul → Stok Girişi) ============
+   Sipariş sonrası teslimat artık doğrudan stok girişi DEĞİL: her irsaliye için bir
+   mal kabul kaydı açılır, kabul/red miktarı burada girilir ve stok girişine YALNIZ
+   kabul edilen miktar dönüşür. Sınıf dili sayfanın kendi .gd-block/.kal-table
+   deseninden türetildi; segmentli "red nedeni" seçicisi irsaliye-fatura sayfasının
+   .upl-tip-seg idiyomunun eşleniğidir (yeni desen icat edilmedi). */
+.mk-rec{padding:20px 22px;border-bottom:1px solid var(--line)}
+.mk-rec:last-child{border-bottom:none}
+.mk-rec.is-target{background:rgba(var(--acc-rgb),.055)}
+.mk-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.mk-id b{font-size:13.5px;font-weight:800;color:var(--ink)}
+.mk-meta{display:block;font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.6}
+
+.mk-table{width:100%;border-collapse:collapse}
+.mk-table th{font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--muted);text-align:right;padding:0 8px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+.mk-table th:first-child{text-align:left;padding-left:0}
+.mk-table th:last-child,.mk-table td:last-child{padding-right:0}
+.mk-table td{padding:9px 8px;font-size:13px;text-align:right;border-bottom:1px solid var(--line);color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mk-table td:first-child{text-align:left;padding-left:0;color:var(--ink);font-weight:600;white-space:normal}
+.mk-table tr:last-child td{border-bottom:none}
+.mk-table td.mk-eksik{color:var(--warn);font-weight:800}
+.mk-unit{font-size:11px;color:var(--muted);margin-left:3px;font-weight:500}
+.mk-inp{width:74px;padding:5px 8px;text-align:right;font:inherit;font-size:12.5px;font-weight:700;
+  font-variant-numeric:tabular-nums;color:var(--ink);background:var(--paper);
+  border:1px solid var(--line-2);border-radius:var(--r-sm);transition:.15s var(--ease)}
+.mk-inp:hover{border-color:var(--acc-ink)}
+.mk-inp:focus{outline:2px solid rgba(var(--acc-rgb),.55);outline-offset:1px;border-color:var(--acc-ink)}
+.mk-table tr.is-bad td{background:var(--danger-tint)}
+.mk-table tr.is-bad .mk-inp{border-color:var(--danger)}
+
+/* akış şeridi — brief'in "Sipariş → Mal Kabul → Stok Girişi" zinciri, kaydın imzası */
+.mk-flow{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap;margin-top:16px}
+.mk-node{display:flex;flex-direction:column;gap:3px;padding:9px 14px;border-radius:var(--r-sm);background:var(--bg);min-width:0}
+.mk-n-lbl{font-size:10.5px;font-weight:700;letter-spacing:.01em;color:var(--muted);white-space:nowrap}
+.mk-n-val{font-size:13.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.mk-node.is-stok{background:rgba(var(--acc-rgb),.11)}
+.mk-node.is-stok .mk-n-lbl{color:var(--acc-deep)}
+.mk-node.is-stok .mk-n-val{color:var(--acc-deep)}
+.mk-arrow{align-self:center;color:var(--line-2);font-size:11px;flex:none}
+.mk-red{display:flex;align-items:flex-start;gap:9px;margin-top:10px;padding:10px 14px;border-radius:var(--r-sm);
+  background:var(--danger-tint);color:var(--danger);font-size:12.5px;font-weight:700;line-height:1.5}
+.mk-red i{font-size:11px;margin-top:3px;flex:none}
+.mk-red span{font-weight:500}
+.mk-red b{font-weight:800}
+
+.mk-foot-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+.mk-neden-lbl{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+.mk-neden{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px;gap:2px}
+.mk-neden button{all:unset;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--muted);padding:5px 13px;border-radius:var(--r-pill);cursor:pointer;transition:.15s var(--ease)}
+.mk-neden button:hover{color:var(--ink-2)}
+.mk-neden button.is-on{background:var(--paper);color:var(--danger);box-shadow:var(--sh-sm)}
+.mk-neden button:focus-visible{outline:2px solid var(--acc-ink);outline-offset:1px}
+.mk-note{margin-top:14px}
+.mk-note label{display:block;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--muted);margin-bottom:7px}
+.mk-note textarea{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;font:inherit;font-size:12.5px;color:var(--ink);line-height:1.6;resize:vertical}
+.mk-note textarea:focus{outline:2px solid rgba(var(--acc-rgb),.55);outline-offset:1px;border-color:var(--acc-ink)}
+.mk-acts{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.mk-warn{display:none;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--danger)}
+.mk-rec.is-bad .mk-warn{display:flex}
+.mk-total{line-height:1.7}
+.mk-total b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+.mk-total b.mk-t-stok{color:var(--acc-deep)}
+.mk-intro{padding:18px 22px 0}
+.mk-intro p{font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+.mk-intro b{font-weight:800;color:var(--ink)}
+
+@media(max-width:640px){
+  .mk-rec{padding:18px 16px}
+  .mk-table{display:block}
+  .mk-table thead{display:none}
+  .mk-table tbody,.mk-table tr{display:block;width:100%}
+  .mk-table tr{border:1px solid var(--line);border-radius:var(--r-md);padding:4px 13px;margin-bottom:10px}
+  .mk-table tr:last-child{margin-bottom:0}
+  /* değer + ölçü birimi BİRLİKTE sağda dursun: etiket kalan alanı kaplar, sayı ve birim
+     yan yana kalır (space-between olsaydı "60 … adet" biçiminde ayrışırdı) */
+  .mk-table td{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:10px 0;text-align:right;white-space:nowrap}
+  .mk-table td::before{content:attr(data-lbl);font-size:11.5px;font-weight:700;letter-spacing:.01em;color:var(--ink-2);text-align:left;flex:1 1 auto;white-space:normal}
+  /* kalem adı kartın başlığıdır — etiketin ALTINDA, tam genişlikte ve sola dayalı */
+  .mk-table td:first-child{display:block;padding:11px 0 8px;text-align:left;white-space:normal}
+  .mk-table td:first-child::before{display:block;margin-bottom:4px;color:var(--muted)}
+  .mk-table td:last-child{border-bottom:none}
+  .mk-node{flex:1 1 100%}
+  .mk-arrow{display:none}
+}
+
+@media print{ .gv-rail,.gv-menu,.gv-divider,.gv-top,.ph-actions,.mk-acts,.mk-neden,.gv-fpanel-ov{display:none!important} }
 </style>
 </head>
 <body data-sec="satinalma" data-screen="siparisler">
@@ -176,8 +261,23 @@
           <div id="uyariWrap"><div class="danger-banner"><i class="fa-solid fa-triangle-exclamation"></i><span>Miktar Uyuşmazlığı — Ø16 nervürlü demir: 12 t sipariş edildi, irsaliyelerde toplam 11,6 t teslim alındı (IRS-2026-12: 6,4 t + IRS-2026-14: 5,2 t). Eksik 0,4 t için tedarikçiyle görüşme sürüyor; bu nedenle FTR-2026-09 muhasebe kontrolünde ve cari hesaba işlenmedi.</span></div></div>
           <div class="gd-block" id="aciklamaBlock">
             <div class="gd-label">Açıklama</div>
-            <p class="gd-desc" id="aciklamaText">Vadi Konakları B ve C Blok betonarme imalatı için sipariş edilen 88 tonluk nervürlü inşaat demiri iki partide teslim alındı. Ø16 kaleminde 12 tonluk sipariş miktarına karşılık 11,6 ton teslim edildi; 0,4 tonluk eksik teslim tedarikçiyle görüşülüyor. Bu eksik, Vadi şantiye deposundaki (D-VDI) Ø16 stok seviyesinin minimumun altına düşmesiyle de bağlantılı.</p>
+            <p class="gd-desc" id="aciklamaText">Vadi Konakları B ve C Blok betonarme imalatı için sipariş edilen 88 tonluk nervürlü inşaat demiri iki partide teslim alındı. Ø16 kaleminde 12 tonluk sipariş miktarına karşılık 11,6 ton teslim edildi; 0,4 tonluk eksik teslim tedarikçiyle görüşülüyor. Bu eksik, Vadi şantiye deposundaki (D-VDI) Ø16 stok seviyesinin minimumun altına düşmesiyle de bağlantılı. Gelen 87,6 tonun tamamı sağlam bulunup kabul edildiği için red edilen miktar yoktur — bu bir eksik teslimdir, kalite reddi değildir.</p>
           </div>
+        </div>
+
+        <!-- ============ M-8 · MAL KABUL ============
+             Akış sırası bilinçli: Kalem Dökümü (sipariş) → Mal Kabul → İrsaliyeler.
+             Kart yalnız teslimatı olan siparişlerde görünür; yoksa JS gizler. -->
+        <div class="gv-card" id="malkabul">
+          <div class="gc-head">
+            <div class="gc-title"><i class="fa-solid fa-clipboard-check"></i> Mal Kabul</div>
+            <span class="gtag" id="mkCount">2 teslimat</span>
+          </div>
+          <div class="mk-intro"><p>Her teslimat için ayrı bir mal kabul kaydı açılır. Stok girişine yalnız <b>kabul edilen</b> miktar dönüşür; red edilen miktar depo bakiyesine hiç girmez. Çok partili siparişlerde “Sipariş” sütunu o sevkiyat için planlanan miktarı gösterir.</p></div>
+          <!-- statik bake — DEFAULT SIP-2026-05 mal kabul kayıtları (MALKABUL['05']); JS yüklenince
+               aynı mount innerHTML ile ezilir, renderMalKabul() çıktısıyla BİREBİR — D18-B2 -->
+          <div id="mkBody"><article class="mk-rec" id="mk-IRS-2026-12" data-mk-rec="0" data-mk-irs="IRS-2026-12"><div class="mk-head"><div class="mk-id"><b>IRS-2026-12</b><span class="mk-meta">18 Haziran 2026 · Teslim alan: İbrahim Sönmez · D-VDI Vadi Şantiye Deposu</span></div><span class="gstat ok" data-mk-badge="">Tam Kabul</span></div><table class="mk-table"><thead><tr><th>Kalem</th><th>Sipariş</th><th>Gelen</th><th>Kabul edilen</th><th>Red edilen</th></tr></thead><tbody><tr data-mk-rowel="0"><td data-lbl="Kalem">Nervürlü inşaat demiri Ø12</td><td data-lbl="Sipariş">20<span class="mk-unit">t</span></td><td data-lbl="Gelen">20<span class="mk-unit">t</span></td><td data-lbl="Kabul edilen"><input class="mk-inp" type="text" inputmode="decimal" value="20" data-mk="kabul" data-rec="0" data-row="0" aria-label="Nervürlü inşaat demiri Ø12 — kabul edilen miktar"><span class="mk-unit">t</span></td><td data-lbl="Red edilen"><input class="mk-inp" type="text" inputmode="decimal" value="0" data-mk="red" data-rec="0" data-row="0" aria-label="Nervürlü inşaat demiri Ø12 — red edilen miktar"><span class="mk-unit">t</span></td></tr><tr data-mk-rowel="1"><td data-lbl="Kalem">Nervürlü inşaat demiri Ø16</td><td data-lbl="Sipariş">6,4<span class="mk-unit">t</span></td><td data-lbl="Gelen">6,4<span class="mk-unit">t</span></td><td data-lbl="Kabul edilen"><input class="mk-inp" type="text" inputmode="decimal" value="6,4" data-mk="kabul" data-rec="0" data-row="1" aria-label="Nervürlü inşaat demiri Ø16 — kabul edilen miktar"><span class="mk-unit">t</span></td><td data-lbl="Red edilen"><input class="mk-inp" type="text" inputmode="decimal" value="0" data-mk="red" data-rec="0" data-row="1" aria-label="Nervürlü inşaat demiri Ø16 — red edilen miktar"><span class="mk-unit">t</span></td></tr><tr data-mk-rowel="2"><td data-lbl="Kalem">Nervürlü inşaat demiri Ø20</td><td data-lbl="Sipariş">14<span class="mk-unit">t</span></td><td data-lbl="Gelen">14<span class="mk-unit">t</span></td><td data-lbl="Kabul edilen"><input class="mk-inp" type="text" inputmode="decimal" value="14" data-mk="kabul" data-rec="0" data-row="2" aria-label="Nervürlü inşaat demiri Ø20 — kabul edilen miktar"><span class="mk-unit">t</span></td><td data-lbl="Red edilen"><input class="mk-inp" type="text" inputmode="decimal" value="0" data-mk="red" data-rec="0" data-row="2" aria-label="Nervürlü inşaat demiri Ø20 — red edilen miktar"><span class="mk-unit">t</span></td></tr></tbody></table><div class="mk-flow" data-mk-flow=""><div class="mk-node"><span class="mk-n-lbl">Sipariş — bu sevkiyat</span><span class="mk-n-val">40,4 t</span></div><i class="fa-solid fa-chevron-right mk-arrow" aria-hidden="true"></i><div class="mk-node"><span class="mk-n-lbl">Mal kabul — gelen / kabul</span><span class="mk-n-val">40,4 t / 40,4 t</span></div><i class="fa-solid fa-chevron-right mk-arrow" aria-hidden="true"></i><div class="mk-node is-stok"><span class="mk-n-lbl">Stok girişi · STK-2026-041</span><span class="mk-n-val">40,4 t</span></div></div><div class="mk-red" data-mk-redline="" hidden=""></div><div class="mk-foot-row" data-mk-nedenwrap="" hidden=""><span class="mk-neden-lbl">Red nedeni</span><div class="mk-neden" role="group" aria-label="Red nedeni"><button type="button" data-no-confirm="" data-mk-neden="hasar" data-rec="0">Hasarlı</button><button type="button" data-no-confirm="" data-mk-neden="uygun" data-rec="0" class="is-on">Uygunsuz / kalite</button></div></div><div class="mk-note"><label for="mkNot0">Açıklama</label><textarea id="mkNot0" rows="3" data-mk-not="0">Sevk programının 1. partisi. Kantar fişi irsaliyeyle uyumlu, çap ve nervür kontrolü yapıldı; tamamı kabul edildi.</textarea></div><div class="mk-acts"><button type="button" class="btn btn-acc btn-sm" data-no-confirm="" data-mk-save="0"><i class="fa-solid fa-clipboard-check"></i> Mal kabulünü kaydet</button><span class="mk-warn"><i class="fa-solid fa-triangle-exclamation"></i> Kabul + red toplamı gelen miktara eşit değil.</span></div></article><article class="mk-rec" id="mk-IRS-2026-14" data-mk-rec="1" data-mk-irs="IRS-2026-14"><div class="mk-head"><div class="mk-id"><b>IRS-2026-14</b><span class="mk-meta">26 Haziran 2026 · Teslim alan: İbrahim Sönmez · D-VDI Vadi Şantiye Deposu</span></div><span class="gstat warn" data-mk-badge="">Eksik Teslim</span></div><table class="mk-table"><thead><tr><th>Kalem</th><th>Sipariş</th><th>Gelen</th><th>Kabul edilen</th><th>Red edilen</th></tr></thead><tbody><tr data-mk-rowel="0"><td data-lbl="Kalem">Nervürlü inşaat demiri Ø10</td><td data-lbl="Sipariş">8<span class="mk-unit">t</span></td><td data-lbl="Gelen">8<span class="mk-unit">t</span></td><td data-lbl="Kabul edilen"><input class="mk-inp" type="text" inputmode="decimal" value="8" data-mk="kabul" data-rec="1" data-row="0" aria-label="Nervürlü inşaat demiri Ø10 — kabul edilen miktar"><span class="mk-unit">t</span></td><td data-lbl="Red edilen"><input class="mk-inp" type="text" inputmode="decimal" value="0" data-mk="red" data-rec="1" data-row="0" aria-label="Nervürlü inşaat demiri Ø10 — red edilen miktar"><span class="mk-unit">t</span></td></tr><tr data-mk-rowel="1"><td data-lbl="Kalem">Nervürlü inşaat demiri Ø12</td><td data-lbl="Sipariş">18<span class="mk-unit">t</span></td><td data-lbl="Gelen">18<span class="mk-unit">t</span></td><td data-lbl="Kabul edilen"><input class="mk-inp" type="text" inputmode="decimal" value="18" data-mk="kabul" data-rec="1" data-row="1" aria-label="Nervürlü inşaat demiri Ø12 — kabul edilen miktar"><span class="mk-unit">t</span></td><td data-lbl="Red edilen"><input class="mk-inp" type="text" inputmode="decimal" value="0" data-mk="red" data-rec="1" data-row="1" aria-label="Nervürlü inşaat demiri Ø12 — red edilen miktar"><span class="mk-unit">t</span></td></tr><tr data-mk-rowel="2"><td data-lbl="Kalem">Nervürlü inşaat demiri Ø16</td><td data-lbl="Sipariş">5,6<span class="mk-unit">t</span></td><td data-lbl="Gelen" class="mk-eksik">5,2<span class="mk-unit">t</span></td><td data-lbl="Kabul edilen"><input class="mk-inp" type="text" inputmode="decimal" value="5,2" data-mk="kabul" data-rec="1" data-row="2" aria-label="Nervürlü inşaat demiri Ø16 — kabul edilen miktar"><span class="mk-unit">t</span></td><td data-lbl="Red edilen"><input class="mk-inp" type="text" inputmode="decimal" value="0" data-mk="red" data-rec="1" data-row="2" aria-label="Nervürlü inşaat demiri Ø16 — red edilen miktar"><span class="mk-unit">t</span></td></tr><tr data-mk-rowel="3"><td data-lbl="Kalem">Nervürlü inşaat demiri Ø20</td><td data-lbl="Sipariş">16<span class="mk-unit">t</span></td><td data-lbl="Gelen">16<span class="mk-unit">t</span></td><td data-lbl="Kabul edilen"><input class="mk-inp" type="text" inputmode="decimal" value="16" data-mk="kabul" data-rec="1" data-row="3" aria-label="Nervürlü inşaat demiri Ø20 — kabul edilen miktar"><span class="mk-unit">t</span></td><td data-lbl="Red edilen"><input class="mk-inp" type="text" inputmode="decimal" value="0" data-mk="red" data-rec="1" data-row="3" aria-label="Nervürlü inşaat demiri Ø20 — red edilen miktar"><span class="mk-unit">t</span></td></tr></tbody></table><div class="mk-flow" data-mk-flow=""><div class="mk-node"><span class="mk-n-lbl">Sipariş — bu sevkiyat</span><span class="mk-n-val">47,6 t</span></div><i class="fa-solid fa-chevron-right mk-arrow" aria-hidden="true"></i><div class="mk-node"><span class="mk-n-lbl">Mal kabul — gelen / kabul</span><span class="mk-n-val">47,2 t / 47,2 t</span></div><i class="fa-solid fa-chevron-right mk-arrow" aria-hidden="true"></i><div class="mk-node is-stok"><span class="mk-n-lbl">Stok girişi · STK-2026-047</span><span class="mk-n-val">47,2 t</span></div></div><div class="mk-red" data-mk-redline="" hidden=""></div><div class="mk-foot-row" data-mk-nedenwrap="" hidden=""><span class="mk-neden-lbl">Red nedeni</span><div class="mk-neden" role="group" aria-label="Red nedeni"><button type="button" data-no-confirm="" data-mk-neden="hasar" data-rec="1">Hasarlı</button><button type="button" data-no-confirm="" data-mk-neden="uygun" data-rec="1" class="is-on">Uygunsuz / kalite</button></div></div><div class="mk-note"><label for="mkNot1">Açıklama</label><textarea id="mkNot1" rows="3" data-mk-not="1">Sevk programının 2. partisi. Ø16 kaleminde 5,6 t beklenirken 5,2 t geldi — 0,4 t eksik teslim tutanağa bağlandı. Gelen miktarın tamamı sağlam olduğu için red YOK; eksik teslim ile red edilen miktar birbirinden ayrıdır.</textarea></div><div class="mk-acts"><button type="button" class="btn btn-acc btn-sm" data-no-confirm="" data-mk-save="1"><i class="fa-solid fa-clipboard-check"></i> Mal kabulünü kaydet</button><span class="mk-warn"><i class="fa-solid fa-triangle-exclamation"></i> Kabul + red toplamı gelen miktara eşit değil.</span></div></article></div>
+          <div class="gc-foot"><div class="mk-total" id="mkTotal">Toplam teslimat — gelen <b>87,6 t</b> · kabul <b>87,6 t</b> · red <b>0 t</b> · stoğa giren <b class="mk-t-stok">87,6 t</b></div></div>
         </div>
 
         <div class="gv-card" id="irsaliyeCard">
@@ -304,19 +404,22 @@
       no:'SIP-2026-03', title:'PVC Doğrama', eyebrow:'Vadi Konakları · Sipariş #SIP-2026-03',
       badge:{cls:'ok', lbl:'Teslim Edildi'}, extraTag:'FTR-2026-06 · vade 15 Tem',
       tdr:'TDR-04', santiye:'Vadi Konakları',
-      tarih:'12 Mayıs 2026', termin:'Teslim edildi — 9 Haziran 2026 (IRS-2026-09)', odeme:'60 gün vade — 15 Temmuz 2026’da ödenecek',
+      tarih:'12 Mayıs 2026', termin:'Teslim edildi — 9 Haziran 2026 (IRS-2026-09); hasarlı 4 setin değişimi 12 Haziran 2026', odeme:'60 gün vade — 15 Temmuz 2026’da ödenecek',
       kalemler:[
         {ad:'PVC pencere doğrama seti (çift cam)', miktar:'60 adet', tutar:336000},
         {ad:'PVC kapı doğrama seti', miktar:'20 adet', tutar:82200}
       ],
-      aciklama:'B ve C Blok daire pencere/kapı doğramaları tek partide teslim alındı (IRS-2026-09). Fatura (FTR-2026-06) 12 Haziran’da kesildi; 15 Temmuz 2026 vadesiyle nakit akışı ödeme takviminde planlı.',
+      /* M-8 — mal kabul senaryosuyla uyumlandı: 4 set hasarlı red + değişim partisi
+         (bkz. MALKABUL['03']). Sipariş durumu ve fatura tutarı DEĞİŞMEDİ. */
+      aciklama:'B ve C Blok daire pencere/kapı doğramaları 9 Haziran’da tek partide teslim alındı (IRS-2026-09). Mal kabulünde 4 pencere doğrama seti nakliye hasarı nedeniyle reddedildi; stoğa yalnız sağlam 76 set girdi. Tedarikçi reddedilen 4 seti 12 Haziran’da hasarsız ürünle değiştirdiği için sipariş tam teslim sayıldı ve fatura tutarı (FTR-2026-06, ₺418.200) değişmedi; 15 Temmuz 2026 vadesiyle nakit akışı ödeme takviminde planlı.',
       kaynak:{no:'MLZ-2026-032', desc:'Vadi PVC doğrama talebi → SAT-2026-009 (arşiv kaydı, talep listesinde görünmez)', archived:true},
       baglantilar:[{ic:'fa-building', lbl:'Boğaziçi Yapı Market — Tedarikçi Kartı', href:'crm-satinalma-tedarikci-detay.html?tdr=TDR-04'},
                     {ic:'fa-file-invoice-dollar', lbl:'İrsaliye & Fatura Takibi', href:'crm-satinalma-irsaliye-fatura.html'},
                     {ic:'fa-sitemap', lbl:'Bütçe Kalemi: Doğrama & Cephe — Vadi Konakları', href:'crm-finans-butce-detay.html?proje=vadi'}],
       chain:[
         {rol:'Sipariş Verildi', kisi:'Baran Yıldız', durum:'olusturdu', tarih:'12 Mayıs 2026'},
-        {rol:'İrsaliye — IRS-2026-09', kisi:'İbrahim Sönmez', durum:'onaylandi', tarih:'9 Haziran 2026', not:'PVC doğrama tam teslim alındı, Vadi şantiye deposu.'},
+        {rol:'Mal Kabul — IRS-2026-09 (Hasarlı Teslim)', kisi:'İbrahim Sönmez', durum:'onaylandi', tarih:'9 Haziran 2026', not:'Gelen 80 setin 76’sı kabul edildi; 4 pencere doğrama seti nakliye hasarı nedeniyle reddedildi. Stok girişi (STK-2026-023) yalnız kabul edilen 76 set üzerinden açıldı.'},
+        {rol:'Mal Kabul — IRS-2026-09/A değişim partisi (Tam Kabul)', kisi:'İbrahim Sönmez', durum:'onaylandi', tarih:'12 Haziran 2026', not:'Reddedilen 4 setin yerine gönderilen hasarsız parti kabul edildi; ek bedel doğmadı, fatura tutarı değişmedi.'},
         {rol:'Fatura — FTR-2026-06 (₺418.200)', kisi:'Nesrin Aydın', durum:'bekliyor', tarih:'12 Haziran 2026', not:'Vade 15 Temmuz 2026 — nakit akışı ödeme takviminde planlı, henüz ödenmedi.'}
       ]
     },
@@ -351,7 +454,7 @@
         {ad:'Nervürlü inşaat demiri Ø16', miktar:'12 t', teslim:'11,6 t', fark:-0.4, tutar:384000},
         {ad:'Nervürlü inşaat demiri Ø20', miktar:'30 t', teslim:'30 t', fark:0, tutar:957000}
       ],
-      aciklama:'Vadi Konakları B ve C Blok betonarme imalatı için sipariş edilen 88 tonluk nervürlü inşaat demiri iki partide teslim alındı. Ø16 kaleminde 12 tonluk sipariş miktarına karşılık 11,6 ton teslim edildi; 0,4 tonluk eksik teslim tedarikçiyle görüşülüyor. Bu eksik, Vadi şantiye deposundaki (D-VDI) Ø16 stok seviyesinin minimumun altına düşmesiyle de bağlantılı.',
+      aciklama:'Vadi Konakları B ve C Blok betonarme imalatı için sipariş edilen 88 tonluk nervürlü inşaat demiri iki partide teslim alındı. Ø16 kaleminde 12 tonluk sipariş miktarına karşılık 11,6 ton teslim edildi; 0,4 tonluk eksik teslim tedarikçiyle görüşülüyor. Bu eksik, Vadi şantiye deposundaki (D-VDI) Ø16 stok seviyesinin minimumun altına düşmesiyle de bağlantılı. Gelen 87,6 tonun tamamı sağlam bulunup kabul edildiği için red edilen miktar yoktur — bu bir eksik teslimdir, kalite reddi değildir.',
       uyari:'Miktar Uyuşmazlığı — Ø16 nervürlü demir: 12 t sipariş edildi, irsaliyelerde toplam 11,6 t teslim alındı (IRS-2026-12: 6,4 t + IRS-2026-14: 5,2 t). Eksik 0,4 t için tedarikçiyle görüşme sürüyor; bu nedenle FTR-2026-09 muhasebe kontrolünde ve cari hesaba işlenmedi.',
       irsaliyeler:[
         {no:'IRS-2026-12', tarih:'18 Haziran 2026', icerik:'Ø12 20 t + Ø16 6,4 t + Ø20 14 t = 40,4 t', stok:'Mal kabul: STK-2026-041 · D-VDI Vadi Şantiye Deposu', teslimAlan:'İbrahim Sönmez'},
@@ -420,6 +523,69 @@
         {rol:'Onaya Gönderim', kisi:'—', durum:'sirada', tarih:null}
       ]
     }
+  };
+
+  /* ---- M-8 · MAL KABUL KAYITLARI — sipariş anahtarı → teslimat listesi ----
+     Tek kaynak: bu obje. crm-satinalma-irsaliye-fatura.html'deki mal kabul rozetleri ve
+     crm-satinalma-stok-form.html'deki sipariş/irsaliye seçicisi AYNI değerleri taşır
+     (buildless prototipte paylaşılan JS yok — üç dosya elle senkron tutulur).
+
+     Alan sözlüğü (brief'in 8 kontrol alanı):
+       siparis → o SEVKİYAT için planlanan miktar (çok partili siparişlerde parti planı;
+                 SIP-2026-05 sevk programı: 1. parti 40,4 t + 2. parti 47,6 t = 88 t)
+       gelen   → irsaliyede yazan miktar        kabul → sağlam/uygun bulunan (stoğa giren)
+       red     → geri çevrilen (stoğa GİRMEZ)   irs/tarih/teslimAlan/aciklama → kayıt üstbilgisi
+       stok    → kabul edilen miktarın düştüğü stok hareketi; null ise stoğa alınmaz
+                 (hazır beton doğrudan dökümde kullanılır — crm-satinalma-stok.html'de
+                  beton kalemi YOKTUR, bu yüzden stok kaydı da açılmaz)
+       neden   → red nedeni: 'hasar' (Hasarlı Teslim) | 'uygun' (Kısmi Kabul)
+       slug    → crm-satinalma-stok.html kalem slug'ı (stok formundaki eşleştirme için) */
+  var MALKABUL = {
+    '01':[
+      {irs:'IRS-2026-01', tarih:'18 Nisan 2026', teslimAlan:'İbrahim Sönmez', yer:'Vadi Konakları şantiyesi', stok:null,
+       aciklama:'Slump ve numune kontrolü sahada yapıldı; parti tam ve uygun kabul edildi.',
+       kalemler:[{ad:'C30/37 hazır beton — 1. parti', birim:'m³', siparis:280, gelen:280, kabul:280, red:0}]},
+      {irs:'IRS-2026-02', tarih:'25 Nisan 2026', teslimAlan:'İbrahim Sönmez', yer:'Vadi Konakları şantiyesi', stok:null,
+       aciklama:'Parti tam ve uygun kabul edildi.',
+       kalemler:[{ad:'C30/37 hazır beton — 2. parti', birim:'m³', siparis:310, gelen:310, kabul:310, red:0}]},
+      {irs:'IRS-2026-03', tarih:'30 Nisan 2026', teslimAlan:'İbrahim Sönmez', yer:'Vadi Konakları şantiyesi', stok:null,
+       aciklama:'Son parti; 850 m³’ün tamamı kabul edildi, sipariş teslimatı kapandı.',
+       kalemler:[{ad:'C30/37 hazır beton — 3. parti', birim:'m³', siparis:260, gelen:260, kabul:260, red:0}]}
+    ],
+    '02':[
+      {irs:'IRS-2026-04', tarih:'9 Mayıs 2026', teslimAlan:'Şükrü Aslan', yer:'D-LMN Liman Şantiye Deposu', stok:'STK-2026-029',
+       aciklama:'Tel çapı ve sarf paketi içeriği irsaliyeyle karşılaştırıldı; tamamı kabul edildi.',
+       kalemler:[{ad:'Kaynak teli (CO2 gazaltı, 1,2 mm)', slug:'kaynak-teli', birim:'kg', siparis:480, gelen:480, kabul:480, red:0},
+                 {ad:'Kaynak sarf paketi (elektrot + disk + eldiven)', slug:'hirdavat-sarf', birim:'paket', siparis:1, gelen:1, kabul:1, red:0}]}
+    ],
+    /* M-8 senaryo — HASARLI TESLİM + RED: brief'in kabul ölçütü ("red edilen miktar stokta
+       görünmüyor") ancak gerçek bir red miktarıyla gösterilebilir. SIP-2026-05 senaryosu
+       EKSİK TESLİM'dir (gelen az, red yok) — iki durumun farkı korunsun diye red senaryosu
+       buraya, teslim edilmiş SIP-2026-03'e kuruldu. Sipariş durumu ('teslim') DEĞİŞMEDİ:
+       reddedilen 4 set tedarikçi tarafından değişim partisiyle tamamlandı, bu yüzden fatura
+       tutarı (FTR-2026-06 ₺418.200) ve sipariş bedeli de aynı kaldı. */
+    '03':[
+      {irs:'IRS-2026-09', tarih:'9 Haziran 2026', teslimAlan:'İbrahim Sönmez', yer:'D-VDI Vadi Şantiye Deposu', stok:'STK-2026-023', neden:'hasar',
+       aciklama:'Nakliyede 4 pencere doğrama setinin profili ezilmiş, köşe kaynağı ayrılmış — hasarlı olarak reddedildi ve araca geri yüklendi. Stok girişi yalnız sağlam 76 set üzerinden yapıldı.',
+       kalemler:[{ad:'PVC pencere doğrama seti (çift cam)', slug:'pvc-dograma', birim:'adet', siparis:60, gelen:60, kabul:56, red:4},
+                 {ad:'PVC kapı doğrama seti', slug:'pvc-dograma', birim:'adet', siparis:20, gelen:20, kabul:20, red:0}]},
+      {irs:'IRS-2026-09/A', tarih:'12 Haziran 2026', teslimAlan:'İbrahim Sönmez', yer:'D-VDI Vadi Şantiye Deposu', stok:'STK-2026-023 · ek kabul',
+       aciklama:'Reddedilen 4 setin yerine gönderilen değişim partisi. Ayrı bedel doğurmadığı için faturaya yansımadı; kontrol sonrası tamamı kabul edildi.',
+       kalemler:[{ad:'PVC pencere doğrama seti — hasarlı 4 setin değişimi', slug:'pvc-dograma', birim:'adet', siparis:4, gelen:4, kabul:4, red:0}]}
+    ],
+    '05':[
+      {irs:'IRS-2026-12', tarih:'18 Haziran 2026', teslimAlan:'İbrahim Sönmez', yer:'D-VDI Vadi Şantiye Deposu', stok:'STK-2026-041',
+       aciklama:'Sevk programının 1. partisi. Kantar fişi irsaliyeyle uyumlu, çap ve nervür kontrolü yapıldı; tamamı kabul edildi.',
+       kalemler:[{ad:'Nervürlü inşaat demiri Ø12', slug:'demir-o12', birim:'t', siparis:20, gelen:20, kabul:20, red:0},
+                 {ad:'Nervürlü inşaat demiri Ø16', slug:'demir-o16', birim:'t', siparis:6.4, gelen:6.4, kabul:6.4, red:0},
+                 {ad:'Nervürlü inşaat demiri Ø20', slug:'demir-o20', birim:'t', siparis:14, gelen:14, kabul:14, red:0}]},
+      {irs:'IRS-2026-14', tarih:'26 Haziran 2026', teslimAlan:'İbrahim Sönmez', yer:'D-VDI Vadi Şantiye Deposu', stok:'STK-2026-047',
+       aciklama:'Sevk programının 2. partisi. Ø16 kaleminde 5,6 t beklenirken 5,2 t geldi — 0,4 t eksik teslim tutanağa bağlandı. Gelen miktarın tamamı sağlam olduğu için red YOK; eksik teslim ile red edilen miktar birbirinden ayrıdır.',
+       kalemler:[{ad:'Nervürlü inşaat demiri Ø10', slug:'demir-o10', birim:'t', siparis:8, gelen:8, kabul:8, red:0},
+                 {ad:'Nervürlü inşaat demiri Ø12', slug:'demir-o12', birim:'t', siparis:18, gelen:18, kabul:18, red:0},
+                 {ad:'Nervürlü inşaat demiri Ø16', slug:'demir-o16', birim:'t', siparis:5.6, gelen:5.2, kabul:5.2, red:0},
+                 {ad:'Nervürlü inşaat demiri Ø20', slug:'demir-o20', birim:'t', siparis:16, gelen:16, kabul:16, red:0}]}
+    ]
   };
 
   var q = new URLSearchParams(location.search);
@@ -539,6 +705,202 @@
     document.getElementById('baglantiBody').innerHTML = h;
   }
 
+  /* ============ M-8 · MAL KABUL — hesap + render + canlı düzenleme ============
+     Hiçbir miktar sabit metin DEĞİL: fark, durum rozeti, akış şeridi ve "stoğa girecek
+     miktar" tek hesap yolundan (mkDurum/mkSum) türer. Kabul + red = gelen bağıntısı
+     bozulursa satır işaretlenir ve kayıt engellenir. */
+  var mkRecs = MALKABUL[key] || [];
+
+  function mkNum(v){ return Math.round((Number(v) || 0) * 1000) / 1000; }
+  function mkFmt(n){ return mkNum(n).toLocaleString('tr-TR', {maximumFractionDigits:2}); }
+  function mkParse(s){
+    var t = String(s == null ? '' : s).replace(/\s/g, '').replace(',', '.');
+    if(t === '') return 0;
+    var v = parseFloat(t);
+    return isNaN(v) ? null : v;
+  }
+  /* farklı ölçü birimleri TOPLANMAZ — birim başına gruplanır ("480 kg · 1 paket") */
+  function mkSum(kalemler, field){
+    var acc = {}, sira = [];
+    kalemler.forEach(function(k){
+      if(!(k.birim in acc)){ acc[k.birim] = 0; sira.push(k.birim); }
+      acc[k.birim] += mkNum(k[field]);
+    });
+    return sira.map(function(u){ return mkFmt(acc[u]) + ' ' + u; }).join(' · ');
+  }
+  function mkSumAll(field){
+    var all = [];
+    mkRecs.forEach(function(r){ all = all.concat(r.kalemler); });
+    return mkSum(all, field);
+  }
+
+  var MK_DURUM = {
+    tam:   {cls:'ok',     lbl:'Tam Kabul'},
+    kismi: {cls:'warn',   lbl:'Kısmi Kabul'},
+    red:   {cls:'danger', lbl:'Red'},
+    eksik: {cls:'warn',   lbl:'Eksik Teslim'},
+    hasar: {cls:'danger', lbl:'Hasarlı Teslim'}
+  };
+  /* 5 durumun tamamı kalem satırlarından türer — elle atanmaz:
+       kabul 0 & red = gelen            → Red
+       red > 0, nedeni hasar            → Hasarlı Teslim
+       red > 0, nedeni uygunsuzluk      → Kısmi Kabul
+       red 0 ama gelen < sipariş        → Eksik Teslim
+       gelen = sipariş, red 0           → Tam Kabul */
+  function mkDurum(rec){
+    var anyRed = false, anyKabul = false, anyEksik = false, gelenVar = false;
+    rec.kalemler.forEach(function(k){
+      if(mkNum(k.gelen) > 0) gelenVar = true;
+      if(mkNum(k.red) > 0) anyRed = true;
+      if(mkNum(k.kabul) > 0) anyKabul = true;
+      if(mkNum(k.gelen) < mkNum(k.siparis)) anyEksik = true;
+    });
+    if(gelenVar && anyRed && !anyKabul) return 'red';
+    if(anyRed) return rec.neden === 'hasar' ? 'hasar' : 'kismi';
+    if(anyEksik) return 'eksik';
+    return 'tam';
+  }
+  function mkRowOk(k){
+    return k.kabul !== null && k.red !== null && mkNum(k.kabul) >= 0 && mkNum(k.red) >= 0
+      && Math.abs(mkNum(k.kabul) + mkNum(k.red) - mkNum(k.gelen)) < 0.0005;
+  }
+  function mkRecOk(rec){ return rec.kalemler.every(mkRowOk); }
+
+  function mkRowHtml(rec, i, k, j){
+    var eksik = mkNum(k.gelen) < mkNum(k.siparis);
+    function inp(alan, val){
+      return '<input class="mk-inp" type="text" inputmode="decimal" value="' + mkFmt(val) + '"'
+        + ' data-mk="' + alan + '" data-rec="' + i + '" data-row="' + j + '"'
+        + ' aria-label="' + k.ad + ' — ' + (alan === 'kabul' ? 'kabul edilen' : 'red edilen') + ' miktar">'
+        + '<span class="mk-unit">' + k.birim + '</span>';
+    }
+    return '<tr data-mk-rowel="' + j + '">'
+      + '<td data-lbl="Kalem">' + k.ad + '</td>'
+      + '<td data-lbl="Sipariş">' + mkFmt(k.siparis) + '<span class="mk-unit">' + k.birim + '</span></td>'
+      + '<td data-lbl="Gelen"' + (eksik ? ' class="mk-eksik"' : '') + '>' + mkFmt(k.gelen) + '<span class="mk-unit">' + k.birim + '</span></td>'
+      + '<td data-lbl="Kabul edilen">' + inp('kabul', k.kabul) + '</td>'
+      + '<td data-lbl="Red edilen">' + inp('red', k.red) + '</td>'
+      + '</tr>';
+  }
+
+  function mkRecHtml(rec, i){
+    var d = MK_DURUM[mkDurum(rec)];
+    return '<article class="mk-rec" id="mk-' + rec.irs.replace(/[^A-Za-z0-9-]/g, '') + '" data-mk-rec="' + i + '" data-mk-irs="' + rec.irs + '">'
+      + '<div class="mk-head"><div class="mk-id"><b>' + rec.irs + '</b>'
+      + '<span class="mk-meta">' + rec.tarih + ' · Teslim alan: ' + rec.teslimAlan + ' · ' + rec.yer + '</span></div>'
+      + '<span class="gstat ' + d.cls + '" data-mk-badge>' + d.lbl + '</span></div>'
+      + '<table class="mk-table"><thead><tr><th>Kalem</th><th>Sipariş</th><th>Gelen</th><th>Kabul edilen</th><th>Red edilen</th></tr></thead>'
+      + '<tbody>' + rec.kalemler.map(function(k, j){ return mkRowHtml(rec, i, k, j); }).join('') + '</tbody></table>'
+      + '<div class="mk-flow" data-mk-flow></div>'
+      + '<div class="mk-red" data-mk-redline hidden></div>'
+      + '<div class="mk-foot-row" data-mk-nedenwrap hidden><span class="mk-neden-lbl">Red nedeni</span>'
+      + '<div class="mk-neden" role="group" aria-label="Red nedeni">'
+      + '<button type="button" data-no-confirm data-mk-neden="hasar" data-rec="' + i + '">Hasarlı</button>'
+      + '<button type="button" data-no-confirm data-mk-neden="uygun" data-rec="' + i + '">Uygunsuz / kalite</button>'
+      + '</div></div>'
+      + '<div class="mk-note"><label for="mkNot' + i + '">Açıklama</label>'
+      + '<textarea id="mkNot' + i + '" rows="3" data-mk-not="' + i + '">' + rec.aciklama + '</textarea></div>'
+      + '<div class="mk-acts"><button type="button" class="btn btn-acc btn-sm" data-no-confirm data-mk-save="' + i + '">'
+      + '<i class="fa-solid fa-clipboard-check"></i> Mal kabulünü kaydet</button>'
+      + '<span class="mk-warn"><i class="fa-solid fa-triangle-exclamation"></i> Kabul + red toplamı gelen miktara eşit değil.</span></div>'
+      + '</article>';
+  }
+
+  /* kaydın canlı bölümleri — her tuş vuruşunda yeniden yazılır (tablo DOM'una dokunulmaz,
+     böylece imleç ve odak kaybolmaz) */
+  function mkPaint(i){
+    var rec = mkRecs[i];
+    var el = document.querySelector('[data-mk-rec="' + i + '"]');
+    if(!rec || !el) return;
+
+    rec.kalemler.forEach(function(k, j){
+      var tr = el.querySelector('[data-mk-rowel="' + j + '"]');
+      if(tr) tr.classList.toggle('is-bad', !mkRowOk(k));
+    });
+    var ok = mkRecOk(rec);
+    el.classList.toggle('is-bad', !ok);
+
+    var d = MK_DURUM[mkDurum(rec)];
+    var badge = el.querySelector('[data-mk-badge]');
+    badge.className = 'gstat ' + d.cls; badge.textContent = d.lbl;
+
+    var kabulTxt = ok ? mkSum(rec.kalemler, 'kabul') : '—';
+    var stokLbl = rec.stok ? 'Stok girişi · ' + rec.stok : 'Stok girişi açılmaz';
+    var stokVal = rec.stok ? kabulTxt : '—';
+    el.querySelector('[data-mk-flow]').innerHTML =
+        '<div class="mk-node"><span class="mk-n-lbl">Sipariş — bu sevkiyat</span><span class="mk-n-val">' + mkSum(rec.kalemler, 'siparis') + '</span></div>'
+      + '<i class="fa-solid fa-chevron-right mk-arrow" aria-hidden="true"></i>'
+      + '<div class="mk-node"><span class="mk-n-lbl">Mal kabul — gelen / kabul</span><span class="mk-n-val">' + mkSum(rec.kalemler, 'gelen') + ' / ' + kabulTxt + '</span></div>'
+      + '<i class="fa-solid fa-chevron-right mk-arrow" aria-hidden="true"></i>'
+      + '<div class="mk-node is-stok"><span class="mk-n-lbl">' + stokLbl + '</span><span class="mk-n-val">' + stokVal + '</span></div>';
+
+    var redVar = rec.kalemler.some(function(k){ return mkNum(k.red) > 0; });
+    var redLine = el.querySelector('[data-mk-redline]');
+    redLine.hidden = !redVar;
+    if(redVar){
+      redLine.innerHTML = '<i class="fa-solid fa-turn-down" aria-hidden="true"></i>'
+        + '<span>Red edilen <b>' + mkSum(rec.kalemler.filter(function(k){ return mkNum(k.red) > 0; }), 'red') + '</b> '
+        + 'stok girişine dönüşmez — depo bakiyesine hiç girmez.</span>';
+    }
+    var nedenWrap = el.querySelector('[data-mk-nedenwrap]');
+    nedenWrap.hidden = !redVar;
+    nedenWrap.querySelectorAll('[data-mk-neden]').forEach(function(b){
+      b.classList.toggle('is-on', b.getAttribute('data-mk-neden') === (rec.neden || 'uygun'));
+    });
+  }
+
+  function mkPaintTotal(){
+    var el = document.getElementById('mkTotal'); if(!el) return;
+    var hepsiOk = mkRecs.every(mkRecOk);
+    el.innerHTML = 'Toplam teslimat — gelen <b>' + mkSumAll('gelen') + '</b> · kabul <b>' + mkSumAll('kabul')
+      + '</b> · red <b>' + mkSumAll('red') + '</b> · stoğa giren <b class="mk-t-stok">'
+      + (hepsiOk ? mkSumAll('kabul') : '—') + '</b>';
+  }
+
+  function renderMalKabul(){
+    var card = document.getElementById('malkabul');
+    if(!mkRecs.length){ card.hidden = true; return; }
+    card.hidden = false;
+    document.getElementById('mkCount').textContent = mkRecs.length + ' teslimat';
+    document.getElementById('mkBody').innerHTML = mkRecs.map(mkRecHtml).join('');
+    mkRecs.forEach(function(_, i){ mkPaint(i); });
+    mkPaintTotal();
+  }
+
+  /* canlı giriş — kullanıcı kabul/red yazdıkça durum, akış şeridi ve toplam güncellenir */
+  document.addEventListener('input', function(e){
+    var inp = e.target.closest('[data-mk]'); if(!inp) return;
+    var i = +inp.getAttribute('data-rec'), j = +inp.getAttribute('data-row');
+    var rec = mkRecs[i]; if(!rec) return;
+    rec.kalemler[j][inp.getAttribute('data-mk')] = mkParse(inp.value);
+    if(!rec.neden && rec.kalemler.some(function(k){ return mkNum(k.red) > 0; })) rec.neden = 'uygun';
+    mkPaint(i); mkPaintTotal();
+  });
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-mk-neden]');
+    if(btn){
+      var ri = +btn.getAttribute('data-rec');
+      mkRecs[ri].neden = btn.getAttribute('data-mk-neden');
+      mkPaint(ri);
+      return;
+    }
+    var save = e.target.closest('[data-mk-save]'); if(!save) return;
+    var si = +save.getAttribute('data-mk-save');
+    var rec = mkRecs[si];
+    if(!mkRecOk(rec)){
+      gvToast(rec.irs + ' kaydedilmedi — her kalemde kabul + red toplamı gelen miktara eşit olmalı.', {type:'danger'});
+      return;
+    }
+    var notEl = document.querySelector('[data-mk-not="' + si + '"]');
+    if(notEl) rec.aciklama = notEl.value.trim();
+    var d = MK_DURUM[mkDurum(rec)];
+    var kabulTxt = mkSum(rec.kalemler, 'kabul'), redTxt = mkSum(rec.kalemler, 'red');
+    gvAddHistory('Mal kabul kaydedildi — ' + rec.irs + ' (' + d.lbl + ')',
+      'Gelen ' + mkSum(rec.kalemler, 'gelen') + ' · kabul ' + kabulTxt + ' · red ' + redTxt
+      + '. Stok girişine yalnız kabul edilen miktar yansıdı' + (rec.stok ? ' (' + rec.stok + ').' : '; bu kalemde depo stoğu tutulmuyor.'));
+    gvToast(rec.irs + ' mal kabulü kaydedildi — stoğa ' + kabulTxt + ' girecek.');
+  });
+
   function render(){
     document.title = item.no + ' — Sipariş Detayı — Gavia CRM';
     document.getElementById('crumbNo').textContent = item.no;
@@ -551,6 +913,7 @@
     renderKalem();
     renderUyari();
     if(item.aciklama){ document.getElementById('aciklamaBlock').hidden = false; document.getElementById('aciklamaText').textContent = item.aciklama; }
+    renderMalKabul();
     renderIrsaliye();
     renderTedarikci();
     document.getElementById('ctxSantiye').textContent = item.santiye;
@@ -564,6 +927,19 @@
   }
 
   render();
+
+  /* ---- M-8 derin bağlantı — crm-satinalma-irsaliye-fatura.html'deki mal kabul rozeti
+     ?sip=…&irs=IRS-2026-14#malkabul ile buraya gelir; ilgili teslimat kaydı vurgulanır.
+     Kart JS ile açıldığı için tarayıcının kendi hash kaydırması yetmez, elle yapılır. ---- */
+  (function(){
+    var wantIrs = q.get('irs');
+    var target = wantIrs ? document.querySelector('[data-mk-irs="' + wantIrs + '"]') : null;
+    if(!target && location.hash !== '#malkabul') return;
+    var el = target || document.getElementById('malkabul');
+    if(!el || document.getElementById('malkabul').hidden) return;
+    if(target) target.classList.add('is-target');
+    requestAnimationFrame(function(){ el.scrollIntoView({behavior:'smooth', block:'center'}); });
+  })();
 
   /* ---- §17 İŞLEM GEÇMİŞİ — kaydın kendi chain'inden ilk 1-2 anlamlı olay seed edilir ---- */
   var IG_LBL = {olusturdu:'Oluşturdu', onaylandi:'Onayladı', reddedildi:'Reddetti', revize:'Revize istedi', bekliyor:'Onay bekliyor', sirada:'Sırada', iptal:'İptal etti'};

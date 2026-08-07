@@ -43,6 +43,12 @@
 .dyn-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;margin-top:18px;padding-top:18px;border-top:1px dashed var(--line)}
 @media(max-width:640px){.dyn-fields{grid-template-columns:minmax(0,1fr)}}
 
+/* M-8 — miktar alanının altındaki mal kabul üst sınırı ipucu */
+.mk-cap{display:block;margin-top:7px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.mk-cap:empty{display:none}
+.mk-cap.is-over{color:var(--danger);font-weight:700}
+.gfield input[readonly],.gfield select:disabled{background:var(--bg);color:var(--ink-2);cursor:default}
+
 .side-tip{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
 .side-tip:last-child{border-bottom:none}
 .side-tip i{color:var(--acc-ink);font-size:13px;width:16px;text-align:center;flex:none;margin-top:1px}
@@ -92,7 +98,10 @@
         <div class="gc-body">
           <div class="gd-label">Hareket Türü</div>
           <div class="tur-grid" id="turGrid">
-            <div class="tur-opt"><input type="radio" name="tur" id="tGiris" value="giris" checked><label for="tGiris"><i class="fa-solid fa-arrow-down-to-bracket"></i><span>Giriş</span></label></div>
+            <div class="tur-opt"><input type="radio" name="tur" id="tGiris" value="giris" checked><!-- [Dalga 2] fa-arrow-down-to-bracket Font Awesome FREE 6.5.2'de YOK (Pro ikonu) —
+                 ikon hiç render olmuyordu. Çıkış'ın fa-arrow-up-from-bracket'ı Free'de var,
+                 bu yüzden yalnız bozuk olan değişti; fa-arrow-down ile yukarı/aşağı simetrisi korunuyor. -->
+            <label for="tGiris"><i class="fa-solid fa-arrow-down"></i><span>Giriş</span></label></div>
             <div class="tur-opt"><input type="radio" name="tur" id="tCikis" value="cikis"><label for="tCikis"><i class="fa-solid fa-arrow-up-from-bracket"></i><span>Çıkış</span></label></div>
             <div class="tur-opt"><input type="radio" name="tur" id="tTransfer" value="transfer"><label for="tTransfer"><i class="fa-solid fa-truck-arrow-right"></i><span>Transfer</span></label></div>
             <div class="tur-opt"><input type="radio" name="tur" id="tIade" value="iade"><label for="tIade"><i class="fa-solid fa-rotate-left"></i><span>İade</span></label></div>
@@ -125,8 +134,11 @@
           </form>
 
           <!-- ============ DİNAMİK ALAN SETİ — hareket türüne göre değişir ============ -->
-          <!-- statik bake — DEFAULT 'giriş' hareket türü alan seti (FIELD_SETS.giris); JS yüklenince aynı mount innerHTML ile ezilir (radio değişince yeniden render olur) — D18-B2 -->
-          <div class="dyn-fields" id="dynFields"><div class="gfield"><label for="dyn0">İrsaliye No</label><input type="text" id="dyn0" placeholder="ör. IRS-2026-15"></div><div class="gfield"><label for="dyn1">Tedarikçi</label><select id="dyn1"><option>Ege Hazır Beton</option><option>Trakya Beton Santrali</option><option>Marmara Demir Çelik</option><option>Boğaziçi Yapı Market</option><option>Delta Elektrik</option><option>Anadolu Hırdavat</option><option>Diğer</option></select></div></div>
+          <!-- statik bake — DEFAULT 'giriş' hareket türü alan seti (renderGiris, sipariş seçilmemiş
+               hâli); JS yüklenince aynı mount innerHTML ile ezilir (sipariş/irsaliye/radio değişince
+               yeniden render olur) — D18-B2. M-8: Giriş türünde artık önce sipariş seçilir; sipariş
+               seçilirse İrsaliye No serbest metni yerini mal kabul seçicisine bırakır. -->
+          <div class="dyn-fields" id="dynFields"><div class="gfield"><label for="gSip">Sipariş</label><select id="gSip"><option value="">Sipariş dışı (serbest giriş)</option><option value="SIP-2026-02">SIP-2026-02 — Anadolu Hırdavat</option><option value="SIP-2026-03">SIP-2026-03 — Boğaziçi Yapı Market</option><option value="SIP-2026-05">SIP-2026-05 — Marmara Demir Çelik</option></select></div><div class="gfield"><label for="dyn0">İrsaliye No</label><input type="text" id="dyn0" placeholder="ör. IRS-2026-15"></div><div class="gfield"><label for="dyn1">Tedarikçi</label><select id="dyn1"><option>Ege Hazır Beton</option><option>Trakya Beton Santrali</option><option>Marmara Demir Çelik</option><option>Boğaziçi Yapı Market</option><option>Delta Elektrik</option><option>Anadolu Hırdavat</option><option>Diğer</option></select></div></div>
         </div>
         <div class="gd-block">
           <div class="gd-label">Not / Açıklama</div>
@@ -146,6 +158,7 @@
           <div class="gc-body">
             <div class="side-tip"><i class="fa-solid fa-hashtag"></i><span>STK takip numarası kayıt onaylandığında otomatik üretilir; bu prototipte gösterilmez.</span></div>
             <div class="side-tip"><i class="fa-solid fa-arrows-turn-to-dots"></i><span>Hareket türü, aşağıdaki alan setini canlı olarak değiştirir — ör. Transfer için kaynak/hedef depo, Sayım için dönem/fark alanı.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-clipboard-check"></i><span>Giriş türünde bir sipariş seçerseniz kalem, depo ve miktar o siparişin mal kabul kaydından gelir. Stoğa yalnız <b>kabul edilen</b> miktar girer; red edilen miktar hiç seçilemez.</span></div>
             <div class="side-tip"><i class="fa-solid fa-flask"></i><span>Bu form simülasyondur; gönderilen bilgiler stok listesine kalıcı olarak eklenmez.</span></div>
           </div>
         </div>
@@ -196,12 +209,56 @@
   var depoSel = document.getElementById('fDepo');
   if(GV.role === 'sef'){ depoSel.value = 'D-VDI'; depoSel.disabled = true; }
 
+  /* ============ M-8 · MAL KABUL BAĞLANTISI ============
+     Brief: "Sadece kabul edilen miktar stok girişine dönüşmelidir." Bu yüzden Giriş
+     türünde irsaliye artık serbest metin değil — önce sipariş, sonra o siparişin mal
+     kabul kaydı seçilir; kalem/depo/miktar mal kabulden gelir ve kabul edilen miktarın
+     üstüne çıkılamaz. Red edilen miktar burada hiç seçilemez, çünkü stoğa girmez.
+
+     Tek kaynak crm-satinalma-siparis-detay.html'deki MALKABUL objesidir; buildless
+     prototipte paylaşılan JS olmadığı için stoğa giren kayıtların özeti buraya
+     kopyalandı (stok kaydı açılmayan hazır beton teslimatları — SIP-2026-01 —
+     bilinçli olarak DIŞARIDA: crm-satinalma-stok.html'de beton kalemi yoktur). */
+  var MK_SIP = {
+    'SIP-2026-02':{lbl:'SIP-2026-02 — Anadolu Hırdavat', tedarikci:'Anadolu Hırdavat', kabuller:[
+      {irs:'IRS-2026-04', tarih:'9 Mayıs 2026', durum:'Tam Kabul', depo:'D-LMN', satirlar:[
+        {slug:'kaynak-teli', ad:'Kaynak teli (CO2 gazaltı, 1,2 mm)', kabul:480, red:0, birim:'kg'},
+        {slug:'hirdavat-sarf', ad:'Kaynak sarf paketi (elektrot + disk + eldiven)', kabul:1, red:0, birim:'paket'}
+      ]}
+    ]},
+    'SIP-2026-03':{lbl:'SIP-2026-03 — Boğaziçi Yapı Market', tedarikci:'Boğaziçi Yapı Market', kabuller:[
+      {irs:'IRS-2026-09', tarih:'9 Haziran 2026', durum:'Hasarlı Teslim', depo:'D-VDI', satirlar:[
+        {slug:'pvc-dograma', ad:'PVC pencere doğrama seti (çift cam)', kabul:56, red:4, birim:'adet'},
+        {slug:'pvc-dograma', ad:'PVC kapı doğrama seti', kabul:20, red:0, birim:'adet'}
+      ]},
+      {irs:'IRS-2026-09/A', tarih:'12 Haziran 2026', durum:'Tam Kabul', depo:'D-VDI', satirlar:[
+        {slug:'pvc-dograma', ad:'PVC pencere doğrama seti — hasarlı 4 setin değişimi', kabul:4, red:0, birim:'adet'}
+      ]}
+    ]},
+    'SIP-2026-05':{lbl:'SIP-2026-05 — Marmara Demir Çelik', tedarikci:'Marmara Demir Çelik', kabuller:[
+      {irs:'IRS-2026-12', tarih:'18 Haziran 2026', durum:'Tam Kabul', depo:'D-VDI', satirlar:[
+        {slug:'demir-o12', ad:'Nervürlü inşaat demiri Ø12', kabul:20, red:0, birim:'t'},
+        {slug:'demir-o16', ad:'Nervürlü inşaat demiri Ø16', kabul:6.4, red:0, birim:'t'},
+        {slug:'demir-o20', ad:'Nervürlü inşaat demiri Ø20', kabul:14, red:0, birim:'t'}
+      ]},
+      {irs:'IRS-2026-14', tarih:'26 Haziran 2026', durum:'Eksik Teslim', depo:'D-VDI', satirlar:[
+        {slug:'demir-o10', ad:'Nervürlü inşaat demiri Ø10', kabul:8, red:0, birim:'t'},
+        {slug:'demir-o12', ad:'Nervürlü inşaat demiri Ø12', kabul:18, red:0, birim:'t'},
+        {slug:'demir-o16', ad:'Nervürlü inşaat demiri Ø16', kabul:5.2, red:0, birim:'t'},
+        {slug:'demir-o20', ad:'Nervürlü inşaat demiri Ø20', kabul:16, red:0, birim:'t'}
+      ]}
+    ]}
+  };
+  function mkFmt(n){ return Number(n).toLocaleString('tr-TR', {maximumFractionDigits:2}); }
+  function mkParse(s){
+    var t = String(s == null ? '' : s).replace(/\s/g, '').replace(',', '.');
+    var v = parseFloat(t);
+    return isNaN(v) ? null : v;
+  }
+
   /* ---- dinamik alan setleri — hareket türüne göre (D12 form idiyomu) ---- */
   var FIELD_SETS = {
-    giris: [
-      {lbl:'İrsaliye No', ph:'ör. IRS-2026-15'},
-      {lbl:'Tedarikçi', select:['Ege Hazır Beton','Trakya Beton Santrali','Marmara Demir Çelik','Boğaziçi Yapı Market','Delta Elektrik','Anadolu Hırdavat','Diğer']}
-    ],
+    /* giris kendi render'ını kullanır (renderGiris) — mal kabul seçimi gerektirir */
     cikis: [
       {lbl:'Şantiye', select:['Vadi Konakları','Liman Lojistik Merkezi','Merkez Şantiye']},
       {lbl:'İş Kalemi', ph:'ör. B Blok 3. kat demir imalatı'}
@@ -224,7 +281,101 @@
     ]
   };
   var dynWrap = document.getElementById('dynFields');
+  var fMiktar = document.getElementById('fMiktar');
+  var fKalem = document.getElementById('fKalem');
+
+  /* M-8 — seçili mal kabul satırı; null ise serbest giriş (üst sınır yok) */
+  var mkSecim = null;
+
+  function kalemOptsHtml(){
+    return KALEMLER.map(function(k){ return '<option value="'+k[0]+'">'+k[1]+'</option>'; }).join('');
+  }
+  function mkNoteEl(id, host){
+    var el = document.getElementById(id);
+    if(el) return el;
+    el = document.createElement('span');
+    el.id = id; el.className = 'mk-cap';
+    host.parentNode.appendChild(el);
+    return el;
+  }
+  function mkHintEl(){ return mkNoteEl('mkCapHint', fMiktar); }
+  function mkKalemNoteEl(){ return mkNoteEl('mkKalemNote', fKalem); }
+  /* mal kabul bağı kurulunca kalem + depo türetilir; kullanıcı bunları elle değiştiremez */
+  function mkBind(sec){
+    mkSecim = sec;
+    var hint = mkHintEl(), knote = mkKalemNoteEl();
+    if(!sec){
+      fKalem.innerHTML = kalemOptsHtml();
+      fKalem.disabled = false;
+      if(GV.role !== 'sef') depoSel.disabled = false;
+      hint.textContent = ''; hint.classList.remove('is-over');
+      knote.textContent = '';
+      return;
+    }
+    knote.textContent = sec.kabul.irs + ' mal kabulünden geldi — kalem ve depo bu kayda bağlı.';
+    fKalem.innerHTML = kalemOptsHtml();
+    fKalem.value = sec.satir.slug;
+    fKalem.disabled = true;
+    depoSel.value = sec.kabul.depo;
+    depoSel.disabled = true;
+    fMiktar.value = mkFmt(sec.satir.kabul);
+    mkCheck();
+  }
+  /* kabul edilen miktarın üstüne çıkılamaz — canlı uyarı + kayıtta engel */
+  function mkCheck(){
+    var hint = mkHintEl();
+    if(!mkSecim){ hint.textContent = ''; hint.classList.remove('is-over'); return true; }
+    var s = mkSecim.satir;
+    var v = mkParse(fMiktar.value);
+    var over = v !== null && v > s.kabul + 0.0005;
+    hint.classList.toggle('is-over', over);
+    hint.textContent = over
+      ? 'Kabul edilen miktarı aşıyor — en fazla ' + mkFmt(s.kabul) + ' ' + s.birim + ' giriş yapılabilir.'
+      : 'Üst sınır ' + mkFmt(s.kabul) + ' ' + s.birim + ' (mal kabulünde kabul edilen)'
+        + (s.red > 0 ? ' · red edilen ' + mkFmt(s.red) + ' ' + s.birim + ' stoğa girmez' : '');
+    return !over;
+  }
+
+  function renderGiris(sipVal, irsIdx){
+    var sipOpts = '<option value="">Sipariş dışı (serbest giriş)</option>'
+      + Object.keys(MK_SIP).map(function(k){
+          return '<option value="' + k + '"' + (k === sipVal ? ' selected' : '') + '>' + MK_SIP[k].lbl + '</option>';
+        }).join('');
+    var h = '<div class="gfield"><label for="gSip">Sipariş</label><select id="gSip">' + sipOpts + '</select></div>';
+
+    if(!sipVal){
+      h += '<div class="gfield"><label for="dyn0">İrsaliye No</label><input type="text" id="dyn0" placeholder="ör. IRS-2026-15"></div>'
+         + '<div class="gfield"><label for="dyn1">Tedarikçi</label><select id="dyn1">'
+         + ['Ege Hazır Beton','Trakya Beton Santrali','Marmara Demir Çelik','Boğaziçi Yapı Market','Delta Elektrik','Anadolu Hırdavat','Diğer']
+             .map(function(o){ return '<option>' + o + '</option>'; }).join('')
+         + '</select></div>';
+      dynWrap.innerHTML = h;
+      mkBind(null);
+      return;
+    }
+
+    var sip = MK_SIP[sipVal];
+    var ki = Math.min(irsIdx || 0, sip.kabuller.length - 1);
+    var kabul = sip.kabuller[ki];
+    h += '<div class="gfield"><label for="gIrs">İrsaliye / Mal Kabul</label><select id="gIrs">'
+       + sip.kabuller.map(function(k, i){
+           return '<option value="' + i + '"' + (i === ki ? ' selected' : '') + '>' + k.irs + ' · ' + k.tarih + ' · ' + k.durum + '</option>';
+         }).join('')
+       + '</select></div>'
+       + '<div class="gfield"><label for="gSatir">Mal kabul kalemi</label><select id="gSatir">'
+       + kabul.satirlar.map(function(s, i){
+           return '<option value="' + i + '">' + s.ad + ' — kabul ' + mkFmt(s.kabul) + ' ' + s.birim + '</option>';
+         }).join('')
+       + '</select></div>'
+       + '<div class="gfield"><label for="gTedarikci">Tedarikçi</label>'
+       + '<input type="text" id="gTedarikci" value="' + sip.tedarikci + '" readonly></div>';
+    dynWrap.innerHTML = h;
+    mkBind({sip:sipVal, kabul:kabul, satir:kabul.satirlar[0]});
+  }
+
   function renderDyn(tur){
+    if(tur === 'giris'){ renderGiris('', 0); return; }
+    mkBind(null);
     var fields = FIELD_SETS[tur] || [];
     dynWrap.innerHTML = fields.map(function(f, i){
       var id = 'dyn' + i;
@@ -240,6 +391,20 @@
     if(e.target.name !== 'tur') return;
     renderDyn(e.target.value);
   });
+  dynWrap.addEventListener('change', function(e){
+    if(e.target.id === 'gSip'){ renderGiris(e.target.value, 0); return; }
+    if(e.target.id === 'gIrs'){
+      var sipEl = document.getElementById('gSip');
+      renderGiris(sipEl.value, +e.target.value);
+      return;
+    }
+    if(e.target.id === 'gSatir'){
+      var sip = MK_SIP[document.getElementById('gSip').value];
+      var kabul = sip.kabuller[+document.getElementById('gIrs').value];
+      mkBind({sip:document.getElementById('gSip').value, kabul:kabul, satir:kabul.satirlar[+e.target.value]});
+    }
+  });
+  fMiktar.addEventListener('input', mkCheck);
 
   document.getElementById('btnDraft').addEventListener('click', function(){
     gvToast('Stok hareketi taslak olarak kaydedildi.', {type:'info'});
@@ -248,11 +413,19 @@
   document.getElementById('hareketSubmit').addEventListener('click', function(){
     var miktar = document.getElementById('fMiktar').value.trim();
     if(!miktar){ gvToast('Miktar girin.', {type:'danger'}); return; }
+    /* M-8 — mal kabule bağlı girişte kabul edilen miktarın üstüne çıkılamaz */
+    if(mkSecim && !mkCheck()){
+      gvToast('Kabul edilen miktardan fazla stok girişi yapılamaz — ' + mkSecim.kabul.irs
+        + ' kaydında kabul edilen miktar ' + mkFmt(mkSecim.satir.kabul) + ' ' + mkSecim.satir.birim + '.', {type:'danger'});
+      return;
+    }
     var kalemAd = document.getElementById('fKalem').selectedOptions[0].textContent;
     var turEl = document.querySelector('input[name="tur"]:checked');
     var turLbl = turEl.nextElementSibling.querySelector('span').textContent;
     if(revNo){
       gvToast(revNo + ' revizyonu (v2) kaydedildi.');
+    } else if(mkSecim){
+      gvToast(mkSecim.kabul.irs + ' mal kabulünden ' + miktar + ' ' + mkSecim.satir.birim + ' stok girişi kaydedildi.');
     } else {
       gvToast(kalemAd + ' — ' + turLbl + ' hareketi kaydedildi.');
     }
