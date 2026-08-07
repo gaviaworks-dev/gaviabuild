@@ -37,8 +37,20 @@
 .proje-switch a:hover{border-color:var(--line-2);color:var(--ink)}
 .proje-switch a.is-on{background:rgba(var(--acc-rgb),.1);border-color:rgba(var(--acc-rgb),.35);color:var(--acc-ink)}
 
-#tblKategori{min-width:760px}
+/* [M-3b/C] Kolon sayısı 6 → 7 (Taahhüt Edilmiş). min-width 760 → 980; sığmadığında
+   kart içi yatay kaydırma (.gc-body.flush + overflow-x) devreye girer. Kural yalnız
+   641px üstünde: altında tablo `gtable-cards` kart görünümüne düşer ve
+   `.gtable-cards{min-width:0}` bu ID seçiciyi (1,0,0) yenemezdi. */
+@media(min-width:641px){ #tblKategori{min-width:980px} }
 #tblKategori td.num,#tblKategori th.num{text-align:right}
+#tblKategori td.is-eksi{color:var(--danger);font-weight:700}
+/* Taahhüt kaynağı + tahmini final maliyet dipnotu — kartın kendi alt şeridi. */
+.bt-src{display:block;line-height:1.7;font-size:12px;color:var(--muted)}
+.bt-src > i{color:var(--acc-ink);margin-right:7px}
+.bt-src b{color:var(--ink-2);font-weight:700}
+.bt-src a{color:var(--acc-ink);font-weight:700}
+.bt-src a:hover{color:var(--acc-deep)}
+.bt-src .bt-src-sep{color:var(--line-2);margin:0 6px}
 .kt-lbl{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--ink)}
 .kt-lbl i{font-size:11px;color:var(--danger)}
 #tblKategori tr.is-asim td{background:var(--danger-tint)}
@@ -92,6 +104,10 @@
 .rev-card.is-taslak .rev-head span{color:var(--warn);font-weight:700}
 @media print{
   .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.ph-actions,.gv-crumb,.proje-switch{display:none !important}
+  /* [M-3b/C] ui.css baskıda tüm .gc-foot'ları gizler (genelde aksiyon şeridi olduğu
+     için doğru kural). Buradaki alt şerit ise taahhüt rakamının DAYANAĞI — hangi
+     sipariş/sözleşmeden geldiği kâğıda çıkan bütçe dökümünden düşmemeli. */
+  .gc-foot{display:block !important}
   .gv-main{margin:0 !important;padding:0 !important}
   .gv-app{display:block !important}
   .tab-panel[hidden]{display:block !important;margin-top:18px}
@@ -168,8 +184,11 @@
       </div>
       <div class="kpi-card">
         <div class="kpi-ico"><i class="fa-solid fa-wallet"></i></div>
-        <div><div class="kpi-num num compact" id="kpiKalan" style="font-size:19px">—</div><div class="kpi-lbl">Kalan bütçe</div>
-        <div class="kpi-delta flat"><i class="fa-solid fa-scale-balanced"></i> Revize − gerçekleşen</div></div>
+        <!-- [M-3b/C] "Kalan bütçe" → "Kullanılabilir bütçe": taahhüt kolonu tabloya
+             girdikten sonra kart ile tablonun aynı rakamı göstermesi şart. Yeni KPI
+             kartı EKLENMEDİ, mevcut kart brief formülüne göre yeniden tanımlandı. -->
+        <div><div class="kpi-num num compact" id="kpiKalan" style="font-size:19px">—</div><div class="kpi-lbl">Kullanılabilir bütçe</div>
+        <div class="kpi-delta flat" id="kpiKalanDelta"><i class="fa-solid fa-scale-balanced"></i> Revize − gerçekleşen − taahhüt</div></div>
       </div>
     </div>
 
@@ -186,21 +205,29 @@
     <section class="tab-panel" data-tab-panel="kategoriler" role="tabpanel" aria-label="Kategoriler">
       <div class="gv-card">
         <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-table-cells"></i> Kategori Dağılımı</div><span class="ph-sub" style="margin:0">15 kategori</span></div>
-        <div class="gc-body flush">
-          <table class="gtable" id="tblKategori">
+        <div class="gc-body flush gv-cards-pad">
+          <!-- [M-3b/C] Üst ekranla AYNI kolon mantığı: `Kalan` → `Kullanılabilir Bütçe`
+               (revize − gerçekleşen − taahhüt) ve yeni `Taahhüt Edilmiş`. Tahmini final
+               maliyet kolonu kategori seviyesinde YOK — o hesap fiziksel ilerlemeye
+               dayanır ve ilerleme yalnız şantiye bazında ölçülüyor; kategori başına
+               uydurulmuş bir ilerleme oranı üretmek yerine tablo altındaki dipnotta
+               şantiye toplamı olarak verilir. -->
+          <table class="gtable gtable-cards" id="tblKategori">
             <thead>
               <tr>
                 <th>Kategori</th>
                 <th class="num">Orijinal</th>
                 <th class="num">Revize</th>
                 <th class="num">Gerçekleşen</th>
-                <th class="num">Kalan</th>
+                <th class="num">Taahhüt Edilmiş</th>
+                <th class="num">Kullanılabilir Bütçe</th>
                 <th class="num">Kullanım</th>
               </tr>
             </thead>
-            <tbody id="tblKategoriBody"><tr class=""><td><div class="kt-lbl"> Hafriyat &amp; Zemin İşleri</div></td><td class="num">₺8.200.000</td><td class="num">₺8.200.000</td><td class="num">₺7.872.000</td><td class="num">₺328.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:96%"></div></div></div><span class="gbar-val">%96</span></div></td></tr><tr class="is-asim"><td><div class="kt-lbl"><i class="fa-solid fa-triangle-exclamation"></i> Betonarme (Kaba Yapı)</div></td><td class="num">₺36.300.000</td><td class="num">₺41.500.000</td><td class="num">₺43.160.000</td><td class="num">₺-1.660.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill danger" style="width:100%"></div></div></div><span class="gbar-val">%104</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Çatı &amp; İzolasyon</div></td><td class="num">₺9.800.000</td><td class="num">₺9.800.000</td><td class="num">₺5.390.000</td><td class="num">₺4.410.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:55%"></div></div></div><span class="gbar-val">%55</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Duvar &amp; Sıva</div></td><td class="num">₺14.500.000</td><td class="num">₺14.500.000</td><td class="num">₺11.310.000</td><td class="num">₺3.190.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:78%"></div></div></div><span class="gbar-val">%78</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Mekanik Tesisat</div></td><td class="num">₺16.200.000</td><td class="num">₺16.200.000</td><td class="num">₺12.150.000</td><td class="num">₺4.050.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:75%"></div></div></div><span class="gbar-val">%75</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Elektrik Tesisatı</div></td><td class="num">₺12.400.000</td><td class="num">₺12.400.000</td><td class="num">₺8.680.000</td><td class="num">₺3.720.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:70%"></div></div></div><span class="gbar-val">%70</span></div></td></tr><tr class=""><td><div class="kt-lbl"> İnce İşler &amp; Boya</div></td><td class="num">₺15.800.000</td><td class="num">₺15.800.000</td><td class="num">₺4.424.000</td><td class="num">₺11.376.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:28%"></div></div></div><span class="gbar-val">%28</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Doğrama &amp; Cephe</div></td><td class="num">₺13.600.000</td><td class="num">₺13.600.000</td><td class="num">₺6.528.000</td><td class="num">₺7.072.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:48%"></div></div></div><span class="gbar-val">%48</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Zemin Kaplama &amp; Seramik</div></td><td class="num">₺11.200.000</td><td class="num">₺11.200.000</td><td class="num">₺2.464.000</td><td class="num">₺8.736.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:22%"></div></div></div><span class="gbar-val">%22</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Peyzaj &amp; Çevre Düzenleme</div></td><td class="num">₺6.300.000</td><td class="num">₺8.600.000</td><td class="num">₺1.032.000</td><td class="num">₺7.568.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:12%"></div></div></div><span class="gbar-val">%12</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Şantiye Genel Giderleri</div></td><td class="num">₺9.400.000</td><td class="num">₺9.400.000</td><td class="num">₺6.678.000</td><td class="num">₺2.722.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:71%"></div></div></div><span class="gbar-val">%71</span></div></td></tr><tr class=""><td><div class="kt-lbl"> İşçilik (Puantaj)</div></td><td class="num">₺12.800.000</td><td class="num">₺12.800.000</td><td class="num">₺10.880.000</td><td class="num">₺1.920.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:85%"></div></div></div><span class="gbar-val">%85</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Makine &amp; Ekipman</div></td><td class="num">₺5.600.000</td><td class="num">₺5.600.000</td><td class="num">₺3.808.000</td><td class="num">₺1.792.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:68%"></div></div></div><span class="gbar-val">%68</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Nakliye &amp; Lojistik</div></td><td class="num">₺3.200.000</td><td class="num">₺3.200.000</td><td class="num">₺1.920.000</td><td class="num">₺1.280.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:60%"></div></div></div><span class="gbar-val">%60</span></div></td></tr><tr class=""><td><div class="kt-lbl"> Resmi Giderler &amp; Harçlar</div></td><td class="num">₺1.200.000</td><td class="num">₺1.200.000</td><td class="num">₺1.104.000</td><td class="num">₺96.000</td><td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:92%"></div></div></div><span class="gbar-val">%92</span></div></td></tr><tr class="km-total"><td>Şantiye Toplamı</td><td class="num">₺176.500.000</td><td class="num">₺184.000.000</td><td class="num">₺127.400.000</td><td class="num">₺56.600.000</td><td class="num">%69</td></tr></tbody>
+            <tbody id="tblKategoriBody"><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Hafriyat &amp; Zemin İşleri</div></td><td class="num" data-lbl="Orijinal">₺8.200.000</td><td class="num" data-lbl="Revize">₺8.200.000</td><td class="num" data-lbl="Gerçekleşen">₺7.872.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺328.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:96%"></div></div></div><span class="gbar-val">%96</span></div></td></tr><tr class="is-asim"><td data-lbl="Kategori"><div class="kt-lbl"><i class="fa-solid fa-triangle-exclamation"></i> Betonarme (Kaba Yapı)</div></td><td class="num" data-lbl="Orijinal">₺36.300.000</td><td class="num" data-lbl="Revize">₺41.500.000</td><td class="num" data-lbl="Gerçekleşen">₺43.160.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺348.900</td><td class="num is-eksi" data-lbl="Kullanılabilir bütçe">₺-2.008.900</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill danger" style="width:100%"></div></div></div><span class="gbar-val">%104</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Çatı &amp; İzolasyon</div></td><td class="num" data-lbl="Orijinal">₺9.800.000</td><td class="num" data-lbl="Revize">₺9.800.000</td><td class="num" data-lbl="Gerçekleşen">₺5.390.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺4.410.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:55%"></div></div></div><span class="gbar-val">%55</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Duvar &amp; Sıva</div></td><td class="num" data-lbl="Orijinal">₺14.500.000</td><td class="num" data-lbl="Revize">₺14.500.000</td><td class="num" data-lbl="Gerçekleşen">₺11.310.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺3.190.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:78%"></div></div></div><span class="gbar-val">%78</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Mekanik Tesisat</div></td><td class="num" data-lbl="Orijinal">₺16.200.000</td><td class="num" data-lbl="Revize">₺16.200.000</td><td class="num" data-lbl="Gerçekleşen">₺12.150.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺4.050.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:75%"></div></div></div><span class="gbar-val">%75</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Elektrik Tesisatı</div></td><td class="num" data-lbl="Orijinal">₺12.400.000</td><td class="num" data-lbl="Revize">₺12.400.000</td><td class="num" data-lbl="Gerçekleşen">₺8.680.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺54.800</td><td class="num" data-lbl="Kullanılabilir bütçe">₺3.665.200</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:70%"></div></div></div><span class="gbar-val">%70</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> İnce İşler &amp; Boya</div></td><td class="num" data-lbl="Orijinal">₺15.800.000</td><td class="num" data-lbl="Revize">₺15.800.000</td><td class="num" data-lbl="Gerçekleşen">₺4.424.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺11.376.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:28%"></div></div></div><span class="gbar-val">%28</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Doğrama &amp; Cephe</div></td><td class="num" data-lbl="Orijinal">₺13.600.000</td><td class="num" data-lbl="Revize">₺13.600.000</td><td class="num" data-lbl="Gerçekleşen">₺6.528.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺7.072.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:48%"></div></div></div><span class="gbar-val">%48</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Zemin Kaplama &amp; Seramik</div></td><td class="num" data-lbl="Orijinal">₺11.200.000</td><td class="num" data-lbl="Revize">₺11.200.000</td><td class="num" data-lbl="Gerçekleşen">₺2.464.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺8.736.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:22%"></div></div></div><span class="gbar-val">%22</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Peyzaj &amp; Çevre Düzenleme</div></td><td class="num" data-lbl="Orijinal">₺6.300.000</td><td class="num" data-lbl="Revize">₺8.600.000</td><td class="num" data-lbl="Gerçekleşen">₺1.032.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺7.568.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:12%"></div></div></div><span class="gbar-val">%12</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Şantiye Genel Giderleri</div></td><td class="num" data-lbl="Orijinal">₺9.400.000</td><td class="num" data-lbl="Revize">₺9.400.000</td><td class="num" data-lbl="Gerçekleşen">₺6.678.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺2.722.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:71%"></div></div></div><span class="gbar-val">%71</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> İşçilik (Puantaj)</div></td><td class="num" data-lbl="Orijinal">₺12.800.000</td><td class="num" data-lbl="Revize">₺12.800.000</td><td class="num" data-lbl="Gerçekleşen">₺10.880.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺1.920.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:85%"></div></div></div><span class="gbar-val">%85</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Makine &amp; Ekipman</div></td><td class="num" data-lbl="Orijinal">₺5.600.000</td><td class="num" data-lbl="Revize">₺5.600.000</td><td class="num" data-lbl="Gerçekleşen">₺3.808.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺1.792.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:68%"></div></div></div><span class="gbar-val">%68</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Nakliye &amp; Lojistik</div></td><td class="num" data-lbl="Orijinal">₺3.200.000</td><td class="num" data-lbl="Revize">₺3.200.000</td><td class="num" data-lbl="Gerçekleşen">₺1.920.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺1.280.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:60%"></div></div></div><span class="gbar-val">%60</span></div></td></tr><tr class=""><td data-lbl="Kategori"><div class="kt-lbl"> Resmi Giderler &amp; Harçlar</div></td><td class="num" data-lbl="Orijinal">₺1.200.000</td><td class="num" data-lbl="Revize">₺1.200.000</td><td class="num" data-lbl="Gerçekleşen">₺1.104.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺0</td><td class="num" data-lbl="Kullanılabilir bütçe">₺96.000</td><td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:92%"></div></div></div><span class="gbar-val">%92</span></div></td></tr><tr class="km-total"><td data-lbl="Kategori">Şantiye Toplamı</td><td class="num" data-lbl="Orijinal">₺176.500.000</td><td class="num" data-lbl="Revize">₺184.000.000</td><td class="num" data-lbl="Gerçekleşen">₺127.400.000</td><td class="num" data-lbl="Taahhüt edilmiş">₺403.700</td><td class="num" data-lbl="Kullanılabilir bütçe">₺56.196.300</td><td class="num" data-lbl="Kullanım">%69</td></tr></tbody>
           </table>
         </div>
+        <div class="gc-foot"><span class="bt-src" id="ktTaahhutKaynak"></span></div>
       </div>
     </section>
 
@@ -323,6 +350,37 @@
   };
   window.GV_BUTCE = SANTIYE_BUTCE; /* crm-finans-maliyet.html BU objeyi aynı rakamlarla ayrıca kendi içinde tanımlar */
 
+  /* ============ [M-3b / Faz C] TAAHHÜT EDİLMİŞ MALİYET — KATEGORİ KIRILIMI ============
+     Tanım: henüz faturası veya hakedişi oluşmamış, ancak SİPARİŞ ya da SÖZLEŞMEYLE
+     bağlanmış maliyet. Üst ekrandaki (crm-finans-butce.html) TAAHHUT_KAYNAK listesiyle
+     kalem kalem AYNI kayıtlar; buradaki tek fark her kalemin bir KATEGORİYE bağlanması.
+     Kategori eşleşmesi kaydın kendi verisinden okunur, pay dağıtımı YAPILMAZ:
+       SIP-2026-05 demir / SIP-2026-07 beton / SZL-2025-T05 (kalıp-demir-beton işçiliği)
+         → Betonarme (Kaba Yapı)                            [kategori indeksi 1]
+       SIP-2026-04 elektrik / SZL-2025-T07 (elektrik tesisat taahhüdü)
+         → Elektrik Tesisatı                                [kategori indeksi 5]
+       SIP-2026-06 beton (C35/45)  → Betonarme (Kaba Yapı)  [1]
+       SZL-2025-T06 (çatı ve cephe yalıtımı) → Çatı & İzolasyon [2]
+     Kalem toplamları şantiye taahhüdüyle BİREBİR tutar; kolon toplamı da satırlardan
+     hesaplanır, sabit yazılmaz. Merkez Şantiye'de açık kayıt yok (SIP-2026-08 taslak). */
+  var TAAHHUT_KALEM = {
+    vadi: [
+      {kat:1, no:'SIP-2026-07', tutar:186000, not:'Ege Hazır Beton · onaylandı',           href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-07'},
+      {kat:1, no:'SZL-2025-T05', tutar:150000, not:'Demir-Beton · hakediş kalanı',         href:'crm-finans-sozlesme-detay.html?szl=t05#kalemler'},
+      {kat:5, no:'SZL-2025-T07', tutar:54800,  not:'ElektroMek · hakediş kalanı',          href:'crm-finans-sozlesme-detay.html?szl=t07#kalemler'},
+      {kat:1, no:'SIP-2026-05', tutar:12900,   not:'kısmi teslim · yalnız açık kalan',     href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-05'}
+    ],
+    liman: [
+      {kat:1, no:'SIP-2026-06', tutar:798000, not:'Trakya Beton · tedarikçide',            href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-06'},
+      {kat:5, no:'SIP-2026-04', tutar:734600, not:'Delta Elektrik · gecikmede',            href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-04'},
+      {kat:2, no:'SZL-2025-T06', tutar:181500, not:'Yalıtım Kardeşler · hakediş kalanı',   href:'crm-finans-sozlesme-detay.html?szl=t06#kalemler'}
+    ],
+    merkez: []
+  };
+  /* Fiziksel ilerleme — tahmini final maliyetin (gerçekleşen ÷ ilerleme) tek girdisi;
+     crm-finans-butce.html'deki `fizik` alanıyla BİREBİR aynı değerler. */
+  var FIZIK = {vadi:68, liman:41, merkez:86};
+
   /* [Dalga 2 / M-3a] Bu ekran ŞANTİYE bazlı bütçedir; M-1 ile gerçek Proje katmanı
      doğduğu için "Proje" adlandırması yanıltıcı hale geldi ve netleştirildi
      (PROJE → SANTIYE_BUTCE; anahtarlar zaten ŞANTİYE anahtarlarıydı, veri DEĞİŞMEDİ).
@@ -348,10 +406,21 @@
     a.classList.toggle('is-on', a.getAttribute('data-p') === pKey);
   });
 
+  /* [M-3b/C] Taahhüt — kategori kalemlerinin toplamı; kategori satırlarıyla, KPI
+     kartıyla ve üst ekranın (crm-finans-butce.html) şantiye satırıyla tek kaynaktan
+     beslenir. Kategori başına taahhüt de aynı listeden çıkar. */
+  var KALEMLER = TAAHHUT_KALEM[pKey] || [];
+  var taahhutTop = KALEMLER.reduce(function(t, r){ return t + r.tutar; }, 0);
+  var TAAHHUT_KAT = [];
+  KALEMLER.forEach(function(r){ TAAHHUT_KAT[r.kat] = (TAAHHUT_KAT[r.kat] || 0) + r.tutar; });
+
   document.getElementById('kpiOrijinal').textContent = tl(P.orijinal);
   document.getElementById('kpiRevize').textContent = tl(P.revize);
   document.getElementById('kpiGerceklesen').textContent = tl(P.gerceklesen);
-  document.getElementById('kpiKalan').textContent = tl(P.kalan);
+  document.getElementById('kpiKalan').textContent = tl(P.revize - P.gerceklesen - taahhutTop);
+  document.getElementById('kpiKalanDelta').innerHTML = taahhutTop
+    ? '<i class="fa-solid fa-scale-balanced"></i> Revize − gerçekleşen − ' + tl(taahhutTop) + ' taahhüt'
+    : '<i class="fa-solid fa-scale-balanced"></i> Açık taahhüt yok · revize − gerçekleşen';
   document.getElementById('kpiOrijinalDelta').innerHTML = '<i class="fa-solid fa-circle"></i> 15 kategori';
   document.getElementById('kpiRevizeDelta').innerHTML = P.revizyon.length
     ? '<i class="fa-solid fa-clock-rotate-left"></i> ' + P.revizyon.length + ' revizyon · +' + tl(P.revize - P.orijinal)
@@ -361,23 +430,51 @@
   var asimIdx = -1;
   var tbody = document.getElementById('tblKategoriBody');
   var rows = '';
-  var tOrij=0,tRev=0,tGer=0;
+  var tOrij=0,tRev=0,tGer=0,tTah=0;
   P.kategoriler.forEach(function(k, i){
-    var orij=k[0], rev=k[1], ger=k[2], kalan=rev-ger, u=pct(ger,rev);
-    tOrij+=orij; tRev+=rev; tGer+=ger;
+    /* [M-3b/C] Kullanılabilir = revize − gerçekleşen − taahhüt (brief formülü).
+       Kullanım oranı KASITLI olarak gerçekleşen ÷ revize kaldı: aşım rozetini,
+       aşım banner'ını ve üst ekranın "aşımdaki kategori" sayımını besleyen ölçü
+       odur; taahhüdü oraya katmak o üç sayımı sessizce kaydırırdı. */
+    var orij=k[0], rev=k[1], ger=k[2], tah=TAAHHUT_KAT[i]||0, kul=rev-ger-tah, u=pct(ger,rev);
+    tOrij+=orij; tRev+=rev; tGer+=ger; tTah+=tah;
     var asim = u > 100;
     if(asim) asimIdx = i;
     rows += '<tr class="'+(asim?'is-asim':'')+'">'
-      + '<td><div class="kt-lbl">'+(asim?'<i class="fa-solid fa-triangle-exclamation"></i>':'')+' '+KATEGORI_ADI[i]+'</div></td>'
-      + '<td class="num">'+tl(orij)+'</td>'
-      + '<td class="num">'+tl(rev)+'</td>'
-      + '<td class="num">'+tl(ger)+'</td>'
-      + '<td class="num">'+tl(kalan)+'</td>'
-      + '<td class="num"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill'+(asim?' danger':(u>=85?' warn':''))+'" style="width:'+Math.min(u,100)+'%"></div></div></div><span class="gbar-val">%'+u+'</span></div></td>'
+      + '<td data-lbl="Kategori"><div class="kt-lbl">'+(asim?'<i class="fa-solid fa-triangle-exclamation"></i>':'')+' '+KATEGORI_ADI[i]+'</div></td>'
+      + '<td class="num" data-lbl="Orijinal">'+tl(orij)+'</td>'
+      + '<td class="num" data-lbl="Revize">'+tl(rev)+'</td>'
+      + '<td class="num" data-lbl="Gerçekleşen">'+tl(ger)+'</td>'
+      + '<td class="num" data-lbl="Taahhüt edilmiş">'+tl(tah)+'</td>'
+      + '<td class="num'+(kul<0?' is-eksi':'')+'" data-lbl="Kullanılabilir bütçe">'+tl(kul)+'</td>'
+      + '<td class="num" data-lbl="Kullanım"><div class="kul-cell"><div class="gbar"><div class="gbar-track"><div class="gbar-fill'+(asim?' danger':(u>=85?' warn':''))+'" style="width:'+Math.min(u,100)+'%"></div></div></div><span class="gbar-val">%'+u+'</span></div></td>'
       + '</tr>';
   });
-  rows += '<tr class="km-total"><td>Şantiye Toplamı</td><td class="num">'+tl(tOrij)+'</td><td class="num">'+tl(tRev)+'</td><td class="num">'+tl(tGer)+'</td><td class="num">'+tl(tRev-tGer)+'</td><td class="num">%'+pct(tGer,tRev)+'</td></tr>';
+  rows += '<tr class="km-total"><td data-lbl="Kategori">Şantiye Toplamı</td><td class="num" data-lbl="Orijinal">'+tl(tOrij)+'</td><td class="num" data-lbl="Revize">'+tl(tRev)+'</td><td class="num" data-lbl="Gerçekleşen">'+tl(tGer)+'</td><td class="num" data-lbl="Taahhüt edilmiş">'+tl(tTah)+'</td><td class="num'+((tRev-tGer-tTah)<0?' is-eksi':'')+'" data-lbl="Kullanılabilir bütçe">'+tl(tRev-tGer-tTah)+'</td><td class="num" data-lbl="Kullanım">%'+pct(tGer,tRev)+'</td></tr>';
   tbody.innerHTML = rows;
+
+  /* [M-3b/C] Dipnot iki işi birden yapar: (1) taahhüt rakamının hangi sipariş ve
+     sözleşmelerden toplandığını linkleriyle gösterir — brief "sipariş veya
+     sözleşmeyle bağlanmış" diyor, o bağ görünür olmalı; (2) kategori seviyesinde
+     kolonu olmayan tahmini final maliyeti şantiye toplamı olarak verir. */
+  var fizik = FIZIK[pKey] || 0;
+  var finalMaliyet = fizik ? Math.round(P.gerceklesen / (fizik/100) / 10000) * 10000 : P.revize;
+  var srcTxt = '<i class="fa-solid fa-link"></i><b>Taahhüt edilmiş maliyet</b> — faturası veya hakedişi henüz oluşmamış, '
+    + 'ancak sipariş ya da sözleşmeyle bağlanmış tutarlardır; ilgili kaydın kategorisine yazılır, kategorilere pay dağıtılmaz.';
+  if(KALEMLER.length){
+    srcTxt += '<br><b>Toplam ' + tl(taahhutTop) + '</b>'
+      + KALEMLER.map(function(r){
+          return '<span class="bt-src-sep">·</span><a href="' + r.href + '">' + r.no + '</a> ' + tl(r.tutar)
+            + ' <span style="opacity:.85">(' + KATEGORI_ADI[r.kat] + ' · ' + r.not + ')</span>';
+        }).join('');
+  } else {
+    srcTxt += '<br>Bu şantiyede açık sipariş veya sözleşme kalanı yok; taahhüt ₺0.';
+  }
+  srcTxt += '<br><i class="fa-solid fa-chart-line"></i><b>Tahmini final maliyet ' + tl(finalMaliyet) + '</b> — '
+    + 'gerçekleşen ÷ fiziksel ilerleme (%' + fizik + '). Fiziksel ilerleme yalnız şantiye bazında ölçüldüğü için '
+    + 'kategori kolonu olarak verilmez. Revize bütçenin ' + tl(Math.abs(finalMaliyet - P.revize))
+    + (finalMaliyet > P.revize ? ' üzerinde.' : ' altında.');
+  document.getElementById('ktTaahhutKaynak').innerHTML = srcTxt;
 
   document.getElementById('asimBanner').hidden = asimIdx === -1;
 

@@ -81,9 +81,35 @@
 .cross-link a:hover i{transform:translateX(3px)}
 
 /* T-R3 — detay tablo + karşılaştırma + yorum (B §6.2) */
-#tblButceDetay{min-width:640px}
+/* [M-3b/C] Kolon sayısı 6 → 8 (Taahhüt Edilmiş + Tahmini Final Maliyet). min-width
+   640 → 1020: sekiz kolonun tamamı sığmadığında KART İÇİ yatay kaydırma açılır
+   (.gc-body.flush + .rp-table-wrap{overflow-x:auto}) — ev standardı. min-width
+   yalnız 641px ÜSTÜNDE geçerli olmalı; altında tablo `gtable-cards` ile kart
+   görünümüne düşer ve `.gtable-cards{min-width:0}` bu ID seçiciyi (1,0,0 > 0,1,0)
+   yenemezdi. Bu yüzden kural media içine alındı. */
+@media(min-width:641px){ #tblButceDetay{min-width:1020px} }
 #tblButceDetay td.num,#tblButceDetay th.num{text-align:right}
 #tblButceDetay tr.bd-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--line-2)}
+/* Semantik merdiven — rozet değil, sayının kendi tonu uyarır (KPI sayımları
+   DEĞİŞMEZ): tahmini final maliyet revize bütçeyi aşarsa bu bir ÖNGÖRÜ aşımıdır →
+   `warn`; kullanılabilir bütçe eksiye düşerse aşım GERÇEKLEŞMİŞ demektir → `danger`.
+   Üçü de tahminde aştığı için hepsini kırmıza boyamak uyarıyı değersizleştirirdi. */
+#tblButceDetay td[data-col="tfm"].is-asim{color:var(--warn);font-weight:700}
+#tblButceDetay td[data-col="kalan"].is-asim{color:var(--danger);font-weight:700}
+
+/* [M-3b/C] Taahhüt kaynağı — kartın kendi alt şeridi (.gc-foot dili), YENİ panel
+   değil. Hangi açık sipariş / hangi sözleşme kalanı toplandığı burada linkli durur. */
+.bt-src{display:block;line-height:1.7;font-size:12px;color:var(--muted)}
+.bt-src > i{color:var(--acc-ink);margin-right:7px}
+.bt-src b{color:var(--ink-2);font-weight:700}
+.bt-src a{color:var(--acc-ink);font-weight:700}
+.bt-src a:hover{color:var(--acc-deep)}
+.bt-src .bt-src-sep{color:var(--line-2);margin:0 6px}
+
+/* [M-3b/C] ui.css baskıda tüm .gc-foot'ları gizler (genelde aksiyon şeridi olduğu
+   için doğru kural). Buradaki alt şerit ise taahhüt rakamının DAYANAĞI — hangi
+   sipariş/sözleşmeden geldiği kâğıda çıkan bütçe dökümünden düşmemeli. */
+@media print{ .gc-foot{display:block !important} }
 
 @media(max-width:640px){
   .cross-link{flex-wrap:wrap;padding:14px 16px}
@@ -118,7 +144,7 @@
       <div>
         <div class="ph-eyebrow">Finans</div>
         <h1>Şantiye Bütçesi</h1>
-        <div class="ph-sub">3 şantiye · orijinal, revize ve gerçekleşen bütçe karşılaştırması</div>
+        <div class="ph-sub">3 şantiye · revize, gerçekleşen ve taahhüt edilmiş maliyet karşılaştırması</div>
       </div>
       <!-- [G-2/R-11] Bu sayfada "Yeni …" butonu YOK, ama patron açıkça "yeni evrak
            yapısı var gibi AYNI HİZADA duracak" dedi. Bu yüzden .ph-actions kabı, tek
@@ -194,7 +220,11 @@
         <div class="rp-chart-body" id="chartBtProje"></div>
       </div>
       <div class="rp-chart">
-        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Harcanan / Kalan</h3><span class="ph-sub" style="margin:0" id="chartBtHkSub">3 şantiye</span></div>
+        <!-- [M-3b/C] Halka eskiden "Harcanan / Kalan" idi; tabloda kalan yerine
+             KULLANILABİLİR durduğu için grafik ile tablo iki farklı rakam gösterirdi
+             (₺120,8 Mn ↔ ₺118,68 Mn). Yeni grafik EKLENMEDİ, mevcut halka taahhüt
+             dilimiyle üçe bölündü — üç yüzey de aynı formülü anlatır. -->
+        <div class="rp-chart-head"><h3><i class="fa-solid fa-chart-pie"></i> Harcanan / Taahhüt / Kullanılabilir</h3><span class="ph-sub" style="margin:0" id="chartBtHkSub">3 şantiye</span></div>
         <div class="rp-chart-body" id="chartBtHk"></div>
       </div>
     </div>
@@ -234,12 +264,20 @@
           </div>
         </div>
       </div>
-      <div class="gc-body flush rp-table-wrap" style="box-shadow:none;border:none;margin-bottom:0">
-        <table class="gtable" id="tblButceDetay">
-          <thead><tr><th>Şantiye</th><th class="num" data-col="orijinal">Orijinal</th><th class="num" data-col="revize">Revize</th><th class="num" data-col="gerceklesen">Gerçekleşen</th><th class="num" data-col="kalan">Kalan</th><th class="num" data-col="kullanim">Kullanım</th></tr></thead>
+      <div class="gc-body flush rp-table-wrap gv-cards-pad" style="box-shadow:none;border:none;margin-bottom:0">
+        <!-- [M-3b/C] `Kalan` kolonu `Kullanılabilir Bütçe`ye DÖNÜŞTÜ (data-col anahtarı
+             "kalan" olarak korundu — gvCols kolon tercihi localStorage'da bu anahtarla
+             saklı, ?proje= ile aynı geriye-dönük uyum gerekçesi). İkisi ayrı kolon
+             olarak TUTULMADI: aralarındaki tek fark taahhüt kolonunun kendisi ve yan
+             yana iki "kalan" rakamı hangisinin bağlayıcı olduğunu belirsizleştirirdi.
+             Kalan gizlenmedi de: Kalan = Kullanılabilir + Taahhüt Edilmiş, ikisi de
+             tabloda görünür. -->
+        <table class="gtable gtable-cards" id="tblButceDetay">
+          <thead><tr><th>Şantiye</th><th class="num" data-col="orijinal">Orijinal</th><th class="num" data-col="revize">Revize</th><th class="num" data-col="gerceklesen">Gerçekleşen</th><th class="num" data-col="taahhut">Taahhüt Edilmiş</th><th class="num" data-col="kalan">Kullanılabilir Bütçe</th><th class="num" data-col="tfm">Tahmini Final Maliyet</th><th class="num" data-col="kullanim">Kullanım</th></tr></thead>
           <tbody id="tblButceDetayBody"></tbody>
         </table>
       </div>
+      <div class="gc-foot"><span class="bt-src" id="btTaahhutKaynak"></span></div>
     </div>
 
     <div class="rp-compare" id="butceCompare"></div>
@@ -295,6 +333,50 @@
   };
   var SANTIYE_BUTCE_ORDER = ['vadi','liman','merkez'];
 
+  /* ============ [M-3b / Faz C] TAAHHÜT EDİLMİŞ MALİYET ============
+     Tanım: henüz faturası veya hakedişi oluşmamış, ancak SİPARİŞ ya da SÖZLEŞMEYLE
+     bağlanmış maliyet. Rakam burada UYDURULMAZ — her kalem var olan bir kayda
+     referans verir ve şantiye taahhüdü bu kalemlerin toplamı olarak HESAPLANIR
+     (sabit sayı yazılmaz; kaynak listesi ile toplam hiçbir koşulda ayrışamaz).
+
+     Kaynak 1 — açık siparişler (crm-satinalma-siparisler.html, data-tutar):
+       onaylandi · tedarikcide · gecikme · kismi  → AÇIK, taahhüttür
+       kapandi · teslim                          → gerçekleşene girdi, taahhüt DEĞİL
+       taslak                                    → henüz bağlanmadı, taahhüt DEĞİL
+       kismi siparişte yalnız teslim alınmamış kısım açıktır (SIP-2026-05: 88 t'nin
+       87,6 t'si alındı → ₺2.840.000'un ~0,4 t'lik kalanı ≈ ₺12.900).
+     Kaynak 2 — taşeron sözleşme kalanları (crm-finans-sozlesme-detay.html poz seti:
+       sözleşme bedeli − kümülatif hakediş). Kurum sözleşmeleri (k01/k02/k03) GELİR
+       tarafıdır; bu ekran maliyet bütçesi olduğu için taahhüde GİRMEZ. */
+  var TAAHHUT_KAYNAK = {
+    vadi: [
+      {no:'SIP-2026-07', tip:'sip', tutar:186000, not:'Ege Hazır Beton · onaylandı',        href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-07'},
+      {no:'SZL-2025-T05', tip:'szl', tutar:150000, not:'Demir-Beton · hakediş kalanı',      href:'crm-finans-sozlesme-detay.html?szl=t05#kalemler'},
+      {no:'SZL-2025-T07', tip:'szl', tutar:54800,  not:'ElektroMek · hakediş kalanı',       href:'crm-finans-sozlesme-detay.html?szl=t07#kalemler'},
+      {no:'SIP-2026-05', tip:'sip', tutar:12900,   not:'kısmi teslim · yalnız açık kalan',  href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-05'}
+    ],
+    liman: [
+      {no:'SIP-2026-06', tip:'sip', tutar:798000, not:'Trakya Beton · tedarikçide',         href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-06'},
+      {no:'SIP-2026-04', tip:'sip', tutar:734600, not:'Delta Elektrik · gecikmede',         href:'crm-satinalma-siparis-detay.html?sip=SIP-2026-04'},
+      {no:'SZL-2025-T06', tip:'szl', tutar:181500, not:'Yalıtım Kardeşler · hakediş kalanı', href:'crm-finans-sozlesme-detay.html?szl=t06#kalemler'}
+    ],
+    merkez: []
+  };
+  /* Şantiye taahhüdü = kaynak kalemlerinin toplamı. Merkez Şantiye'de açık kayıt yok
+     (SIP-2026-08 taslak durumda), bu yüzden ₺0 — boş değil, sıfır. */
+  function taahhut(k){
+    return (TAAHHUT_KAYNAK[k] || []).reduce(function(t, r){ return t + r.tutar; }, 0);
+  }
+  /* Brief formülü: Kullanılabilir Bütçe = Revize − Gerçekleşen − Açık Taahhütler. */
+  function kullanilabilir(k){ var P = SANTIYE_BUTCE[k]; return P.rev - P.ger - taahhut(k); }
+  /* Tahmini final maliyet — kazanılmış değer (earned value) yaklaşımı:
+     gerçekleşen ÷ fiziksel ilerleme. Bir tahmin olduğu için ₺10.000'e yuvarlanır;
+     tam haneli gösterim olduğundan daha kesin bir izlenim verirdi. */
+  function tfm(k){
+    var P = SANTIYE_BUTCE[k];
+    return P.fizik ? Math.round(P.ger / (P.fizik / 100) / 10000) * 10000 : P.rev;
+  }
+
   function keysFor(filter){
     if(filter === 'tumu') return SANTIYE_BUTCE_ORDER;
     if(filter === 'diger') return [];
@@ -308,8 +390,13 @@
       return '<div class="gv-card pb-card' + (P.danger ? ' is-danger' : '') + '">'
         + '<div class="pb-head"><div class="pb-mark">' + P.kisa + '</div><div class="pb-id"><h3>' + P.ad + '</h3>'
         + '<div class="pb-tags"><span class="gtag' + (k==='vadi'?' mint':'') + '">' + P.tip + '</span><span class="gstat ' + P.tag.cls + '">' + P.tag.lbl + '</span></div></div></div>'
+        /* [M-3b/C] Kart ile tablo aynı dörtlüyü göstermeliydi; tabloya Taahhüt ve
+           Kullanılabilir girdiği için kart da onları gösterir — aksi halde "Kalan"
+           kartta, "Kullanılabilir" tabloda farklı iki rakam olarak okunurdu. Yeni
+           blok AÇILMADI, mevcut dl'e iki alan eklendi (ızgara auto-fit, sarar). */
         + '<dl class="pb-amounts"><div><dt>Orijinal</dt><dd>' + tl(P.orij) + '</dd></div><div><dt>Revize</dt><dd>' + tl(P.rev) + '</dd></div>'
-        + '<div><dt>Gerçekleşen</dt><dd>' + tl(P.ger) + '</dd></div><div><dt>Kalan</dt><dd class="rem">' + tl(P.rev - P.ger) + '</dd></div></dl>'
+        + '<div><dt>Gerçekleşen</dt><dd>' + tl(P.ger) + '</dd></div><div><dt>Taahhüt edilmiş</dt><dd>' + tl(taahhut(k)) + '</dd></div>'
+        + '<div><dt>Kullanılabilir</dt><dd class="rem">' + tl(kullanilabilir(k)) + '</dd></div></dl>'
         + '<div class="pb-prog"><div class="pb-prog-row"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:' + u + '%"></div></div></div><span class="gbar-val">%' + u + '</span></div>'
         + '<div class="pb-prog-note">Fiziksel ilerleme %' + P.fizik + ' ile tutarlı' + (P.asimKat ? ' · 1 kategori aşımda (' + P.asimKat + ' %' + P.asimPct + ')' : '') + '</div></div>'
         + '<div class="pb-foot"><span>' + (P.asimKat ? '<i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> ' + P.asimKat + ' aşımda' : '') + '</span>'
@@ -317,20 +404,57 @@
     }).join('');
   }
 
+  /* [M-3b/C] Satır üreticisi — her <td> data-lbl taşır (640 altında .gtable-cards
+     kart görünümü etiketleri buradan okur). Kullanılabilir ve Tahmini Final Maliyet
+     hücreleri hesaplanır, sabit metin yazılmaz. */
+  function tblRow(cls, ad, orij, rev, ger, tah, kul, fin, u){
+    var kulAsim = kul < 0 ? ' is-asim' : '';
+    var finAsim = fin > rev ? ' is-asim' : '';
+    return '<tr' + cls + '><td data-lbl="Şantiye">' + ad + '</td>'
+      + '<td class="num" data-col="orijinal" data-lbl="Orijinal">' + tl(orij) + '</td>'
+      + '<td class="num" data-col="revize" data-lbl="Revize">' + tl(rev) + '</td>'
+      + '<td class="num" data-col="gerceklesen" data-lbl="Gerçekleşen">' + tl(ger) + '</td>'
+      + '<td class="num" data-col="taahhut" data-lbl="Taahhüt edilmiş">' + tl(tah) + '</td>'
+      + '<td class="num' + kulAsim + '" data-col="kalan" data-lbl="Kullanılabilir bütçe">' + tl(kul) + '</td>'
+      + '<td class="num' + finAsim + '" data-col="tfm" data-lbl="Tahmini final maliyet">' + tl(fin) + '</td>'
+      + '<td class="num" data-col="kullanim" data-lbl="Kullanım">%' + u + '</td></tr>';
+  }
+
   function tblHtml(keys){
     var h = '';
-    var tOrij=0, tRev=0, tGer=0;
+    var tOrij=0, tRev=0, tGer=0, tTah=0, tFin=0;
     keys.forEach(function(k){
-      var P = SANTIYE_BUTCE[k];
-      tOrij += P.orij; tRev += P.rev; tGer += P.ger;
-      h += '<tr data-durum="' + (P.asimKat ? 'asim' : 'normal') + '"><td>' + P.ad + '</td><td class="num" data-col="orijinal">' + tl(P.orij) + '</td><td class="num" data-col="revize">' + tl(P.rev) + '</td>'
-        + '<td class="num" data-col="gerceklesen">' + tl(P.ger) + '</td><td class="num" data-col="kalan">' + tl(P.rev - P.ger) + '</td><td class="num" data-col="kullanim">%' + pct(P.ger, P.rev) + '</td></tr>';
+      var P = SANTIYE_BUTCE[k], tah = taahhut(k), fin = tfm(k);
+      tOrij += P.orij; tRev += P.rev; tGer += P.ger; tTah += tah; tFin += fin;
+      h += tblRow(' data-durum="' + (P.asimKat ? 'asim' : 'normal') + '"', P.ad,
+        P.orij, P.rev, P.ger, tah, kullanilabilir(k), fin, pct(P.ger, P.rev));
     });
     if(keys.length > 1){
-      h += '<tr class="bd-total"><td>Toplam</td><td class="num" data-col="orijinal">' + tl(tOrij) + '</td><td class="num" data-col="revize">' + tl(tRev) + '</td>'
-        + '<td class="num" data-col="gerceklesen">' + tl(tGer) + '</td><td class="num" data-col="kalan">' + tl(tRev - tGer) + '</td><td class="num" data-col="kullanim">%' + pct(tGer, tRev) + '</td></tr>';
+      h += tblRow(' class="bd-total"', 'Toplam', tOrij, tRev, tGer, tTah,
+        tRev - tGer - tTah, tFin, pct(tGer, tRev));
     }
     return h;
+  }
+
+  /* [M-3b/C] Taahhüt kaynağının izlenebilirliği — brief "sipariş veya sözleşmeyle
+     bağlanmış" diyor, o bağ kullanıcıya GÖRÜNÜR olmalı. Kartın alt şeridinde,
+     seçili kapsamdaki her açık sipariş / sözleşme kalanı tutarıyla ve kendi kaydına
+     linkiyle listelenir. Yeni panel/modal AÇILMAZ. */
+  function kaynakHtml(keys){
+    var kalem = [];
+    keys.forEach(function(k){
+      (TAAHHUT_KAYNAK[k] || []).forEach(function(r){
+        kalem.push('<a href="' + r.href + '">' + r.no + '</a> ' + tl(r.tutar)
+          + ' <span style="opacity:.85">(' + r.not + ')</span>');
+      });
+    });
+    var top = keys.reduce(function(t,k){ return t + taahhut(k); }, 0);
+    var s = '<i class="fa-solid fa-link"></i><b>Taahhüt edilmiş maliyet</b> — faturası veya hakedişi henüz oluşmamış, '
+      + 'ancak sipariş ya da sözleşmeyle bağlanmış tutarlardır. Kullanılabilir bütçe = revize − gerçekleşen − taahhüt edilmiş.';
+    if(!kalem.length){
+      return s + '<br>Seçili kapsamda açık sipariş veya sözleşme kalanı yok; taahhüt ₺0.';
+    }
+    return s + '<br><b>Toplam ' + tl(top) + '</b><span class="bt-src-sep">·</span>' + kalem.join('<span class="bt-src-sep">·</span>');
   }
 
   function compareHtml(keys){
@@ -361,6 +485,15 @@
     } else {
       txt += '<strong>Seçili şantiyede bütçe kullanımı %' + u + ', aşımda kategori yok.</strong> Fiziksel ilerleme (%' + SANTIYE_BUTCE[keys[0]].fizik + ') ile harcama oranı tutarlı seyrediyor.';
     }
+    /* [M-3b/C] Taahhüt + tahmini final maliyet yorumu — yeni blok değil, mevcut
+       .rp-note cümlesinin devamı. Sapma ARİTMETİKTEN türetilir, elle yazılmaz. */
+    var tTah = keys.reduce(function(t,k){ return t + taahhut(k); }, 0);
+    var tFin = keys.reduce(function(t,k){ return t + tfm(k); }, 0);
+    var sapma = tFin - tRev;
+    txt += ' <strong>Açık taahhüt ' + tl(tTah) + '</strong> — sipariş ve sözleşmelerle bağlanmış, faturası henüz oluşmamış tutar; '
+      + 'kullanılabilir bütçe bu düşüldükten sonra ' + tl(tRev - tGer - tTah) + '. '
+      + 'Fiziksel ilerlemeye göre tahmini final maliyet ' + tl(tFin) + ', revize bütçenin '
+      + (sapma > 0 ? tl(sapma) + ' üzerinde — mevcut harcama hızı sürerse bütçe aşılır.' : tl(-sapma) + ' altında.');
     return txt;
   }
 
@@ -389,17 +522,19 @@
       }), {yon:'yatay', baslik:'Şantiye bazlı revize bütçe dağılımı', labelWidth:150});
     }
     if(window.gvDonut){
-      var gToplam = 0, rToplam = 0;
-      keys.forEach(function(k){ gToplam += SANTIYE_BUTCE[k].ger; rToplam += SANTIYE_BUTCE[k].rev; });
+      var gToplam = 0, rToplam = 0, tToplam = 0;
+      keys.forEach(function(k){ gToplam += SANTIYE_BUTCE[k].ger; rToplam += SANTIYE_BUTCE[k].rev; tToplam += taahhut(k); });
       document.getElementById('chartBtHkSub').textContent = keys.length > 1 ? keys.length + ' şantiye' : SANTIYE_BUTCE[keys[0]].ad;
       gvDonut('#chartBtHk', [
         {lbl:'Harcanan', val:gToplam, tone:'acc'},
-        {lbl:'Kalan', val:Math.max(rToplam - gToplam, 0), tone:'muted'}
-      ], {baslik:'Harcanan / kalan bütçe', merkezEtiket:'%' + pct(gToplam, rToplam), merkezAlt:'kullanım'});
+        {lbl:'Taahhüt edilmiş', val:tToplam, tone:'warn'},
+        {lbl:'Kullanılabilir', val:Math.max(rToplam - gToplam - tToplam, 0), tone:'muted'}
+      ], {baslik:'Harcanan, taahhüt edilmiş ve kullanılabilir bütçe', merkezEtiket:'%' + pct(gToplam, rToplam), merkezAlt:'kullanım'});
     }
 
     document.getElementById('butceGrid').innerHTML = gridHtml(keys);
     document.getElementById('tblButceDetayBody').innerHTML = tblHtml(keys);
+    document.getElementById('btTaahhutKaynak').innerHTML = kaynakHtml(keys);
     document.getElementById('butceCompare').innerHTML = compareHtml(keys);
     document.getElementById('butceCompare').hidden = keys.length < 2;
     document.getElementById('butceNote').innerHTML = noteHtml(keys, filter);
@@ -480,7 +615,11 @@
         {key:'orijinal', lbl:'Orijinal', def:true},
         {key:'revize', lbl:'Revize', def:true},
         {key:'gerceklesen', lbl:'Gerçekleşen', def:true},
-        {key:'kalan', lbl:'Kalan', def:true},
+        /* [M-3b/C] `kalan` anahtarı KORUNDU (localStorage'daki kolon tercihi bu
+           anahtarla saklı); etiketi "Kullanılabilir Bütçe" olarak güncellendi. */
+        {key:'taahhut', lbl:'Taahhüt Edilmiş', def:true},
+        {key:'kalan', lbl:'Kullanılabilir Bütçe', def:true},
+        {key:'tfm', lbl:'Tahmini Final Maliyet', def:true},
         {key:'kullanim', lbl:'Kullanım', def:true}
       ]
     });
