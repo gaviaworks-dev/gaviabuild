@@ -67,6 +67,20 @@
 .step-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 14px;text-align:center;color:var(--muted);font-size:12.5px;border:1px dashed var(--line);border-radius:var(--r-md);background:var(--bg)}
 .step-empty i{font-size:20px;color:var(--line-2)}
 
+/* ---- tutar bazlı onay (kademe tablosu) — .step-row dilinin türevi ---- */
+.tier-switch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:12px}
+.tier-switch .sw-hint{flex:1 1 100%;font-size:11.5px;color:var(--muted);line-height:1.5}
+.tier-row{align-items:flex-end}
+.tier-row .step-order{margin-bottom:3px}
+.tier-lim{flex:0 1 134px;min-width:110px;margin:0}
+.tier-role{flex:1 1 184px;min-width:158px;margin:0}
+.tier-lim label,.tier-role label{font-size:10.5px;color:var(--muted)}
+.tier-lim input,.tier-role select{padding:8px 10px;font-size:12.5px}
+.tier-lim input{font-variant-numeric:tabular-nums}
+.tier-row .step-ops{margin-bottom:3px}
+.tier-dash{flex:none;color:var(--line-2);font-size:12px;padding-bottom:11px}
+@media(max-width:640px){ .tier-dash{display:none} }
+
 /* bildirim tercihi satırı — crm-personel-izin-form.html .chk-line ile aynı dil */
 .chk-row{display:flex;flex-wrap:wrap;gap:16px 22px}
 .chk-line{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink)}
@@ -141,7 +155,7 @@
                   <option value="egitim">Eğitim &amp; Sertifika Talebi</option>
                   <option value="ozel">Özel alan…</option>
                 </select>
-                <span class="gf-hint">Mevcut belge türleri (Kasa, Malzeme, İzin…) burada listelenmez — onların zinciri sabittir.</span>
+                <span class="gf-hint">Tanımlı belge türleri (Kasa, Malzeme İhtiyaç Onayı, Satın Alma / Sipariş Onayı, İzin…) burada listelenmez; onlar <a href="crm-ayarlar-onay.html" style="color:var(--acc-ink);font-weight:700">Onay Akışları</a> ekranından düzenlenir.</span>
               </div>
               <div class="gfield">
                 <label for="fMinOnay">Min. Onay Sayısı</label>
@@ -183,10 +197,22 @@
               <span><b>Başvuru Sahibi</b> akışı başlatır</span>
               <span class="tag">Sabit</span>
             </div>
+            <div class="tier-switch">
+              <label class="chk-line"><input type="checkbox" id="fTutarBazli"> Tutar bazlı onay</label>
+              <span class="sw-hint">Açıkken zincir tek sıra yerine tutar kademelerinden kurulur: her kademe, o tutar aralığında zincire eklenen son onaycıyı tanımlar; alt kademelerin onaycıları zincirde kalır. Kapalıyken tüm tutarlar aynı sırayı izler.</span>
+            </div>
+
             <!-- statik bake — bilinçli-boş başlangıç durumu (6B kararı: steps=[], JS render()'ın
                  kendi boş-durum çıktısıyla VERBATIM); JS yüklenince aynı mount innerHTML ile ezilir — D18-B2 -->
-            <div class="step-list" id="stepList"><div class="step-empty"><i class="fa-solid fa-list-ol"></i><span>Henüz onay adımı yok. Aşağıdaki "Adım Ekle" ile başlayın.</span></div></div>
-            <button type="button" class="step-add" id="stepAddBtn"><i class="fa-solid fa-plus"></i> Adım Ekle</button>
+            <div id="flatWrap">
+              <div class="step-list" id="stepList"><div class="step-empty"><i class="fa-solid fa-list-ol"></i><span>Henüz onay adımı yok. Aşağıdaki "Adım Ekle" ile başlayın.</span></div></div>
+              <button type="button" class="step-add" id="stepAddBtn"><i class="fa-solid fa-plus"></i> Adım Ekle</button>
+            </div>
+
+            <div id="tierWrap" hidden>
+              <div class="step-list" id="tierList"></div>
+              <button type="button" class="step-add" id="tierAddBtn"><i class="fa-solid fa-plus"></i> Kademe Ekle</button>
+            </div>
           </div>
           <div class="form-foot">
             <a class="btn btn-ghost btn-sm" href="crm-ayarlar-onay.html">Vazgeç</a>
@@ -202,6 +228,7 @@
           <div class="gc-body">
             <div class="side-tip"><i class="fa-solid fa-diagram-project"></i><span>Adımları "Adım Ekle" ile oluşturun, ok tuşlarıyla sırasını değiştirin, çöp kutusuyla kaldırın.</span></div>
             <div class="side-tip"><i class="fa-solid fa-hashtag"></i><span>Min. onay sayısı, zincirdeki toplam onaycı adımı sayısını aşarsa kayıt engellenir.</span></div>
+            <div class="side-tip"><i class="fa-solid fa-sliders"></i><span>Tutar bazlı onayda kademeler bitişik olmalıdır: bir kademenin üst limiti, bir sonrakinin alt limitidir. Son kademenin üst limiti boş bırakılırsa üst sınır aranmaz.</span></div>
             <div class="side-tip"><i class="fa-solid fa-flask"></i><span>Bu form simülasyondur; oluşturulan akış kalıcı olarak kaydedilmez ve mevcut onay zincirlerini (gvChain) değiştirmez.</span></div>
             <div class="side-tip"><i class="fa-solid fa-arrow-left"></i><span>Tanımlı akışların tamamı <a href="crm-ayarlar-onay.html" style="color:var(--acc-ink);font-weight:700">Onay Akışları</a> ekranındadır.</span></div>
           </div>
@@ -288,6 +315,89 @@
     render();
   });
 
+  /* ---- TUTAR BAZLI ONAY — kademe tablosu ----
+     Varsayılan bantlar firma limitlerinden gelir (crm-ayarlar-onay.html: 25.000 / 100.000).
+     Kademe = tutar aralığı + o aralıkta zincire eklenen son onaycı; alt kademelerin
+     onaycıları zincirde kalır (Düşük ⊂ Orta ⊂ Yüksek). */
+  var tiers = [
+    {alt:0,      ust:25000,  role:'satinalma'},
+    {alt:25000,  ust:100000, role:'teknik'},
+    {alt:100000, ust:'',     role:'yonetim'}
+  ];
+  var tierChk  = document.getElementById('fTutarBazli');
+  var tierWrap = document.getElementById('tierWrap');
+  var flatWrap = document.getElementById('flatWrap');
+  var tierList = document.getElementById('tierList');
+
+  function renderTiers(){
+    if(!tiers.length){
+      tierList.innerHTML = '<div class="step-empty"><i class="fa-solid fa-layer-group"></i><span>Henüz tutar kademesi yok. Aşağıdaki "Kademe Ekle" ile başlayın.</span></div>';
+      return;
+    }
+    var html = '';
+    tiers.forEach(function(t, i){
+      html += '<div class="step-row tier-row" data-i="'+i+'">'
+          +   '<span class="step-order">'+(i+1)+'</span>'
+          +   '<div class="gfield tier-lim"><label>Alt limit (₺)</label><input type="number" min="0" step="1000" data-f="alt" value="'+t.alt+'"></div>'
+          +   '<span class="tier-dash">–</span>'
+          +   '<div class="gfield tier-lim"><label>Üst limit (₺)</label><input type="number" min="0" step="1000" data-f="ust" value="'+t.ust+'" placeholder="Üst sınır yok"></div>'
+          +   '<div class="gfield tier-role"><label>Son onaycı</label><select data-f="role">'
+          +     '<option value="" disabled'+(t.role ? '' : ' selected')+'>Onaycı rol seçin</option>'
+          +     ROLE_OPTS.map(function(r){ return '<option value="'+r.k+'"'+(t.role===r.k?' selected':'')+'>'+r.lbl+'</option>'; }).join('')
+          +   '</select></div>'
+          +   '<div class="step-ops">'
+          +     '<button type="button" class="step-ibtn" data-act="up" '+(i===0?'disabled':'')+' aria-label="Yukarı taşı"><i class="fa-solid fa-chevron-up"></i></button>'
+          +     '<button type="button" class="step-ibtn" data-act="down" '+(i===tiers.length-1?'disabled':'')+' aria-label="Aşağı taşı"><i class="fa-solid fa-chevron-down"></i></button>'
+          +     '<button type="button" class="step-ibtn danger" data-act="del" data-no-confirm aria-label="Kademeyi kaldır"><i class="fa-solid fa-trash"></i></button>'
+          +   '</div>'
+          + '</div>';
+    });
+    tierList.innerHTML = html;
+  }
+  renderTiers();
+
+  tierChk.addEventListener('change', function(){
+    tierWrap.hidden = !tierChk.checked;
+    flatWrap.hidden =  tierChk.checked;
+  });
+
+  document.getElementById('tierAddBtn').addEventListener('click', function(){
+    var son = tiers[tiers.length-1];
+    var alt = son ? (+son.ust || +son.alt || 0) : 0;
+    if(son && son.ust === '') son.ust = alt;
+    tiers.push({alt:alt, ust:'', role:''});
+    renderTiers();
+  });
+
+  tierList.addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-act]'); if(!btn) return;
+    var i = +btn.closest('.tier-row').dataset.i, act = btn.dataset.act;
+    if(act === 'del'){ tiers.splice(i,1); }
+    else if(act === 'up' && i>0){ var t=tiers[i-1]; tiers[i-1]=tiers[i]; tiers[i]=t; }
+    else if(act === 'down' && i<tiers.length-1){ var t2=tiers[i+1]; tiers[i+1]=tiers[i]; tiers[i]=t2; }
+    renderTiers();
+  });
+
+  tierList.addEventListener('change', function(e){
+    var f = e.target.dataset.f; if(!f) return;
+    var i = +e.target.closest('.tier-row').dataset.i;
+    /* re-render YOK — sayısal alanda yazarken odak kaybolmasın */
+    tiers[i][f] = (f === 'role') ? e.target.value : (e.target.value === '' ? '' : +e.target.value);
+  });
+
+  function tierError(){
+    if(!tiers.length) return 'En az bir tutar kademesi ekleyin.';
+    for(var i=0;i<tiers.length;i++){
+      var t = tiers[i];
+      if(!t.role) return 'Her kademede bir son onaycı seçin.';
+      if(t.alt === '' || t.alt < 0) return 'Kademe ' + (i+1) + ' için alt limit girin.';
+      if(t.ust !== '' && t.ust <= t.alt) return 'Kademe ' + (i+1) + ': üst limit alt limitten büyük olmalı.';
+      if(i > 0 && t.alt !== tiers[i-1].ust) return 'Kademe ' + (i+1) + ' alt limiti, bir önceki kademenin üst limitiyle aynı olmalı.';
+      if(t.ust === '' && i !== tiers.length-1) return 'Üst limit yalnız son kademede boş bırakılabilir.';
+    }
+    return null;
+  }
+
   /* Modül = "Özel alan…" seçilince özel modül adı alanını göster */
   var modulSel = document.getElementById('fModul');
   var ozelWrap = document.getElementById('fOzelModulWrap');
@@ -302,11 +412,17 @@
     if(modulSel.value === 'ozel' && !document.getElementById('fOzelModul').value.trim()){
       gvToast('Özel modül adı girin.', {type:'danger'}); return;
     }
-    if(!steps.length){ gvToast('En az bir onay adımı ekleyin.', {type:'danger'}); return; }
-    if(steps.some(function(s){ return !s.role; })){ gvToast('Her adımda bir onaycı rol seçin.', {type:'danger'}); return; }
     var minOnay = +document.getElementById('fMinOnay').value || 1;
-    if(minOnay > steps.length){ gvToast('Min. onay sayısı adım sayısını aşamaz.', {type:'danger'}); return; }
-    gvToast('"' + ad + '" akışı oluşturuldu (demo) — gvChain\'e yansımaz.', {type:'ok'});
+    if(tierChk.checked){
+      var tErr = tierError();
+      if(tErr){ gvToast(tErr, {type:'danger'}); return; }
+      if(minOnay > tiers.length){ gvToast('Min. onay sayısı kademe sayısını aşamaz.', {type:'danger'}); return; }
+    } else {
+      if(!steps.length){ gvToast('En az bir onay adımı ekleyin.', {type:'danger'}); return; }
+      if(steps.some(function(s){ return !s.role; })){ gvToast('Her adımda bir onaycı rol seçin.', {type:'danger'}); return; }
+      if(minOnay > steps.length){ gvToast('Min. onay sayısı adım sayısını aşamaz.', {type:'danger'}); return; }
+    }
+    gvToast('"' + ad + '" akışı ' + (tierChk.checked ? tiers.length + ' tutar kademesiyle ' : '') + 'oluşturuldu (demo) — gvChain\'e yansımaz.', {type:'ok'});
     setTimeout(function(){ location.href = 'crm-ayarlar-onay.html'; }, 1000);
   });
 })();

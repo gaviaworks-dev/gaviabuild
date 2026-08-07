@@ -44,7 +44,28 @@
 .flow-note{display:flex;align-items:flex-start;gap:9px;margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.55;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 13px}
 .flow-note i{color:var(--acc-ink);flex:none;margin-top:2px}
 
-.flow-head-r{display:flex;align-items:center;gap:10px}
+.flow-head-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* dar ekranda kart başlığı ile sağ grup alt alta insin (390px'te "Limitleri düzenle" taşıyordu) */
+.gc-head{flex-wrap:wrap}
+
+/* ---- tutar kademesi (yalnız Satın Alma / Sipariş Onayı) ----
+   Üç bant alt alta; her bant kendi zincirini taşır. Bant başlığı bilgi taşır:
+   hangi tutar aralığında kaç onay kademesi devrede. */
+.band + .band{margin-top:15px;padding-top:15px;border-top:1px dashed var(--line)}
+.band-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.band-k{font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--ink-2);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:3px 9px}
+.band-r{font-size:13px;font-weight:800;color:var(--acc-ink);font-variant-numeric:tabular-nums}
+.band-c{font-size:11.5px;color:var(--muted);margin-left:auto}
+.band .flow{padding-bottom:4px}
+
+/* tutar limiti düzenleyici — kart içinde, ayrı ekran açmadan */
+.lim{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:18px;padding:14px 16px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md)}
+.lim-t{flex:1 1 100%;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink-2)}
+.lim-t i{color:var(--acc-ink)}
+.lim .gfield{flex:1 1 170px;min-width:150px}
+.lim .gfield input{font-variant-numeric:tabular-nums}
+.lim-act{flex:none;height:41px}
+@media(max-width:640px){ .lim-act{width:100%} .band-c{margin-left:0;flex:1 1 100%} }
 
 /* genel dipnot */
 .foot-note{display:flex;align-items:flex-start;gap:12px;background:var(--info-tint);border:1px solid color-mix(in srgb,var(--info) 20%,var(--paper));border-radius:var(--r-md);padding:14px 16px;margin-top:18px;font-size:12.5px;color:var(--ink-2);line-height:1.55}
@@ -107,10 +128,10 @@
         </div>
       </div>
 
-      <!-- MALZEME TALEBİ -->
-      <div class="gv-card">
+      <!-- MALZEME TALEBİ — İHTİYAÇ ONAYI (satın alma onayından ayrı; soru: ihtiyaç var mı?) -->
+      <div class="gv-card" id="akis-ihtiyac">
         <div class="gc-head">
-          <div class="gc-title"><i class="fa-solid fa-boxes-stacked"></i> Malzeme Talebi</div>
+          <div class="gc-title"><i class="fa-solid fa-boxes-stacked"></i> Malzeme Talebi — İhtiyaç Onayı</div>
           <div class="flow-head-r">
             <span class="gtag">MLZ-2026-###</span>
             <button class="btn btn-ghost btn-sm" data-demo="Akış düzenleme bu prototipte simülasyondur (demo)."><i class="fa-solid fa-pen"></i> Düzenle</button>
@@ -122,7 +143,76 @@
             <i class="fa-solid fa-chevron-right farrow"></i>
             <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-cart-flatbed"></i></div><div class="fn-b"><b>Satın Alma Sorumlusu</b><span class="act ap">Onaylar</span></div></div>
           </div>
-          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> Tek kademeli onay — onaylanan talep satın alma formuna dönüşür.</div>
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> <span>Bu akışın sorusu: <b>bu malzemeye gerçekten ihtiyaç var mı?</b> Tek kademeli, tutardan bağımsız — talep tutarı zinciri değiştirmez. Onaylanan talep satın alma formuna dönüşür; tedarikçi, fiyat ve şart kararı ayrı bir akışta, <a href="#akis-satinalma" style="color:var(--acc-ink);font-weight:700">Satın Alma / Sipariş Onayı</a>'nda verilir.</span></div>
+        </div>
+      </div>
+
+      <!-- SATIN ALMA / SİPARİŞ ONAYI — tutar kademeli (K-4 eşikleri) -->
+      <div class="gv-card" id="akis-satinalma">
+        <div class="gc-head">
+          <div class="gc-title"><i class="fa-solid fa-file-signature"></i> Satın Alma / Sipariş Onayı</div>
+          <div class="flow-head-r">
+            <span class="gtag">SAT-2026-###</span>
+            <button class="btn btn-ghost btn-sm" id="limJump"><i class="fa-solid fa-sliders"></i> Limitleri düzenle</button>
+          </div>
+        </div>
+        <div class="gc-body">
+
+          <div class="band">
+            <div class="band-h">
+              <span class="band-k">Düşük</span>
+              <span class="band-r" id="bandRDusuk">₺25.000 altı</span>
+              <span class="band-c">tek onay</span>
+            </div>
+            <div class="flow">
+              <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-cart-flatbed"></i></div><div class="fn-b"><b>Satın Alma Sorumlusu</b><span class="act fin">Seçer ve onaylar</span></div></div>
+            </div>
+          </div>
+
+          <div class="band">
+            <div class="band-h">
+              <span class="band-k">Orta</span>
+              <span class="band-r" id="bandROrta">₺25.000 – ₺100.000</span>
+              <span class="band-c">iki onay</span>
+            </div>
+            <div class="flow">
+              <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-cart-flatbed"></i></div><div class="fn-b"><b>Satın Alma Sorumlusu</b><span class="act">Seçer / gönderir</span></div></div>
+              <i class="fa-solid fa-chevron-right farrow"></i>
+              <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-compass-drafting"></i></div><div class="fn-b"><b>Teknik Müdür</b><span class="act fin">Son onay</span></div></div>
+            </div>
+          </div>
+
+          <div class="band">
+            <div class="band-h">
+              <span class="band-k">Yüksek</span>
+              <span class="band-r" id="bandRYuksek">₺100.000 üzeri</span>
+              <span class="band-c">üç onay</span>
+            </div>
+            <div class="flow">
+              <div class="fnode start"><div class="fn-ico"><i class="fa-solid fa-cart-flatbed"></i></div><div class="fn-b"><b>Satın Alma Sorumlusu</b><span class="act">Seçer / gönderir</span></div></div>
+              <i class="fa-solid fa-chevron-right farrow"></i>
+              <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-compass-drafting"></i></div><div class="fn-b"><b>Teknik Müdür</b><span class="act ap">Onaylar</span></div></div>
+              <i class="fa-solid fa-chevron-right farrow"></i>
+              <div class="fnode"><div class="fn-ico"><i class="fa-solid fa-user-tie"></i></div><div class="fn-b"><b>Genel Müdür</b><span class="act fin">Son onay</span></div></div>
+            </div>
+          </div>
+
+          <div class="flow-note"><i class="fa-solid fa-circle-info"></i> <span>Bu akışın sorusu: <b>bu tedarikçiden, bu fiyat ve şartlarla satın alma yapılabilir mi?</b> İhtiyaç onayı ayrıdır ve önce tamamlanır; bu zincir teklif icmali hazır olduktan sonra, seçili teklifin tutarına göre işler.</span></div>
+
+          <div class="lim">
+            <div class="lim-t"><i class="fa-solid fa-sliders"></i> Tutar limitleri</div>
+            <div class="gfield">
+              <label for="limOrta">Orta kademe başlangıcı (₺)</label>
+              <input type="number" id="limOrta" min="1" step="1000" value="25000">
+            </div>
+            <div class="gfield">
+              <label for="limYuksek">Yüksek kademe başlangıcı (₺)</label>
+              <input type="number" id="limYuksek" min="1" step="1000" value="100000">
+            </div>
+            <button type="button" class="btn btn-acc btn-sm lim-act" id="limSave"><i class="fa-solid fa-check"></i> Limitleri güncelle</button>
+            <span class="gf-hint" style="flex:1 1 100%;font-size:11.5px;color:var(--muted)">Limitler firma ayarıdır — değiştirildiğinde yukarıdaki bantlar ve yeni kayıtların onay zinciri buna göre kurulur. Bu prototipte değişiklik kalıcı kaydedilmez.</span>
+          </div>
+
         </div>
       </div>
 
@@ -231,5 +321,42 @@
 
 <script src="assets/js/shell.js"></script>
 <script src="assets/js/ui.js"></script>
+<script>
+/* Satın Alma / Sipariş Onayı — tutar limitleri (K-4 varsayılanı: 25.000 / 100.000).
+   Limitler firma ayarıdır; burada değiştirilince bant etiketleri aynı sayfada
+   canlı güncellenir. Prototipte kalıcı kayıt yok — sonuç gvToast ile bildirilir. */
+(function(){
+  var oIn = document.getElementById('limOrta');
+  var yIn = document.getElementById('limYuksek');
+  if(!oIn || !yIn) return;
+
+  var rD = document.getElementById('bandRDusuk');
+  var rO = document.getElementById('bandROrta');
+  var rY = document.getElementById('bandRYuksek');
+
+  function tl(n){ return '₺' + Number(n).toLocaleString('tr-TR'); }
+
+  function paint(o, y){
+    rD.textContent = tl(o) + ' altı';
+    rO.textContent = tl(o) + ' – ' + tl(y);
+    rY.textContent = tl(y) + ' üzeri';
+  }
+  paint(+oIn.value, +yIn.value);
+
+  document.getElementById('limJump').addEventListener('click', function(){
+    document.querySelector('.lim').scrollIntoView({behavior:'smooth', block:'center'});
+    setTimeout(function(){ oIn.focus(); oIn.select(); }, 320);
+  });
+
+  document.getElementById('limSave').addEventListener('click', function(){
+    var o = Math.round(+oIn.value), y = Math.round(+yIn.value);
+    if(!(o > 0) || !(y > 0)){ gvToast('Her iki limit de sıfırdan büyük olmalı.', {type:'danger'}); return; }
+    if(y <= o){ gvToast('Yüksek kademe başlangıcı, orta kademe başlangıcından büyük olmalı.', {type:'danger'}); return; }
+    oIn.value = o; yIn.value = y;
+    paint(o, y);
+    gvToast('Tutar limitleri güncellendi — orta ' + tl(o) + ', yüksek ' + tl(y) + ' (demo, kalıcı kaydedilmez).', {type:'ok'});
+  });
+})();
+</script>
 </body>
 </html>
