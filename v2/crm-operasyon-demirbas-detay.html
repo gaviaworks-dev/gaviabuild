@@ -122,6 +122,44 @@
 .hist-info span{font-size:12px;color:var(--muted)}
 .hist-meta{flex:none;font-size:12px;font-weight:700;color:var(--ink-2);text-align:right;white-space:nowrap}
 
+/* ============ M-7 / Faz C — TRANSFER (HAREKET) SATIRI ============
+   Demirbaş ve aracın ORTAK hareket bileşeni: crm-operasyon-arac-detay.html'deki
+   .trf-* bloğu BU bloğun birebir kopyasıdır (sayfa-lokal, ortak ui.css'e
+   dokunulmadı — iki dosya aynı bileşen dilini konuşur).
+   Yukarıdaki .hist-row deseninin brief'in 8 alanına genişletilmiş hâli:
+     kaynak lokasyon · hedef lokasyon · teslim eden · teslim alan ·
+     transfer tarihi · durum · açıklama · fotoğraf/belge
+   "Teslim Eden / Teslim Alan" sözlüğü aynı dosyadaki zimmetTablo'dan devralındı,
+   yeni dil üretilmedi. Tablo yerine satır listesi seçildi: 8 kolonluk bir .gtable
+   ~1100px min-width ister ve 390px'te yatay kaydırmaya zorlar; satır listesi aynı
+   8 alanı taşırken 390'da da taşmadan sarar. */
+.trf-row{display:flex;align-items:flex-start;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line)}
+.trf-row:last-child{border-bottom:none}
+.trf-ico{width:34px;height:34px;flex:none;border-radius:var(--r-sm);display:grid;place-items:center;font-size:13px;background:var(--bg);color:var(--ink-2)}
+.trf-body{flex:1;min-width:0}
+.trf-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.trf-head b{font-size:13.5px;font-weight:700;color:var(--ink)}
+.trf-head b .trf-ar{color:var(--muted);margin:0 6px}
+.trf-note{display:block;font-size:12px;color:var(--muted);line-height:1.6}
+/* alan ızgarası — bu dosyanın .kv-grid'iyle aynı 3→2→1 ritmi; kolonların satırlar
+   arasında hizalanması için flex-wrap yerine grid (flex'te değişken içerik
+   genişlikleri sütunları kaydırıyordu) */
+.trf-kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 26px;margin-top:12px}
+.trf-kv dt{font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--muted);margin-bottom:2px}
+.trf-kv dd{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.trf-kv dd i{font-size:11px;color:var(--info);margin-right:6px}
+.trf-kv dd.trf-bos{font-weight:600;color:var(--muted)}
+.trf-date{flex:none;font-size:12px;font-weight:700;color:var(--ink-2);white-space:nowrap;padding-top:3px}
+.trf-foot{font-size:12px;color:var(--muted);line-height:1.6;padding:14px 22px;border-top:1px solid var(--line)}
+.trf-foot i{margin-right:6px;color:var(--line-2)}
+@media(max-width:900px){.trf-kv{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){
+  .trf-row{flex-wrap:wrap;gap:12px;padding:16px 18px}
+  .trf-date{flex:0 0 100%;padding-top:0;padding-left:46px}
+  .trf-kv{grid-template-columns:minmax(0,1fr);gap:10px}
+  .trf-foot{padding:14px 18px}
+}
+
 .tab-cta{padding:14px 22px;border-top:1px solid var(--line);text-align:right}
 
 /* demirbas.html listesiyle aynı hurda rozeti (sayfa-lokal, ortak ui.css'te yok) */
@@ -190,7 +228,7 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
       <button class="gv-tab" data-tab="satinalma" role="tab" aria-selected="false"><i class="fa-solid fa-file-invoice-dollar"></i> Satın Alma Bilgileri</button>
       <button class="gv-tab" data-tab="zimmetbilgi" role="tab" aria-selected="false"><i class="fa-solid fa-user-shield"></i> Zimmet Bilgileri</button>
       <button class="gv-tab" data-tab="zimmetgecmis" role="tab" aria-selected="false"><i class="fa-solid fa-clock-rotate-left"></i> Zimmet Geçmişi</button>
-      <button class="gv-tab" data-tab="konum" role="tab" aria-selected="false"><i class="fa-solid fa-location-dot"></i> Konum Geçmişi</button>
+      <button class="gv-tab" data-tab="konum" role="tab" aria-selected="false"><i class="fa-solid fa-route"></i> Konum ve Transfer Geçmişi</button>
       <button class="gv-tab" data-tab="bakim" role="tab" aria-selected="false"><i class="fa-solid fa-screwdriver-wrench"></i> Bakım Geçmişi</button>
       <button class="gv-tab" data-tab="ariza" role="tab" aria-selected="false"><i class="fa-solid fa-bug"></i> Arıza Geçmişi</button>
       <button class="gv-tab" data-tab="kalibrasyon" role="tab" aria-selected="false"><i class="fa-solid fa-gauge-high"></i> Kalibrasyon ve Kontrol</button>
@@ -298,11 +336,15 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
       </div>
     </section>
 
-    <!-- ============ 6. KONUM GEÇMİŞİ (YENİ — zimmet geçmişinden ayrıştırılmış,
-         demirbaşın fiziksel yer değişimi) ============ -->
-    <section class="tab-panel" data-tab-panel="konum" role="tabpanel" aria-label="Konum Geçmişi" hidden>
+    <!-- ============ 6. KONUM VE TRANSFER GEÇMİŞİ (zimmet geçmişinden ayrıştırılmış,
+         demirbaşın fiziksel yer değişimi — M-7/Faz C'de brief'in 8 transfer alanına
+         tamamlandı: kaynak · hedef · teslim eden · teslim alan · tarih · durum ·
+         açıklama · fotoğraf/belge. Sekme SAYISI değişmedi (12), yalnız adı hareketi
+         daha iyi anlatacak biçimde genişledi; data-tab="konum" kalıcı hash uyumu
+         için AYNEN korundu. AYRI bir "Transferler" modülü/menü öğesi AÇILMAZ. ============ -->
+    <section class="tab-panel" data-tab-panel="konum" role="tabpanel" aria-label="Konum ve Transfer Geçmişi" hidden>
       <div class="gv-card">
-        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-location-dot"></i> Konum Geçmişi</div></div>
+        <div class="gc-head"><div class="gc-title"><i class="fa-solid fa-route"></i> Konum ve Transfer Geçmişi</div></div>
         <div id="konumWrap"></div>
       </div>
     </section>
@@ -400,7 +442,12 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci', tarih:'3 Oca 2026', iade:'—', kondisyon:'Yeni/İyi', eksik:'Yok', aciklama:'Şantiye şefinin sahada iletişim/koordinasyon telefonu.'}
       ],
       konum:[
-        {tarih:'3 Oca 2026', from:'Turkcell Kurumsal (tedarikçi)', to:'Vadi Konakları', not:'Satın alma ile aynı gün doğrudan şantiyeye teslim edildi.'}
+        {tarih:'3 Oca 2026', tip:'tedarik-depo', from:'Turkcell Kurumsal (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Turkcell Kurumsal — kurye teslimi', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2026-0041.pdf', not:'Cihaz mal kabulü yapıldı; satın alma ile aynı gün zimmete çıkarıldı.'},
+        {tarih:'3 Oca 2026', tip:'depo-personel', from:'Merkez Ana Depo', to:'Hasan Demirci (Vadi Konakları)',
+          eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci', foto:2,
+          not:'Şantiye şefinin sahada iletişim/koordinasyon telefonu olarak teslim edildi.'}
       ],
       bakim:[], bakimNote:'Bu kalem için bakım kaydı yok — cep telefonu periyodik bakım gerektirmiyor.',
       ariza:[],
@@ -433,7 +480,12 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci', tarih:'3 Oca 2026', iade:'—', kondisyon:'Yeni/İyi', eksik:'Yok', aciklama:'Şantiyede genel tamir/montaj işleri için zimmetlendi. Yıllık periyodik bakım gerekiyor.'}
       ],
       konum:[
-        {tarih:'3 Oca 2026', from:'Bosch Yetkili Bayi (tedarikçi)', to:'Vadi Konakları', not:'Satın alma ile aynı gün doğrudan şantiyeye teslim edildi.'}
+        {tarih:'3 Oca 2026', tip:'tedarik-depo', from:'Bosch Yetkili Bayi (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Bosch Yetkili Bayi — sevkiyat', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2026-0042.pdf', not:'18 parçalı set sayımla teslim alındı, aynı gün sahaya çıkarıldı.'},
+        {tarih:'3 Oca 2026', tip:'depo-personel', from:'Merkez Ana Depo', to:'Hasan Demirci (Vadi Konakları)',
+          eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci',
+          not:'Şantiyede genel tamir/montaj işleri için zimmetlendi.'}
       ],
       bakim:[], bakimNote:'Bu kalem yıllık periyodik bakıma tabi (bakimPeriyodu: Yıllık) — 3 Ocak 2026 teslimden bu yana ilk periyodu (3 Ocak 2027) henüz gelmedi.',
       ariza:[],
@@ -466,7 +518,12 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci', tarih:'3 Oca 2026', iade:'—', kondisyon:'Yeni/İyi', eksik:'Yok', aciklama:'Standart KKD zimmeti.'}
       ],
       konum:[
-        {tarih:'3 Oca 2026', from:'Guvenpar İSG Ekipmanları (tedarikçi)', to:'Vadi Konakları', not:'Satın alma ile aynı gün doğrudan şantiyeye teslim edildi.'}
+        {tarih:'3 Oca 2026', tip:'tedarik-depo', from:'Guvenpar İSG Ekipmanları (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Guvenpar İSG Ekipmanları — sevkiyat', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2026-0043.pdf', not:'KKD seti beden kontrolüyle teslim alındı.'},
+        {tarih:'3 Oca 2026', tip:'depo-personel', from:'Merkez Ana Depo', to:'Hasan Demirci (Vadi Konakları)',
+          eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci',
+          not:'Şantiye girişinde zorunlu kullanılan standart KKD seti olarak zimmetlendi.'}
       ],
       bakim:[], bakimNote:'Bu kalem için bakım kaydı yok — KKD ekipmanı periyodik görsel kontrol dışında bakım gerektirmiyor (bir sonraki kontrol: 3 Ocak 2027).',
       ariza:[],
@@ -499,9 +556,15 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
       zimmetTablo:[
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci', tarih:'3 Oca 2026', iade:'—', kondisyon:'İyi', eksik:'Yok', aciklama:'Araç zimmeti — ayrıntılar Araç Dosyasında (ARC-01).'}
       ],
+      /* ARC-01 Araç Dosyasındaki transfer geçmişiyle BİREBİR aynı iki kayıt —
+         iki ekran aynı hareketi anlatır, sapma yok (M-7/Faz C). */
       konum:[
-        {tarih:'18 Ara 2022', from:'Ford Otosan bayi', to:'Merkez depo'},
-        {tarih:'3 Oca 2026', from:'Merkez depo', to:'Vadi Konakları', not:'Kullanım bazlı sefer/konum takibi Araç Dosyasında (Kullanım Kayıtları) sürer.'}
+        {tarih:'18 Ara 2022', tip:'tedarik-merkez', from:'Ford Otosan Yetkili Bayi — Ümraniye', to:'Genel Merkez',
+          eden:'Ford Otosan — teslim yetkilisi', alan:'Elif Sarıkaya (Teknik Müdür)',
+          belge:'Ruhsat — ruhsat-34ABC123.pdf (Araç Dosyası)', not:'Araç filoya katıldı, genel merkez otoparkına alındı.'},
+        {tarih:'3 Oca 2026', tip:'merkez-santiye', from:'Genel Merkez', to:'Vadi Konakları',
+          eden:'Elif Sarıkaya (Teknik Müdür)', alan:'Hasan Demirci', foto:2,
+          not:'Şantiye şefine zimmetlendi; kullanım bazlı sefer/konum takibi Araç Dosyasında (Kullanım Kayıtları) sürer.'}
       ],
       bakim:[], bakimNote:'Bu aracın bakım geçmişi Araç Dosyasında (Bakım Geçmişi sekmesi) tutulur, burada tekrarlanmaz.',
       ariza:[],
@@ -542,7 +605,12 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Aylin Koç', tarih:'15 Şub 2026', iade:'—', kondisyon:'Yeni/İyi', eksik:'Yok', aciklama:'Liman Lojistik Merkezi şantiye şefi için zimmetlendi.'}
       ],
       konum:[
-        {tarih:'15 Şub 2026', from:'Teknosa Kurumsal (tedarikçi)', to:'Liman Lojistik Merkezi', not:'Satın alma ile aynı gün doğrudan şantiyeye teslim edildi.'}
+        {tarih:'15 Şub 2026', tip:'tedarik-depo', from:'Teknosa Kurumsal (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Teknosa Kurumsal — kurye teslimi', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2026-0045.pdf', not:'Cihaz mal kabulü yapıldı, aynı gün Liman şefine sevk edildi.'},
+        {tarih:'15 Şub 2026', tip:'depo-personel', from:'Merkez Ana Depo', to:'Aylin Koç (Liman Lojistik Merkezi)',
+          eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Aylin Koç', foto:1,
+          not:'Saha raporlama ve dijital form kullanımı için zimmetlendi.'}
       ],
       bakim:[], bakimNote:'Bu kalem için bakım kaydı yok — tablet periyodik bakım gerektirmiyor.',
       ariza:[],
@@ -575,7 +643,12 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Ömer Taşkın', tarih:'20 Oca 2026', iade:'—', kondisyon:'Yeni/İyi', eksik:'Yok', aciklama:'Merkez Şantiye şefi için zimmetlendi.'}
       ],
       konum:[
-        {tarih:'20 Oca 2026', from:'Bosch Yetkili Bayi (tedarikçi)', to:'Merkez Şantiye', not:'Satın alma ile aynı gün doğrudan şantiyeye teslim edildi.'}
+        {tarih:'20 Oca 2026', tip:'tedarik-depo', from:'Bosch Yetkili Bayi (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Bosch Yetkili Bayi — sevkiyat', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2026-0046.pdf', not:'Cihaz kalibrasyon sertifikasıyla birlikte teslim alındı.'},
+        {tarih:'20 Oca 2026', tip:'depo-personel', from:'Merkez Ana Depo', to:'Ömer Taşkın (Merkez Şantiye)',
+          eden:'Recep Yaman (Depo Sorumlusu)', alan:'Ömer Taşkın',
+          belge:'Kalibrasyon Sertifikası — KAL-2026-0184.pdf', not:'Ölçüm/keşif işleri için şantiye şefine zimmetlendi.'}
       ],
       bakim:[], bakimNote:'Bu kalem için ayrı bakım kaydı yok — yalnızca yıllık kalibrasyon kontrolü uygulanıyor, bkz. Kalibrasyon ve Kontrol sekmesi.',
       ariza:[],
@@ -612,13 +685,29 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Ramazan Kılıç', tarih:'12 Şub 2026', iade:'28 Nis 2026', kondisyon:'İyi (teslim/iadede)', eksik:'Yok', aciklama:'Tutanak ZTT-047/1'},
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Ali Vural', tarih:'5 May 2026', iade:'20 Haz 2026', kondisyon:'İade sırasında hasarlı — gövde çatlağı', eksik:'Yok', aciklama:'Tutanak ZTT-047/2, hasar bedeli borç kaydına işlendi'}
       ],
+      /* Dosyanın en zengin hareket kurgusu: Depo → Personel ve Personel → Depo
+         çevrimi iki kez döner, sonunda servise çıkar. Belge referansları bu kaydın
+         Belgeler sekmesindeki evrakSeed satırlarıyla BİREBİR aynı (uydurma dosya yok). */
       konum:[
-        {tarih:'10 Kas 2025', from:'Hilti Türkiye (tedarikçi)', to:'Merkez depo'},
-        {tarih:'12 Şub 2026', from:'Merkez depo', to:'Vadi Konakları', not:'Ramazan Kılıç zimmetiyle birlikte'},
-        {tarih:'28 Nis 2026', from:'Vadi Konakları', to:'Merkez depo', not:'İade ile birlikte'},
-        {tarih:'5 May 2026', from:'Merkez depo', to:'Vadi Konakları', not:'Ali Vural zimmetiyle birlikte'},
-        {tarih:'20 Haz 2026', from:'Vadi Konakları', to:'Merkez depo', not:'İade ile birlikte, kontrolde hasar tespit edildi'},
-        {tarih:'25 Haz 2026', from:'Merkez depo', to:'Hilti Servis Merkezi', not:'Gövde çatlağı onarımı için servise gönderildi'}
+        {tarih:'10 Kas 2025', tip:'tedarik-depo', from:'Hilti Türkiye (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Hilti Türkiye — sevkiyat', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2025-0187.pdf', not:'Mal kabulü yapıldı, depo stokuna alındı.'},
+        {tarih:'12 Şub 2026', tip:'depo-personel', from:'Merkez Ana Depo', to:'Ramazan Kılıç (Vadi Konakları)',
+          eden:'Recep Yaman (Depo Sorumlusu)', alan:'Ramazan Kılıç',
+          belge:'Zimmet Tutanağı — ZTT-047/1.pdf', not:'Kalıp söküm ve delme işleri için sahaya çıktı.'},
+        {tarih:'28 Nis 2026', tip:'personel-depo', from:'Ramazan Kılıç (Vadi Konakları)', to:'Merkez Ana Depo',
+          eden:'Ramazan Kılıç', alan:'Recep Yaman (Depo Sorumlusu)',
+          not:'İş bitiminde iade alındı; kontrolde eksik parça veya hasar bulunmadı.'},
+        {tarih:'5 May 2026', tip:'depo-personel', from:'Merkez Ana Depo', to:'Ali Vural (Vadi Konakları)',
+          eden:'Recep Yaman (Depo Sorumlusu)', alan:'Ali Vural',
+          belge:'Zimmet Tutanağı — ZTT-047/2.pdf', not:'İkinci kullanım dönemi için yeniden sahaya çıktı.'},
+        {tarih:'20 Haz 2026', tip:'personel-depo', from:'Ali Vural (Vadi Konakları)', to:'Merkez Ana Depo',
+          eden:'Ali Vural', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Hasar Tespit Tutanağı — HTT-047.pdf', foto:3,
+          not:'İade kontrolünde gövde çatlağı tespit edildi; hasar bedeli borç kaydına işlendi.'},
+        {tarih:'25 Haz 2026', tip:'depo-servis', from:'Merkez Ana Depo', to:'Hilti Servis Merkezi',
+          eden:'Recep Yaman (Depo Sorumlusu)', alan:'Hilti Servis Merkezi — teknik servis',
+          not:'Gövde çatlağı onarımı için servise gönderildi; dönüş teslimi henüz yapılmadı.'}
       ],
       bakim:[
         {tarih:'20 Haz 2026', tur:'Genel kontrol', firma:'Dahili teknik ekip', tutar:null, sonraki:null, aciklama:'İade kontrolünde gövde çatlağı tespit edildi, servise yönlendirildi.'},
@@ -654,8 +743,16 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
       ],
       zimmetTablo:[],
       zimmetTabloNote:'Henüz kimseye zimmet verilmedi — set, merkez depo stokunda zimmete hazır bekliyor.',
+      /* "İptal" durumunun temsil edildiği kayıt: sevk iptal edildiği için kalem
+         hâlâ depoda — hareket listesi ile kalemin "Depoda" durumu çelişmez. */
       konum:[
-        {tarih:'1 Mar 2026', from:'Motorola Yetkili Bayi (tedarikçi)', to:'Merkez depo'}
+        {tarih:'1 Mar 2026', tip:'tedarik-depo', from:'Motorola Yetkili Bayi (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Motorola Yetkili Bayi — sevkiyat', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2026-0048.pdf', not:'4 adetlik set sayımla teslim alındı, zimmete hazır stokta.'},
+        {tarih:'26 Haz 2026', tip:'depo-santiye', from:'Merkez Ana Depo', to:'Liman Lojistik Merkezi',
+          eden:'Recep Yaman (Depo Sorumlusu)', alan:'Şükrü Aslan',
+          durum:{cls:'off', lbl:'İptal'},
+          not:'Liman sevk talebi geri çekildi; sevk gerçekleşmedi, set merkez depoda kaldı.'}
       ],
       bakim:[], bakimNote:'Bu kalem için bakım kaydı yok — depoda henüz kullanıma açılmadı.',
       ariza:[],
@@ -690,8 +787,15 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
         {eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci', tarih:'10 Mar 2025', iade:'3 Oca 2026', kondisyon:'İyi', eksik:'Yok', aciklama:'Yeni model (ZMT-2026-041 iş telefonu) teslimiyle iade alındı.'}
       ],
       konum:[
-        {tarih:'10 Mar 2025', from:'Motorola Yetkili Bayi (tedarikçi)', to:'Vadi Konakları', not:'Hasan Demirci zimmetiyle birlikte, satın alma ile aynı gün'},
-        {tarih:'3 Oca 2026', from:'Vadi Konakları', to:'Merkez depo', not:'İade edildi'}
+        {tarih:'10 Mar 2025', tip:'tedarik-depo', from:'Motorola Yetkili Bayi (tedarikçi)', to:'Merkez Ana Depo',
+          eden:'Motorola Yetkili Bayi — sevkiyat', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Fatura — FTR-2025-0090.pdf', not:'Mal kabulü yapıldı, aynı gün zimmete çıkarıldı.'},
+        {tarih:'10 Mar 2025', tip:'depo-personel', from:'Merkez Ana Depo', to:'Hasan Demirci (Vadi Konakları)',
+          eden:'Baran Yıldız (Satın Alma Sorumlusu)', alan:'Hasan Demirci',
+          not:'Şantiye şefinin saha telsizi olarak teslim edildi.'},
+        {tarih:'3 Oca 2026', tip:'personel-depo', from:'Hasan Demirci (Vadi Konakları)', to:'Merkez Ana Depo',
+          eden:'Hasan Demirci', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'İade Tutanağı — IDT-017.pdf', not:'Yeni model iş telefonu (ZMT-2026-041) teslimiyle iade alındı.'}
       ],
       bakim:[], bakimNote:'Bu kalem için bakım kaydı yok.',
       ariza:[],
@@ -720,9 +824,22 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
       ],
       zimmetTablo:[],
       zimmetTabloNote:'Bu kalem kişiye zimmetlenmeden doğrudan şantiye envanterinde (ortak kullanım) kullanıldı.',
+      /* "Şantiye → Şantiye" hareketinin temsil edildiği kayıt: jeneratör ortak
+         kullanım ekipmanıdır, döküm döneminde Vadi Konakları'na geçici devredilip
+         geri alınmıştır. Kalıcı bağlı olduğu şantiye Merkez Şantiye olarak kalır. */
       konum:[
-        {tarih:'8 Nis 2025', from:'Honda Power Products (tedarikçi)', to:'Merkez Şantiye', not:'Şantiye jeneratör ihtiyacı için satın alma ile aynı gün sevk edildi'},
-        {tarih:'12 May 2026', from:'Merkez Şantiye', to:'Hurda deposu', not:'Hurdaya ayrıldı'}
+        {tarih:'8 Nis 2025', tip:'tedarik-santiye', from:'Honda Power Products Türkiye (tedarikçi)', to:'Merkez Şantiye',
+          eden:'Honda Power Products — sevkiyat', alan:'Ömer Taşkın',
+          belge:'Fatura — FTR-2025-0055.pdf', not:'Şantiye jeneratör ihtiyacı için satın alma ile aynı gün sevk edildi.'},
+        {tarih:'14 Eki 2025', tip:'santiye-santiye', from:'Merkez Şantiye', to:'Vadi Konakları',
+          eden:'Ömer Taşkın', alan:'Hasan Demirci', foto:1,
+          not:'Vadi Konakları temel betonu döküm döneminde geçici olarak devredildi.'},
+        {tarih:'9 Ara 2025', tip:'santiye-santiye', from:'Vadi Konakları', to:'Merkez Şantiye',
+          eden:'Hasan Demirci', alan:'Ömer Taşkın',
+          not:'Döküm dönemi tamamlandı, jeneratör kalıcı yerine geri alındı.'},
+        {tarih:'12 May 2026', tip:'santiye-hurda', from:'Merkez Şantiye', to:'Hurda Deposu',
+          eden:'Ömer Taşkın', alan:'Recep Yaman (Depo Sorumlusu)',
+          belge:'Hurda Karar Tutanağı — HKT-009.pdf', not:'Onarım ekonomik bulunmadı, hurdaya ayrıldı.'}
       ],
       bakim:[
         {tarih:'2 Mar 2026', tur:'Genel kontrol', firma:'Dahili teknik ekip', tutar:1200, sonraki:null, aciklama:'Motor performans kaybı tespit edildi, onarım ekonomik bulunmadı.'}
@@ -855,16 +972,63 @@ tr.maliyet-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--
     }
   }
 
-  /* ---- 6. Konum Geçmişi ---- */
+  /* ---- 6. Konum ve Transfer Geçmişi (M-7/Faz C) ----
+     Transfer kaydı AYRI bir modül/menü açmaz; ilgili varlığın hareket geçmişinde
+     yaşar. Aşağıdaki TRF_TIP sözlüğü + trfRow() çıktısı crm-operasyon-arac-detay.html
+     ile BİREBİR aynıdır — demirbaş, araç ve makine aynı transfer mantığını konuşur.
+     İlk dört anahtar brief'in dört örnek hareketidir; kalanlar aynı kaynak→hedef
+     modelinin diğer uçlarıdır (tedarik girişi, servis, hurda, filo çıkışı). */
+  var TRF_TIP = {
+    'merkez-santiye': {lbl:'Merkez → Şantiye',        ic:'fa-truck-fast'},
+    'santiye-santiye':{lbl:'Şantiye → Şantiye',       ic:'fa-arrow-right-arrow-left'},
+    'depo-personel':  {lbl:'Depo → Personel',         ic:'fa-hand-holding'},
+    'personel-depo':  {lbl:'Personel → Depo',         ic:'fa-rotate-left'},
+    'tedarik-depo':   {lbl:'Tedarikçi → Depo',        ic:'fa-dolly'},
+    'tedarik-santiye':{lbl:'Tedarikçi → Şantiye',     ic:'fa-dolly'},
+    'tedarik-merkez': {lbl:'Tedarikçi → Merkez',      ic:'fa-dolly'},
+    'depo-santiye':   {lbl:'Depo → Şantiye',          ic:'fa-truck-fast'},
+    'merkez-personel':{lbl:'Merkez → Personel',       ic:'fa-hand-holding'},
+    'santiye-personel':{lbl:'Şantiye → Personel',     ic:'fa-hand-holding'},
+    'depo-servis':    {lbl:'Depo → Servis',           ic:'fa-screwdriver-wrench'},
+    'santiye-servis': {lbl:'Şantiye → Servis',        ic:'fa-screwdriver-wrench'},
+    'santiye-hurda':  {lbl:'Şantiye → Hurda Deposu',  ic:'fa-box-archive'},
+    'filo-cikis':     {lbl:'Filo Çıkışı',             ic:'fa-box-archive'}
+  };
+  /* durum rozetleri accent'ten BAĞIMSIZ sabit semantik renkler (.gstat) */
+  var TRF_DURUM_VAR = {cls:'ok', lbl:'Tamamlandı'};
+  function trfDd(html, bos){ return '<dd' + (bos ? ' class="trf-bos"' : '') + '>' + html + '</dd>'; }
+  function trfRow(t){
+    var tip = TRF_TIP[t.tip] || {lbl:'Transfer', ic:'fa-arrow-right-arrow-left'};
+    var d = t.durum || TRF_DURUM_VAR;
+    /* fotoğraf/belge — bu prototipte gerçek dosya yoktur; sahte görsel URL'i
+       ÜRETİLMEZ. Belge adları kaydın Belgeler sekmesindeki evrak satırlarıyla
+       aynı, fotoğraf yalnız adetle temsil edilir. */
+    var ek = [];
+    if(t.belge) ek.push('<i class="fa-regular fa-file-lines"></i>' + t.belge);
+    if(t.foto)  ek.push('<i class="fa-regular fa-image"></i>' + t.foto + ' fotoğraf');
+    return '<div class="trf-row">'
+      + '<div class="trf-ico"><i class="fa-solid ' + tip.ic + '"></i></div>'
+      + '<div class="trf-body">'
+      +   '<div class="trf-head"><b>' + t.from + '<span class="trf-ar">→</span>' + t.to + '</b>'
+      +     '<span class="gtag">' + tip.lbl + '</span>'
+      +     '<span class="gstat ' + d.cls + '">' + d.lbl + '</span></div>'
+      +   (t.not ? '<span class="trf-note">' + t.not + '</span>' : '')
+      +   '<dl class="trf-kv">'
+      +     '<div><dt>Teslim Eden</dt>' + trfDd(t.eden || 'Kayıt yok', !t.eden) + '</div>'
+      +     '<div><dt>Teslim Alan</dt>' + trfDd(t.alan || 'Kayıt yok', !t.alan) + '</div>'
+      +     '<div><dt>Fotoğraf / Belge</dt>' + trfDd(ek.length ? ek.join(' · ') : 'Eklenmedi', !ek.length) + '</div>'
+      +   '</dl>'
+      + '</div>'
+      + '<div class="trf-date">' + t.tarih + '</div>'
+      + '</div>';
+  }
   function renderKonum(){
     var wrap = document.getElementById('konumWrap');
     if(item.konum && item.konum.length){
-      wrap.innerHTML = item.konum.map(function(k){
-        return '<div class="hist-row"><div class="hist-ico"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>'
-          + '<div class="hist-info"><b>'+k.from+' → '+k.to+'</b><span>'+(k.not ? k.not+' · ' : '')+k.tarih+'</span></div></div>';
-      }).join('');
+      wrap.innerHTML = item.konum.map(trfRow).join('')
+        + '<p class="trf-foot"><i class="fa-solid fa-circle-info"></i> Transfer kayıtları ayrı bir modülde tutulmaz — her hareket ilgili demirbaşın bu geçmişinde saklanır.</p>';
     } else {
-      wrap.innerHTML = emptyBlock('fa-location-dot', 'Konum kaydı yok', 'Bu kalem için henüz bir konum değişikliği kaydedilmedi.');
+      wrap.innerHTML = emptyBlock('fa-route', 'Hareket kaydı yok', 'Bu kalem için henüz bir konum değişikliği veya transfer kaydedilmedi.');
     }
   }
 
