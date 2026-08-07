@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Proje Detayı — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* ============ SAYFAYA ÖZEL — Proje Detay (8 sekmeli, ?proje= map) ============
+   TASARIM DİLİ: crm-santiye-detay.html'den BİREBİR devralındı (hero + sekme şeridi +
+   ml-timeline + risk-row). Yeni bir dil ÜRETİLMEDİ; aşağıdaki bloklar o dosyanın
+   sayfa-lokal <style>'ının kopyasıdır, yalnız proje seviyesinde gerekmeyen kurallar
+   (puantaj grid'i, dosya modalı, süre uzatım çipi) alınmadı. */
+
+.ph-back{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:10px;transition:.18s var(--ease)}
+.ph-back i{font-size:11px}
+.ph-back:hover{color:var(--acc-ink)}
+
+/* [G-9] shell.css `.gv-page-head .ph-actions` flex:none veriyor → kutu max-content'e
+   çivilenir ve dar ekranda doc-level taşma yapar; daralmayı serbest bırakıyoruz.
+   crm-santiye-detay.html'deki AYNI düzeltme. */
+.gv-page-head .ph-actions{flex-wrap:wrap;flex-shrink:1;min-width:0}
+
+/* proje başlık kartı — .site-hero ailesi crm-santiye-detay.html ile BİREBİR */
+.site-hero{display:grid;grid-template-columns:1.7fr 1fr;gap:30px;padding:26px 26px 24px;margin-bottom:22px}
+.site-hero-id{display:flex;gap:18px}
+.site-hero-mark{width:58px;height:58px;flex:none;border-radius:var(--r-md);display:grid;place-items:center;font-size:19px;font-weight:800;background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.site-hero-info{flex:1;min-width:0}
+.site-hero-tags{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.site-hero-prog{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.site-hero-prog .gbar{min-width:180px;flex:1;max-width:280px}
+.hp-lbl{font-size:12px;color:var(--muted);font-weight:600}
+.site-hero-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px}
+.site-hero-meta dt{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--muted);margin-bottom:3px}
+.site-hero-meta dd{font-size:13.5px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+.hero-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start}
+.hstat{background:var(--bg);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.hstat-num{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.hstat-lbl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.hstat.ok .hstat-num{color:var(--ok)}
+.hstat.warn .hstat-num{color:var(--warn)}
+a.hstat{border:1px solid transparent;transition:.2s var(--ease)}
+a.hstat:hover{border-color:var(--acc-ink);transform:translateY(-2px);box-shadow:var(--sh-sm)}
+a.hstat:focus-visible{border-color:var(--acc-ink)}
+a.hstat .hstat-lbl i{font-size:10px;margin-left:3px;color:var(--acc-ink)}
+.hero-note{display:flex;gap:14px;align-items:flex-start;background:var(--bg);border-radius:var(--r-md);padding:16px 18px}
+.hero-note i{color:var(--acc-ink);font-size:17px;margin-top:2px;flex:none}
+.hero-note b{display:block;font-size:13.5px;color:var(--ink);margin-bottom:3px}
+.hero-note span{font-size:12.5px;color:var(--ink-2);line-height:1.55}
+@media(max-width:980px){.site-hero{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){
+  .site-hero{padding:20px 18px}
+  .site-hero-id{flex-direction:column}
+  .site-hero-meta{grid-template-columns:1fr}
+}
+/* [G-9] 981–1279 ölü bant: çift sidebar açıkken hero'nun sağ kolonu daralıyor ve
+   ₺189.400.000 gibi kırılamayan tek token kırpılıyor. crm-santiye-detay.html'deki
+   ölçünün AYNISI: kolon oranı 1.15fr + sayı 19→17px. Değer gizlenmedi/kısaltılmadı. */
+@media(min-width:981px) and (max-width:1279px){
+  .site-hero{grid-template-columns:1.15fr 1fr}
+  .hstat-num{font-size:17px}
+}
+
+/* sekme çubuğu — crm-santiye-detay.html ile BİREBİR (alt çizgili, yoğun ERP dili) */
+.gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 4px;margin-right:26px;flex:none;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--muted);background:none;border:none;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tab i{font-size:13px}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+.gv-tab .tb-cnt{font-size:10.5px;font-weight:700;background:var(--bg);color:var(--ink-2);padding:1px 6px;border-radius:var(--r-pill)}
+.gv-tab.is-active .tb-cnt{background:rgba(var(--acc-rgb),.16);color:var(--acc-deep)}
+.tab-panel{animation:tabIn .22s var(--ease)}
+@keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.tab-panel{animation:none}}
+
+/* İş Programı — kilometre taşı zaman çizelgesi (crm-santiye-detay.html BİREBİR) */
+.ml-timeline{list-style:none;padding:22px 22px 4px;display:flex;flex-direction:column}
+.ml-item{position:relative;padding-left:34px;padding-bottom:26px}
+.ml-item:last-child{padding-bottom:2px}
+.ml-item::before{content:"";position:absolute;left:9px;top:22px;bottom:-6px;width:2px;background:var(--line)}
+.ml-item:last-child::before{display:none}
+.ml-dot{position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:var(--r-circle);background:var(--paper);border:2px solid var(--line-2);display:grid;place-items:center;font-size:9px;color:var(--muted)}
+.ml-item.done .ml-dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.ml-item.active .ml-dot{border-color:var(--acc-ink);box-shadow:0 0 0 4px rgba(var(--acc-rgb),.16)}
+.ml-item.active .ml-dot::after{content:"";width:8px;height:8px;border-radius:var(--r-circle);background:var(--acc-ink)}
+.ml-body b{display:block;font-size:13.5px;font-weight:700;color:var(--ink)}
+.ml-body b a{color:inherit;transition:.18s var(--ease)}
+.ml-body b a:hover{color:var(--acc-ink)}
+.ml-body span{font-size:12px;color:var(--muted)}
+.ml-body .ml-sapma{display:inline-block;margin-top:5px}
+
+/* Riskler — risk kaydı satırı (crm-santiye-detay.html BİREBİR) */
+.risk-row{padding:16px 22px;border-bottom:1px solid var(--line)}
+.risk-row:last-child{border-bottom:none}
+.risk-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.risk-top b{font-size:13.5px;font-weight:700;color:var(--ink)}
+.risk-meta{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-top:8px}
+.risk-meta b{font-weight:700;color:var(--ink-2)}
+.risk-mit{font-size:12.5px;color:var(--ink-2);line-height:1.6;margin-top:8px}
+.risk-mit i{color:var(--acc-ink);margin-right:6px}
+
+/* Bütçe tablosu toplam satırı — crm-finans-butce.html'deki .bd-total ile AYNI dil */
+.pd-butce tr.bd-total td{font-weight:800;color:var(--ink);border-top:2px solid var(--line-2)}
+@media(max-width:640px){.pd-butce tr.bd-total{border-color:var(--line-2)}}
+
+/* tablo içindeki kayıt linki — .gcell-name'in tıklanabilir hali (ui.css'i değiştirmeden) */
+a.pd-rowlink{color:inherit;transition:.18s var(--ease)}
+a.pd-rowlink:hover{color:var(--acc-ink)}
+</style>
+</head>
+<body data-sec="santiye" data-screen="proje">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main" id="gvMain">
+    <div class="gv-page-head">
+      <div>
+        <a class="ph-back" href="crm-santiye-proje.html"><i class="fa-solid fa-arrow-left"></i> Projeler</a>
+        <div class="ph-eyebrow" id="phEyebrow">Saha · Proje</div>
+        <h1 id="phTitle">—</h1>
+        <div class="ph-sub" id="phSub">—</div>
+      </div>
+      <div class="ph-actions">
+        <a class="btn btn-ghost btn-sm" href="crm-panel-rapor-isprogrami.html"><i class="fa-solid fa-chart-gantt"></i> İş Programı Raporu</a>
+        <a class="btn btn-ghost btn-sm" href="crm-ayarlar-log.html" data-no-confirm><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişi</a>
+      </div>
+    </div>
+
+    <div id="projRoot"></div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+(function(){
+  if(!window.GV) return;
+
+  /* ================================================================================
+     PROJE DETAY — 8 sekme (Genel Bakış · Şantiyeler · Sözleşmeler · Bütçe ·
+     İş Programı · Hakedişler · Riskler · Dosyalar), ?proje= ile kayıt seçimi.
+
+     VERİ KURALI: bu sayfa hiçbir yeni rakam URETMEZ. Her sekme mevcut kanonik
+     kayıtlardan derlenir; kayıt yoksa tasarlanmış boş durum gösterilir.
+       · şantiye künyeleri  → crm-santiye.html / crm-santiye-detay.html
+       · sözleşmeler        → crm-finans-sozlesmeler.html (k01–k03, t05–t07)
+       · bütçe              → crm-finans-butce.html (vadi/liman/merkez)
+       · hakedişler         → crm-finans-kurum.html (HKD) + crm-finans-taseron.html (TH)
+       · riskler            → crm-santiye-detay.html Riskler sekmesi
+     ================================================================================ */
+
+  /* PROJE SETİ — kanonik kaynak crm-santiye-proje.html; BİREBİR kopya. */
+  var PROJECTS = {
+    korfez: {
+      key:'korfez', kod:'PRJ-2024-01', ad:'Körfez GYO Karma Yatırım Programı',
+      mark:'KG', markBg:'rgba(var(--acc-rgb),.12)', markFg:'var(--acc-ink)',
+      isveren:'Körfez GYO', mudur:'Elif Sarıkaya',
+      baslangic:'1 Mart 2024', bitis:'31 Aralık 2026',
+      ilerleme:76, ilerlemeWarn:false, butce:246000000,
+      durumCls:'ok', durumTxt:'Devam ediyor', santiyeler:['vadi','kule']
+    },
+    liman: {
+      key:'liman', kod:'PRJ-2025-02', ad:'Aliağa Liman Lojistik Merkezi',
+      mark:'AL', markBg:'var(--warn-tint)', markFg:'var(--warn)',
+      isveren:'Aliağa Liman İşletmeleri', mudur:'Elif Sarıkaya',
+      baslangic:'12 Şubat 2025', bitis:'30 Haziran 2027',
+      ilerleme:41, ilerlemeWarn:true, butce:97000000,
+      durumCls:'wait', durumTxt:'Programın gerisinde', santiyeler:['liman']
+    },
+    gol: {
+      key:'gol', kod:'PRJ-2026-03', ad:'Göl Evleri Konut Projesi',
+      mark:'GE', markBg:'var(--bg)', markFg:'var(--muted)',
+      isveren:'Sapanca Belediyesi', mudur:'Murat Denizli',
+      baslangic:'1 Eylül 2026', bitis:'31 Ağustos 2028',
+      ilerleme:0, ilerlemeWarn:false, butce:120000000,
+      durumCls:'info', durumTxt:'Planlama · Eylül 2026', santiyeler:['gol']
+    },
+    yapitas: {
+      key:'yapitas', kod:'PRJ-2023-04', ad:'Yapıtaş İç Yatırım Portföyü',
+      mark:'Yİ', markBg:'var(--info-tint)', markFg:'var(--info)',
+      isveren:'Yapıtaş İnşaat A.Ş.', mudur:'Murat Denizli',
+      baslangic:'5 Haziran 2023', bitis:'31 Aralık 2027',
+      ilerleme:86, ilerlemeWarn:false, butce:61000000,
+      durumCls:'ok', durumTxt:'Devam ediyor', santiyeler:['merkez','cskp','btk','fmr','ksr']
+    }
+  };
+
+  /* ŞANTİYE KÜNYELERİ — crm-santiye.html liste satırları + crm-santiye-detay.html
+     SITES bloğuyla BİREBİR (mark/renk/tip/konum/şef/ilerleme/personel/durum). */
+  var SANTIYE = {
+    vadi:  {key:'vadi',  ad:'Vadi Konakları',              mark:'VK', markBg:'rgba(var(--acc-rgb),.12)', markFg:'var(--acc-ink)',
+            tip:'Konut',          konum:'Çekmeköy, İstanbul',    sef:'Hasan Demirci', ilerleme:68,  ilerlemeWarn:false, personel:51,
+            durumCls:'ok',     durumTxt:'Aktif',                       baslangic:'1 Mar 2024',  bitis:'20 Ara 2026'},
+    kule:  {key:'kule',  ad:'Kule Ofis B Blok',            mark:'KO', markBg:'var(--ok-tint)',   markFg:'var(--ok)',
+            tip:'Ofis',           konum:'Ataşehir, İstanbul',    sef:'Ömer Taşkın',   ilerleme:100, ilerlemeWarn:false, personel:null,
+            durumCls:'off',    durumTxt:'Teslim edildi · Mart 2026',   baslangic:'—',           bitis:'Mart 2026 (teslim)'},
+    liman: {key:'liman', ad:'Liman Lojistik Merkezi',      mark:'LL', markBg:'var(--info-tint)', markFg:'var(--info)',
+            tip:'Ticari',         konum:'Aliağa, İzmir',         sef:'Aylin Koç',     ilerleme:41,  ilerlemeWarn:true,  personel:30,
+            durumCls:'wait',   durumTxt:'Programın gerisinde',         baslangic:'12 Ağu 2024', bitis:'30 Haz 2026 (doldu)'},
+    gol:   {key:'gol',   ad:'Göl Evleri 2. Etap',          mark:'GE', markBg:'var(--bg)',        markFg:'var(--muted)',
+            tip:'Konut',          konum:'Sapanca, Sakarya',      sef:null,            ilerleme:0,   ilerlemeWarn:false, personel:null,
+            durumCls:'info',   durumTxt:'Planlama · Eylül 2026',       baslangic:'Eyl 2026 (planlanan)', bitis:'—'},
+    merkez:{key:'merkez',ad:'Merkez Şantiye',              mark:'MŞ', markBg:'var(--warn-tint)', markFg:'var(--warn)',
+            tip:'Depo + Atölye',  konum:'Gebze, Kocaeli',        sef:'Ömer Taşkın',   ilerleme:86,  ilerlemeWarn:false, personel:12,
+            durumCls:'ok',     durumTxt:'Aktif',                       baslangic:'3 Şub 2025',  bitis:'31 Ağu 2026'},
+    cskp:  {key:'cskp',  ad:'Çınar Sokak Karma Proje',     mark:'ÇS', markBg:'var(--bg)',        markFg:'var(--muted)',
+            tip:'Karma Proje',    konum:'Ümraniye, İstanbul',    sef:null,            ilerleme:0,   ilerlemeWarn:false, personel:0,
+            durumCls:'off',    durumTxt:'Pasif',                       baslangic:'10 Oca 2023', bitis:'—'},
+    btk:   {key:'btk',   ad:'Bahçelievler Toplu Konut',    mark:'BT', markBg:'var(--warn-tint)', markFg:'var(--warn)',
+            tip:'Konut',          konum:'Bahçelievler, İstanbul',sef:null,            ilerleme:0,   ilerlemeWarn:false, personel:0,
+            durumCls:'wait',   durumTxt:'Askıya Alınan',               baslangic:'5 Haz 2024',  bitis:'—'},
+    fmr:   {key:'fmr',   ad:'Fatih Mahallesi Restorasyon', mark:'FM', markBg:'var(--bg)',        markFg:'var(--muted)',
+            tip:'Restorasyon',    konum:'Fatih, İstanbul',       sef:null,            ilerleme:100, ilerlemeWarn:false, personel:0,
+            durumCls:'off',    durumTxt:'Arşivlenen',                  baslangic:'2 Mar 2018',  bitis:'14 Kas 2019'},
+    ksr:   {key:'ksr',   ad:'Kartal Sahil Rezidans',       mark:'KS', markBg:'var(--danger-tint)',markFg:'var(--danger)',
+            tip:'Konut',          konum:'Kartal, İstanbul',      sef:null,            ilerleme:0,   ilerlemeWarn:false, personel:0,
+            durumCls:'danger', durumTxt:'İptal Edilen',                baslangic:'20 Eyl 2025', bitis:'—'}
+  };
+
+  /* BÜTÇE — crm-finans-butce.html PROJE objesiyle BİREBİR (orij/rev/ger).
+     kule: bu prototipte AÇIK bütçe kaydı YOK; proje kapanış rakamı olarak taşınır
+     (246.000.000 = Vadi 184.000.000 + Kule 62.000.000 ile birebir tutarlı), bu yüzden
+     satırı bütçe detayına LİNK VERMEZ — crm-finans-butce-detay.html tanımadığı anahtarda
+     sessizce Vadi'ye düşer, o da yanlış kayıt gösterirdi. */
+  var BUTCE = {
+    vadi:  {orij:176500000, rev:184000000, ger:127400000, href:'crm-finans-butce-detay.html?proje=vadi'},
+    liman: {orij:97000000,  rev:97000000,  ger:40700000,  href:'crm-finans-butce-detay.html?proje=liman'},
+    merkez:{orij:61000000,  rev:61000000,  ger:53100000,  href:'crm-finans-butce-detay.html?proje=merkez'},
+    kule:  {orij:62000000,  rev:62000000,  ger:62000000,  href:null, kapali:true}
+  };
+
+  /* SÖZLEŞMELER — crm-finans-sozlesmeler.html tablo satırlarıyla BİREBİR. */
+  var SOZLESMELER = [
+    {szl:'k01', no:'SZL-2026-K01', taraf:'Körfez GYO',                mark:'KG', tur:'Kurum',   santiye:'vadi',  bedel:24500000, sure:'1 Oca 2025 – 31 Ara 2026',  durumCls:'ok',   durumTxt:'Yürürlükte'},
+    {szl:'k02', no:'SZL-2026-K02', taraf:'Aliağa Liman İşletmeleri',  mark:'AL', tur:'Kurum',   santiye:'liman', bedel:9800000,  sure:'1 Mar 2025 – 31 Ağu 2026',  durumCls:'ok',   durumTxt:'Yürürlükte', uyari:'Süresi yaklaşıyor'},
+    {szl:'k03', no:'SZL-2026-K03', taraf:'Sapanca Belediyesi',        mark:'SB', tur:'Kurum',   santiye:'gol',   bedel:6200000,  sure:'1 Eyl 2026 – 31 Ağu 2027',  durumCls:'wait', durumTxt:'İmza Bekliyor'},
+    {szl:'t05', no:'SZL-2025-T05', taraf:'Demir-Beton İnş. Ltd.',     mark:'DB', tur:'Taşeron', santiye:'vadi',  bedel:450000,   sure:'1 Nis 2026 – 30 Eyl 2026',  durumCls:'ok',   durumTxt:'Yürürlükte'},
+    {szl:'t06', no:'SZL-2025-T06', taraf:'Yalıtım Kardeşler',         mark:'YK', tur:'Taşeron', santiye:'liman', bedel:310000,   sure:'15 May 2026 – 15 Kas 2026', durumCls:'ok',   durumTxt:'Yürürlükte'},
+    {szl:'t07', no:'SZL-2025-T07', taraf:'ElektroMek Taahhüt',        mark:'EM', tur:'Taşeron', santiye:'vadi',  bedel:185000,   sure:'1 Haz 2026 – 31 Ağu 2026',  durumCls:'ok',   durumTxt:'Yürürlükte'}
+  ];
+
+  /* HAKEDİŞLER — crm-finans-kurum.html (HKD) + crm-finans-taseron.html (TH) BİREBİR. */
+  var HAKEDIS_KURUM = [
+    {href:'crm-finans-hakedis-detay.html?hkd=006', no:'HKD-2026-006', alt:'Gönderildi · 20 Haz 2026', taraf:'Körfez GYO',               santiye:'vadi',  donem:'Haziran 2026', tutar:1630000, durumCls:'wait', durumTxt:'Onay Bekliyor'},
+    {href:'crm-finans-hakedis-detay.html?hkd=005', no:'HKD-2026-005', alt:'Dönem: Mayıs 2026',        taraf:'Körfez GYO',               santiye:'vadi',  donem:'Mayıs 2026',   tutar:620000,  durumCls:'ok',   durumTxt:'Ödendi'},
+    {href:'crm-finans-hakedis-detay.html?hkd=004', no:'HKD-2026-004', alt:'Dönem: Nisan 2026',        taraf:'Körfez GYO',               santiye:'vadi',  donem:'Nisan 2026',   tutar:540000,  durumCls:'ok',   durumTxt:'Ödendi'},
+    {href:'crm-finans-hakedis-detay.html?hkd=003', no:'HKD-2026-003', alt:'Onaylandı · tahsilat bekliyor', taraf:'Aliağa Liman İşletmeleri', santiye:'liman', donem:'Haziran 2026', tutar:980000, durumCls:'info', durumTxt:'Onaylandı'},
+    {href:'crm-finans-hakedis-detay.html?hkd=002', no:'HKD-2026-002', alt:'Dönem: Mayıs 2026',        taraf:'Aliağa Liman İşletmeleri', santiye:'liman', donem:'Mayıs 2026',   tutar:410000,  durumCls:'ok',   durumTxt:'Ödendi'},
+    {href:'crm-finans-hakedis-detay.html?hkd=001', no:'HKD-2026-001', alt:'Dönem: Nisan 2026',        taraf:'Aliağa Liman İşletmeleri', santiye:'liman', donem:'Nisan 2026',   tutar:265000,  durumCls:'ok',   durumTxt:'Ödendi'}
+  ];
+  var HAKEDIS_TASERON = [
+    {href:'crm-finans-hakedis-detay.html?th=014', no:'TH-2026-014', alt:'Gönderildi · 28 Haz 2026', taraf:'Demir-Beton İnş. Ltd.', santiye:'vadi',  donem:'Haziran 2026', tutar:90000,  durumCls:'wait', durumTxt:'Onay Bekliyor'},
+    {href:'crm-finans-hakedis-detay.html?th=009', no:'TH-2026-009', alt:'Gönderildi · 1 Tem 2026',  taraf:'ElektroMek Taahhüt',    santiye:'vadi',  donem:'Haziran 2026', tutar:76200,  durumCls:'wait', durumTxt:'Onay Bekliyor'},
+    {href:'crm-finans-hakedis-detay.html?th=013', no:'TH-2026-013', alt:'Ödeme sırada',             taraf:'Demir-Beton İnş. Ltd.', santiye:'vadi',  donem:'Mayıs 2026',   tutar:210000, durumCls:'info', durumTxt:'Onaylandı'},
+    {href:'crm-finans-hakedis-detay.html?th=008', no:'TH-2026-008', alt:'Malzeme mahsuplu',         taraf:'Yalıtım Kardeşler',     santiye:'liman', donem:'Haziran 2026', tutar:128500, durumCls:'info', durumTxt:'Onaylandı'},
+    {href:'crm-finans-hakedis-detay.html?th=005', no:'TH-2026-005', alt:'Dönem: Nisan 2026',        taraf:'Demir-Beton İnş. Ltd.', santiye:'vadi',  donem:'Nisan 2026',   tutar:185000, durumCls:'ok',   durumTxt:'Ödendi'},
+    {href:'crm-finans-hakedis-detay.html?th=002', no:'TH-2026-002', alt:'Dönem: Mart 2026',         taraf:'ElektroMek Taahhüt',    santiye:'vadi',  donem:'Mart 2026',    tutar:54000,  durumCls:'ok',   durumTxt:'Ödendi'}
+  ];
+
+  /* RİSKLER — crm-santiye-detay.html Riskler sekmesindeki kayıtlarla BİREBİR.
+     Vadi'nin 4 kaydı orada elle girilmiş; Liman ve Merkez'inki süre uzatım /
+     hedef teslim verisinden türetilmiş tek satırdır (aynı metinler). */
+  var RISKLER = {
+    vadi: [
+      {baslik:'Elektrik ve tesisat imalatı kaba inşaatın gerisinde', cls:'warn',   lbl:'Takipte',   olasilik:'Orta',  etki:'Yüksek', sorumlu:'Elif Sarıkaya',  azaltma:'ElektroMek ekibine ek vardiya planlanıyor.'},
+      {baslik:'Ø12 demir tedarikinde gecikme riski',                 cls:'info',   lbl:'İzleniyor', olasilik:'Düşük', etki:'Yüksek', sorumlu:'Hasan Demirci',  azaltma:'Alternatif tedarikçiyle yedek görüşme yapılıyor (GRV-2026-001).'},
+      {baslik:'Yaz sıcaklarında beton kür sürecinin aksaması',       cls:'danger', lbl:'Açık',      olasilik:'Orta',  etki:'Orta',   sorumlu:'Hasan Demirci',  azaltma:'Kür örtüsü ve günlük sulama takibi (GRV-2026-008).'},
+      {baslik:'Yalıtım Kardeşler taşeron mobilizasyon gecikmesi',    cls:'warn',   lbl:'Takipte',   olasilik:'Orta',  etki:'Orta',   sorumlu:'Murat Denizli',  azaltma:'Mobilizasyon tarihi taşeronla teyit ediliyor.'}
+    ],
+    liman: [
+      {baslik:'İş programı gecikmesi — sözleşmeye göre bitiş tarihi geçildi', cls:'danger', lbl:'Gecikmiş', olasilik:'Yüksek', etki:'Yüksek', sorumlu:'Aylin Koç',
+       azaltma:'Sözleşmeye göre bitiş 30 Haziran 2026 tarihinde doldu; SUZ-2026-02 süre uzatım talebi Aliağa Liman İşletmeleri onayını bekliyor (talep edilen yeni tarih 29 Ağustos 2026).',
+       link:{href:'crm-santiye-sure-uzatim-form.html?santiye=liman', lbl:'Süre uzatım talebini gör'}}
+    ],
+    merkez: [
+      {baslik:'Hedef teslim tarihine 60 gün kaldı', cls:'warn', lbl:'Yaklaşıyor', olasilik:'Düşük', etki:'Orta', sorumlu:'Ömer Taşkın',
+       azaltma:'İç yatırım hedefi 31 Ağustos 2026 — henüz süre uzatım talebi yok; teslim takvimi yakından izleniyor.',
+       link:{href:'crm-santiye-sure-uzatim-form.html?santiye=merkez', lbl:'Süre uzatım talebini gör'}}
+    ]
+  };
+
+  /* ---------------------------------------------------------------- yardımcılar */
+  function tl(n){ return '₺' + (n || 0).toLocaleString('tr-TR'); }
+  function pct(a, b){ return b ? Math.round(a / b * 100) : 0; }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* boş durum kartı — crm-santiye-detay.html emptyCard() BİREBİR */
+  function emptyCard(icon, title, text, linkHref, linkLbl){
+    return '<div class="gv-card"><div class="gv-empty" style="padding:38px 24px">'
+      + '<div class="ge-ico"><i class="fa-solid '+icon+'"></i></div>'
+      + '<h4>'+title+'</h4><p>'+text+'</p>'
+      + (linkHref ? '<a class="btn btn-ghost btn-sm" style="margin-top:14px" href="'+linkHref+'">'+linkLbl+'</a>' : '')
+      + '</div></div>';
+  }
+  function cardOpen(icon, title, linkHref, linkLbl){
+    return '<div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid '+icon+'"></i> '+title+'</div>'
+      + (linkHref ? '<a class="gc-link" href="'+linkHref+'">'+linkLbl+' <i class="fa-solid fa-arrow-right"></i></a>' : '')
+      + '</div>';
+  }
+  function cardFoot(text, linkHref, linkLbl, linkIcon){
+    return '<div class="gc-foot"><span><i class="fa-solid fa-circle-info"></i> '+text+'</span>'
+      + (linkHref ? '<a class="gc-link" href="'+linkHref+'"><i class="fa-solid '+(linkIcon||'fa-arrow-right')+'"></i> '+linkLbl+'</a>' : '')
+      + '</div></div>';
+  }
+  function bar(val, warn){
+    return '<div class="gbar"><div class="gbar-track"><div class="gbar-fill'+(warn?' warn':'')+'" style="width:'+val+'%"></div></div>'
+      + '<span class="gbar-val">'+(val ? ('%'+val) : '—')+'</span></div>';
+  }
+  function detayBtn(href, label){
+    return '<div class="row-acts"><a class="ia-btn" href="'+href+'" data-no-confirm aria-label="'+label+'" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>';
+  }
+  /* tarih aralığı — tek uçlu kayıtlarda "— – Mart 2026" gibi yarım aralık basılmaz */
+  function donem(s){
+    if(s.baslangic === '—') return s.bitis;
+    if(s.bitis === '—')     return s.baslangic;
+    return s.baslangic + ' – ' + s.bitis;
+  }
+  function sitesOf(P){ return P.santiyeler.map(function(k){ return SANTIYE[k]; }); }
+  /* hero künyesi 5 uzun şantiye adını alt alta sarmasın: ilk 2 + kalan sayısı;
+     tam liste Şantiyeler sekmesinde (hero'daki sayaç oraya atlar) */
+  function adListesi(sites){
+    var adlar = sites.map(function(s){ return s.ad; });
+    if(adlar.length <= 2) return adlar.join(', ');
+    return adlar.slice(0, 2).join(', ') + ' +' + (adlar.length - 2) + ' şantiye';
+  }
+  function rowsFor(P, list){ return list.filter(function(r){ return P.santiyeler.indexOf(r.santiye) !== -1; }); }
+
+  /* ---------------------------------------------------------------- hero */
+  function heroHtml(P){
+    var sites = sitesOf(P);
+    var soz   = rowsFor(P, SOZLESMELER);
+    var hkd   = rowsFor(P, HAKEDIS_KURUM).concat(rowsFor(P, HAKEDIS_TASERON));
+    var ger   = P.santiyeler.reduce(function(t, k){ return t + (BUTCE[k] ? BUTCE[k].ger : 0); }, 0);
+    var bekleyen = hkd.filter(function(h){ return h.durumCls === 'wait'; }).length;
+
+    return '<div class="gv-card site-hero">'
+      + '<div class="site-hero-id">'
+      +   '<div class="site-hero-mark" style="background:'+P.markBg+';color:'+P.markFg+'">'+P.mark+'</div>'
+      +   '<div class="site-hero-info">'
+      +     '<div class="site-hero-tags"><span class="gtag mint">Proje</span><span class="gtag">'+P.kod+'</span>'
+      +       '<span class="gstat '+P.durumCls+'">'+P.durumTxt+'</span></div>'
+      +     '<div class="site-hero-prog">'+bar(P.ilerleme, P.ilerlemeWarn)+'<span class="hp-lbl">genel ilerleme</span></div>'
+      +     '<dl class="site-hero-meta">'
+      +       '<div><dt>İşveren</dt><dd>'+P.isveren+'</dd></div>'
+      +       '<div><dt>Proje Müdürü</dt><dd>'+P.mudur+'</dd></div>'
+      +       '<div><dt>Başlangıç</dt><dd>'+P.baslangic+'</dd></div>'
+      +       '<div><dt>Planlanan Bitiş</dt><dd>'+P.bitis+'</dd></div>'
+      +       '<div><dt>Toplam Bütçe</dt><dd>'+tl(P.butce)+'</dd></div>'
+      +       '<div><dt>Bağlı Şantiyeler</dt><dd>'+adListesi(sites)+'</dd></div>'
+      +     '</dl>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="hero-stats">'
+      +   '<a class="hstat" href="#" data-tab-goto="santiyeler"><span class="hstat-num">'+sites.length+'</span><span class="hstat-lbl">Bağlı şantiye <i class="fa-solid fa-arrow-right"></i></span></a>'
+      +   '<a class="hstat" href="#" data-tab-goto="sozlesme"><span class="hstat-num">'+soz.length+'</span><span class="hstat-lbl">Sözleşme <i class="fa-solid fa-arrow-right"></i></span></a>'
+      +   '<a class="hstat'+(bekleyen ? ' warn' : '')+'" href="#" data-tab-goto="hakedis"><span class="hstat-num">'+hkd.length+'</span><span class="hstat-lbl">Hakediş'+(bekleyen ? ' · '+bekleyen+' onay bekliyor' : '')+' <i class="fa-solid fa-arrow-right"></i></span></a>'
+      +   '<a class="hstat" href="#" data-tab-goto="butce"><span class="hstat-num">'+tl(ger)+'</span><span class="hstat-lbl">Gerçekleşen bütçe <i class="fa-solid fa-arrow-right"></i></span></a>'
+      + '</div>'
+      + '</div>';
+  }
+
+  /* ---------------------------------------------------------------- Genel Bakış */
+  function ozetTab(P){
+    var sites = sitesOf(P);
+    var ger   = P.santiyeler.reduce(function(t, k){ return t + (BUTCE[k] ? BUTCE[k].ger : 0); }, 0);
+    var aktif = sites.filter(function(s){ return s.durumCls === 'ok' || s.durumCls === 'wait'; }).length;
+    var personel = sites.reduce(function(t, s){ return t + (s.personel || 0); }, 0);
+
+    var kpi = '<div class="kpi-grid">'
+      + '<div class="kpi-card"><div class="kpi-ico"><i class="fa-solid fa-helmet-safety"></i></div>'
+      +   '<div><div class="kpi-num">'+sites.length+'</div><div class="kpi-lbl">Bağlı şantiye</div>'
+      +   '<div class="kpi-delta flat"><i class="fa-solid fa-circle"></i> '+aktif+' tanesi sahada</div></div></div>'
+      + '<div class="kpi-card"><div class="kpi-ico"><i class="fa-solid fa-wallet"></i></div>'
+      +   '<div><div class="kpi-num">'+tl(P.butce)+'</div><div class="kpi-lbl">Toplam bütçe</div>'
+      +   '<div class="kpi-delta flat"><i class="fa-solid fa-circle"></i> Revize edilmiş tutar</div></div></div>'
+      + '<div class="kpi-card'+(ger ? '' : ' info')+'"><div class="kpi-ico"><i class="fa-solid fa-coins"></i></div>'
+      +   '<div><div class="kpi-num">'+tl(ger)+'</div><div class="kpi-lbl">Gerçekleşen</div>'
+      +   '<div class="kpi-delta flat"><i class="fa-solid fa-percent"></i> Bütçenin %'+pct(ger, P.butce)+"'u</div></div></div>"
+      + '<div class="kpi-card'+(P.ilerlemeWarn ? ' warn' : '')+'"><div class="kpi-ico"><i class="fa-solid fa-chart-simple"></i></div>'
+      +   '<div><div class="kpi-num">'+(P.ilerleme ? '%'+P.ilerleme : '—')+'</div><div class="kpi-lbl">Genel ilerleme</div>'
+      +   '<div class="kpi-delta '+(P.ilerlemeWarn ? 'down' : 'flat')+'"><i class="fa-solid fa-circle"></i> '+P.durumTxt+'</div></div></div>'
+      + '</div>';
+
+    var kunye = cardOpen('fa-building-user', 'Proje Künyesi')
+      + '<div class="gc-body"><dl class="site-hero-meta">'
+      +   '<div><dt>Proje Kodu</dt><dd>'+P.kod+'</dd></div>'
+      +   '<div><dt>İşveren</dt><dd>'+P.isveren+'</dd></div>'
+      +   '<div><dt>Proje Müdürü</dt><dd>'+P.mudur+'</dd></div>'
+      +   '<div><dt>Durum</dt><dd><span class="gstat '+P.durumCls+'">'+P.durumTxt+'</span></dd></div>'
+      +   '<div><dt>Başlangıç</dt><dd>'+P.baslangic+'</dd></div>'
+      +   '<div><dt>Planlanan Bitiş</dt><dd>'+P.bitis+'</dd></div>'
+      +   '<div><dt>Sahadaki Personel</dt><dd>'+(personel ? personel + ' kişi' : '—')+'</dd></div>'
+      +   '<div><dt>Bağlı Şantiye</dt><dd>'+sites.length+'</dd></div>'
+      + '</dl></div>'
+      + cardFoot('Künye bilgileri şantiye kayıtlarından derlenir; şantiye bazlı ayrıntı Şantiyeler sekmesindedir.', null, null);
+
+    var dagilim = cardOpen('fa-diagram-project', 'Şantiye Kırılımı', null, null)
+      + '<div class="gc-body">'
+      + sites.map(function(s){
+          return '<div class="cat-row" style="display:flex;align-items:center;gap:16px;padding:11px 0">'
+            + '<span style="flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+            +   '<a class="pd-rowlink" href="crm-santiye-detay.html?santiye='+s.key+'">'+s.ad+'</a></span>'
+            + '<div style="flex:1.2;min-width:0">'+bar(s.ilerleme, s.ilerlemeWarn)+'</div></div>';
+        }).join('')
+      + '</div>'
+      + cardFoot('Yüzdeler şantiye kartlarıyla aynıdır.', 'crm-santiye.html', 'Şantiyeler', 'fa-helmet-safety');
+
+    return kpi + '<div class="dash-cols">' + kunye + dagilim + '</div>';
+  }
+
+  /* ---------------------------------------------------------------- Şantiyeler */
+  function santiyelerTab(P){
+    var sites = sitesOf(P);
+    var rows = sites.map(function(s){
+      var href = 'crm-santiye-detay.html?santiye=' + s.key;
+      return '<tr>'
+        + '<td data-lbl="Şantiye"><div class="gcell">'
+        +   '<div class="gcell-mark" style="background:'+s.markBg+';color:'+s.markFg+'">'+s.mark+'</div>'
+        +   '<div class="gcell-info"><div class="gcell-name"><a class="pd-rowlink" href="'+href+'">'+s.ad+'</a></div>'
+        +   '<div class="gcell-sub">'+donem(s)+'</div></div></div></td>'
+        + '<td data-lbl="Tip"><span class="gtag">'+s.tip+'</span></td>'
+        + '<td data-lbl="Konum">'+s.konum+'</td>'
+        + '<td data-lbl="Şef" class="t-strong">'+(s.sef || '<span class="muted">Atanmadı</span>')+'</td>'
+        + '<td data-lbl="İlerleme">'+bar(s.ilerleme, s.ilerlemeWarn)+'</td>'
+        + '<td data-lbl="Personel" class="num t-strong">'+(s.personel === null ? '—' : s.personel)+'</td>'
+        + '<td data-lbl="Durum"><span class="gstat '+s.durumCls+'">'+s.durumTxt+'</span></td>'
+        + '<td data-lbl="">'+detayBtn(href, s.ad + ' şantiye kartı')+'</td>'
+        + '</tr>';
+    }).join('');
+
+    var sahada = sites.filter(function(s){ return s.durumCls === 'ok' || s.durumCls === 'wait'; }).length;
+    return cardOpen('fa-helmet-safety', 'Bu Projeye Bağlı Şantiyeler', 'crm-santiye.html', 'Tüm şantiyeler')
+      + '<div class="gc-body flush gv-cards-pad"><table class="gtable gtable-cards">'
+      + '<thead><tr><th>Şantiye</th><th>Tip</th><th>Konum</th><th>Şef</th><th>İlerleme</th>'
+      +   '<th class="num">Personel</th><th>Durum</th><th></th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table></div>'
+      + cardFoot(sites.length + ' şantiye bu projeye bağlı · ' + sahada + ' tanesi sahada aktif. Bir satıra tıklayınca o şantiyenin kartı açılır.', null, null);
+  }
+
+  /* ---------------------------------------------------------------- Sözleşmeler */
+  function sozlesmeTab(P){
+    var list = rowsFor(P, SOZLESMELER);
+    if(!list.length){
+      return emptyCard('fa-file-contract', 'Sözleşme kaydı yok',
+        P.ad + ' için bu prototipte kayıtlı bir kurum veya taşeron sözleşmesi bulunmuyor.',
+        'crm-finans-sozlesmeler.html', 'Tüm sözleşmeleri gör');
+    }
+    var toplam = list.reduce(function(t, r){ return t + r.bedel; }, 0);
+    var rows = list.map(function(r){
+      var s = SANTIYE[r.santiye];
+      var taseron = r.tur === 'Taşeron';
+      return '<tr>'
+        + '<td data-lbl="Sözleşme / Taraf"><div class="gcell">'
+        +   '<div class="gcell-mark"'+(taseron ? ' style="background:var(--info-tint);color:var(--info)"' : '')+'>'+r.mark+'</div>'
+        +   '<div class="gcell-info"><div class="gcell-name">'
+        +     '<a class="pd-rowlink" href="crm-finans-sozlesme-detay.html?szl='+r.szl+'">'+r.no+' · '+r.taraf+'</a></div>'
+        +   '<span class="gtag'+(taseron ? '' : ' mint')+'"'+(taseron ? ' style="background:var(--info-tint);color:var(--info);border-color:transparent"' : '')+'>'+r.tur+'</span>'
+        +   '</div></div></td>'
+        + '<td data-lbl="Şantiye"><a class="pd-rowlink" href="crm-santiye-detay.html?santiye='+s.key+'">'+s.ad+'</a></td>'
+        + '<td data-lbl="Bedel" class="num t-strong">'+tl(r.bedel)+'</td>'
+        + '<td data-lbl="Süre">'+r.sure+(r.uyari ? '<br><span class="gstat warn" style="margin-top:5px"><i class="fa-solid fa-triangle-exclamation"></i> '+r.uyari+'</span>' : '')+'</td>'
+        + '<td data-lbl="Durum"><span class="gstat '+r.durumCls+'">'+r.durumTxt+'</span></td>'
+        + '<td data-lbl="">'+detayBtn('crm-finans-sozlesme-detay.html?szl='+r.szl, r.no + ' sözleşme detayı')+'</td>'
+        + '</tr>';
+    }).join('');
+
+    return cardOpen('fa-file-contract', 'Proje Sözleşmeleri', 'crm-finans-sozlesmeler.html', 'Tüm sözleşmeler')
+      + '<div class="gc-body flush gv-cards-pad"><table class="gtable gtable-cards">'
+      + '<thead><tr><th>Sözleşme / Taraf</th><th>Şantiye</th><th class="num">Bedel</th><th>Süre</th><th>Durum</th><th></th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table></div>'
+      + cardFoot(list.length + ' sözleşme · toplam bedel ' + tl(toplam) + '. Yalnız bu projenin şantiyelerine bağlı kayıtlar listelenir.', null, null);
+  }
+
+  /* ---------------------------------------------------------------- Bütçe */
+  function butceTab(P){
+    var keys = P.santiyeler.filter(function(k){ return BUTCE[k]; });
+    if(!keys.length){
+      return emptyCard('fa-wallet', 'Bütçe kalemleri henüz girilmedi',
+        'Onaylanan yatırım programı ' + tl(P.butce) + '; kategori kırılımı saha mobilizasyonuyla birlikte açılacak.',
+        'crm-finans-butce.html', 'Bütçe takibini aç');
+    }
+    var tOrij = 0, tRev = 0, tGer = 0;
+    var rows = keys.map(function(k){
+      var s = SANTIYE[k], B = BUTCE[k];
+      tOrij += B.orij; tRev += B.rev; tGer += B.ger;
+      return '<tr>'
+        + '<td data-lbl="Şantiye" class="t-strong">'+(B.href
+            ? '<a class="pd-rowlink" href="'+B.href+'">'+s.ad+'</a>'
+            : s.ad + ' <span class="gtag" style="margin-left:6px">Kapandı</span>')+'</td>'
+        + '<td data-lbl="Orijinal" class="num">'+tl(B.orij)+'</td>'
+        + '<td data-lbl="Revize" class="num">'+tl(B.rev)+'</td>'
+        + '<td data-lbl="Gerçekleşen" class="num">'+tl(B.ger)+'</td>'
+        + '<td data-lbl="Kalan" class="num">'+tl(B.rev - B.ger)+'</td>'
+        + '<td data-lbl="Kullanım" class="num">%'+pct(B.ger, B.rev)+'</td>'
+        + '<td data-lbl="">'+(B.href
+            ? detayBtn(B.href, s.ad + ' bütçe detayı')
+            : '<div class="row-acts"><span class="muted" style="font-size:12px">—</span></div>')+'</td>'
+        + '</tr>';
+    }).join('');
+
+    var eksik = P.santiyeler.filter(function(k){ return !BUTCE[k]; }).length;
+    var kapali = keys.filter(function(k){ return BUTCE[k].kapali; }).length;
+    var not = 'Rakamlar Finans > Bütçe Takibi kayıtlarıyla birebir aynıdır.';
+    if(kapali) not += ' Kapanan şantiyenin bütçesi arşivlendiği için ayrı bir detay sayfası açılmaz.';
+    if(eksik)  not += ' ' + eksik + ' pasif şantiyenin bütçe kaydı bulunmuyor.';
+
+    return cardOpen('fa-wallet', 'Şantiye Bazında Bütçe', 'crm-finans-butce.html', 'Bütçe takibi')
+      + '<div class="gc-body flush gv-cards-pad"><table class="gtable gtable-cards pd-butce">'
+      + '<thead><tr><th>Şantiye</th><th class="num">Orijinal</th><th class="num">Revize</th>'
+      +   '<th class="num">Gerçekleşen</th><th class="num">Kalan</th><th class="num">Kullanım</th><th></th></tr></thead>'
+      + '<tbody>' + rows
+      + '<tr class="bd-total"><td data-lbl="Şantiye">Toplam</td>'
+      +   '<td data-lbl="Orijinal" class="num">'+tl(tOrij)+'</td>'
+      +   '<td data-lbl="Revize" class="num">'+tl(tRev)+'</td>'
+      +   '<td data-lbl="Gerçekleşen" class="num">'+tl(tGer)+'</td>'
+      +   '<td data-lbl="Kalan" class="num">'+tl(tRev - tGer)+'</td>'
+      +   '<td data-lbl="Kullanım" class="num">%'+pct(tGer, tRev)+'</td><td data-lbl=""></td></tr>'
+      + '</tbody></table></div>'
+      + cardFoot(not, 'crm-finans-maliyet.html', 'Maliyet analizi', 'fa-chart-pie');
+  }
+
+  /* ---------------------------------------------------------------- İş Programı */
+  function programTab(P){
+    var sites = sitesOf(P);
+    var sirali = sites.slice().sort(function(a, b){ return faz(b) - faz(a); });
+    function faz(s){
+      if(s.ilerleme === 100) return 3;                                  /* tamamlandı */
+      if(s.durumCls === 'ok' || s.durumCls === 'wait') return 2;         /* devam ediyor */
+      if(s.durumCls === 'info') return 1;                               /* planlama */
+      return 0;                                                          /* pasif/iptal */
+    }
+    var items = sirali.map(function(s){
+      var f = faz(s), cls = f === 3 ? ' done' : (f === 2 ? ' active' : '');
+      var durumSatiri = (f === 3 ? 'Tamamlandı' : (f === 2 ? 'Devam ediyor' : (f === 1 ? 'Planlandı' : 'Saha kapalı')))
+        + ' · ' + donem(s);
+      return '<li class="ml-item'+cls+'"><span class="ml-dot">'+(f === 3 ? '<i class="fa-solid fa-check"></i>' : '')+'</span>'
+        + '<div class="ml-body"><b><a href="crm-santiye-detay.html?santiye='+s.key+'#program">'+s.ad+'</a></b>'
+        + '<span>'+durumSatiri+'</span><br>'
+        + '<span class="gstat '+(s.ilerlemeWarn ? 'warn' : s.durumCls)+' ml-sapma">'+(s.ilerleme ? '%'+s.ilerleme+' ilerleme' : s.durumTxt)+'</span>'
+        + '</div></li>';
+    }).join('');
+
+    var aktif = sites.filter(function(s){ return faz(s) === 2; }).length;
+    var biten = sites.filter(function(s){ return faz(s) === 3; }).length;
+
+    return cardOpen('fa-calendar-days', 'İş Programı — Şantiye Fazları', 'crm-santiye-ajanda.html', 'Tüm iş programı')
+      + '<ol class="ml-timeline">' + items + '</ol>'
+      + cardFoot(biten + ' şantiye tamamlandı, ' + aktif + ' tanesi devam ediyor. Kilometre taşı ayrıntısı her şantiyenin kendi İş Programı sekmesindedir.',
+          'crm-panel-rapor-isprogrami.html', 'Detaylı rapor', 'fa-chart-gantt');
+  }
+
+  /* ---------------------------------------------------------------- Hakedişler */
+  function hakedisTablo(P, list, baslik, ikon, listHref, listLbl, tarafBaslik){
+    var rows = list.map(function(r){
+      var s = SANTIYE[r.santiye];
+      return '<tr>'
+        + '<td data-lbl="Hakediş"><div class="gcell-info">'
+        +   '<div class="gcell-name"><a class="pd-rowlink" href="'+r.href+'">'+r.no+'</a></div>'
+        +   '<div class="gcell-sub">'+r.alt+'</div></div></td>'
+        + '<td data-lbl="'+tarafBaslik+'" class="t-strong">'+r.taraf+'</td>'
+        + '<td data-lbl="Şantiye"><a class="pd-rowlink" href="crm-santiye-detay.html?santiye='+s.key+'">'+s.ad+'</a></td>'
+        + '<td data-lbl="Dönem">'+r.donem+'</td>'
+        + '<td data-lbl="Tutar" class="num t-strong">'+tl(r.tutar)+'</td>'
+        + '<td data-lbl="Durum"><span class="gstat '+r.durumCls+'">'+r.durumTxt+'</span></td>'
+        + '<td data-lbl="">'+detayBtn(r.href, r.no + ' hakediş detayı')+'</td>'
+        + '</tr>';
+    }).join('');
+    var toplam = list.reduce(function(t, r){ return t + r.tutar; }, 0);
+    return cardOpen(ikon, baslik, listHref, listLbl)
+      + '<div class="gc-body flush gv-cards-pad"><table class="gtable gtable-cards">'
+      + '<thead><tr><th>Hakediş</th><th>'+tarafBaslik+'</th><th>Şantiye</th><th>Dönem</th>'
+      +   '<th class="num">Tutar</th><th>Durum</th><th></th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table></div>'
+      + cardFoot(list.length + ' hakediş · toplam ' + tl(toplam) + '.', null, null);
+  }
+  function hakedisTab(P){
+    var kurum   = rowsFor(P, HAKEDIS_KURUM);
+    var taseron = rowsFor(P, HAKEDIS_TASERON);
+    if(!kurum.length && !taseron.length){
+      return emptyCard('fa-file-invoice-dollar', 'Hakediş kaydı yok',
+        P.ad + ' için açılmış bir kurum veya taşeron hakediş dönemi bulunmuyor.',
+        'crm-finans-kurum.html', 'Kurum hakedişlerini gör');
+    }
+    var h = '';
+    if(kurum.length){
+      h += hakedisTablo(P, kurum, 'Kurum Hakedişleri', 'fa-building-columns', 'crm-finans-kurum.html', 'Tüm kurum hakedişleri', 'Kurum');
+    }
+    if(taseron.length){
+      h += (h ? '<div style="height:20px"></div>' : '')
+        + hakedisTablo(P, taseron, 'Taşeron Hakedişleri', 'fa-people-arrows', 'crm-finans-taseron.html', 'Tüm taşeron hakedişleri', 'Taşeron');
+    }
+    return h;
+  }
+
+  /* ---------------------------------------------------------------- Riskler */
+  function risklerTab(P){
+    var kayitlar = [];
+    P.santiyeler.forEach(function(k){
+      (RISKLER[k] || []).forEach(function(r){ kayitlar.push({s:SANTIYE[k], r:r}); });
+    });
+    if(!kayitlar.length){
+      return emptyCard('fa-triangle-exclamation', 'Risk kaydı yok',
+        P.durumCls === 'info'
+          ? 'Saha mobilizasyonu başlamadan risk kaydı oluşturulmaz.'
+          : P.ad + ' şantiyelerinde açık bir risk kaydı bulunmuyor.',
+        null, null);
+    }
+    var rows = kayitlar.map(function(x){
+      var r = x.r;
+      return '<div class="risk-row">'
+        + '<div class="risk-top"><b>'+r.baslik+'</b><span class="gstat '+r.cls+'">'+r.lbl+'</span></div>'
+        + '<div class="risk-meta"><span>Şantiye: <b><a class="pd-rowlink" href="crm-santiye-detay.html?santiye='+x.s.key+'#riskler">'+x.s.ad+'</a></b></span>'
+        +   '<span>Olasılık: <b>'+r.olasilik+'</b></span><span>Etki: <b>'+r.etki+'</b></span><span>Sorumlu: <b>'+r.sorumlu+'</b></span></div>'
+        + '<p class="risk-mit"><i class="fa-solid fa-shield-halved"></i>Azaltma: '+r.azaltma
+        +   (r.link ? ' <a href="'+r.link.href+'" style="color:var(--acc-ink);font-weight:700">'+r.link.lbl+'</a>' : '')+'</p>'
+        + '</div>';
+    }).join('');
+    var acik = kayitlar.filter(function(x){ return x.r.cls === 'danger'; }).length;
+    var takip = kayitlar.filter(function(x){ return x.r.cls === 'warn'; }).length;
+    var izlen = kayitlar.length - acik - takip;
+
+    return cardOpen('fa-triangle-exclamation', 'Proje Riskleri', null, null)
+      + '<div>' + rows + '</div>'
+      + cardFoot(kayitlar.length + ' risk kaydı · ' + acik + ' açık, ' + takip + ' takipte, ' + izlen + ' izleniyor. Kayıtlar şantiye kartlarındaki risk listelerinden derlenir.', null, null);
+  }
+
+  /* ---------------------------------------------------------------- Dosyalar */
+  function dosyaTab(P){
+    var ilk = sitesOf(P)[0];
+    return emptyCard('fa-folder-open', 'Proje dosyası yok',
+      'Bu prototipte dosyalar şantiye kartlarında tutulur; proje seviyesinde ortak bir dosya kaydı henüz oluşturulmadı.',
+      'crm-santiye-detay.html?santiye=' + ilk.key + '#dosya', ilk.ad + ' dosyalarını aç');
+  }
+
+  /* ---------------------------------------------------------------- sekmeler */
+  var TAB_ORDER = [
+    {id:'ozet',       ic:'fa-chart-simple',         lbl:'Genel Bakış'},
+    {id:'santiyeler', ic:'fa-helmet-safety',        lbl:'Şantiyeler'},
+    {id:'sozlesme',   ic:'fa-file-contract',        lbl:'Sözleşmeler'},
+    {id:'butce',      ic:'fa-wallet',               lbl:'Bütçe'},
+    {id:'program',    ic:'fa-calendar-days',        lbl:'İş Programı'},
+    {id:'hakedis',    ic:'fa-file-invoice-dollar',  lbl:'Hakedişler'},
+    {id:'riskler',    ic:'fa-triangle-exclamation', lbl:'Riskler'},
+    {id:'dosya',      ic:'fa-folder-open',          lbl:'Dosyalar'}
+  ];
+
+  function render(P){
+    document.title = P.ad + ' — Proje Kartı — Gavia CRM';
+    document.getElementById('phEyebrow').textContent = 'Saha · Proje';
+    document.getElementById('phTitle').textContent = P.ad;
+    document.getElementById('phSub').textContent = P.kod + ' · ' + P.isveren + ' · Proje Müdürü ' + P.mudur;
+
+    var tab = {
+      ozet:       ozetTab(P),
+      santiyeler: santiyelerTab(P),
+      sozlesme:   sozlesmeTab(P),
+      butce:      butceTab(P),
+      program:    programTab(P),
+      hakedis:    hakedisTab(P),
+      riskler:    risklerTab(P),
+      dosya:      dosyaTab(P)
+    };
+    /* sekme sayaçları — yalnız gerçek kayıt sayısı; 0 ise rozet basılmaz */
+    var CNT = {
+      santiyeler: P.santiyeler.length,
+      sozlesme:   rowsFor(P, SOZLESMELER).length,
+      hakedis:    rowsFor(P, HAKEDIS_KURUM).length + rowsFor(P, HAKEDIS_TASERON).length,
+      riskler:    P.santiyeler.reduce(function(t, k){ return t + ((RISKLER[k] || []).length); }, 0)
+    };
+
+    var tabsHtml = TAB_ORDER.map(function(t, i){
+      var cnt = CNT[t.id] ? ' <span class="tb-cnt">'+CNT[t.id]+'</span>' : '';
+      return '<button class="gv-tab'+(i === 0 ? ' is-active' : '')+'" data-tab="'+t.id+'" role="tab" '
+        + 'aria-selected="'+(i === 0 ? 'true' : 'false')+'"><i class="fa-solid '+t.ic+'"></i> '+t.lbl+cnt+'</button>';
+    }).join('');
+    var panelsHtml = TAB_ORDER.map(function(t, i){
+      return '<section class="tab-panel" data-tab-panel="'+t.id+'" role="tabpanel" aria-label="'+t.lbl+'"'
+        + (i === 0 ? '' : ' hidden')+'>'+(tab[t.id] || '')+'</section>';
+    }).join('');
+
+    document.getElementById('projRoot').innerHTML = heroHtml(P)
+      + '<div class="gv-tabs" role="tablist" aria-label="Proje detay sekmeleri">'+tabsHtml+'</div>'
+      + panelsHtml;
+
+    /* sekme motoru — crm-santiye-detay.html ile BİREBİR (tık + hash + çapraz atlama) */
+    var tabs   = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+    function activate(id){
+      tabs.forEach(function(t){
+        var on = t.getAttribute('data-tab') === id;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== id; });
+    }
+    tabs.forEach(function(t){
+      t.addEventListener('click', function(){
+        var id = t.getAttribute('data-tab');
+        activate(id);
+        history.replaceState(null, '', '#' + id);
+      });
+    });
+    document.querySelectorAll('[data-tab-goto]').forEach(function(el){
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        var id = el.getAttribute('data-tab-goto');
+        activate(id);
+        history.replaceState(null, '', '#' + id);
+        var btn = document.querySelector('.gv-tab[data-tab="' + id + '"]');
+        if(btn){ btn.scrollIntoView({block:'nearest', inline:'center'}); btn.focus(); }
+      });
+    });
+    var initial = (location.hash || '').replace('#', '');
+    var valid = tabs.some(function(t){ return t.getAttribute('data-tab') === initial; });
+    activate(valid ? initial : 'ozet');
+
+    if(typeof GV.crumb === 'function') GV.crumb(P.ad);
+  }
+
+  /* ---------------------------------------------------------------- giriş */
+  var PROJE_KEYS = ['korfez','liman','gol','yapitas'];
+  var reqProje = new URLSearchParams(location.search).get('proje');
+
+  /* şef budaması — Hasan Demirci yalnız Vadi Konakları'nı görür, o da Körfez programına
+     bağlıdır; başka bir projeye doğrudan URL ile gidilirse sessizce oraya döner
+     (crm-santiye-detay.html'deki aynı davranışın proje seviyesindeki karşılığı) */
+  if(GV.role === 'sef' && reqProje && reqProje !== 'korfez'){
+    location.replace('crm-santiye-proje-detay.html?proje=korfez');
+    return;
+  }
+
+  if(!reqProje){
+    render(PROJECTS.korfez);
+  } else if(PROJE_KEYS.indexOf(reqProje) !== -1){
+    render(PROJECTS[reqProje]);
+  } else {
+    gvNotFound({
+      code: esc(reqProje), tur:'proje',
+      listHref:'crm-santiye-proje.html', listLbl:'Proje listesine dön',
+      defHref:'crm-santiye-proje-detay.html?proje=korfez', defLbl:'Körfez GYO programını aç'
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -99,6 +99,21 @@
               <label for="fAd">Şantiye Adı</label>
               <input type="text" id="fAd" placeholder="örn. Vadi Konakları 3. Etap">
             </div>
+            <!-- [Dalga 2 / M-1] Proje eşlemesi — kanonik kaynak crm-santiye-proje.html; BİREBİR kopya.
+                 Proje hiyerarşide şantiyenin ÜSTÜNDE olduğu için künyenin üst kısmında,
+                 "Proje Niteliği"nden (fiziksel nitelik, ayrı kavram) ÖNCE duruyor.
+                 Alan opsiyonel — mevcut kayıtlarda proje bağı olmayabilir. -->
+            <div class="gfield full">
+              <label for="fProje">Bağlı Olduğu Proje <span class="gf-hint">(isteğe bağlı)</span></label>
+              <select id="fProje">
+                <option value="">Proje seçin</option>
+                <option value="korfez">Körfez GYO Karma Yatırım Programı</option>
+                <option value="liman">Aliağa Liman Lojistik Merkezi</option>
+                <option value="gol">Göl Evleri Konut Projesi</option>
+                <option value="yapitas">Yapıtaş İç Yatırım Portföyü</option>
+              </select>
+              <span class="gf-hint">Şantiye bir proje programının altında yürüyorsa seçin; boş bırakılırsa Projeler ekranından sonra bağlanabilir.</span>
+            </div>
             <div class="gfield full">
               <label>Proje Niteliği</label>
               <div class="tip-group" id="tipGroup">
@@ -233,6 +248,12 @@
     fmr:   {ad:'Fatih Mahallesi Restorasyon', tip:'ticari', tur:'kamu',    il:'İstanbul', ilce:'Fatih',     sef:'',              musteri:'',                        hedef:'2019-11-14', baslangic:'2018-03-02'},
     ksr:   {ad:'Kartal Sahil Rezidans',       tip:'konut',  tur:'taahhut', il:'İstanbul', ilce:'Kartal',    sef:'',              musteri:'',                        hedef:'', baslangic:'2025-09-20'}
   };
+  /* [Dalga 2 / M-1] Proje eşlemesi — kanonik kaynak crm-santiye-proje.html; BİREBİR kopya.
+     Ayrı map olarak tutuldu ki yukarıdaki hizalı SITE_EDIT_DATA bloğu bozulmasın. */
+  var SITE_PROJE = {
+    vadi:'korfez', kule:'korfez', liman:'liman', gol:'gol',
+    merkez:'yapitas', cskp:'yapitas', btk:'yapitas', fmr:'yapitas', ksr:'yapitas'
+  };
   var q = new URLSearchParams(location.search);
   var mod = q.get('mod');
   var siteKey = q.get('santiye');
@@ -249,6 +270,8 @@
     if(sd.sef){ Array.prototype.forEach.call(fSefSel.options, function(o){ if(o.textContent === sd.sef) fSefSel.value = o.value; }); }
     var fMusteriSel = document.getElementById('fMusteri');
     if(sd.musteri){ Array.prototype.forEach.call(fMusteriSel.options, function(o){ if(o.textContent === sd.musteri) fMusteriSel.value = o.value; }); }
+    var fProjeSel = document.getElementById('fProje');
+    if(fProjeSel && SITE_PROJE[siteKey]) fProjeSel.value = SITE_PROJE[siteKey];
     if(sd.baslangic) document.getElementById('fBasla').value = sd.baslangic;
     if(sd.hedef) document.getElementById('fHedef').value = sd.hedef;
     if(isEdit){

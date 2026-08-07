@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Proje Listesi — Gavia CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/shell.css">
+<link rel="stylesheet" href="assets/css/ui.css">
+<style>
+/* Sayfaya özel: yalnız kolon genişliği + hedefli tek-satır hücreler. Blanket
+   `td{white-space:nowrap}` YOK — crm-santiye.html'deki cari-audit deseni birebir:
+   sadece kısa/tek-satırlık kolonlar nowrap, tek uzun metin kolonu (Proje Adı)
+   max-width ile sınırlanır ki ui.css'in ellipsis mekaniği devreye girsin.
+   #tblProje'ye SABİT min-width VERİLMEZ — 10 kolon `.gc-body.flush`'ın clientWidth'ine
+   sığmazsa oradaki overflow-x:auto devralır; sayfa gövdesi yatay taşmaz. 640px altında
+   tablo `gtable-cards` ile gerçek karta döner, kaydırma kaçış yolu gerekmez. */
+.col-prog{width:160px}
+#tblProje .gbar{min-width:92px}
+/* [G-9 dersi] Birincil kolon KIRPILMAZ: 245px, en uzun proje adının ("Körfez GYO
+   Karma Yatırım Programı") tam sığdığı ölçüdür — 4 satırlık bir listede projenin
+   adını üç noktayla kesmek anlamsız. 640px altında kart görünümünde tavan tamamen
+   kalkar (kartın kendi genişliği zaten sınır). */
+#tblProje .gcell-info{max-width:245px}
+@media(max-width:640px){
+  #tblProje .gcell-info{max-width:none}
+  /* [G-9] Mobil kartta birincil hücre TAM GENİŞLİK: etiket üstte, proje adı altta.
+     Ev standardı olan "etiket solda / değer sağda" dizilimde 390px'te uzun proje
+     adı (Körfez GYO Karma Yatırım Programı) üç noktayla kesiliyordu. Kalan tüm
+     hücreler ev standardını AYNEN korur; yalnız ilk hücrenin ekseni dönüyor. */
+  #tblProje.gtable-cards td:first-child{
+    flex-direction:column;align-items:flex-start;gap:6px;text-align:left
+  }
+  /* masaüstündeki nowrap kolonları kart modunda ui.css'in `white-space:normal`
+     varsayılanına GERİ döner — dar kartta tek satıra zorlamak taşma üretir
+     (özgüllük yüzünden aşağıdaki #tblProje kuralları buraya kadar sızıyordu). */
+  #tblProje td[data-col="kod"],
+  #tblProje td[data-col="isveren"],
+  #tblProje td[data-col="mudur"],
+  #tblProje td[data-col="baslangic"],
+  #tblProje td[data-col="bitis"]{white-space:normal}
+}
+/* [T-L1a] pozisyon bazlı nth-child DEĞİL, data-col öznitelik seçicisi — kolon sırası
+   değişse de doğru hücreyi bulur (crm-santiye.html ile aynı gerekçe). */
+#tblProje td[data-col="kod"],
+#tblProje td[data-col="isveren"],
+#tblProje td[data-col="mudur"],
+#tblProje td[data-col="baslangic"],
+#tblProje td[data-col="bitis"],
+#tblProje td.num{white-space:nowrap}
+</style>
+</head>
+<body data-sec="santiye" data-screen="proje">
+<div class="gv-app">
+  <aside class="gv-rail" id="gvRail"></aside>
+  <nav class="gv-menu" id="gvMenu"></nav>
+  <div class="gv-divider" id="gvDivider" role="separator" aria-label="Menüyü daralt/genişlet"><span class="gv-grip"></span></div>
+  <div class="gv-overlay" id="gvOverlay"></div>
+
+  <header class="gv-top">
+    <button class="gv-burger" id="gvBurger" aria-label="Menü"><i class="fa-solid fa-bars"></i></button>
+    <div class="gv-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Ara"></div>
+    <div class="gv-top-tools">
+      <button class="gv-iconbtn" data-tip="Bildirimler" aria-label="Bildirimler"><i class="fa-regular fa-bell"></i><span class="gb-dot"></span></button>
+      <div class="gv-me">
+        <div class="me-ava" id="gvAva">·</div>
+        <div class="me-id"><div class="me-name" id="gvName">—</div><div class="me-role" id="gvRole">—</div></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="gv-main">
+    <div class="gv-page-head">
+      <div>
+        <div class="ph-eyebrow">Saha</div>
+        <h1>Projeler</h1>
+        <div class="ph-sub">4 proje · 9 şantiye bağlı · ₺524.000.000 portföy</div>
+      </div>
+      <div class="ph-actions" data-admin-only>
+        <!-- Proje ekleme formu bu dalgada üretilmedi (brief istemiyor) — birincil buton
+             yerini korur, tıklanınca data-demo toast'ı düşer. Ev stili: accent birincil
+             en sağda; bu listede ghost aksiyon YOK (aşağıdaki filtre şeridi notu). -->
+        <a class="btn btn-acc btn-sm" href="#" data-demo="Proje ekleme formu bu prototipte kurgulanmadı."><i class="fa-solid fa-plus"></i> Yeni Proje</a>
+      </div>
+    </div>
+
+    <!-- ============ Özet kartları. 4 kart TAM bir satır doldurduğu için `.kpi-grid`
+         KULLANILDI, `.kpi-rail` DEĞİL: ui.css'teki [G-3] notu rayı yalnız "kart sayısı
+         satırı düzgün doldurmadığında (öksüz kart kaldığında)" öngörüyor (bkz
+         crm-finans-sozlesmeler.html / crm-satis-sozlesmeler.html — ikisi de 4 kart +
+         grid). 4 kartta gereksiz yere slider yapılmaz. Sayılar tablodaki 4 satırla
+         BİREBİR tutarlı: 4 toplam · 2 "Devam ediyor" · 1 planlama ·
+         246+97+120+61 = ₺524.000.000. ============ -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-ico"><i class="fa-solid fa-diagram-project"></i></div>
+        <div><div class="kpi-num num">4</div><div class="kpi-lbl">Toplam proje</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-helmet-safety"></i> 9 şantiye bağlı</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--ok-tint);color:var(--ok)"><i class="fa-solid fa-circle-check"></i></div>
+        <div><div class="kpi-num num">2</div><div class="kpi-lbl">Devam eden proje</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-clock-rotate-left"></i> 1 proje programın gerisinde</div></div>
+      </div>
+      <div class="kpi-card info">
+        <div class="kpi-ico"><i class="fa-solid fa-compass-drafting"></i></div>
+        <div><div class="kpi-num num">1</div><div class="kpi-lbl">Planlama</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-calendar-days"></i> Göl Evleri · Eylül 2026</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-ico" style="background:var(--info-tint);color:var(--info)"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div><div class="kpi-num num">₺524.000.000</div><div class="kpi-lbl">Toplam portföy bütçesi</div>
+        <div class="kpi-delta flat"><i class="fa-solid fa-layer-group"></i> 4 projenin sözleşme bedeli</div></div>
+      </div>
+    </div>
+
+    <div class="gv-card">
+      <!-- Standart liste üst alanı (spec §2.1/§2.2/§2.3): .lh-row (arama) → .lh-tabs
+           (durum sekmeleri slider'ı).
+           BİLİNÇLİ KARAR — Gelişmiş Filtre / Kolonlar / Dışa Aktar EKLENMEDİ. Brief §14:
+           "her listeye gereksiz filtre/export eklenmemeli". 4 satırlık, 9 kolonlu bir
+           listede 14 alanlı filtre paneli ve kolon yöneticisi ölü ağırlıktır; arama +
+           durum sekmesi tüm süzme ihtiyacını karşılıyor. `.lh-acts` bu yüzden hiç
+           basılmadı (boş kap bırakılmadı) — liste büyürse eklenecek yer hazır. -->
+      <div class="gv-listhead">
+        <div class="lh-row">
+          <div class="lh-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Proje, kod veya işveren ara" data-table-search="#tblProje">
+          </div>
+        </div>
+        <div class="lh-tabs">
+          <div class="gv-chipbar-wrap" data-chipbar>
+            <button type="button" class="cb-arrow cb-prev" aria-label="Sola kaydır" hidden><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="gv-chipbar chips" data-target="#tblProje">
+              <button class="chip is-on" data-filter="hepsi">Tümü <span class="ch-cnt">4</span></button>
+              <button class="chip" data-filter="devam">Devam eden <span class="ch-cnt">2</span></button>
+              <!-- [Dalga 2 / M-1] "Programın gerisinde" çipi — bu çip olmadan çip seti
+                   4 kaydın yalnız 3'ünü kapsıyordu (2+1+0) ve Aliağa Liman projesine
+                   hiçbir çiple erişilemiyordu; yalnız Tümü + arama üzerinden bulunuyordu.
+                   Liste standardı: çip sayımlarının toplamı kayıt sayısını vermeli. -->
+              <button class="chip" data-filter="gecikme">Programın gerisinde <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="planlama">Planlama <span class="ch-cnt">1</span></button>
+              <button class="chip" data-filter="tamam">Tamamlanan <span class="ch-cnt">0</span></button>
+            </div>
+            <button type="button" class="cb-arrow cb-next" aria-label="Sağa kaydır" hidden><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="gc-body flush gv-cards-pad">
+        <!-- STATİK BAKE (JS-kapalı ikiz): aşağıdaki 4 <tr> elle yazılmıştır ve
+             sayfanın sonundaki PROJELER objesinden basılan çıktının BİREBİR aynısıdır.
+             Veri değişirse İKİSİ BİRDEN güncellenir (repo geneli bake+override deseni,
+             bkz crm-satis-birimler.html). -->
+        <table class="gtable gtable-cards" id="tblProje">
+          <thead>
+            <tr>
+              <th>Proje Adı</th>
+              <th data-col="kod">Proje Kodu</th>
+              <th data-col="isveren">İşveren</th>
+              <th data-col="mudur">Proje Müdürü</th>
+              <th data-col="baslangic">Başlangıç Tarihi</th>
+              <th data-col="bitis">Bitiş Tarihi</th>
+              <th class="num" data-col="santiye">Bağlı Şantiye Sayısı</th>
+              <th class="col-prog" data-col="prog">İlerleme</th>
+              <th data-col="durum">Durum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-f="devam" data-proje="korfez" data-durum="devam" data-kod="PRJ-2024-01"
+                data-mudur="elif-sarikaya" data-baslangic="2024-03-01" data-bitis="2026-12-31"
+                data-santiyeler="vadi,kule" data-ilerleme="76" data-butce="246000000">
+              <td data-lbl="Proje Adı">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">KG</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Körfez GYO Karma Yatırım Programı</div>
+                    <div class="gcell-sub">Körfez GYO</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="kod" data-lbl="Proje Kodu"><span class="gtag">PRJ-2024-01</span></td>
+              <td data-col="isveren" data-lbl="İşveren">Körfez GYO</td>
+              <td data-col="mudur" data-lbl="Proje Müdürü" class="t-strong">Elif Sarıkaya</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">1 Mar 2024</td>
+              <td data-col="bitis" data-lbl="Bitiş Tarihi">31 Ara 2026</td>
+              <td data-col="santiye" data-lbl="Bağlı Şantiye Sayısı" class="num t-strong" title="Vadi Konakları · Kule Ofis B Blok">2</td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:76%"></div></div><span class="gbar-val">%76</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Devam ediyor</span></td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-proje-detay.html?proje=korfez" data-no-confirm aria-label="Proje kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+              </td>
+            </tr>
+            <tr data-f="gecikme" data-proje="liman" data-durum="gecikme" data-kod="PRJ-2025-02"
+                data-mudur="elif-sarikaya" data-baslangic="2025-02-12" data-bitis="2027-06-30"
+                data-santiyeler="liman" data-ilerleme="41" data-butce="97000000">
+              <td data-lbl="Proje Adı">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:var(--warn-tint);color:var(--warn)">AL</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Aliağa Liman Lojistik Merkezi</div>
+                    <div class="gcell-sub">Aliağa Liman İşletmeleri</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="kod" data-lbl="Proje Kodu"><span class="gtag">PRJ-2025-02</span></td>
+              <td data-col="isveren" data-lbl="İşveren">Aliağa Liman İşletmeleri</td>
+              <td data-col="mudur" data-lbl="Proje Müdürü" class="t-strong">Elif Sarıkaya</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">12 Şub 2025</td>
+              <td data-col="bitis" data-lbl="Bitiş Tarihi">30 Haz 2027</td>
+              <td data-col="santiye" data-lbl="Bağlı Şantiye Sayısı" class="num t-strong" title="Liman Lojistik Merkezi">1</td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill warn" style="width:41%"></div></div><span class="gbar-val">%41</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat wait">Programın gerisinde</span></td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-proje-detay.html?proje=liman" data-no-confirm aria-label="Proje kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+              </td>
+            </tr>
+            <tr data-f="planlama" data-proje="gol" data-durum="planlama" data-kod="PRJ-2026-03"
+                data-mudur="murat-denizli" data-baslangic="2026-09-01" data-bitis="2028-08-31"
+                data-santiyeler="gol" data-ilerleme="0" data-butce="120000000">
+              <td data-lbl="Proje Adı">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:var(--bg);color:var(--muted)">GE</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Göl Evleri Konut Projesi</div>
+                    <div class="gcell-sub">Sapanca Belediyesi</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="kod" data-lbl="Proje Kodu"><span class="gtag">PRJ-2026-03</span></td>
+              <td data-col="isveren" data-lbl="İşveren">Sapanca Belediyesi</td>
+              <td data-col="mudur" data-lbl="Proje Müdürü" class="t-strong">Murat Denizli</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">1 Eyl 2026</td>
+              <td data-col="bitis" data-lbl="Bitiş Tarihi">31 Ağu 2028</td>
+              <td data-col="santiye" data-lbl="Bağlı Şantiye Sayısı" class="num t-strong" title="Göl Evleri 2. Etap">1</td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:0%"></div></div><span class="gbar-val">—</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat info">Planlama · Eylül 2026</span></td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-proje-detay.html?proje=gol" data-no-confirm aria-label="Proje kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+              </td>
+            </tr>
+            <tr data-f="devam" data-proje="yapitas" data-durum="devam" data-kod="PRJ-2023-04"
+                data-mudur="murat-denizli" data-baslangic="2023-06-05" data-bitis="2027-12-31"
+                data-santiyeler="merkez,cskp,btk,fmr,ksr" data-ilerleme="86" data-butce="61000000">
+              <td data-lbl="Proje Adı">
+                <div class="gcell">
+                  <div class="gcell-mark" style="background:var(--info-tint);color:var(--info)">Yİ</div>
+                  <div class="gcell-info">
+                    <div class="gcell-name">Yapıtaş İç Yatırım Portföyü</div>
+                    <div class="gcell-sub">Yapıtaş İnşaat A.Ş.</div>
+                  </div>
+                </div>
+              </td>
+              <td data-col="kod" data-lbl="Proje Kodu"><span class="gtag">PRJ-2023-04</span></td>
+              <td data-col="isveren" data-lbl="İşveren">Yapıtaş İnşaat A.Ş.</td>
+              <td data-col="mudur" data-lbl="Proje Müdürü" class="t-strong">Murat Denizli</td>
+              <td data-col="baslangic" data-lbl="Başlangıç Tarihi">5 Haz 2023</td>
+              <td data-col="bitis" data-lbl="Bitiş Tarihi">31 Ara 2027</td>
+              <td data-col="santiye" data-lbl="Bağlı Şantiye Sayısı" class="num t-strong" title="Merkez Şantiye · Çınar Sokak Karma Proje · Bahçelievler Toplu Konut · Fatih Mahallesi Restorasyon · Kartal Sahil Rezidans">5</td>
+              <td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:86%"></div></div><span class="gbar-val">%86</span></div></td>
+              <td data-col="durum" data-lbl="Durum"><span class="gstat ok">Devam ediyor</span></td>
+              <td data-lbl="">
+                <div class="row-acts">
+                  <a class="ia-btn" href="crm-santiye-proje-detay.html?proje=yapitas" data-no-confirm aria-label="Proje kartı" data-tip="Detay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="gv-empty" data-table-empty hidden>
+          <div class="ge-ico"><i class="fa-solid fa-diagram-project"></i></div>
+          <h4>Eşleşen proje yok</h4>
+          <p>Aramayı temizleyin veya farklı bir durum filtresi seçin.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+/* KANONİK PROJE SETİ (Dalga 2 / M-1) — crm-santiye-proje-detay.html, crm-santiye.html
+   (proje kolonu), crm-santiye-form.html, crm-finans-sozlesme-form.html ve
+   crm-santiye-detay.html BU anahtar/adları BİREBİR kullanır. Değişiklik önce burada. */
+(function(){
+  if(!window.GV) return;
+
+  /* ---- Şantiye anahtar → ad eşlemesi (mevcut sisteme ait; burada TÜRETİLMEZ,
+     yalnız referans alınır — kaynak: crm-santiye.html data-site anahtarları). ---- */
+  var SANTIYE_AD = {
+    vadi:'Vadi Konakları', kule:'Kule Ofis B Blok', liman:'Liman Lojistik Merkezi',
+    gol:'Göl Evleri 2. Etap', merkez:'Merkez Şantiye', cskp:'Çınar Sokak Karma Proje',
+    btk:'Bahçelievler Toplu Konut', fmr:'Fatih Mahallesi Restorasyon', ksr:'Kartal Sahil Rezidans'
+  };
+
+  /* ---- KANONİK VERİ. Yukarıdaki statik <tr> bake'i bunun BİREBİR ikizidir; aşağıdaki
+     render() aynı HTML'i yeniden basar (JS açıkken tek kaynak burasıdır, JS kapalıyken
+     bake görünür). Toplamlar: 9 şantiye · ₺524.000.000. ---- */
+  var PROJELER = [
+    { key:'korfez', kod:'PRJ-2024-01', ad:'Körfez GYO Karma Yatırım Programı',
+      isveren:'Körfez GYO', mudur:'Elif Sarıkaya', mudurKey:'elif-sarikaya',
+      baslangic:'2024-03-01', baslangicTxt:'1 Mar 2024', bitis:'2026-12-31', bitisTxt:'31 Ara 2026',
+      santiyeler:['vadi','kule'], ilerleme:76, butce:246000000,
+      f:'devam', durumTxt:'Devam ediyor', durumTon:'ok', mark:'KG',
+      markStil:'background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)', barTon:'' },
+    { key:'liman', kod:'PRJ-2025-02', ad:'Aliağa Liman Lojistik Merkezi',
+      isveren:'Aliağa Liman İşletmeleri', mudur:'Elif Sarıkaya', mudurKey:'elif-sarikaya',
+      baslangic:'2025-02-12', baslangicTxt:'12 Şub 2025', bitis:'2027-06-30', bitisTxt:'30 Haz 2027',
+      santiyeler:['liman'], ilerleme:41, butce:97000000,
+      f:'gecikme', durumTxt:'Programın gerisinde', durumTon:'wait', mark:'AL',
+      markStil:'background:var(--warn-tint);color:var(--warn)', barTon:' warn' },
+    { key:'gol', kod:'PRJ-2026-03', ad:'Göl Evleri Konut Projesi',
+      isveren:'Sapanca Belediyesi', mudur:'Murat Denizli', mudurKey:'murat-denizli',
+      baslangic:'2026-09-01', baslangicTxt:'1 Eyl 2026', bitis:'2028-08-31', bitisTxt:'31 Ağu 2028',
+      santiyeler:['gol'], ilerleme:0, butce:120000000,
+      f:'planlama', durumTxt:'Planlama · Eylül 2026', durumTon:'info', mark:'GE',
+      markStil:'background:var(--bg);color:var(--muted)', barTon:'' },
+    { key:'yapitas', kod:'PRJ-2023-04', ad:'Yapıtaş İç Yatırım Portföyü',
+      isveren:'Yapıtaş İnşaat A.Ş.', mudur:'Murat Denizli', mudurKey:'murat-denizli',
+      baslangic:'2023-06-05', baslangicTxt:'5 Haz 2023', bitis:'2027-12-31', bitisTxt:'31 Ara 2027',
+      santiyeler:['merkez','cskp','btk','fmr','ksr'], ilerleme:86, butce:61000000,
+      f:'devam', durumTxt:'Devam ediyor', durumTon:'ok', mark:'Yİ',
+      markStil:'background:var(--info-tint);color:var(--info)', barTon:'' }
+  ];
+
+  var tbl = document.getElementById('tblProje');
+  if(!tbl) return;
+
+  /* proje müdürü şantiye listesini tooltip olarak taşır — ayrı kolon AÇILMADAN
+     (brief kolon listesi kapalı) bağlı şantiyelerin adına erişim verir */
+  function santiyeTip(p){
+    return p.santiyeler.map(function(s){ return SANTIYE_AD[s] || s; }).join(' · ');
+  }
+
+  function rowHtml(p){
+    var barVal = p.ilerleme > 0 ? '%' + p.ilerleme : '—';
+    return '<tr data-f="' + p.f + '" data-proje="' + p.key + '" data-durum="' + p.f + '" data-kod="' + p.kod + '"'
+      + ' data-mudur="' + p.mudurKey + '" data-baslangic="' + p.baslangic + '" data-bitis="' + p.bitis + '"'
+      + ' data-santiyeler="' + p.santiyeler.join(',') + '" data-ilerleme="' + p.ilerleme + '" data-butce="' + p.butce + '">'
+      + '<td data-lbl="Proje Adı"><div class="gcell">'
+        + '<div class="gcell-mark" style="' + p.markStil + '">' + p.mark + '</div>'
+        + '<div class="gcell-info"><div class="gcell-name">' + p.ad + '</div>'
+        + '<div class="gcell-sub">' + p.isveren + '</div></div></div></td>'
+      + '<td data-col="kod" data-lbl="Proje Kodu"><span class="gtag">' + p.kod + '</span></td>'
+      + '<td data-col="isveren" data-lbl="İşveren">' + p.isveren + '</td>'
+      + '<td data-col="mudur" data-lbl="Proje Müdürü" class="t-strong">' + p.mudur + '</td>'
+      + '<td data-col="baslangic" data-lbl="Başlangıç Tarihi">' + p.baslangicTxt + '</td>'
+      + '<td data-col="bitis" data-lbl="Bitiş Tarihi">' + p.bitisTxt + '</td>'
+      + '<td data-col="santiye" data-lbl="Bağlı Şantiye Sayısı" class="num t-strong" title="' + santiyeTip(p) + '">' + p.santiyeler.length + '</td>'
+      + '<td data-col="prog" data-lbl="İlerleme"><div class="gbar"><div class="gbar-track">'
+        + '<div class="gbar-fill' + p.barTon + '" style="width:' + p.ilerleme + '%"></div></div>'
+        + '<span class="gbar-val">' + barVal + '</span></div></td>'
+      + '<td data-col="durum" data-lbl="Durum"><span class="gstat ' + p.durumTon + '">' + p.durumTxt + '</span></td>'
+      + '<td data-lbl=""><div class="row-acts">'
+        + '<a class="ia-btn" href="crm-santiye-proje-detay.html?proje=' + p.key + '" data-no-confirm aria-label="Proje kartı" data-tip="Detay">'
+        + '<i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></td>'
+      + '</tr>';
+  }
+
+  /* ---- ROL DARALTMASI. Şantiye şefi yalnız sorumlu olduğu şantiyenin (Vadi Konakları)
+     bağlı olduğu projeyi görür — firma geneli portföy özeti onun kapsamı değil
+     (crm-santiye.html'deki aynı gerekçe: §4.1 "Görebilenler"). ---- */
+  var data = PROJELER;
+  if(GV.role === 'sef'){
+    data = PROJELER.filter(function(p){ return p.santiyeler.indexOf('vadi') !== -1; });
+    var kpi = document.querySelector('.kpi-grid'); if(kpi) kpi.remove();
+    var sub = document.querySelector('.ph-sub');
+    if(sub) sub.textContent = 'Vadi Konakları · bağlı olduğunuz proje';
+    var CNT = { hepsi:'1', devam:'1', planlama:'0', tamam:'0' };
+    Object.keys(CNT).forEach(function(f){
+      var c = document.querySelector('.chip[data-filter="' + f + '"] .ch-cnt');
+      if(c) c.textContent = CNT[f];
+    });
+  }
+
+  /* JS OVERRIDE — statik bake aynı içerikle yeniden basılır (repo geneli bake+override
+     deseni). Bu satır ui.js'in wireTables()'ından ÖNCE çalışır (o DOMContentLoaded'da),
+     dolayısıyla arama/çip motoru taze satırları görür. */
+  tbl.querySelector('tbody').innerHTML = data.map(rowHtml).join('');
+
+  /* ---- Yetki: yalnız yönetim rolleri "Yeni Proje" görür (crm-santiye.html deseni). ---- */
+  var isAdminRole = GV.role === 'superadmin' || GV.role === 'sahip' || GV.role === 'yonetim';
+  if(!isAdminRole){
+    document.querySelectorAll('[data-admin-only]').forEach(function(el){ el.hidden = true; });
+  }
+
+  /* NOT (lead'e): durum çipleri brief'te verilen sayılarla BİREBİR basıldı
+     (Tümü 4 · Devam eden 2 · Planlama 1 · Tamamlanan 0). "Aliağa Liman" projesi
+     "Programın gerisinde" durumunda olduğu için hiçbir çiple tekil olarak
+     süzülemiyor — yalnız "Tümü" ve aramadan erişiliyor. Kapatmak istenirse
+     tek satırlık ek: <button class="chip" data-filter="gecikme">Programın gerisinde
+     <span class="ch-cnt">1</span></button>. Brief'in çip listesine sadık kalındı,
+     karar lead'e bırakıldı. */
+})();
+</script>
+</body>
+</html>
