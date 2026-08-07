@@ -51,9 +51,53 @@
 .apr-chain .st.now{background:var(--warn-tint);color:var(--warn);border-color:transparent}
 .apr-chain i.sep{font-size:8px;color:var(--line-2)}
 .apr-acts{display:flex;gap:6px;flex:none}
+/* M-11 — kritik onay işareti. Hakediş/sözleşme her zaman, tutar bazlı akışlarda
+   (satın alma · kasa · avans) ₺25.000 ve üzeri kritiktir; eşik crm-ayarlar-onay.html
+   #akis-satinalma'daki K-4 kademeleriyle aynıdır. Kritik satırda Onayla/Reddet YOKTUR,
+   yerine tek "İncele" aksiyonu detay ekranına götürür — karar orada verilir. */
+/* .apr-info span{display:block} (0,1,1) rozeti tam genişliğe yayıyordu — banner gibi
+   duruyordu; sarmalayıcı sınıfla özgüllük eşitlenip içeriğine sarması sağlandı. */
+.apr-info .apr-crit{display:inline-flex;align-items:center;gap:5px;margin-top:6px;
+  font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;
+  background:var(--warn-tint);color:var(--warn)}
+.apr-crit i{font-size:9px}
 @media(max-width:640px){
   .apr-row{flex-wrap:wrap;padding:14px 16px}
   .apr-acts{width:100%;justify-content:flex-end}
+}
+
+/* ============ M-12 — "Bugün Aksiyon Gerektirenler" ============
+   Dağınık aciliyet satırlarının tek adresi. Yeni grafik/bildirim/modal YOK; mevcut kart
+   dili (.gv-card + .gc-head) ve mevcut rol budama idiyomu (data-view) kullanılır.
+   İkon MODÜL kimliğini sessizce taşır (nötr), aciliyet TEK sinyalle sağdaki .gstat
+   rozetinde okunur (danger = süre geçti, warn = süre yaklaşıyor). */
+.ta-row{display:flex;align-items:center;gap:12px;padding:12px 22px;
+  border-top:1px solid var(--line);text-decoration:none}
+/* :first-of-type KULLANILAMAZ — DOM'daki ilk satır çoğu rolde hidden'dır ve başlık
+   çizgisiyle çift kenarlık oluşurdu. İlk GÖRÜNEN satır JS ile işaretlenir; JS'siz
+   varsayılan (yonetim) için statik olarak da basılıdır. */
+.ta-row.ta-first{border-top:none}
+.ta-row:hover{background:var(--bg)}
+.ta-row:focus-visible{outline:2px solid rgba(var(--acc-rgb),.45);outline-offset:-2px}
+.ta-ico{width:30px;height:30px;flex:none;border-radius:var(--r-sm);display:grid;
+  place-items:center;font-size:12px;background:var(--bg);color:var(--ink-2);
+  border:1px solid var(--line)}
+.ta-txt{flex:1;min-width:0;line-height:1.4}
+.ta-txt b{display:block;font-size:13px;font-weight:700;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta-txt span{display:block;font-size:11.5px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta-row:hover .ta-txt b{color:var(--acc-ink)}
+.ta-row .gstat{flex:none}
+.ta-chev{flex:none;font-size:11px;color:var(--line-2)}
+.ta-cnt{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+@media(max-width:640px){
+  .ta-row{padding:12px 16px;gap:10px}
+  .ta-chev{display:none}
+  /* dar ekranda başlık tek satıra sığmıyor — kayıt kodu kırpılmasın diye 2 satıra
+     kadar sarar (.sc-txt b ile aynı idiyom); alt satır tek satır + ellipsis kalır */
+  .ta-txt b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;
+    -webkit-box-orient:vertical;overflow:hidden}
 }
 
 /* şantiye durum satırı */
@@ -217,6 +261,183 @@ a.sc-row:hover{background:var(--bg)}
     <div class="dash-body">
     <div class="dash-left">
 
+    <!-- ============ M-12 — BUGÜN AKSİYON GEREKTİRENLER ============
+         Panelin en üstünde, TÜM rol görünümlerinin ÜSTÜNDE tek blok. Satırlar mevcut rol
+         budama idiyomuyla (data-view, boşluk-ayrımlı) süzülür — yeni mekanizma yok.
+         Kural: yalnız SÜRESİ GEÇEN ya da SÜRESİ YAKLAŞAN, o rolün gerçekten aksiyon
+         alabileceği kayıtlar. "Her şey yolunda" bilgi satırı YOK, yeni grafik YOK,
+         yeni bildirim/modal YOK. Rolün hiç kaydı yoksa blok basılmaz (alttaki IIFE).
+         Tüm kayıtlar mevcut sayfalardan BİREBİR; sayı/tutar üretilmedi. -->
+    <div class="gv-card stack-gap" id="taCard" data-view="yonetim sef ik satinalma muhasebe">
+      <div class="gc-head">
+        <div class="gc-title"><i class="fa-solid fa-bolt"></i> Bugün Aksiyon Gerektirenler</div>
+        <span class="ta-cnt" id="taCnt"></span>
+      </div>
+      <div id="taRows">
+
+        <!-- ---- SÜRESİ GEÇENLER ---- -->
+
+        <!-- SIP-2026-04 · crm-satinalma-siparisler.html "24 Haz — 8 gün gecikti", ₺734.600.
+             YALNIZ satinalma: yönetim görünümünde aynı kayıt "Proje Riskleri" kartında
+             zaten duruyor (ve crm-panel-yonetici.html risk paneliyle eşli) — oraya
+             dokunulmadı, burada tekrar edilmedi. Satın alma görünümünde ise bu kayıt
+             hiçbir kartta YOKTU; en ağır gecikme kendi sorumlusuna görünmüyordu. -->
+        <a class="ta-row" href="crm-satinalma-siparis-detay.html?sip=SIP-2026-04" data-view="satinalma" hidden>
+          <span class="ta-ico"><i class="fa-solid fa-truck-ramp-box"></i></span>
+          <span class="ta-txt"><b>SIP-2026-04 · Delta Elektrik teslimatı yapılmadı</b><span>Liman Lojistik Merkezi · kablo + pano · ₺734.600 · termin 24 Haziran</span></span>
+          <span class="gstat danger">8 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- SAT-2026-011 · crm-satinalma-termin.html "2 gün gecikti". Silinen "Kritik
+             Uyarılar" kartından taşındı. Satın alma görünümündeki "Termin Takibi"
+             kartından da ÇIKARILDI (çift durmasın); "1 Geciken sipariş" KPI'sı özet
+             olarak yerinde bırakıldı.
+             data-view DEĞİL data-only: hedef ekran satinalma/formlar ve "yonetim"
+             görünümünü paylaşan dört rolden TEKNİK MÜDÜR bu ekranı görmüyor
+             (shell.js teknik.scr.satinalma = ['stok'] — link onu 403'e düşürürdü).
+             Satır bu yüzden görünüme değil role bağlandı. muhasebe de formlar
+             ekranını görmüyor, zaten listede değil. -->
+        <a class="ta-row ta-first" href="crm-satinalma-form-detay.html?form=011" data-only="superadmin sahip yonetim satinalma">
+          <span class="ta-ico"><i class="fa-solid fa-truck-ramp-box"></i></span>
+          <span class="ta-txt"><b>SAT-2026-011 · XPS yalıtım teslimi gecikti</b><span>Ege Hazır Beton · Merkez Şantiye · plan 30 Haziran</span></span>
+          <span class="gstat danger">2 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- kritik stok · crm-satinalma-stok.html: altMin:true 3 kalem (menü sayacı da 3).
+             Ø16 demir 1,7/5 t · İSG KKD 9/25 adet · NYM kablo 180/500 m. -->
+        <a class="ta-row" href="crm-satinalma-stok.html" data-view="yonetim satinalma">
+          <span class="ta-ico"><i class="fa-solid fa-boxes-stacked"></i></span>
+          <span class="ta-txt"><b>3 kalem min-stok altına düştü</b><span>Ø16 demir 1,7/5 t · İSG KKD seti 9/25 adet · NYM kablo 180/500 m</span></span>
+          <span class="gstat danger">3 kalem</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- sef yalnız kendi deposundaki kalemi görür: Ø16 demir D-VDI (Vadi). Diğer iki
+             kalem Merkez ve Liman depolarında — sef'in aksiyonu değil, listelenmez. -->
+        <a class="ta-row" href="crm-satinalma-stok-detay.html?kalem=demir-o16" data-view="sef" hidden>
+          <span class="ta-ico"><i class="fa-solid fa-boxes-stacked"></i></span>
+          <span class="ta-txt"><b>Ø16 nervürlü inşaat demiri min-stok altında</b><span>Vadi şantiye deposu · mevcut 1,7 t · min 5 t</span></span>
+          <span class="gstat danger">1,7 / 5 t</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- İSG uygunsuzluğu · crm-santiye-isg-detay.html?isg=008 "aksiyon bekliyor".
+             santiye bölümünü yalnız yonetim + sef görür (shell.js secs). -->
+        <a class="ta-row" href="crm-santiye-isg-detay.html?isg=008" data-view="yonetim sef">
+          <span class="ta-ico"><i class="fa-solid fa-shield-halved"></i></span>
+          <span class="ta-txt"><b>ISG-2026-008 · İskele korkuluk eksikliği</b><span>Vadi Konakları · B Blok · aksiyon bekliyor</span></span>
+          <span class="gstat danger">Açık</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- geciken görevler · crm-gorev.html?f=geciken (GRV-008/009/010). Firma geneli 3
+             — shell.js menü sayacı ve crm-gorev chip sayacıyla BİREBİR. -->
+        <a class="ta-row" href="crm-gorev.html?f=geciken" data-view="yonetim">
+          <span class="ta-ico"><i class="fa-solid fa-list-check"></i></span>
+          <span class="ta-txt"><b>3 görev vadesini geçti</b><span>Perde betonu kür raporu · kalıp iskelesi sökümü · Haziran kasa mutabakatı</span></span>
+          <span class="gstat danger">3 görev</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+        <!-- sef sayısı bu sayfadaki kendi KPI'sıyla ("2'si gecikmede") BİREBİR. -->
+        <a class="ta-row" href="crm-gorev.html?f=geciken" data-view="sef" hidden>
+          <span class="ta-ico"><i class="fa-solid fa-list-check"></i></span>
+          <span class="ta-txt"><b>2 göreviniz vadesini geçti</b><span>Perde betonu kür takibini raporla · Vadi Konakları</span></span>
+          <span class="gstat danger">2 görev</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- SGK bildirimi bekleyen rapor · crm-personel-rapor.html ("1 SGK bildirimi
+             bekliyor"). Yasal süreli iş — "İK Kuyruğum" kartından BURAYA taşındı. -->
+        <a class="ta-row" href="crm-personel-rapor.html" data-view="ik" hidden>
+          <span class="ta-ico"><i class="fa-solid fa-notes-medical"></i></span>
+          <span class="ta-txt"><b>SGK bildirimi yapılmamış istirahat raporu</b><span>1 istirahat raporu · bildirim süresi işliyor</span></span>
+          <span class="gstat danger">1 rapor</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- araç bakımı · crm-operasyon-arac.html: ARC-04 bakım tarihi 30 Haziran'ı 2 gün
+             geçti + km hedefi aşıldı (87.400 / 85.000). varlik bölümü: yonetim + ik.
+             ARC-01 muayenesine 27 gün var — bugünün işi değil, listelenmedi. -->
+        <a class="ta-row" href="crm-operasyon-arac-bakim.html?arac=ARC-04" data-view="yonetim ik">
+          <span class="ta-ico"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+          <span class="ta-txt"><b>41 DBL 457 · Periyodik bakım tarihi geçti</b><span>Fiat Doblo · Merkez Şantiye · plan 30 Haziran · 87.400 / 85.000 km</span></span>
+          <span class="gstat danger">2 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- vadesi geçen cari · kanonik kaynak crm-panel-rapor-cari.html: "Marmara Demir
+             Çelik (₺211.000, 17 gün) ve Demir-Beton İnş. (₺342.000, 4 gün) vadesi geçmiş
+             toplam ₺553.000". muhasebe KPI'sı aynı toplamı ÖZET olarak veriyor (hedefi
+             crm-cari-durum.html); buradaki satır hangi hesaplar ve kaç gün olduğunu
+             söyleyip rakamın gerçekten yazdığı rapora götürür. -->
+        <a class="ta-row" href="crm-panel-rapor-cari.html" data-view="muhasebe" hidden>
+          <span class="ta-ico"><i class="fa-solid fa-scale-balanced"></i></span>
+          <span class="ta-txt"><b>2 cari hesapta ödeme vadesi geçti</b><span>Marmara Demir Çelik ₺211.000 · Demir-Beton İnş. ₺342.000 · toplam ₺553.000</span></span>
+          <span class="gstat danger">17 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- ---- SÜRESİ YAKLAŞANLAR ---- -->
+
+        <!-- M-11 kritik onay sınıfının toplu göstergesi. crm-panel-onaylar.html 12'li
+             kuyruğunda kritik sayılan tek tip hakediştir: TH-2026-014 (₺90.000, 4 gün) +
+             TH-2026-009 (₺76.200) = ₺166.200 net. muhasebe görünümünde iki kayıt
+             "Onayımdaki İşlemler" kartında TEK TEK duruyor — orada tekrar edilmez. -->
+        <a class="ta-row" href="crm-panel-onaylar.html" data-view="yonetim">
+          <span class="ta-ico"><i class="fa-solid fa-stamp"></i></span>
+          <span class="ta-txt"><b>2 kritik onay detay incelemesi bekliyor</b><span>TH-2026-014 + TH-2026-009 · toplam ₺166.200 net · tek tıkla onaylanmaz</span></span>
+          <span class="gstat warn">4 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- İZN-2026-031 · crm-panel-onaylar.html'de "Şantiye Şefi" adımında. İzin 6 Temmuz'da
+             başlıyor (bugün 2 Temmuz). sef bu kaydı panelinde başka hiçbir kartta görmüyordu;
+             "Yaklaşan İzinler" kartı yonetim + ik'ye açık. -->
+        <a class="ta-row" href="crm-personel-izin-detay.html?izn=031" data-view="sef" hidden>
+          <span class="ta-ico"><i class="fa-solid fa-umbrella-beach"></i></span>
+          <span class="ta-txt"><b>İZN-2026-031 · Ali Vural — 5 gün yıllık izin</b><span>6–10 Temmuz · onayınız bekleniyor</span></span>
+          <span class="gstat warn">4 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- araç sigortası · crm-operasyon-arac.html: ARC-08 sigortası 10 Temmuz'da bitiyor,
+             8 gün kaldı ("yenileme başlatılmalı"). -->
+        <a class="ta-row" href="crm-operasyon-arac-detay.html?arac=ARC-08" data-view="yonetim ik">
+          <span class="ta-ico"><i class="fa-solid fa-car"></i></span>
+          <span class="ta-txt"><b>34 PLK 552 · Sigorta süresi doluyor</b><span>VW Transporter T6 · Genel Merkez · bitiş 10 Temmuz 2026</span></span>
+          <span class="gstat warn">8 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- sözleşme bitişi · crm-finans-sozlesme-detay.html?szl=k02 sureUyari alanı:
+             "Süresi yaklaşıyor · 32 gün kaldı". finans/sozlesmeler ekranını sef görmüyor. -->
+        <a class="ta-row" href="crm-finans-sozlesme-detay.html?szl=k02" data-view="yonetim muhasebe">
+          <span class="ta-ico"><i class="fa-solid fa-file-contract"></i></span>
+          <span class="ta-txt"><b>SZL-2026-K02 · Aliağa Liman İşletmeleri</b><span>Bitiş 31 Ağustos 2026 · yenileme sözleşmesi girilmedi</span></span>
+          <span class="gstat warn">32 gün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+        <!-- günlük puantaj · crm-operasyon-puantaj.html 2 Temmuz girişi "Taslak".
+             "İK Kuyruğum" kartından BURAYA taşındı. -->
+        <a class="ta-row" href="crm-operasyon-puantaj.html" data-view="yonetim ik">
+          <span class="ta-ico"><i class="fa-solid fa-user-clock"></i></span>
+          <span class="ta-txt"><b>Günlük puantaj İK onayına gönderilmedi</b><span>2 Temmuz girişi · 3 şantiye · durum: Taslak</span></span>
+          <span class="gstat warn">Bugün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+        <a class="ta-row" href="crm-operasyon-puantaj.html" data-view="sef" hidden>
+          <span class="ta-ico"><i class="fa-solid fa-user-clock"></i></span>
+          <span class="ta-txt"><b>Günlük puantaj girişiniz İK onayına gönderilmedi</b><span>Vadi Konakları · 2 Temmuz · durum: Taslak</span></span>
+          <span class="gstat warn">Bugün</span>
+          <i class="fa-solid fa-chevron-right ta-chev"></i>
+        </a>
+
+      </div>
+    </div>
+
     <!-- ============ YÖNETİM GÖRÜNÜMÜ (superadmin · sahip · yonetim · teknik) ============ -->
     <section data-view="yonetim">
       <div class="gv-card stack-gap">
@@ -320,11 +541,18 @@ a.sc-row:hover{background:var(--bg)}
             <div class="gc-title"><i class="fa-solid fa-stamp"></i> Bekleyen Onaylar</div>
             <a class="gc-link" href="crm-panel-onaylar.html">Tümü (12) <i class="fa-solid fa-arrow-right"></i></a>
           </div>
+          <!-- M-11 — hızlı onay kuralı. BASİT (izin · görev · malzeme talebi · ₺25.000 altı
+               kasa/avans/sipariş) satırlar dashboard'dan doğrudan onaylanır. KRİTİK (hakediş ·
+               sözleşme · ₺25.000 ve üzeri finansal kayıt) satırlarda Onayla/Reddet YOKTUR —
+               tek "İncele" aksiyonu detay ekranına götürür.
+               KSA-2026-018 ₺24.900 bilerek eşiğin ALTINDA kalır (düşük kademe, ₺25.000 altı):
+               aynı kart içinde hem basit hem kritik davranışı ve eşiğin nerede işlediğini
+               gösterir. Eşik tanımı: crm-ayarlar-onay.html#akis-satinalma (₺25.000 / ₺100.000). -->
           <div>
             <div class="apr-row">
               <div class="apr-ico" style="background:var(--warn-tint);color:var(--warn)"><i class="fa-solid fa-cash-register"></i></div>
               <div class="apr-info">
-                <b><a href="crm-operasyon-kasa-detay.html">Kasa gideri — ₺24.900</a></b>
+                <b><a href="crm-operasyon-kasa-detay.html?ks=ksa-018">Kasa gideri — ₺24.900</a></b>
                 <span>Vadi Konakları · Hasan Demirci · hafriyat nakliyesi + yakıt</span>
                 <span class="apr-chain"><span class="st done"><i class="fa-solid fa-check"></i> Şef</span><i class="fa-solid fa-chevron-right sep"></i><span class="st done"><i class="fa-solid fa-check"></i> Teknik</span><i class="fa-solid fa-chevron-right sep"></i><span class="st now"><i class="fa-solid fa-hourglass-half"></i> Genel Müdür</span></span>
               </div>
@@ -369,6 +597,24 @@ a.sc-row:hover{background:var(--bg)}
                 <button class="btn btn-acc btn-sm" onclick="gvToast('İzin talebi onaylandı.')">Onayla</button>
               </div>
             </div>
+            <!-- KRİTİK — taşeron hakedişi tutardan bağımsız kritiktir; onay detayda verilir.
+                 Kayıt crm-panel-onaylar.html'deki 12'li kuyruğun en eski (4 gün) ve en yüksek
+                 tutarlı kaydıdır — BİREBİR aynı veri. -->
+            <div class="apr-row">
+              <div class="apr-ico" style="background:rgba(var(--acc-rgb),.14);color:var(--acc-ink)"><i class="fa-solid fa-people-arrows"></i></div>
+              <div class="apr-info">
+                <b><a href="crm-finans-hakedis-detay.html?th=014">Taşeron hakediş — ₺90.000 net</a></b>
+                <span>Vadi Konakları · Demir-Beton İnş. Ltd. · TH-2026-014 · Haziran 2026</span>
+                <span class="apr-chain"><span class="st done"><i class="fa-solid fa-check"></i> Teknik</span><i class="fa-solid fa-chevron-right sep"></i><span class="st now"><i class="fa-solid fa-hourglass-half"></i> Muhasebe</span></span>
+                <span class="apr-crit"><i class="fa-solid fa-lock"></i> Finansal onay — karar detayda</span>
+              </div>
+              <div class="apr-acts">
+                <a class="btn btn-ghost btn-sm" href="crm-finans-hakedis-detay.html?th=014">İncele <i class="fa-solid fa-arrow-right"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="gc-foot">
+            <span><i class="fa-solid fa-lock"></i> Hakediş, sözleşme ve ₺25.000 üzeri finansal kayıtlar ana ekrandan onaylanmaz; karar detay ekranında verilir.</span><span data-only="superadmin sahip" hidden><a class="gc-link" style="display:inline;white-space:nowrap" href="crm-ayarlar-onay.html#akis-satinalma">Onay kuralları</a></span>
           </div>
         </div>
 
@@ -768,21 +1014,15 @@ a.sc-row:hover{background:var(--bg)}
             <div class="gc-title"><i class="fa-solid fa-inbox"></i> İK Kuyruğum</div>
             <a class="gc-link" href="crm-personel.html">Personel listesi <i class="fa-solid fa-arrow-right"></i></a>
           </div>
+          <!-- M-12 — süreye bağlı iki satır (günlük puantaj taslağı + SGK bildirimi
+               bekleyen rapor) bu karttan ÇIKARILDI: ikisi de "Bugün Aksiyon
+               Gerektirenler" bloğunda. Kart böylece saf ONAY KUYRUĞU oldu; blok
+               süreli işleri, kart bekleyen kararları taşıyor. -->
           <div>
-            <a class="sc-row" href="crm-operasyon-puantaj.html">
-              <span class="sc-dot" style="background:var(--warn)"></span>
-              <span class="sc-txt"><b>Günlük puantaj onayı bekliyor</b><span>3 şantiye girişi · 2 Temmuz · durum: Taslak</span></span>
-              <span class="sc-tail warn">Bugün</span>
-            </a>
             <a class="sc-row" href="crm-personel-izin-detay.html?izn=031">
               <span class="sc-dot" style="background:var(--info)"></span>
               <span class="sc-txt"><b>İZN-2026-031 · Ali Vural — 5 gün yıllık izin</b><span>6–10 Temmuz · şef onayında, sıradaki adım İK</span></span>
               <span class="sc-tail">Sırada</span>
-            </a>
-            <a class="sc-row" href="crm-personel-rapor.html">
-              <span class="sc-dot" style="background:var(--danger)"></span>
-              <span class="sc-txt"><b>SGK bildirimi bekleyen rapor</b><span>1 istirahat raporu · bildirim yapılmadı</span></span>
-              <span class="sc-tail danger">1</span>
             </a>
             <a class="sc-row" href="crm-personel-avans-detay.html?avn=014">
               <span class="sc-dot" style="background:var(--ok)"></span>
@@ -950,8 +1190,11 @@ a.sc-row:hover{background:var(--bg)}
               </div>
             </div>
           </div>
+          <!-- M-11 — malzeme talebi BASİT onaydır: crm-ayarlar-onay.html'de tek kademeli ve
+               tutardan bağımsız tanımlıdır ("bu malzemeye ihtiyaç var mı?"). Tedarikçi/fiyat
+               kararı ayrı akışta — Satın Alma / Sipariş Onayı, ₺25.000 üzeri kritik. -->
           <div class="gc-foot">
-            <span><i class="fa-solid fa-circle-info"></i> Diğer 6 talep şef / teknik müdür adımında.</span>
+            <span><i class="fa-solid fa-circle-info"></i> Diğer 6 talep şef / teknik müdür adımında. Talep onayı ihtiyaç kararıdır; tedarikçi ve fiyat kararı sipariş onayında verilir.</span>
           </div>
         </div>
 
@@ -960,12 +1203,11 @@ a.sc-row:hover{background:var(--bg)}
             <div class="gc-title"><i class="fa-solid fa-truck-ramp-box"></i> Termin Takibi</div>
             <a class="gc-link" href="crm-satinalma-termin.html">Tümü <i class="fa-solid fa-arrow-right"></i></a>
           </div>
+          <!-- M-12 — SAT-2026-011 (geciken teslim) bu karttan ÇIKARILDI: artık sayfanın
+               üstündeki "Bugün Aksiyon Gerektirenler" bloğunda. Bu kart bundan sonra
+               YAKLAŞAN teslimleri gösterir; geciken teslimin özeti "1 Geciken sipariş"
+               KPI kartında duruyor. -->
           <div>
-            <a class="sc-row" href="crm-satinalma-termin.html">
-              <span class="sc-dot" style="background:var(--danger)"></span>
-              <span class="sc-txt"><b>SAT-2026-011 · XPS yalıtım teslimi gecikti</b><span>Ege Hazır Beton · Merkez Şantiye · plan 30 Haziran</span></span>
-              <span class="sc-tail danger">2 gün</span>
-            </a>
             <a class="sc-row" href="crm-satinalma-form-detay.html?form=016">
               <span class="sc-dot" style="background:var(--warn)"></span>
               <span class="sc-txt"><b>SAT-2026-016 · Kalıp kerestesi teslimi</b><span>Vadi Konakları · Ege Hazır Beton · bugün 09:00</span></span>
@@ -1080,10 +1322,10 @@ a.sc-row:hover{background:var(--bg)}
                 <b><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014 — Taşeron hakediş ₺90.000 net</a></b>
                 <span>Vadi Konakları · Demir-Beton İnş. Ltd. · Haziran 2026 dönemi</span>
                 <span class="apr-chain"><span class="st done"><i class="fa-solid fa-check"></i> Teknik</span><i class="fa-solid fa-chevron-right sep"></i><span class="st now"><i class="fa-solid fa-hourglass-half"></i> Muhasebe</span></span>
+                <span class="apr-crit"><i class="fa-solid fa-lock"></i> Finansal onay — karar detayda</span>
               </div>
               <div class="apr-acts">
-                <button class="btn btn-ghost btn-sm">Reddet</button>
-                <button class="btn btn-acc btn-sm" onclick="gvToast('Taşeron hakedişi onaylandı.')">Onayla</button>
+                <a class="btn btn-ghost btn-sm" href="crm-finans-hakedis-detay.html?th=014">İncele <i class="fa-solid fa-arrow-right"></i></a>
               </div>
             </div>
             <div class="apr-row">
@@ -1092,12 +1334,17 @@ a.sc-row:hover{background:var(--bg)}
                 <b><a href="crm-finans-hakedis-detay.html?th=009">TH-2026-009 — Taşeron hakediş ₺76.200 net</a></b>
                 <span>Vadi Konakları · ElektroMek Taahhüt · Haziran 2026 dönemi</span>
                 <span class="apr-chain"><span class="st done"><i class="fa-solid fa-check"></i> Teknik</span><i class="fa-solid fa-chevron-right sep"></i><span class="st now"><i class="fa-solid fa-hourglass-half"></i> Muhasebe</span></span>
+                <span class="apr-crit"><i class="fa-solid fa-lock"></i> Finansal onay — karar detayda</span>
               </div>
               <div class="apr-acts">
-                <button class="btn btn-ghost btn-sm">Reddet</button>
-                <button class="btn btn-acc btn-sm" onclick="gvToast('Taşeron hakedişi onaylandı.')">Onayla</button>
+                <a class="btn btn-ghost btn-sm" href="crm-finans-hakedis-detay.html?th=009">İncele <i class="fa-solid fa-arrow-right"></i></a>
               </div>
             </div>
+          </div>
+          <!-- M-11 — AVN-2026-014 ₺4.000 düşük tutarlı avans: doğrudan onaylanır.
+               İki taşeron hakedişi tutardan bağımsız kritiktir: onay detayda verilir. -->
+          <div class="gc-foot">
+            <span><i class="fa-solid fa-lock"></i> Hakediş ve ₺25.000 üzeri finansal kayıtlar ana ekrandan onaylanmaz; karar detay ekranında verilir.</span><span data-only="superadmin sahip" hidden><a class="gc-link" style="display:inline;white-space:nowrap" href="crm-ayarlar-onay.html#akis-satinalma">Onay kuralları</a></span>
           </div>
         </div>
 
@@ -1193,39 +1440,13 @@ a.sc-row:hover{background:var(--bg)}
         </div>
       </div>
 
-      <!-- kritik uyarılar -->
-      <div class="gv-card" data-view="yonetim sef ik satinalma muhasebe">
-        <div class="sc-head"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><b>Kritik Uyarılar</b></div>
-        <a class="sc-row" href="crm-satinalma-termin.html" data-view="yonetim satinalma">
-          <span class="sc-dot" style="background:var(--danger)"></span>
-          <span class="sc-txt"><b>SAT-2026-011 · XPS yalıtım teslimi gecikti</b><span>Ege Hazır Beton · Merkez Şantiye · plan 30 Haziran</span></span>
-          <span class="sc-tail danger">2 gün</span>
-        </a>
-        <!-- §10 ek alan: Sözleşme süresi yaklaşanlar — crm-finans-sozlesmeler.html kanoniği
-             (SZL-2026-K02, Aliağa Liman İşletmeleri, "Süresi yaklaşıyor" bayrağı zaten
-             crm-finans-sozlesme-detay.html?szl=k02'de var; burada yalnız yüzeye çıkarıldı) -->
-        <a class="sc-row" href="crm-finans-sozlesme-detay.html?szl=k02" data-view="yonetim muhasebe">
-          <span class="sc-dot" style="background:var(--warn)"></span>
-          <span class="sc-txt"><b>SZL-2026-K02 · Aliağa Liman İşletmeleri</b><span>Sözleşme süresi yaklaşıyor · bitiş 31 Ağustos 2026</span></span>
-          <span class="sc-tail warn">Süre</span>
-        </a>
-        <a class="sc-row" href="crm-santiye-isg-detay.html?isg=008" data-view="yonetim sef">
-          <span class="sc-dot" style="background:var(--danger)"></span>
-          <span class="sc-txt"><b>ISG-2026-008 · İskele korkuluk eksikliği</b><span>Vadi Konakları · B Blok · aksiyon bekliyor</span></span>
-        </a>
-        <a class="sc-row" href="crm-operasyon-puantaj.html" data-view="yonetim ik">
-          <span class="sc-dot" style="background:var(--warn)"></span>
-          <span class="sc-txt"><b>Günlük puantaj İK onayına gönderilmedi</b><span>2 Temmuz girişi · 3 şantiye · durum: Taslak</span></span>
-        </a>
-        <a class="sc-row" href="crm-operasyon-puantaj.html" data-view="sef" hidden>
-          <span class="sc-dot" style="background:var(--warn)"></span>
-          <span class="sc-txt"><b>Günlük puantaj girişiniz İK onayına gönderilmedi</b><span>Vadi Konakları · 2 Temmuz · durum: Taslak</span></span>
-        </a>
-        <a class="sc-row" href="crm-gorev.html?f=geciken" data-view="yonetim">
-          <span class="sc-dot" style="background:var(--warn)"></span>
-          <span class="sc-txt"><b>3 görev vadesini geçti</b><span>Perde betonu kür raporu · kalıp iskelesi sökümü…</span></span>
-        </a>
-      </div>
+      <!-- M-12 — "Kritik Uyarılar" kartı KALDIRILDI. Amacı ("aciliyeti yüzeye çıkarmak")
+           ana kolondaki "Bugün Aksiyon Gerektirenler" bloğunun amacıyla birebir aynıydı ve
+           5 satırının tamamı (SAT-2026-011 · SZL-2026-K02 · ISG-2026-008 · puantaj taslağı ·
+           geciken görevler) o bloğa TAŞINDI — ikisi birlikte dursa aynı kayıt sayfada iki kez
+           görünürdü. Modül kartları (Termin Takibi, İK Kuyruğum, Kasa Takibi, Proje Riskleri)
+           ise DURUYOR: onlar bir kategorinin TÜM kuyruğunu gösterir, yeni blok yalnız süresi
+           geçen/yaklaşan kaydı gösterir — farklı işler, çakışmıyorlar. -->
 
       <!-- bugünün ajandası (kanonik: crm-panel-ajanda.html 2 Tem olayları) -->
       <div class="gv-card" data-view="yonetim sef satinalma muhasebe">
@@ -1333,8 +1554,13 @@ a.sc-row:hover{background:var(--bg)}
   document.querySelectorAll('[data-view]').forEach(function(el){
     el.hidden = el.getAttribute('data-view').split(' ').indexOf(view) === -1;
   });
+  /* M-11: data-only da artık boşluk-ayrımlı liste alabilir (data-view'in F2'de kazandığı
+     davranışın aynısı). Tek değerli mevcut kullanım (plat-note="superadmin") aynen çalışır.
+     Gerekçe: crm-ayarlar-onay.html'e YALNIZ superadmin + sahip girebiliyor (diğer roller
+     crm-sistem-403.html'e düşüyor), ama "Onay kuralları" bağlantısı yönetim ve muhasebe
+     kartlarında da duruyordu — rol ikilisini tek attribute ile ifade etmek gerekti. */
   document.querySelectorAll('[data-only]').forEach(function(el){
-    el.hidden = el.getAttribute('data-only') !== GV.role;
+    el.hidden = el.getAttribute('data-only').split(' ').indexOf(GV.role) === -1;
   });
   var ad = GV.R.name.split(' ')[0];
   /* F2: selamlama gerçek saate göre */
@@ -1346,6 +1572,22 @@ a.sc-row:hover{background:var(--bg)}
   /* F2: sağ kolon tarih satırı tek kaynaktan (shell.js STR) */
   var nd = document.getElementById('nowDate');
   if(nd) nd.textContent = GV.STR.greetDate;
+})();
+
+/* M-12 — "Bugün Aksiyon Gerektirenler": sayaç + ilk-satır kenarlığı + boş durum.
+   Rol budaması YUKARIDAKİ data-view döngüsünde bitti; burada yeni görünürlük kuralı
+   YOK, yalnız o döngünün sonucu okunur. Rolün aksiyon gerektiren hiçbir kaydı yoksa
+   blok hiç basılmaz — "her şey yolunda" tipi bilgi satırı üretilmez. */
+(function(){
+  var card = document.getElementById('taCard');
+  if(!card || card.hidden) return;
+  var rows = [].slice.call(card.querySelectorAll('.ta-row')).filter(function(r){ return !r.hidden; });
+  if(!rows.length){ card.hidden = true; return; }
+  card.querySelectorAll('.ta-row.ta-first').forEach(function(r){ r.classList.remove('ta-first'); });
+  rows[0].classList.add('ta-first');
+  var acil = rows.filter(function(r){ return r.querySelector('.gstat.danger'); }).length;
+  var cnt = document.getElementById('taCnt');
+  if(cnt) cnt.textContent = rows.length + ' kayıt' + (acil ? ' · ' + acil + ' acil' : '');
 })();
 
 /* D15 / [T-PANEL] — Bekleyen Görevler "Üzerime Al": crm-gorev'in localStorage(gv_gorev_claims)
