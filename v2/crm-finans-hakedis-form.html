@@ -48,6 +48,18 @@
 .kal-row input:focus,.kal-row select:focus{border-color:var(--acc);background:var(--paper);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.12)}
 .kal-row .kal-num{text-align:right;font-variant-numeric:tabular-nums}
 .kal-row .kal-tutar{font-size:13px;font-weight:700;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* [Dalga 2 / M-4] Poz seçimi — iş kalemi artık serbest metin değil, sözleşme pozu.
+   Birim ve birim fiyat sözleşmeden gelir, hakedişte değiştirilemez; salt-okunur
+   alanlar çerçevesiz/soluk yazılarak düzenlenebilir alanlardan ayrışır. */
+.kal-row input[readonly]{background:var(--bg);border-color:transparent;color:var(--muted);font-weight:600;cursor:default}
+.kal-row input[readonly]:focus{border-color:transparent;background:var(--bg);box-shadow:none}
+.kal-hint{grid-column:1/-1;display:flex;align-items:flex-start;gap:6px;font-size:11.5px;line-height:1.5;color:var(--muted);margin-top:-3px}
+.kal-hint i{font-size:10px;margin-top:3px;flex:none}
+.kal-hint b{font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.kal-row.is-error .kal-miktar{border-color:var(--danger);background:var(--danger-tint);color:var(--danger)}
+.kal-row.is-error .kal-miktar:focus{border-color:var(--danger);background:var(--danger-tint);box-shadow:0 0 0 3px var(--danger-tint)}
+.kal-row.is-error .kal-hint,.kal-row.is-error .kal-hint b{color:var(--danger)}
 .kal-remove{width:34px;height:34px;flex:none;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--paper);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s var(--ease)}
 .kal-remove:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-tint)}
 .kal-add{margin-top:2px}
@@ -56,8 +68,10 @@
 @media(max-width:760px){
   .kal-head{display:none}
   .kal-row{grid-template-columns:1fr 1fr;gap:8px;padding-bottom:12px;margin-bottom:12px;border-bottom:1px dashed var(--line)}
-  .kal-row .kal-remove{grid-column:1/-1;justify-self:end;width:34px}
-  .kal-row .kal-tutar{grid-column:1/-1;text-align:left;font-size:14px}
+  /* dar ekranda kalan-miktar ipucu, ait olduğu miktar alanının hemen altında kalsın */
+  .kal-hint{order:1;margin-top:1px}
+  .kal-row .kal-tutar{order:2;grid-column:1/2;text-align:left;font-size:14px}
+  .kal-row .kal-remove{order:3;grid-column:2/-1;justify-self:end;width:34px}
 }
 
 /* kesintiler */
@@ -142,7 +156,7 @@
       <div>
         <div class="ph-eyebrow">Finans</div>
         <h1>Yeni Hakediş</h1>
-        <div class="ph-sub">Metraj bazlı imalat kalemlerini girin; kesintiler ve net tutar otomatik hesaplanır.</div>
+        <div class="ph-sub">Sözleşmenin iş kalemlerini seçip bu dönem imal edilen miktarı girin; kesintiler ve net tutar otomatik hesaplanır.</div>
       </div>
     </div>
 
@@ -204,38 +218,28 @@
         </div>
 
         <div class="gd-block">
-          <div class="gd-label">Metraj / İmalat Kalemleri</div>
-          <div class="kal-head"><span>Tanım</span><span>Birim</span><span>Miktar</span><span>Birim Fiyat</span><span>Tutar</span><span></span></div>
+          <div class="gd-label">Metraj / İmalat Kalemleri <span class="gtag">Sözleşme pozlarından</span></div>
+          <div class="kal-head"><span>İş Kalemi (Poz)</span><span>Birim</span><span>Miktar</span><span>Birim Fiyat</span><span>Tutar</span><span></span></div>
+          <!-- [Dalga 2 / M-4] Satırlar JS ile seçili sözleşmenin pozlarından kurulur;
+               aşağıdaki iki satır SZL-2025-T05 varsayılanının birebir karşılığıdır. -->
           <div id="kalWrap">
-            <div class="kal-row">
-              <input type="text" placeholder="İmalat kalemi" value="Kalıp işçiliği">
-              <select>
-                <option>m²</option>
-                <option>m³</option>
-                <option>ton</option>
-                <option>metre</option>
-                <option>adet</option>
-                <option>kg</option>
-              </select>
-              <input type="text" class="kal-num kal-miktar" placeholder="Miktar" value="320">
-              <input type="text" class="kal-num kal-fiyat" placeholder="Birim ₺" value="85">
+            <div class="kal-row" data-poz="POZ-01">
+              <select class="kal-poz" aria-label="İş kalemi"><option value="POZ-01" selected>POZ-01 · Kalıp işçiliği</option></select>
+              <input type="text" class="kal-birim" value="m²" readonly aria-label="Birim">
+              <input type="text" class="kal-num kal-miktar" inputmode="decimal" placeholder="Miktar" value="320" aria-label="Bu dönem miktarı">
+              <input type="text" class="kal-num kal-fiyat" value="85" readonly aria-label="Birim fiyat">
               <div class="kal-tutar">₺27.200</div>
               <button type="button" class="kal-remove" aria-label="Satırı kaldır" data-no-confirm><i class="fa-solid fa-xmark"></i></button>
+              <div class="kal-hint"><i class="fa-solid fa-ruler"></i><span>Kalan: <b>800 m²</b> (sözleşme 3.200 · önceki hakediş 2.400)</span></div>
             </div>
-            <div class="kal-row">
-              <input type="text" placeholder="İmalat kalemi" value="Demir montajı">
-              <select>
-                <option>m²</option>
-                <option>m³</option>
-                <option selected>ton</option>
-                <option>metre</option>
-                <option>adet</option>
-                <option>kg</option>
-              </select>
-              <input type="text" class="kal-num kal-miktar" placeholder="Miktar" value="2,5">
-              <input type="text" class="kal-num kal-fiyat" placeholder="Birim ₺" value="9500">
+            <div class="kal-row" data-poz="POZ-02">
+              <select class="kal-poz" aria-label="İş kalemi"><option value="POZ-02" selected>POZ-02 · Demir montajı</option></select>
+              <input type="text" class="kal-birim" value="ton" readonly aria-label="Birim">
+              <input type="text" class="kal-num kal-miktar" inputmode="decimal" placeholder="Miktar" value="2,5" aria-label="Bu dönem miktarı">
+              <input type="text" class="kal-num kal-fiyat" value="9.500" readonly aria-label="Birim fiyat">
               <div class="kal-tutar">₺23.750</div>
               <button type="button" class="kal-remove" aria-label="Satırı kaldır" data-no-confirm><i class="fa-solid fa-xmark"></i></button>
+              <div class="kal-hint"><i class="fa-solid fa-ruler"></i><span>Kalan: <b>4 ton</b> (sözleşme 12 · önceki hakediş 8)</span></div>
             </div>
           </div>
           <button type="button" class="btn btn-ghost btn-sm kal-add" id="kalAdd" data-no-confirm><i class="fa-solid fa-plus"></i> Kalem Ekle</button>
@@ -346,6 +350,48 @@
     {key:'t07', ad:'SZL-2025-T07 — ElektroMek Taahhüt · Vadi Konakları', kum:130200, bedel:185000}
   ];
 
+  /* [Dalga 2 / M-4] Pozlar — kanonik kaynak crm-finans-sozlesme-detay.html; BİREBİR kopya.
+     Her sözleşmede Σ(miktar × fiyat) = sözleşme bedeli, Σ(onceki × fiyat) = kümülatif
+     hakediş toplamı (`kum`). `onceki` = önceki hakedişlerde imal edilmiş miktar. */
+  var POZ = {
+    k01:[
+      {no:'POZ-01', ad:'Kaba inşaat (betonarme)', birim:'m²', miktar:38400, fiyat:320, onceki:8700},
+      {no:'POZ-02', ad:'İnce işler', birim:'m²', miktar:38400, fiyat:175, onceki:0},
+      {no:'POZ-03', ad:'Mekanik tesisat', birim:'m²', miktar:38400, fiyat:90, onceki:0},
+      {no:'POZ-04', ad:'Elektrik tesisatı', birim:'m²', miktar:38400, fiyat:50, onceki:0},
+      {no:'POZ-05', ad:'Çevre düzenleme', birim:'m²', miktar:4640, fiyat:25, onceki:240}
+    ],
+    k02:[
+      {no:'POZ-01', ad:'Saha betonu', birim:'m²', miktar:12000, fiyat:420, onceki:2500},
+      {no:'POZ-02', ad:'Çelik konstrüksiyon', birim:'ton', miktar:185, fiyat:18000, onceki:25},
+      {no:'POZ-03', ad:'Altyapı ve drenaj', birim:'metre', miktar:1430, fiyat:1000, onceki:155}
+    ],
+    k03:[
+      {no:'POZ-01', ad:'Kaba inşaat', birim:'m²', miktar:8500, fiyat:480, onceki:0},
+      {no:'POZ-02', ad:'İnce işler', birim:'m²', miktar:8500, fiyat:200, onceki:0},
+      {no:'POZ-03', ad:'Çevre düzenleme', birim:'m²', miktar:2100, fiyat:200, onceki:0}
+    ],
+    t05:[
+      /* [Dalga 2 / M-4] Birim fiyatlar TH-2026-014 kalem dökümünden hizalandı
+         (beton C30 ₺1.625/m³ — önceki ₺250 değeri o kayıtla çelişiyordu).
+         Σ(miktar×fiyat)=450.000 · Σ(önceki×fiyat)=300.000 korundu. */
+      {no:'POZ-01', ad:'Kalıp işçiliği', birim:'m²', miktar:3000, fiyat:85, onceki:2400},
+      {no:'POZ-02', ad:'Demir montajı', birim:'ton', miktar:12, fiyat:9500, onceki:8},
+      {no:'POZ-03', ad:'Beton dökümü C30', birim:'m³', miktar:40, fiyat:1625, onceki:12},
+      {no:'POZ-04', ad:'İskele kurulum ve söküm', birim:'m²', miktar:800, fiyat:20, onceki:25}
+    ],
+    t06:[
+      {no:'POZ-01', ad:'Çatı su yalıtımı', birim:'m²', miktar:1800, fiyat:95, onceki:900},
+      {no:'POZ-02', ad:'Isı yalıtımı (dış cephe)', birim:'m²', miktar:1100, fiyat:90, onceki:300},
+      {no:'POZ-03', ad:'Temel perde yalıtımı', birim:'m²', miktar:500, fiyat:80, onceki:200}
+    ],
+    t07:[
+      {no:'POZ-01', ad:'Kablo tesisatı', birim:'metre', miktar:4200, fiyat:25, onceki:3100},
+      {no:'POZ-02', ad:'Pano montajı', birim:'adet', miktar:14, fiyat:3500, onceki:10},
+      {no:'POZ-03', ad:'Aydınlatma armatürü', birim:'adet', miktar:620, fiyat:50, onceki:354}
+    ]
+  };
+
   var sozlesmeSel = document.getElementById('fSozlesme');
   var kesBlock = document.getElementById('kesBlock');
   var kesKurumNote = document.getElementById('kesKurumNote');
@@ -367,7 +413,8 @@
     crumbBack.textContent = label;
     btnCancel.href = target;
     document.getElementById('fTevkifat').value = tur === 'kurum' ? 'yok' : '4-10';
-    recalc();
+    /* [Dalga 2 / M-4] tür değişince sözleşme de değişir → kalem satırları sıfırlanır */
+    resetKalemler();
   }
 
   document.getElementById('turGroup').addEventListener('click', function(e){
@@ -385,6 +432,86 @@
   function fmt(n){ return '₺' + Math.round(n).toLocaleString('tr-TR'); }
 
   var wrap = document.getElementById('kalWrap');
+
+  /* ---- [Dalga 2 / M-4] poz seçim mekaniği ----
+     İş kalemi serbest metin olarak girilmez: satırın ilk alanı seçili sözleşmenin poz
+     listesidir. Poz seçilince birim ve birim fiyat sözleşmeden gelir (salt-okunur);
+     kullanıcıya açık tek alan "bu dönem miktarı"dır. Kalan miktar satır altında
+     gösterilir, aşım hem satırda hem toast ile uyarılır. */
+  function nf(n){ return Number(n).toLocaleString('tr-TR', {maximumFractionDigits:2}); }
+  function pozList(){ return POZ[sozlesmeSel.value] || []; }
+  function pozBul(no){ return pozList().filter(function(p){ return p.no === no; })[0] || null; }
+
+  function rowHtml(pozNo, miktar){
+    return '<div class="kal-row" data-poz="' + pozNo + '">'
+      +   '<select class="kal-poz" aria-label="İş kalemi"></select>'
+      +   '<input type="text" class="kal-birim" value="" readonly aria-label="Birim">'
+      +   '<input type="text" class="kal-num kal-miktar" inputmode="decimal" placeholder="Miktar" value="' + miktar + '" aria-label="Bu dönem miktarı">'
+      +   '<input type="text" class="kal-num kal-fiyat" value="" readonly aria-label="Birim fiyat">'
+      +   '<div class="kal-tutar">₺0</div>'
+      +   '<button type="button" class="kal-remove" aria-label="Satırı kaldır" data-no-confirm><i class="fa-solid fa-xmark"></i></button>'
+      +   '<div class="kal-hint"></div>'
+      + '</div>';
+  }
+
+  /* seçenek listesini tazele — başka satırda kullanılan poz disabled olur (aynı poz iki kez eklenemez) */
+  function optionsTazele(){
+    var rows = Array.prototype.slice.call(wrap.querySelectorAll('.kal-row'));
+    var used = rows.map(function(r){ return r.querySelector('.kal-poz').value || r.dataset.poz; });
+    rows.forEach(function(r){
+      var sel = r.querySelector('.kal-poz');
+      var cur = sel.value || r.dataset.poz;
+      sel.innerHTML = pozList().map(function(p){
+        var dis = p.no !== cur && used.indexOf(p.no) !== -1;
+        return '<option value="' + p.no + '"' + (p.no === cur ? ' selected' : '') + (dis ? ' disabled' : '') + '>' + p.no + ' · ' + p.ad + '</option>';
+      }).join('');
+      sel.value = cur;
+    });
+  }
+
+  /* satırı seçili poza göre kur: birim/fiyat sözleşmeden, kalan miktar ipucu, aşım kontrolü */
+  function satirUygula(row, uyar){
+    var p = pozBul(row.querySelector('.kal-poz').value);
+    var hint = row.querySelector('.kal-hint');
+    if(!p){ row.classList.remove('is-error'); hint.innerHTML = ''; return; }
+    row.dataset.poz = p.no;
+    row.querySelector('.kal-birim').value = p.birim;
+    row.querySelector('.kal-fiyat').value = nf(p.fiyat);
+    var kalan = p.miktar - p.onceki;
+    var asim = num(row.querySelector('.kal-miktar').value) > kalan + 0.0001;
+    var oncedenAsim = row.classList.contains('is-error');
+    row.classList.toggle('is-error', asim);
+    hint.innerHTML = '<i class="fa-solid fa-' + (asim ? 'triangle-exclamation' : 'ruler') + '"></i>'
+      + '<span>' + (asim ? 'Miktar kalanı aşıyor — k' : 'K') + 'alan: <b>' + nf(kalan) + ' ' + p.birim + '</b>'
+      + ' (sözleşme ' + nf(p.miktar) + ' · önceki hakediş ' + nf(p.onceki) + ')</span>';
+    if(asim && !oncedenAsim && uyar){
+      gvToast(p.no + ' · ' + p.ad + ' — bu dönem miktarı sözleşmede kalan ' + nf(kalan) + ' ' + p.birim + ' değerini aşıyor.', {type:'danger'});
+    }
+  }
+
+  /* sözleşme değişince satırlar sıfırlanır — eski sözleşmenin pozu taşınmaz.
+     İlk kurulumda taşeron varsayılanı (SZL-2025-T05) iki kalemle açılır. */
+  var SEED = {t05:[['POZ-01','320'], ['POZ-02','2,5']]};
+  var ilkKurulum = true;
+  function resetKalemler(){
+    var list = pozList();
+    var seed = (ilkKurulum && SEED[sozlesmeSel.value]) ? SEED[sozlesmeSel.value] : [[(list[0] || {}).no || '', '']];
+    ilkKurulum = false;
+    wrap.innerHTML = seed.map(function(s){ return rowHtml(s[0], s[1]); }).join('');
+    optionsTazele();
+    wrap.querySelectorAll('.kal-row').forEach(function(r){ satirUygula(r, false); });
+    recalc();
+  }
+
+  function kalemDogrula(){
+    var rows = Array.prototype.slice.call(wrap.querySelectorAll('.kal-row'));
+    var dolu = rows.filter(function(r){ return num(r.querySelector('.kal-miktar').value) > 0; });
+    if(!dolu.length) return 'En az bir iş kalemi için bu dönem miktarını girin.';
+    if(rows.some(function(r){ return r.classList.contains('is-error'); })){
+      return 'Bir kalemin miktarı sözleşmede kalan miktarı aşıyor — düzeltmeden hakedişi gönderemezsiniz.';
+    }
+    return '';
+  }
 
   function recalc(){
     var brut = 0;
@@ -427,27 +554,40 @@
   }
 
   wrap.addEventListener('input', function(e){
-    if(e.target.classList.contains('kal-miktar') || e.target.classList.contains('kal-fiyat')) recalc();
+    if(!e.target.classList.contains('kal-miktar')) return;
+    satirUygula(e.target.closest('.kal-row'), true);
+    recalc();
+  });
+  wrap.addEventListener('change', function(e){
+    if(!e.target.classList.contains('kal-poz')) return;
+    var row = e.target.closest('.kal-row');
+    optionsTazele();
+    satirUygula(row, true);
+    recalc();
   });
   wrap.addEventListener('click', function(e){
     var btn = e.target.closest('.kal-remove'); if(!btn) return;
     var rows = wrap.querySelectorAll('.kal-row');
     if(rows.length <= 1){ gvToast('En az bir kalem satırı kalmalı.', {type:'info'}); return; }
     btn.closest('.kal-row').remove();
+    optionsTazele();
     recalc();
   });
+  /* Kalem Ekle — sözleşmenin henüz eklenmemiş ilk pozuyla yeni satır açar */
   document.getElementById('kalAdd').addEventListener('click', function(){
-    var row = wrap.querySelector('.kal-row').cloneNode(true);
-    row.querySelectorAll('input[type="text"]').forEach(function(i){ i.value = ''; });
-    row.querySelector('select').selectedIndex = 0;
-    row.querySelector('.kal-tutar').textContent = '₺0';
-    wrap.appendChild(row);
-    row.querySelector('input').focus();
+    var used = Array.prototype.map.call(wrap.querySelectorAll('.kal-poz'), function(s){ return s.value; });
+    var bos = pozList().filter(function(p){ return used.indexOf(p.no) === -1; })[0];
+    if(!bos){ gvToast('Bu sözleşmedeki tüm iş kalemleri hakedişe eklendi.', {type:'info'}); return; }
+    wrap.insertAdjacentHTML('beforeend', rowHtml(bos.no, ''));
+    var row = wrap.lastElementChild;
+    optionsTazele();
+    satirUygula(row, false);
+    row.querySelector('.kal-miktar').focus();
     recalc();
   });
   document.getElementById('fTeminat').addEventListener('input', recalc);
   document.getElementById('fAvans').addEventListener('input', recalc);
-  sozlesmeSel.addEventListener('change', recalc);
+  sozlesmeSel.addEventListener('change', resetKalemler);
 
   /* ?tur=kurum|taseron ile ön seçim — finans-kurum/taseron listelerindeki
      "Yeni Hakediş" bağlantıları buradan gelir. */
@@ -462,8 +602,8 @@
 
   document.getElementById('btnSend').addEventListener('click', function(){
     if(this.disabled) return;
-    var anyName = Array.prototype.some.call(wrap.querySelectorAll('.kal-row input[type="text"]'), function(i){ return i.value.trim(); });
-    if(!anyName){ gvToast('En az bir imalat kalemi girin.', {type:'danger'}); return; }
+    var hata = kalemDogrula();
+    if(hata){ gvToast(hata, {type:'danger'}); return; }
     var tur = document.querySelector('#turGroup .tip-opt.is-on').getAttribute('data-t');
     var target = tur === 'kurum' ? 'crm-finans-kurum.html' : 'crm-finans-taseron.html';
     gvResult('onaya-gonderildi', {
@@ -477,9 +617,9 @@
 
   /* §17 — Taslak Olarak Kaydet: gerçek durum geçişi (Taslak), onay akışına GİRMEZ */
   document.getElementById('btnDraft').addEventListener('click', function(){
-    var anyName = Array.prototype.some.call(wrap.querySelectorAll('.kal-row input[type="text"]'), function(i){ return i.value.trim(); });
-    if(!anyName){ gvToast('En az bir imalat kalemi girin.', {type:'danger'}); return; }
-    var turNow = document.querySelector('#turGroup .tip-opt.is-on').getAttribute('data-t');
+    var hataDraft = kalemDogrula();
+    if(hataDraft){ gvToast(hataDraft, {type:'danger'}); return; }
+    var turNow =document.querySelector('#turGroup .tip-opt.is-on').getAttribute('data-t');
     var targetNow = turNow === 'kurum' ? 'crm-finans-kurum.html' : 'crm-finans-taseron.html';
     gvResult('kaydedildi', {
       mesaj: 'Hakediş taslak olarak kaydedildi — onaya göndermeden dilediğiniz zaman düzenleyebilirsiniz.',

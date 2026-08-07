@@ -67,6 +67,39 @@
 .term-item{display:flex;gap:10px;font-size:13px;color:var(--ink-2);line-height:1.55}
 .term-item i{color:var(--acc-ink);font-size:12px;margin-top:3px;flex:none}
 
+/* ---- [Dalga 2 / M-4] sekme çubuğu — crm-santiye-detay.html'in sayfa-lokal
+   .gv-tabs/.gv-tab/.tab-panel idiyomu BİREBİR devralındı (o dosya READ-ONLY referans,
+   yazılmadı). Alt çizgili, yoğun ERP dili — pill DEĞİL. ui.css yalnız kaydırma
+   ipucunu (.gv-scroll-l/-r) tanır, sekmenin görsel dili sayfa-lokaldir. ---- */
+.gv-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 4px;margin-right:26px;flex:none;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--muted);background:none;border:none;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;transition:.18s var(--ease)}
+.gv-tab i{font-size:13px}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-color:var(--acc-ink)}
+.gv-tab .tb-cnt{font-size:10.5px;font-weight:700;background:var(--bg);color:var(--ink-2);padding:1px 6px;border-radius:var(--r-pill)}
+.gv-tab.is-active .tb-cnt{background:rgba(var(--acc-rgb),.16);color:var(--acc-deep)}
+.tab-panel{animation:tabIn .22s var(--ease)}
+@keyframes tabIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---- [Dalga 2 / M-4] İş Kalemleri (poz) tablosu — 11 kolon. Tablo primitifi
+   ui.css .gtable/.gtable-cards; burada yalnız özet satırı + dipnot tanımlanır. ---- */
+@media(min-width:641px){
+  .gtable td.poz-desc{min-width:200px;color:var(--ink-2)}
+  /* poz kodu ve birim tek satırda kalır — "POZ-01" tirede bölünmemeli */
+  [data-tab-panel="kalemler"] .gtable td:first-child,
+  [data-tab-panel="kalemler"] .gtable td:nth-child(4){white-space:nowrap}
+}
+.poz-sum{display:flex;flex-wrap:wrap;gap:10px 30px;padding:15px 22px;border-top:1px solid var(--line)}
+.poz-sum > div{display:flex;align-items:baseline;gap:9px}
+.poz-sum .ps-lbl{font-size:12px;color:var(--muted)}
+.poz-sum .ps-val{font-size:14px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.poz-sum .ps-val.is-acc{color:var(--acc-ink)}
+.poz-note{display:flex;gap:10px;padding:0 22px 18px;font-size:12px;line-height:1.6;color:var(--muted)}
+.poz-note i{color:var(--acc-ink);font-size:11.5px;margin-top:3px;flex:none}
+@media(max-width:640px){ .poz-sum,.poz-note{padding-left:16px;padding-right:16px} }
 
 /* ---- §19 revizyon (D4/Finans) — Belge Önizleme modalı: crm-satinalma-irsaliye-
    fatura.html'deki .gv-modal idiyomu BİREBİR devralındı (o dosya READ-ONLY referans,
@@ -97,6 +130,10 @@
   .gv-rail,.gv-menu,.gv-divider,.gv-overlay,.gv-top,.ph-actions,#gdQuickFiles,#modBanner{display:none !important}
   .gv-main{margin:0 !important;padding:0 !important}
   .gv-app{display:block !important}
+  /* [Dalga 2 / M-4] yazdırmada sekme ayrımı yoktur — sözleşme çıktısı iş kalemleri
+     tablosunu da taşımalı; gizli panel açılır, sekme şeridi basılmaz. */
+  .gv-tabs{display:none !important}
+  .tab-panel[hidden]{display:block !important}
 }
 </style>
 </head>
@@ -123,7 +160,7 @@
   <main class="gv-main">
     <!-- statik bake — DEFAULT sözleşme (szl=t05, SZL map VERBATIM); JS yüklenince
          ?szl= parametresine göre aynı mount innerHTML ile ezilir — D18-B2 -->
-    <div id="szlRoot"><div class="gd-head"><div><div class="gd-eyebrow">Demir-Beton İnş. Ltd. · Taşeron Sözleşmesi #SZL-2025-T05</div><h1>Vadi Konakları kaba inşaat — kalıp, demir, beton işleri</h1><div class="gd-badges" id="gdBadge"><span class="gstat ok">Yürürlükte</span> <span class="gtag">Taşeron</span></div></div><div class="ph-actions"><a class="btn btn-ghost btn-sm" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t05" data-no-confirm><i class="fa-solid fa-pen"></i> Düzenle</a><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlCopy"><i class="fa-solid fa-copy"></i> Kopyala</button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlToggle"><i class="fa-solid fa-power-off"></i> <span id="btnSzlToggleLbl">Pasife Al</span></button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlArch"><i class="fa-solid fa-box-archive"></i> Arşivle</button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlFile"><i class="fa-solid fa-paperclip"></i> Dosya Ekle</button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlPrint"><i class="fa-solid fa-print"></i> Yazdır</button><a class="btn btn-ghost btn-sm" id="btnSzlLog" href="crm-ayarlar-log.html?kayit=SZL-2025-T05"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişini Gör</a><a class="btn btn-ghost btn-sm" href="crm-finans-sozlesmeler.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a></div></div><div class="gd-grid"><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Kapsam / İş Tanımı</div><p class="gd-desc">Vadi Konakları A ve B Blok kaba inşaat imalatları kapsamında kalıp işçiliği, demir montajı ve C30 beton dökümü işleri Demir-Beton İnş. Ltd.'ye taşeron olarak verilmiştir. İşin süresi 6 ay olup metraj bazlı aylık hakediş usulüyle faturalandırılır. Malzeme (demir, beton) Yapıtaş İnşaat A.Ş. tarafından temin edilir; taşeron yalnız işçilik ve uygulamadan sorumludur.</p></div><div class="gd-block"><div class="gd-label">Ödeme Koşulları</div><div class="term-list"><div class="term-item"><i class="fa-solid fa-calendar-check"></i> Aylık metraj bazlı hakediş, her ayın son iş gününde kesilir.</div><div class="term-item"><i class="fa-solid fa-scissors"></i> Her hakedişten %3 stopaj ve %5 teminat kesintisi uygulanır.</div><div class="term-item"><i class="fa-solid fa-hand-holding-dollar"></i> %20 peşin avans (₺90.000) 1 Nisan 2026'da verilmiş olup sonraki hakedişlerden orantılı mahsup edilir.</div><div class="term-item"><i class="fa-solid fa-building-columns"></i> Ödemeler onaylanan hakedişten en geç 15 gün içinde banka havalesiyle yapılır.</div></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">İlişkili Hakedişler</div><div class="tbl-scroll"><table class="kum-table"><thead><tr><th>Hakediş</th><th>Dönem</th><th class="num">Net Tutar</th><th>Durum</th></tr></thead><tbody><tr><td><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a></td><td>Haziran 2026</td><td class="num">₺90.000</td><td><span class="gstat wait">Onay Bekliyor</span></td></tr><tr><td><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013</a></td><td>Mayıs 2026</td><td class="num">₺210.000</td><td><span class="gstat info">Onaylandı</span></td></tr></tbody></table></div><div class="kum-note"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:66.7%"></div></div><span class="gbar-val">%66,7</span></div><span class="kn-txt">300.000 kümülatif imalat / ₺450.000 sözleşme bedeli</span></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">İşlem Geçmişi</div><div class="islem-item"><i class="fa-solid fa-file-circle-plus"></i><div class="im-body"><b><a href="crm-finans-sozlesme-revizyon.html?szl=t05">Ek protokol kaydı: EP-SZL-2025-T05-01</a></b><span>15 Mayıs 2026 · Onaylandı</span></div></div><div class="islem-item"><i class="fa-solid fa-file-invoice-dollar"></i><div class="im-body"><b><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014 hakedişi oluşturuldu</a></b><span>Haziran 2026 dönemi · ₺90.000</span></div></div><div class="islem-item"><i class="fa-solid fa-file-invoice-dollar"></i><div class="im-body"><b><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013 hakedişi oluşturuldu</a></b><span>Mayıs 2026 dönemi · ₺210.000</span></div></div><div class="islem-item"><i class="fa-solid fa-file-signature"></i><div class="im-body"><b>Sözleşme imzalandı</b><span>28 Mart 2026</span></div></div></div></div></div><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Taraflar</div><div class="party-row"><div class="party-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">YI</div><div class="party-info"><b>Yapıtaş İnşaat A.Ş.</b><span>Vadi Konakları · İşveren yüklenici</span></div><span class="party-role">Taraf A</span></div><div class="party-row"><div class="party-mark" style="background:var(--info-tint);color:var(--info)">DB</div><div class="party-info"><b><a href="crm-cari-durum.html?cari=demir-beton" style="color:inherit">Demir-Beton İnş. Ltd.</a></b><span>Yusuf Ergin · Taşeron</span></div><span class="party-role">Taraf B</span></div></div><div class="gd-block"><div class="ctx-row"><span class="ctx-lbl">Sözleşme bedeli</span><span class="ctx-val">₺450.000 <span class="muted" style="font-weight:500">(KDV hariç)</span></span></div><div class="ctx-row"><span class="ctx-lbl">Başlangıç tarihi</span><span class="ctx-val">1 Nisan 2026</span></div><div class="ctx-row"><span class="ctx-lbl">Bitiş tarihi</span><span class="ctx-val">30 Eylül 2026</span></div><div class="ctx-row"><span class="ctx-lbl">Teminat</span><span class="ctx-val">%5 kesin teminat mektubu</span></div><div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val"><a href="crm-santiye-detay.html?santiye=vadi" style="color:var(--acc-ink);font-weight:700">Vadi Konakları</a></span></div><div class="ctx-row"><span class="ctx-lbl">Proje</span><span class="ctx-val"><a href="crm-santiye-proje-detay.html?proje=korfez" style="color:var(--acc-ink);font-weight:700">Körfez GYO Karma Yatırım Programı</a></span></div><div class="ctx-row"><span class="ctx-lbl">İmza tarihi</span><span class="ctx-val">28 Mart 2026</span></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">Belge<span class="gtag" style="margin-left:8px">v2</span></div><div class="party-row" style="border:none;padding:4px 0"><div class="party-mark" style="background:var(--danger-tint);color:var(--danger)"><i class="fa-solid fa-file-pdf"></i></div><div class="party-info"><b>sozlesme-szl-2025-t05.pdf</b><span>1,1 MB · İmzalı nüsha</span></div><button class="ia-btn" data-belge-preview="" aria-label="Önizle"><i class="fa-solid fa-eye"></i></button><button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm="" aria-label="İndir"><i class="fa-solid fa-download"></i></button></div><div class="gd-block" style="padding-top:0"><div class="term-item"><i class="fa-solid fa-file-circle-plus"></i> Bu versiyon ek protokol içerir — <a href="crm-finans-sozlesme-revizyon.html?szl=t05" style="color:var(--acc-ink);font-weight:700">revizyon dosyalarını gör</a></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">İlgili Kayıtlar</div><div class="term-list"><div class="term-item"><i class="fa-solid fa-clock-rotate-left"></i> <a href="crm-finans-sozlesme-revizyon.html?szl=t05" style="color:var(--acc-ink);font-weight:700">Revizyon / Ek Protokol Geçmişi</a></div><div class="term-item"><i class="fa-solid fa-user-shield"></i> <a href="crm-finans-sozlesme-yetki.html?szl=t05" style="color:var(--acc-ink);font-weight:700">Yetkili Erişim Paylaşımı</a></div></div></div></div></div></div>
+    <div id="szlRoot"><div class="gd-head"><div><div class="gd-eyebrow">Demir-Beton İnş. Ltd. · Taşeron Sözleşmesi #SZL-2025-T05</div><h1>Vadi Konakları kaba inşaat — kalıp, demir, beton işleri</h1><div class="gd-badges" id="gdBadge"><span class="gstat ok">Yürürlükte</span> <span class="gtag">Taşeron</span></div></div><div class="ph-actions"><a class="btn btn-ghost btn-sm" href="crm-finans-sozlesme-form.html?mod=duzenle&amp;szl=t05" data-no-confirm><i class="fa-solid fa-pen"></i> Düzenle</a><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlCopy"><i class="fa-solid fa-copy"></i> Kopyala</button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlToggle"><i class="fa-solid fa-power-off"></i> <span id="btnSzlToggleLbl">Pasife Al</span></button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlArch"><i class="fa-solid fa-box-archive"></i> Arşivle</button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlFile"><i class="fa-solid fa-paperclip"></i> Dosya Ekle</button><button type="button" class="btn btn-ghost btn-sm" data-no-confirm id="btnSzlPrint"><i class="fa-solid fa-print"></i> Yazdır</button><a class="btn btn-ghost btn-sm" id="btnSzlLog" href="crm-ayarlar-log.html?kayit=SZL-2025-T05"><i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişini Gör</a><a class="btn btn-ghost btn-sm" href="crm-finans-sozlesmeler.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a></div></div><div class="gv-tabs" role="tablist" aria-label="Sözleşme detay sekmeleri"><button class="gv-tab is-active" data-tab="genel" role="tab" aria-selected="true"><i class="fa-solid fa-file-contract"></i> Genel</button><button class="gv-tab" data-tab="kalemler" role="tab" aria-selected="false"><i class="fa-solid fa-list-check"></i> İş Kalemleri <span class="tb-cnt">3</span></button></div><section class="tab-panel" data-tab-panel="genel" role="tabpanel" aria-label="Genel"><div class="gd-grid"><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Kapsam / İş Tanımı</div><p class="gd-desc">Vadi Konakları A ve B Blok kaba inşaat imalatları kapsamında kalıp işçiliği, demir montajı ve C30 beton dökümü işleri Demir-Beton İnş. Ltd.'ye taşeron olarak verilmiştir. İşin süresi 6 ay olup metraj bazlı aylık hakediş usulüyle faturalandırılır. Malzeme (demir, beton) Yapıtaş İnşaat A.Ş. tarafından temin edilir; taşeron yalnız işçilik ve uygulamadan sorumludur.</p></div><div class="gd-block"><div class="gd-label">Ödeme Koşulları</div><div class="term-list"><div class="term-item"><i class="fa-solid fa-calendar-check"></i> Aylık metraj bazlı hakediş, her ayın son iş gününde kesilir.</div><div class="term-item"><i class="fa-solid fa-scissors"></i> Her hakedişten %3 stopaj ve %5 teminat kesintisi uygulanır.</div><div class="term-item"><i class="fa-solid fa-hand-holding-dollar"></i> %20 peşin avans (₺90.000) 1 Nisan 2026'da verilmiş olup sonraki hakedişlerden orantılı mahsup edilir.</div><div class="term-item"><i class="fa-solid fa-building-columns"></i> Ödemeler onaylanan hakedişten en geç 15 gün içinde banka havalesiyle yapılır.</div></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">İlişkili Hakedişler</div><div class="tbl-scroll"><table class="kum-table"><thead><tr><th>Hakediş</th><th>Dönem</th><th class="num">Net Tutar</th><th>Durum</th></tr></thead><tbody><tr><td><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014</a></td><td>Haziran 2026</td><td class="num">₺90.000</td><td><span class="gstat wait">Onay Bekliyor</span></td></tr><tr><td><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013</a></td><td>Mayıs 2026</td><td class="num">₺210.000</td><td><span class="gstat info">Onaylandı</span></td></tr></tbody></table></div><div class="kum-note"><div class="gbar"><div class="gbar-track"><div class="gbar-fill" style="width:66.7%"></div></div><span class="gbar-val">%66,7</span></div><span class="kn-txt">300.000 kümülatif imalat / ₺450.000 sözleşme bedeli</span></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">İşlem Geçmişi</div><div class="islem-item"><i class="fa-solid fa-file-circle-plus"></i><div class="im-body"><b><a href="crm-finans-sozlesme-revizyon.html?szl=t05">Ek protokol kaydı: EP-SZL-2025-T05-01</a></b><span>15 Mayıs 2026 · Onaylandı</span></div></div><div class="islem-item"><i class="fa-solid fa-file-invoice-dollar"></i><div class="im-body"><b><a href="crm-finans-hakedis-detay.html?th=014">TH-2026-014 hakedişi oluşturuldu</a></b><span>Haziran 2026 dönemi · ₺90.000</span></div></div><div class="islem-item"><i class="fa-solid fa-file-invoice-dollar"></i><div class="im-body"><b><a href="crm-finans-hakedis-detay.html?th=013">TH-2026-013 hakedişi oluşturuldu</a></b><span>Mayıs 2026 dönemi · ₺210.000</span></div></div><div class="islem-item"><i class="fa-solid fa-file-signature"></i><div class="im-body"><b>Sözleşme imzalandı</b><span>28 Mart 2026</span></div></div></div></div></div><div class="gv-side-stack"><div class="gv-card"><div class="gd-block"><div class="gd-label">Taraflar</div><div class="party-row"><div class="party-mark" style="background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)">YI</div><div class="party-info"><b>Yapıtaş İnşaat A.Ş.</b><span>Vadi Konakları · İşveren yüklenici</span></div><span class="party-role">Taraf A</span></div><div class="party-row"><div class="party-mark" style="background:var(--info-tint);color:var(--info)">DB</div><div class="party-info"><b><a href="crm-cari-durum.html?cari=demir-beton" style="color:inherit">Demir-Beton İnş. Ltd.</a></b><span>Yusuf Ergin · Taşeron</span></div><span class="party-role">Taraf B</span></div></div><div class="gd-block"><div class="ctx-row"><span class="ctx-lbl">Sözleşme bedeli</span><span class="ctx-val">₺450.000 <span class="muted" style="font-weight:500">(KDV hariç)</span></span></div><div class="ctx-row"><span class="ctx-lbl">Başlangıç tarihi</span><span class="ctx-val">1 Nisan 2026</span></div><div class="ctx-row"><span class="ctx-lbl">Bitiş tarihi</span><span class="ctx-val">30 Eylül 2026</span></div><div class="ctx-row"><span class="ctx-lbl">Teminat</span><span class="ctx-val">%5 kesin teminat mektubu</span></div><div class="ctx-row"><span class="ctx-lbl">Şantiye</span><span class="ctx-val"><a href="crm-santiye-detay.html?santiye=vadi" style="color:var(--acc-ink);font-weight:700">Vadi Konakları</a></span></div><div class="ctx-row"><span class="ctx-lbl">Proje</span><span class="ctx-val"><a href="crm-santiye-proje-detay.html?proje=korfez" style="color:var(--acc-ink);font-weight:700">Körfez GYO Karma Yatırım Programı</a></span></div><div class="ctx-row"><span class="ctx-lbl">İmza tarihi</span><span class="ctx-val">28 Mart 2026</span></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">Belge<span class="gtag" style="margin-left:8px">v2</span></div><div class="party-row" style="border:none;padding:4px 0"><div class="party-mark" style="background:var(--danger-tint);color:var(--danger)"><i class="fa-solid fa-file-pdf"></i></div><div class="party-info"><b>sozlesme-szl-2025-t05.pdf</b><span>1,1 MB · İmzalı nüsha</span></div><button class="ia-btn" data-belge-preview="" aria-label="Önizle"><i class="fa-solid fa-eye"></i></button><button class="ia-btn" data-demo="İndirme hazırlanıyor (demo)" data-no-confirm="" aria-label="İndir"><i class="fa-solid fa-download"></i></button></div><div class="gd-block" style="padding-top:0"><div class="term-item"><i class="fa-solid fa-file-circle-plus"></i> Bu versiyon ek protokol içerir — <a href="crm-finans-sozlesme-revizyon.html?szl=t05" style="color:var(--acc-ink);font-weight:700">revizyon dosyalarını gör</a></div></div></div></div><div class="gv-card"><div class="gd-block"><div class="gd-label">İlgili Kayıtlar</div><div class="term-list"><div class="term-item"><i class="fa-solid fa-clock-rotate-left"></i> <a href="crm-finans-sozlesme-revizyon.html?szl=t05" style="color:var(--acc-ink);font-weight:700">Revizyon / Ek Protokol Geçmişi</a></div><div class="term-item"><i class="fa-solid fa-user-shield"></i> <a href="crm-finans-sozlesme-yetki.html?szl=t05" style="color:var(--acc-ink);font-weight:700">Yetkili Erişim Paylaşımı</a></div></div></div></div></div></div></section><section class="tab-panel" data-tab-panel="kalemler" role="tabpanel" aria-label="İş Kalemleri" hidden><div class="gv-card"><div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> İş Kalemleri (Poz)</div><span class="gtag">3 poz</span></div><div class="gc-body flush gv-cards-pad"><table class="gtable gtable-cards"><thead><tr><th>Poz No</th><th>İş Kalemi</th><th>Açıklama</th><th>Birim</th><th class="num">Sözleşme Miktarı</th><th class="num">Birim Fiyat</th><th class="num">Toplam Tutar</th><th class="num">Önceki Hakediş Miktarı</th><th class="num">Bu Dönem Miktarı</th><th class="num">Kümülatif Miktar</th><th class="num">Kalan Miktar</th></tr></thead><tbody><tr><td data-lbl="Poz No"><span class="t-strong">POZ-01</span></td><td data-lbl="İş Kalemi"><span class="t-strong">Kalıp işçiliği</span></td><td data-lbl="Açıklama" class="poz-desc">A-B blok perde, kolon ve döşeme kalıbı</td><td data-lbl="Birim">m²</td><td data-lbl="Sözleşme Miktarı" class="num">3.200</td><td data-lbl="Birim Fiyat" class="num">₺85</td><td data-lbl="Toplam Tutar" class="num t-strong">₺272.000</td><td data-lbl="Önceki Hakediş Miktarı" class="num">2.400</td><td data-lbl="Bu Dönem Miktarı" class="num muted">—</td><td data-lbl="Kümülatif Miktar" class="num">2.400</td><td data-lbl="Kalan Miktar" class="num">800</td></tr><tr><td data-lbl="Poz No"><span class="t-strong">POZ-02</span></td><td data-lbl="İş Kalemi"><span class="t-strong">Demir montajı</span></td><td data-lbl="Açıklama" class="poz-desc">Nervürlü donatı kesim, bükme ve montajı</td><td data-lbl="Birim">ton</td><td data-lbl="Sözleşme Miktarı" class="num">12</td><td data-lbl="Birim Fiyat" class="num">₺9.500</td><td data-lbl="Toplam Tutar" class="num t-strong">₺114.000</td><td data-lbl="Önceki Hakediş Miktarı" class="num">8</td><td data-lbl="Bu Dönem Miktarı" class="num muted">—</td><td data-lbl="Kümülatif Miktar" class="num">8</td><td data-lbl="Kalan Miktar" class="num">4</td></tr><tr><td data-lbl="Poz No"><span class="t-strong">POZ-03</span></td><td data-lbl="İş Kalemi"><span class="t-strong">Beton dökümü</span></td><td data-lbl="Açıklama" class="poz-desc">C30 beton dökümü, vibrasyon ve kür</td><td data-lbl="Birim">m³</td><td data-lbl="Sözleşme Miktarı" class="num">256</td><td data-lbl="Birim Fiyat" class="num">₺250</td><td data-lbl="Toplam Tutar" class="num t-strong">₺64.000</td><td data-lbl="Önceki Hakediş Miktarı" class="num">80</td><td data-lbl="Bu Dönem Miktarı" class="num muted">—</td><td data-lbl="Kümülatif Miktar" class="num">80</td><td data-lbl="Kalan Miktar" class="num">176</td></tr></tbody></table></div><div class="poz-sum"><div><span class="ps-lbl">Sözleşme bedeli (poz toplamı)</span><span class="ps-val">₺450.000</span></div><div><span class="ps-lbl">Önceki hakedişler toplamı</span><span class="ps-val">₺300.000</span></div><div><span class="ps-lbl">Kalan</span><span class="ps-val is-acc">₺150.000</span></div></div><div class="poz-note"><i class="fa-solid fa-circle-info"></i><span>Bu dönem miktarı sözleşme kaydında boş durur; o miktar hakediş oluşturulurken girilir. Kümülatif miktar = önceki hakediş + bu dönem, kalan miktar = sözleşme miktarı − kümülatif olarak hesaplanır.</span></div></div></section></div>
   </main>
 
   <!-- ============ BELGE ÖNİZLEME modalı (§19: sözleşme belge önizleme) ============
@@ -156,6 +193,10 @@
      k01 k02 k03 t05 t06 t07). t05 DEFAULT — mevcut hardcode içerik AYNEN. k01-k03 + t06/t07
      kapsam/ödeme metinleri taşeron kartları (crm-finans-taseron-detay.html DATA) ve
      cari-durum.html kişi kayıtlarından derlendi; kaynakta olmayan tutar/kesinti UYDURULMAZ. ---- */
+
+  /* [Dalga 2 / M-4] İş kalemleri (poz). Poz toplamı = sözleşme bedeli, önceki hakediş
+     toplamı = crm-finans-hakedis-form.html'deki kum değeri — üç ekran birbirini tutar.
+     Kanonik kaynak BU dosyadır; hakediş formu pozları buradan BİREBİR kopyalar. */
   var SZL = {
     k01:{ no:'SZL-2026-K01', ad:'Körfez GYO', ini:'KG', tip:'Kurum', title:'Vadi Konakları — kurumsal işveren sözleşmesi',
       santiye:'Vadi Konakları', santiyeHref:true, durum:'ok', durumLbl:'Yürürlükte',
@@ -171,6 +212,13 @@
         {no:'HKD-2026-006', href:'crm-finans-hakedis-detay.html?hkd=006', donem:'Haziran 2026', tutar:'₺1.630.000', st:'wait', stLbl:'Onay Bekliyor'},
         {no:'HKD-2026-005', href:'crm-finans-hakedis-detay.html?hkd=005', donem:'Mayıs 2026', tutar:'₺620.000', st:'ok', stLbl:'Ödendi'},
         {no:'HKD-2026-004', href:'crm-finans-hakedis-detay.html?hkd=004', donem:'Nisan 2026', tutar:'₺540.000', st:'ok', stLbl:'Ödendi'}
+      ],
+      pozlar:[
+        {poz:'POZ-01', ad:'Kaba inşaat (betonarme)', aciklama:'A-B-C blok, bodrum + 8 kat', birim:'m²', miktar:38400, bf:320, onceki:8700},
+        {poz:'POZ-02', ad:'İnce işler', aciklama:'Sıva, şap, kaplama ve boya', birim:'m²', miktar:38400, bf:175, onceki:0},
+        {poz:'POZ-03', ad:'Mekanik tesisat', aciklama:'Sıhhi tesisat, ısıtma, havalandırma', birim:'m²', miktar:38400, bf:90, onceki:0},
+        {poz:'POZ-04', ad:'Elektrik tesisatı', aciklama:'Kuvvetli ve zayıf akım tesisatı', birim:'m²', miktar:38400, bf:50, onceki:0},
+        {poz:'POZ-05', ad:'Çevre düzenleme', aciklama:'Yaya yolu, otopark ve peyzaj', birim:'m²', miktar:4640, bf:25, onceki:240}
       ],
       kumulatif:2790000, kumOran:'%11,4',
       taraf:{ad:'Körfez GYO', ini:'KG', kisi:'Selin Aydemir · Proje Müdürü', cariHref:'crm-cari-durum.html?cari=korfez-gyo'},
@@ -191,6 +239,11 @@
         {no:'HKD-2026-002', href:'crm-finans-hakedis-detay.html?hkd=002', donem:'Mayıs 2026', tutar:'₺410.000', st:'ok', stLbl:'Ödendi'},
         {no:'HKD-2026-001', href:'crm-finans-hakedis-detay.html?hkd=001', donem:'Nisan 2026', tutar:'₺265.000', st:'ok', stLbl:'Ödendi'}
       ],
+      pozlar:[
+        {poz:'POZ-01', ad:'Saha betonu', aciklama:'Hangar ve manevra sahası döşemesi', birim:'m²', miktar:12000, bf:420, onceki:2500},
+        {poz:'POZ-02', ad:'Çelik konstrüksiyon', aciklama:'Hangar çatı makası ve kolonlar', birim:'ton', miktar:185, bf:18000, onceki:25},
+        {poz:'POZ-03', ad:'Altyapı ve drenaj', aciklama:'Yağmur suyu hattı ve menfezler', birim:'metre', miktar:1430, bf:1000, onceki:155}
+      ],
       kumulatif:1655000, kumOran:'%16,9',
       taraf:{ad:'Aliağa Liman İşletmeleri', ini:'AL', kisi:'Erhan Kaya · Yatırım Md.', cariHref:'crm-cari-durum.html?cari=aliaga-liman'},
       belge:{ad:'sozlesme-szl-2026-k02.pdf', meta:'2,1 MB · İmzalı nüsha'}
@@ -205,6 +258,11 @@
         {ic:'fa-building-columns', txt:'Ödeme koşulları imza ile birlikte kesinleşecek.'}
       ],
       hakedisler:[],
+      pozlar:[
+        {poz:'POZ-01', ad:'Kaba inşaat', aciklama:'D-E blok, bodrum + 4 kat', birim:'m²', miktar:8500, bf:480, onceki:0},
+        {poz:'POZ-02', ad:'İnce işler', aciklama:'Sıva, şap, kaplama ve boya', birim:'m²', miktar:8500, bf:200, onceki:0},
+        {poz:'POZ-03', ad:'Çevre düzenleme', aciklama:'Sahil bandı yürüyüş yolu ve peyzaj', birim:'m²', miktar:2100, bf:200, onceki:0}
+      ],
       kumulatif:0, kumOran:'%0',
       taraf:{ad:'Sapanca Belediyesi', ini:'SB', kisi:'Zeynep Ulusoy · Fen İşleri Md.', cariHref:'crm-cari-durum.html?cari=sapanca-belediyesi'},
       belge:null
@@ -224,6 +282,19 @@
         {no:'TH-2026-014', href:'crm-finans-hakedis-detay.html?th=014', donem:'Haziran 2026', tutar:'₺90.000', st:'wait', stLbl:'Onay Bekliyor'},
         {no:'TH-2026-013', href:'crm-finans-hakedis-detay.html?th=013', donem:'Mayıs 2026', tutar:'₺210.000', st:'info', stLbl:'Onaylandı'}
       ],
+      pozlar:[
+        /* [Dalga 2 / M-4] Birim fiyatlar TH-2026-014'ün kalem dökümünden ALINDI
+           (crm-finans-hakedis-detay.html): kalıp ₺85/m² · demir ₺9.500/ton ·
+           beton C30 ₺1.625/m³. Poz numarası eklenince bu üç fiyat iki ekranda
+           yan yana görünür hale geldi; miktarlar fiyatlara göre dengelendi ki
+           Σ(miktar×bf)=450.000 (bedel) ve Σ(önceki×bf)=300.000 (kümülatif) tutsun.
+           Sonuç: TH-2026-014'ün bu dönem miktarları (500 m² · 4 ton · 28 m³)
+           üç pozda da kalanı TAM dolduruyor, hiçbirinde aşım yok. */
+        {poz:'POZ-01', ad:'Kalıp işçiliği', aciklama:'A-B blok perde, kolon ve döşeme kalıbı', birim:'m²', miktar:3000, bf:85, onceki:2400},
+        {poz:'POZ-02', ad:'Demir montajı', aciklama:'Nervürlü donatı kesim, bükme ve montajı', birim:'ton', miktar:12, bf:9500, onceki:8},
+        {poz:'POZ-03', ad:'Beton dökümü C30', aciklama:'C30 beton dökümü, vibrasyon ve kür', birim:'m³', miktar:40, bf:1625, onceki:12},
+        {poz:'POZ-04', ad:'İskele kurulum ve söküm', aciklama:'Cephe iskelesi kurulum, taşıma ve söküm', birim:'m²', miktar:800, bf:20, onceki:25}
+      ],
       kumulatif:300000, kumOran:'%66,7',
       taraf:{ad:'Demir-Beton İnş. Ltd.', ini:'DB', kisi:'Yusuf Ergin · Taşeron', cariHref:'crm-cari-durum.html?cari=demir-beton'},
       belge:{ad:'sozlesme-szl-2025-t05.pdf', meta:'1,1 MB · İmzalı nüsha'}
@@ -240,6 +311,11 @@
       ],
       hakedisler:[
         {no:'TH-2026-008', href:'crm-finans-hakedis-detay.html?th=008', donem:'Haziran 2026', tutar:'₺128.500', st:'info', stLbl:'Onaylandı — malzeme mahsuplu'}
+      ],
+      pozlar:[
+        {poz:'POZ-01', ad:'Çatı su yalıtımı', aciklama:'Hangar çatısı membran serimi', birim:'m²', miktar:1800, bf:95, onceki:900},
+        {poz:'POZ-02', ad:'Isı yalıtımı (dış cephe)', aciklama:'Dış cephe levha ve sıva uygulaması', birim:'m²', miktar:1100, bf:90, onceki:300},
+        {poz:'POZ-03', ad:'Temel perde yalıtımı', aciklama:'Bodrum perde bohçalama', birim:'m²', miktar:500, bf:80, onceki:200}
       ],
       kumulatif:128500, kumOran:'%41,5',
       taraf:{ad:'Yalıtım Kardeşler', ini:'YK', kisi:'Cemal Boz · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=yalitim-kardesler'},
@@ -258,6 +334,11 @@
       hakedisler:[
         {no:'TH-2026-009', href:'crm-finans-hakedis-detay.html?th=009', donem:'Haziran 2026', tutar:'₺76.200', st:'wait', stLbl:'Onay Bekliyor'},
         {no:'TH-2026-002', href:'crm-finans-hakedis-detay.html?th=002', donem:'Mart 2026', tutar:'₺54.000', st:'ok', stLbl:'Ödendi'}
+      ],
+      pozlar:[
+        {poz:'POZ-01', ad:'Kablo tesisatı', aciklama:'Şaft ve kat kablo çekimi', birim:'metre', miktar:4200, bf:25, onceki:3100},
+        {poz:'POZ-02', ad:'Pano montajı', aciklama:'Kat panosu ve ana dağıtım panosu', birim:'adet', miktar:14, bf:3500, onceki:10},
+        {poz:'POZ-03', ad:'Aydınlatma armatürü', aciklama:'Daire içi ve ortak alan armatürleri', birim:'adet', miktar:620, bf:50, onceki:354}
       ],
       kumulatif:130200, kumOran:'%70,4',
       taraf:{ad:'ElektroMek Taahhüt', ini:'EM', kisi:'Tolga Şener · Taşeron Sorumlusu', cariHref:'crm-cari-durum.html?cari=elektromek'},
@@ -383,6 +464,64 @@
     return '<div class="gv-card"><div class="gd-block"><div class="gd-label">İşlem Geçmişi</div>' + rows + '</div></div>';
   }
 
+  /* ---- [Dalga 2 / M-4] İş Kalemleri (Poz) sekmesi ----
+     Kümülatif ve Kalan SABİT METİN DEĞİL, burada hesaplanır (K-1: "kullanıcının
+     girdiği yerde canlı hesap serbest") — poz miktarı değişse özet satırı da döner,
+     tutarsızlık doğamaz. "Bu Dönem Miktarı" sözleşme kaydında YOKTUR: sözleşmenin
+     dönemi olmaz, o miktar hakediş oluşturulurken girilir — kolon yerini korur,
+     değeri boş kalır (bkz. tablo altındaki dipnot). ---- */
+  function tl(n){ return n.toLocaleString('tr-TR'); }
+  function pozPanelHtml(){
+    var pz = rec.pozlar || [];
+    if(!pz.length){
+      return '<div class="gv-card"><div class="gd-block"><div class="gd-label">İş Kalemleri (Poz)</div>'
+        + '<p class="gd-desc">Bu sözleşmede tanımlı iş kalemi yok.</p></div></div>';
+    }
+    var sumTutar = 0, sumOnceki = 0;
+    var rows = pz.map(function(p){
+      var tutar = p.miktar * p.bf;
+      var buDonem = 0;                 /* sözleşme kaydında dönem yok — hakedişte girilir */
+      var kum = p.onceki + buDonem;    /* Kümülatif = Önceki + Bu Dönem */
+      var kalan = p.miktar - kum;      /* Kalan = Sözleşme Miktarı − Kümülatif */
+      sumTutar += tutar;
+      sumOnceki += p.onceki * p.bf;
+      return '<tr>'
+        + '<td data-lbl="Poz No"><span class="t-strong">' + p.poz + '</span></td>'
+        + '<td data-lbl="İş Kalemi"><span class="t-strong">' + p.ad + '</span></td>'
+        + '<td data-lbl="Açıklama" class="poz-desc">' + p.aciklama + '</td>'
+        + '<td data-lbl="Birim">' + p.birim + '</td>'
+        + '<td data-lbl="Sözleşme Miktarı" class="num">' + tl(p.miktar) + '</td>'
+        + '<td data-lbl="Birim Fiyat" class="num">₺' + tl(p.bf) + '</td>'
+        + '<td data-lbl="Toplam Tutar" class="num t-strong">₺' + tl(tutar) + '</td>'
+        + '<td data-lbl="Önceki Hakediş Miktarı" class="num">' + tl(p.onceki) + '</td>'
+        + '<td data-lbl="Bu Dönem Miktarı" class="num muted">—</td>'
+        + '<td data-lbl="Kümülatif Miktar" class="num">' + tl(kum) + '</td>'
+        + '<td data-lbl="Kalan Miktar" class="num">' + tl(kalan) + '</td>'
+        + '</tr>';
+    }).join('');
+    var imzasiz = !rec.imza
+      ? ' Sözleşme henüz imzalanmadığı için önceki hakediş miktarları sıfırdır.'
+      : '';
+    return '<div class="gv-card">'
+      + '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-list-check"></i> İş Kalemleri (Poz)</div>'
+      +   '<span class="gtag">' + pz.length + ' poz</span></div>'
+      + '<div class="gc-body flush gv-cards-pad"><table class="gtable gtable-cards"><thead><tr>'
+      +   '<th>Poz No</th><th>İş Kalemi</th><th>Açıklama</th><th>Birim</th>'
+      +   '<th class="num">Sözleşme Miktarı</th><th class="num">Birim Fiyat</th><th class="num">Toplam Tutar</th>'
+      +   '<th class="num">Önceki Hakediş Miktarı</th><th class="num">Bu Dönem Miktarı</th>'
+      +   '<th class="num">Kümülatif Miktar</th><th class="num">Kalan Miktar</th>'
+      + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+      + '<div class="poz-sum">'
+      +   '<div><span class="ps-lbl">Sözleşme bedeli (poz toplamı)</span><span class="ps-val">₺' + tl(sumTutar) + '</span></div>'
+      +   '<div><span class="ps-lbl">Önceki hakedişler toplamı</span><span class="ps-val">₺' + tl(sumOnceki) + '</span></div>'
+      +   '<div><span class="ps-lbl">Kalan</span><span class="ps-val is-acc">₺' + tl(sumTutar - sumOnceki) + '</span></div>'
+      + '</div>'
+      + '<div class="poz-note"><i class="fa-solid fa-circle-info"></i><span>Bu dönem miktarı sözleşme '
+      +   'kaydında boş durur; o miktar hakediş oluşturulurken girilir. Kümülatif miktar = önceki hakediş '
+      +   '+ bu dönem, kalan miktar = sözleşme miktarı − kümülatif olarak hesaplanır.' + imzasiz + '</span></div>'
+      + '</div>';
+  }
+
   var root = document.getElementById('szlRoot');
   root.innerHTML = ''
     + '<div class="gd-head">'
@@ -402,6 +541,14 @@
     +     '<a class="btn btn-ghost btn-sm" href="crm-finans-sozlesmeler.html"><i class="fa-solid fa-arrow-left"></i> Listeye Dön</a>'
     +   '</div>'
     + '</div>'
+    /* [Dalga 2 / M-4] sekme şeridi — motor crm-santiye-detay.html'den devralındı.
+       Mevcut bloklar TEK PARÇA halinde "Genel" panelinin içine alındı; hiçbiri
+       yeniden tasarlanmadı, yeri değişmedi. Varsayılan açık sekme: Genel. */
+    + '<div class="gv-tabs" role="tablist" aria-label="Sözleşme detay sekmeleri">'
+    +   '<button class="gv-tab is-active" data-tab="genel" role="tab" aria-selected="true"><i class="fa-solid fa-file-contract"></i> Genel</button>'
+    +   '<button class="gv-tab" data-tab="kalemler" role="tab" aria-selected="false"><i class="fa-solid fa-list-check"></i> İş Kalemleri <span class="tb-cnt">' + (rec.pozlar || []).length + '</span></button>'
+    + '</div>'
+    + '<section class="tab-panel" data-tab-panel="genel" role="tabpanel" aria-label="Genel">'
     + '<div class="gd-grid">'
     +   '<div class="gv-side-stack">'
     +     '<div class="gv-card">'
@@ -448,7 +595,36 @@
     +       '<div class="term-item"><i class="fa-solid fa-user-shield"></i> <a href="crm-finans-sozlesme-yetki.html?szl=' + id + '" style="color:var(--acc-ink);font-weight:700">Yetkili Erişim Paylaşımı</a></div>'
     +     '</div></div></div>'
     +   '</div>'
-    + '</div>';
+    + '</div>'
+    + '</section>'
+    + '<section class="tab-panel" data-tab-panel="kalemler" role="tabpanel" aria-label="İş Kalemleri" hidden>'
+    +   pozPanelHtml()
+    + '</section>';
+
+  /* ---- sekme motoru — crm-santiye-detay.html'deki activate() BİREBİR (o dosya
+     READ-ONLY referans, yazılmadı): is-active + aria-selected + panel hidden
+     toggle, tık üzerine history.replaceState ile hash, açılışta location.hash'ten
+     ilk sekme (?szl=t05#kalemler gibi derin link çalışır). ---- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.gv-tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.tab-panel'));
+  function activateTab(tid){
+    tabs.forEach(function(t){
+      var on = t.getAttribute('data-tab') === tid;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-tab-panel') !== tid; });
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      var tid = t.getAttribute('data-tab');
+      activateTab(tid);
+      history.replaceState(null, '', '#' + tid);
+    });
+  });
+  var initialTab = (location.hash || '').replace('#', '');
+  var validTab = tabs.some(function(t){ return t.getAttribute('data-tab') === initialTab; });
+  activateTab(validTab ? initialTab : 'genel');
 
   /* ---- Belge Önizleme modalı — crm-satinalma-irsaliye-fatura.html deseni (bkz. o
      dosyanın openBelge() fonksiyonu, READ-ONLY referans). ---- */
