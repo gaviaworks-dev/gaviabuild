@@ -241,6 +241,36 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
 
 /* ============ v2 revizyon — Ekip (Öz Kadro + Taşeron Kadro, §4.2-4.4) ============ */
 .ekip-blocks{display:flex;flex-direction:column;gap:16px}
+
+/* ============ [Dalga 2 / M-6] Geçici görevlendirme — Ekip sekmesinde gelen/giden
+   ayrımı. Yeni sekme veya modül AÇILMAZ: Öz Kadro tablosunun hemen üstünde, aynı
+   .gv-card dilinde tek bir blok. Kadro sayıları (Vadi 51 · Liman 30 · Merkez 12)
+   bu bloktan ETKİLENMEZ — blok kadroyu değil hareketi anlatır. ============ */
+.grv-list{display:flex;flex-direction:column}
+.grv-row{display:flex;align-items:flex-start;gap:14px;padding:15px 22px;border-top:1px solid var(--line)}
+.grv-row:first-child{border-top:none}
+.grv-ico{width:34px;height:34px;border-radius:var(--r-sm);flex:none;display:grid;place-items:center;font-size:13px}
+.grv-ico.gelen{background:rgba(var(--acc-rgb),.12);color:var(--acc-ink)}
+.grv-ico.giden{background:var(--bg);color:var(--muted);border:1px dashed var(--line-2)}
+.grv-body{flex:1 1 180px;min-width:0}
+.grv-line1{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.grv-line1 b{font-size:13.5px;font-weight:800;color:var(--ink)}
+.grv-line1 .grv-kod{font-size:10.5px;font-weight:800;letter-spacing:.02em;color:var(--acc-ink);
+  background:rgba(var(--acc-rgb),.10);border-radius:var(--r-pill);padding:2px 9px}
+.grv-yon{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.grv-yon i{font-size:10.5px;color:var(--muted)}
+.grv-yon .grv-pas{font-weight:600;color:var(--muted)}
+.grv-meta{display:flex;flex-wrap:wrap;gap:3px 16px;margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.6}
+.grv-meta b{font-weight:700;color:var(--ink-2)}
+.grv-acts{display:flex;align-items:center;gap:9px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.grv-foot-note{padding:13px 22px;border-top:1px dashed var(--line-2);background:var(--bg);
+  font-size:11.5px;color:var(--muted);line-height:1.6;display:flex;gap:9px;align-items:flex-start}
+.grv-foot-note i{margin-top:3px;flex:none}
+@media(max-width:640px){
+  .grv-row{flex-wrap:wrap;padding:14px 16px}
+  .grv-acts{flex-basis:100%;justify-content:flex-start;padding-left:48px}
+  .grv-foot-note{padding:13px 16px}
+}
 .gcell-name-flag{display:flex;align-items:center;gap:6px}
 .gcell-name-flag .flag-doc{font-size:10.5px;color:var(--danger);position:relative}
 .gcell-name-flag .flag-doc[data-tip]:hover::after,.gcell-name-flag .flag-doc[data-tip]:focus-visible::after{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -804,7 +834,11 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
       {ad:'Volkan Er',poz:'Forklift Operatörü',per:'303',bugun:'+'},
       {ad:'Tolunay Gökçen',poz:'Ambar Memuru',per:'304',bugun:'+'},
       {ad:'Selahattin Barut',poz:'Düz İşçi',per:'305',bugun:'+'},
-      {ad:'Erkan Tez',poz:'Düz İşçi',per:'306',bugun:'+',durum:'gecici',not:'Vadi Konakları\'ndan 2 haftalığına geçici görevlendirildi'},
+      /* [Dalga 2 / M-6] Bu satır artık GOREVLENDIRMELER['GRV-2026-004'] kaydına bağlı —
+         eskiden serbest metinli, hiçbir kayda dayanmayan bir nottu. Kadro şantiyesi
+         Vadi Konakları; Merkez'in 12 kişilik saha sayımı DEĞİŞMEDİ (bkz. M-6 kadro kararı). */
+      {ad:'Erkan Tez',poz:'Düz İşçi',per:'306',bugun:'+',durum:'gecici',grv:'GRV-2026-004',kadroSantiye:'Vadi Konakları',
+       not:'GRV-2026-004 · Vadi Konakları kadrosundan 29 Haziran – 3 Temmuz 2026 arası geçici görevli; maliyeti Merkez Şantiye\'ye yazılıyor'},
       {ad:'Coşkun Alagöz',poz:'Kalıpçı',per:'307',bugun:'+'},
       {ad:'Fuat Kocabıyık',poz:'Ambar Memuru',per:'308',bugun:'+'}
     ]
@@ -983,9 +1017,83 @@ td.col-sp-gun.is-today{background:rgba(var(--acc-rgb),.05)}
       + '<div class="tas-list">'+firms.map(taseronCardHtml).join('')+'</div></div>';
   }
 
+  /* =====================================================================
+     [Dalga 2 / M-6] Geçici görevlendirme — kanonik kayıt; puantaj/personel/şantiye
+     üç ekranda BİREBİR.
+     ---------------------------------------------------------------------
+     Bu dosyadaki eski, bağlantısız mock (OZKADRO.merkez → Erkan Tez, durum:'gecici',
+     "Vadi Konakları'ndan 2 haftalığına geçici görevlendirildi") artık BU kayda bağlı:
+     aynı 8 alan crm-operasyon-puantaj.html GOREVLENDIRMELER[] ve
+     crm-personel-detay.html PER['306'].grv ile birebir aynıdır.
+     KADRO KARARI: kanonik sayımlar (Vadi 51 · Liman 30 · Merkez 12 · 93 = 69 öz + 24
+     taşeron) "bugün sahada bulunan" sayımlarıdır ve DEĞİŞTİRİLMEDİ. Geçici görevlendirme
+     kadroyu değil, kişinin o günlerde nerede çalıştığını değiştirir: Erkan Tez görev
+     süresince Merkez Şantiye'nin saha listesinde sayılır (12 içinde), kadro şantiyesi
+     Vadi Konakları olarak satırında ve aşağıdaki blokta açıkça yazılır. Vadi tarafında
+     "giden" olarak görünür ama Vadi'nin sayımına EKLENMEZ — çift sayım olurdu.
+     ===================================================================== */
+  var GRV_SANTIYE_AD = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
+  var GOREVLENDIRMELER = [
+    {
+      id:'GRV-2026-004', personel:'Erkan Tez', per:'306', poz:'Düz İşçi',
+      kaynakSantiye:'vadi', hedefSantiye:'merkez',
+      baslangic:'29 Haziran 2026', bitis:'3 Temmuz 2026', bitisISO:'2026-07-03',
+      aciklama:'Merkez atölyede kalıp iskelesi bakımı ve depo tasnifi',
+      onaylayan:'Hasan Demirci · Şantiye Şefi (Vadi Konakları)',
+      maliyetSantiye:'merkez', durum:'Aktif'
+    }
+  ];
+
+  function grvRowHtml(g, yon){
+    var karsi = yon === 'gelen' ? g.kaynakSantiye : g.hedefSantiye;
+    var yonLbl = yon === 'gelen'
+      ? '<span class="grv-pas">Kadro şantiyesi</span> <b>' + GRV_SANTIYE_AD[g.kaynakSantiye] + '</b> <i class="fa-solid fa-arrow-right-long"></i> <span class="grv-pas">burada çalışıyor</span>'
+      : '<span class="grv-pas">Bu şantiyenin kadrosundan</span> <i class="fa-solid fa-arrow-right-long"></i> <b>' + GRV_SANTIYE_AD[g.hedefSantiye] + '</b>';
+    return '<div class="grv-row">'
+      + '<div class="grv-ico ' + yon + '"><i class="fa-solid fa-people-arrows"></i></div>'
+      + '<div class="grv-body">'
+      +   '<div class="grv-line1"><b>' + g.personel + '</b><span class="gtag">' + g.poz + '</span><span class="grv-kod">' + g.id + '</span></div>'
+      +   '<div class="grv-yon">' + yonLbl + '</div>'
+      +   '<div class="grv-meta">'
+      +     '<span>Tarih aralığı: <b>' + g.baslangic + ' – ' + g.bitis + '</b></span>'
+      +     '<span>Maliyet yazılan şantiye: <b>' + GRV_SANTIYE_AD[g.maliyetSantiye] + '</b></span>'
+      +     '<span>Onaylayan: <b>' + g.onaylayan + '</b></span>'
+      +     '<span>Görev: ' + g.aciklama + '</span>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="grv-acts">'
+      +   '<span class="gstat ' + (yon === 'gelen' ? 'info' : 'off') + '">' + (yon === 'gelen' ? 'Gelen · ' + g.durum : 'Giden · ' + g.durum) + '</span>'
+      +   '<a class="ia-btn" href="crm-personel-detay.html?per=' + g.per + '" data-no-confirm aria-label="Personel kartı"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+      +   '<a class="ia-btn" href="crm-operasyon-puantaj.html?santiye=' + karsi + '" data-no-confirm aria-label="Puantajda gör"><i class="fa-solid fa-calendar-week"></i></a>'
+      + '</div>'
+      + '</div>';
+  }
+
+  /* Gelen (kadrosu başka şantiyede, burada çalışıyor) ve giden (bu şantiyenin
+     kadrosunda, şu an başka şantiyede) ayrı ayrı listelenir. Kayıt yoksa blok hiç
+     basılmaz — boş kart göstermek yerine sessiz kalınır. */
+  function grvBlockHtml(siteKey){
+    var gelen = GOREVLENDIRMELER.filter(function(g){ return g.hedefSantiye === siteKey; });
+    var giden = GOREVLENDIRMELER.filter(function(g){ return g.kaynakSantiye === siteKey; });
+    if(!gelen.length && !giden.length) return '';
+    var rozet = [];
+    if(gelen.length) rozet.push(gelen.length + ' gelen');
+    if(giden.length) rozet.push(giden.length + ' giden');
+    return '<div class="gv-card">'
+      + '<div class="gc-head"><div class="gc-title"><i class="fa-solid fa-people-arrows"></i> Geçici Görevlendirmeler</div>'
+      +   '<span class="gtag mint">' + rozet.join(' · ') + '</span></div>'
+      + '<div class="grv-list">'
+      +   gelen.map(function(g){ return grvRowHtml(g, 'gelen'); }).join('')
+      +   giden.map(function(g){ return grvRowHtml(g, 'giden'); }).join('')
+      + '</div>'
+      + '<div class="grv-foot-note"><i class="fa-solid fa-circle-info"></i><span>Geçici görevlendirme kadroyu değiştirmez; yalnız kişinin o tarihlerde hangi şantiyede çalıştığını belirler. Gelen personel görev süresince bu şantiyenin saha listesinde ve puantajında görünür, kadro şantiyesi satırında yazılıdır. Giden personel bu şantiyenin bugünkü saha sayımına dahil edilmez — çift sayımı önlemek için yalnız çalıştığı şantiyede sayılır.</span></div>'
+      + '</div>';
+  }
+
   function ekipTabHtml(chiefCardHtml, siteKey, firmKeys, toplamEtiket, tasEmptyMsg){
     return '<div class="ekip-blocks">'
       + chiefCardHtml
+      + grvBlockHtml(siteKey)
       + ozKadroBlockHtml(siteKey, toplamEtiket)
       + taseronKadroBlockHtml(firmKeys, tasEmptyMsg)
       + '</div>';

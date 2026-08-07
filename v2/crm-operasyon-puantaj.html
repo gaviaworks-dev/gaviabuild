@@ -77,6 +77,15 @@ th.is-today .dh-d{color:var(--acc-ink)}
 .pt-mark.ht{background:transparent;color:var(--line-2);border:1px dashed var(--line)}
 .pt-mark.gelecek{background:transparent;color:var(--line-2)}
 .pt-mark.gelecek::before{content:"–";font-weight:700}
+/* [Dalga 2 / M-6] 10. puantaj kodu: "gorev" — Geçici görevde (başka şantiyede).
+   Gerekçe: mevcut 9 kodun (tam·yarim·yok·izin·rapor·fm·em·rt·ht) hiçbiri "kadroda,
+   çalışıyor, ama bugün BAŞKA şantiyede" durumunu anlatmıyor. Kabul ölçütü aynı kişinin
+   aynı gün kaynak şantiyede tam gün görünmemesini şart koştuğu için ayrı bir kod
+   ZORUNLU oldu. Mevcut dokuz kodun anlamı, rengi ve ikonu DEĞİŞMEDİ. Haftalık toplama
+   0 gün girer (kaynak şantiyenin adam-günü değildir); hedef şantiyede kişi normal
+   "tam gün" olarak işlenir. Görsel dil: kesikli accent çerçeve — dolu accent (fm) ile
+   karışmaz, "burada değil" hissini taşır. */
+.pt-mark.gorev{background:rgba(var(--acc-rgb),.06);color:var(--acc-ink);border:1px dashed rgba(var(--acc-rgb),.55)}
 
 /* hücre tooltip — sadece puantaj grid'inde, aşağı açılır */
 .pt-mark[data-tip],.tg-day[data-tip]{position:relative}
@@ -108,6 +117,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
 .pt-legend .lg-sw.em{background:color-mix(in srgb, var(--warn) 30%, var(--warn-tint));color:color-mix(in srgb, var(--warn) 78%, #000)}
 .pt-legend .lg-sw.rt{background:var(--bg);color:var(--ink-2);border:1px dashed var(--line-2)}
 .pt-legend .lg-sw.ht{background:transparent;color:var(--line-2);border:1px dashed var(--line)}
+.pt-legend .lg-sw.gorev{background:rgba(var(--acc-rgb),.06);color:var(--acc-ink);border:1px dashed rgba(var(--acc-rgb),.55)}
 
 /* lejant altbilgi — geç giriş/erken çıkış notu (ikincil ton, çiplerle yarışmaz) */
 .pt-legend-note{
@@ -277,6 +287,47 @@ th.is-today .dh-d{color:var(--acc-ink)}
 .pf-mini-list .pfm-info b{font-size:13.5px;font-weight:700;color:var(--ink)}
 .pf-mini-list .pfm-info span{font-size:12px;color:var(--muted)}
 .pf-mini-empty{padding:16px 13px;font-size:12.5px;color:var(--muted);text-align:center}
+.pf-mini-list li.is-secili{background:rgba(var(--acc-rgb),.07);box-shadow:inset 3px 0 0 var(--acc-ink)}
+
+/* ============ [Dalga 2 / M-6] Geçici görevlendirme kaydı — form + grid izleri.
+   Yeni modal/popup AÇILMAZ: form mevcut "Personel Getir" panelinin içinde, kişi
+   seçilince açılan ikinci adım olarak yaşar. ============ */
+.grv-form{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line-2)}
+.grv-form-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.grv-form-head b{font-size:13.5px;font-weight:800;color:var(--ink)}
+.grv-form-head span{font-size:12px;color:var(--muted)}
+.grv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grv-grid .gfield.full{grid-column:1/-1}
+.grv-ro{padding:9px 12px;border:1px dashed var(--line-2);border-radius:var(--r-sm);background:var(--bg);
+  font-size:13px;font-weight:700;color:var(--ink-2);min-height:38px;display:flex;align-items:center;gap:8px}
+.grv-ro i{font-size:11px;color:var(--muted)}
+.grv-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
+.grv-foot-note{flex:1 1 250px;min-width:0;font-size:11.5px;color:var(--muted);line-height:1.55}
+@media(max-width:640px){
+  .grv-grid{grid-template-columns:1fr}
+  .grv-foot .btn{flex:1 1 auto;justify-content:center}
+  /* 390px'te başlık ile açıklama çipi aynı satırda sıkışıp başlığı üç satıra
+     bölüyordu — çip kendi satırına iner (ortak .gc-head kuralı DEĞİŞTİRİLMEZ). */
+  #getirCard .gc-head{flex-wrap:wrap;row-gap:9px}
+  #getirCard .gc-head .gtag{flex-basis:100%}
+  .pf-mini-list li{flex-wrap:wrap;row-gap:9px}
+  .pf-mini-list li .btn,.pf-mini-list li .gstat{width:100%;justify-content:center}
+}
+
+/* Kayıt künyesi — grup başlığının hemen altında, 8 alanın tamamını ayrı kart/modal
+   açmadan okunur kılar (brief: "yeni büyük bir modül oluşturulmasına gerek yoktur"). */
+.pt-grv-meta td{background:var(--bg);border-top:none;padding:0 18px 12px!important;text-align:left!important}
+.pt-grv{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:11.5px;font-weight:600;color:var(--muted);line-height:1.6}
+.pt-grv b{font-weight:800;color:var(--ink-2)}
+.pt-grv .grv-kod{font-size:10.5px;font-weight:800;letter-spacing:.02em;color:var(--acc-ink);
+  background:rgba(var(--acc-rgb),.10);border-radius:var(--r-pill);padding:2px 9px}
+@media(max-width:640px){
+  .gtable-cards tr.pt-grv-meta td{justify-content:flex-start;border-bottom:none;padding:0 0 12px!important}
+  .pt-grv{gap:4px 12px}
+}
+/* Personel hücresinde "şu an başka şantiyede" izi — kadro satırı silinmez, işaretlenir. */
+.pp-grv-tag{display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--acc-ink)}
+.pp-grv-tag i{font-size:10px}
 
 /* ============ Eksik evrak uyarısı — puantaj personel hücresi (§14). Gerçek veri:
    crm-personel-detay.html ozlukEks[] ile birebir (zorunlu üçlü: kimlik/sözleşme/SGK). ---- */
@@ -441,19 +492,66 @@ th.is-today .dh-d{color:var(--acc-ink)}
       <div class="gc-body" id="gunlukBody"></div>
     </div>
 
-    <!-- ============ Merkez şantiyeden personel getirme (§14) [MOCK-SİM] — seçili
-         şantiyenin puantajına başka bir şantiyede kayıtlı personel geçici olarak eklenir;
-         satırda "Geldiği Şantiye" bilgisi kalıcı görünür. Kadro/kordon sayılarını (93/69/24,
-         25/22/3) DEĞİŞTİRMEZ — misafir satırı ayrıca etiketlenir, KPI'lara dahil edilmez. -->
+    <!-- ============ Diğer şantiyeden personel getirme (§14) [MOCK-SİM] —
+         [Dalga 2 / M-6] Bu işlem artık doğrudan satır eklemez: tarih aralıklı bir
+         GEÇİCİ GÖREVLENDİRME KAYDI oluşturur (8 alan: personel · mevcut şantiye ·
+         hedef şantiye · başlangıç · bitiş · görev açıklaması · onaylayan · maliyetin
+         yazılacağı şantiye). Form ayrı bir modal DEĞİL — aynı panelin ikinci adımı.
+         Kadro/kordon sayılarını (93/69/24, 25/22/3) DEĞİŞTİRMEZ: görevlendirme kadroyu
+         değil, o günkü "sahada bulunan" dağılımı etkiler; satırlar ayrı gruplarda ve
+         etiketli görünür, şantiye KPI'ları kadro satırlarından hesaplanmaya devam eder. -->
     <div class="gv-card" id="getirCard" style="margin-bottom:24px" hidden>
       <div class="gc-head">
         <div class="gc-title"><i class="fa-solid fa-people-arrows"></i> Diğer Şantiyeden Personel Getir</div>
+        <span class="gtag">Geçici görevlendirme kaydı oluşturur</span>
       </div>
       <div class="gc-body">
         <div class="pf-mini-combo">
           <div class="fb-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="getirArama" autocomplete="off" placeholder="Personel adıyla ara…" aria-label="Personel ara"></div>
           <ul class="pf-mini-list" id="getirListe" role="listbox" aria-label="Diğer şantiyelerden personel"></ul>
         </div>
+
+        <form class="grv-form" id="grvForm" hidden>
+          <div class="grv-form-head">
+            <b id="grvKisi">—</b><span id="grvKisiPoz">—</span>
+          </div>
+          <div class="grv-grid">
+            <div class="gfield">
+              <label>Mevcut şantiye</label>
+              <div class="grv-ro" id="grvKaynak"><i class="fa-solid fa-helmet-safety"></i> —</div>
+            </div>
+            <div class="gfield">
+              <label>Hedef şantiye</label>
+              <div class="grv-ro" id="grvHedef"><i class="fa-solid fa-location-dot"></i> —</div>
+            </div>
+            <div class="gfield">
+              <label for="grvBas">Başlangıç tarihi</label>
+              <input type="date" id="grvBas" value="2026-07-02" min="2026-06-29" max="2026-12-31">
+            </div>
+            <div class="gfield">
+              <label for="grvBit">Bitiş tarihi</label>
+              <input type="date" id="grvBit" value="2026-07-04" min="2026-06-29" max="2026-12-31">
+            </div>
+            <div class="gfield full">
+              <label for="grvAciklama">Görev açıklaması</label>
+              <input type="text" id="grvAciklama" autocomplete="off" placeholder="Örn. kalıp sökümü ve depo tasnifi">
+            </div>
+            <div class="gfield">
+              <label for="grvOnay">Onaylayan</label>
+              <select id="grvOnay"></select>
+            </div>
+            <div class="gfield">
+              <label for="grvMaliyet">Maliyetin yazılacağı şantiye</label>
+              <select id="grvMaliyet"></select>
+              <span class="gf-hint">Varsayılan: hedef şantiye — adam-gün maliyeti işi yaptıran şantiyeye yazılır.</span>
+            </div>
+          </div>
+          <div class="grv-foot">
+            <p class="grv-foot-note"><i class="fa-solid fa-circle-info"></i> Kayıt açıldığı anda personel hedef şantiyenin puantajında görünür; kaynak şantiyede aynı günler "Geçici görevde" işaretlenir, tam gün sayılmaz. Bitiş tarihinden sonra ana şantiyesine döner.</p>
+            <button type="button" class="btn btn-ghost btn-sm" id="grvIptal" data-no-confirm>Vazgeç</button>
+            <button type="submit" class="btn btn-acc btn-sm" id="grvKaydet" data-no-confirm><i class="fa-solid fa-check"></i> Görevlendirmeyi Kaydet</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -552,6 +650,8 @@ th.is-today .dh-d{color:var(--acc-ink)}
         <span class="lg-item"><span class="lg-sw em"><i class="fa-solid fa-arrow-trend-down"></i></span> Eksik mesai (EM)</span>
         <span class="lg-item"><span class="lg-sw rt"><i class="fa-solid fa-flag"></i></span> Resmî tatil (RT)</span>
         <span class="lg-item"><span class="lg-sw ht"><i class="fa-solid fa-moon"></i></span> Hafta tatili (HT)</span>
+        <span class="lg-item"><span class="lg-sw gorev"><i class="fa-solid fa-people-arrows"></i></span> Geçici görevde (G)</span>
+        <div class="pt-legend-note"><i class="fa-solid fa-people-arrows"></i> Kadro ile sahada bulunan aynı şey değildir: geçici görevlendirme personelin kadrosunu değiştirmez, yalnız o günlerde nerede çalıştığını değiştirir. Kişi görev süresince hedef şantiyenin puantajında tam gün işlenir; kaynak şantiyede aynı günler "Geçici görevde" olarak işaretlenir ve haftalık toplamına 0 gün girer.</div>
         <div class="pt-legend-note"><i class="fa-solid fa-circle-info"></i> Geç giriş veya erken çıkış için ayrı bir puantaj kodu yoktur; bu durumlar mevcut kodlarla işlenir — gün yarıda kesiliyorsa "Yarım gün", tam gün içindeki kısa eksik ise "Eksik mesai (EM)" olarak kaydedilir.</div>
       </div>
     </div>
@@ -981,6 +1081,20 @@ th.is-today .dh-d{color:var(--acc-ink)}
   var PREV_DAYS = ['Pzt 22','Sal 23','Çar 24','Per 25','Cum 26','Cmt 27','Paz 28'];
   var WEEK_LBL = {'0':'29 Haziran – 5 Temmuz 2026','-1':'22 – 28 Haziran 2026'};
   function curDays(){ return WEEK === -1 ? PREV_DAYS : DAYS; }
+  /* [Dalga 2 / M-6] Grid sütunlarının GERÇEK takvim karşılığı — görevlendirme tarih
+     aralığı gün indeksiyle değil tarihle değerlendirilir, böylece hafta değiştirildiğinde
+     (WEEK 0 ↔ -1) aralık kendiliğinden doğru sonuç verir. ISO string sıralaması bu
+     format için sözlüksel = kronolojik, ayrı Date nesnesi gerekmez. */
+  var WEEK_ISO = {
+    '0':  ['2026-06-29','2026-06-30','2026-07-01','2026-07-02','2026-07-03','2026-07-04','2026-07-05'],
+    '-1': ['2026-06-22','2026-06-23','2026-06-24','2026-06-25','2026-06-26','2026-06-27','2026-06-28']
+  };
+  function dayISO(d){ return (WEEK_ISO[String(WEEK)] || WEEK_ISO['0'])[d]; }
+  var AY_KISA = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  function trTarih(iso){
+    var p = String(iso).split('-');
+    return parseInt(p[2], 10) + ' ' + AY_KISA[parseInt(p[1], 10) - 1] + ' ' + p[0];
+  }
 
   var PERSONEL = [
     {ad:'Hasan Demirci',  poz:'Şantiye Şefi',    santiye:'vadi',   gunler:['tam','tam','tam','tam']},
@@ -1038,8 +1152,8 @@ th.is-today .dh-d{color:var(--acc-ink)}
   /* Temmuz özeti — grid indeks 2 (Çar 1 Tem) ve 3 (Per 2 Tem, bugün) TEK Temmuz günleri;
      0-1 (29-30 Haz) Haziran'a ait, ay özetine dahil edilmez. */
   var JULY_START_IDX = 2;
-  var OZET_KOD = {tam:'N', fm:'FM', em:'E', yarim:'Y', yok:'D', izin:'İ', rapor:'R'};
-  var OZET_SIRA = ['tam','fm','em','yarim','yok','izin','rapor'];
+  var OZET_KOD = {tam:'N', fm:'FM', em:'E', yarim:'Y', yok:'D', izin:'İ', rapor:'R', gorev:'G'};
+  var OZET_SIRA = ['tam','fm','em','yarim','yok','izin','rapor','gorev'];
   var SANTIYE_ADI = {vadi:'Vadi Konakları', liman:'Liman Lojistik Merkezi', merkez:'Merkez Şantiye'};
   var SANTIYE_TINT = {
     vadi:  {bg:'rgba(var(--acc-rgb),.12)', fg:'var(--acc-ink)'},
@@ -1056,13 +1170,83 @@ th.is-today .dh-d{color:var(--acc-ink)}
     em:     {ic:'fa-arrow-trend-down',   lbl:'Eksik mesai (EM)'},
     rt:     {ic:'fa-flag',               lbl:'Resmî tatil (RT)'},
     ht:     {ic:'fa-moon',               lbl:'Hafta tatili (HT)'},
+    gorev:  {ic:'fa-people-arrows',      lbl:'Geçici görevde'},
     gelecek:{ic:'',                      lbl:'Henüz işlenmedi'}
   };
+
+  /* =====================================================================
+     [Dalga 2 / M-6] Geçici görevlendirme — kanonik kayıt; puantaj/personel/şantiye
+     üç ekranda BİREBİR.
+     ---------------------------------------------------------------------
+     Brief'in 8 alanı: personel · mevcut (kaynak) şantiye · hedef şantiye · başlangıç
+     tarihi · bitiş tarihi · görev açıklaması · onaylayan · maliyetin yazılacağı şantiye.
+     Kanonik kayıt GRV-2026-004 aynen şu üç yerde geçer:
+       · burası (puantaj — kaynak/hedef grid davranışı)
+       · crm-santiye-detay.html  (Vadi = giden · Merkez = gelen, Ekip sekmesi)
+       · crm-personel-detay.html (per=306, Şantiye Atama Geçmişi kartı)
+     Kişi: Erkan Tez (per 306, Düz İşçi) — kadrosu Vadi Konakları, 29 Haziran–3 Temmuz
+     2026 arası Merkez Şantiye'de. Bilerek seçilen aralık: arşiv haftasının (22–28 Haz)
+     TAMAMEN dışında (o haftada hedef şantiyede görünmez) ve güncel haftanın Cmt 4 /
+     Paz 5 günlerinden ÖNCE biter (bitişten sonra ana şantiyesine döner — iki kural da
+     tek ekranda görülebilir).
+     Kadro etkisi YOK: kanonik kişi bu sayfanın izlenen 16 kişilik PERSONEL örnekleminde
+     DEĞİL, bu yüzden şantiye KPI'ları ve 93/69/24 · 25/22/3 sayımları aynen kalır.
+     ===================================================================== */
+  var GOREVLENDIRMELER = [
+    {
+      id:'GRV-2026-004', personel:'Erkan Tez', per:'306', poz:'Düz İşçi',
+      kaynakSantiye:'vadi', hedefSantiye:'merkez',
+      baslangic:'2026-06-29', bitis:'2026-07-03',
+      aciklama:'Merkez atölyede kalıp iskelesi bakımı ve depo tasnifi',
+      onaylayan:'Hasan Demirci · Şantiye Şefi (Vadi Konakları)',
+      maliyetSantiye:'merkez', kanonik:true
+    }
+  ];
+  var SEF_OF = {vadi:'Hasan Demirci', liman:'Aylin Koç', merkez:'Ömer Taşkın'};
+
+  function grvEsc(s){
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  /* Kayıt bir günü kapsıyor mu? Tarihle karşılaştırılır (gün indeksiyle değil). */
+  function grvKapsar(g, iso){ return !!iso && iso >= g.baslangic && iso <= g.bitis; }
+  /* Kaynak şantiyede: kişi o gün başka şantiyede mi? → 'gorev' kodu. */
+  function grvKaynakta(ad, iso){
+    for(var i = 0; i < GOREVLENDIRMELER.length; i++){
+      var g = GOREVLENDIRMELER[i];
+      if(g.personel === ad && grvKapsar(g, iso)) return g;
+    }
+    return null;
+  }
+  /* Kişinin (haftadan bağımsız) açık görevlendirme kaydı — satır etiketi için. */
+  function grvKaydiOlan(ad){
+    for(var i = 0; i < GOREVLENDIRMELER.length; i++){
+      if(GOREVLENDIRMELER[i].personel === ad) return GOREVLENDIRMELER[i];
+    }
+    return null;
+  }
+  function grvMetaHtml(g){
+    return '<div class="pt-grv">'
+      + '<span class="grv-kod">' + g.id + '</span>'
+      + '<span><b>' + grvEsc(g.personel) + '</b> · ' + grvEsc(g.poz) + '</span>'
+      + '<span><b>' + SANTIYE_ADI[g.kaynakSantiye] + '</b> <i class="fa-solid fa-arrow-right-long"></i> <b>' + SANTIYE_ADI[g.hedefSantiye] + '</b></span>'
+      + '<span>' + trTarih(g.baslangic) + ' – ' + trTarih(g.bitis) + '</span>'
+      + '<span>Maliyet: <b>' + SANTIYE_ADI[g.maliyetSantiye] + '</b></span>'
+      + '<span>Onaylayan: <b>' + grvEsc(g.onaylayan) + '</b></span>'
+      + '<span>Görev: ' + grvEsc(g.aciklama) + '</span>'
+      + '</div>';
+  }
 
   function initials(ad){
     return ad.split(' ').map(function(p){ return p.charAt(0); }).join('').slice(0,2).toUpperCase();
   }
   function statusOf(person, dayIdx){
+    /* [M-6] Puantaj görevlendirme kaydını dikkate alır — kaynak şantiyenin grid'inde
+       görev günleri 'gorev' basılır. Hafta tatili (Pazar) İSTİSNA: görevlendirme de
+       olsa o gün çalışılmaz, HT kalır (mevcut kural bozulmaz). Aralık tarihle
+       değerlendirildiği için arşiv haftasında (22–28 Haz) kayıt kendiliğinden
+       kapsam dışı kalır; bitiş tarihinden sonraki günlerde de kişi ana şantiyesine
+       döner ve normal kaydı geri gelir. */
+    if(dayIdx !== 6 && grvKaynakta(person.ad, dayISO(dayIdx))) return 'gorev';
     if(WEEK === -1) return (PREV[person.ad] || [])[dayIdx] || 'ht';
     if(dayIdx === 6) return 'ht';
     if(dayIdx > RECORDED_UPTO) return 'gelecek';
@@ -1294,11 +1478,17 @@ th.is-today .dh-d{color:var(--acc-ink)}
     var html = '';
     /* §11.1 — bu tablo yalnız öz kadro kişileri içerir (taşeron ayrı sekmede); grup
        başlığı yine de tutarlı görsel dil için basılır. Geçici Görevli grubu
-       renderGuestRows()'ta ayrıca ve yalnız misafir varsa eklenir. */
-    if(rows.length) html += '<tr class="pgrp-row" data-grp="oz"><td colspan="12"><span class="pgrp-lbl">Öz Kadro</span><span class="pgrp-badge">'+rows.length+' kişi</span></td></tr>';
+       grvRowsHtml()'de ayrıca ve yalnız açık görevlendirme kaydı varsa eklenir. */
+    if(rows.length) html += '<tr class="pgrp-row" data-grp="oz"><td colspan="12" data-lbl=""><span class="pgrp-lbl">Öz Kadro</span><span class="pgrp-badge">'+rows.length+' kişi</span></td></tr>';
     rows.forEach(function(p){
       var uy = EVRAK_UYARI[p.ad];
       var uyariHtml = uy ? '<a class="pp-evrak-warn" href="crm-personel-detay.html?per='+uy.per+'" data-tip="'+uy.not+'"><i class="fa-solid fa-triangle-exclamation"></i> Zorunlu evrak</a>' : '';
+      /* [M-6] Kadro satırı silinmez — kişi kadroda kalır, yalnız görev süresince
+         nerede olduğu satırın kimlik hücresinde işaretlenir. */
+      var pGrv = grvKaydiOlan(p.ad);
+      if(pGrv && pGrv.kaynakSantiye === santiye){
+        uyariHtml += '<span class="pp-grv-tag" data-tip="'+pGrv.id+' · '+trTarih(pGrv.baslangic)+' – '+trTarih(pGrv.bitis)+' · Maliyet: '+SANTIYE_ADI[pGrv.maliyetSantiye]+'"><i class="fa-solid fa-people-arrows"></i> Geçici görevde: '+SANTIYE_ADI[pGrv.hedefSantiye]+'</span>';
+      }
       html += '<tr data-per="'+p.ad+'" data-durum-bugun="'+statusOf(p, ptFilterDayIdx())+'" data-departman="'+ptDepartmanOf(p.poz)+'">';
       html += '<td class="col-chk" data-lbl=""><label class="row-chk"><input type="checkbox" class="pt-chk" aria-label="'+p.ad+' seç"><span class="chk-box"><i class="fa-solid fa-check"></i></span></label></td>';
       html += '<td data-lbl="Personel"><div class="pp-cell"><div class="pp-mark" style="background:'+tint.bg+';color:'+tint.fg+'">'+initials(p.ad)+'</div>'
@@ -1325,6 +1515,11 @@ th.is-today .dh-d{color:var(--acc-ink)}
        WEEK===-1'deyse (arşiv haftası ZATEN görünüyor) grup atlanır: aksi halde aynı
        veri iki kez, birbiriyle YARIŞARAK görünürdü. Nav 0'a dönünce toggle açık kaldığı
        sürece grup otomatik geri gelir (render() her applyWeek()'te yeniden çağrılır). */
+    /* [M-6] Geçici görevlendirme grupları — kadro satırlarının ALTINA, arşiv grubunun
+       ÜSTÜNE. Kadro satırlarına ve KPI hesabına dokunmaz (aşağıdaki sayım yalnız
+       rows[] üzerinden döner); boş grup hiç basılmaz. */
+    var grvHtml = grvRowsHtml(santiye, rows);
+    html += grvHtml;
     if(ptArsivGoster && WEEK !== -1) html += arsivRowsHtml(rows, tint, santiye);
     body.innerHTML = html || '<tr><td colspan="12" style="text-align:center;justify-content:center;color:var(--muted);padding:32px">Bu şantiyede kayıtlı personel yok.</td></tr>';
     if(gcHandle) gcHandle.apply();
@@ -1344,7 +1539,16 @@ th.is-today .dh-d{color:var(--acc-ink)}
     document.getElementById('kpiTamLbl').textContent = WEEK === -1 ? 'Tam gün (22–28 Haz)' : 'Tam gün (29 Haz–2 Tem)';
     document.getElementById('kpiGunDelta').innerHTML = '<i class="fa-solid fa-calendar-check"></i> İşlenen ' + recordedCount() + ' gün';
     document.getElementById('ptOzetTh').textContent = WEEK === -1 ? 'Haziran Özeti' : 'Temmuz Özeti';
-    sub.textContent = rows.length + ' personel · ' + SANTIYE_ADI[santiye] + ' · ' + WEEK_LBL[String(WEEK)] + (WEEK === -1 ? ' · arşiv' : '');
+    /* [M-6] Kadro sayısı DEĞİŞMEZ; geçici hareket varsa ayrı bir cümlecikle belirtilir —
+       "kadro" ile "bugün sahada" ayrımı başlık altında da okunur olsun diye. */
+    var bugunISO = dayISO(WEEK === -1 ? 6 : TODAY_IDX);
+    var gelenBugun = GOREVLENDIRMELER.filter(function(g){ return g.hedefSantiye === santiye && grvKapsar(g, bugunISO); }).length;
+    var gidenBugun = GOREVLENDIRMELER.filter(function(g){ return g.kaynakSantiye === santiye && grvKapsar(g, bugunISO); }).length;
+    var par = [];
+    if(gelenBugun) par.push(gelenBugun + ' geçici görevli geldi (kadro sayımına girmez)');
+    if(gidenBugun) par.push(gidenBugun + ' kişi geçici görevde (kadroda, sahada değil)');
+    var grvNot = par.length ? ' · ' + par.join(' · ') : '';
+    sub.textContent = rows.length + ' personel · ' + SANTIYE_ADI[santiye] + ' · ' + WEEK_LBL[String(WEEK)] + (WEEK === -1 ? ' · arşiv' : '') + grvNot;
   }
 
   /* geçmiş gün kilidi — tıklama/klavye ile toast (tek delegasyon, #ptBody her render'da
@@ -1445,9 +1649,20 @@ th.is-today .dh-d{color:var(--acc-ink)}
       var val = kayitli || p.gunler[TODAY_IDX] || 'tam';
       var saat = loadSaat(santiye, p.ad) || {giris:'08:00', cikis:'18:00'};
       var diff = saatDelta(saat.giris, saat.cikis);
+      /* [M-6] Görevlendirme kaydı olan kişi bugün bu şantiyede DEĞİL — günlük girişte
+         saat/durum kontrolü açılmaz, aksi halde aynı kişi aynı gün iki şantiyede tam
+         gün işaretlenebilirdi (brief'in birinci kuralı). Satır silinmez, kilitlenir. */
+      var grvBugun = grvKaynakta(p.ad, dayISO(TODAY_IDX));
       html += '<div class="pg-row">';
       html += '<div class="pg-name"><div class="pp-cell"><div class="pp-mark" style="background:'+tint.bg+';color:'+tint.fg+'">'+initials(p.ad)+'</div>'
             + '<div class="pp-info"><b>'+p.ad+'</b><span>'+p.poz+'</span></div></div></div>';
+      if(grvBugun){
+        html += '<div class="pg-status"><span class="pt-mark gorev"><i class="fa-solid fa-people-arrows"></i></span>'
+              + 'Geçici görevde — ' + SANTIYE_ADI[grvBugun.hedefSantiye]
+              + '<span class="pg-saat-ro">' + grvBugun.id + '</span></div>';
+        html += '</div>';
+        return;
+      }
       if(editable){
         html += '<div class="pg-saat"><div class="gfield"><input type="time" class="pg-saat-in" data-role="giris" data-ad="'+p.ad+'" value="'+saat.giris+'" aria-label="'+p.ad+' giriş saati"></div>'
               + '<span class="pg-saat-sep">–</span>'
@@ -1668,20 +1883,62 @@ th.is-today .dh-d{color:var(--acc-ink)}
   }
   updateCiktiBtn();
 
-  /* ============ Personel Getir — merkez/diğer şantiyeden geçici puantaj katılımı
-     (§14) [MOCK-SİM]. Aranabilir mini liste crm-personel-avans-form.html'deki
-     personelCombo desenini devralır (arama + tıklanabilir satır); tam aria-combobox
-     yerine küçültülmüş liste kullanılır çünkü seçim tek adımda satır ekler, form alanı
-     doldurmaz. Eklenen kişi GEÇİCİ satırdır: kadro/kordon sayılarına (93/69/24,
-     25/22/3, ptSub metni) katılmaz — yalnız kendi satırında "Geldiği: X" etiketiyle
-     görünür, KPI'lar yeniden hesaplanmaz. ============ */
+  /* ============ [Dalga 2 / M-6] Personel Getir → GEÇİCİ GÖREVLENDİRME KAYDI
+     (§14 revizyonu) [MOCK-SİM]. Eskiden tıklama anında sayfa-lokal bir "misafir"
+     satırı (yalnız bugün geçerli) eklerdi; artık aranabilir liste yalnız kişiyi SEÇER,
+     ikinci adımda brief'in 8 alanlı kaydı doldurulur ve GOREVLENDIRMELER dizisine
+     yazılır. Kayıt tarih aralıklıdır: hem hedef hem kaynak şantiyenin grid'ini etkiler,
+     hafta değiştirilse de doğru değerlendirilir. Yeni modal AÇILMAZ — form aynı panelin
+     içinde yaşar. Kadro/kordon sayıları (93/69/24, 25/22/3, ptSub metni) DEĞİŞMEZ;
+     görevlendirme kadroyu değil "o gün sahada bulunanı" değiştirir. ============ */
   var getirListeEl = document.getElementById('getirListe');
   var getirAramaEl = document.getElementById('getirArama');
-  var GUEST_ROWS = []; /* {ad, poz, kaynak} — sayfa-lokal, santiye değişince temizlenir */
+  var grvForm      = document.getElementById('grvForm');
+  var grvSecili    = null; /* form açıkken seçili PERSONEL kaydı */
+  var grvSeq       = 4;    /* kanonik kayıt GRV-2026-004 — yeni kayıtlar buradan devam eder */
 
   function digerSantiyePersoneli(){
     var santiye = sel.value;
     return PERSONEL.filter(function(p){ return p.santiye !== santiye; });
+  }
+  function grvFormKapat(){
+    grvForm.hidden = true;
+    grvSecili = null;
+    Array.prototype.forEach.call(getirListeEl.querySelectorAll('li.is-secili'), function(li){ li.classList.remove('is-secili'); });
+  }
+  function grvSantiyeSecenek(selEl, deger){
+    selEl.innerHTML = ['vadi','liman','merkez'].map(function(k){
+      return '<option value="'+k+'"'+(k === deger ? ' selected' : '')+'>'+SANTIYE_ADI[k]+'</option>';
+    }).join('');
+  }
+  /* Onaylayan uydurulmaz: yalnız kanonik şefler ve aktif kullanıcı seçenek olur. */
+  function grvOnaySecenek(kaynak, hedef){
+    var onay = document.getElementById('grvOnay');
+    var liste = [
+      SEF_OF[kaynak] + ' · Şantiye Şefi (' + SANTIYE_ADI[kaynak] + ')',
+      SEF_OF[hedef]  + ' · Şantiye Şefi (' + SANTIYE_ADI[hedef]  + ')'
+    ];
+    /* Aktif kullanıcı (shell.js ROLES config'i) — uydurma isim EKLENMEZ, yalnız
+       zaten kanonik olan persona. Şeflerden biriyse ikinci kez listelenmez. */
+    var akt = (window.GV && GV.R && GV.R.name) ? GV.R.name : null;
+    if(akt && akt !== SEF_OF[kaynak] && akt !== SEF_OF[hedef]){
+      liste.push(akt + (GV.R.role ? ' · ' + GV.R.role : ''));
+    }
+    onay.innerHTML = liste.map(function(v, i){
+      return '<option value="'+grvEsc(v)+'"'+(i === 0 ? ' selected' : '')+'>'+grvEsc(v)+'</option>';
+    }).join('');
+  }
+  function grvFormAc(p){
+    grvSecili = p;
+    var hedef = sel.value;
+    document.getElementById('grvKisi').textContent = p.ad;
+    document.getElementById('grvKisiPoz').textContent = p.poz;
+    document.getElementById('grvKaynak').innerHTML = '<i class="fa-solid fa-helmet-safety"></i> ' + SANTIYE_ADI[p.santiye];
+    document.getElementById('grvHedef').innerHTML  = '<i class="fa-solid fa-location-dot"></i> ' + SANTIYE_ADI[hedef];
+    grvOnaySecenek(p.santiye, hedef);
+    grvSantiyeSecenek(document.getElementById('grvMaliyet'), hedef);
+    document.getElementById('grvAciklama').value = '';
+    grvForm.hidden = false;
   }
   function renderGetirListesi(term){
     term = (term || '').trim().toLocaleLowerCase('tr');
@@ -1690,81 +1947,167 @@ th.is-today .dh-d{color:var(--acc-ink)}
     });
     if(!aday.length){
       getirListeEl.innerHTML = '<div class="pf-mini-empty">Eşleşen personel yok — diğer şantiyelerde kayıtlı personel listelenir.</div>';
+      grvFormKapat();
       return;
     }
     getirListeEl.innerHTML = aday.map(function(p){
-      return '<li role="option" data-ad="' + p.ad + '"><div class="pfm-info"><b>' + p.ad + '</b><span>' + p.poz + ' · ' + SANTIYE_ADI[p.santiye] + '</span></div>'
-           + '<span class="btn btn-ghost btn-sm" data-no-confirm><i class="fa-solid fa-plus"></i> Getir</span></li>';
+      var acik = grvKaydiOlan(p.ad);
+      var sag = acik
+        ? '<span class="gstat info">Görevlendirmesi var</span>'
+        : '<span class="btn btn-ghost btn-sm" data-no-confirm><i class="fa-solid fa-plus"></i> Görevlendir</span>';
+      return '<li role="option" data-ad="' + grvEsc(p.ad) + '"><div class="pfm-info"><b>' + grvEsc(p.ad) + '</b><span>' + grvEsc(p.poz) + ' · ' + SANTIYE_ADI[p.santiye] + '</span></div>' + sag + '</li>';
     }).join('');
     Array.prototype.forEach.call(getirListeEl.querySelectorAll('li'), function(li){
       li.addEventListener('click', function(){
         var ad = li.getAttribute('data-ad');
         var p = PERSONEL.filter(function(x){ return x.ad === ad; })[0];
         if(!p) return;
-        if(GUEST_ROWS.some(function(g){ return g.ad === ad; })){
-          gvToast(p.ad + ' zaten bugün için bu şantiyeye getirilmiş.', {type:'warn'});
+        var acik = grvKaydiOlan(ad);
+        if(acik){
+          gvToast(p.ad + ' için açık bir görevlendirme kaydı zaten var — ' + acik.id + ' (' + trTarih(acik.baslangic) + ' – ' + trTarih(acik.bitis) + ').', {type:'warn'});
           return;
         }
-        GUEST_ROWS.push({ad:p.ad, poz:p.poz, kaynak:p.santiye});
-        renderGuestRows();
-        gvToast(p.ad + ' — ' + SANTIYE_ADI[p.santiye] + "'den bugün için bu şantiyeye getirildi.", {type:'ok'});
-        getirCard.hidden = true;
-        btnGetirToggle.setAttribute('aria-expanded', 'false');
+        Array.prototype.forEach.call(getirListeEl.querySelectorAll('li.is-secili'), function(x){ x.classList.remove('is-secili'); });
+        li.classList.add('is-secili');
+        grvFormAc(p);
       });
     });
   }
-  /* Misafir satırlarını mevcut #ptBody'nin ALTINA ekler — kadro satırlarını (kordon
-     sayımı bunlardan yapılır) değiştirmez, ayrı ve etiketli bir blok olarak görünür. */
-  function renderGuestRows(){
-    var santiye = sel.value;
-    var tint = SANTIYE_TINT[santiye];
-    var existing = body.querySelectorAll('tr.pt-guest-row, tr.pgrp-row[data-grp="gecici"]');
-    Array.prototype.forEach.call(existing, function(tr){ tr.remove(); });
-    if(!GUEST_ROWS.length) return; /* boş grup basılmaz — §11.1 */
-    var hdr = document.createElement('tr');
-    hdr.className = 'pgrp-row';
-    hdr.setAttribute('data-grp', 'gecici');
-    hdr.innerHTML = '<td colspan="12"><span class="pgrp-lbl">Geçici Görevli</span><span class="pgrp-badge">'+GUEST_ROWS.length+' kişi</span></td>';
-    body.appendChild(hdr);
-    GUEST_ROWS.forEach(function(g){
-      var tr = document.createElement('tr');
-      tr.className = 'pt-guest-row';
-      var rowHtml = '<td class="col-chk" data-lbl=""></td>'
-        + '<td data-lbl="Personel"><div class="pp-cell"><div class="pp-mark" style="background:'+tint.bg+';color:'+tint.fg+'">'+initials(g.ad)+'</div>'
-        + '<div class="pp-info"><b>'+g.ad+'</b><span><i class="fa-solid fa-people-arrows"></i> Geldiği: '+SANTIYE_ADI[g.kaynak]+'</span></div></div></td>'
-        + '<td data-col="poz" data-lbl="Görev">'+g.poz+'</td>';
-      /* 7 gün hücresi — yalnız bugün (misafirin katıldığı gün) işlenir, Pazar hafta
-         tatili, diğerleri henüz işlenmedi (misafir kaydı yalnız bugün için geçerli).
-         Dalga 5 düzeltmesi: önceki sabit 6-hücrelik dizilim TODAY_IDX=3'ü hep 1. gün
-         sanıyordu (data-col hizası olmadan gerçek gün sırasıyla eşleşmiyordu) — artık
-         gerçek d==TODAY_IDX/d==6 eşleşmesiyle tam 7 hücre, diğer satırlarla AYNI sırada. */
-      for(var d = 0; d < 7; d++){
-        var lbl = curDays()[d];
-        if(WEEK === 0 && d === TODAY_IDX){
-          rowHtml += '<td class="col-gun is-today" data-col="'+GUN_KEY[d]+'" data-lbl="'+lbl+'"><div class="pt-mark tam" data-tip="'+lbl+' · Tam gün (misafir)" tabindex="0"><i class="fa-solid fa-check"></i></div></td>';
-        } else if(d === 6){
-          rowHtml += '<td class="col-gun" data-col="'+GUN_KEY[d]+'" data-lbl="'+lbl+'"><div class="pt-mark ht" data-tip="'+lbl+' · Hafta tatili (HT)" tabindex="0"><i class="fa-solid fa-moon"></i></div></td>';
-        } else {
-          rowHtml += '<td class="col-gun" data-col="'+GUN_KEY[d]+'" data-lbl="'+lbl+'"><div class="pt-mark gelecek" data-tip="'+lbl+' · Misafir kaydı yalnız bugün için geçerli" tabindex="0"></div></td>';
-        }
-      }
-      rowHtml += '<td class="num" data-col="hafta" data-lbl="Haftalık"><div class="pt-total">1 gün<span>misafir — bugün</span></div></td>'
-        + '<td data-col="ozet" data-lbl="Aylık Özet"><div class="pt-ozet">Geçici katılım</div></td>';
-      tr.innerHTML = rowHtml;
-      body.appendChild(tr);
-    });
-    if(gcHandle) gcHandle.apply();
+
+  grvForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!grvSecili) return;
+    var bas = document.getElementById('grvBas').value;
+    var bit = document.getElementById('grvBit').value;
+    if(!bas || !bit){ gvToast('Başlangıç ve bitiş tarihi zorunludur.', {type:'warn'}); return; }
+    if(bit < bas){ gvToast('Bitiş tarihi başlangıçtan önce olamaz.', {type:'warn'}); return; }
+    var aciklama = document.getElementById('grvAciklama').value.trim();
+    if(!aciklama){ gvToast('Görev açıklaması olmadan görevlendirme kaydı açılmaz.', {type:'warn'}); return; }
+    grvSeq++;
+    var kayit = {
+      id: 'GRV-2026-' + ('00' + grvSeq).slice(-3),
+      personel: grvSecili.ad, per: null, poz: grvSecili.poz,
+      kaynakSantiye: grvSecili.santiye, hedefSantiye: sel.value,
+      baslangic: bas, bitis: bit, aciklama: aciklama,
+      onaylayan: document.getElementById('grvOnay').value,
+      maliyetSantiye: document.getElementById('grvMaliyet').value
+    };
+    GOREVLENDIRMELER.push(kayit);
+    grvFormKapat();
+    getirCard.hidden = true;
+    btnGetirToggle.setAttribute('aria-expanded', 'false');
+    render();
+    gvToast(kayit.id + ' açıldı — ' + kayit.personel + ' ' + trTarih(bas) + ' – ' + trTarih(bit) + ' arası ' + SANTIYE_ADI[kayit.hedefSantiye] + '\'nde. Maliyet ' + SANTIYE_ADI[kayit.maliyetSantiye] + '\'ne yazılır.', {type:'ok'});
+  });
+  document.getElementById('grvIptal').addEventListener('click', function(){
+    grvFormKapat();
+    getirAramaEl.focus();
+  });
+
+  /* Görevlendirme satırlarını #ptBody'nin ALTINA ekler — kadro satırlarına (KPI ve
+     kordon sayımı bunlardan yapılır) DOKUNMAZ, iki ayrı etiketli grup olarak görünür:
+     "gelen" (bu şantiyede çalışıyor, kadrosu başka yerde) ve "giden" (bu şantiyenin
+     kadrosunda ama bugün burada değil). Giden grubu YALNIZ kişi bu sayfanın izlenen
+     PERSONEL örnekleminde değilse basılır — örneklemdeki kişinin kendi satırı zaten
+     'gorev' koduyla işaretlendiği için ikinci kez listelenmez. */
+  function grvGunHucresi(d, cls, tip){
+    var lbl = curDays()[d];
+    var V = STATUS[cls] || STATUS.gelecek;
+    var today = (WEEK === 0 && d === TODAY_IDX) ? ' is-today' : '';
+    return '<td class="col-gun'+today+'" data-col="'+GUN_KEY[d]+'" data-lbl="'+lbl+'">'
+      + '<div class="pt-mark '+cls+'" data-tip="'+grvEsc(lbl + ' · ' + tip)+'" tabindex="0">'
+      + (V.ic ? '<i class="fa-solid '+V.ic+'"></i>' : '') + '</div></td>';
   }
+  function grvSatirHtml(g, yon, tint){
+    var kod = yon === 'gelen' ? 'tam' : 'gorev';
+    var gun = 0, ayGun = 0, hucre = '';
+    var ayBas = (WEEK === -1) ? 0 : JULY_START_IDX; /* ay özeti penceresi — kadro satırlarıyla aynı */
+    for(var d = 0; d < 7; d++){
+      var iso = dayISO(d);
+      if(d === 6){ hucre += grvGunHucresi(d, 'ht', STATUS.ht.lbl); continue; }
+      if(grvKapsar(g, iso)){
+        /* Hedef şantiyede yalnız İŞLENMİŞ günler tam gün sayılır — kapsam içindeki
+           ileri günler "planlı görev" olarak işaretlenir, adam-güne yazılmaz
+           (grid'in geri kalanındaki RECORDED_UPTO kuralıyla aynı). */
+        var islenmemis = (WEEK === 0 && d > RECORDED_UPTO);
+        if(yon === 'gelen' && islenmemis){
+          hucre += grvGunHucresi(d, 'gorev', 'Görevlendirme kapsamında · henüz işlenmedi');
+        } else {
+          gun++;
+          /* ay özeti yalnız İŞLENMİŞ günleri sayar — kadro satırlarındaki
+             monthlySummary() penceresiyle birebir aynı (aksi halde giden satırı
+             aynı ay için kadro satırlarından fazla gün gösterirdi). */
+          if(d >= ayBas && !islenmemis) ayGun++;
+          hucre += grvGunHucresi(d, kod, yon === 'gelen'
+            ? 'Tam gün · geçici görevli (' + SANTIYE_ADI[g.kaynakSantiye] + ' kadrosu)'
+            : 'Geçici görevde — ' + SANTIYE_ADI[g.hedefSantiye]);
+        }
+      } else if(iso > g.bitis){
+        hucre += grvGunHucresi(d, 'gelecek', yon === 'gelen'
+          ? 'Görevlendirme sona erdi — ' + SANTIYE_ADI[g.kaynakSantiye] + "'na döndü"
+          : 'Görevlendirme sona erdi — ana şantiyesinde');
+      } else {
+        hucre += grvGunHucresi(d, 'gelecek', 'Görevlendirme ' + trTarih(g.baslangic) + ' tarihinde başlıyor');
+      }
+    }
+    var altBilgi = yon === 'gelen'
+      ? '<i class="fa-solid fa-people-arrows"></i> Kadrosu: ' + SANTIYE_ADI[g.kaynakSantiye]
+      : '<i class="fa-solid fa-people-arrows"></i> Geçici görevde: ' + SANTIYE_ADI[g.hedefSantiye];
+    var toplam = yon === 'gelen'
+      ? gun + ' gün<span>bu şantiyede geçici</span>'
+      : '0 gün<span>' + gun + ' gün görevlendirme kapsamında</span>';
+    /* Ay özeti kadro satırlarıyla AYNI pencereden (Temmuz günleri) türetilir — OZET_KOD
+       gelen için 'N' (tam gün), giden için 'G' (geçici görevde). */
+    var ozet = ayGun
+      ? ayGun + ' ' + (yon === 'gelen' ? OZET_KOD.tam : OZET_KOD.gorev)
+      : '—';
+    var perHref = g.per ? 'crm-personel-detay.html?per=' + g.per : null;
+    var adHtml = perHref ? '<a href="'+perHref+'">'+grvEsc(g.personel)+'</a>' : grvEsc(g.personel);
+    return '<tr class="pt-guest-row" data-grv="'+g.id+'">'
+      + '<td class="col-chk" data-lbl=""></td>'
+      + '<td data-lbl="Personel"><div class="pp-cell"><div class="pp-mark" style="background:'+tint.bg+';color:'+tint.fg+'">'+initials(g.personel)+'</div>'
+      +   '<div class="pp-info"><b>'+adHtml+'</b><span>'+altBilgi+'</span></div></div></td>'
+      + '<td data-col="poz" data-lbl="Görev">'+grvEsc(g.poz)+'</td>'
+      + hucre
+      + '<td class="num" data-col="hafta" data-lbl="Haftalık"><div class="pt-total">'+toplam+'</div></td>'
+      + '<td data-col="ozet" data-lbl="'+(WEEK === -1 ? 'Haziran Özeti' : 'Temmuz Özeti')+'"><div class="pt-ozet">'+ozet+'</div></td>'
+      + '</tr>'
+      + '<tr class="pt-grv-meta"><td colspan="12" data-lbl="">'+grvMetaHtml(g)+'</td></tr>';
+  }
+  function grvGrupHtml(kayitlar, yon, tint, baslik, rozet){
+    if(!kayitlar.length) return ''; /* boş grup basılmaz — §11.1 */
+    return '<tr class="pgrp-row" data-grp="gecici-'+yon+'"><td colspan="12" data-lbl="">'
+      + '<span class="pgrp-lbl"><i class="fa-solid fa-people-arrows"></i> '+baslik+'</span>'
+      + '<span class="pgrp-badge">'+kayitlar.length+' kişi · '+rozet+'</span></td></tr>'
+      + kayitlar.map(function(g){ return grvSatirHtml(g, yon, tint); }).join('');
+  }
+  function grvRowsHtml(santiye, rows){
+    var tint = SANTIYE_TINT[santiye];
+    var haftaBas = dayISO(0), haftaSon = dayISO(6);
+    /* görünen haftayla kesişmeyen kayıt hiç basılmaz — bitiş sonrası kişi ana
+       şantiyesine döner, hedef şantiyede artık görünmez (brief kuralı 2). */
+    function haftadaVar(g){ return g.baslangic <= haftaSon && g.bitis >= haftaBas; }
+    var izlenen = {};
+    rows.forEach(function(p){ izlenen[p.ad] = true; });
+    var gelen = GOREVLENDIRMELER.filter(function(g){ return g.hedefSantiye === santiye && haftadaVar(g); });
+    var giden = GOREVLENDIRMELER.filter(function(g){ return g.kaynakSantiye === santiye && haftadaVar(g) && !izlenen[g.personel]; });
+    return grvGrupHtml(gelen, 'gelen', tint, 'Geçici Görevli — Gelen', 'kadro sayımına dahil değil')
+         + grvGrupHtml(giden, 'giden', tint, 'Geçici Görevde — Giden', 'kadroda, sahada değil');
+  }
+
   btnGetirToggle.addEventListener('click', function(){
     if(WEEK !== 0) return;
     var opening = getirCard.hidden;
     getirCard.hidden = !opening;
     btnGetirToggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
-    if(opening){ getirAramaEl.value = ''; renderGetirListesi(''); }
+    if(opening){ getirAramaEl.value = ''; grvFormKapat(); renderGetirListesi(''); }
+    else grvFormKapat();
   });
   getirAramaEl.addEventListener('input', function(){ renderGetirListesi(getirAramaEl.value); });
-  /* şantiye değişince bir önceki şantiyenin misafir listesi geçerliliğini yitirir */
-  sel.addEventListener('change', function(){ GUEST_ROWS = []; });
+  /* Görevlendirme kaydı şantiye seçicisine bağlı DEĞİLDİR (eski misafir listesinin
+     aksine): kalıcı bir kayıttır, şantiye değişince silinmez — yalnız o şantiyeyle
+     ilgisi varsa görünür. Panel açıksa formu sıfırla (hedef şantiye değişti). */
+  sel.addEventListener('change', function(){ grvFormKapat(); if(!getirCard.hidden) renderGetirListesi(getirAramaEl.value); });
 
   /* ---- R2 hafta geçişi [MOCK-SİM] — thead günleri, hafta etiketi, arşiv kilidi ve
      her iki grid weekIdx'e göre yeniden basılır. Yalnız -1 (arşiv) ve 0 (kanonik) var;
@@ -1794,7 +2137,10 @@ th.is-today .dh-d{color:var(--acc-ink)}
       getirCard.hidden = true;
       btnGetirToggle.setAttribute('aria-expanded', 'false');
     }
-    GUEST_ROWS = [];
+    /* [M-6] Görevlendirme kayıtları hafta değişiminde SİLİNMEZ (eski misafir listesinin
+       aksine kalıcı kayıttır) — tarih aralığı görünen haftayla kesişmiyorsa zaten
+       basılmaz, kesişiyorsa doğru günlerde görünür. */
+    grvFormKapat();
     selected = {};
     updateOnayCardVis();
     updateHeads();
@@ -1974,7 +2320,7 @@ th.is-today .dh-d{color:var(--acc-ink)}
     var html = '';
     /* §11.1 — grup başlığı; sayaç GERÇEK görünen kişi sayısından (kisiler.length, rol
        budamasına göre değişir: şef yalnız Vadi'nin 16'sını görür) — sabit 24 YAZILMAZ. */
-    if(kisiler.length) html += '<tr class="pgrp-row" data-grp="taseron"><td colspan="10"><span class="pgrp-lbl">Taşeron Personeli</span><span class="pgrp-badge">'+kisiler.length+' kişi</span></td></tr>';
+    if(kisiler.length) html += '<tr class="pgrp-row" data-grp="taseron"><td colspan="10" data-lbl=""><span class="pgrp-lbl">Taşeron Personeli</span><span class="pgrp-badge">'+kisiler.length+' kişi</span></td></tr>';
     kisiler.forEach(function(p){
       html += '<tr data-per-t="'+p.ad+'" data-santiye="'+taseronSantiyeOf(p)+'" data-durum-bugun="'+taseronStatusOf(p, TODAY_IDX)+'" data-departman="saha">';
       html += '<td data-lbl="Personel"><div class="pp-cell"><div class="pp-mark" style="background:var(--bg);color:var(--ink-2)">'+initials(p.ad)+'</div>'
