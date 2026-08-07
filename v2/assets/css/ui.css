@@ -49,7 +49,18 @@
 
 /* ============ PANEL KARTI ============ */
 .gv-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-sm)}
-.gc-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+/* [Dalga 2] `.gc-head` yatay kaydırma — G-3'ün EKSİK KALAN YARISI.
+   G-3 "şerit ikinci satıra taşmasın + taşarsa yatay slider" diyordu; nowrap tarafı
+   uygulanmış (flex varsayılanı), kaydırma tarafı uygulanmamıştı. Sonuç: dar ekranda
+   (390px) başlık şeridi kabından taşıp BELGEYİ kaydırıyordu — ör. şantiye detayı
+   İş Programı sekmesindeki "Yeni Talep" butonlu şerit, 57px belge taşması.
+   Yeni kural İCAT EDİLMEDİ: sayfada zaten var olan .gv-tabs/.gv-chipbar/.kpi-rail/
+   .gc-body.flush kaydırma primitifi (overflow-x:auto + ui.js wireScrollHints kenar
+   ipucu) .gc-head'e de tükettirildi. İçerik sığdığında hiçbir görsel değişiklik yok.
+   min-width:0 — flex çocuklarının kabı şişirmesini engeller (ellipsis mekaniği). */
+.gc-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line);
+  overflow-x:auto;min-width:0;scrollbar-width:none}
+.gc-head::-webkit-scrollbar{display:none}
 .gc-title{font-size:15.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
 .gc-title i{color:var(--acc-ink);font-size:14px}
 .gc-link{font-size:13px;font-weight:700;color:var(--acc-ink);display:inline-flex;align-items:center;gap:7px}
@@ -531,16 +542,19 @@ a.kpi-card{color:inherit;text-decoration:none;cursor:pointer}
    mutlak konumlu — scroll container'ın KENDİSİ position:relative host'u olduğundan
    içerikle birlikte kaymaz, kabın kendi kutusuna sabit kalır. Sınıf ui.js ile
    (gv-scroll-l/gv-scroll-r) gerçek scrollWidth/scrollLeft ölçümüne göre açılır. */
-.gv-tabs,.pf-tabs,.gc-body.flush,.gv-chipbar,.kpi-rail{position:relative}
+/* [Dalga 2] `.gc-head` bu listeye EKLENDİ — kaydırma verildiği için kenar ipucunu da
+   alması gerekiyor, yoksa kaydırılabilir olduğu görünmez (scrollbar-width:none). */
+.gv-tabs,.pf-tabs,.gc-body.flush,.gv-chipbar,.kpi-rail,.gc-head{position:relative}
 .gv-tabs::before,.gv-tabs::after,.pf-tabs::before,.pf-tabs::after,
-.gc-body.flush::before,.gc-body.flush::after,.gv-chipbar::before,.gv-chipbar::after,.kpi-rail::before,.kpi-rail::after{
+.gc-body.flush::before,.gc-body.flush::after,.gv-chipbar::before,.gv-chipbar::after,.kpi-rail::before,.kpi-rail::after,
+.gc-head::before,.gc-head::after{
   content:"";position:absolute;top:0;bottom:0;width:32px;pointer-events:none;
   opacity:0;transition:opacity .18s var(--ease);z-index:2;
 }
-.gv-tabs::after,.pf-tabs::after,.gc-body.flush::after,.gv-chipbar::after,.kpi-rail::after{right:0;background:linear-gradient(to right,transparent,var(--paper))}
-.gv-tabs::before,.pf-tabs::before,.gc-body.flush::before,.gv-chipbar::before,.kpi-rail::before{left:0;background:linear-gradient(to left,transparent,var(--paper))}
-.gv-tabs.gv-scroll-r::after,.pf-tabs.gv-scroll-r::after,.gc-body.flush.gv-scroll-r::after,.gv-chipbar.gv-scroll-r::after,.kpi-rail.gv-scroll-r::after{opacity:1}
-.gv-tabs.gv-scroll-l::before,.pf-tabs.gv-scroll-l::before,.gc-body.flush.gv-scroll-l::before,.gv-chipbar.gv-scroll-l::before,.kpi-rail.gv-scroll-l::before{opacity:1}
+.gv-tabs::after,.pf-tabs::after,.gc-body.flush::after,.gv-chipbar::after,.kpi-rail::after,.gc-head::after{right:0;background:linear-gradient(to right,transparent,var(--paper))}
+.gv-tabs::before,.pf-tabs::before,.gc-body.flush::before,.gv-chipbar::before,.kpi-rail::before,.gc-head::before{left:0;background:linear-gradient(to left,transparent,var(--paper))}
+.gv-tabs.gv-scroll-r::after,.pf-tabs.gv-scroll-r::after,.gc-body.flush.gv-scroll-r::after,.gv-chipbar.gv-scroll-r::after,.kpi-rail.gv-scroll-r::after,.gc-head.gv-scroll-r::after{opacity:1}
+.gv-tabs.gv-scroll-l::before,.pf-tabs.gv-scroll-l::before,.gc-body.flush.gv-scroll-l::before,.gv-chipbar.gv-scroll-l::before,.kpi-rail.gv-scroll-l::before,.gc-head.gv-scroll-l::before{opacity:1}
 
 /* ============ D1-T-CSS — GELİŞMİŞ FİLTRE PANELİ (§9, gvFilterPanel) ============
    Ortak liste süzgeci: filter-bar (arama+hızlı çip) yanına "Gelişmiş Filtre" butonu →

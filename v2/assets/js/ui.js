@@ -743,7 +743,9 @@
      olduğu HİÇ görünmez) ve .gc-body.flush (geniş .gtable sarmalayıcısı) için gerçek
      scrollWidth/scrollLeft ölçümüne göre kenar ipucu (ui.css .gv-scroll-l/-r). ---- */
   function wireScrollHints(){
-    var sel = '.gv-tabs,.pf-tabs,.gc-body.flush,.gv-chipbar';
+    /* [Dalga 2] `.gc-head` EKLENDİ — G-3'ün eksik kalan yatay-kaydırma yarısı ona da
+       tükettirildi (bkz. ui.css .gc-head kuralı), dolayısıyla kenar ipucunu da alır. */
+    var sel = '.gv-tabs,.pf-tabs,.gc-body.flush,.gv-chipbar,.gc-head';
     function update(el){
       var canL = el.scrollLeft > 3;
       var canR = el.scrollLeft < (el.scrollWidth - el.clientWidth - 3);
