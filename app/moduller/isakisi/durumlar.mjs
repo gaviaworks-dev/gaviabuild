@@ -208,6 +208,73 @@ export const NESNELER = {
     isaretler: ['suresi_asti'],
   },
 
+  /* ---- Mal kabul (STK-03..05) -------------------------------------------
+     Kabul kararı stok defterine YAZAR; bu yüzden karar bir kez verilir ve
+     "kabul" durumundan geri dönülmez — düzeltme ters kayıtla yapılır. */
+  malKabul: {
+    etiket: 'Mal kabul',
+    durumlar: ['taslak', 'kontrolde', 'kabul', 'kismi_kabul', 'ret', 'iptal'],
+    baslangic: 'taslak',
+    sonDurumlar: ['kabul', 'kismi_kabul', 'ret', 'iptal'],
+    etiketler: {
+      taslak: 'Taslak', kontrolde: 'Kalite kontrolünde', kabul: 'Kabul edildi',
+      kismi_kabul: 'Kısmi kabul', ret: 'Reddedildi', iptal: 'İptal',
+    },
+    gecisler: [
+      { den: 'taslak', e: 'kontrolde', eylem: 'kontrole_gonder', etiket: 'Kalite kontrolüne gönder',
+        gerekce: 'istege_bagli' },
+      /* Aşağıdaki geçişleri mal kabul ekranı, kalem kararlarını işledikten
+         SONRA motor kipinde tetikler: kullanıcı sonucu doğrudan seçemez. */
+      { den: 'kontrolde', e: 'kabul', eylem: 'kabul_et', etiket: 'Kabul', gerekce: 'istege_bagli', yalnizMotor: true },
+      { den: 'kontrolde', e: 'kismi_kabul', eylem: 'kismi_kabul_et', etiket: 'Kısmi kabul',
+        gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'kontrolde', e: 'ret', eylem: 'reddet', etiket: 'Ret', gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'taslak', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis'],
+  },
+
+  /* ---- Teklif talebi (RFQ, PRC-04) --------------------------------------- */
+  rfq: {
+    etiket: 'Teklif talebi',
+    durumlar: ['taslak', 'gonderildi', 'toplaniyor', 'degerlendirmede', 'sonuclandi', 'iptal'],
+    baslangic: 'taslak',
+    sonDurumlar: ['sonuclandi', 'iptal'],
+    etiketler: {
+      taslak: 'Taslak', gonderildi: 'Tedarikçilere gönderildi', toplaniyor: 'Teklif toplanıyor',
+      degerlendirmede: 'Değerlendirmede', sonuclandi: 'Sonuçlandı', iptal: 'İptal',
+    },
+    gecisler: [
+      { den: 'taslak', e: 'gonderildi', eylem: 'gonder', etiket: 'Tedarikçilere gönder', gerekce: 'istege_bagli' },
+      { den: 'gonderildi', e: 'toplaniyor', eylem: 'topla', etiket: 'Teklif toplamaya başla', gerekce: 'istege_bagli' },
+      { den: 'toplaniyor', e: 'degerlendirmede', eylem: 'degerlendir', etiket: 'Değerlendirmeye al', gerekce: 'istege_bagli' },
+      { den: 'gonderildi', e: 'degerlendirmede', eylem: 'degerlendir', etiket: 'Değerlendirmeye al', gerekce: 'istege_bagli' },
+      { den: 'degerlendirmede', e: 'sonuclandi', eylem: 'sonuclandir', etiket: 'Kazananı belirle',
+        gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'taslak', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+      { den: 'gonderildi', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+      { den: 'toplaniyor', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis', 'sla_asildi'],
+  },
+
+  /* ---- Stok transferi (STK-07) ------------------------------------------- */
+  stokTransferi: {
+    etiket: 'Stok transferi',
+    durumlar: ['taslak', 'yolda', 'tamamlandi', 'iptal'],
+    baslangic: 'taslak',
+    sonDurumlar: ['tamamlandi', 'iptal'],
+    etiketler: { taslak: 'Taslak', yolda: 'Yolda', tamamlandi: 'Teslim alındı', iptal: 'İptal' },
+    gecisler: [
+      { den: 'taslak', e: 'yolda', eylem: 'sevk_et', etiket: 'Sevk et', gerekce: 'istege_bagli' },
+      /* Teslim alma karşı depoda GİRİŞ hareketi yazar; dört göz: sevk edenle
+         teslim alan aynı kişi olamaz. */
+      { den: 'yolda', e: 'tamamlandi', eylem: 'teslim_al', etiket: 'Teslim al', gerekce: 'istege_bagli', dortGoz: true },
+      { den: 'taslak', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis'],
+  },
+
   /* ---- Kart yükleme partisi (Faz 5'te kullanılacak, tanım burada) ------- */
   kartYuklemePartisi: {
     etiket: 'Kart yükleme partisi',
@@ -243,6 +310,7 @@ export const ONAYLI_TURLER = {
   butce_revizyonu: 'Bütçe revizyonu', sure_uzatim: 'Süre uzatım talebi',
   degisiklik: 'Değişiklik talebi', odeme: 'Ödeme talebi', kart_yukleme: 'Kart yükleme',
   kabul: 'Geçici/kesin kabul', puantaj_donemi: 'Puantaj dönemi',
+  siparis: 'Satın alma siparişi', stok_sayimi: 'Stok sayımı',
   banka_hareketi: 'Banka hareketi', avans: 'Avans talebi', izin: 'İzin talebi',
 };
 

@@ -4,14 +4,14 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 119 · devam: 0 · bitti: 0 · doğrulandı: 125
+**Toplam:** 244 sayfa ailesi — bekliyor: 96 · devam: 0 · bitti: 0 · doğrulandı: 148
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
 | Faz 3 | 89 | 0 | 0 | 0 | 89 |
-| Faz 4 | 69 | 69 | 0 | 0 | 0 |
+| Faz 4 | 69 | 46 | 0 | 0 | 23 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
 
@@ -165,29 +165,29 @@
 | HR-11 | Avans talepleri | P0 | listeForm | `/avanslar` | ⬜ bekliyor | — | kaynak: crm-personel-avans-detay (birlestir), crm-personel-avans-form (birlestir), crm-personel-avans (koru) |
 | HR-12 | Sağlık ve uygunluk | P1 | listeForm | `/personel-saglik` | ⬜ bekliyor | — | sıfırdan |
 | HR-13 | Yetkinlik ve sertifikalar | P1 | listeForm | `/yetkinlikler` | ⬜ bekliyor | — | kaynak: crm-personel-evrak-uyari (birlestir) |
-| PRC-01 | Satın alma talepleri | P0 | liste | `/satinalma/talepler` | ⬜ bekliyor | — | kaynak: crm-satinalma-formlar (birlestir), crm-satinalma-talepler (koru) |
-| PRC-02 | Yeni satın alma talebi | P0 | form | `/satinalma/talepler/yeni` | ⬜ bekliyor | — | kaynak: crm-satinalma-talep-form (koru) |
-| PRC-03 | Talep detayı | P0 | detay | `/satinalma/talepler/:id` | ⬜ bekliyor | — | kaynak: crm-satinalma-form-detay (birlestir), crm-satinalma-talep-detay (koru) |
-| PRC-04 | Teklif talepleri RFQ | P0 | listeForm | `/satinalma/rfq` | ⬜ bekliyor | — | kaynak: crm-satinalma-teklif-detay (birlestir), crm-satinalma-teklifler (koru) |
-| PRC-05 | Teklif toplama portalı | P1 | portal | `/tedarikci/teklif/:token` | ⬜ bekliyor | — | sıfırdan |
-| PRC-06 | Teklif karşılaştırma | P0 | mutabakat | `/satinalma/karsilastirma/:id` | ⬜ bekliyor | — | kaynak: crm-satinalma-teklif-karsilastir (koru) |
-| PRC-07 | Satın alma siparişleri | P0 | liste | `/satinalma/siparisler` | ⬜ bekliyor | — | kaynak: crm-satinalma-siparisler (koru), crm-satinalma-termin (birlestir) |
-| PRC-08 | Yeni sipariş | P0 | form | `/satinalma/siparisler/yeni` | ⬜ bekliyor | — | sıfırdan |
-| PRC-09 | Sipariş detayı | P0 | detay | `/satinalma/siparisler/:id` | ⬜ bekliyor | — | kaynak: crm-satinalma-siparis-detay (koru) |
-| PRC-10 | Sipariş değişikliği | P0 | onay | `/satinalma/siparisler/:id/revizyon` | ⬜ bekliyor | — | sıfırdan |
-| PRC-11 | Tedarikçiler | P1 | liste | `/tedarikciler` | ⬜ bekliyor | — | kaynak: crm-finans-taseron (birlestir), crm-finans-taseronlar (koru), crm-satinalma-tedarikciler (koru) |
-| PRC-12 | Tedarikçi detayı | P1 | detay | `/tedarikciler/:id` | ⬜ bekliyor | — | kaynak: crm-finans-taseron-detay (birlestir), crm-satinalma-tedarikci-detay (koru) |
-| PRC-13 | Tedarikçi değerlendirme | P1 | rapor | `/tedarikciler/:id/degerlendirme` | ⬜ bekliyor | — | sıfırdan |
-| STK-01 | Depolar | P0 | listeForm | `/depolar` | ⬜ bekliyor | — | kaynak: crm-operasyon-yemekhane (birlestir) |
-| STK-02 | Stok kartları | P0 | listeForm | `/stok-kartlari` | ⬜ bekliyor | — | kaynak: crm-satinalma-stok-detay (birlestir), crm-satinalma-stok-form (birlestir), crm-satinalma-stok (koru) |
-| STK-03 | Mal kabul | P0 | liste | `/mal-kabul` | ⬜ bekliyor | — | kaynak: crm-satinalma-irsaliye-fatura (birlestir) |
-| STK-04 | Yeni mal kabul | P0 | form | `/mal-kabul/yeni` | ⬜ bekliyor | — | sıfırdan |
-| STK-05 | Mal kabul detayı | P0 | detay | `/mal-kabul/:id` | ⬜ bekliyor | — | sıfırdan |
-| STK-06 | Stok rezervasyonu | P0 | listeForm | `/stok/rezervasyonlar` | ⬜ bekliyor | — | sıfırdan |
-| STK-07 | Depolar arası transfer | P0 | listeForm | `/stok/transferler` | ⬜ bekliyor | — | sıfırdan |
-| STK-08 | Sarf ve iade | P0 | listeForm | `/stok/sarf` | ⬜ bekliyor | — | sıfırdan |
-| STK-09 | Stok sayımı | P1 | sihirbaz | `/stok/sayim` | ⬜ bekliyor | — | kaynak: crm-operasyon-yemekhane-sayim-detay (birlestir), crm-operasyon-yemekhane-sayim-form (birlestir) |
-| STK-10 | Stok hareket defteri | P0 | rapor | `/stok/hareketler` | ⬜ bekliyor | — | sıfırdan |
+| PRC-01 | Satın alma talepleri | P0 | liste | `/satinalma/talepler` | ✅ doğrulandı | faz4a | Satın alma talepleri — onaylı/siparişsiz izleme; tutar kalemlerden türer |
+| PRC-02 | Yeni satın alma talebi | P0 | form | `/satinalma/talepler/yeni` | ✅ doğrulandı | faz4a | Yeni talep — kalemli form, toplam alanı yok, taslak açılır |
+| PRC-03 | Talep detayı | P0 | detay | `/satinalma/talepler/:id` | ✅ doğrulandı | faz4a | Talep detayı — onaydaki talebin kalemleri değişmez; RFQ/sipariş bağı |
+| PRC-04 | Teklif talepleri RFQ | P0 | listeForm | `/satinalma/rfq` | ✅ doğrulandı | faz4a | RFQ listesi — yalnız ONAYLI talepten açılır |
+| PRC-05 | Teklif toplama portalı | P1 | portal | `/tedarikci/teklif/:token` | ✅ doğrulandı | faz4a | Tedarikçi teklif portalı — oturumsuz, token özeti saklanır, iç menü yok |
+| PRC-06 | Teklif karşılaştırma | P0 | mutabakat | `/satinalma/karsilastirma/:id` | ✅ doğrulandı | faz4a | Teklif karşılaştırma — en düşük işaretli; farklı seçim gerekçe ister |
+| PRC-07 | Satın alma siparişleri | P0 | liste | `/satinalma/siparisler` | ✅ doğrulandı | faz4a | Siparişler — kalan teslim oranı hareketlerden türer |
+| PRC-08 | Yeni sipariş | P0 | form | `/satinalma/siparisler/yeni` | ✅ doğrulandı | faz4a | Yeni sipariş — ONAYSIZ talep siparişe dönüşmez (PRC-01 kabul) |
+| PRC-09 | Sipariş detayı | P0 | detay | `/satinalma/siparisler/:id` | ✅ doğrulandı | faz4a | Sipariş detayı — teslim/fatura miktarları kaynak kayıtlardan türer |
+| PRC-10 | Sipariş değişikliği | P0 | onay | `/satinalma/siparisler/:id/revizyon` | ✅ doğrulandı | faz4a | Sipariş revizyonu — onaylı sipariş yerinde değişmez, yeni sürüm açılır |
+| PRC-11 | Tedarikçiler | P1 | liste | `/tedarikciler` | ✅ doğrulandı | faz4a | Tedarikçiler — kara liste açık siparişte engellenir |
+| PRC-12 | Tedarikçi detayı | P1 | detay | `/tedarikciler/:id` | ✅ doğrulandı | faz4a | Tedarikçi detayı — sipariş, teklif ve mal kabul sekmeleri |
+| PRC-13 | Tedarikçi değerlendirme | P1 | rapor | `/tedarikciler/:id/degerlendirme` | ✅ doğrulandı | faz4a | Tedarikçi değerlendirme — kalite/termin/fiyat puanı formülüyle hesaplanır |
+| STK-01 | Depolar | P0 | listeForm | `/depolar` | ✅ doğrulandı | faz4a | Depolar — bakiye kalemi defterden sayılır |
+| STK-02 | Stok kartları | P0 | listeForm | `/stok-kartlari` | ✅ doğrulandı | faz4a | Stok kartları — mevcut miktar sütunu YOK; bakiye defterden türer |
+| STK-03 | Mal kabul | P0 | liste | `/mal-kabul` | ✅ doğrulandı | faz4a | Mal kabul listesi |
+| STK-04 | Yeni mal kabul | P0 | form | `/mal-kabul/yeni` | ✅ doğrulandı | faz4a | Yeni mal kabul — sipariş kalanını aşamaz; stok henüz yazılmaz |
+| STK-05 | Mal kabul detayı | P0 | detay | `/mal-kabul/:id` | ✅ doğrulandı | faz4a | Mal kabul detayı — kabul deftere yazar, ret otomatik NCR açar (§7) |
+| STK-06 | Stok rezervasyonu | P0 | listeForm | `/stok/rezervasyonlar` | ✅ doğrulandı | faz4a | Stok rezervasyonu — kullanılabilir stoktan (bakiye − rezerve) |
+| STK-07 | Depolar arası transfer | P0 | listeForm | `/stok/transferler` | ✅ doğrulandı | faz4a | Depolar arası transfer — sevk çıkış, teslim giriş; dört göz |
+| STK-08 | Sarf ve iade | P0 | listeForm | `/stok/sarf` | ✅ doğrulandı | faz4a | Sarf ve iade — doğrudan deftere; negatif bakiye engelli |
+| STK-09 | Stok sayımı | P1 | sihirbaz | `/stok/sayim` | ✅ doğrulandı | faz4a | Stok sayımı — kör sayım, defter dondurulur, fark onaydan sonra yazılır |
+| STK-10 | Stok hareket defteri | P0 | rapor | `/stok/hareketler` | ✅ doğrulandı | faz4a | Stok hareket defteri — değişmez (tetikleyici), ters kayıtla düzeltilir (STK-01 kabul) |
 | CNT-01 | Sözleşmeler | P0 | liste | `/sozlesmeler` | ⬜ bekliyor | — | kaynak: crm-finans-sozlesmeler (koru), crm-satis-sozlesmeler (birlestir) |
 | CNT-02 | Yeni sözleşme | P0 | form | `/sozlesmeler/yeni` | ⬜ bekliyor | — | kaynak: crm-finans-sozlesme-form (koru) |
 | CNT-03 | Sözleşme detayı | P0 | detay | `/sozlesmeler/:id` | ⬜ bekliyor | — | kaynak: crm-finans-sozlesme-detay (koru), crm-finans-sozlesme-yetki (birlestir), crm-satis-sozlesme-detay (birlestir) |

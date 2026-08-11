@@ -40,6 +40,27 @@ const SABLONLAR = [
     ],
   },
   {
+    kod: 'SIPARIS-KUCUK', ad: 'Satın alma siparişi — 50.000 TL altı', nesne: 'siparis',
+    altMinor: 0, ustMinor: 5_000_000, sla: 48,
+    adimlar: [{ sira: 1, ad: 'Satın alma yöneticisi onayı', rol: 'proje_muduru', gereken: 1 }],
+  },
+  {
+    kod: 'SIPARIS-BUYUK', ad: 'Satın alma siparişi — 50.000 TL üstü', nesne: 'siparis',
+    altMinor: 5_000_001, ustMinor: null, sla: 72,
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 },
+      { sira: 3, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'SAYIM', ad: 'Stok sayım farkı onayı', nesne: 'stok_sayimi', sla: 48,
+    adimlar: [
+      { sira: 1, ad: 'Depo sorumlusu doğrulaması', rol: 'depo_sorumlusu', gereken: 1 },
+      { sira: 2, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 },
+    ],
+  },
+  {
     kod: 'SOZLESME', ad: 'Sözleşme onayı', nesne: 'sozlesme', altMinor: 0, ustMinor: null, sla: 72,
     adimlar: [
       { sira: 1, ad: 'Finans incelemesi', rol: 'finans_sorumlusu', gereken: 1 },
@@ -209,7 +230,8 @@ export function isAkisiTohumla(tenantId, kullaniciId = null) {
       ['butce', 'BDG'], ['kasa', 'CSH'], ['banka', 'BNK'], ['cari', 'CAR'],
       ['fatura', 'INV'], ['odeme', 'PAY'], ['teminat', 'TMN'], ['zeyil', 'ZYL'],
       ['kabul', 'KBL'], ['is_emri', 'IEM'], ['toplanti', 'TPL'],
-      ['isg_denetimi', 'DEN']]) {
+      ['isg_denetimi', 'DEN'], ['tedarikci', 'TED'], ['rfq', 'RFQ'], ['teklif_kaydi', 'TKF'],
+      ['stok_transferi', 'TRF'], ['stok_sayimi', 'SYM']]) {
       sablonKur(tenantId, nesne, onek);
     }
 

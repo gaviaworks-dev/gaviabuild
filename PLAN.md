@@ -115,7 +115,7 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz3(PLAN,TASK,HSE,PRJ,GLB)` · **Test:** 213/213 · **Doğrulanan ekran:** 125/244
+**Son commit:** `faz4(PRC,STK)` · **Test:** 243/243 · **Doğrulanan ekran:** 148/244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
@@ -123,7 +123,7 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 | Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
 | Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
 | Faz 3 | ✅ kapandı (`faz-3-tamam`) | 89/89 aile; raporlar/faz-3-rapor.md; §12 engeli yok |
-| Faz 4 | 🟡 sıradaki | PRC → STK → CNT → FIN + GLB-02/03, HR-10..13, AST-01..10 (69 aile) |
+| Faz 4 | 🟡 23/69 aile | PRC-01..13 ve STK-01..10 tamam (`faz4a`); sırada CNT → FIN → AST → HR-10..13 |
 | Faz 5-6 | ⬜ başlamadı | |
 
 ### Faz 3'te teslim edilenler
@@ -138,10 +138,8 @@ resmi belge, geçici/kesin kabul).
 
 Sıra doküman §9'a göre: **PRC → STK → CNT → FIN**, ardından AST ve GLB panoları.
 
-1. **Satın alma (PRC-01..13)** — 13 aile. Kabul: onaysız talep siparişe dönüşmez (PRC-01).
-   Onay motoru ve tutar kademeli şablonlar HAZIR (`TALEP-KUCUK/ORTA/BUYUK`).
-2. **Depo ve stok (STK-01..10)** — 10 aile. Kabul: bakiye **hareket defterinden** yeniden
-   hesaplanır (STK-01); elle bakiye yazımı yasak (kural 7).
+1. ~~**Satın alma (PRC-01..13)**~~ ✅ `faz4a` — PRC-01 kabul yeşil.
+2. ~~**Depo ve stok (STK-01..10)**~~ ✅ `faz4a` — STK-01 kabul yeşil; defter tetikleyiciyle değişmez.
 3. **Sözleşme, metraj, hakediş (CNT-01..15)** — 15 aile. Onaylı metraj + onaylı ilerlemeden
    hakediş üretimi; zeyil ve değişiklik emri sürümlü.
 4. **Finans (FIN-01..15)** — 15 aile. Kabul: üçlü eşleştirme; tolerans dışı fark onaya gider.
@@ -171,6 +169,10 @@ veya proje kapatılamaz — bu bilinçli bir tasarımdır, unutulmuş bir eksik 
   hem okumaya hem yazmaya kapatır (K-039).
 - **`moduller/santiye/kapanis.mjs`** — açılış/kapanış engel listesi; Faz 4'te stok,
   varlık ve kasa sorguları BURAYA bağlanacak (K-049: şu an kaldırılamaz engel).
+  **Stok ayağı artık bağlanabilir**: `moduller/stok/defter.mjs` hazır.
+- **`moduller/stok/defter.mjs`** — değişmez hareket defteri (K-061). Bakiye, rezerve,
+  kullanılabilir, yürüyen bakiye ve ters kayıt tek yerde. Finans defteri de aynı
+  kalıpla kurulacak (kasa/banka/cari hareketleri).
 
 ### Bilinen açık uçlar
 
