@@ -113,6 +113,48 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ---
 
+## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
+
+**Son commit:** `faz3(PRJ,SITE,PLAN,TASK,HSE,QLT)` · **Test:** 120/120 · **Doğrulanan ekran:** 67/244
+
+| Faz | Durum | Not |
+| --- | --- | --- |
+| Faz 0 | ✅ kapandı (`faz-0-tamam`) | 244 yol kararı, screen-manifest, link testi |
+| Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
+| Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
+| Faz 3 | 🟡 çekirdek kapandı, katalog açık | 34/89 aile; PRJ-01, PLAN-01, PLAN-02, SITE-01, QLT-01 yeşil |
+| Faz 4-6 | ⬜ başlamadı | |
+
+### Sıradaki iş paketleri (öncelik sırasıyla)
+
+1. **Faz 3 kataloğunu tamamla** — sırasıyla:
+   `QLT-01..04` (kalite paneli, ITP, muayene) → `QLT-08..14` (malzeme onayı, submittal, **RFI**, test, punch)
+   → `DOC-04..10` (çizim, transmittal, evrak, dağıtım matrisi, arşiv)
+   → `HR-01..09` (personel, puantaj, izin — Faz 4 finansının ön koşulu)
+   → `SITE-04, 05, 12..16` (şantiye düzenle, açılış/kapanış sihirbazları, kabuller)
+   → `PLAN-05, 07, 08, 10, 12` · `TASK-04..09` · `HSE-01, 07..12` · `PRJ-05..10`
+2. **Faz 4** — `PRC` → `STK` → `CNT` → `FIN`. Kabul: PRC-01 (onaysız talep siparişe dönüşmez),
+   STK-01 (bakiye defterden yeniden üretilebilir), üçlü eşleştirme.
+   Ön koşul: HR-08 puantaj ve SET-11 maliyet kodları (ikincisi hazır).
+3. **Faz 5** — `CRD-01..18`. Doküman §6 birebir. Ön koşul: HR-06 işten ayrılış bağı.
+4. **Faz 6** — `RPT-01..15` (önce `ReportLayout` + PDF/XLSX üreticisi), `EXT-01..08`, `GLB-02/03`
+   panoları (K-017 ile Faz 4'e alınmıştı, veri geldiğinde), `GLB-07` arama, `AST-11` mobil.
+
+### Hazır ama henüz kullanılmayan altyapı
+
+- `Para` (tamsayı minor unit), `idempotent()`, `surumluGuncelle()` (409), `audit.yaz()` zinciri
+- Onay motoru: tutar kademeli şablon seçimi, paralel adım, vekalet, revizyonda geçersizleşme
+- Geçiş motoru: `kartYuklemePartisi` durum zinciri **zaten tanımlı** (Faz 5'te doğrudan kullanılacak)
+- `cokluParcaOku()` (dosya yükleme), doküman sürümleme, içerik-adresli depo
+- `rotalar/ortak.mjs`: liste sorgusu, filtre, geçiş formu, kayıt oluşturma, özet şeridi
+
+### Bilinen açık uçlar
+
+- Günlük rapor **PDF**'i Faz 6 `ReportLayout`'a bırakıldı (K-030)
+- `GLB-02`, `GLB-03` panoları Faz 4'e alındı (K-017)
+- E-posta gönderimi yok: davet ve parola sıfırlama bağlantısı geliştirme ortamında ekranda gösterilir (K-021)
+- Antivirüs taraması Faz 5 entegrasyon adaptörüne bağlanacak (K-027)
+
 ## Faz kapanış kontrol listesi (her faz için zorunlu)
 
 - [ ] `raporlar/faz-<N>-rapor.md` üretildi: kırık link, yetkisiz erişim, veri tutarlılığı, PDF/çıktı
