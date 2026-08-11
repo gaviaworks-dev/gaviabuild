@@ -14,7 +14,10 @@
 export const KALIP_EYLEMLERI = {
   liste:     ['goruntule', 'disa_aktar'],
   listeForm: ['goruntule', 'olustur', 'guncelle', 'disa_aktar'],
-  detay:     ['goruntule', 'disa_aktar'],
+  /* Detay ekranı yalnız okuma yüzeyi DEĞİLDİR: durum geçişleri (§5.2 eylem menüsü),
+     yeni sürüm yükleme ve satır ekleme burada olur. Yazma yetkisi olmayan roller
+     (ör. denetçi) zaten "guncelle" eylemini taşımadığı için salt okunur kalır. */
+  detay:     ['goruntule', 'guncelle', 'disa_aktar'],
   form:      ['goruntule', 'olustur', 'guncelle'],
   sihirbaz:  ['goruntule', 'olustur', 'guncelle', 'tamamla'],
   onay:      ['goruntule', 'karar_ver'],
@@ -36,8 +39,6 @@ export const KALIP_EYLEMLERI = {
 export const EKRAN_EYLEMLERI = {
   'GLB-04': ['goruntule'],
   'GLB-05': ['goruntule', 'karar_ver'],
-  /* Doküman detayı aynı zamanda YENİ SÜRÜM yükleme yüzeyidir (§5.4). */
-  'DOC-03': ['goruntule', 'guncelle', 'disa_aktar'],
 };
 
 /* Rol tanımları. `bolumler` manifest bölüm anahtarlarıdır; '*' hepsi demektir.

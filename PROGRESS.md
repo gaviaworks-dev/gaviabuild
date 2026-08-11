@@ -4,13 +4,13 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 208 · devam: 0 · bitti: 0 · doğrulandı: 36
+**Toplam:** 244 sayfa ailesi — bekliyor: 177 · devam: 0 · bitti: 0 · doğrulandı: 67
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
-| Faz 3 | 89 | 89 | 0 | 0 | 0 |
+| Faz 3 | 89 | 58 | 0 | 0 | 31 |
 | Faz 4 | 69 | 69 | 0 | 0 | 0 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
@@ -50,9 +50,9 @@
 | GLB-05 | Onay detayı | P0 | detay | `/onaylar/:id` | ✅ doğrulandı | faz2 | Karar ekranı — belge sürümü dondurulmuş, dört göz, gerekçe zorunluluğu |
 | GLB-06 | Bildirim merkezi | P0 | liste | `/bildirimler` | ✅ doğrulandı | faz2 | Bildirim merkezi (Faz 1 kabuğu + Faz 2 gerçek olay üretimi) |
 | GLB-09 | Duyurular | P2 | listeForm | `/duyurular` | ✅ doğrulandı | faz2 | Duyurular — onay motorunun uçtan uca ilk uygulaması; yayına motor alır |
-| DOC-01 | Doküman merkezi | P0 | liste | `/dokumanlar` | ✅ doğrulandı | faz2 | Doküman merkezi — gizli sınıf yetkisiz kullanıcıya listelenmiyor |
-| DOC-02 | Yeni doküman | P0 | form | `/dokumanlar/yeni` | ✅ doğrulandı | faz2 | Yeni doküman — gerçek dosya yükleme, MIME imza doğrulaması, SHA-256 |
-| DOC-03 | Doküman detayı | P0 | detay | `/dokumanlar/:id` | ✅ doğrulandı | faz2 | Doküman detayı — sürüm satırı değişmez, indirme denetim izinde |
+| DOC-01 | Doküman merkezi | P0 | liste | `/dokumanlar` | ✅ doğrulandı | faz3 | Doküman merkezi (Faz 2) |
+| DOC-02 | Yeni doküman | P0 | form | `/dokumanlar/yeni` | ✅ doğrulandı | faz3 | Yeni doküman (Faz 2) |
+| DOC-03 | Doküman detayı | P0 | detay | `/dokumanlar/:id` | ✅ doğrulandı | faz3 | Doküman detayı (Faz 2) |
 | SET-06 | İş akışı şablonları | P0 | listeForm | `/ayarlar/is-akislari` | ✅ doğrulandı | faz2 | İş akışı şablonları — sürümlü, tutar kademeli, paralel adımlı |
 | SET-07 | Onay vekaletleri | P0 | listeForm | `/ayarlar/vekaletler` | ✅ doğrulandı | faz2 | Onay vekaletleri — süreli, çakışma kontrollü, audit kayıtlı |
 | SET-08 | Bildirim kuralları | P1 | listeForm | `/ayarlar/bildirimler` | ✅ doğrulandı | faz2 | Bildirim kuralları + sistemin ürettiği gerçek olay dökümü |
@@ -66,47 +66,47 @@
 | Kod | Sayfa | Öncelik | Kalıp | Rota | Durum | Commit | Not |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | GLB-08 | Takvim | P1 | takvim | `/takvim` | ⬜ bekliyor | — | kaynak: crm-panel-ajanda (koru), crm-santiye-ajanda-katman (birlestir), crm-santiye-ajanda (birlestir) |
-| PRJ-01 | Proje listesi | P0 | liste | `/projeler` | ⬜ bekliyor | — | kaynak: crm-santiye-proje (koru) |
-| PRJ-02 | Yeni proje | P0 | form | `/projeler/yeni` | ⬜ bekliyor | — | sıfırdan |
-| PRJ-03 | Proje detayı | P0 | detay | `/projeler/:id` | ⬜ bekliyor | — | kaynak: crm-santiye-proje-detay (koru) |
-| PRJ-04 | Proje düzenle | P0 | form | `/projeler/:id/duzenle` | ⬜ bekliyor | — | sıfırdan |
+| PRJ-01 | Proje listesi | P0 | liste | `/projeler` | ✅ doğrulandı | faz3 | Proje listesi — portföy filtreleri, ilerleme ve takvim sağlığı |
+| PRJ-02 | Yeni proje | P0 | form | `/projeler/yeni` | ✅ doğrulandı | faz3 | Yeni proje — eski uygulamadaki 404 giderildi; gerçek kayıt + detaya yönlendirme |
+| PRJ-03 | Proje detayı | P0 | detay | `/projeler/:id` | ✅ doğrulandı | faz3 | Proje detayı — özet/şantiye/program/risk/geçmiş sekmeleri, durum geçiş menüsü |
+| PRJ-04 | Proje düzenle | P0 | form | `/projeler/:id/duzenle` | ✅ doğrulandı | faz3 | Proje düzenle — sürümlü güncelleme (409 korumalı) |
 | PRJ-05 | Proje aktivasyon sihirbazı | P1 | sihirbaz | `/projeler/:id/aktivasyon` | ⬜ bekliyor | — | sıfırdan |
 | PRJ-06 | Proje organizasyonu | P1 | listeForm | `/projeler/:id/organizasyon` | ⬜ bekliyor | — | sıfırdan |
 | PRJ-07 | Proje paydaşları | P1 | listeForm | `/projeler/:id/paydaslar` | ⬜ bekliyor | — | sıfırdan |
 | PRJ-08 | Proje risk kaydı | P1 | listeForm | `/projeler/:id/riskler` | ⬜ bekliyor | — | sıfırdan |
 | PRJ-09 | Proje kapanış | P1 | sihirbaz | `/projeler/:id/kapanis` | ⬜ bekliyor | — | sıfırdan |
 | PRJ-10 | Proje sürüm ve değişiklik geçmişi | P1 | liste | `/projeler/:id/gecmis` | ⬜ bekliyor | — | sıfırdan |
-| SITE-01 | Şantiye listesi | P0 | liste | `/santiyeler` | ⬜ bekliyor | — | kaynak: crm-santiye (koru) |
-| SITE-02 | Yeni şantiye | P0 | form | `/santiyeler/yeni` | ⬜ bekliyor | — | kaynak: crm-santiye-form (koru) |
-| SITE-03 | Şantiye detayı | P0 | detay | `/santiyeler/:id` | ⬜ bekliyor | — | kaynak: crm-santiye-detay (koru) |
+| SITE-01 | Şantiye listesi | P0 | liste | `/santiyeler` | ✅ doğrulandı | faz3 | Şantiye listesi — yaşam durumu ile takvim sağlığı AYRI sütunlarda |
+| SITE-02 | Yeni şantiye | P0 | form | `/santiyeler/yeni` | ✅ doğrulandı | faz3 | Yeni şantiye — projeye bağlı, maliyet merkezi ile |
+| SITE-03 | Şantiye detayı | P0 | detay | `/santiyeler/:id` | ✅ doğrulandı | faz3 | Şantiye detayı — kanonik veriden sekmeler |
 | SITE-04 | Şantiye düzenle | P0 | form | `/santiyeler/:id/duzenle` | ⬜ bekliyor | — | sıfırdan |
 | SITE-05 | Şantiye açılış kontrolü | P1 | sihirbaz | `/santiyeler/:id/acilis` | ⬜ bekliyor | — | sıfırdan |
-| SITE-06 | Günlük şantiye raporları | P0 | liste | `/santiyeler/:id/gunluk-raporlar` | ⬜ bekliyor | — | sıfırdan |
-| SITE-07 | Yeni günlük rapor | P0 | form | `/santiyeler/:id/gunluk-raporlar/yeni` | ⬜ bekliyor | — | sıfırdan |
-| SITE-08 | Günlük rapor detayı | P0 | listeForm | `/gunluk-raporlar/:id` | ⬜ bekliyor | — | sıfırdan |
-| SITE-09 | Saha bildirimleri | P0 | liste | `/saha-bildirimleri` | ⬜ bekliyor | — | kaynak: crm-santiye-bildirimler (koru) |
-| SITE-10 | Yeni saha bildirimi | P0 | form | `/saha-bildirimleri/yeni` | ⬜ bekliyor | — | kaynak: crm-santiye-bildirim-form (koru) |
-| SITE-11 | Saha bildirimi detayı | P0 | detay | `/saha-bildirimleri/:id` | ⬜ bekliyor | — | kaynak: crm-santiye-bildirim-detay (koru) |
+| SITE-06 | Günlük şantiye raporları | P0 | liste | `/santiyeler/:id/gunluk-raporlar` | ✅ doğrulandı | faz3 | Günlük şantiye raporları listesi |
+| SITE-07 | Yeni günlük rapor | P0 | form | `/santiyeler/:id/gunluk-raporlar/yeni` | ✅ doğrulandı | faz3 | Yeni günlük rapor — çevrimdışı taslak kimliği, çift senkronda tek kayıt |
+| SITE-08 | Günlük rapor detayı | P0 | listeForm | `/gunluk-raporlar/:id` | ✅ doğrulandı | faz3 | Günlük rapor detayı — onaydan sonra kilit |
+| SITE-09 | Saha bildirimleri | P0 | liste | `/saha-bildirimleri` | ✅ doğrulandı | faz3 | Saha bildirimleri — SLA ve önem işaretleri |
+| SITE-10 | Yeni saha bildirimi | P0 | form | `/saha-bildirimleri/yeni` | ✅ doğrulandı | faz3 | Yeni saha bildirimi — SLA aciliyetten türetilir, kullanıcı girmez |
+| SITE-11 | Saha bildirimi detayı | P0 | detay | `/saha-bildirimleri/:id` | ✅ doğrulandı | faz3 | Saha bildirimi detayı — atama, işlem, doğrulama, kapanış |
 | SITE-12 | Saha günlükleri ve ziyaretçiler | P2 | listeForm | `/santiyeler/:id/ziyaretciler` | ⬜ bekliyor | — | sıfırdan |
 | SITE-13 | Şantiye izin ve resmi belgeleri | P1 | listeForm | `/santiyeler/:id/izinler` | ⬜ bekliyor | — | sıfırdan |
 | SITE-14 | Geçici kabul | P1 | sihirbaz | `/santiyeler/:id/gecici-kabul` | ⬜ bekliyor | — | sıfırdan |
 | SITE-15 | Kesin kabul ve devir | P1 | sihirbaz | `/santiyeler/:id/kesin-kabul` | ⬜ bekliyor | — | sıfırdan |
 | SITE-16 | Şantiye kapatma | P1 | sihirbaz | `/santiyeler/:id/kapat` | ⬜ bekliyor | — | sıfırdan |
-| PLAN-01 | İş programı listesi | P0 | liste | `/is-programlari` | ⬜ bekliyor | — | sıfırdan |
-| PLAN-02 | Yeni iş programı | P0 | form | `/is-programlari/yeni` | ⬜ bekliyor | — | sıfırdan |
-| PLAN-03 | İş programı detayı | P0 | detay | `/is-programlari/:id` | ⬜ bekliyor | — | sıfırdan |
-| PLAN-04 | WBS düzenleyici | P0 | matris | `/is-programlari/:id/wbs` | ⬜ bekliyor | — | sıfırdan |
+| PLAN-01 | İş programı listesi | P0 | liste | `/is-programlari` | ✅ doğrulandı | faz3 | İş programı listesi — baz çizgi ve onaylı ilerleme |
+| PLAN-02 | Yeni iş programı | P0 | form | `/is-programlari/yeni` | ✅ doğrulandı | faz3 | Yeni iş programı |
+| PLAN-03 | İş programı detayı | P0 | detay | `/is-programlari/:id` | ✅ doğrulandı | faz3 | Program detayı — WBS, aktivite ve ilerleme sekmeleri |
+| PLAN-04 | WBS düzenleyici | P0 | matris | `/is-programlari/:id/wbs` | ✅ doğrulandı | faz3 | WBS düzenleyici — ağırlık doğrulaması canlı |
 | PLAN-05 | Aktivite formu | P0 | form | `/is-programlari/:id/aktiviteler/yeni` | ⬜ bekliyor | — | sıfırdan |
-| PLAN-06 | Baz çizgi onayı | P0 | onay | `/is-programlari/:id/baz-cizgi` | ⬜ bekliyor | — | sıfırdan |
+| PLAN-06 | Baz çizgi onayı | P0 | onay | `/is-programlari/:id/baz-cizgi` | ✅ doğrulandı | faz3 | Baz çizgi onayı — %100 kontrol listesi, onaylanınca DONDURULUR |
 | PLAN-07 | Program revizyonu | P0 | onay | `/is-programlari/:id/revizyon` | ⬜ bekliyor | — | sıfırdan |
 | PLAN-08 | Haftalık look-ahead | P1 | takvim | `/is-programlari/:id/look-ahead` | ⬜ bekliyor | — | sıfırdan |
-| PLAN-09 | İlerleme girişi | P0 | form | `/ilerleme/yeni` | ⬜ bekliyor | — | sıfırdan |
+| PLAN-09 | İlerleme girişi | P0 | form | `/ilerleme/yeni` | ✅ doğrulandı | faz3 | İlerleme girişi — kanıt zorunlu, geri gidiş engelli |
 | PLAN-10 | İlerleme doğrulama | P0 | onay | `/ilerleme/:id/dogrula` | ⬜ bekliyor | — | sıfırdan |
-| PLAN-11 | Plan-gerçekleşen analizi | P1 | rapor | `/raporlar/plan-gerceklesen` | ⬜ bekliyor | — | kaynak: crm-panel-rapor-isprogrami (birlestir) |
+| PLAN-11 | Plan-gerçekleşen analizi | P1 | rapor | `/raporlar/plan-gerceklesen` | ✅ doğrulandı | faz3 | Plan-gerçekleşen sapması — baz çizgi sürümü görünür |
 | PLAN-12 | Program içe/dışa aktarma | P2 | sihirbaz | `/is-programlari/:id/aktarim` | ⬜ bekliyor | — | sıfırdan |
-| TASK-01 | Görev listesi | P0 | liste | `/gorevler` | ⬜ bekliyor | — | kaynak: crm-gorev (koru) |
-| TASK-02 | Yeni görev | P0 | form | `/gorevler/yeni` | ⬜ bekliyor | — | kaynak: crm-gorev-form (koru) |
-| TASK-03 | Görev detayı | P0 | detay | `/gorevler/:id` | ⬜ bekliyor | — | kaynak: crm-gorev-detay (koru) |
+| TASK-01 | Görev listesi | P0 | liste | `/gorevler` | ✅ doğrulandı | faz3 | Görev listesi — yaşam durumu ve hesaplanan gecikme AYRI |
+| TASK-02 | Yeni görev | P0 | form | `/gorevler/yeni` | ✅ doğrulandı | faz3 | Yeni görev — durum seçtirmeden atama/havuz akışı |
+| TASK-03 | Görev detayı | P0 | detay | `/gorevler/:id` | ✅ doğrulandı | faz3 | Görev detayı — yorum, üstlenme, geçiş menüsü |
 | TASK-04 | Görev şablonları | P1 | listeForm | `/gorev-sablonlari` | ⬜ bekliyor | — | sıfırdan |
 | TASK-05 | Toplu görev oluşturma | P1 | sihirbaz | `/gorevler/toplu` | ⬜ bekliyor | — | sıfırdan |
 | TASK-06 | İş emirleri | P1 | liste | `/is-emirleri` | ⬜ bekliyor | — | sıfırdan |
@@ -114,11 +114,11 @@
 | TASK-08 | Toplantılar | P2 | liste | `/toplantilar` | ⬜ bekliyor | — | sıfırdan |
 | TASK-09 | Toplantı detayı ve tutanak | P2 | listeForm | `/toplantilar/:id` | ⬜ bekliyor | — | sıfırdan |
 | HSE-01 | İSG paneli | P0 | panel | `/isg` | ⬜ bekliyor | — | sıfırdan |
-| HSE-02 | Olay listesi | P0 | liste | `/isg/olaylar` | ⬜ bekliyor | — | kaynak: crm-santiye-isg (koru) |
-| HSE-03 | Kaza bildirimi | P0 | form | `/isg/olaylar/kaza/yeni` | ⬜ bekliyor | — | kaynak: crm-santiye-isg-form (birlestir) |
-| HSE-04 | Ramak kala | P0 | form | `/isg/olaylar/ramak-kala/yeni` | ⬜ bekliyor | — | kaynak: crm-santiye-isg-form (birlestir) |
-| HSE-05 | Tehlikeli durum/davranış | P0 | form | `/isg/olaylar/tehlike/yeni` | ⬜ bekliyor | — | kaynak: crm-santiye-isg-form (birlestir) |
-| HSE-06 | İSG olay detayı | P0 | detay | `/isg/olaylar/:id` | ⬜ bekliyor | — | kaynak: crm-santiye-isg-detay (koru) |
+| HSE-02 | Olay listesi | P0 | liste | `/isg/olaylar` | ✅ doğrulandı | faz3 | İSG olay listesi — kaza/ramak kala/tehlike |
+| HSE-03 | Kaza bildirimi | P0 | form | `/isg/olaylar/kaza/yeni` | ✅ doğrulandı | faz3 | Kaza bildirimi — kritik açılır, yönetime bildirim |
+| HSE-04 | Ramak kala | P0 | form | `/isg/olaylar/ramak-kala/yeni` | ✅ doğrulandı | faz3 | Ramak kala bildirimi |
+| HSE-05 | Tehlikeli durum/davranış | P0 | form | `/isg/olaylar/tehlike/yeni` | ✅ doğrulandı | faz3 | Tehlikeli durum/davranış bildirimi |
+| HSE-06 | İSG olay detayı | P0 | detay | `/isg/olaylar/:id` | ✅ doğrulandı | faz3 | İSG olay detayı — kök neden, DÖF, etkinlik doğrulamadan kapanmaz |
 | HSE-07 | Saha denetimleri | P1 | listeForm | `/isg/denetimler` | ⬜ bekliyor | — | sıfırdan |
 | HSE-08 | Toolbox konuşmaları | P1 | listeForm | `/isg/toolbox` | ⬜ bekliyor | — | sıfırdan |
 | HSE-09 | İSG eğitimleri | P1 | listeForm | `/isg/egitimler` | ⬜ bekliyor | — | sıfırdan |
@@ -129,9 +129,9 @@
 | QLT-02 | ITP listesi | P0 | liste | `/kalite/itp` | ⬜ bekliyor | — | sıfırdan |
 | QLT-03 | ITP formu | P0 | form | `/kalite/itp/yeni` | ⬜ bekliyor | — | sıfırdan |
 | QLT-04 | Muayene talepleri | P0 | listeForm | `/kalite/muayeneler` | ⬜ bekliyor | — | sıfırdan |
-| QLT-05 | NCR uygunsuzluk listesi | P0 | liste | `/kalite/ncr` | ⬜ bekliyor | — | sıfırdan |
-| QLT-06 | NCR formu | P0 | form | `/kalite/ncr/yeni` | ⬜ bekliyor | — | sıfırdan |
-| QLT-07 | NCR detayı ve DÖF | P0 | detay | `/kalite/ncr/:id` | ⬜ bekliyor | — | sıfırdan |
+| QLT-05 | NCR uygunsuzluk listesi | P0 | liste | `/kalite/ncr` | ✅ doğrulandı | faz3 | NCR listesi — yaşlandırma, DÖF ve etkinlik durumu |
+| QLT-06 | NCR formu | P0 | form | `/kalite/ncr/yeni` | ✅ doğrulandı | faz3 | NCR formu — gereklilik/bulgu/etki/karantina |
+| QLT-07 | NCR detayı ve DÖF | P0 | detay | `/kalite/ncr/:id` | ✅ doğrulandı | faz3 | NCR detayı — üç adımlı kapanış zinciri, dört göz |
 | QLT-08 | Malzeme onayları | P0 | listeForm | `/teknik/malzeme-onaylari` | ⬜ bekliyor | — | sıfırdan |
 | QLT-09 | Submittal kayıtları | P0 | listeForm | `/teknik/submittal` | ⬜ bekliyor | — | sıfırdan |
 | QLT-10 | RFI listesi | P0 | liste | `/teknik/rfi` | ⬜ bekliyor | — | sıfırdan |

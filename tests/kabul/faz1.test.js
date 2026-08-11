@@ -302,7 +302,8 @@ describe('Platform — manifest, rota ve yetki tutarlılığı', () => {
   test('uygulanmamış manifest rotası sahte ekran değil dürüst 404 döndürür', async () => {
     const c = S.istemci();
     await c.giris('sahip@yapitas.demo');
-    const y = await c.get('/projeler');
+    /* Henüz uygulanmamış bir faz rotası (Faz 5 kartlar) — uygulandıkça bu kod güncellenir. */
+    const y = await c.get('/kartlar');
     assert.equal(y.durum, 404);
     assert.ok(!/WIP|yapım aşamasında|çok yakında/i.test(y.govde), 'WIP metni kullanılmış');
   });

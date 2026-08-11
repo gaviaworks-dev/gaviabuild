@@ -20,13 +20,21 @@ const HEDEFLER = [
   { ad: 'denetim-izi',      yol: '/ayarlar/denetim-izi',       rol: 'sahip@yapitas.demo' },
   { ad: 'profil',           yol: '/profilim',                  rol: 'sahip@yapitas.demo' },
   { ad: 'yetkisiz-403',     yol: '/ayarlar/kullanicilar',      rol: 'calisan@yapitas.demo' },
-  { ad: 'bulunamadi-404',   yol: '/projeler',                  rol: 'sahip@yapitas.demo' },
+  { ad: 'bulunamadi-404',   yol: '/kartlar',                   rol: 'sahip@yapitas.demo' },
   { ad: 'onay-kutum',       yol: '/onaylar',                   rol: 'sahip@yapitas.demo' },
   { ad: 'duyurular',        yol: '/duyurular',                 rol: 'ik@yapitas.demo' },
   { ad: 'is-akislari',      yol: '/ayarlar/is-akislari?sablon=HAKEDIS', rol: 'sahip@yapitas.demo' },
   { ad: 'vekaletler',       yol: '/ayarlar/vekaletler',        rol: 'sahip@yapitas.demo' },
   { ad: 'sozlukler',        yol: '/ayarlar/sozlukler',         rol: 'sahip@yapitas.demo' },
   { ad: 'maliyet-kodlari',  yol: '/ayarlar/maliyet-kodlari',   rol: 'sahip@yapitas.demo' },
+  { ad: 'projeler',         yol: '/projeler',                  rol: 'sahip@yapitas.demo' },
+  { ad: 'proje-formu',      yol: '/projeler/yeni',             rol: 'sahip@yapitas.demo' },
+  { ad: 'santiyeler',       yol: '/santiyeler',                rol: 'sahip@yapitas.demo' },
+  { ad: 'is-programlari',   yol: '/is-programlari',            rol: 'sahip@yapitas.demo' },
+  { ad: 'gorevler',         yol: '/gorevler',                  rol: 'sahip@yapitas.demo' },
+  { ad: 'ncr-listesi',      yol: '/kalite/ncr',                rol: 'sahip@yapitas.demo' },
+  { ad: 'isg-olaylar',      yol: '/isg/olaylar',               rol: 'sahip@yapitas.demo' },
+  { ad: 'saha-bildirimleri',yol: '/saha-bildirimleri',         rol: 'sahip@yapitas.demo' },
 ];
 const OLCULER = [{ ad: 'masaustu', w: 1440, h: 960 }, { ad: 'mobil', w: 390, h: 844 }];
 

@@ -56,6 +56,21 @@ const SABLONLAR = [
     ],
   },
   {
+    kod: 'BAZ-CIZGI', ad: 'İş programı baz çizgi onayı', nesne: 'is_programi', sla: 72,
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'ILERLEME', ad: 'İlerleme doğrulama', nesne: 'ilerleme', sla: 48,
+    adimlar: [{ sira: 1, ad: 'Proje müdürü doğrulaması', rol: 'proje_muduru', gereken: 1 }],
+  },
+  {
+    kod: 'GUNLUK-RAPOR', ad: 'Günlük şantiye raporu onayı', nesne: 'gunluk_rapor', sla: 24,
+    adimlar: [{ sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 }],
+  },
+  {
     kod: 'SURE-UZATIM', ad: 'Süre uzatım talebi onayı', nesne: 'sure_uzatim', sla: 120,
     adimlar: [
       { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
@@ -143,7 +158,8 @@ export function isAkisiTohumla(tenantId, kullaniciId = null) {
 
     for (const [nesne, onek] of [['talep', 'TLP'], ['siparis', 'SIP'], ['sozlesme', 'SZL'],
       ['hakedis', 'HKD'], ['duyuru', 'DYR'], ['dokuman', 'DOC'], ['gorev', 'GRV'],
-      ['saha_bildirimi', 'SHB'], ['kart_yukleme', 'KYP']]) {
+      ['saha_bildirimi', 'SHB'], ['kart_yukleme', 'KYP'], ['proje', 'PRJ'], ['santiye', 'STE'],
+      ['is_programi', 'PRG'], ['gunluk_rapor', 'GNR'], ['isg_olayi', 'ISG'], ['ncr', 'NCR']]) {
       sablonKur(tenantId, nesne, onek);
     }
 

@@ -15,6 +15,9 @@ import * as calismaRotalari from './rotalar/calisma.mjs';
 import * as ayarRotalari from './rotalar/ayarlar.mjs';
 import * as isAkisiRotalari from './rotalar/isakisi.mjs';
 import * as dokumanRotalari from './rotalar/dokuman.mjs';
+import * as projeRotalari from './rotalar/proje.mjs';
+import * as planRotalari from './rotalar/plan.mjs';
+import * as sahaRotalari from './rotalar/saha.mjs';
 
 const uygulanan = new Set();
 
@@ -44,6 +47,9 @@ export function yonlendiriciKur() {
   ayarRotalari.kur(y, ekranRota);
   isAkisiRotalari.kur(y, ekranRota);
   dokumanRotalari.kur(y, ekranRota);
+  projeRotalari.kur(y, ekranRota);
+  planRotalari.kur(y, ekranRota);
+  sahaRotalari.kur(y, ekranRota);
 
   /* Kök: oturum varsa role göre landing, yoksa giriş. */
   y.get('/', (ctx) => kimlikRotalari.kok(ctx));

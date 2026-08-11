@@ -21,6 +21,7 @@ import { sonrakiKod } from '../moduller/isakisi/numara.mjs';
 import { gecisYap, izinliGecisler, isaretler } from '../moduller/isakisi/durum.mjs';
 import { durumEtiketi, NESNELER } from '../moduller/isakisi/durumlar.mjs';
 import { bildir } from '../moduller/isakisi/bildirim.mjs';
+import { bazCizgiSonucu } from './plan.mjs';
 import { kabuk } from '../web/kabuk.mjs';
 import { h, ham, sayi } from '../web/temel.mjs';
 import * as B from '../web/bilesenler.mjs';
@@ -396,6 +397,7 @@ function duyuruOnayaGonder(ctx, govde) {
 function isNesnesiniIlerlet(ctx, talepId, sonuc) {
   const t = onayMotoru.talepDetayi(ctx.tenant.id, talepId);
   if (!t) return;
+  if (t.nesne === 'is_programi') { bazCizgiSonucu(ctx, t.nesne_id, sonuc); return; }
   if (t.nesne === 'duyuru' && sonuc === 'onaylandi') {
     const d = tek('SELECT * FROM duyuru WHERE id = ?', t.nesne_id);
     if (!d || d.durum !== 'taslak') return;

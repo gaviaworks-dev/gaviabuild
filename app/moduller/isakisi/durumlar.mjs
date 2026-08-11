@@ -110,7 +110,7 @@ export const NESNELER = {
       { den: 'taslak', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
       { den: 'revizyon_istendi', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
     ],
-    isaretler: ['suresi_asti', 'butce_etkisi', 'odeme_bekliyor'],
+    isaretler: ['suresi_asti', 'butce_etkisi', 'odeme_bekliyor', 'gecikmis'],
   },
 
   /* ---- Saha bildirimi --------------------------------------------------- */
@@ -167,6 +167,8 @@ export const NESNELER = {
 /** Onay yaşam döngüsünü paylaşan somut nesne türleri. */
 export const ONAYLI_TURLER = {
   talep: 'Satın alma talebi', sozlesme: 'Sözleşme', hakedis: 'Hakediş',
+  /* Onaydan geçen saha/plan kayıtları aynı yaşam döngüsünü paylaşır. */
+  gunluk_rapor: 'Günlük şantiye raporu', ilerleme: 'İlerleme kaydı', is_programi: 'İş programı',
   butce_revizyonu: 'Bütçe revizyonu', sure_uzatim: 'Süre uzatım talebi',
   degisiklik: 'Değişiklik talebi', odeme: 'Ödeme talebi', kart_yukleme: 'Kart yükleme',
   banka_hareketi: 'Banka hareketi', avans: 'Avans talebi', izin: 'İzin talebi',
