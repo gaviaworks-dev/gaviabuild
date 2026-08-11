@@ -41,6 +41,24 @@ export const EKRAN_EYLEMLERI = {
   'GLB-05': ['goruntule', 'karar_ver'],
 };
 
+/* Katalogda AYRI form ekranı olmayan liste ekranları kaydı kendisi açar.
+   Bu ekranlarda oluşturma formu listenin altındadır; "Liste" kalıbının salt
+   okunur sayılması kaydın hiç açılamamasına yol açardı (K-038). */
+export const LISTE_OLUSTURUR = [
+  'DOC-04', 'DOC-06', 'DOC-08', 'QLT-04', 'QLT-09', 'QLT-13', 'QLT-14',
+  'STK-01', 'STK-02', 'STK-03', 'STK-06', 'STK-07', 'STK-08',
+  'PRC-04', 'PRC-11', 'FIN-05', 'FIN-07', 'FIN-10', 'FIN-11', 'FIN-13',
+  'CNT-05', 'CNT-06', 'CNT-10', 'CNT-13', 'CNT-15',
+  'AST-04', 'AST-05', 'AST-06', 'AST-07', 'AST-09', 'AST-10',
+  'HR-07', 'HR-08', 'HR-10', 'HR-11', 'HR-12', 'HR-13',
+  'HSE-07', 'HSE-08', 'HSE-09', 'HSE-10', 'HSE-11',
+  'CRD-09', 'CRD-10', 'CRD-16', 'TASK-04', 'TASK-06', 'PLAN-08',
+  'PRJ-07', 'PRJ-08', 'SITE-12', 'SITE-13', 'SET-17', 'RPT-14', 'GLB-08',
+];
+for (const kod of LISTE_OLUSTURUR) {
+  EKRAN_EYLEMLERI[kod] = ['goruntule', 'olustur', 'guncelle', 'disa_aktar'];
+}
+
 /* Rol tanımları. `bolumler` manifest bölüm anahtarlarıdır; '*' hepsi demektir.
    `eylemler` o roldeki azami eylem kümesi; ekranın kalıbıyla kesişimi alınır. */
 export const ROLLER = [

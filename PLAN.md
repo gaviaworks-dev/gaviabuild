@@ -115,44 +115,56 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz3(PRJ,SITE,PLAN,TASK,HSE,QLT)` · **Test:** 120/120 · **Doğrulanan ekran:** 67/244
+**Son commit:** `faz3(DOC-04..10)` · **Test:** 140/140 · **Doğrulanan ekran:** 85/244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
 | Faz 0 | ✅ kapandı (`faz-0-tamam`) | 244 yol kararı, screen-manifest, link testi |
 | Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
 | Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
-| Faz 3 | 🟡 çekirdek kapandı, katalog açık | 34/89 aile; PRJ-01, PLAN-01, PLAN-02, SITE-01, QLT-01 yeşil |
+| Faz 3 | 🟡 44/89 aile · kabul kriterleri yeşil | PRJ-01, PLAN-01, PLAN-02, SITE-01, QLT-01 |
 | Faz 4-6 | ⬜ başlamadı | |
 
-### Sıradaki iş paketleri (öncelik sırasıyla)
+### Faz 3'te teslim edilenler
+Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş programı ve ilerleme
+(PLAN-01..04, 06, 09, 11) · görev (TASK-01..03) · İSG (HSE-02..06) · kalite bloğu
+(QLT-01..14, QLT-05..07 dahil) · doküman bloğu (DOC-01..10).
 
-1. **Faz 3 kataloğunu tamamla** — sırasıyla:
-   `QLT-01..04` (kalite paneli, ITP, muayene) → `QLT-08..14` (malzeme onayı, submittal, **RFI**, test, punch)
-   → `DOC-04..10` (çizim, transmittal, evrak, dağıtım matrisi, arşiv)
-   → `HR-01..09` (personel, puantaj, izin — Faz 4 finansının ön koşulu)
-   → `SITE-04, 05, 12..16` (şantiye düzenle, açılış/kapanış sihirbazları, kabuller)
-   → `PLAN-05, 07, 08, 10, 12` · `TASK-04..09` · `HSE-01, 07..12` · `PRJ-05..10`
-2. **Faz 4** — `PRC` → `STK` → `CNT` → `FIN`. Kabul: PRC-01 (onaysız talep siparişe dönüşmez),
-   STK-01 (bakiye defterden yeniden üretilebilir), üçlü eşleştirme.
-   Ön koşul: HR-08 puantaj ve SET-11 maliyet kodları (ikincisi hazır).
-3. **Faz 5** — `CRD-01..18`. Doküman §6 birebir. Ön koşul: HR-06 işten ayrılış bağı.
-4. **Faz 6** — `RPT-01..15` (önce `ReportLayout` + PDF/XLSX üreticisi), `EXT-01..08`, `GLB-02/03`
-   panoları (K-017 ile Faz 4'e alınmıştı, veri geldiğinde), `GLB-07` arama, `AST-11` mobil.
+### SIRADAKİ İŞ PAKETİ — Faz 3'ün kalan 45 ailesi
+
+1. **İK (HR-01..14)** — 14 aile. **Şema HAZIR** (`goc5.mjs`: personel, personel_atama,
+   puantaj_donemi, puantaj, izin, avans, yetkinlik); ekran ve rota YOK.
+   Faz 4 finansının ön koşulu: avans/izin onay akışı ve puantaj dönem kapanışı.
+   Kabul noktaları: atama tarih çakışması reddedilmeli; dönem kapandıktan sonra
+   puantaj kayıtları kilitlenmeli; maaş alanı `alan_maskesi` kuralına tabi olmalı.
+2. **Şantiye tamamlama (SITE-04, 05, 12..16)** — 7 aile. Açılış/kapanış sihirbazları,
+   geçici/kesin kabul, ziyaretçi, izin belgeleri. Kapanış sihirbazı "açık iş, varlık,
+   stok, kasa, belge engelleri" listesini gösterip engel sıfırlanmadan kapatmamalı (§7).
+3. **Plan/görev/İSG/proje kalanları** — PLAN-05, 07, 08, 10, 12 · TASK-04..09 ·
+   HSE-01, 07..12 · PRJ-05..10 (24 aile).
+4. **Faz 4** — PRC → STK → CNT → FIN (69 aile). Kabul: PRC-01, STK-01, üçlü eşleştirme.
+5. **Faz 5** — CRD-01..18 (doküman §6 birebir). `kartYuklemePartisi` durum zinciri hazır.
+6. **Faz 6** — RPT-01..15 (önce `ReportLayout` + PDF/XLSX), EXT-01..08, GLB-02/03, GLB-07, AST-11.
 
 ### Hazır ama henüz kullanılmayan altyapı
 
-- `Para` (tamsayı minor unit), `idempotent()`, `surumluGuncelle()` (409), `audit.yaz()` zinciri
-- Onay motoru: tutar kademeli şablon seçimi, paralel adım, vekalet, revizyonda geçersizleşme
-- Geçiş motoru: `kartYuklemePartisi` durum zinciri **zaten tanımlı** (Faz 5'te doğrudan kullanılacak)
-- `cokluParcaOku()` (dosya yükleme), doküman sürümleme, içerik-adresli depo
-- `rotalar/ortak.mjs`: liste sorgusu, filtre, geçiş formu, kayıt oluşturma, özet şeridi
+- **`rotalar/kayit-modulu.mjs`** — liste+form+detay üreteci (K-033). Yeni modül yazmanın
+  standart yolu: alan tanımı ver, sayfalama/CSRF/idempotency/sürüm/audit üreteçten gelsin.
+  `altForm` seçeneği, katalogda ayrı form ekranı olmayan listelere oluşturma formu ekler.
+- `LISTE_OLUSTURUR` (roller.mjs) — ayrı form ekranı olmayan liste kodları burada;
+  yeni modül eklerken ilgili kodu bu listeye eklemek gerekir (K-038).
+- Para (tamsayı minor unit), idempotent(), surumluGuncelle() (409), audit zinciri
+- Onay motoru: tutar kademeli şablon, paralel adım, vekalet, revizyonda geçersizleşme
+- `cokluParcaOku()` dosya yükleme, doküman sürümleme, içerik-adresli depo
+- **`goc5.mjs` İK şeması uygulandı ama ekranı yok** — sonraki paketin başlangıç noktası
 
 ### Bilinen açık uçlar
 
 - Günlük rapor **PDF**'i Faz 6 `ReportLayout`'a bırakıldı (K-030)
 - `GLB-02`, `GLB-03` panoları Faz 4'e alındı (K-017)
-- E-posta gönderimi yok: davet ve parola sıfırlama bağlantısı geliştirme ortamında ekranda gösterilir (K-021)
+- RFI yanıtının tetiklediği **değişiklik talebi** kaydı Faz 4 CNT-10 ile bağlanacak
+  (şu an yalnız `degisiklik_tetikledi` işareti konuyor)
+- E-posta gönderimi yok: davet/sıfırlama bağlantısı geliştirmede ekranda (K-021)
 - Antivirüs taraması Faz 5 entegrasyon adaptörüne bağlanacak (K-027)
 
 ## Faz kapanış kontrol listesi (her faz için zorunlu)

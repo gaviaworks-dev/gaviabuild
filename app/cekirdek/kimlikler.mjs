@@ -32,6 +32,7 @@ export const ONEK = {
   isg: 'hse', kalite: 'qlt', dokuman: 'doc', dosya: 'fil',
   itp: 'itp', muayene: 'muy', submittal: 'sbm', rfi: 'rfi', test: 'tst', punch: 'pnc',
   cizim: 'drw', transmittal: 'trm', evrak: 'evr',
+  atama: 'atm', donem: 'dnm', yetkinlik: 'ytk',
   personel: 'per', puantaj: 'pnt', izin: 'izn', avans: 'avs',
   talep: 'req', siparis: 'ord', tedarikci: 'sup', teklif: 'rfq',
   depo: 'whs', stok: 'stk', hareket: 'mov', malkabul: 'grn',

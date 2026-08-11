@@ -4,13 +4,13 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 166 · devam: 0 · bitti: 0 · doğrulandı: 78
+**Toplam:** 244 sayfa ailesi — bekliyor: 159 · devam: 0 · bitti: 0 · doğrulandı: 85
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
-| Faz 3 | 89 | 47 | 0 | 0 | 42 |
+| Faz 3 | 89 | 40 | 0 | 0 | 49 |
 | Faz 4 | 69 | 69 | 0 | 0 | 0 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
@@ -139,13 +139,13 @@
 | QLT-12 | RFI detayı | P0 | detay | `/teknik/rfi/:id` | ✅ doğrulandı | faz3b | RFI detayı — yanıt kapsam etkiliyse değişiklik tetikler (§7) |
 | QLT-13 | Test ve laboratuvar sonuçları | P1 | listeForm | `/kalite/testler` | ✅ doğrulandı | faz3b | Test sonuçları — uygunsuz test otomatik kritik NCR açar |
 | QLT-14 | Punch / eksik işler | P1 | listeForm | `/kalite/punch` | ✅ doğrulandı | faz3b | Punch listesi — kapanış KANIT ister |
-| DOC-04 | Çizim listesi | P0 | liste | `/cizimler` | ⬜ bekliyor | — | sıfırdan |
-| DOC-05 | Çizim detayı | P0 | detay | `/cizimler/:id` | ⬜ bekliyor | — | sıfırdan |
-| DOC-06 | Transmittal listesi | P0 | liste | `/transmittal` | ⬜ bekliyor | — | sıfırdan |
-| DOC-07 | Yeni transmittal | P0 | form | `/transmittal/yeni` | ⬜ bekliyor | — | sıfırdan |
-| DOC-08 | Gelen-giden evrak | P1 | listeForm | `/evrak` | ⬜ bekliyor | — | sıfırdan |
-| DOC-09 | Belge dağıtım matrisi | P1 | listeForm | `/dokumanlar/dagitim-matrisi` | ⬜ bekliyor | — | sıfırdan |
-| DOC-10 | Belge arşivi | P1 | liste | `/dokumanlar/arsiv` | ⬜ bekliyor | — | sıfırdan |
+| DOC-04 | Çizim listesi | P0 | liste | `/cizimler` | ✅ doğrulandı | faz3c | Çizim listesi — disiplin, paket ve son geçerli revizyon |
+| DOC-05 | Çizim detayı | P0 | detay | `/cizimler/:id` | ✅ doğrulandı | faz3c | Çizim detayı — revizyon satırı değiştirilemez, dağıtım geçmişi |
+| DOC-06 | Transmittal listesi | P0 | liste | `/transmittal` | ✅ doğrulandı | faz3c | Transmittal listesi — teslim kanıtı durumu |
+| DOC-07 | Yeni transmittal | P0 | form | `/transmittal/yeni` | ✅ doğrulandı | faz3c | Yeni transmittal — amaç kodu; boş transmittal gönderilemez |
+| DOC-08 | Gelen-giden evrak | P1 | listeForm | `/evrak` | ✅ doğrulandı | faz3c | Gelen-giden evrak — havale ve cevap son tarihi |
+| DOC-09 | Belge dağıtım matrisi | P1 | listeForm | `/dokumanlar/dagitim-matrisi` | ✅ doğrulandı | faz3c | Belge dağıtım matrisi — rol × belge türü erişimi |
+| DOC-10 | Belge arşivi | P1 | liste | `/dokumanlar/arsiv` | ✅ doğrulandı | faz3c | Belge arşivi — saklama süresi ve hukuki bekletme |
 | HR-01 | Personel listesi | P0 | liste | `/personel` | ⬜ bekliyor | — | kaynak: crm-personel (koru) |
 | HR-02 | Yeni personel | P0 | form | `/personel/yeni` | ⬜ bekliyor | — | kaynak: crm-personel-form (koru) |
 | HR-03 | Personel detayı | P0 | detay | `/personel/:id` | ⬜ bekliyor | — | kaynak: crm-personel-detay (koru), crm-personel-ozluk (birlestir) |
