@@ -260,6 +260,41 @@ ${B.listeDuzeni({
     },
   });
 
+  /* ====================== SITE-04 Şantiye düzenle ======================= */
+  ekranRota(y, 'SITE-04', {
+    get: (ctx, _g, params) => {
+      const e = ekranNesnesi('SITE-04');
+      yetkiZorunlu(ctx, e.yetki);
+      const kayit = kaydiAl(ctx, 'santiye', 'santiye', params.id);
+      return html(ctx, 200, ciz(ctx, e, santiyeFormu(ctx, { kayit }), { kayitEtiketi: kayit.kod, baslik: kayit.ad }));
+    },
+    post: (ctx, govde, params) => {
+      const e = ekranNesnesi('SITE-04');
+      yetkiZorunlu(ctx, `${e.kod}:guncelle`);
+      csrfZorunlu(ctx, govde);
+      const kayit = kaydiAl(ctx, 'santiye', 'santiye', params.id);
+      try {
+        if (['kapali', 'arsiv'].includes(kayit.durum)) {
+          throw DogrulamaHatasi('Kapalı veya arşivlenmiş şantiyenin temel verisi değiştirilemez.');
+        }
+        const alanlar = santiyeGirdisiDogrula(ctx, govde);
+        islem(() => {
+          surumluGuncelle('santiye', kayit.id, Number(govde.surum), alanlar,
+            { guncelleyen: ctx.kullanici.id, guncellendi: simdi() });
+          audit.yaz({ tenantId: ctx.tenant.id, kullaniciId: ctx.kullanici.id, istekId: ctx.istekId, ip: ctx.ip,
+            nesne: 'santiye', nesneId: kayit.id, eylem: 'guncelle',
+            onceki: Object.fromEntries(Object.keys(alanlar).map((k) => [k, kayit[k]])), sonraki: alanlar });
+        });
+        return yonlendir(ctx, `/santiyeler/${kayit.id}?guncellendi=1`);
+      } catch (err) {
+        if (!(err instanceof UygulamaHatasi)) throw err;
+        return html(ctx, err.durum, ciz(ctx, e,
+          santiyeFormu(ctx, { kayit, deger: govde, hata: hataNesnesi(err) }),
+          { kayitEtiketi: kayit.kod, baslik: kayit.ad }));
+      }
+    },
+  });
+
   /* ====================== SITE-03 Şantiye detayı ======================== */
   ekranRota(y, 'SITE-03', {
     get: (ctx, _g, params) => santiyeDetayi(ctx, params.id),
@@ -417,12 +452,24 @@ function projeFormu(ctx, { kayit = null, deger = {}, hata = null }) {
   });
 }
 
-function santiyeFormu(ctx, { deger = {}, hata = null }) {
+function santiyeFormu(ctx, { deger = {}, hata = null, kayit = null }) {
   const projeler = sorgu(
     `SELECT id, ad, kod FROM proje WHERE tenant_id = ? AND durum NOT IN ('kapali','arsiv') ORDER BY ad`, ctx.tenant.id)
     .map((p) => ({ deger: p.id, etiket: `${p.kod} — ${p.ad}` }));
+  /* SITE-04 düzenleme kipi: aynı kalıp, aynı doğrulama; yalnız hedef rota ve
+     ön değerler değişir (kural 4 — ikinci bir form uygulaması yok). */
+  const d = kayit ? {
+    ad: kayit.ad, projeId: kayit.proje_id, sefId: kayit.sef_id, il: kayit.il, ilce: kayit.ilce,
+    adres: kayit.adres, maliyetMerkezi: kayit.maliyet_merkezi,
+    baslangic: kayit.baslangic ? gunAnahtari(kayit.baslangic) : '',
+    planlananBitis: kayit.planlanan_bitis ? gunAnahtari(kayit.planlanan_bitis) : '',
+    ...deger,
+  } : deger;
+  deger = d;
   return B.form({
-    rota: '/santiyeler/yeni', csrf: csrfAlani(ctx), idempotencyAnahtari: kimlik('idempotency'), hatalar: hata,
+    rota: kayit ? `/santiyeler/${kayit.id}/duzenle` : '/santiyeler/yeni',
+    csrf: csrfAlani(ctx),
+    idempotencyAnahtari: kayit ? null : kimlik('idempotency'), hatalar: hata,
     bolumler: [
       { baslik: 'Şantiye kimliği', aciklama: 'Şantiye her zaman bir projeye bağlıdır.',
         alanlar: h`
@@ -442,8 +489,20 @@ function santiyeFormu(ctx, { deger = {}, hata = null }) {
           ${B.alan({ ad: 'maliyetMerkezi', etiket: 'Maliyet merkezi', deger: deger.maliyetMerkezi || '',
             ipucu: 'Bütçe ve satın alma bu kodla eşleşir.' })}` },
     ],
-    eylemler: h`${B.btn('Vazgeç', { rota: '/santiyeler' })}
-      ${B.btn('Kaydet ve detaya git', { tur: 'acc', gonder: true, ikon: 'fa-floppy-disk' })}`,
+    ozet: kayit ? h`<div class="gv-card"><div class="gc-body">
+      <div class="gv-cap-sm">Kayıt künyesi</div>
+      <dl class="gd-grid" style="margin-top:12px;padding-top:0;border-top:0">
+        <div><dt>Kod</dt><dd>${kayit.kod}</dd></div>
+        <div><dt>Durum</dt><dd>${B.rozet(kayit.durum)}</dd></div>
+        <div><dt>Sürüm</dt><dd>${kayit.surum}</dd></div>
+      </dl>
+      <p class="gf-hint" style="margin-top:12px">Bu form <b>temel veriyi</b> günceller; yaşam durumu
+        buradan değişmez. Siz düzenlerken başkası kaydettiyse gönderim 409 ile reddedilir.</p>
+      ${ham(`<input type="hidden" name="surum" value="${kayit.surum}">`)}
+    </div></div>` : null,
+    eylemler: h`${B.btn('Vazgeç', { rota: kayit ? `/santiyeler/${kayit.id}` : '/santiyeler' })}
+      ${B.btn(kayit ? 'Değişiklikleri kaydet' : 'Kaydet ve detaya git',
+        { tur: 'acc', gonder: true, ikon: 'fa-floppy-disk' })}`,
   });
 }
 
@@ -626,6 +685,8 @@ function santiyeDetayi(ctx, id, { hata = null, durum = 200 } = {}) {
 ${hata ? B.hataOzeti(hata) : ''}
 ${ctx.sorgu.get('olusan') ? B.sonucSeridi({ tur: 'ok', baslik: 'Şantiye oluşturuldu' }) : ''}
 ${ctx.sorgu.get('gecis') ? B.sonucSeridi({ tur: 'ok', baslik: 'Durum güncellendi', aciklama: `Yeni durum: ${s.durum}` }) : ''}
+${ctx.sorgu.get('guncellendi') ? B.sonucSeridi({ tur: 'ok', baslik: 'Şantiye güncellendi',
+    aciklama: 'Alan bazlı değişiklik denetim izine yazıldı.' }) : ''}
 ${ozetSeridi(ctx, {
     nesne: 'santiye', kayit: s, baslik: s.ad,
     bilgiler: [
@@ -637,7 +698,19 @@ ${ozetSeridi(ctx, {
       { etiket: 'Açık görev', deger: sayi(acikGorevler) },
     ],
     birincilEylem: B.btn('Günlük rapor', { tur: 'acc', rota: `/santiyeler/${s.id}/gunluk-raporlar`, ikon: 'fa-clipboard-list' }),
+    digerEylemler: h`${yetkiVar(ctx, 'SITE-04:guncelle')
+      ? B.btn('Düzenle', { rota: `/santiyeler/${s.id}/duzenle`, ikon: 'fa-pen' }) : ''}
+      ${yetkiVar(ctx, 'SITE-05:goruntule') && ['taslak', 'hazirlik'].includes(s.durum)
+        ? B.btn('Açılış kontrolü', { rota: `/santiyeler/${s.id}/acilis`, ikon: 'fa-clipboard-check' }) : ''}
+      ${yetkiVar(ctx, 'SITE-16:goruntule') && ['aktif', 'kapanista'].includes(s.durum)
+        ? B.btn('Kapatma sihirbazı', { rota: `/santiyeler/${s.id}/kapat`, ikon: 'fa-box-archive' }) : ''}`,
   })}
+<div class="gv-card" style="margin-bottom:18px"><div class="gc-body" style="display:flex;gap:8px;flex-wrap:wrap">
+  ${B.btn('İzin ve resmi belgeler', { rota: `/santiyeler/${s.id}/izinler`, ikon: 'fa-file-shield', kucuk: true })}
+  ${B.btn('Ziyaretçi ve saha girişi', { rota: `/santiyeler/${s.id}/ziyaretciler`, ikon: 'fa-user-clock', kucuk: true })}
+  ${B.btn('Geçici kabul', { rota: `/santiyeler/${s.id}/gecici-kabul`, ikon: 'fa-clipboard-check', kucuk: true })}
+  ${B.btn('Kesin kabul ve devir', { rota: `/santiyeler/${s.id}/kesin-kabul`, ikon: 'fa-handshake', kucuk: true })}
+</div></div>
 ${B.sekmeler({ sekmeler: [
     { ad: 'ozet', etiket: 'Özet' },
     { ad: 'raporlar', etiket: 'Günlük raporlar', adet: raporlar.length },

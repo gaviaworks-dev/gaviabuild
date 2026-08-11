@@ -4,13 +4,13 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 151 · devam: 0 · bitti: 0 · doğrulandı: 93
+**Toplam:** 244 sayfa ailesi — bekliyor: 144 · devam: 0 · bitti: 0 · doğrulandı: 100
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
-| Faz 3 | 89 | 32 | 0 | 0 | 57 |
+| Faz 3 | 89 | 25 | 0 | 0 | 64 |
 | Faz 4 | 69 | 69 | 0 | 0 | 0 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
@@ -79,19 +79,19 @@
 | SITE-01 | Şantiye listesi | P0 | liste | `/santiyeler` | ✅ doğrulandı | faz3 | Şantiye listesi — yaşam durumu ile takvim sağlığı AYRI sütunlarda |
 | SITE-02 | Yeni şantiye | P0 | form | `/santiyeler/yeni` | ✅ doğrulandı | faz3 | Yeni şantiye — projeye bağlı, maliyet merkezi ile |
 | SITE-03 | Şantiye detayı | P0 | detay | `/santiyeler/:id` | ✅ doğrulandı | faz3 | Şantiye detayı — kanonik veriden sekmeler |
-| SITE-04 | Şantiye düzenle | P0 | form | `/santiyeler/:id/duzenle` | ⬜ bekliyor | — | sıfırdan |
-| SITE-05 | Şantiye açılış kontrolü | P1 | sihirbaz | `/santiyeler/:id/acilis` | ⬜ bekliyor | — | sıfırdan |
+| SITE-04 | Şantiye düzenle | P0 | form | `/santiyeler/:id/duzenle` | ✅ doğrulandı | faz3e | Şantiye düzenle — sürümlü temel veri güncellemesi; yaşam durumu buradan değişmez |
+| SITE-05 | Şantiye açılış kontrolü | P1 | sihirbaz | `/santiyeler/:id/acilis` | ✅ doğrulandı | faz3e | Açılış kontrolü — belge/şef/ekip tamamlanmadan geçiş motoru "aktif" yapmaz |
 | SITE-06 | Günlük şantiye raporları | P0 | liste | `/santiyeler/:id/gunluk-raporlar` | ✅ doğrulandı | faz3 | Günlük şantiye raporları listesi |
 | SITE-07 | Yeni günlük rapor | P0 | form | `/santiyeler/:id/gunluk-raporlar/yeni` | ✅ doğrulandı | faz3 | Yeni günlük rapor — çevrimdışı taslak kimliği, çift senkronda tek kayıt |
 | SITE-08 | Günlük rapor detayı | P0 | listeForm | `/gunluk-raporlar/:id` | ✅ doğrulandı | faz3 | Günlük rapor detayı — onaydan sonra kilit |
 | SITE-09 | Saha bildirimleri | P0 | liste | `/saha-bildirimleri` | ✅ doğrulandı | faz3 | Saha bildirimleri — SLA ve önem işaretleri |
 | SITE-10 | Yeni saha bildirimi | P0 | form | `/saha-bildirimleri/yeni` | ✅ doğrulandı | faz3 | Yeni saha bildirimi — SLA aciliyetten türetilir, kullanıcı girmez |
 | SITE-11 | Saha bildirimi detayı | P0 | detay | `/saha-bildirimleri/:id` | ✅ doğrulandı | faz3 | Saha bildirimi detayı — atama, işlem, doğrulama, kapanış |
-| SITE-12 | Saha günlükleri ve ziyaretçiler | P2 | listeForm | `/santiyeler/:id/ziyaretciler` | ⬜ bekliyor | — | sıfırdan |
-| SITE-13 | Şantiye izin ve resmi belgeleri | P1 | listeForm | `/santiyeler/:id/izinler` | ⬜ bekliyor | — | sıfırdan |
-| SITE-14 | Geçici kabul | P1 | sihirbaz | `/santiyeler/:id/gecici-kabul` | ⬜ bekliyor | — | sıfırdan |
-| SITE-15 | Kesin kabul ve devir | P1 | sihirbaz | `/santiyeler/:id/kesin-kabul` | ⬜ bekliyor | — | sıfırdan |
-| SITE-16 | Şantiye kapatma | P1 | sihirbaz | `/santiyeler/:id/kapat` | ⬜ bekliyor | — | sıfırdan |
+| SITE-12 | Saha günlükleri ve ziyaretçiler | P2 | listeForm | `/santiyeler/:id/ziyaretciler` | ✅ doğrulandı | faz3e | Ziyaretçi ve saha girişi — giriş saati sunucudan; çıkışsız kayıt kapanışı engeller |
+| SITE-13 | Şantiye izin ve resmi belgeleri | P1 | listeForm | `/santiyeler/:id/izinler` | ✅ doğrulandı | faz3e | İzin ve resmi belgeler — süre aşımı hesaplanır, durum eylemle değişir |
+| SITE-14 | Geçici kabul | P1 | sihirbaz | `/santiyeler/:id/gecici-kabul` | ✅ doğrulandı | faz3e | Geçici kabul — punch eki, garanti süresi, onay motoru |
+| SITE-15 | Kesin kabul ve devir | P1 | sihirbaz | `/santiyeler/:id/kesin-kabul` | ✅ doğrulandı | faz3e | Kesin kabul ve devir — onaylı geçici kabul olmadan açılamaz |
+| SITE-16 | Şantiye kapatma | P1 | sihirbaz | `/santiyeler/:id/kapat` | ✅ doğrulandı | faz3e | Şantiye kapatma — §7 engel listesi sıfırlanmadan kapalı duruma geçilemez |
 | PLAN-01 | İş programı listesi | P0 | liste | `/is-programlari` | ✅ doğrulandı | faz3 | İş programı listesi — baz çizgi ve onaylı ilerleme |
 | PLAN-02 | Yeni iş programı | P0 | form | `/is-programlari/yeni` | ✅ doğrulandı | faz3 | Yeni iş programı |
 | PLAN-03 | İş programı detayı | P0 | detay | `/is-programlari/:id` | ✅ doğrulandı | faz3 | Program detayı — WBS, aktivite ve ilerleme sekmeleri |

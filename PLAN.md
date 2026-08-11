@@ -115,28 +115,28 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz3(HR-01..09)` · **Test:** 160/160 · **Doğrulanan ekran:** 93/244
+**Son commit:** `faz3(SITE-04..16)` · **Test:** 179/179 · **Doğrulanan ekran:** 100/244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
 | Faz 0 | ✅ kapandı (`faz-0-tamam`) | 244 yol kararı, screen-manifest, link testi |
 | Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
 | Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
-| Faz 3 | 🟡 57/89 aile · kabul kriterleri yeşil | PRJ-01, PLAN-01, PLAN-02, SITE-01, QLT-01, HR-05/07/08/09 |
+| Faz 3 | 🟡 64/89 aile · kabul kriterleri yeşil | PRJ-01, PLAN-01/02, SITE-01, QLT-01, HR-05/07/08/09, SITE-05/16 |
 | Faz 4-6 | ⬜ başlamadı | |
 
 ### Faz 3'te teslim edilenler
 Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş programı ve ilerleme
 (PLAN-01..04, 06, 09, 11) · görev (TASK-01..03) · İSG (HSE-02..06) · kalite bloğu
 (QLT-01..14, QLT-05..07 dahil) · doküman bloğu (DOC-01..10) · İK bloğu
-(HR-01..05, HR-07..09: personel, işe giriş sihirbazı, atama, puantaj, dönem kapanışı).
+(HR-01..05, HR-07..09: personel, işe giriş sihirbazı, atama, puantaj, dönem kapanışı) ·
+şantiye tamamlama (SITE-04, 05, 12..16: düzenleme, açılış/kapanış sihirbazı, ziyaretçi,
+resmi belge, geçici/kesin kabul).
 
-### SIRADAKİ İŞ PAKETİ — Faz 3'ün kalan 32 ailesi
+### SIRADAKİ İŞ PAKETİ — Faz 3'ün kalan 25 ailesi
 
-1. ~~**İK (HR-01..05, 07..09)**~~ ✅ `faz3d` ile teslim edildi (HR-10..13 Faz 4, HR-06 Faz 5, HR-14 Faz 6).
-2. **Şantiye tamamlama (SITE-04, 05, 12..16)** — 7 aile. Açılış/kapanış sihirbazları,
-   geçici/kesin kabul, ziyaretçi, izin belgeleri. Kapanış sihirbazı "açık iş, varlık,
-   stok, kasa, belge engelleri" listesini gösterip engel sıfırlanmadan kapatmamalı (§7).
+1. ~~**İK (HR-01..05, 07..09)**~~ ✅ `faz3d`.
+2. ~~**Şantiye tamamlama (SITE-04, 05, 12..16)**~~ ✅ `faz3e`.
 3. **Plan/görev/İSG/proje kalanları** — PLAN-05, 07, 08, 10, 12 · TASK-04..09 ·
    HSE-01, 07..12 · PRJ-05..10 (24 aile).
 4. **Faz 4** — PRC → STK → CNT → FIN (69 aile). Kabul: PRC-01, STK-01, üçlü eşleştirme.
@@ -157,6 +157,8 @@ Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş program
   kuran kayıt (K-041). Faz 4'te cari, tedarikçi, varlık için gerekecek.
 - **Alan maskesi (`alanMaskeliMi` + alan tanımında `gorunur(ctx)`)** — hassas alanı
   hem okumaya hem yazmaya kapatır (K-039).
+- **`moduller/santiye/kapanis.mjs`** — açılış/kapanış engel listesi; Faz 4'te stok,
+  varlık ve kasa sorguları BURAYA bağlanacak (K-049: şu an kaldırılamaz engel).
 
 ### Bilinen açık uçlar
 

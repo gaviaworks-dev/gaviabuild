@@ -78,6 +78,21 @@ const SABLONLAR = [
     ],
   },
   {
+    kod: 'KABUL', ad: 'Geçici/kesin kabul onayı', nesne: 'kabul', sla: 120,
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'SANTIYE-KAPANIS', ad: 'Şantiye kapanış onayı', nesne: 'santiye_kapanis', sla: 120,
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Finans onayı', rol: 'finans_sorumlusu', paralel: 1, gereken: 2 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', paralel: 1, gereken: 2 },
+    ],
+  },
+  {
     kod: 'PUANTAJ-DONEM', ad: 'Puantaj dönem kapanış onayı', nesne: 'puantaj_donemi', sla: 48,
     adimlar: [
       { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
@@ -185,7 +200,8 @@ export function isAkisiTohumla(tenantId, kullaniciId = null) {
       ['stok_karti', 'STK'], ['mal_kabul', 'GRN'], ['transfer', 'TRF'], ['sayim', 'SYM'],
       ['metraj', 'MTR'], ['degisiklik', 'CHG'], ['gecikme', 'DLY'], ['claim', 'CLM'],
       ['butce', 'BDG'], ['kasa', 'CSH'], ['banka', 'BNK'], ['cari', 'CAR'],
-      ['fatura', 'INV'], ['odeme', 'PAY'], ['teminat', 'TMN'], ['zeyil', 'ZYL']]) {
+      ['fatura', 'INV'], ['odeme', 'PAY'], ['teminat', 'TMN'], ['zeyil', 'ZYL'],
+      ['kabul', 'KBL']]) {
       sablonKur(tenantId, nesne, onek);
     }
 

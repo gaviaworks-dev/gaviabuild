@@ -15,6 +15,8 @@
  *     onayGerekir?: boolean, etiket: string }
  */
 
+import { acilisEngeliMetni, kapanisEngeliMetni } from '../santiye/kapanis.mjs';
+
 export const NESNELER = {
   /* ---- Proje / Şantiye ------------------------------------------------- */
   proje: {
@@ -50,11 +52,15 @@ export const NESNELER = {
     },
     gecisler: [
       { den: 'taslak', e: 'hazirlik', eylem: 'hazirliga_al', etiket: 'Hazırlığa al', gerekce: 'istege_bagli' },
-      { den: 'hazirlik', e: 'aktif', eylem: 'ac', etiket: 'Şantiyeyi aç', gerekce: 'istege_bagli' },
+      /* SITE-05: açılış kontrol listesi tamamlanmadan şantiye açılamaz. */
+      { den: 'hazirlik', e: 'aktif', eylem: 'ac', etiket: 'Şantiyeyi aç', gerekce: 'istege_bagli',
+        onKosul: (ctx, k) => acilisEngeliMetni(k.id) },
       { den: 'aktif', e: 'askida', eylem: 'askiya_al', etiket: 'Askıya al', gerekce: 'zorunlu' },
       { den: 'askida', e: 'aktif', eylem: 'devam_ettir', etiket: 'Devam ettir', gerekce: 'zorunlu' },
       { den: 'aktif', e: 'kapanista', eylem: 'kapanisa_al', etiket: 'Kapanışa al', gerekce: 'istege_bagli' },
-      { den: 'kapanista', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu', onayGerekir: true },
+      /* §7: engel listesi sıfırlanmadan "kapalı" duruma geçilemez. */
+      { den: 'kapanista', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu', onayGerekir: true,
+        onKosul: (ctx, k) => kapanisEngeliMetni(k.id) },
       { den: 'kapali', e: 'arsiv', eylem: 'arsivle', etiket: 'Arşivle', gerekce: 'istege_bagli' },
     ],
     isaretler: ['takvimde', 'riskli', 'gecikmis', 'butce_asimi'],
@@ -231,6 +237,7 @@ export const ONAYLI_TURLER = {
   gunluk_rapor: 'Günlük şantiye raporu', ilerleme: 'İlerleme kaydı', is_programi: 'İş programı',
   butce_revizyonu: 'Bütçe revizyonu', sure_uzatim: 'Süre uzatım talebi',
   degisiklik: 'Değişiklik talebi', odeme: 'Ödeme talebi', kart_yukleme: 'Kart yükleme',
+  kabul: 'Geçici/kesin kabul', puantaj_donemi: 'Puantaj dönemi',
   banka_hareketi: 'Banka hareketi', avans: 'Avans talebi', izin: 'İzin talebi',
 };
 
