@@ -7,7 +7,9 @@
    Zaman: INTEGER epoch ms (UTC).
    ========================================================================== */
 
-export const GOCLER = [
+import { GOCLER_2 } from './goc2.mjs';
+
+const G001 = [
 { ad: 'G001_kimlik_ve_yetki', sql: `
 
 /* ---- Kiracı (tenant) ve tüzel kişi ------------------------------------- */
@@ -247,3 +249,6 @@ CREATE TABLE bildirim (
 CREATE INDEX ix_bildirim_kullanici ON bildirim (kullanici_id, okundu);
 `},
 ];
+
+/* Göçler sırayla uygulanır; her dosya bir faz ekler (tek yönlü, geri alınamaz). */
+export const GOCLER = [...G001, ...GOCLER_2];

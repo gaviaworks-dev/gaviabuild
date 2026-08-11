@@ -14,6 +14,8 @@ import { baglamOlustur, govdeOku, html, json, yanitla, yonlendir, jsonIster } fr
 import { hataCevir, UygulamaHatasi, Bulunamadi } from './cekirdek/hata.mjs';
 import { yukle as oturumYukle, csrfAlani } from './moduller/kimlik/oturum.mjs';
 import { rolleriKur, demoTenantKur } from './moduller/kimlik/tohum.mjs';
+import { isAkisiTohumla } from './moduller/isakisi/tohum.mjs';
+import { sorgu } from './cekirdek/db.mjs';
 import { yonlendiriciKur, uygulananKodlar } from './rotalar.mjs';
 import { durumSayfasi } from './web/sayfalar/kimlik.mjs';
 import { btn } from './web/bilesenler.mjs';
@@ -63,8 +65,13 @@ async function istegiIsle(yonlendirici, istek, yanit) {
       return yonlendir(ctx, '/ilk-kurulum');
     }
 
-    const govde = ctx.metot === 'POST' ? await govdeOku(istek) : {};
-    return rota.isleyici(ctx, govde, params);
+    /* multipart/form-data gövdesini isleyici KENDİ okur (dosya akışı bellek
+       kopyası üretmesin diye router burada tüketmez). */
+    const cokluParca = (istek.headers['content-type'] || '').startsWith('multipart/form-data');
+    const govde = ctx.metot === 'POST' && !cokluParca ? await govdeOku(istek) : {};
+    /* `return await` ŞART: `return promise` biçimi try bloğunu beklemeden döner,
+       async isleyicideki hata catch'e düşmez ve süreç çökerdi. */
+    return await rota.isleyici(ctx, govde, params);
   } catch (ham) {
     return hatayiYanitla(ctx, ham);
   }
@@ -103,6 +110,8 @@ export function uygulamaKur({ dbYolu } = {}) {
   dbAc(dbYolu);
   rolleriKur();
   if (!yapilandirma.uretim) demoTenantKur();
+  /* Her tenant, onaysız akış başlatılamadığı için asgari şablon setiyle gelir. */
+  for (const t of sorgu('SELECT id FROM tenant')) isAkisiTohumla(t.id);
   const yonlendirici = yonlendiriciKur();
   return { yonlendirici, istegiIsle: (istek, yanit) => istegiIsle(yonlendirici, istek, yanit) };
 }

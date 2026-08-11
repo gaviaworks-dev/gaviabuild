@@ -31,7 +31,7 @@ const KOD_IKONU = {
 };
 
 const IKON = {
-  liste: 'fa-list', form: 'fa-pen-to-square', panel: 'fa-gauge-high', rapor: 'fa-chart-column',
+  liste: 'fa-list', listeForm: 'fa-list-check', form: 'fa-pen-to-square', panel: 'fa-gauge-high', rapor: 'fa-chart-column',
   sihirbaz: 'fa-wand-magic-sparkles', onay: 'fa-circle-check', matris: 'fa-table-cells',
   mutabakat: 'fa-scale-balanced', takvim: 'fa-calendar-days', portal: 'fa-globe',
   mobil: 'fa-mobile-screen', ayar: 'fa-sliders', detay: 'fa-file-lines', durum: 'fa-triangle-exclamation',

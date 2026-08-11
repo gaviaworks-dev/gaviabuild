@@ -13,6 +13,7 @@
 /** Ekran kalıbına göre o ekranda mümkün olan eylemler. */
 export const KALIP_EYLEMLERI = {
   liste:     ['goruntule', 'disa_aktar'],
+  listeForm: ['goruntule', 'olustur', 'guncelle', 'disa_aktar'],
   detay:     ['goruntule', 'disa_aktar'],
   form:      ['goruntule', 'olustur', 'guncelle'],
   sihirbaz:  ['goruntule', 'olustur', 'guncelle', 'tamamla'],
@@ -27,6 +28,16 @@ export const KALIP_EYLEMLERI = {
   durum:     ['goruntule'],
   kimlik:    ['goruntule'],
   ayar:      ['goruntule', 'guncelle'],
+};
+
+/** Ekran koduna özel eylem kümesi — kalıp eylemlerini EZER.
+    Onay ekranları kalıbı "Liste"/"Detay" olsa da karar verme yüzeyidir; bu
+    yetkiyi kalıba yaymak (tüm detay ekranlarına karar_ver vermek) yanlış olurdu. */
+export const EKRAN_EYLEMLERI = {
+  'GLB-04': ['goruntule'],
+  'GLB-05': ['goruntule', 'karar_ver'],
+  /* Doküman detayı aynı zamanda YENİ SÜRÜM yükleme yüzeyidir (§5.4). */
+  'DOC-03': ['goruntule', 'guncelle', 'disa_aktar'],
 };
 
 /* Rol tanımları. `bolumler` manifest bölüm anahtarlarıdır; '*' hepsi demektir.
@@ -133,7 +144,7 @@ export function yetkileriUret(rol, ekranlar) {
     if (haric.has(e.kod)) continue;
     if (!hepsi && !rol.bolumler.includes(e.bolum)) continue;
     if (e.bolum === 'kimlik') continue;             // giriş/sistem durumları yetki gerektirmez
-    const kalipEylemleri = KALIP_EYLEMLERI[e.kalip] || ['goruntule'];
+    const kalipEylemleri = EKRAN_EYLEMLERI[e.kod] || KALIP_EYLEMLERI[e.kalip] || ['goruntule'];
     for (const eylem of kalipEylemleri) {
       if (rol.eylemler.includes(eylem)) set.add(`${e.kod}:${eylem}`);
     }

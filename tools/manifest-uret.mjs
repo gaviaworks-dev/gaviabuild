@@ -51,6 +51,9 @@ function kalipCoz(tip) {
   if (t.includes('takvim')) return 'takvim';
   if (t.includes('durum')) return 'durum';
   if (t.includes('onay')) return 'onay';
+  /* Bileşik tipler ("Liste/Form", "Liste/Detay", "Detay/Form") tek ekranda hem
+     listeleme hem kayıt açma/güncelleme yapar; kataloqda ayrı form ekranı yoktur. */
+  if (t.includes('/')) return 'listeForm';
   if (t.includes('detay')) return 'detay';
   if (t.includes('form')) return 'form';
   if (t.includes('liste')) return 'liste';
