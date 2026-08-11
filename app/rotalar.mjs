@@ -1,0 +1,57 @@
+/* ============================================================================
+   ROTA TABLOSU — screen-manifest'ten türer (değişmez kural 1)
+   ----------------------------------------------------------------------------
+   `ekranRota()` bir ekran kodunu alır, manifestten rotasını okur ve kaydeder.
+   Rota elle yazılmaz: manifestteki "Önerilen yol" ne ise o servis edilir. Kayıtlı
+   ekran kodları `uygulananKodlar()` ile dışa verilir; rail/menü YALNIZ uygulanmış
+   ekranları gösterir — böylece §12'nin "P0 rotada 404 / WIP bağlantısı" engeli
+   yapısal olarak imkânsızlaşır.
+   ========================================================================== */
+import { Yonlendirici } from './cekirdek/http.mjs';
+import { manifest } from './cekirdek/yapilandirma.mjs';
+import { Bulunamadi } from './cekirdek/hata.mjs';
+import * as kimlikRotalari from './rotalar/kimlik.mjs';
+import * as calismaRotalari from './rotalar/calisma.mjs';
+import * as ayarRotalari from './rotalar/ayarlar.mjs';
+
+const uygulanan = new Set();
+
+export function ekran(kod) {
+  const e = manifest().ekranlar.find((x) => x.kod === kod);
+  if (!e) throw new Error(`Manifestte olmayan ekran kodu: ${kod}`);
+  return e;
+}
+
+/** Ekran kodunu rotaya bağlar. Rota manifestten okunur, elle yazılmaz. */
+export function ekranRota(y, kod, { get, post } = {}) {
+  const e = ekran(kod);
+  if (get) y.get(e.rota, get, { ekran: e });
+  if (post) y.post(e.rota, post, { ekran: e });
+  uygulanan.add(kod);
+  /* Takma adlar aynı kanonik ekrana düşer (K-013). */
+  for (const t of manifest().ekranlar.filter((x) => x.takmaAdi === kod)) uygulanan.add(t.kod);
+  return e;
+}
+
+export const uygulananKodlar = () => uygulanan;
+
+export function yonlendiriciKur() {
+  const y = new Yonlendirici();
+  kimlikRotalari.kur(y, ekranRota);
+  calismaRotalari.kur(y, ekranRota);
+  ayarRotalari.kur(y, ekranRota);
+
+  /* Kök: oturum varsa role göre landing, yoksa giriş. */
+  y.get('/', (ctx) => kimlikRotalari.kok(ctx));
+  y.post('/cikis', (ctx, p) => kimlikRotalari.cikis(ctx, p));
+  y.get('/sso', (ctx) => kimlikRotalari.sso(ctx));
+
+  /* Manifestte tanımlı ama HENÜZ uygulanmamış rota: sahte ekran üretmek yerine
+     dürüst 404 verilir ve hangi fazda geleceği söylenir (WIP bağlantısı yasak). */
+  for (const e of manifest().ekranlar) {
+    if (uygulanan.has(e.kod) || e.acik) continue;
+    if (e.dinamik) continue;
+    y.get(e.rota, (ctx) => { throw Bulunamadi(`"${e.ad}" ekranı bu sürümde henüz yayında değil (${e.kod}).`); }, { ekran: e, planli: true });
+  }
+  return y;
+}

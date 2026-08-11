@@ -1,0 +1,215 @@
+/* =====================================================================
+   UYGULAMA KATMANI — sunucu render markup'ının ihtiyaç duyduğu ek desenler
+   tokens.css + shell.css + ui.css'in ÜSTÜNE biner; onları override etmez,
+   yalnız arşiv prototipinde JS ile üretilen düzenlerin CSS karşılığını ekler.
+   ===================================================================== */
+
+/* ---- Erişilebilirlik ------------------------------------------------ */
+.gv-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.gv-skip{position:absolute;left:-9999px;top:0;z-index:100;padding:10px 16px;
+  background:var(--acc-ink);color:#fff;font-weight:700;border-radius:0 0 var(--r-sm) 0}
+.gv-skip:focus{left:0}
+:where(a,button,input,select,textarea):focus-visible{
+  outline:2px solid var(--acc-ink);outline-offset:2px;border-radius:4px}
+
+/* ---- Hizalama yardımcıları (tablo sütunları) ------------------------ */
+.gtable th.ta-sag,.gtable td.ta-sag,.ta-sag{text-align:right;font-variant-numeric:tabular-nums}
+.gtable th.ta-orta,.gtable td.ta-orta,.ta-orta{text-align:center}
+.gth-sort{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none}
+.gth-sort i{font-size:9px;opacity:.55}
+.gth-sort:hover i{opacity:1;color:var(--acc-ink)}
+
+/* ---- Kart başlığı: "başlık + tek satır açıklama" kalıbı ------------
+   ui.css .gc-title yatay flex'tir (ikon + başlık). Açıklamalı kullanımda
+   :has() ile dikey yığılır; ikonlu kullanım etkilenmez. ---- */
+.gc-title:has(> b){flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
+.gc-title > b{font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.gc-title > span{font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0;
+  line-height:1.5;white-space:normal}
+
+/* ---- Liste kartı: tablo kartın içine sıfır boşlukla oturur --------- */
+.gv-tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---- Sayfalama ek parçaları (§3.5) ---------------------------------- */
+.pg-size{display:inline-flex;align-items:center;gap:8px;margin-right:6px;color:var(--muted)}
+.pg-size select{padding:5px 8px;border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--paper);font:inherit;font-size:12.5px;color:var(--ink)}
+.pg-btn.is-disabled{opacity:.4;cursor:default;pointer-events:none}
+@media(max-width:640px){
+  /* Mobilde yalnız önceki/sonraki + kayıt aralığı kalır (§3.5 mobil kuralı). */
+  .pg-size,.gv-pager .pg-uc{display:none}
+}
+
+/* ---- Veri tarihi künyesi -------------------------------------------- */
+.gv-datastamp{display:flex;align-items:center;gap:7px;margin-top:14px;
+  font-size:12px;color:var(--muted)}
+.gv-datastamp i{font-size:11px;opacity:.7}
+
+/* ---- Filtre barı içi satır-içi alan --------------------------------- */
+.gfield-inline{flex-direction:column;gap:4px;min-width:150px}
+.gfield-inline select{padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--paper);font:inherit;font-size:13px;color:var(--ink)}
+
+/* ---- Form düzeni — ui.css .form-grid (ana+yan) ve .gform (alan ızgarası)
+   üzerine biner; iki düzen de ORADA tanımlıdır, burada yalnız eksikler ---- */
+.gform-main{display:flex;flex-direction:column;gap:18px;min-width:0}
+.gform-alanlar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}
+.gform-side{position:sticky;top:calc(var(--top-h) + 18px);display:flex;flex-direction:column;gap:14px}
+.gform-sec{scroll-margin-top:calc(var(--top-h) + 20px)}
+@media(max-width:1100px){
+  .gform-side{position:static;order:-1}
+}
+@media(max-width:640px){
+  .gform-alanlar{grid-template-columns:minmax(0,1fr)}
+}
+.gfield.full{grid-column:1/-1}
+.gf-req{color:var(--danger);margin-left:3px}
+.gf-err{font-size:11.5px;font-weight:700;color:var(--danger)}
+.gfield.has-error input,.gfield.has-error select,.gfield.has-error textarea{
+  border-color:var(--danger);background:var(--danger-tint)}
+
+/* ---- Hata özeti ------------------------------------------------------ */
+.gv-m-err{display:block;padding:14px 16px;margin-bottom:16px;border-radius:var(--r-md);
+  background:var(--danger-tint);border:1px solid rgba(209,67,67,.28);color:var(--ink)}
+.gv-m-err b{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--danger)}
+.gv-m-err ul{margin:9px 0 0;padding-left:20px;font-size:12.5px;line-height:1.75}
+.gv-m-err a{color:var(--danger);font-weight:700}
+.gv-errcode{display:inline-block;margin-top:8px;font-size:11px;color:var(--muted)}
+.gv-errcode code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ---- İşlem sonucu şeridi (sahte toast DEĞİL: gerçek sonuç) ---------- */
+.gv-result{display:flex;align-items:center;gap:12px;padding:13px 16px;margin-bottom:18px;
+  border-radius:var(--r-md);font-size:13.5px;border:1px solid transparent}
+.gv-result i{font-size:16px;flex:none}
+.gv-result b{display:block;font-size:13.5px}
+.gv-result span{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.gv-result .btn{margin-left:auto;flex:none}
+.gv-result-ok{background:var(--ok-tint);border-color:rgba(46,158,107,.25)}
+.gv-result-ok i{color:var(--ok)}
+.gv-result-warn{background:var(--warn-tint);border-color:rgba(169,121,8,.25)}
+.gv-result-warn i{color:var(--warn)}
+.gv-result-hata{background:var(--danger-tint);border-color:rgba(209,67,67,.25)}
+.gv-result-hata i{color:var(--danger)}
+
+/* ---- Detay özet şeridi (§3.3) --------------------------------------- */
+.gd-summary{margin-bottom:18px}
+.gd-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.gd-ident h2{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:4px 0 9px}
+.gd-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gd-acts{display:flex;gap:9px;flex:none}
+.gd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px 22px;
+  margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.gd-grid dt{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.gd-grid dd{margin:5px 0 0;font-size:13.5px;font-weight:600;color:var(--ink);word-break:break-word}
+@media(max-width:640px){.gd-acts{width:100%}.gd-acts .btn{flex:1 1 auto;justify-content:center}}
+
+/* ---- Sekmeler -------------------------------------------------------- */
+.gv-tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:18px;
+  border-bottom:1px solid var(--line);scrollbar-width:none}
+.gv-tabs::-webkit-scrollbar{display:none}
+.gv-tab{display:inline-flex;align-items:center;gap:7px;padding:11px 15px;white-space:nowrap;
+  font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;
+  border-bottom:2px solid transparent;transition:color .18s var(--ease),border-color .18s var(--ease)}
+.gv-tab:hover{color:var(--ink)}
+.gv-tab.is-active{color:var(--acc-ink);border-bottom-color:var(--acc-ink)}
+
+/* ---- Boş durum ------------------------------------------------------- */
+.gv-empty{display:flex;flex-direction:column;align-items:center;gap:9px;
+  padding:52px 24px;text-align:center}
+.gv-empty-ico{width:52px;height:52px;border-radius:var(--r-md);display:grid;place-items:center;
+  background:var(--bg);color:var(--muted);font-size:19px;margin-bottom:4px}
+.gv-empty b{font-size:14.5px;color:var(--ink)}
+.gv-empty span{font-size:13px;color:var(--muted);max-width:380px}
+.gv-empty-act{margin-top:10px}
+
+/* ---- Menü çıkış formu (buton link gibi görünür) --------------------- */
+.gv-cikis-form{margin:0}
+.gv-cikis-form .gv-mlink{width:100%;background:none;border:0;font:inherit;cursor:pointer;text-align:left}
+
+/* ---- Mobil: tablo yerine kart görünümü (doküman §2 madde 8) --------- */
+@media(max-width:760px){
+  .gtable{min-width:0;display:block}
+  .gtable thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .gtable tbody,.gtable tr,.gtable td{display:block;width:100%}
+  .gtable tr{border:1px solid var(--line);border-radius:var(--r-md);margin:12px;padding:6px 0;
+    background:var(--paper);box-shadow:var(--sh-sm)}
+  .gtable td{display:flex;align-items:baseline;gap:12px;padding:8px 16px !important;
+    border-bottom:0;text-align:left !important}
+  .gtable td::before{content:attr(data-etiket);flex:none;width:38%;
+    font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+  .gtable td .td-icerik{flex:1;min-width:0;display:block;overflow-wrap:anywhere}
+  .gtable td:last-child{justify-content:flex-start}
+}
+
+/* ---- Giriş sayfası: iki panel (doküman 2.1) ------------------------- */
+.gv-sade{min-height:100vh;background:var(--bg)}
+.gr-split{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);min-height:100vh}
+.gr-sol{position:relative;display:flex;flex-direction:column;justify-content:center;
+  padding:64px 60px;background:var(--gv-deep);color:var(--gv-on-dark);overflow:hidden}
+.gr-sol::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(63,213,173,.08) 1px,transparent 1px);background-size:26px 26px}
+.gr-sol > *{position:relative;z-index:1}
+.gr-mark{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
+  background:var(--gv-mint-glow);border:1px solid rgba(63,213,173,.3);
+  color:var(--gv-mint);font-weight:800;font-size:21px;letter-spacing:-.03em;margin-bottom:30px}
+.gr-sol h1{font-size:33px;line-height:1.22;font-weight:800;letter-spacing:-.025em;color:#fff;max-width:15ch}
+.gr-sol .gr-lead{margin-top:15px;font-size:14.5px;line-height:1.7;color:var(--on-dark);max-width:46ch}
+.gr-fay{list-style:none;margin:36px 0 0;padding:0;display:flex;flex-direction:column;gap:15px;max-width:44ch}
+.gr-fay li{display:flex;align-items:flex-start;gap:12px;font-size:13.5px;line-height:1.55;color:var(--on-dark)}
+.gr-fay i{flex:none;margin-top:3px;width:19px;height:19px;border-radius:6px;display:grid;place-items:center;
+  background:var(--gv-mint-glow);color:var(--gv-mint);font-size:9px}
+.gr-foot{margin-top:44px;font-size:11.5px;color:var(--on-dark-faint);letter-spacing:.02em}
+.gr-sag{display:flex;align-items:center;justify-content:center;padding:48px 40px;background:var(--paper)}
+.gr-kart{width:100%;max-width:392px}
+.gr-kart h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.gr-kart .gr-alt{margin-top:7px;font-size:13.5px;color:var(--muted)}
+.gr-form{margin-top:28px;display:flex;flex-direction:column;gap:15px}
+.gr-form .gfield input{padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--paper);font:inherit;font-size:14px;color:var(--ink);width:100%}
+.gr-form .gfield label{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.gr-satir{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px}
+.gr-satir label{display:inline-flex;align-items:center;gap:7px;color:var(--ink-2);cursor:pointer}
+.gr-form .btn{width:100%;justify-content:center;padding:12px}
+.gr-ayrac{display:flex;align-items:center;gap:12px;margin:22px 0;color:var(--muted);font-size:11.5px}
+.gr-ayrac::before,.gr-ayrac::after{content:"";flex:1;height:1px;background:var(--line)}
+.gr-demo{margin-top:20px;padding:15px;border:1px dashed var(--line-2);border-radius:var(--r-md);background:var(--bg)}
+.gr-demo-bas{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin-bottom:10px}
+.gr-demo-bas .gtag{background:var(--warn-tint);color:var(--warn)}
+.gr-demo p{font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:11px}
+.gr-demo-liste{display:flex;flex-wrap:wrap;gap:7px}
+@media(max-width:900px){
+  .gr-split{grid-template-columns:minmax(0,1fr)}
+  .gr-sol{padding:44px 26px 38px;min-height:auto}
+  .gr-sol h1{font-size:25px;max-width:none}
+  .gr-fay{margin-top:26px;gap:12px}
+  .gr-foot{margin-top:30px}
+  .gr-sag{padding:34px 22px 56px}
+}
+
+/* ---- Sistem durumu sayfaları (403/404/bakım/oturum) ----------------- */
+.gv-durum{min-height:100vh;display:grid;place-items:center;padding:40px 22px;background:var(--bg)}
+.gv-durum-kart{width:100%;max-width:460px;text-align:center;background:var(--paper);
+  border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:42px 34px}
+.gv-durum-ico{width:58px;height:58px;margin:0 auto 20px;border-radius:16px;display:grid;place-items:center;font-size:22px}
+.gv-durum-kart h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+.gv-durum-kart p{margin-top:11px;font-size:13.5px;line-height:1.7;color:var(--muted)}
+.gv-durum-kart .gv-durum-acts{margin-top:26px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.gv-durum-kod{margin-top:20px;font-size:11px;color:var(--muted)}
+
+/* ---- Yazdırma: menü, buton ve form kontrolleri gizlenir (§3.4) ------ */
+@media print{
+  .gv-rail,.gv-menu,.gv-top,.gv-divider,.gv-overlay,.filter-bar,.gv-pager,
+  .form-foot,.ph-actions,.gd-acts,.gv-tabs{display:none !important}
+  .gv-main{margin:0 !important;padding:0 !important;max-width:none !important}
+  .gv-card{box-shadow:none;border-color:#ccc;break-inside:avoid}
+  .gtable thead{display:table-header-group}     /* tekrarlanan tablo başlığı */
+  .gtable tr{break-inside:avoid}
+  a[href]::after{content:""}
+}
+
+/* ---- Dar ekranda üst bar sadeleşir ---------------------------------- */
+@media(max-width:640px){
+  .gv-tenant{display:none}   /* bağlam adı sığmıyor; kabuk başlığında zaten var */
+}

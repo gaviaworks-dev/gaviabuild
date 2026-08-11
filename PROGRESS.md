@@ -4,45 +4,43 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 244 · devam: 0 · bitti: 0 · doğrulandı: 0
+**Toplam:** 244 sayfa ailesi — bekliyor: 221 · devam: 0 · bitti: 0 · doğrulandı: 23
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
-| Faz 1 | 24 | 24 | 0 | 0 | 0 |
-| Faz 2 | 14 | 14 | 0 | 0 | 0 |
+| Faz 1 | 22 | 0 | 0 | 0 | 22 |
+| Faz 2 | 14 | 13 | 0 | 0 | 1 |
 | Faz 3 | 89 | 89 | 0 | 0 | 0 |
-| Faz 4 | 67 | 67 | 0 | 0 | 0 |
+| Faz 4 | 69 | 69 | 0 | 0 | 0 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
 
-## Faz 1 — 24 sayfa ailesi
+## Faz 1 — 22 sayfa ailesi
 
 | Kod | Sayfa | Öncelik | Kalıp | Rota | Durum | Commit | Not |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| AUTH-01 | Giriş | P0 | kimlik | `/giris` | ⬜ bekliyor | — | kaynak: crm-auth-giris (koru), portal-giris (birlestir) |
-| AUTH-02 | Şifremi unuttum | P0 | form | `/sifre-unuttum` | ⬜ bekliyor | — | kaynak: crm-auth-sifremi-unuttum (koru), portal-sifremi-unuttum (birlestir) |
-| AUTH-03 | Şifre sıfırla | P0 | form | `/sifre-sifirla/:token` | ⬜ bekliyor | — | kaynak: crm-auth-sifre-sifirla (koru) |
-| AUTH-04 | Davet kabul | P0 | form | `/davet/:token` | ⬜ bekliyor | — | kaynak: crm-auth-davet-kabul (koru), portal-davet-kabul (birlestir) |
-| AUTH-05 | MFA doğrulama | P0 | form | `/mfa` | ⬜ bekliyor | — | kaynak: crm-auth-2fa (koru) |
-| AUTH-06 | İlk giriş kurulumu | P0 | sihirbaz | `/ilk-kurulum` | ⬜ bekliyor | — | kaynak: crm-auth-ilk-sifre (birlestir), crm-sistem-ilk-kullanim (birlestir) |
-| AUTH-07 | Oturum süresi doldu | P0 | durum | `/oturum-sonlandi` | ⬜ bekliyor | — | kaynak: crm-auth-oturum-doldu (koru) |
-| AUTH-08 | Yetkisiz erişim | P0 | durum | `/403` | ⬜ bekliyor | — | kaynak: crm-auth-hesap-pasif (birlestir), crm-sistem-403 (koru) |
-| AUTH-09 | Sayfa bulunamadı | P1 | durum | `/404` | ⬜ bekliyor | — | kaynak: 404 (yonlendir), 404 (yonlendir) |
-| AUTH-10 | Bakım / servis kesintisi | P1 | durum | `/bakim` | ⬜ bekliyor | — | kaynak: crm-sistem-500 (birlestir), crm-sistem-bakim (koru), crm-sistem-hata (birlestir), crm-sistem-veri-hata (birlestir) |
-| GLB-01 | Rol bazlı ana panel | P0 | panel | `/panel` | ⬜ bekliyor | — | kaynak: index (yonlendir), crm-panel (koru), index (yonlendir) |
-| GLB-02 | Günlük özet | P1 | panel | `/panel/gunluk-ozet` | ⬜ bekliyor | — | kaynak: crm-panel-operasyon (birlestir), crm-panel-ozet (koru) |
-| GLB-03 | Yönetici kontrol merkezi | P1 | panel | `/panel/yonetici` | ⬜ bekliyor | — | kaynak: crm-panel-yonetici (koru), gavia-panel (birlestir) |
-| GLB-10 | Kişisel notlar | P1 | liste | `/notlarim` | ⬜ bekliyor | — | sıfırdan |
-| GLB-11 | Yeni kişisel not | P1 | form | `/notlarim/yeni` | ⬜ bekliyor | — | sıfırdan |
-| GLB-12 | Profilim | P1 | detay | `/profilim` | ⬜ bekliyor | — | kaynak: crm-ayarlar-bildirim-tercih (birlestir), crm-ayarlar-hesap (birlestir), crm-ayarlar-profil (koru) |
-| GLB-13 | İşlem geçmişim | P2 | liste | `/profilim/islemler` | ⬜ bekliyor | — | sıfırdan |
-| SET-01 | Şirketler | P0 | detay | `/ayarlar/sirketler` | ⬜ bekliyor | — | kaynak: crm-ayarlar-coklu-firma (birlestir), gavia-firma-detay (koru), gavia-firma-form (birlestir), gavia-firmalar (koru) |
-| SET-02 | Şirket ayarları | P0 | form | `/ayarlar/sirket` | ⬜ bekliyor | — | kaynak: crm-ayarlar-firma (koru) |
-| SET-03 | Kullanıcılar | P0 | detay | `/ayarlar/kullanicilar` | ⬜ bekliyor | — | kaynak: crm-ayarlar-kullanici-davet (birlestir), crm-ayarlar-kullanici-detay (koru), crm-ayarlar-kullanicilar (koru) |
-| SET-04 | Roller ve yetkiler | P0 | matris | `/ayarlar/roller` | ⬜ bekliyor | — | kaynak: crm-ayarlar-rol-detay (birlestir), crm-ayarlar-rol-form (birlestir), crm-ayarlar-rol-kullanicilar (birlestir), crm-ayarlar-rol-matris (koru), crm-ayarlar-roller (koru) |
-| SET-05 | Veri kapsamı kuralları | P0 | matris | `/ayarlar/veri-kapsami` | ⬜ bekliyor | — | kaynak: crm-ayarlar-yetkili-form (birlestir) |
-| SET-16 | Denetim izi | P0 | detay | `/ayarlar/denetim-izi` | ⬜ bekliyor | — | kaynak: crm-ayarlar-log-detay (koru), crm-ayarlar-log (koru) |
-| SET-18 | Özellik bayrakları | P2 | form | `/ayarlar/ozellikler` | ⬜ bekliyor | — | kaynak: crm-ayarlar-modul-kilitli (birlestir), crm-ayarlar-moduller (birlestir) |
+| AUTH-01 | Giriş | P0 | kimlik | `/giris` | ✅ doğrulandı | faz1 | İki panelli giriş; sunucu oturumu, HttpOnly çerez, hız sınırı, var/yok sızdırmayan hata |
+| AUTH-02 | Şifremi unuttum | P0 | form | `/sifre-unuttum` | ✅ doğrulandı | faz1 | Sıfırlama isteği — var/yok sızdırmaz, önceki tokenleri geçersizler |
+| AUTH-03 | Şifre sıfırla | P0 | form | `/sifre-sifirla/:token` | ✅ doğrulandı | faz1 | Tek kullanımlık + süreli token, parola politikası, tüm oturumları kapatır |
+| AUTH-04 | Davet kabul | P0 | form | `/davet/:token` | ✅ doğrulandı | faz1 | Davet + rol/kapsam ataması, KVKK onayı zorunlu |
+| AUTH-05 | MFA doğrulama | P0 | form | `/mfa` | ✅ doğrulandı | faz1 | TOTP (RFC 6238), ±1 pencere, 5 dk süreli ikinci adım tokeni |
+| AUTH-06 | İlk giriş kurulumu | P0 | sihirbaz | `/ilk-kurulum` | ✅ doğrulandı | faz1 | İlk kurulum sihirbazı — kurulum bitmeden uygulamaya erişilemez |
+| AUTH-07 | Oturum süresi doldu | P0 | durum | `/oturum-sonlandi` | ✅ doğrulandı | faz1 | Oturum sonu durumu |
+| AUTH-08 | Yetkisiz erişim | P0 | durum | `/403` | ✅ doğrulandı | faz1 | 403 — kayıt ve eylem düzeyi yetki reddi, istek kimliği ile |
+| AUTH-09 | Sayfa bulunamadı | P1 | durum | `/404` | ✅ doğrulandı | faz1 | 404 — dürüst bulunamadı, WIP metni yok |
+| AUTH-10 | Bakım / servis kesintisi | P1 | durum | `/bakim` | ✅ doğrulandı | faz1 | Bakım/kesinti durumu, olay kodu |
+| GLB-01 | Rol bazlı ana panel | P0 | panel | `/panel` | ✅ doğrulandı | faz1 | Rol bazlı panel — KPI ve erişim bağlamı gerçek veriden |
+| GLB-10 | Kişisel notlar | P1 | liste | `/notlarim` | ✅ doğrulandı | faz1 | Kişisel notlar — ABAC kendi_kaydi kuralının gerçek uygulaması |
+| GLB-11 | Yeni kişisel not | P1 | form | `/notlarim/yeni` | ✅ doğrulandı | faz1 | Yeni not formu — idempotency, CSRF, alan bazlı hata özeti |
+| GLB-12 | Profilim | P1 | detay | `/profilim` | ✅ doğrulandı | faz1 | Profil ve oturum listesi |
+| GLB-13 | İşlem geçmişim | P2 | liste | `/profilim/islemler` | ✅ doğrulandı | faz1 | Kullanıcının kendi denetim izi |
+| SET-01 | Şirketler | P0 | detay | `/ayarlar/sirketler` | ✅ doğrulandı | faz1 | Tenant ve tüzel kişi ayrımı |
+| SET-02 | Şirket ayarları | P0 | form | `/ayarlar/sirket` | ✅ doğrulandı | faz1 | Şirket ayarları — optimistic concurrency (409) ile korumalı |
+| SET-03 | Kullanıcılar | P0 | detay | `/ayarlar/kullanicilar` | ✅ doğrulandı | faz1 | Kullanıcı listesi + davet akışı |
+| SET-04 | Roller ve yetkiler | P0 | matris | `/ayarlar/roller` | ✅ doğrulandı | faz1 | Rol matrisi — yetkiler manifestten türetiliyor |
+| SET-05 | Veri kapsamı kuralları | P0 | matris | `/ayarlar/veri-kapsami` | ✅ doğrulandı | faz1 | Veri kapsamı (ABAC) kuralları |
+| SET-16 | Denetim izi | P0 | detay | `/ayarlar/denetim-izi` | ✅ doğrulandı | faz1 | Denetim izi + hash zinciri doğrulaması |
+| SET-18 | Özellik bayrakları | P2 | form | `/ayarlar/ozellikler` | ✅ doğrulandı | faz1 | Özellik bayrakları — demo.* üretimde kod düzeyinde kilitli |
 
 ## Faz 2 — 14 sayfa ailesi
 
@@ -50,7 +48,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | GLB-04 | Onay kutum | P0 | liste | `/onaylar` | ⬜ bekliyor | — | kaynak: crm-panel-onaylar (koru) |
 | GLB-05 | Onay detayı | P0 | detay | `/onaylar/:id` | ⬜ bekliyor | — | kaynak: crm-sistem-onay-durum (birlestir) |
-| GLB-06 | Bildirim merkezi | P0 | liste | `/bildirimler` | ⬜ bekliyor | — | kaynak: crm-panel-bildirimler (koru) |
+| GLB-06 | Bildirim merkezi | P0 | liste | `/bildirimler` | ✅ doğrulandı | faz1 | Bildirim merkezi — liste kalıbı, sunucu sayfalama |
 | GLB-09 | Duyurular | P2 | detay | `/duyurular` | ⬜ bekliyor | — | kaynak: crm-panel-duyurular (koru) |
 | DOC-01 | Doküman merkezi | P0 | liste | `/dokumanlar` | ⬜ bekliyor | — | sıfırdan |
 | DOC-02 | Yeni doküman | P0 | form | `/dokumanlar/yeni` | ⬜ bekliyor | — | kaynak: crm-personel-evrak-form (birlestir) |
@@ -157,10 +155,12 @@
 | HR-08 | Puantaj | P0 | form | `/puantaj` | ⬜ bekliyor | — | kaynak: crm-operasyon-puantaj-form (birlestir), crm-operasyon-puantaj (koru) |
 | HR-09 | Puantaj dönem kapanışı | P0 | onay | `/puantaj/donem-kapanis` | ⬜ bekliyor | — | sıfırdan |
 
-## Faz 4 — 67 sayfa ailesi
+## Faz 4 — 69 sayfa ailesi
 
 | Kod | Sayfa | Öncelik | Kalıp | Rota | Durum | Commit | Not |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| GLB-02 | Günlük özet | P1 | panel | `/panel/gunluk-ozet` | ⬜ bekliyor | — | K-017: veri kaynağı modülleri (Faz 3-4) gelmeden boş kabuk olurdu → Faz 4 |
+| GLB-03 | Yönetici kontrol merkezi | P1 | panel | `/panel/yonetici` | ⬜ bekliyor | — | K-017: portföy/nakit verisi Faz 4 ile gelir → Faz 4 |
 | HR-10 | İzin talepleri | P0 | form | `/izinler` | ⬜ bekliyor | — | kaynak: crm-personel-izin-detay (birlestir), crm-personel-izin-form (birlestir), crm-personel-izin (koru) |
 | HR-11 | Avans talepleri | P0 | form | `/avanslar` | ⬜ bekliyor | — | kaynak: crm-personel-avans-detay (birlestir), crm-personel-avans-form (birlestir), crm-personel-avans (koru) |
 | HR-12 | Sağlık ve uygunluk | P1 | detay | `/personel-saglik` | ⬜ bekliyor | — | sıfırdan |

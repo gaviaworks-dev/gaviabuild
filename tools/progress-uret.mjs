@@ -22,7 +22,8 @@ const FAZ = (kod) => {
   const no = Number(noStr);
   switch (ek) {
     case 'AUTH': return 1;
-    case 'GLB':  return no <= 3 ? 1 : no <= 6 ? 2 : no === 7 ? 6 : no === 8 ? 3 : no === 9 ? 2 : 1;
+    /* GLB-02/03 panoları besleyen veri Faz 3-4'te oluşur (KARARLAR K-017). */
+    case 'GLB':  return no === 1 ? 1 : no <= 3 ? 4 : no <= 6 ? 2 : no === 7 ? 6 : no === 8 ? 3 : no === 9 ? 2 : 1;
     case 'SET':  return no <= 5 ? 1 : no === 16 ? 1 : no === 18 ? 1 : no <= 10 ? 2 : no === 11 ? 2 : no === 12 ? 2 : no <= 15 ? 5 : no === 19 ? 5 : 6;
     case 'PRJ':  return 3;
     case 'SITE': return 3;
