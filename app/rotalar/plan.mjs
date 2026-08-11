@@ -1,14 +1,14 @@
 /* ============================================================================
-   İŞ PROGRAMI ROTALARI — PLAN-01..06, PLAN-09, PLAN-10, PLAN-11
+   İŞ PROGRAMI ROTALARI — PLAN-01..12
    ----------------------------------------------------------------------------
    PLAN-01 kabul: WBS ağırlıkları 100 değilse baz çizgi ONAYA GÖNDERİLEMEZ.
    PLAN-02 kabul: proje ilerlemesi yalnız ONAYLI alt ilerlemelerden ve seçili
    baz çizgi sürümünden hesaplanır.
    ========================================================================== */
-import { html, yonlendir } from '../cekirdek/http.mjs';
+import { html, yonlendir, yanitla } from '../cekirdek/http.mjs';
 import { kimlik } from '../cekirdek/kimlikler.mjs';
 import { simdi, tarih, gunAnahtari, gunBaslangici } from '../cekirdek/zaman.mjs';
-import { UygulamaHatasi, DogrulamaHatasi, GecisIzinsiz } from '../cekirdek/hata.mjs';
+import { UygulamaHatasi, DogrulamaHatasi, GecisIzinsiz, Cakisma } from '../cekirdek/hata.mjs';
 import { idempotent } from '../cekirdek/idempotency.mjs';
 import * as onayMotoru from '../moduller/isakisi/onay.mjs';
 import {
@@ -198,6 +198,101 @@ export function kur(y, ekranRota) {
       } catch (err) {
         if (!(err instanceof UygulamaHatasi)) throw err;
         return bazCizgiSayfasi(ctx, params.id, { hata: hataNesnesi(err), durum: err.durum });
+      }
+    },
+  });
+
+  /* ================= PLAN-05 Aktivite formu ============================ */
+  ekranRota(y, 'PLAN-05', {
+    get: (ctx, _g, params) => aktiviteSayfasi(ctx, params.id),
+    post: (ctx, govde, params) => {
+      const e = ekranNesnesi('PLAN-05');
+      yetkiZorunlu(ctx, `${e.kod}:olustur`);
+      csrfZorunlu(ctx, govde);
+      const program = kaydiAl(ctx, 'is_programi', 'is_programi', params.id);
+      try {
+        return aktiviteEkle(ctx, program, govde);
+      } catch (err) {
+        if (!(err instanceof UygulamaHatasi)) throw err;
+        return aktiviteSayfasi(ctx, params.id, { hata: hataNesnesi(err), durum: err.durum, deger: govde });
+      }
+    },
+  });
+
+  /* ================= PLAN-07 Program revizyonu ========================= */
+  ekranRota(y, 'PLAN-07', {
+    get: (ctx, _g, params) => revizyonSayfasi(ctx, params.id),
+    post: (ctx, govde, params) => {
+      const e = ekranNesnesi('PLAN-07');
+      yetkiZorunlu(ctx, `${e.kod}:karar_ver`);
+      csrfZorunlu(ctx, govde);
+      const program = kaydiAl(ctx, 'is_programi', 'is_programi', params.id);
+      try {
+        const yeni = revizyonAc(ctx, program, govde);
+        return yonlendir(ctx, `/is-programlari/${yeni.id}?revizyon=1`);
+      } catch (err) {
+        if (!(err instanceof UygulamaHatasi)) throw err;
+        return revizyonSayfasi(ctx, params.id, { hata: hataNesnesi(err), durum: err.durum });
+      }
+    },
+  });
+
+  /* ================= PLAN-08 Haftalık look-ahead ======================= */
+  ekranRota(y, 'PLAN-08', {
+    get: (ctx, _g, params) => lookAheadSayfasi(ctx, params.id),
+    post: (ctx, govde, params) => {
+      const e = ekranNesnesi('PLAN-08');
+      yetkiZorunlu(ctx, `${e.kod}:olustur`);
+      csrfZorunlu(ctx, govde);
+      const program = kaydiAl(ctx, 'is_programi', 'is_programi', params.id);
+      try {
+        const mesaj = lookAheadGorevi(ctx, program, govde);
+        return yonlendir(ctx, `/is-programlari/${program.id}/look-ahead?islem=${encodeURIComponent(mesaj)}`);
+      } catch (err) {
+        if (!(err instanceof UygulamaHatasi)) throw err;
+        return lookAheadSayfasi(ctx, params.id, { hata: hataNesnesi(err), durum: err.durum });
+      }
+    },
+  });
+
+  /* ================= PLAN-10 İlerleme doğrulama ======================== */
+  ekranRota(y, 'PLAN-10', {
+    get: (ctx, _g, params) => ilerlemeDogrulaSayfasi(ctx, params.id),
+    post: (ctx, govde, params) => {
+      const e = ekranNesnesi('PLAN-10');
+      yetkiZorunlu(ctx, `${e.kod}:karar_ver`);
+      csrfZorunlu(ctx, govde);
+      try {
+        const sonuc = ilerlemeDogrula(ctx, params.id, govde.karar, govde.gerekce);
+        return yonlendir(ctx, `/ilerleme/${params.id}/dogrula?karar=${sonuc}`);
+      } catch (err) {
+        if (!(err instanceof UygulamaHatasi)) throw err;
+        return ilerlemeDogrulaSayfasi(ctx, params.id, { hata: hataNesnesi(err), durum: err.durum });
+      }
+    },
+  });
+
+  /* ================= PLAN-12 İçe/dışa aktarım ========================== */
+  ekranRota(y, 'PLAN-12', {
+    get: (ctx, _g, params) => {
+      if (ctx.sorgu.get('disa') === 'csv') return programCsvDisaAktar(ctx, params.id);
+      return aktarimSayfasi(ctx, params.id);
+    },
+    post: (ctx, govde, params) => {
+      const e = ekranNesnesi('PLAN-12');
+      yetkiZorunlu(ctx, `${e.kod}:olustur`);
+      csrfZorunlu(ctx, govde);
+      const program = kaydiAl(ctx, 'is_programi', 'is_programi', params.id);
+      try {
+        const onizleme = csvOnizle(ctx, program, govde.csv || '');
+        if (govde._eylem !== 'uygula') {
+          return aktarimSayfasi(ctx, params.id, { onizleme, girdi: govde.csv });
+        }
+        const sonuc = csvUygula(ctx, program, onizleme);
+        return yonlendir(ctx, `/is-programlari/${program.id}/aktarim?ice=${sonuc.wbs}_${sonuc.aktivite}`);
+      } catch (err) {
+        if (!(err instanceof UygulamaHatasi)) throw err;
+        return aktarimSayfasi(ctx, params.id, { hata: hataNesnesi(err), durum: err.durum, girdi: govde.csv });
       }
     },
   });
@@ -700,4 +795,596 @@ function ilerlemeFormu(ctx, { deger = {}, hata = null }) {
     }],
     eylemler: B.btn('Kaydet', { tur: 'acc', gonder: true, ikon: 'fa-floppy-disk' }),
   });
+}
+
+/* ==========================================================================
+   PLAN-05 — Aktivite formu
+   ========================================================================== */
+function aktiviteSayfasi(ctx, id, { hata = null, durum = 200, deger = {} } = {}) {
+  const e = ekranNesnesi('PLAN-05');
+  yetkiZorunlu(ctx, e.yetki);
+  const { program, dugumler, aktiviteler } = programVerisi(ctx, id);
+  const kilit = program.baz_cizgi
+    ? 'Baz çizgi dondurulmuş; yeni aktivite ancak program revizyonu ile eklenir (§5.4).'
+    : ['onaya_gonderildi', 'incelemede'].includes(program.durum) ? 'Program onayda; karar verilene kadar değiştirilemez.' : null;
+
+  const icerik = h`
+${hata ? B.hataOzeti(hata) : ''}
+${kilit ? B.sonucSeridi({ tur: 'warn', baslik: 'Program kilitli', aciklama: kilit }) : ''}
+${B.detayOzetSeridi({
+    kod: program.kod, baslik: `${program.ad} — yeni aktivite`, durum: program.durum, surum: program.surum_no,
+    bilgiler: [
+      { etiket: 'WBS düğümü', deger: sayi(dugumler.length) },
+      { etiket: 'Aktivite', deger: sayi(aktiviteler.length) },
+      { etiket: 'Baz çizgi', deger: program.baz_cizgi ? `donduruldu ${tarih(program.baz_cizgi_tarih)}` : 'açık' },
+    ],
+    birincilEylem: B.btn('Programa dön', { rota: `/is-programlari/${program.id}?sekme=wbs` }),
+  })}
+${kilit ? '' : B.form({
+    rota: `/is-programlari/${program.id}/aktiviteler/yeni`, csrf: csrfAlani(ctx), hatalar: hata,
+    idempotencyAnahtari: kimlik('idempotency'),
+    bolumler: [
+      { baslik: 'Aktivite kimliği',
+        aciklama: 'Aktivite bir WBS düğümüne bağlıdır; ağırlığı o düğümün içinde %100 tamamlamalıdır.',
+        alanlar: h`
+          ${B.alan({ ad: 'aktiviteKodu', etiket: 'Aktivite kodu', zorunlu: true,
+            deger: deger.aktiviteKodu || '', hata: hata?.alanlar?.aktiviteKodu })}
+          ${B.alan({ ad: 'aktiviteAdi', etiket: 'Aktivite adı', zorunlu: true, genis: true,
+            deger: deger.aktiviteAdi || '', hata: hata?.alanlar?.aktiviteAdi })}
+          ${B.alan({ ad: 'wbsId', etiket: 'WBS düğümü', zorunlu: true, deger: deger.wbsId || '',
+            hata: hata?.alanlar?.wbsId,
+            secenekler: [{ deger: '', etiket: 'Seçin…' },
+              ...dugumler.map((d) => ({ deger: d.id, etiket: `${d.kod} — ${d.ad}` }))] })}
+          ${B.alan({ ad: 'aktiviteAgirligi', etiket: 'Ağırlık (%)', deger: deger.aktiviteAgirligi || '',
+            hata: hata?.alanlar?.aktiviteAgirligi, ipucu: 'Bağlı olduğu WBS düğümü içindeki payı.' })}` },
+      { baslik: 'Ölçüm ve takvim',
+        aciklama: 'İlerleme ölçüm yöntemi sonradan değişmez; kümülatif ilerleme bu yönteme göre yorumlanır.',
+        alanlar: h`
+          ${B.alan({ ad: 'yontem', etiket: 'Ölçüm yöntemi', deger: deger.yontem || 'miktar', secenekler: YONTEMLER })}
+          ${B.alan({ ad: 'birim', etiket: 'Birim', deger: deger.birim || '', ipucu: 'Örn. m3, m2, ton' })}
+          ${B.alan({ ad: 'planlananMiktar', etiket: 'Planlanan miktar', deger: deger.planlananMiktar || '' })}
+          ${B.alan({ ad: 'aktiviteBaslangic', etiket: 'Planlanan başlangıç', tur: 'date',
+            deger: deger.aktiviteBaslangic || '' })}
+          ${B.alan({ ad: 'aktiviteBitis', etiket: 'Planlanan bitiş', tur: 'date', deger: deger.aktiviteBitis || '' })}
+          ${B.alan({ ad: 'aktiviteSorumlusu', etiket: 'Sorumlu', deger: deger.aktiviteSorumlusu || '',
+            secenekler: [{ deger: '', etiket: 'Seçin…' },
+              ...sorgu(`SELECT id, ad_soyad FROM kullanici WHERE tenant_id = ? AND durum = 'aktif' ORDER BY ad_soyad`,
+                ctx.tenant.id).map((k) => ({ deger: k.id, etiket: k.ad_soyad }))] })}` },
+    ],
+    eylemler: h`${B.btn('Vazgeç', { rota: `/is-programlari/${program.id}?sekme=wbs` })}
+      ${B.btn('Aktiviteyi ekle', { tur: 'acc', gonder: true, ikon: 'fa-plus' })}`,
+  })}`;
+  return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: program.kod, baslik: program.ad }));
+}
+
+/* ==========================================================================
+   PLAN-07 — Program revizyonu (yeni sürüm; önceki sürüm DEĞİŞMEZ)
+   ========================================================================== */
+/** Onaylı programın yeni sürümünü açar; WBS ve aktiviteler kopyalanır. */
+function revizyonAc(ctx, program, govde) {
+  if (!program.baz_cizgi) {
+    throw GecisIzinsiz('Yalnız baz çizgisi dondurulmuş program revize edilir. '
+      + 'Baz çizgi öncesi düzenleme WBS ekranından yapılır.');
+  }
+  const gerekce = String(govde.gerekce || '').trim();
+  if (!gerekce) {
+    throw DogrulamaHatasi('Revizyon gerekçesi zorunludur.',
+      { alanlar: { gerekce: ['Neden yeni sürüm açıldığını yazın.'] } });
+  }
+  const acikRevizyon = tek(
+    `SELECT * FROM is_programi WHERE tenant_id = ? AND kod = ? AND durum <> 'iptal' AND baz_cizgi = 0`,
+    ctx.tenant.id, program.kod);
+  if (acikRevizyon) {
+    throw Cakisma(`Bu programın ${acikRevizyon.surum_no}. sürümü hâlâ açık; önce onu sonuçlandırın.`);
+  }
+
+  return islem(() => {
+    const enBuyuk = Number(tek(
+      'SELECT MAX(surum_no) AS n FROM is_programi WHERE tenant_id = ? AND kod = ?',
+      ctx.tenant.id, program.kod)?.n ?? program.surum_no);
+    const yeniId = kimlik('plan');
+    calistir(`INSERT INTO is_programi (id, tenant_id, proje_id, santiye_id, kod, ad, surum_no, baz_cizgi,
+                calisma_gunleri, baslangic, bitis, durum, onceki_surum_id, revizyon_gerekcesi,
+                olusturan, olusturuldu)
+              VALUES (?,?,?,?,?,?,?,0,?,?,?, 'taslak', ?,?,?,?)`,
+      yeniId, ctx.tenant.id, program.proje_id, program.santiye_id, program.kod, program.ad,
+      enBuyuk + 1, program.calisma_gunleri,
+      govde.baslangic ? gunBaslangici(govde.baslangic) : program.baslangic,
+      govde.bitis ? gunBaslangici(govde.bitis) : program.bitis,
+      program.id, gerekce, ctx.kullanici.id, simdi());
+
+    /* WBS ağacı kopyalanır; üst-alt bağı yeni kimliklerle yeniden kurulur. */
+    const harita = new Map();
+    const dugumler = sorgu('SELECT * FROM wbs WHERE program_id = ? ORDER BY seviye, kod', program.id);
+    for (const d of dugumler) {
+      const id = kimlik('wbs');
+      harita.set(d.id, id);
+      calistir(`INSERT INTO wbs (id, tenant_id, program_id, ust_id, kod, ad, agirlik, seviye,
+                  sorumlu_id, maliyet_kodu, olusturan, olusturuldu)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id, ctx.tenant.id, yeniId, d.ust_id ? harita.get(d.ust_id) : null, d.kod, d.ad,
+        d.agirlik, d.seviye, d.sorumlu_id, d.maliyet_kodu, ctx.kullanici.id, simdi());
+    }
+    const aktiviteler = sorgu('SELECT * FROM aktivite WHERE program_id = ? ORDER BY kod', program.id);
+    for (const a of aktiviteler) {
+      calistir(`INSERT INTO aktivite (id, tenant_id, program_id, wbs_id, kod, ad, yontem, birim,
+                  planlanan_miktar, agirlik, baslangic, bitis, sure_gun, onculler, sorumlu_id,
+                  olusturan, olusturuldu)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        kimlik('aktivite'), ctx.tenant.id, yeniId, harita.get(a.wbs_id), a.kod, a.ad, a.yontem,
+        a.birim, a.planlanan_miktar, a.agirlik, a.baslangic, a.bitis, a.sure_gun, a.onculler,
+        a.sorumlu_id, ctx.kullanici.id, simdi());
+    }
+
+    audit.yaz({ tenantId: ctx.tenant.id, kullaniciId: ctx.kullanici.id, istekId: ctx.istekId, ip: ctx.ip,
+      nesne: 'is_programi', nesneId: yeniId, eylem: 'revizyon_acildi', gerekce,
+      onceki: { kaynakSurum: program.surum_no, kaynakId: program.id },
+      sonraki: { surumNo: enBuyuk + 1, wbs: dugumler.length, aktivite: aktiviteler.length } });
+    return { id: yeniId, surum_no: enBuyuk + 1 };
+  });
+}
+
+function revizyonSayfasi(ctx, id, { hata = null, durum = 200 } = {}) {
+  const e = ekranNesnesi('PLAN-07');
+  yetkiZorunlu(ctx, e.yetki);
+  const program = kaydiAl(ctx, 'is_programi', 'is_programi', id);
+  const surumler = sorgu(
+    `SELECT * FROM is_programi WHERE tenant_id = ? AND kod = ? ORDER BY surum_no DESC`,
+    ctx.tenant.id, program.kod);
+  const acikRevizyon = surumler.find((p) => !p.baz_cizgi && p.durum !== 'iptal');
+  const acilabilir = !!program.baz_cizgi && !acikRevizyon;
+
+  const icerik = h`
+${hata ? B.hataOzeti(hata) : ''}
+${B.detayOzetSeridi({
+    kod: program.kod, baslik: `${program.ad} — revizyon`, durum: program.durum, surum: program.surum_no,
+    bilgiler: [
+      { etiket: 'Baz çizgi', deger: program.baz_cizgi ? tarih(program.baz_cizgi_tarih) : 'yok' },
+      { etiket: 'Sürüm sayısı', deger: sayi(surumler.length) },
+      { etiket: 'Onaylı ilerleme', deger: yuzdeMetni(programIlerlemesi(program.id)) },
+    ],
+    birincilEylem: B.btn('Programa dön', { rota: `/is-programlari/${program.id}` }),
+  })}
+<div class="dash-cols">
+  <div class="gv-card">
+    <div class="gc-head"><div class="gc-title"><b>Sürüm geçmişi</b>
+      <span>Onaylı sürüm yerinde değiştirilmez; revizyon YENİ sürüm açar (kural 6).</span></div></div>
+    <div class="gc-body flush">${B.tablo({
+    satirlar: surumler,
+    satirRota: (r) => `/is-programlari/${r.id}`,
+    bosDurum: { baslik: 'Sürüm yok' },
+    sutunlar: [
+      { ad: 'surum_no', etiket: 'Sürüm', govde: (r) => h`<b>${r.surum_no}</b>${
+        r.id === program.id ? h` ${B.isaret('görüntülenen', 'info')}` : ''}` },
+      { ad: 'durum', etiket: 'Durum', govde: (r) => B.rozet(r.durum) },
+      { ad: 'baz_cizgi', etiket: 'Baz çizgi', govde: (r) => (r.baz_cizgi
+        ? B.isaret(tarih(r.baz_cizgi_tarih), 'ok') : h`<span class="muted">açık</span>`) },
+      { ad: 'ilerleme', etiket: 'Onaylı ilerleme', hizala: 'sag',
+        govde: (r) => yuzdeMetni(programIlerlemesi(r.id)) },
+      { ad: 'revizyon_gerekcesi', etiket: 'Revizyon gerekçesi', govde: (r) => r.revizyon_gerekcesi || '—' },
+    ],
+  })}</div>
+  </div>
+  <div class="gv-side-stack">
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><b>Yeni sürüm aç</b>
+        <span>WBS ve aktiviteler kopyalanır; ilerleme kayıtları eski sürümde kalır.</span></div></div>
+      <div class="gc-body">
+        ${!program.baz_cizgi ? B.sonucSeridi({ tur: 'warn', baslik: 'Bu sürümün baz çizgisi yok',
+    aciklama: 'Revizyon yalnız dondurulmuş baz çizgi üzerinden açılır; bu sürüm hâlâ düzenlenebilir.' }) : ''}
+        ${acikRevizyon ? B.sonucSeridi({ tur: 'warn', baslik: `Sürüm ${acikRevizyon.surum_no} açık`,
+    aciklama: 'Aynı anda birden fazla açık revizyon olamaz.',
+    kayitRota: `/is-programlari/${acikRevizyon.id}` }) : ''}
+        ${acilabilir && yetkiVar(ctx, 'PLAN-07:karar_ver') ? h`
+        <form method="post" action="/is-programlari/${program.id}/revizyon" data-gform="1">
+          ${ham(csrfAlani(ctx))}
+          ${B.alan({ ad: 'gerekce', etiket: 'Revizyon gerekçesi', tur: 'metin', zorunlu: true,
+    ipucu: 'Değişiklik emri, süre uzatımı veya kapsam değişikliği referansı.' })}
+          ${B.alan({ ad: 'baslangic', etiket: 'Yeni başlangıç', tur: 'date',
+    deger: program.baslangic ? gunAnahtari(program.baslangic) : '' })}
+          ${B.alan({ ad: 'bitis', etiket: 'Yeni bitiş', tur: 'date',
+    deger: program.bitis ? gunAnahtari(program.bitis) : '' })}
+          <div style="margin-top:12px">${B.btn('Revizyon sürümü aç',
+    { tur: 'acc', gonder: true, ikon: 'fa-code-branch' })}</div>
+        </form>` : ''}
+      </div>
+    </div>
+  </div>
+</div>`;
+  return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: program.kod, baslik: program.ad }));
+}
+
+/* ==========================================================================
+   PLAN-08 — Haftalık look-ahead
+   ========================================================================== */
+const HAFTA_MS = 7 * 86_400_000;
+
+function lookAheadGorevi(ctx, program, govde) {
+  const a = tek('SELECT * FROM aktivite WHERE id = ? AND program_id = ?', govde.aktiviteId, program.id);
+  if (!a) throw DogrulamaHatasi('Aktivite bulunamadı.');
+  const mevcut = tek(
+    `SELECT * FROM gorev WHERE tenant_id = ? AND kaynak_nesne = 'aktivite' AND kaynak_id = ?
+       AND durum NOT IN ('tamamlandi','iptal')`, ctx.tenant.id, a.id);
+  if (mevcut) throw Cakisma(`Bu aktivite için açık görev zaten var: ${mevcut.kod}.`);
+  /* Görev TASLAK açılır; durumu ve sorumluyu kullanıcı burada seçmez. */
+  const kayit = kayitOlustur(ctx, { tablo: 'gorev', nesne: 'gorev', kodNesnesi: 'gorev',
+    alanlar: { id: kimlik('gorev'), baslik: `${a.kod} — ${a.ad}`,
+      aciklama: `Look-ahead penceresinde planlanan aktivite (${program.kod} s.${program.surum_no}).`,
+      proje_id: program.proje_id, santiye_id: program.santiye_id,
+      termin: a.bitis, oncelik: 'normal', durum: 'taslak',
+      kaynak_nesne: 'aktivite', kaynak_id: a.id } });
+  return `${kayit.kod} görevi açıldı (${a.kod})`;
+}
+
+function lookAheadSayfasi(ctx, id, { hata = null, durum = 200 } = {}) {
+  const e = ekranNesnesi('PLAN-08');
+  yetkiZorunlu(ctx, e.yetki);
+  const program = kaydiAl(ctx, 'is_programi', 'is_programi', id);
+  const hafta = Math.min(12, Math.max(1, Number(ctx.sorgu.get('hafta')) || 6));
+  const baslangicGun = ctx.sorgu.get('baslangic') || gunAnahtari(simdi());
+  const bas = gunBaslangici(baslangicGun);
+  const son = bas + hafta * HAFTA_MS;
+
+  const aktiviteler = sorgu(
+    `SELECT a.*, w.kod AS wbs_kod, w.ad AS wbs_ad FROM aktivite a
+       JOIN wbs w ON w.id = a.wbs_id
+      WHERE a.program_id = ? AND a.baslangic IS NOT NULL
+        AND a.baslangic < ? AND (a.bitis IS NULL OR a.bitis >= ?)
+      ORDER BY a.baslangic, a.kod`, program.id, son, bas);
+
+  /* Haftalık kolonlar — pencere sunucuda hesaplanır, istemci takvim kurmaz. */
+  const haftalar = Array.from({ length: hafta }, (_, i) => ({
+    no: i + 1, bas: bas + i * HAFTA_MS, son: bas + (i + 1) * HAFTA_MS,
+  }));
+
+  const satirlar = aktiviteler.map((a) => {
+    const gorev = tek(
+      `SELECT kod, id, durum FROM gorev WHERE tenant_id = ? AND kaynak_nesne = 'aktivite' AND kaynak_id = ?
+        ORDER BY olusturuldu DESC LIMIT 1`, ctx.tenant.id, a.id);
+    return { ...a, ilerleme: aktiviteIlerlemesi(a.id), gorev };
+  });
+
+  const icerik = h`
+${hata ? B.hataOzeti(hata) : ''}
+${ctx.sorgu.get('islem') ? B.sonucSeridi({ tur: 'ok', baslik: ctx.sorgu.get('islem') }) : ''}
+${B.detayOzetSeridi({
+    kod: program.kod, baslik: `${program.ad} — look-ahead`, durum: program.durum, surum: program.surum_no,
+    bilgiler: [
+      { etiket: 'Pencere', deger: `${hafta} hafta` },
+      { etiket: 'Aralık', deger: `${tarih(bas)} → ${tarih(son)}` },
+      { etiket: 'Penceredeki aktivite', deger: sayi(aktiviteler.length) },
+    ],
+    birincilEylem: B.btn('Programa dön', { rota: `/is-programlari/${program.id}` }),
+  })}
+${B.filtreBari({ rota: `/is-programlari/${program.id}/look-ahead`, sorgu: ctx.sorgu, aramaYer: 'Aktivite ara…',
+    filtreler: [{ ad: 'hafta', etiket: 'Pencere',
+      secenekler: [3, 4, 6, 8, 12].map((n) => ({ deger: String(n), etiket: `${n} hafta` })) }] })}
+<div class="gv-card">
+  <div class="gc-head"><div class="gc-title"><b>Haftalık plan penceresi</b>
+    <span>Pencerede başlayan/süren aktiviteler; kısıt yerine gerçek görev açılır (§7 bağ).</span></div></div>
+  <div class="gc-body flush">${B.tablo({
+    satirlar,
+    bosDurum: { baslik: 'Bu pencerede aktivite yok', ikon: 'fa-calendar-week',
+      aciklama: 'Aktivitelere planlanan başlangıç/bitiş tarihi girildiğinde burada görünür.' },
+    sutunlar: [
+      { ad: 'kod', etiket: 'Aktivite', govde: (r) => h`<b>${r.kod}</b><br><span class="muted">${r.ad}</span>` },
+      { ad: 'wbs_kod', etiket: 'WBS', govde: (r) => h`${r.wbs_kod}<br><span class="muted">${r.wbs_ad}</span>` },
+      { ad: 'takvim', etiket: 'Planlanan', govde: (r) => h`${r.baslangic ? tarih(r.baslangic) : '—'} →
+        ${r.bitis ? tarih(r.bitis) : '—'}` },
+      ...haftalar.map((w) => ({ ad: `h${w.no}`, etiket: `H${w.no}`, hizala: 'sag',
+        govde: (r) => ((r.baslangic ?? 0) < w.son && (r.bitis ?? Number.MAX_SAFE_INTEGER) >= w.bas
+          ? B.isaret('●', r.bitis && r.bitis < simdi() && r.ilerleme < 100_000 ? 'danger' : 'ok')
+          : h`<span class="muted">·</span>`) })),
+      { ad: 'ilerleme', etiket: 'Onaylı', hizala: 'sag', govde: (r) => yuzdeMetni(r.ilerleme) },
+      { ad: 'gorev', etiket: 'Görev', govde: (r) => (r.gorev
+        ? h`<a href="/gorevler/${r.gorev.id}">${r.gorev.kod}</a><br><span class="muted">${r.gorev.durum}</span>`
+        : (yetkiVar(ctx, 'PLAN-08:olustur')
+          ? h`<form method="post" action="/is-programlari/${program.id}/look-ahead" style="display:inline">
+              ${ham(csrfAlani(ctx))}
+              <input type="hidden" name="aktiviteId" value="${r.id}">
+              <button class="btn btn-ghost btn-sm" type="submit">Görev aç</button></form>`
+          : '—')) },
+    ],
+  })}</div>
+</div>
+${B.veriTarihi(simdi())}`;
+  return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: program.kod, baslik: program.ad }));
+}
+
+/* ==========================================================================
+   PLAN-10 — İlerleme doğrulama
+   ========================================================================== */
+function ilerlemeDogrulaSayfasi(ctx, id, { hata = null, durum = 200 } = {}) {
+  const e = ekranNesnesi('PLAN-10');
+  yetkiZorunlu(ctx, e.yetki);
+  const kayit = kaydiAl(ctx, 'ilerleme', 'ilerleme', id);
+  const aktivite = tek('SELECT * FROM aktivite WHERE id = ?', kayit.aktivite_id);
+  const program = tek('SELECT * FROM is_programi WHERE id = ?', kayit.program_id);
+  const oncekiOnayli = aktiviteIlerlemesi(kayit.aktivite_id, { onayliSadece: true });
+  const kendisi = kayit.olusturan === ctx.kullanici.id;
+  const karar = ctx.sorgu.get('karar');
+  const kararVerilebilir = ['taslak', 'onaya_gonderildi'].includes(kayit.durum) && !kendisi
+    && yetkiVar(ctx, 'PLAN-10:karar_ver');
+
+  const icerik = h`
+${hata ? B.hataOzeti(hata) : ''}
+${karar ? B.sonucSeridi({ tur: karar === 'onaylandi' ? 'ok' : 'warn',
+    baslik: karar === 'onaylandi' ? 'İlerleme doğrulandı' : 'İlerleme reddedildi',
+    aciklama: 'Karar denetim izine yazıldı; yalnız onaylı ilerleme proje yüzdesine katılır.' }) : ''}
+${B.detayOzetSeridi({
+    kod: aktivite?.kod || '—', baslik: aktivite?.ad || 'İlerleme kaydı', durum: kayit.durum, surum: kayit.surum,
+    bilgiler: [
+      { etiket: 'Program', deger: h`<a href="/is-programlari/${program?.id}">${program?.ad || '—'}</a>` },
+      { etiket: 'Dönem', deger: kayit.donem },
+      { etiket: 'Bildirilen kümülatif', deger: yuzdeMetni(kayit.yuzde_binde) },
+      { etiket: 'Önceki onaylı', deger: yuzdeMetni(oncekiOnayli) },
+      { etiket: 'Giren', deger: kullaniciAdi(kayit.olusturan) },
+      { etiket: 'Doğrulayan', deger: kayit.dogrulayan ? kullaniciAdi(kayit.dogrulayan) : '—' },
+    ],
+    birincilEylem: program ? B.btn('Programa dön',
+      { rota: `/is-programlari/${program.id}?sekme=ilerleme` }) : null,
+  })}
+<div class="dash-cols">
+  <div class="gv-card">
+    <div class="gc-head"><div class="gc-title"><b>Kanıt ve açıklama</b>
+      <span>Kanıtsız ilerleme kaydı açılamaz; doğrulama kanıt üzerinden yapılır.</span></div></div>
+    <div class="gc-body">
+      <dl class="gd-grid" style="border-top:0;padding-top:0;margin-top:0">
+        <div><dt>Kanıt</dt><dd>${kayit.kanit || '—'}</dd></div>
+        <div><dt>Gerçekleşen miktar</dt><dd>${kayit.miktar || '—'}</dd></div>
+        <div><dt>Planlanan miktar</dt><dd>${aktivite?.planlanan_miktar || '—'} ${aktivite?.birim || ''}</dd></div>
+        <div><dt>Açıklama</dt><dd>${kayit.aciklama || '—'}</dd></div>
+      </dl>
+    </div>
+  </div>
+  <div class="gv-side-stack">
+    <div class="gv-card">
+      <div class="gc-head"><div class="gc-title"><b>Doğrulama kararı</b>
+        <span>Kendi girdiğiniz ilerlemeyi doğrulayamazsınız (dört göz).</span></div></div>
+      <div class="gc-body">
+        ${kendisi ? B.sonucSeridi({ tur: 'warn', baslik: 'Bu kaydı siz girdiniz',
+    aciklama: 'Doğrulamayı başka bir yetkili yapmalıdır.' }) : ''}
+        ${!['taslak', 'onaya_gonderildi'].includes(kayit.durum)
+    ? B.sonucSeridi({ tur: 'ok', baslik: `Kayıt "${kayit.durum}"`,
+      aciklama: 'Karara bağlanmış ilerleme yeniden doğrulanmaz; düzeltme yeni kayıtla yapılır.' }) : ''}
+        ${kararVerilebilir ? h`
+        <form method="post" action="/ilerleme/${kayit.id}/dogrula" data-gform="1">
+          ${ham(csrfAlani(ctx))}
+          ${B.alan({ ad: 'gerekce', etiket: 'Gerekçe', tur: 'metin',
+    ipucu: 'Ret kararında gerekçe zorunludur.' })}
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+            <button class="btn btn-acc" type="submit" name="karar" value="onayla">
+              Doğrula <span class="muted">→ onaylandı</span></button>
+            <button class="btn btn-danger" type="submit" name="karar" value="reddet">
+              Reddet <span class="muted">→ reddedildi</span></button>
+          </div>
+        </form>` : ''}
+      </div>
+    </div>
+  </div>
+</div>`;
+  return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: aktivite?.kod, baslik: aktivite?.ad || 'İlerleme' }));
+}
+
+/* ==========================================================================
+   PLAN-12 — Program içe/dışa aktarımı (CSV, sıfır bağımlılık)
+   ========================================================================== */
+const CSV_BASLIK = 'tip;kod;ad;ust_kod;agirlik_yuzde;yontem;birim;planlanan_miktar;baslangic;bitis';
+
+const csvKacir = (v) => {
+  const s = String(v ?? '');
+  return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+function csvSatirAyristir(satir) {
+  const alanlar = []; let mevcut = ''; let tirnak = false;
+  for (let i = 0; i < satir.length; i++) {
+    const c = satir[i];
+    if (tirnak) {
+      if (c === '"' && satir[i + 1] === '"') { mevcut += '"'; i++; }
+      else if (c === '"') tirnak = false;
+      else mevcut += c;
+    } else if (c === '"') tirnak = true;
+    else if (c === ';') { alanlar.push(mevcut); mevcut = ''; }
+    else mevcut += c;
+  }
+  alanlar.push(mevcut);
+  return alanlar.map((a) => a.trim());
+}
+
+function programCsvDisaAktar(ctx, id) {
+  const e = ekranNesnesi('PLAN-12');
+  yetkiZorunlu(ctx, `${e.kod}:goruntule`);
+  const program = kaydiAl(ctx, 'is_programi', 'is_programi', id);
+  const dugumler = sorgu('SELECT * FROM wbs WHERE program_id = ? ORDER BY seviye, kod', program.id);
+  const ustKodu = new Map(dugumler.map((d) => [d.id, d.kod]));
+  const aktiviteler = sorgu('SELECT * FROM aktivite WHERE program_id = ? ORDER BY kod', program.id);
+
+  const satirlar = [CSV_BASLIK];
+  for (const d of dugumler) {
+    satirlar.push(['wbs', d.kod, d.ad, d.ust_id ? ustKodu.get(d.ust_id) : '',
+      (d.agirlik / 100).toFixed(2), '', '', '', '', ''].map(csvKacir).join(';'));
+  }
+  for (const a of aktiviteler) {
+    satirlar.push(['aktivite', a.kod, a.ad, ustKodu.get(a.wbs_id) || '',
+      (a.agirlik / 100).toFixed(2), a.yontem, a.birim || '', a.planlanan_miktar || '',
+      a.baslangic ? gunAnahtari(a.baslangic) : '', a.bitis ? gunAnahtari(a.bitis) : '']
+      .map(csvKacir).join(';'));
+  }
+  /* Çıktı künyesi: hangi sürüm, hangi veri tarihi (kural 9 ile aynı ilke). */
+  const kunye = `# ${program.kod} · sürüm ${program.surum_no} · baz çizgi: `
+    + `${program.baz_cizgi ? tarih(program.baz_cizgi_tarih) : 'yok'} · veri tarihi: ${tarih(simdi())}`;
+  islem(() => audit.yaz({ tenantId: ctx.tenant.id, kullaniciId: ctx.kullanici.id, istekId: ctx.istekId,
+    ip: ctx.ip, nesne: 'is_programi', nesneId: program.id, eylem: 'disa_aktarildi',
+    sonraki: { bicim: 'csv', wbs: dugumler.length, aktivite: aktiviteler.length } }));
+  return yanitla(ctx, 200, `${kunye}\n${satirlar.join('\n')}\n`, {
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${program.kod}-s${program.surum_no}.csv"`,
+  });
+}
+
+/** İçe aktarımın KURU ÇALIŞTIRMASI: hiçbir şey yazmaz, satır satır sonuç üretir. */
+function csvOnizle(ctx, program, metin) {
+  bazCizgiKilidi(program);
+  const satirlar = String(metin || '').split(/\r?\n/)
+    .map((s) => s.trim()).filter((s) => s && !s.startsWith('#'));
+  if (!satirlar.length) {
+    throw DogrulamaHatasi('İçe aktarılacak satır bulunamadı.', { alanlar: { csv: ['CSV içeriği boş.'] } });
+  }
+  if (satirlar[0].toLowerCase().startsWith('tip;')) satirlar.shift();
+
+  const mevcutWbs = new Map(sorgu('SELECT kod, id FROM wbs WHERE program_id = ?', program.id)
+    .map((d) => [d.kod, d.id]));
+  const mevcutAkt = new Set(sorgu('SELECT kod FROM aktivite WHERE program_id = ?', program.id).map((a) => a.kod));
+  const yeniWbs = new Set();
+  const sonuc = [];
+
+  satirlar.forEach((satir, i) => {
+    const a = csvSatirAyristir(satir);
+    const [tip, kod, ad, ustKod, agirlik, yontem, birim, miktar, bas, bit] = a;
+    const satirNo = i + 1;
+    const hata = (m) => sonuc.push({ satirNo, tip, kod, ad, sonuc: 'hata', not: m });
+
+    if (!['wbs', 'aktivite'].includes(tip)) return hata(`Bilinmeyen tip: "${tip}". "wbs" veya "aktivite" olmalı.`);
+    if (!kod) return hata('Kod boş olamaz.');
+    if (!ad) return hata('Ad boş olamaz.');
+    let agirlikBinde = 0;
+    try { agirlikBinde = agirlikAyristir(agirlik); } catch { return hata('Ağırlık 0-100 arası olmalı.'); }
+
+    if (tip === 'wbs') {
+      if (mevcutWbs.has(kod) || yeniWbs.has(kod)) return hata(`WBS kodu zaten var: ${kod}`);
+      if (ustKod && !mevcutWbs.has(ustKod) && !yeniWbs.has(ustKod)) {
+        return hata(`Üst WBS bulunamadı: ${ustKod} (üst düğüm kendinden önce gelmeli).`);
+      }
+      yeniWbs.add(kod);
+      return sonuc.push({ satirNo, tip, kod, ad, ustKod, agirlikBinde, sonuc: 'eklenecek', not: '—' });
+    }
+    if (mevcutAkt.has(kod)) return hata(`Aktivite kodu zaten var: ${kod}`);
+    if (!ustKod) return hata('Aktivite için WBS kodu (ust_kod) zorunlu.');
+    if (!mevcutWbs.has(ustKod) && !yeniWbs.has(ustKod)) return hata(`WBS düğümü bulunamadı: ${ustKod}`);
+    if (yontem && !YONTEMLER.some((v) => v.deger === yontem)) return hata(`Geçersiz yöntem: ${yontem}`);
+    mevcutAkt.add(kod);
+    return sonuc.push({ satirNo, tip, kod, ad, ustKod, agirlikBinde,
+      yontem: yontem || 'miktar', birim, miktar, bas, bit, sonuc: 'eklenecek', not: '—' });
+  });
+
+  return { satirlar: sonuc, hataliSayisi: sonuc.filter((r) => r.sonuc === 'hata').length };
+}
+
+/** Uygulama: ÖNİZLEMEDE tek bir hata varsa hiçbir satır yazılmaz (hep ya da hiç). */
+function csvUygula(ctx, program, onizleme) {
+  bazCizgiKilidi(program);
+  if (onizleme.hataliSayisi > 0) {
+    throw DogrulamaHatasi(
+      `${onizleme.hataliSayisi} satır hatalı; içe aktarım kısmi uygulanmaz. Hataları düzeltip yeniden deneyin.`);
+  }
+  return islem(() => {
+    const kodMap = new Map(sorgu('SELECT kod, id, seviye FROM wbs WHERE program_id = ?', program.id)
+      .map((d) => [d.kod, { id: d.id, seviye: d.seviye }]));
+    let w = 0; let a = 0;
+    for (const r of onizleme.satirlar) {
+      if (r.tip !== 'wbs') continue;
+      const ust = r.ustKod ? kodMap.get(r.ustKod) : null;
+      const id = kimlik('wbs');
+      calistir(`INSERT INTO wbs (id, tenant_id, program_id, ust_id, kod, ad, agirlik, seviye, olusturan, olusturuldu)
+                VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        id, ctx.tenant.id, program.id, ust?.id || null, r.kod, r.ad, r.agirlikBinde,
+        ust ? ust.seviye + 1 : 1, ctx.kullanici.id, simdi());
+      kodMap.set(r.kod, { id, seviye: ust ? ust.seviye + 1 : 1 });
+      w++;
+    }
+    for (const r of onizleme.satirlar) {
+      if (r.tip !== 'aktivite') continue;
+      calistir(`INSERT INTO aktivite (id, tenant_id, program_id, wbs_id, kod, ad, yontem, birim,
+                  planlanan_miktar, agirlik, baslangic, bitis, olusturan, olusturuldu)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        kimlik('aktivite'), ctx.tenant.id, program.id, kodMap.get(r.ustKod).id, r.kod, r.ad,
+        r.yontem || 'miktar', r.birim || null, r.miktar || null, r.agirlikBinde,
+        r.bas ? gunBaslangici(r.bas) : null, r.bit ? gunBaslangici(r.bit) : null,
+        ctx.kullanici.id, simdi());
+      a++;
+    }
+    audit.yaz({ tenantId: ctx.tenant.id, kullaniciId: ctx.kullanici.id, istekId: ctx.istekId, ip: ctx.ip,
+      nesne: 'is_programi', nesneId: program.id, eylem: 'ice_aktarildi',
+      sonraki: { bicim: 'csv', wbs: w, aktivite: a } });
+    return { wbs: w, aktivite: a };
+  });
+}
+
+function aktarimSayfasi(ctx, id, { hata = null, durum = 200, onizleme = null, girdi = '' } = {}) {
+  const e = ekranNesnesi('PLAN-12');
+  yetkiZorunlu(ctx, e.yetki);
+  const { program, dugumler, aktiviteler, dogrulama } = programVerisi(ctx, id);
+  const iceSonuc = ctx.sorgu.get('ice');
+  const kilitli = program.baz_cizgi || ['onaya_gonderildi', 'incelemede'].includes(program.durum);
+
+  const icerik = h`
+${hata ? B.hataOzeti(hata) : ''}
+${iceSonuc ? B.sonucSeridi({ tur: 'ok', baslik: 'İçe aktarım tamamlandı',
+    aciklama: `${iceSonuc.split('_')[0]} WBS düğümü, ${iceSonuc.split('_')[1]} aktivite eklendi.` }) : ''}
+${B.detayOzetSeridi({
+    kod: program.kod, baslik: `${program.ad} — içe/dışa aktarım`, durum: program.durum, surum: program.surum_no,
+    bilgiler: [
+      { etiket: 'WBS düğümü', deger: sayi(dugumler.length) },
+      { etiket: 'Aktivite', deger: sayi(aktiviteler.length) },
+      { etiket: 'Ağırlık', deger: dogrulama.gecerli ? 'geçerli (%100)' : 'geçersiz' },
+    ],
+    birincilEylem: B.btn('CSV dışa aktar',
+      { tur: 'acc', rota: `/is-programlari/${program.id}/aktarim?disa=csv`, ikon: 'fa-file-csv' }),
+    digerEylemler: B.btn('Programa dön', { rota: `/is-programlari/${program.id}` }),
+  })}
+<div class="gv-card" style="margin-bottom:18px">
+  <div class="gc-head"><div class="gc-title"><b>Biçim</b>
+    <span>Noktalı virgülle ayrılmış; başlık satırı ve <code>#</code> ile başlayan künye satırı yok sayılır.</span></div></div>
+  <div class="gc-body">
+    <pre style="overflow-x:auto;font-size:12px;line-height:1.7;margin:0">${CSV_BASLIK}
+wbs;01;Kaba yapı;;40,00;;;;;
+wbs;01.01;Betonarme;01;60,00;;;;;
+aktivite;A-101;Temel betonu;01.01;50,00;miktar;m3;1200;2026-09-01;2026-09-20</pre>
+    <p class="gf-hint" style="margin-top:10px">Üst WBS düğümü dosyada kendinden <b>önce</b> gelmelidir.
+      Ağırlık, bağlı olduğu düğüm içindeki yüzdedir.</p>
+  </div>
+</div>
+${kilitli ? B.sonucSeridi({ tur: 'warn', baslik: 'İçe aktarım kapalı',
+    aciklama: program.baz_cizgi
+      ? 'Baz çizgi dondurulmuş; içe aktarım ancak yeni revizyon sürümünde yapılır (kural 6).'
+      : 'Program onayda; karar verilene kadar değiştirilemez.' })
+  : yetkiVar(ctx, 'PLAN-12:olustur') ? h`
+<form method="post" action="/is-programlari/${program.id}/aktarim" data-gform="1">
+  ${ham(csrfAlani(ctx))}
+  <div class="gv-card" style="margin-bottom:18px">
+    <div class="gc-head"><div class="gc-title"><b>CSV içe aktar</b>
+      <span>Önce KURU ÇALIŞTIRMA yapılır; tek satır hatalıysa hiçbir satır yazılmaz.</span></div></div>
+    <div class="gc-body">
+      ${B.alan({ ad: 'csv', etiket: 'CSV içeriği', tur: 'metin', genis: true, deger: girdi || '',
+    hata: hata?.alanlar?.csv })}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        ${B.btn('Önizle (hiçbir şey yazmaz)', { gonder: true, ikon: 'fa-magnifying-glass' })}
+        ${onizleme && onizleme.hataliSayisi === 0
+    ? h`<button class="btn btn-acc" type="submit" name="_eylem" value="uygula">
+        <i class="fa-solid fa-file-import"></i> ${onizleme.satirlar.length} satırı uygula</button>` : ''}
+      </div>
+    </div>
+  </div>
+</form>` : ''}
+${onizleme ? h`
+<div class="gv-card">
+  <div class="gc-head"><div class="gc-title"><b>Önizleme sonucu</b>
+    <span>${onizleme.hataliSayisi ? `${onizleme.hataliSayisi} satır hatalı — uygulama kapalı.`
+    : 'Tüm satırlar geçerli.'}</span></div></div>
+  <div class="gc-body flush">${B.tablo({
+    satirlar: onizleme.satirlar,
+    bosDurum: { baslik: 'Satır yok' },
+    sutunlar: [
+      { ad: 'satirNo', etiket: 'Satır', hizala: 'sag' },
+      { ad: 'tip', etiket: 'Tip' },
+      { ad: 'kod', etiket: 'Kod', govde: (r) => h`<b>${r.kod || '—'}</b>` },
+      { ad: 'ad', etiket: 'Ad', govde: (r) => r.ad || '—' },
+      { ad: 'sonuc', etiket: 'Sonuç', govde: (r) => (r.sonuc === 'hata'
+        ? B.isaret('hata', 'danger') : B.isaret('eklenecek', 'ok')) },
+      { ad: 'not', etiket: 'Açıklama' },
+    ],
+  })}</div>
+</div>` : ''}`;
+  return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: program.kod, baslik: program.ad }));
 }

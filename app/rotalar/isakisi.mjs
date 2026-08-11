@@ -28,6 +28,7 @@ import * as B from '../web/bilesenler.mjs';
 import { sayaclar } from './calisma.mjs';
 import { donemOnaySonucu } from './ik.mjs';
 import { kabulOnaySonucu, santiyeKapanisOnaySonucu } from './santiye-ek.mjs';
+import { projeKapanisOnaySonucu } from './proje-ek.mjs';
 
 const ekranNesnesi = (kod) => manifest().ekranlar.find((e) => e.kod === kod);
 const ciz = (ctx, ekran, icerik, ek = {}) => {
@@ -403,6 +404,7 @@ function isNesnesiniIlerlet(ctx, talepId, sonuc) {
   if (t.nesne === 'puantaj_donemi') { donemOnaySonucu(ctx, t.nesne_id, sonuc); return; }
   if (t.nesne === 'kabul') { kabulOnaySonucu(ctx, t.nesne_id, sonuc); return; }
   if (t.nesne === 'santiye_kapanis') { santiyeKapanisOnaySonucu(ctx, t.nesne_id, sonuc); return; }
+  if (t.nesne === 'proje_kapanis') { projeKapanisOnaySonucu(ctx, t.nesne_id, sonuc); return; }
   if (t.nesne === 'duyuru' && sonuc === 'onaylandi') {
     const d = tek('SELECT * FROM duyuru WHERE id = ?', t.nesne_id);
     if (!d || d.durum !== 'taslak') return;

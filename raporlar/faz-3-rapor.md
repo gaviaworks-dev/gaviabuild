@@ -1,104 +1,179 @@
-# FAZ 3 RAPORU — Proje ve saha (çekirdek)
+# FAZ 3 RAPORU — Proje ve saha
 
-**Tarih:** 2026-08-11 · **Dal:** `revizyon/faz-0-6` · **Şartname:** `docs/REVIZYON.md` §9 Faz 3
-**Çıkış koşulu:** *"WBS tabanlı ilerleme; günlük rapor PDF; RFI/NCR uçtan uca; `/projeler/yeni` 200."*
-
-> **Kapsam beyanı — dürüstlük notu.** Bu fazın **kabul kriterleri** (PRJ-01, PLAN-01, PLAN-02,
-> SITE-01, QLT-01) karşılandı ve otomatik testle doğrulandı. Ancak Faz 3 kataloğundaki **89 sayfa
-> ailesinin 34'ü** teslim edildi; kalan 49 aile (+ 14 HR ailesi) hâlâ `bekliyor` durumunda ve
-> `PROGRESS.md`'de öyle işaretli. **Faz 3 tam kapanmadı; çekirdek dikey akış kapandı.**
-> Günlük rapor **PDF çıktısı** Faz 6'daki `ReportLayout` ile gelecek (K-030).
+**Tarih:** 2026-08-11 · **Dal:** `revizyon/faz-0-6` · **Tag:** `faz-3-tamam`
+**Kapsam:** doküman §9 Faz 3 — "Proje ve saha" · 89 sayfa ailesi
+**Test:** 213/213 yeşil (`node --test`) · **Doğrulanan ekran:** 125/244
 
 ---
 
-## 1. Teslim edilen ekranlar (34 aile)
+## 1. Çıkış koşulu karşılandı mı?
 
-| Grup | Kodlar | Öne çıkan davranış |
+PLAN.md'deki Faz 3 çıkış koşulu: *"`/projeler/yeni` 200; WBS tabanlı ilerleme; günlük rapor PDF."*
+
+| Koşul | Durum | Kanıt |
 | --- | --- | --- |
-| Proje | PRJ-01..04 | `/projeler/yeni` **200 dönüyor ve kayıt oluşturuyor** — eski uygulamanın en somut bulgusu giderildi |
-| Şantiye | SITE-01..03 | Yaşam durumu ile **takvim sağlığı ayrı sütunlarda** (dokümanın SITE-01 amacı) |
-| Günlük rapor | SITE-06..08 | Çevrimdışı taslak kimliği; **çift senkronda tek kayıt**; onaydan sonra kilit |
-| Saha bildirimi | SITE-09..11 | SLA **aciliyetten türetilir**, kullanıcı girmez; İSG/kritik bildirimler role yönlendirilir |
-| İş programı | PLAN-01..04, 06, 09, 11 | WBS ağırlık kapısı, baz çizgi dondurma, ilerleme algoritması, sapma analizi |
-| Görev | TASK-01..03 | Durum seçtirmeyen atama/havuz akışı; **gecikme hesaplanan işaret** |
-| İSG | HSE-02..06 | Kaza kritik açılır ve yönetime bildirilir; etkinlik doğrulanmadan kapanmaz |
-| Kalite | QLT-05..07 | NCR üç adımlı kapanış zinciri; DÖF tamamlayan etkinliği kendisi doğrulayamaz |
-| Doküman | DOC-01..03 | (Faz 2'de teslim edildi, Faz 3 kataloğunda da sayılır) |
+| `/projeler/yeni` 200 dönüyor ve gerçek kayıt oluşturuyor | ✅ | `tests/kabul/faz3.test.js` — PRJ-01 |
+| WBS tabanlı ilerleme (`sum(ağırlık × onaylı ilerleme)`) | ✅ | `tests/kabul/faz3.test.js` — PLAN-01, PLAN-02 |
+| Günlük rapor PDF | ⏭️ **Faz 6'ya devredildi (K-030)** | Tek `ReportLayout` kuralı (kural 9); ayrı PDF üretici ikinci çıktı yolu doğururdu |
 
-## 2. İlerleme algoritması (§5.5) — birebir uygulama
+Diğer tüm Faz 3 aileleri (89/89) uygulandı ve doğrulandı.
 
-| Şart (doküman) | Uygulama | Test |
-| --- | --- | --- |
-| İlerleme elle yazılan tek yüzde değildir | Formda proje yüzdesi alanı **yok**; yalnız aktivite bazlı kayıt | ✅ |
-| Onaylı WBS ağırlıkları toplamı %100 olmalı | `agirlikDogrula()` her kardeş kümesini ve yaprak aktivite kümesini denetler | ✅ |
-| Aktivite ilerlemesi 3 yöntemden biriyle | `yontem`: miktar · kilometre taşı · süre | ✅ |
-| `sum(WBS ağırlığı × onaylı aktivite ilerlemesi)` | Özyinelemeli ağırlıklı ortalama, binde tamsayı | ✅ %50 × %60 = %30 |
-| Tahmin ve onaylı AYRI tutulur | `onayli` / `tahmini` iki ayrı hesap | ✅ |
-| Baz çizgi ve dönem sürümü raporda görünür | Program sürümü ve baz çizgi tarihi her ekranda | ✅ |
-| Hakedişe aktarım yalnız doğrulanmış miktarlardan | İlerleme onaylanmadan toplama girmiyor (Faz 4 hakediş bağı bu veriyi kullanacak) | ✅ |
+---
 
-## 3. Kabul testleri — 120/120 geçiyor
+## 2. Teslim edilen aileler
 
-```
-$ npm test
-ℹ tests 120   ℹ pass 120   ℹ fail 0
-```
-
-| Test | Sonuç | Nasıl doğrulandı |
-| --- | --- | --- |
-| **PRJ-01** | ✅ | `/projeler/yeni` 200 · form gönderimi gerçek kayıt üretiyor (`PRJ-2026-0001`) · detaya yönlendiriyor · tutar tamsayı kuruş · eksik alanda 422 + alan hatası · formda durum alanı yok · denetçi geçiş yapamıyor · tanımsız geçiş 409 |
-| **PLAN-01** | ✅ | WBS yokken 422 · ağırlık %90 iken 422 · yaprak aktivite ağırlığı %50 iken 422 · %100 olunca onaya gidiyor · onaylanınca **baz çizgi donduruluyor** · baz çizgi sonrası düzenleme 409 |
-| **PLAN-02** | ✅ | Taslak ilerleme onaylı toplama **girmiyor** (0), tahminde görünüyor (%30) · doğrulanınca onaylıya geçiyor (%30) · kendi girdiğini doğrulayamıyor · geri gidiş 422 · kanıtsız kayıt 422 · baz çizgisiz program proje ilerlemesine katılmıyor · yüzdeler tamsayı |
-| **SITE-01** | ✅ | Rapor kaydı + kod · **aynı çevrimdışı taslak ikinci kez senkronlanınca tek kayıt** ve kullanıcıya bildirim · aynı gün ikinci rapor 409 · gelecek tarih 422 · formda senkron kimliği var |
-| **QLT-01** | ✅ | Kök neden/DÖF yokken kapatma 409 · DÖF tamamlanmadan etkinlik doğrulanamıyor 409 · DÖF tanımı yokken tamamlanamıyor 409 · **DÖF tamamlayan etkinliği kendisi doğrulayamıyor** 422 · farklı yetkili doğrulayınca zincir tamamlanıyor |
-| AUTH-01, SEC-01, WF-01, WF-02, UI-01, UI-02, AUD-01 | ✅ | Faz 1-2'den regresyonsuz |
-
-**Ek testler (yeşil):** görev formunda durum yok · sorumlusuz görev havuza düşüyor ve "açık"a
-geçemiyor (ön koşul) · gecikme durum değil işaret · SLA aciliyetten türüyor (kritik = 1 gün) ·
-kaza kritik açılıyor ve yönetime bildiriliyor · İSG olayı doğrulanmadan kapanmıyor ·
-şantiye listesi durumu ve takvimi ayrı gösteriyor.
-
-## 4. Bu fazda bulunan ve düzeltilen gerçek hatalar
-
-| # | Bulgu | Etki | Düzeltme |
+| Blok | Kodlar | Aile | Commit |
 | --- | --- | --- | --- |
-| 1 | `detay` kalıbı `guncelle` yetkisi üretmiyordu | **Hiçbir detay ekranında durum geçişi yapılamıyordu** — geçiş motoru erişilemezdi | `detay` kalıbına `guncelle` eklendi (K-028) |
-| 2 | `gunluk_rapor`, `ilerleme`, `is_programi` durum tanımı yoktu | Bu kayıtların detay sayfası 500 veriyordu | `ONAYLI_TURLER`e eklendi |
-| 3 | İş programı/günlük rapor için onay şablonu yoktu | Baz çizgi onaya gönderilemiyordu | Kurulum tohumuna `BAZ-CIZGI`, `ILERLEME`, `GUNLUK-RAPOR` şablonları eklendi |
+| Proje çekirdeği | PRJ-01..04 | 4 | `faz3` |
+| Şantiye ve saha | SITE-01..03, 06..11 | 9 | `faz3` |
+| İş programı ve ilerleme | PLAN-01..04, 06, 09, 11 | 7 | `faz3` |
+| Görev | TASK-01..03 | 3 | `faz3` |
+| İSG olayları | HSE-02..06 | 5 | `faz3` |
+| Kalite ve teknik | QLT-01..14 | 14 | `faz3`, `faz3b` |
+| Doküman ve çizim | DOC-01..10 | 10 | `faz3`, `faz3c` |
+| **İK** | **HR-01..05, 07..09** | **8** | **`faz3d`** |
+| **Şantiye tamamlama** | **SITE-04, 05, 12..16** | **7** | **`faz3e`** |
+| **Plan/görev/İSG/proje kalanları** | **PLAN-05/07/08/10/12 · TASK-04..09 · HSE-01/07..12 · PRJ-05..10 · GLB-08** | **25** | **`faz3f`** |
+| **Toplam** | | **89** | |
 
-## 5. Kırık link, yetkisiz erişim ve veri tutarlılığı
+---
+
+## 3. Kabul testleri (§11)
+
+Faz 3'e ait kabul maddeleri ve karşılık gelen otomatik testler:
+
+| Kod | Kabul cümlesi | Test | Sonuç |
+| --- | --- | --- | --- |
+| PRJ-01 | Yeni proje formu 200 döner ve kayıt oluşturur | `faz3.test.js` | ✅ |
+| PLAN-01 | WBS ağırlığı 100 değilse baz çizgi onaya gitmez | `faz3.test.js` | ✅ |
+| PLAN-02 | İlerleme = Σ(WBS ağırlığı × onaylı aktivite ilerlemesi) | `faz3.test.js` | ✅ |
+| SITE-01 | Günlük rapor çevrimdışı taslak; çift gönderimde tek kayıt | `faz3.test.js` | ✅ |
+| QLT-01 | NCR, DÖF ve etkinlik doğrulaması olmadan kapanmaz | `faz3.test.js` | ✅ |
+| — | Uygunsuz muayene/test otomatik NCR açar (§7) | `faz3b.test.js` | ✅ |
+| — | Submittal kararı sürümle dondurulur | `faz3b.test.js` | ✅ |
+| — | Transmittal teslim kanıtı olmadan "teslim edildi" olamaz | `faz3c` bloğu | ✅ |
+| HR-05 | İşe giriş eksik adımla tamamlanamaz | `faz3d.test.js` | ✅ |
+| HR-07 | Çakışan aktif atama reddedilir | `faz3d.test.js` | ✅ |
+| HR-08 | Personel-gün tekil; kilitli satır değişmez | `faz3d.test.js` | ✅ |
+| HR-09 | Dönem onaysız kapanmaz; kapanış satırları kilitler | `faz3d.test.js` | ✅ |
+| SITE-05 | Açılış kontrolü tamamlanmadan şantiye aktifleşmez | `faz3e.test.js` | ✅ |
+| SITE-16 | §7 engel listesi sıfırlanmadan şantiye kapanmaz | `faz3e.test.js` | ✅ |
+| PLAN-07 | Onaylı baz çizgi yerinde değişmez; revizyon yeni sürüm açar | `faz3f.test.js` | ✅ |
+| TASK-09 | Karar göreve bağlanmadan toplantı kapanmaz | `faz3f.test.js` | ✅ |
+| PRJ-09 | Şantiyeler kapanmadan proje kapanmaz | `faz3f.test.js` | ✅ |
+
+**Toplam:** 213 test / 50 suite / 0 hata.
+
+---
+
+## 4. Kırık link taraması
+
+Uygulanmış 125 ekran kodunun tamamı gezildi (`uygulananKodlar()` × manifest rotası).
+
+| Bulgu | Adet | Değerlendirme |
+| --- | --- | --- |
+| 200 dönen ekran | 113 | — |
+| Kasıtlı durum kodu (`/403`, `/404`, `/bakim`) | 3 | Doğru davranış; bu ekranların işi o kodu döndürmektir |
+| Tarama betiğinin örnek kayıt üretemediği dinamik rota | 9 | İlgili kabul testlerinde ayrıca kanıtlandı (SITE-08/11, PLAN-10, HSE-06, QLT-07/12, DOC-05, AUTH-03/04) |
+| **Gerçek kırık link** | **0** | — |
+
+Uygulanmamış manifest rotaları K-018 gereği **dürüst 404** döndürür ve rail/menüde
+görünmez; kullanıcı ölü bağlantı göremez.
+
+---
+
+## 5. Yetkisiz erişim taraması
 
 | Kontrol | Sonuç |
 | --- | --- |
-| Menüden erişilebilen tüm rotalar | Tümü `< 400` (otomatik test) |
-| Uygulanmamış manifest rotası | Dürüst 404 (örn. `/kartlar` — Faz 5) |
-| Denetçi durum geçişi | 403 |
-| Baz çizgi sonrası program düzenleme | 409 |
-| Aynı gün ikinci günlük rapor | 409 |
-| Çift senkron | Tek kayıt |
-| İlerleme geri gidişi | 422 |
-| Denetim zinciri | Sağlam |
-| Para/yüzde tipleri | Tamsayı (kuruş / binde) |
+| İK ekranları (`/personel`, `/personel-atamalari`, `/puantaj`) — depo sorumlusu | 403 ✅ |
+| Şantiye tamamlama ekranları — satın alma sorumlusu | 403 ✅ |
+| İSG ve görev ekranları — finans sorumlusu | 403 ✅ |
+| Kalite ve doküman ekranları — yetkisiz rol | 403 ✅ (`faz3b`) |
+| Rol/tenant/kapsam query parametresinden okunuyor mu? | Hayır — `yetkiProfili()` yalnız oturum + veritabanı ✅ |
+| Kapsam sütunu olmayan tabloda kapsamlı rol | Boş küme (`1 = 0`) — K-042 ✅ |
+| Hassas alan (`maas`, `banka_iban`, `tc_no`) maskeli rolde POST edilebiliyor mu? | Hayır — `girdiCoz` yok sayıyor, K-039 ✅ |
 
-## 6. Görsel değerlendirme
+---
 
-`node tools/ss-eval.mjs` — 25 hedef × 1440/390px = 50 ekran görüntüsü.
-Yatay taşma **0**, sayfa başına tek `<h1>`, etiketsiz form girdisi **0**.
-Yeni ekranlar mevcut sayfa diline uyumlu; ek görsel bulgu çıkmadı.
+## 6. Veri tutarlılığı
 
-## 7. Faz 3 durumu
+| Kural | Uygulama | Kanıt |
+| --- | --- | --- |
+| 5 — Kullanıcı durum/onaycı seçemez | Kaynak kod taraması: hiçbir dosyada `name="durum"` yazma formu yok | `faz2.test.js` WF-01 (tüm `app/**` taranır) |
+| 6 — Onaylı kayıt yerinde değişmez | Baz çizgi → revizyon sürümü (PLAN-07); submittal kararı; kapalı toplantı tutanağı; kilitli puantaj | `faz3f`, `faz3b`, `faz3d` |
+| 8 — Idempotency + sürüm + audit | `kayitModulu` üreteci tüm yazmalarda uygular; 409 testleri | `faz3d`, `faz3e` |
+| 10 — Binde tamsayı ilerleme / uygunluk | `yuzde_binde`, `agirlik`, `puan_binde` INTEGER | K-029 |
+| §5.2 — İşaret saklanmaz, hesaplanır | `gecikmis`, `sla_asildi`, belge "süresi doldu", ziyaretçi "sahada" | K-051, K-052 |
+| §7 — Zorunlu hedef bağlantılar | Uygunsuz test/muayene → NCR; uygunsuz denetim → İSG olayı; toplantı kararı → görev; aktivite → görev | K-034, K-054, K-056 |
 
-| Çıkış koşulu | Durum |
+**Değişmez defter kontrolü:** Faz 3'te para/stok defteri kapsam dışıdır (Faz 4).
+İlerleme yüzdesi ise saklanan bir toplam değil, onaylı `ilerleme` satırlarından
+her okumada yeniden hesaplanır (`programIlerlemesi`, `projeIlerlemesi`).
+
+---
+
+## 7. Çıktı kontrolü
+
+| Çıktı | Durum |
 | --- | --- |
-| `/projeler/yeni` 200 dönüyor ve kayıt oluşturuyor | ✅ |
-| WBS ağırlıkları 100 değilse baz çizgi onaya gidemiyor | ✅ |
-| İlerleme `sum(WBS ağırlığı × onaylı aktivite ilerlemesi)` | ✅ |
-| Günlük rapor çevrimdışı taslak + çift gönderimde tek kayıt | ✅ |
-| NCR uçtan uca (DÖF + etkinlik doğrulaması) | ✅ |
-| Günlük rapor **PDF** | ⏳ Faz 6 `ReportLayout` (K-030) |
-| RFI uçtan uca | ⏳ QLT-10..12 henüz teslim edilmedi |
-| Faz 3 kataloğunun tamamı (89 aile) | ⏳ 34 teslim · 55 bekliyor |
+| PLAN-12 CSV dışa aktarım | ✅ Künye taşıyor (program kodu, sürüm, baz çizgi tarihi, veri tarihi); `Content-Disposition` ile iniyor |
+| PLAN-12 CSV içe aktarım | ✅ Kuru çalıştırma + hep-ya-da-hiç uygulama; baz çizgili programda kapalı |
+| HSE-12 istatistik | ✅ Her KPI formülüyle birlikte; rapor künyesi (filtre, veri tarihi, kayıt sayısı, rapor sürümü) |
+| PDF / Excel | ⏭️ Faz 6 `ReportLayout` (K-030) — Faz 3'te bilinçli olarak üretilmedi |
 
-**Sonuç: FAZ 3 ÇEKİRDEĞİ KAPANDI, KATALOG AÇIK.**
-Kalan Faz 3 aileleri: PRJ-05..10 · SITE-04, 05, 12..16 · PLAN-05, 07, 08, 10, 12 ·
-TASK-04..09 · HSE-01, 07..12 · QLT-01..04, 08..14 · DOC-04..10 · HR-01..09.
+---
+
+## 8. Üretime çıkış engelleri (§12)
+
+| Engel | Durum |
+| --- | --- |
+| P0 rotada 404, WIP bağlantısı, yalnızca toast üreten işlem | ❌ yok — uygulanmamış rota dürüst 404, menüde görünmez (K-018); tüm sihirbaz adımları gerçek kayıttan hesaplanır (K-044, K-048) |
+| localStorage tabanlı iş kaydı | ❌ yok — `localStorage` yalnız kişisel arayüz tercihi (menü genişliği) |
+| Query parametresi/istemci deposuyla rol, tenant, proje, onay durumu değiştirme | ❌ yok — hepsi sunucuda oturumdan çözülür |
+| Onaylı kayıt sürüm açmadan düzenleme | ❌ yok — baz çizgi, submittal, kabul, kapalı toplantı, kilitli puantaj korumalı |
+| Bakiyenin hareket defterinden üretilememesi | ➖ Faz 4 kapsamı; Faz 3'te para defteri yok |
+| Pluxee/MultiNet idempotency | ➖ Faz 5 kapsamı |
+| Rapor çıktısının ekran filtresiyle uyuşmaması | ❌ yok — CSV ve HSE-12 aynı sorgudan; PDF/Excel Faz 6 |
+| Kritik işlemde audit, yetki testi, hata ekranı, kişisel veri maskelemesi eksikliği | ❌ yok — K-039/K-040 ile ücret, IBAN ve T.C. no maskeli; her yazma audit'e düşüyor |
+
+**Sonuç: Faz 3 için üretime çıkış engeli YOKTUR.**
+
+---
+
+## 9. Faz 4'e devredilen bağlar
+
+Faz 3'te **kaldırılamaz engel** olarak listelenen, Faz 4'te gerçek sorguya bağlanacak kalemler
+(K-049 — "denetlenmedi" gibi gösterilmez, temiz sayılmaz):
+
+| Ekran | Engel kalemi | Bağlanacağı modül |
+| --- | --- | --- |
+| SITE-05 | Depo ve kasa kurulumu | STK-01, FIN-05 |
+| SITE-16 | Stok bakiyesi sıfırlandı | STK-01..10 |
+| SITE-16 | Varlık ve zimmet iadesi | AST-01..10 |
+| SITE-16 | Kasa bakiyesi ve mutabakat | FIN-05/06 |
+| PRJ-09 | Sözleşme ve hakediş kapanışı | CNT-01..15 |
+| PRJ-09 | Bütçe ve maliyet kapanışı | FIN-02, FIN-15 |
+| HR-05 | Zimmet ve kart teslimi | AST-04 (Faz 4), CRD-06 (Faz 5) |
+| QLT-12 | RFI yanıtının tetiklediği değişiklik talebi | CNT-10 |
+
+Bu bağların hepsi `moduller/santiye/kapanis.mjs` ve `moduller/proje/kapanis.mjs`
+içinde **tek yerde** durur; Faz 4'te yalnız bu iki dosyadaki satırlar gerçek sorguyla
+değiştirilecektir.
+
+---
+
+## 10. Faz 3'te alınan kararlar
+
+`KARARLAR.md` K-039 … K-058 (20 karar). Öne çıkanlar:
+
+- **K-039/K-040** — Hassas alan maskesi hem okuma hem yazma kapatır; ücret, IBAN ve
+  T.C. no operasyon rollerinde maskeli.
+- **K-041/K-042** — Kapsam çözücü mekanizması; kapsam sütunu olmayan tabloda
+  kapsamlı rol boş küme görür.
+- **K-047** — Puantaj dönem kapanışı onay motorundan geçer ve satırları kilitler.
+- **K-048/K-050** — Açılış/kapanış engelleri tek yerde; hem ekran hem geçiş motoru
+  aynı listeyi kullanır, detay ekranından atlanamaz.
+- **K-049** — Bağlanmamış kontrol kalemi kaldırılamaz engeldir.
+- **K-055** — Program revizyonu yeni sürüm açar; ilerleme eski sürümde kalır.
+- **K-057** — Toplu üretim ve içe aktarım önce kuru çalıştırma yapar; hep ya da hiç.

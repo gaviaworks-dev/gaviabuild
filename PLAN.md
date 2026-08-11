@@ -115,15 +115,16 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz3(SITE-04..16)` · **Test:** 179/179 · **Doğrulanan ekran:** 100/244
+**Son commit:** `faz3(PLAN,TASK,HSE,PRJ,GLB)` · **Test:** 213/213 · **Doğrulanan ekran:** 125/244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
 | Faz 0 | ✅ kapandı (`faz-0-tamam`) | 244 yol kararı, screen-manifest, link testi |
 | Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
 | Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
-| Faz 3 | 🟡 64/89 aile · kabul kriterleri yeşil | PRJ-01, PLAN-01/02, SITE-01, QLT-01, HR-05/07/08/09, SITE-05/16 |
-| Faz 4-6 | ⬜ başlamadı | |
+| Faz 3 | ✅ kapandı (`faz-3-tamam`) | 89/89 aile; raporlar/faz-3-rapor.md; §12 engeli yok |
+| Faz 4 | 🟡 sıradaki | PRC → STK → CNT → FIN + GLB-02/03, HR-10..13, AST-01..10 (69 aile) |
+| Faz 5-6 | ⬜ başlamadı | |
 
 ### Faz 3'te teslim edilenler
 Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş programı ve ilerleme
@@ -133,15 +134,26 @@ Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş program
 şantiye tamamlama (SITE-04, 05, 12..16: düzenleme, açılış/kapanış sihirbazı, ziyaretçi,
 resmi belge, geçici/kesin kabul).
 
-### SIRADAKİ İŞ PAKETİ — Faz 3'ün kalan 25 ailesi
+### SIRADAKİ İŞ PAKETİ — Faz 4 (69 aile)
 
-1. ~~**İK (HR-01..05, 07..09)**~~ ✅ `faz3d`.
-2. ~~**Şantiye tamamlama (SITE-04, 05, 12..16)**~~ ✅ `faz3e`.
-3. **Plan/görev/İSG/proje kalanları** — PLAN-05, 07, 08, 10, 12 · TASK-04..09 ·
-   HSE-01, 07..12 · PRJ-05..10 (24 aile).
-4. **Faz 4** — PRC → STK → CNT → FIN (69 aile). Kabul: PRC-01, STK-01, üçlü eşleştirme.
-5. **Faz 5** — CRD-01..18 (doküman §6 birebir). `kartYuklemePartisi` durum zinciri hazır.
-6. **Faz 6** — RPT-01..15 (önce `ReportLayout` + PDF/XLSX), EXT-01..08, GLB-02/03, GLB-07, AST-11.
+Sıra doküman §9'a göre: **PRC → STK → CNT → FIN**, ardından AST ve GLB panoları.
+
+1. **Satın alma (PRC-01..13)** — 13 aile. Kabul: onaysız talep siparişe dönüşmez (PRC-01).
+   Onay motoru ve tutar kademeli şablonlar HAZIR (`TALEP-KUCUK/ORTA/BUYUK`).
+2. **Depo ve stok (STK-01..10)** — 10 aile. Kabul: bakiye **hareket defterinden** yeniden
+   hesaplanır (STK-01); elle bakiye yazımı yasak (kural 7).
+3. **Sözleşme, metraj, hakediş (CNT-01..15)** — 15 aile. Onaylı metraj + onaylı ilerlemeden
+   hakediş üretimi; zeyil ve değişiklik emri sürümlü.
+4. **Finans (FIN-01..15)** — 15 aile. Kabul: üçlü eşleştirme; tolerans dışı fark onaya gider.
+5. **Varlık ve filo (AST-01..10)** — 10 aile.
+6. **İK finans etkili (HR-10..13)** — 4 aile: izin, avans, sağlık, yetkinlik.
+   `IZIN` ve `AVANS` onay şablonları `faz3d` ile HAZIR; tablolar `goc5.mjs`'de var.
+7. **Panolar (GLB-02, GLB-03)** — 2 aile. K-017 gereği veri kaynakları geldikten sonra.
+
+**Faz 4'ün ilk işi olmalı:** `moduller/santiye/kapanis.mjs` ve `moduller/proje/kapanis.mjs`
+içindeki `planli: 'Faz 4'` satırlarını gerçek sorguyla değiştirmek (K-049). Bu satırlar
+şu an kaldırılamaz engeldir; stok/varlık/kasa/sözleşme modülleri gelmeden hiçbir şantiye
+veya proje kapatılamaz — bu bilinçli bir tasarımdır, unutulmuş bir eksik değildir.
 
 ### Hazır ama henüz kullanılmayan altyapı
 

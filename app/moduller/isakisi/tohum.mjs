@@ -85,6 +85,13 @@ const SABLONLAR = [
     ],
   },
   {
+    kod: 'PROJE-KAPANIS', ad: 'Proje kapanış onayı', nesne: 'proje_kapanis', sla: 168,
+    adimlar: [
+      { sira: 1, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
     kod: 'SANTIYE-KAPANIS', ad: 'Şantiye kapanış onayı', nesne: 'santiye_kapanis', sla: 120,
     adimlar: [
       { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
@@ -201,7 +208,8 @@ export function isAkisiTohumla(tenantId, kullaniciId = null) {
       ['metraj', 'MTR'], ['degisiklik', 'CHG'], ['gecikme', 'DLY'], ['claim', 'CLM'],
       ['butce', 'BDG'], ['kasa', 'CSH'], ['banka', 'BNK'], ['cari', 'CAR'],
       ['fatura', 'INV'], ['odeme', 'PAY'], ['teminat', 'TMN'], ['zeyil', 'ZYL'],
-      ['kabul', 'KBL']]) {
+      ['kabul', 'KBL'], ['is_emri', 'IEM'], ['toplanti', 'TPL'],
+      ['isg_denetimi', 'DEN']]) {
       sablonKur(tenantId, nesne, onek);
     }
 

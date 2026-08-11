@@ -52,7 +52,7 @@ export const LISTE_OLUSTURUR = [
   'AST-04', 'AST-05', 'AST-06', 'AST-07', 'AST-09', 'AST-10',
   'HR-07', 'HR-08', 'HR-10', 'HR-11', 'HR-12', 'HR-13',
   'HSE-07', 'HSE-08', 'HSE-09', 'HSE-10', 'HSE-11',
-  'CRD-09', 'CRD-10', 'CRD-16', 'TASK-04', 'TASK-06', 'PLAN-08',
+  'CRD-09', 'CRD-10', 'CRD-16', 'TASK-04', 'TASK-06', 'TASK-08', 'PLAN-08',
   'PRJ-07', 'PRJ-08', 'SITE-12', 'SITE-13', 'SET-17', 'RPT-14', 'GLB-08',
 ];
 for (const kod of LISTE_OLUSTURUR) {

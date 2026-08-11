@@ -16,6 +16,7 @@
  */
 
 import { acilisEngeliMetni, kapanisEngeliMetni } from '../santiye/kapanis.mjs';
+import { aktivasyonEngeliMetni, projeKapanisEngeliMetni } from '../proje/kapanis.mjs';
 
 export const NESNELER = {
   /* ---- Proje / Şantiye ------------------------------------------------- */
@@ -30,11 +31,15 @@ export const NESNELER = {
     },
     gecisler: [
       { den: 'taslak', e: 'hazirlik', eylem: 'hazirliga_al', etiket: 'Hazırlığa al', gerekce: 'istege_bagli' },
-      { den: 'hazirlik', e: 'aktif', eylem: 'aktive_et', etiket: 'Aktifleştir', gerekce: 'istege_bagli', onayGerekir: true },
+      /* PRJ-05: aktivasyon kontrol listesi tamamlanmadan proje aktifleşmez. */
+      { den: 'hazirlik', e: 'aktif', eylem: 'aktive_et', etiket: 'Aktifleştir', gerekce: 'istege_bagli',
+        onayGerekir: true, onKosul: (ctx, k) => aktivasyonEngeliMetni(k.id) },
       { den: 'aktif', e: 'askida', eylem: 'askiya_al', etiket: 'Askıya al', gerekce: 'zorunlu' },
       { den: 'askida', e: 'aktif', eylem: 'devam_ettir', etiket: 'Devam ettir', gerekce: 'zorunlu' },
       { den: 'aktif', e: 'kapanista', eylem: 'kapanisa_al', etiket: 'Kapanışa al', gerekce: 'istege_bagli' },
-      { den: 'kapanista', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu', onayGerekir: true },
+      /* PRJ-09/§7: proje, altındaki şantiyeler kapanmadan kapatılamaz. */
+      { den: 'kapanista', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu', onayGerekir: true,
+        onKosul: (ctx, k) => projeKapanisEngeliMetni(k.id) },
       { den: 'kapali', e: 'arsiv', eylem: 'arsivle', etiket: 'Arşivle', gerekce: 'istege_bagli' },
       { den: 'taslak', e: 'arsiv', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
     ],
