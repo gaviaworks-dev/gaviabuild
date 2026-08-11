@@ -1,5 +1,5 @@
 /* =====================================================================
-   GAVIA CRM — OMURGA JS (config-driven rail + menü + rol motoru)
+   [ÜRÜN ADI] — OMURGA JS (config-driven rail + menü + rol motoru)
    Rol: ?role= → localStorage(gv_crm_role) → superadmin
    Bölüm: body[data-sec] · Aktif ekran: body[data-screen]
    Tüm shell metinleri STR/SECTIONS/ROLES config'inde — i18n'e hazır,
@@ -446,7 +446,7 @@
        birikintisi. Teslimat problemi: Işık B-406 randevu ertelenmesi. teknik rolü satis'te
        YALNIZ bu ekranı görür; SST'de temsilci budaması YOK (matris: tam erişim).
      · CARİ ÇAPRAZ LİNK (2.0.2): satışı tamamlanan müşteri kartında "Cari Hesabı → CAR-…";
-       cari kartında geri link "CRM Kartı → MST-…". CAR-2026-021 Onaran (bakiye ₺3.592.000
+       cari kartında geri link "Cari kartı → MST-…". CAR-2026-021 Onaran (bakiye ₺3.592.000
        borç) · CAR-2026-022 Toprak (bakiye ₺4.560.000 borç; ₺570.000 vadesi 12 gün geçmiş).
        crm-cari-detay.html ?cari= param şablonu (demirbaş ?zmt= idiyomu; parametresiz
        default Demir-Beton AYNEN korunur).
@@ -637,12 +637,12 @@
        sayfa-içi guard: ?role → localStorage(gv_crm_role) → superadmin DEĞİLSE
        location.replace('index.html')).
        PAKETLER (4 + Ücretsiz; aylık): Ücretsiz ₺0 · Basic ₺7.900 · Professional ₺14.900 ·
-       CRM + Sales ₺19.900 · Enterprise ₺34.900. Limit/modül matrisi:
+       Saha + Satış ₺19.900 · Enterprise ₺34.900. Limit/modül matrisi:
          Ücretsiz     : 3 kullanıcı · 1 şantiye · 1 GB · SMS yok · Şantiye & Saha + Görev Takibi
          Basic        : 10 kullanıcı · 2 şantiye · 10 GB · 1.000 SMS · + Personel & İK + Saha Kayıtları
          Professional : 25 kullanıcı · 5 şantiye · 50 GB · 5.000 SMS · + Satın Alma + Cariler +
            Hakediş & Sözleşme (7 modül — Yapıtaş plan-card/limitleriyle BİREBİR)
-         CRM + Sales  : 40 kullanıcı · 8 şantiye · 100 GB · 10.000 SMS · + Satış CRM + Müşteri Portalı
+         Saha + Satış  : 40 kullanıcı · 8 şantiye · 100 GB · 10.000 SMS · + Satış ve fırsat + Müşteri Portalı
          Enterprise   : sınırsız kullanıcı/şantiye · 500 GB · 25.000 SMS · + Stok & ERP +
            Çoklu Firma Yönetimi + öncelikli destek
        TENANT'LAR (5 ana + Miray 2 alt şirket; MRR ₺61.700 = 14.900 + 26.900 + 19.900 —
@@ -650,14 +650,14 @@
          Yapıtaş İnşaat A.Ş. · Professional ₺14.900 · Aktif 14 ay · 18/25 kullanıcı · 3/5
            şantiye · toplam ödeme ₺208.600 (dönemsel fiyat farkı + ek paketler dahil; kırılım
            gösterilmez) · son faturalar Tem/Haz ₺14.900 + May ₺13.400 (crm-ayarlar-firma
-           BİREBİR) · 3 genişleme modülü (Satış CRM · Stok & ERP · Çoklu Firma) TANITIM
+           BİREBİR) · 3 genişleme modülü (Satış ve fırsat · Stok & ERP · Çoklu Firma) TANITIM
            EKLENTİSİ olarak AÇIK (₺0 — moduller sayfası 10/10 senkron; MRR'a eklenmez)
          Miray Yapı Group · Enterprise · Aktif 26 ay · ESKİ FİYAT GARANTİSİ ₺26.900/ay (2024
            sözleşmesi; liste ₺34.900) · MULTI-COMPANY: alt şirketler ana sözleşmeye DAHİL,
            ayrı fatura YOK — Miray Konut A.Ş. (Enterprise rozeti) + Miray Altyapı Ltd.
            (Basic rozeti) · tek yetkili Cem Miray — 3 şirkete erişim · kullanıcı 42 (24+12+6) ·
            toplam ödeme ₺699.400 (26 × 26.900)
-         Ege Modern İnşaat · CRM + Sales ₺19.900 · Aktif 7 ay · 11/40 kullanıcı · toplam
+         Ege Modern İnşaat · Saha + Satış ₺19.900 · Aktif 7 ay · 11/40 kullanıcı · toplam
            ödeme ₺139.300 · satış ofisi ağırlıklı geliştirici
          Kuzey Proje Ltd. · Basic DENEME (9/14. gün — başlangıç 24 Haz, bitiş 8 Tem 2026) ·
            ₺0 · 4 kullanıcı · "Deneme Sürecini Başlat" akışının sonucu
@@ -1153,7 +1153,7 @@
 
   /* ---- i18n'e hazır shell metinleri (tek kaynak) ---- */
   var STR = {
-    brand:'Gavia CRM',
+    brand:'[ÜRÜN ADI]',
     greetDate:'2 Temmuz 2026, Perşembe',
     tenant:'Yapıtaş İnşaat A.Ş.',
     tenantPlan:'Profesyonel Paket',
@@ -1396,7 +1396,7 @@
       {ic:'fa-bell',           lbl:'Bildirim Tercihleri', href:'crm-ayarlar-bildirim-tercih.html', screen:'bildirim'}
     ]},
     /* [D11] satış bölümü — 14 ekranın tamamı diskte, kilit dalga sonunda kaldırıldı */
-    satis:{ ic:'fa-chart-line', eyebrow:'Satış', title:'Satış CRM', menu:[
+    satis:{ ic:'fa-chart-line', eyebrow:'Satış', title:'Satış ve fırsat', menu:[
       {ic:'fa-address-card',          lbl:'Müşteriler',          href:'crm-satis-musteriler.html',  screen:'musteriler'},
       {ic:'fa-table-columns',         lbl:'Pipeline',            href:'crm-satis-pipeline.html',    screen:'pipeline', cnt:'14'},
       {ic:'fa-building-circle-check', lbl:'Bağımsız Bölümler',   href:'crm-satis-birimler.html',    screen:'birimler'},

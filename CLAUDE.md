@@ -1,202 +1,167 @@
-# GaviaCRM — İnşaat CRM/ERP Statik Prototip
+# GaviaBuild — Bütünleşik İnşaat ve Şantiye Operasyonları Yönetim Platformu
 
-## Proje Kimliği
+## Ürün Kimliği
 
-**GaviaCRM**, inşaat firmaları için şantiye, personel, görev, kasa, puantaj, malzeme talebi,
-satın alma, hakediş ve sözleşme süreçlerini tek merkezden yöneten kiralanabilir (SaaS)
-CRM/ERP platformunun **statik, tıklanabilir UI prototipidir**. Gaviaworks tarafından
-geliştirilmektedir; müşteri onayı ve ürün tasarım kararları için kullanılır.
+**Bu ürün bir CRM DEĞİLDİR.** Kategorisi: *Bütünleşik İnşaat ve Şantiye Operasyonları
+Yönetim Platformu*. Şirket, proje ve şantiye süreçlerini **aynı veri omurgasında** yöneten
+üretim seviyesi bir uygulamadır. Çalışma adı **GaviaBuild**; nihai marka verilene kadar
+kullanıcıya görünen her yerde **`[ÜRÜN ADI]`** kullanılır. Kod, arayüz, rota, sınıf adı,
+yorum, test ve dokümanda "CRM" ifadesi geçmez.
 
-**Bu repo SADECE arayüz prototipidir:**
-- Backend YOK, veritabanı YOK, gerçek auth YOK. Her şey statik HTML + CSS + vanilla JS.
-- Mock veri sayfaların içine ve küçük JS objelerine gömülüdür (JSON backend simülasyonu yok).
-- GitHub Pages'te yayınlanır: https://by4r.github.io/gaviacrm-view/
-- Build adımı YOK (buildless). CDN + el yazımı CSS/JS. `npm install` gerektiren hiçbir şey eklenmez.
+**Bağlayıcı şartname:** `docs/REVIZYON.md` (629 satır) — uygulama talimatı ve kabul
+şartnamesidir. Ek bağlam: `docs/REVIZYON-video-20260805.md`. Çelişki halinde **daha
+kısıtlayıcı güvenlik/veri bütünlüğü kuralı** geçerlidir.
 
-**Kapsam: SADECE FAZ 1** (operasyon çekirdeği). Faz 2 (CRM/satış/ERP) ve Faz 3 (AI/SaaS)
-modülleri İNŞA EDİLMEZ; ancak mimari (token yapısı, sidebar bölüm yapısı, rol sistemi,
-dosya adlandırma) bu fazları ileride ekleyebilecek şekilde genişletilebilir tutulur.
-Detaylı envanter: `tasks/plan.md` (yerel, commit edilmez).
+## Her Oturumun İlk İşi
 
-**Kesinleşen ürün kararları (2026-07):**
-- Ürün adı SABİT: **"Gavia CRM"**; logo/marka Gaviaworks kimliği (tipografik "G" mark).
-- Palet KESİN: Gaviaworks lacivert + mint. Turuncu/sarı İSG tonları KULLANILMAZ.
-- Demo personaları: **superadmin (Gavia Platform Yöneticisi) + sahip (Firma Sahibi)**
-  öncelikli; index bu ikisini öne çıkarır, default `superadmin`. Kiralanabilirlik hissi
-  tenant-admin konsoluyla verilir (Ayarlar > Firma: paket/limit/modül aç-kapa);
-  tenant-switcher Faz 2 — superadmin topbar'ında PASİF çip olarak yer tutar.
-- Rail 9 bölüm: panel, santiye, gorev, personel, operasyon, satinalma, **cari**
-  (Firma Rehberi + Kişiler + Cari Durum; satış pipeline'ı Faz 2 kilitli sekme), finans, ayarlar.
-- Dil: TR varsayılan; topbar'da PASİF dil düğmesi (TR çipi, kilitli — çok-dil Faz 2+).
-  Shell/menü/rol metinleri `shell.js` config'inde tek yerden yönetilir (i18n'e hazır).
-- Mobil first-class: web + mobil eşit önemde; 390px SS-eval zorunlu.
-- Mock tenant: "Yapıtaş İnşaat A.Ş." (tamamen kurgusal) — kanonik isim listesi shell.js
-  üstündeki yorum bloğunda; tüm sayfalar aynı adları kullanır.
+Şu üç dosya okunmadan iş yapılmaz; iş bittikçe güncellenir:
+
+| Dosya | İçerik |
+| --- | --- |
+| `PLAN.md` | Faz faz iş kırılımı, hedef kodlar, çıkış koşulları |
+| `PROGRESS.md` | 244 sayfa ailesinin durum tablosu (**üretilen dosya** — kaynak `manifest/durum.json`) |
+| `KARARLAR.md` | Her mimari/stack/isimlendirme kararı + gerekçe + tarih |
+
+**Asla baştan başlanmaz; kaldığı yerden devam edilir.**
+
+## Değişmez Kurallar — ihlal edilirse iş kabul edilmez
+
+1. Tek `screen-manifest`: menü, rota, breadcrumb, yetki, özellik bayrağı, analitik olayı ve
+   testler `manifest/screen-manifest.json`'dan türer. Bu dosya **elle yazılmaz**, üretilir.
+2. `localStorage` / `sessionStorage` / query parametresi **rol, tenant veya yetki kaynağı
+   değildir**. Yetki ve tenant/proje/şantiye kapsamı sunucuda doğrulanır (RBAC + ABAC).
+3. **Sahte başarı bildirimi yok.** Her eylem gerçek API sonucu, gerçek hata kodu ve geri
+   döndürülebilir sonuç üretir.
+4. Liste, form, detay, rapor ve çıktı **tek kanonik kayıt/API** kullanır. Aynı örnek dizi
+   birden çok sayfaya kopyalanmaz.
+5. Kullanıcı **onay durumunu, nihai durumu veya keyfi onaycıyı seçemez**. Durum = merkezi
+   geçiş motoru; onaycı = sürümlü politika.
+6. **Onaylı kayıt yerinde değiştirilmez**; revizyon açılır, önceki sürüm ve karar geçmişi korunur.
+7. Finans, stok ve kart bakiyeleri elle yazılan sayı değildir; **değişmez hareket defterinden**
+   türetilir ve ters kayıtla düzeltilir.
+8. Tüm kritik yazmalarda **idempotency key + optimistic concurrency (version) + audit**.
+9. Tüm raporlar tek `ReportLayout`: filtre özeti, veri tarihi, rapor sürümü, açıklanmış KPI
+   formülü, PDF/Excel/CSV, print CSS. **Ekran = PDF = Excel.**
+10. Para: **tamsayı minor unit + para birimi**. Zaman: **UTC** saklanır, kullanıcı saat
+    diliminde gösterilir. Her kayıtta `created_by/at`, `updated_by/at`, `version`, `status`,
+    `tenant_id` ve bağlam kimlikleri.
+
+## Mimari
+
+Modüler monolit, **Node.js 22+**, **sıfır npm bağımlılığı** (yalnız `node:*` yerleşikleri —
+`node:http`, `node:sqlite`, `node:crypto`, `node:zlib`, `node:test`). Build adımı yok,
+`npm install` yok. Gerekçeler: `KARARLAR.md` K-002..K-011.
+
+```
+gaviabuild/
+├── PLAN.md · PROGRESS.md · KARARLAR.md    # çalışma protokolü (her oturum okunur)
+├── docs/REVIZYON.md                        # bağlayıcı şartname
+├── manifest/
+│   ├── screen-manifest.json                # ÜRETİLEN — 244 sayfa ailesi, tek kaynak
+│   ├── eski-eslesme.json                   # ÜRETİLEN — eski ekran → hedef karar
+│   └── durum.json                          # iş durumu (elle güncellenen tek durum kaynağı)
+├── app/                                    # uygulama (modüler monolit)
+│   ├── cekirdek/                           # http, db, hata, kimlik üretimi, para, zaman, audit
+│   ├── moduller/                           # kimlik, isakisi, dokuman, proje, santiye, plan,
+│   │                                       #  gorev, isg, kalite, satinalma, stok, sozlesme,
+│   │                                       #  finans, ik, kartlar, varlik, rapor, entegrasyon
+│   └── web/                                # sunucu render kabuk + ortak sayfa bileşenleri
+├── tests/                                  # node:test — birim, entegrasyon, kabul (§11)
+├── tools/                                  # manifest ve envanter üreteçleri
+├── raporlar/                               # faz raporları (kırık link, yetki, veri, çıktı)
+└── v2/                                     # ARŞİV — statik prototip, salt okunur görsel referans
+```
+
+Modül sınırları (doküman §8): kimlik-yetki · proje-şantiye · iş akışı · doküman ·
+satın alma-stok · sözleşme-hakediş · finans · İK · kartlar · varlık · rapor · entegrasyon.
+
+## Faz Sırası (doküman §9 — bozulmaz)
+
+| Faz | Kapsam | Çıkış koşulu |
+| --- | --- | --- |
+| 0 | Envanter ve yönlendirme | ✅ screen-manifest + 244 yol kararı + link testi |
+| 1 | Temel platform | Tüm API'lerde sunucu yetkisi; demo rol seçimi üretimde kapalı |
+| 2 | İş akışı omurgası | Formdan durum/onaycı seçilemiyor |
+| 3 | Proje ve saha | `/projeler/yeni` 200; WBS tabanlı ilerleme; günlük rapor PDF |
+| 4 | Tedarik ve finans | Üçlü eşleştirme; değişmez stok/finans defteri |
+| 5 | Kartlar | Sağlayıcı bağımsız model; idempotent gönderim; mutabakat |
+| 6 | Rapor, mobil, portallar | Filtre/sürüm tutarlı PDF/Excel; kapsam testleri |
+
+Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>` · Faz sonu tag: `faz-<N>-tamam` ·
+Dal: `revizyon/faz-0-6` · Her faz sonunda `raporlar/faz-<N>-rapor.md` üretilir.
+
+## Üretime Çıkış Engelleri (§12) — biri varsa faz kapanmaz
+
+- P0 rotada 404, WIP bağlantısı, yalnızca toast üreten işlem veya localStorage tabanlı iş kaydı
+- Kullanıcının query parametresi/istemci deposuyla rol, tenant, proje veya onay durumu değiştirebilmesi
+- Onaylı sözleşme/bütçe/iş programı/hakediş/yükleme partisinin sürüm açmadan düzenlenebilmesi
+- Stok, finans veya kart bakiyesinin hareket defterinden yeniden üretilememesi
+- Pluxee/MultiNet gönderiminde idempotency, durum sorgusu veya kısmi sonuç yönetiminin eksikliği
+- Rapor PDF/Excel çıktısının ekran filtresi, veri tarihi veya toplamlarıyla uyuşmaması
+- Kritik işlemde audit, yetki testi, hata/retry ekranı veya kişisel veri maskelemesinin eksikliği
 
 ## Gizlilik — KRİTİK
 
-Repo **PUBLIC**. Patron brief'i / kaynak dokümanlar (`~/Desktop/GaviaCRM Sources`) ve
-onlardan türetilen planlama dokümanları (`tasks/`, `docs/brief/`) **ASLA commit edilmez**
-— `.gitignore` bunu zorlar; yeni dosya eklerken kontrol et. Müşteri adı, gerçek kişi/firma
-bilgisi, ticari detay hiçbir commit'e girmez. Mock veriler tamamen kurgusaldır.
+Repo **PUBLIC**. Kaynak brief'ler ve onlardan türetilen planlama dokümanları (`tasks/`,
+`docs/brief/`) **ASLA commit edilmez** — `.gitignore` bunu zorlar. Müşteri adı, gerçek
+kişi/firma bilgisi, ticari detay hiçbir commit'e girmez. Mock tenant "Yapıtaş İnşaat A.Ş."
+tamamen kurgusaldır; seed/demo veri gerçek API üzerinden üretilir ve `DEMO` etiketi taşır.
 
-## Git İzin Kuralı — ŞART
+## Git Kuralı
 
-İlk repo bootstrap'i (repo + Pages + iskelet) dışında **hiçbir commit/push Beyar'ın açık
-onayı olmadan yapılmaz.** Agent'lar working tree'de serbestçe dosya üretir; commit/push
-kararı her zaman Beyar'a sorulur. Bu kural teammate/subagent'lar için de geçerlidir.
-
-**Aktif dalga sürecinde `git clean` çalıştırılmaz** — `tasks/` altındaki gitignored
-doğrulama dosyaları (`kordon.md`, `handoff.md`) kaybolur. Bu dosyalar izlenmediği için
-commit'ten geri getirilemez; kaybolurlarsa dalga sonu doğrulaması dayanaksız kalır.
+Bootstrap dışında commit/push **Beyar'ın açık onayıyla** yapılır. Revizyon turu (Faz 0-6)
+için bu onay verilmiştir: her tamamlanan iş paketi commit + push edilir, her faz tag'lenir.
 
 ### Yıkıcı git komutu YASAĞI — teammate/subagent'lar için MUTLAK
 
-**Agent teammate'ler yıkıcı git komutu ÇALIŞTIRAMAZ.** Yasak, istisnasız:
+| YASAK | İZİNLİ |
+| --- | --- |
+| `git stash` / `stash pop` / `stash apply` | `git add`, `git commit` (yalnız lead) |
+| `git reset` (her biçimi) | `git diff`, `git status`, `git log`, `git show` |
+| `git clean`, `git restore`, `git checkout -- <dosya>` | `git worktree` |
 
-| YASAK | | İZİNLİ |
-|---|---|---|
-| `git stash` (ve `stash pop`/`stash apply`) | | `git add` |
-| `git reset` (her biçimi) | | `git diff` |
-| `git clean` | | `git status` |
-| `git checkout -- <dosya>` | | `git commit` (yalnız lead) |
-| `git restore` | | `git log`, `git show` (okuma) |
+Taban karşılaştırması için `git show HEAD:<dosya>` veya `git diff` kullanılır; ikisi de
+working tree'ye dokunmaz. **Gerekçe (2026-08-02):** bir teammate'in `git stash pop`'u aynı
+anda çalışan üç ajanın işini working tree'den sildi (10 dosya). Paylaşılan working tree'de
+bir ajanın sıfırlaması diğerlerinin işini sessizce yok eder.
 
-Taban/karşılaştırma gerekiyorsa `git show HEAD:<dosya>` veya `git diff` kullanılır;
-ikisi de working tree'ye dokunmaz. `git worktree` de güvenlidir.
+## Görsel Dil
 
-**Gerekçe (2026-08-02, v3 revizyon turu):** Bir teammate, tablet taramasını tabanla
-karşılaştırmak için `git stash` + `stash pop` çalıştırdı; pop, sahibi olmadığı bir
-dosyada çakıştı ve **aynı anda çalışan üç ajanın işini working tree'den sildi** —
-10 dosya, hepsi yeniden yapıldı. Yasak o turda yalnız prompt'ta duruyordu; prompt
-kuralı ajan bazında delinebildiği için kural buraya, depoya taşındı.
-Paralel ajan varken working tree paylaşılan bir kaynaktır: bir ajanın onu
-sıfırlaması diğerlerinin işini sessizce yok eder.
-Olay kaydı: `tasks/lessons.md`.
+`docs/REVIZYON.md` §2'deki sayfa dili korunur: sol ikon rayı + bağlamsal ikinci menü,
+üst bar (arama, onay kutusu, bildirim, şirket/proje/şantiye seçici, kullanıcı menüsü),
+tıklanabilir breadcrumb, `eyebrow + H1 + tek satır açıklama` page-head, liste/form/detay/
+rapor kalıpları, mobilde tek kolon + kart görünümü. Görsel referans: `v2/` (ARŞİV).
+**Kopyalanmayacaklar:** demo veri, `?role=` rol seçimi, sahte başarı bildirimleri,
+`localStorage` iş kuralları.
 
-## Referans UI Dili
+### Gaviaworks marka paleti
 
-Yapı, layout, etkileşim ve component dili şu referanstan devralınır:
-`~/Developer/Projects/dadamutfak/v7-6cu356/sa-shell.html`
-(canlı: https://by4r.github.io/dadamutfak-view/v7-6cu356/sa-shell.html?role=super)
-
-Devralınan pattern'lar:
-- **Buildless stack:** vanilla CSS + vanilla JS, Font Awesome 6.5.2 CDN (kilitli ikon seti),
-  self-host/Google Fonts. Framework yok, Tailwind yok, build yok.
-- **Çift-sidebar shell:** sol ikon rail (bölümler) + ikinci sidebar (aktif bölümün modül
-  menüsü, JS ile render) + beyaz içerik alanı + sabit topbar (arama, bildirim zili, persona
-  chip'i). Divider grip ile menü katlanır, `localStorage`'da kalıcı.
-- **Shared-asset MPA:** her ekran kendi kendine yeten ayrı `.html` dosyası; ortak
-  `assets/css/*.css` + `assets/js/*.js` paylaşılır. Navigasyon gerçek `href` linkleriyle
-  tam sayfa geçiş. Sayfa kimliği `body[data-sec]` + `body[data-screen]` ile.
-- **Rol simülasyonu:** `?role=` query param → `localStorage` → default. JS `ROLES` config'i
-  rail görünürlüğünü budar, persona chip'ini yazar, yetkisiz bölümü rolün landing'ine
-  yönlendirir. Client-side RBAC simülasyonu.
-- **`--acc` accent-token mimarisi:** tüm componentler `var(--acc)` / `rgba(var(--acc-rgb),…)`
-  kullanır; bölüm/marka bazlı yeniden renklendirme 3 değişkenle olur.
-- **Component seti:** KPI kartları, `.pnl-card`, filtre bar'ı + chip'ler, durum rozetleri
-  (semantik renkler accent'ten BAĞIMSIZ sabit), tablo/liste pattern'ı, toast, confirm modal,
-  empty state, hesap dropdown'u. Yıkıcı aksiyonlarda global confirm interception.
-- **Etkileşim dili:** tek easing eğrisi, hover lift (−2px + gölge), accent focus ring,
-  980px/640px responsive kırılımları (mobilde off-canvas drawer).
-
-Dosya adlandırma: `crm-{bolum}-{modul}[-detay|-form].html` (referanstaki
-`sa-{section}-{module}` konvansiyonunun uyarlaması).
-
-## Gaviaworks Marka Paleti
-
-Renkler gaviaworks.com canlı CSS'inden (`/gavia/assets/css/brand.css`) birebir alınmıştır
-— TAHMİN ETME, kaynak bu:
+gaviaworks.com canlı CSS'inden birebir (`v2/assets/css/tokens.css` içinde tanımlı):
 
 ```css
---gavia-deep:   #020837;  /* en koyu lacivert — rail zemini */
---gavia-night:  #141533;  /* koyu lacivert — menü zemini */
---gavia-dark:   #0A0E27;  /* koyu yüzey */
---gavia-mint:   #3FD5AD;  /* ana accent */
---gavia-mint-bright: #4FE5BD;
---gavia-mint-glow: rgba(63, 213, 173, 0.12);
---gavia-light:  #E9EEF1;  /* koyu zeminde metin */
---gavia-muted:  #6B7280;
---gavia-border: #1F2740;
+--gv-deep:#020837;  --gv-night:#141533;  --gv-dark:#0A0E27;
+--gv-mint:#3FD5AD;  --gv-mint-bright:#4FE5BD;  --gv-mint-glow:rgba(63,213,173,.12);
+--gv-light:#E9EEF1; --gv-border-dark:#1F2740;
+--acc-ink:#0E8C6D;  /* açık zeminde erişilebilir mint türevi */
 ```
 
-- Font: **Manrope** (400/500/700/800, Google Fonts) — gaviaworks.com ile aynı.
-- Kimlik dark-first'tür; CRM içerik alanı **açık zemin** çalışır: sidebar katmanları
-  dark (deep/night), içerik light. Design-token dosyası HEM dark HEM light nötr skalayı
-  tanımlar (`assets/css/tokens.css`).
-- Mint, beyaz zeminde metin/buton için kontrast yetersiz kalabilir; açık zeminde
-  koyulaştırılmış türev accent kullanılır (token dosyasında tanımlı, onaya sunulmuş).
-- dadamutfak paleti (domates/krem/Gilroy) KULLANILMAZ — sadece yapı devralınır.
+Font **Manrope** (400/500/700/800). Kimlik dark-first; sidebar katmanları dark (deep/night),
+içerik alanı light. Semantik durum renkleri accent'ten **bağımsız sabittir**.
 
-## Görsel Kurallar (cross-project, ZORUNLU)
+### Görsel kuralları (zorunlu)
 
-- Görsel boyutlarında **CSS render genişliği esastır**; 2x retina çarpması YAPILMAZ.
-  (Örn. 400px genişlik render edilecekse 400px kaynak istenir/üretilir, 800px değil.)
-- **Kare/oranlı görseller `<img>` ile DEĞİL**, `div` + `background-image` +
-  `background-size: cover` + `background-position: center` ile konur.
-- Placeholder görsellerde de aynı kural geçerli; bozuk oran/taşma kabul edilmez.
+- Görsel boyutlarında **CSS render genişliği esastır**; 2x retina çarpması yapılmaz.
+- Kare/oranlı görseller `<img>` ile değil, `div` + `background-image` + `background-size:cover`
+  + `background-position:center` ile konur. Placeholder'da da aynı kural geçerlidir.
 
-## Agent-Team Workflow
+## Kalite Kapıları
 
-### Pilot-first, sonra ölçek
-1. Önce **shell + 1 temsili pilot sayfa** üretilir.
-2. **Beyar görsel onayı** alınır (bu bir kalite kapısıdır, atlanamaz).
-3. Onaydan SONRA modül bazlı paralel çoğaltmaya geçilir.
-
-### Domain separation
-- Her teammate **ayrı HTML modül dosyaları** sahiplenir; aynı dosyaya iki agent asla yazmaz.
-- Ortak shell + design system dosyaları (`assets/css/*`, `assets/js/*`, token dosyası)
-  **tek sahiptedir** ve pilot onayından sonra **kilitlenir**: değişiklik ihtiyacı sahibine
-  bildirilir, sahibi uygular.
-- Sahiplik tablosu `tasks/plan.md`'de tutulur.
-
-### Targeted edit only
-- Ortak dosyalarda **full-file overwrite YASAK** (lost-update önleme). Sadece hedefli
-  `Edit` (string replace) kullanılır. Kendi sahiplendiğin yeni sayfa dosyasını
-  ilk üretimde `Write` ile yazmak serbesttir.
-
-### frontend-design skill ZORUNLU
-- Her UI teammate, sayfa üretimi/polish sırasında **frontend-design skill'ini kullanmak
-  zorundadır** (whitespace ritmi, tipografik ölçek, kart kompozisyonu, template-default
-  görünümden kaçınma). Bu bir öneri değil şarttır; teammate prompt'larına yazılır.
-
-### Screenshot-eval döngüsü (done tanımı)
-Bir sayfaya "done" denmeden önce:
-1. Playwright ile sayfanın **anahtar state'lerinin** ekran görüntüsü alınır
-   (desktop 1440px + mobil 390px; varsa farklı rol/tab/boş-dolu state'ler).
-2. Görüntüler şu rubriğe + referans UI'ye göre öz-değerlendirilir:
-   - Görsel hiyerarşi ve whitespace ritmi
-   - Tipografik ölçek tutarlılığı
-   - Kontrast / erişilebilirlik (WCAG AA hedef)
-   - Component tutarlılığı (token ve pattern'lara sadakat)
-   - Referans UI diline sadakat (shell, etkileşim, yoğunluk)
-   - Gaviaworks marka tutarlılığı (palet, font, ton)
-3. Eksikler düzeltilir, gerekirse tekrar SS alınır; sonra "done" denir.
-
-## Dizin Yapısı
-
-```
-gaviacrm/
-├── CLAUDE.md              # bu dosya
-├── index.html             # giriş / rol seçimi (Pages kökü)
-├── crm-*.html             # ekranlar (bolum-modul[-detay|-form])
-├── assets/
-│   ├── css/               # tokens.css, shell.css, ui.css …
-│   └── js/                # shell.js, ui.js …
-├── tasks/                 # (GİTİGNORE) research.md, plan.md, handoff.md,
-│                          #  lessons.md, patron-questions.md
-├── docs/brief/            # (GİTİGNORE) kaynak doküman kopyaları
-└── .claude/
-    ├── commands/          # ör. /ss-eval
-    └── agents/            # teammate tanımları (plan onayından sonra)
-```
-
-## Çalışma Kuralları Özeti
-
-1. Faz 1 dışına çıkma; Faz 2/3 için sadece genişleme noktası bırak.
-2. Türkçe UI metinleri; sade, sektörün diliyle (şantiye, hakediş, puantaj, cari…).
-3. Her sayfa `?role=` simülasyonuna saygılı olmalı (yetkisiz içerik gizlenir).
-4. Bootstrap dışında commit/push için Beyar onayı ŞART.
-5. Hassas brief içeriği repoya girmez; mock veriler kurgusal.
-6. Deploy: push sonrası `gh api` Pages build polling YAPILMAZ; Beyar tarayıcıdan
-   doğrular. Sadece "push OK, Pages ~1-3 dk sonra canlı" de ve geç.
+- **frontend-design skill zorunlu:** her UI üretimi/polish'inde kullanılır (whitespace ritmi,
+  tipografik ölçek, kart kompozisyonu, template-default görünümden kaçınma).
+- **Screenshot-eval:** bir sayfaya "done" denmeden önce anahtar state'lerin SS'i alınır
+  (desktop 1440px + mobil 390px), görsel hiyerarşi / tipografik ölçek / kontrast (WCAG AA) /
+  component tutarlılığı / referans dile sadakat / marka tutarlılığı rubriğine göre değerlendirilir.
+- **Test:** her modül için birim, entegrasyon, yetki, durum geçişi, idempotency, erişilebilirlik
+  ve uçtan uca test. Doküman §11'deki kabul testlerinin **hepsi** `tests/kabul/` altında otomatiktir.
+- **Domain separation:** her teammate ayrı dosya sahiplenir; ortak dosyalarda **full-file
+  overwrite yasak**, yalnız hedefli `Edit`.

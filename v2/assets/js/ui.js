@@ -1,5 +1,5 @@
 /* =====================================================================
-   GAVIA CRM — PAYLAŞILAN UI PRİMİTİFLERİ (kabuk-bağımsız)
+   [ÜRÜN ADI] — PAYLAŞILAN UI PRİMİTİFLERİ (kabuk-bağımsız)
    gvToast · gvConfirm (+ delege yıkıcı-aksiyon onayı) · hesap dropdown ·
    data-demo sim toast'ı · data-export format menüsü (GV_EXPORTERS kayıtlıysa
    gerçek .xlsx/.csv indirme, değilse [MOCK-SİM] toast) ·
@@ -502,7 +502,7 @@
     act(opts.defHref, opts.defLbl || 'Varsayılan kaydı aç', 'btn-ghost', 'fa-file-lines');
     mount.innerHTML = '';
     mount.appendChild(card);
-    document.title = 'Kayıt Bulunamadı — Gavia CRM';
+    document.title = 'Kayıt Bulunamadı — [ÜRÜN ADI]';
   };
 
   /* ---- SAYFALANDIRMA (gv-pager, D17 Y5 / DK11) ----
