@@ -159,7 +159,15 @@ export function isAkisiTohumla(tenantId, kullaniciId = null) {
     for (const [nesne, onek] of [['talep', 'TLP'], ['siparis', 'SIP'], ['sozlesme', 'SZL'],
       ['hakedis', 'HKD'], ['duyuru', 'DYR'], ['dokuman', 'DOC'], ['gorev', 'GRV'],
       ['saha_bildirimi', 'SHB'], ['kart_yukleme', 'KYP'], ['proje', 'PRJ'], ['santiye', 'STE'],
-      ['is_programi', 'PRG'], ['gunluk_rapor', 'GNR'], ['isg_olayi', 'ISG'], ['ncr', 'NCR']]) {
+      ['is_programi', 'PRG'], ['gunluk_rapor', 'GNR'], ['isg_olayi', 'ISG'], ['ncr', 'NCR'],
+      ['itp', 'ITP'], ['muayene', 'MUY'], ['submittal', 'SBM'], ['rfi', 'RFI'],
+      ['test_sonucu', 'TST'], ['punch', 'PNC'], ['cizim', 'DRW'], ['transmittal', 'TRM'],
+      ['evrak', 'EVR'], ['personel', 'PER'], ['izin', 'IZN'], ['avans', 'AVS'],
+      ['zimmet', 'ZMT'], ['varlik', 'AST'], ['talep', 'TLP'], ['depo', 'DPO'],
+      ['stok_karti', 'STK'], ['mal_kabul', 'GRN'], ['transfer', 'TRF'], ['sayim', 'SYM'],
+      ['metraj', 'MTR'], ['degisiklik', 'CHG'], ['gecikme', 'DLY'], ['claim', 'CLM'],
+      ['butce', 'BDG'], ['kasa', 'CSH'], ['banka', 'BNK'], ['cari', 'CAR'],
+      ['fatura', 'INV'], ['odeme', 'PAY'], ['teminat', 'TMN'], ['zeyil', 'ZYL']]) {
       sablonKur(tenantId, nesne, onek);
     }
 

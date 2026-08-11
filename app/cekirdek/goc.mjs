@@ -9,6 +9,7 @@
 
 import { GOCLER_2 } from './goc2.mjs';
 import { GOCLER_3 } from './goc3.mjs';
+import { GOCLER_4 } from './goc4.mjs';
 
 const G001 = [
 { ad: 'G001_kimlik_ve_yetki', sql: `
@@ -252,4 +253,4 @@ CREATE INDEX ix_bildirim_kullanici ON bildirim (kullanici_id, okundu);
 ];
 
 /* Göçler sırayla uygulanır; her dosya bir faz ekler (tek yönlü, geri alınamaz). */
-export const GOCLER = [...G001, ...GOCLER_2, ...GOCLER_3];
+export const GOCLER = [...G001, ...GOCLER_2, ...GOCLER_3, ...GOCLER_4];

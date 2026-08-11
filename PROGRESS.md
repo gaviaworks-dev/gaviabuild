@@ -4,13 +4,13 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 177 · devam: 0 · bitti: 0 · doğrulandı: 67
+**Toplam:** 244 sayfa ailesi — bekliyor: 166 · devam: 0 · bitti: 0 · doğrulandı: 78
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
-| Faz 3 | 89 | 58 | 0 | 0 | 31 |
+| Faz 3 | 89 | 47 | 0 | 0 | 42 |
 | Faz 4 | 69 | 69 | 0 | 0 | 0 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
@@ -125,20 +125,20 @@
 | HSE-10 | KKD zimmet ve kontrol | P1 | listeForm | `/isg/kkd` | ⬜ bekliyor | — | sıfırdan |
 | HSE-11 | Çevre olayları ve atık | P2 | listeForm | `/cevre` | ⬜ bekliyor | — | sıfırdan |
 | HSE-12 | İSG istatistik raporu | P1 | rapor | `/raporlar/isg` | ⬜ bekliyor | — | sıfırdan |
-| QLT-01 | Kalite paneli | P0 | panel | `/kalite` | ⬜ bekliyor | — | sıfırdan |
-| QLT-02 | ITP listesi | P0 | liste | `/kalite/itp` | ⬜ bekliyor | — | sıfırdan |
-| QLT-03 | ITP formu | P0 | form | `/kalite/itp/yeni` | ⬜ bekliyor | — | sıfırdan |
-| QLT-04 | Muayene talepleri | P0 | listeForm | `/kalite/muayeneler` | ⬜ bekliyor | — | sıfırdan |
+| QLT-01 | Kalite paneli | P0 | panel | `/kalite` | ✅ doğrulandı | faz3b | Kalite paneli — NCR yaşlandırma, bekleyen muayene, RFI SLA |
+| QLT-02 | ITP listesi | P0 | liste | `/kalite/itp` | ✅ doğrulandı | faz3b | ITP listesi + kontrol noktaları (H/W/R/S) |
+| QLT-03 | ITP formu | P0 | form | `/kalite/itp/yeni` | ✅ doğrulandı | faz3b | ITP formu — onaylı ITP değiştirilemez |
+| QLT-04 | Muayene talepleri | P0 | listeForm | `/kalite/muayeneler` | ✅ doğrulandı | faz3b | Muayene talepleri — uygunsuz sonuç otomatik NCR açar |
 | QLT-05 | NCR uygunsuzluk listesi | P0 | liste | `/kalite/ncr` | ✅ doğrulandı | faz3 | NCR listesi — yaşlandırma, DÖF ve etkinlik durumu |
 | QLT-06 | NCR formu | P0 | form | `/kalite/ncr/yeni` | ✅ doğrulandı | faz3 | NCR formu — gereklilik/bulgu/etki/karantina |
 | QLT-07 | NCR detayı ve DÖF | P0 | detay | `/kalite/ncr/:id` | ✅ doğrulandı | faz3 | NCR detayı — üç adımlı kapanış zinciri, dört göz |
-| QLT-08 | Malzeme onayları | P0 | listeForm | `/teknik/malzeme-onaylari` | ⬜ bekliyor | — | sıfırdan |
-| QLT-09 | Submittal kayıtları | P0 | listeForm | `/teknik/submittal` | ⬜ bekliyor | — | sıfırdan |
-| QLT-10 | RFI listesi | P0 | liste | `/teknik/rfi` | ⬜ bekliyor | — | sıfırdan |
-| QLT-11 | RFI formu | P0 | form | `/teknik/rfi/yeni` | ⬜ bekliyor | — | sıfırdan |
-| QLT-12 | RFI detayı | P0 | detay | `/teknik/rfi/:id` | ⬜ bekliyor | — | sıfırdan |
-| QLT-13 | Test ve laboratuvar sonuçları | P1 | listeForm | `/kalite/testler` | ⬜ bekliyor | — | sıfırdan |
-| QLT-14 | Punch / eksik işler | P1 | listeForm | `/kalite/punch` | ⬜ bekliyor | — | sıfırdan |
+| QLT-08 | Malzeme onayları | P0 | listeForm | `/teknik/malzeme-onaylari` | ✅ doğrulandı | faz3b | Malzeme onayları — submittal tablosunun filtrelenmiş görünümü (kural 4) |
+| QLT-09 | Submittal kayıtları | P0 | listeForm | `/teknik/submittal` | ✅ doğrulandı | faz3b | Submittal — sürümlü, müşavir karar kodu (A/B/C/D) dondurulur |
+| QLT-10 | RFI listesi | P0 | liste | `/teknik/rfi` | ✅ doğrulandı | faz3b | RFI listesi — SLA ve kapsam/süre/maliyet etkisi |
+| QLT-11 | RFI formu | P0 | form | `/teknik/rfi/yeni` | ✅ doğrulandı | faz3b | RFI formu — SLA gerekli tarihten türer |
+| QLT-12 | RFI detayı | P0 | detay | `/teknik/rfi/:id` | ✅ doğrulandı | faz3b | RFI detayı — yanıt kapsam etkiliyse değişiklik tetikler (§7) |
+| QLT-13 | Test ve laboratuvar sonuçları | P1 | listeForm | `/kalite/testler` | ✅ doğrulandı | faz3b | Test sonuçları — uygunsuz test otomatik kritik NCR açar |
+| QLT-14 | Punch / eksik işler | P1 | listeForm | `/kalite/punch` | ✅ doğrulandı | faz3b | Punch listesi — kapanış KANIT ister |
 | DOC-04 | Çizim listesi | P0 | liste | `/cizimler` | ⬜ bekliyor | — | sıfırdan |
 | DOC-05 | Çizim detayı | P0 | detay | `/cizimler/:id` | ⬜ bekliyor | — | sıfırdan |
 | DOC-06 | Transmittal listesi | P0 | liste | `/transmittal` | ⬜ bekliyor | — | sıfırdan |
