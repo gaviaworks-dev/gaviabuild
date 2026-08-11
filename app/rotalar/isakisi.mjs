@@ -31,6 +31,10 @@ import { kabulOnaySonucu, santiyeKapanisOnaySonucu } from './santiye-ek.mjs';
 import { projeKapanisOnaySonucu } from './proje-ek.mjs';
 import { satinalmaOnaySonucu } from './satinalma.mjs';
 import { sayimOnaySonucu } from './stok.mjs';
+import { sozlesmeOnaySonucu } from './sozlesme.mjs';
+import { degisiklikOnaySonucu } from './sozlesme-ek.mjs';
+import { butceOnaySonucu } from './finans.mjs';
+import { finansOnaySonucu } from './finans-ek.mjs';
 
 const ekranNesnesi = (kod) => manifest().ekranlar.find((e) => e.kod === kod);
 const ciz = (ctx, ekran, icerik, ek = {}) => {
@@ -409,6 +413,14 @@ function isNesnesiniIlerlet(ctx, talepId, sonuc) {
   if (t.nesne === 'proje_kapanis') { projeKapanisOnaySonucu(ctx, t.nesne_id, sonuc); return; }
   if (t.nesne === 'talep' || t.nesne === 'siparis') { satinalmaOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return; }
   if (t.nesne === 'stok_sayimi') { sayimOnaySonucu(ctx, t.nesne_id, sonuc); return; }
+  if (['sozlesme', 'zeyil', 'metraj', 'hakedis'].includes(t.nesne)) {
+    sozlesmeOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return;
+  }
+  if (t.nesne === 'butce') { butceOnaySonucu(ctx, t.nesne_id, sonuc); return; }
+  if (['fatura', 'odeme'].includes(t.nesne)) { finansOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return; }
+  if (['degisiklik', 'sure_uzatim'].includes(t.nesne)) {
+    degisiklikOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return;
+  }
   if (t.nesne === 'duyuru' && sonuc === 'onaylandi') {
     const d = tek('SELECT * FROM duyuru WHERE id = ?', t.nesne_id);
     if (!d || d.durum !== 'taslak') return;

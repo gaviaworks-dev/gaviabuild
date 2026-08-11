@@ -234,12 +234,18 @@ describe('Şablon seçimi ve paralel adım', () => {
 
   test('paralel adım tanımı: aynı sıra, gereken onay > 1', () => {
     const t = tek(`SELECT id FROM tenant WHERE kod = 'yapitas'`);
-    const adimlar = sorgu(
-      `SELECT a.* FROM is_akisi_adimi a JOIN is_akisi_sablonu s ON s.id = a.sablon_id
-        WHERE s.tenant_id = ? AND s.kod = 'HAKEDIS' ORDER BY a.sira`, t.id);
-    const birinciSira = adimlar.filter((a) => a.sira === 1);
-    assert.equal(birinciSira.length, 2, 'hakediş şablonunda paralel adım yok');
-    assert.ok(birinciSira.every((a) => a.paralel === 1 && a.gereken_onay === 2));
+    /* Hangi şablonda olduğu iş kararıdır ve değişebilir; MOTOR en az bir yerde
+       paralel adımı desteklemeli ve tohumlama onu doğru yazmalıdır. */
+    const paralel = sorgu(
+      `SELECT s.kod AS sablon, a.sira, COUNT(*) AS adet, MAX(a.gereken_onay) AS gereken
+         FROM is_akisi_adimi a JOIN is_akisi_sablonu s ON s.id = a.sablon_id
+        WHERE s.tenant_id = ? AND a.paralel = 1
+        GROUP BY s.id, a.sira HAVING COUNT(*) > 1`, t.id);
+    assert.ok(paralel.length > 0, 'hiçbir şablonda paralel adım tanımlı değil');
+    for (const p of paralel) {
+      assert.ok(p.gereken > 1, `${p.sablon} paralel adımında gereken onay 1 kalmış`);
+      assert.equal(p.adet, p.gereken, `${p.sablon}: paralel adım sayısı gereken onayla uyuşmuyor`);
+    }
   });
 });
 

@@ -28,10 +28,12 @@ export const HAREKET_ETIKETI = {
 };
 
 /** Binde tamsayı ayrıştırıcı: "12,5" → 12500. Kayan nokta saklanmaz (K-004). */
-export function miktarAyristir(girdi, alanAdi = 'miktar', { enAz = 1 } = {}) {
+export function miktarAyristir(girdi, alanAdi = 'miktar', { enAz = 1, sifirSerbest = false } = {}) {
   const s = String(girdi ?? '').trim().replace(',', '.');
   if (!s) throw DogrulamaHatasi('Miktar zorunludur.', { alanlar: { [alanAdi]: ['Miktar girin.'] } });
   const n = Number(s);
+  /* Sıfır, kabul/ret gibi "bölüştürme" alanlarında geçerli bir değerdir. */
+  if (sifirSerbest && Number.isFinite(n) && n === 0) return 0;
   if (!Number.isFinite(n) || n <= 0) {
     throw DogrulamaHatasi('Miktar sıfırdan büyük olmalı.', { alanlar: { [alanAdi]: ['Geçerli bir miktar girin.'] } });
   }

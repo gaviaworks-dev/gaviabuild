@@ -4,14 +4,14 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 96 · devam: 0 · bitti: 0 · doğrulandı: 148
+**Toplam:** 244 sayfa ailesi — bekliyor: 66 · devam: 0 · bitti: 0 · doğrulandı: 178
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
 | Faz 3 | 89 | 0 | 0 | 0 | 89 |
-| Faz 4 | 69 | 46 | 0 | 0 | 23 |
+| Faz 4 | 69 | 16 | 0 | 0 | 53 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
 
@@ -188,36 +188,36 @@
 | STK-08 | Sarf ve iade | P0 | listeForm | `/stok/sarf` | ✅ doğrulandı | faz4a | Sarf ve iade — doğrudan deftere; negatif bakiye engelli |
 | STK-09 | Stok sayımı | P1 | sihirbaz | `/stok/sayim` | ✅ doğrulandı | faz4a | Stok sayımı — kör sayım, defter dondurulur, fark onaydan sonra yazılır |
 | STK-10 | Stok hareket defteri | P0 | rapor | `/stok/hareketler` | ✅ doğrulandı | faz4a | Stok hareket defteri — değişmez (tetikleyici), ters kayıtla düzeltilir (STK-01 kabul) |
-| CNT-01 | Sözleşmeler | P0 | liste | `/sozlesmeler` | ⬜ bekliyor | — | kaynak: crm-finans-sozlesmeler (koru), crm-satis-sozlesmeler (birlestir) |
-| CNT-02 | Yeni sözleşme | P0 | form | `/sozlesmeler/yeni` | ⬜ bekliyor | — | kaynak: crm-finans-sozlesme-form (koru) |
-| CNT-03 | Sözleşme detayı | P0 | detay | `/sozlesmeler/:id` | ⬜ bekliyor | — | kaynak: crm-finans-sozlesme-detay (koru), crm-finans-sozlesme-yetki (birlestir), crm-satis-sozlesme-detay (birlestir) |
-| CNT-04 | Zeyil ve ek protokol | P0 | listeForm | `/sozlesmeler/:id/zeyiller` | ⬜ bekliyor | — | kaynak: crm-finans-sozlesme-revizyon (birlestir) |
-| CNT-05 | Teminatlar | P0 | listeForm | `/teminatlar` | ⬜ bekliyor | — | sıfırdan |
-| CNT-06 | Metraj cetvelleri | P0 | listeForm | `/metraj` | ⬜ bekliyor | — | sıfırdan |
-| CNT-07 | Hakedişler | P0 | liste | `/hakedisler` | ⬜ bekliyor | — | sıfırdan |
-| CNT-08 | Yeni hakediş | P0 | sihirbaz | `/hakedisler/yeni` | ⬜ bekliyor | — | kaynak: crm-finans-hakedis-form (koru) |
-| CNT-09 | Hakediş detayı | P0 | listeForm | `/hakedisler/:id` | ⬜ bekliyor | — | kaynak: crm-finans-hakedis-cikti (birlestir), crm-finans-hakedis-detay (koru), crm-finans-hakedis-onay-gecmisi (birlestir) |
-| CNT-10 | Değişiklik talepleri | P0 | liste | `/degisiklikler` | ⬜ bekliyor | — | sıfırdan |
-| CNT-11 | Yeni değişiklik talebi | P0 | form | `/degisiklikler/yeni` | ⬜ bekliyor | — | sıfırdan |
-| CNT-12 | Değişiklik emri | P0 | onay | `/degisiklikler/:id` | ⬜ bekliyor | — | sıfırdan |
-| CNT-13 | Gecikme olayları | P0 | listeForm | `/gecikme-olaylari` | ⬜ bekliyor | — | sıfırdan |
-| CNT-14 | Süre uzatım talepleri | P0 | listeForm | `/sure-uzatim` | ⬜ bekliyor | — | kaynak: crm-santiye-sure-uzatim-form (koru) |
-| CNT-15 | Claim / talep dosyaları | P1 | listeForm | `/claimler` | ⬜ bekliyor | — | sıfırdan |
-| FIN-01 | Finans paneli | P0 | panel | `/finans` | ⬜ bekliyor | — | kaynak: crm-finans-nakit (birlestir) |
-| FIN-02 | Bütçeler | P0 | listeForm | `/butceler` | ⬜ bekliyor | — | kaynak: crm-finans-butce-detay (koru), crm-finans-butce (koru) |
-| FIN-03 | Bütçe revizyonu | P0 | onay | `/butceler/:id/revizyon` | ⬜ bekliyor | — | sıfırdan |
-| FIN-04 | Tahmin ve EAC | P1 | rapor | `/tahminler` | ⬜ bekliyor | — | sıfırdan |
-| FIN-05 | Kasalar | P0 | listeForm | `/kasalar` | ⬜ bekliyor | — | kaynak: crm-operasyon-kasa-detay (koru), crm-operasyon-kasa-form (birlestir), crm-operasyon-kasa (koru) |
-| FIN-06 | Kasa hareketleri | P0 | listeForm | `/kasa-hareketleri` | ⬜ bekliyor | — | kaynak: crm-operasyon-kasa-belgesiz-harcama-form (birlestir), crm-operasyon-kasa-onay-gecmisi (birlestir) |
-| FIN-07 | Banka hesapları | P0 | listeForm | `/banka-hesaplari` | ⬜ bekliyor | — | kaynak: crm-ayarlar-banka-form (birlestir), crm-finans-banka-detay (koru), crm-finans-banka-form (birlestir), crm-finans-banka (koru) |
-| FIN-08 | Banka hareketleri | P0 | liste | `/banka-hareketleri` | ⬜ bekliyor | — | kaynak: crm-finans-banka-hareket-detay (birlestir), crm-finans-banka-hareket-form (birlestir), crm-finans-banka-hareket (koru) |
-| FIN-09 | Banka hareketi eşleştirme | P0 | mutabakat | `/banka-hareketleri/eslestirme` | ⬜ bekliyor | — | sıfırdan |
-| FIN-10 | Cari hesaplar | P0 | listeForm | `/cariler` | ⬜ bekliyor | — | kaynak: crm-cari-detay (koru), crm-cari-durum (birlestir), crm-cari-form (birlestir), crm-cari (koru), crm-finans-kurum (birlestir), crm-finans-mizan (birlestir) |
-| FIN-11 | Ödeme talepleri | P0 | listeForm | `/odemeler` | ⬜ bekliyor | — | sıfırdan |
-| FIN-12 | Ödeme planı | P1 | takvim | `/odemeler/plan` | ⬜ bekliyor | — | sıfırdan |
-| FIN-13 | Fatura kayıtları | P0 | listeForm | `/faturalar` | ⬜ bekliyor | — | kaynak: crm-satinalma-irsaliye-fatura (birlestir) |
-| FIN-14 | Üçlü eşleştirme | P0 | mutabakat | `/faturalar/eslestirme` | ⬜ bekliyor | — | sıfırdan |
-| FIN-15 | Dönem kapanışı | P1 | sihirbaz | `/finans/donem-kapanis` | ⬜ bekliyor | — | kaynak: crm-operasyon-kasa-donem-kapat (birlestir), crm-operasyon-kasa-mutabakat (birlestir) |
+| CNT-01 | Sözleşmeler | P0 | liste | `/sozlesmeler` | ✅ doğrulandı | faz4b | Sözleşmeler — bedel pozlardan türer, güncel bedel zeyillerle |
+| CNT-02 | Yeni sözleşme | P0 | form | `/sozlesmeler/yeni` | ✅ doğrulandı | faz4b | Yeni sözleşme — poz cetveli; toplam alanı yok |
+| CNT-03 | Sözleşme detayı | P0 | detay | `/sozlesmeler/:id` | ✅ doğrulandı | faz4b | Sözleşme detayı — onaylı sözleşmenin pozu değişmez (kural 6) |
+| CNT-04 | Zeyil ve ek protokol | P0 | listeForm | `/sozlesmeler/:id/zeyiller` | ✅ doğrulandı | faz4b | Zeyiller — sözleşmeyi yerinde değiştirmez, farkı taşır; onaydan geçer |
+| CNT-05 | Teminatlar | P0 | listeForm | `/teminatlar` | ✅ doğrulandı | faz4b | Teminatlar — süresi yaklaşan uyarısı; iade/nakde çevirme gerekçeli |
+| CNT-06 | Metraj cetvelleri | P0 | listeForm | `/metraj` | ✅ doğrulandı | faz4b | Metraj cetvelleri — onaylanmadan hakedişe giremez |
+| CNT-07 | Hakedişler | P0 | liste | `/hakedisler` | ✅ doğrulandı | faz4b | Hakedişler — dönem brüt, kesinti ve net ayrı |
+| CNT-08 | Yeni hakediş | P0 | sihirbaz | `/hakedisler/yeni` | ✅ doğrulandı | faz4b | Yeni hakediş — ONAYLI metrajdan üretilir; tutar alanı yok |
+| CNT-09 | Hakediş detayı | P0 | listeForm | `/hakedisler/:id` | ✅ doğrulandı | faz4b | Hakediş detayı — kesinti icmali formülüyle; onaylı hakediş değişmez |
+| CNT-10 | Değişiklik talepleri | P0 | liste | `/degisiklikler` | ✅ doğrulandı | faz4b | Değişiklik talepleri — kapsam etkili RFI kaynağı (§7) |
+| CNT-11 | Yeni değişiklik talebi | P0 | form | `/degisiklikler/yeni` | ✅ doğrulandı | faz4b | Yeni değişiklik talebi — tutar/süre/kapsam etkisi |
+| CNT-12 | Değişiklik emri | P0 | onay | `/degisiklikler/:id` | ✅ doğrulandı | faz4b | Değişiklik emri — onaylanınca otomatik zeyil taslağı açar (§7) |
+| CNT-13 | Gecikme olayları | P0 | listeForm | `/gecikme-olaylari` | ✅ doğrulandı | faz4b | Gecikme olayları — etkilenen gün hesaplanır; kabul dört göz ister |
+| CNT-14 | Süre uzatım talepleri | P0 | listeForm | `/sure-uzatim` | ✅ doğrulandı | faz4b | Süre uzatım talepleri — kabul edilmiş gecikme olayına dayanır, aşamaz |
+| CNT-15 | Claim / talep dosyaları | P1 | listeForm | `/claimler` | ✅ doğrulandı | faz4b | Claim dosyaları — dayanaksız açılamaz; kabul tutarı talebi aşamaz |
+| FIN-01 | Finans paneli | P0 | panel | `/finans` | ✅ doğrulandı | faz4b | Finans paneli — kasa/banka bakiyeleri defterden; eşleşmemiş uyarısı |
+| FIN-02 | Bütçeler | P0 | listeForm | `/butceler` | ✅ doğrulandı | faz4b | Bütçeler — maliyet kodu bazlı; gerçekleşen defterlerden hesaplanır |
+| FIN-03 | Bütçe revizyonu | P0 | onay | `/butceler/:id/revizyon` | ✅ doğrulandı | faz4b | Bütçe revizyonu — onaylı bütçe yerinde değişmez, yeni sürüm açar |
+| FIN-04 | Tahmin ve EAC | P1 | rapor | `/tahminler` | ✅ doğrulandı | faz4b | Tahmin ve EAC — BAC/EV/AC/CPI/EAC/VAC formülleriyle |
+| FIN-05 | Kasalar | P0 | listeForm | `/kasalar` | ✅ doğrulandı | faz4b | Kasalar — bakiye sütunu YOK; defterden türer, eksiye düşemez |
+| FIN-06 | Kasa hareketleri | P0 | listeForm | `/kasa-hareketleri` | ✅ doğrulandı | faz4b | Kasa hareketleri — değişmez defter, ters kayıt; belgesiz harcama açıklama ister |
+| FIN-07 | Banka hesapları | P0 | listeForm | `/banka-hesaplari` | ✅ doğrulandı | faz4b | Banka hesapları — bakiye defterden |
+| FIN-08 | Banka hareketleri | P0 | liste | `/banka-hareketleri` | ✅ doğrulandı | faz4b | Banka hareketleri — tutar/yön/tarih değişmez; mükerrer referans reddedilir |
+| FIN-09 | Banka hareketi eşleştirme | P0 | mutabakat | `/banka-hareketleri/eslestirme` | ✅ doğrulandı | faz4b | Banka eşleştirme — tutar farkı gerekçe ister; ödeme eşleşince ödendi olur |
+| FIN-10 | Cari hesaplar | P0 | listeForm | `/cariler` | ✅ doğrulandı | faz4b | Cari hesaplar — bakiye ve ekstre defterden türer |
+| FIN-11 | Ödeme talepleri | P0 | listeForm | `/odemeler` | ✅ doğrulandı | faz4b | Ödeme talepleri — yalnız ONAYLI fatura/hakedişe; tutar belgeden alınır |
+| FIN-12 | Ödeme planı | P1 | takvim | `/odemeler/plan` | ✅ doğrulandı | faz4b | Ödeme planı — haftalık nakit projeksiyonu, açık uyarısı |
+| FIN-13 | Fatura kayıtları | P0 | listeForm | `/faturalar` | ✅ doğrulandı | faz4b | Fatura kayıtları — mükerrer fatura engelli; eşleştirmesiz onaya gitmez |
+| FIN-14 | Üçlü eşleştirme | P0 | mutabakat | `/faturalar/eslestirme` | ✅ doğrulandı | faz4b | Üçlü eşleştirme — sonuç hesaplanır; tolerans dışı fark gerekçe + onay ister |
+| FIN-15 | Dönem kapanışı | P1 | sihirbaz | `/finans/donem-kapanis` | ✅ doğrulandı | faz4b | Dönem kapanışı — engel listesi; kapalı döneme yazılamaz; yeniden açma dört göz |
 | AST-01 | Varlık listesi | P0 | liste | `/varliklar` | ⬜ bekliyor | — | kaynak: crm-operasyon-demirbas (koru), crm-operasyon-makine (birlestir) |
 | AST-02 | Yeni varlık | P0 | form | `/varliklar/yeni` | ⬜ bekliyor | — | kaynak: crm-operasyon-arac-form (birlestir), crm-operasyon-demirbas-form (koru), crm-operasyon-makine-form (birlestir) |
 | AST-03 | Varlık detayı | P0 | detay | `/varliklar/:id` | ⬜ bekliyor | — | kaynak: crm-operasyon-demirbas-detay (koru) |

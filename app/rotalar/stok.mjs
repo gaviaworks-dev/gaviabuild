@@ -589,9 +589,9 @@ function malKabulIslemi(ctx, m, govde) {
     const kabulGirdi = String(govde[`kabul_${k.id}`] ?? '').trim();
     const retGirdi = String(govde[`ret_${k.id}`] ?? '').trim();
     let kabul = 0; let ret = 0;
-    try { kabul = kabulGirdi ? miktarAyristir(kabulGirdi, `kabul_${k.id}`) : 0; }
+    try { kabul = kabulGirdi ? miktarAyristir(kabulGirdi, `kabul_${k.id}`, { sifirSerbest: true }) : 0; }
     catch (e) { hatalar[`kabul_${k.id}`] = [e.mesaj]; continue; }
-    try { ret = retGirdi ? miktarAyristir(retGirdi, `ret_${k.id}`) : 0; }
+    try { ret = retGirdi ? miktarAyristir(retGirdi, `ret_${k.id}`, { sifirSerbest: true }) : 0; }
     catch (e) { hatalar[`ret_${k.id}`] = [e.mesaj]; continue; }
     if (kabul + ret !== k.gelen_binde) {
       hatalar[`kabul_${k.id}`] = [
@@ -1197,7 +1197,7 @@ function sayimIslemi(ctx, govde) {
     if (s.durum !== 'sayiliyor') throw GecisIzinsiz('Yalnız "sayılıyor" durumundaki sayıma satır girilir.');
     const kart = tek('SELECT * FROM stok_karti WHERE id = ? AND tenant_id = ?', govde.kartId, ctx.tenant.id);
     if (!kart) throw DogrulamaHatasi('Stok kartı seçin.', { alanlar: { kartId: ['Kart bulunamadı.'] } });
-    const sayilan = String(govde.sayilan ?? '').trim() === '0' ? 0 : miktarAyristir(govde.sayilan, 'sayilan');
+    const sayilan = miktarAyristir(govde.sayilan, 'sayilan', { sifirSerbest: true });
     if (tek('SELECT id FROM stok_sayim_satiri WHERE sayim_id = ? AND stok_karti_id = ?', s.id, kart.id)) {
       throw Cakisma(`${kart.kod} bu sayımda zaten var.`);
     }

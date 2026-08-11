@@ -62,17 +62,61 @@ const SABLONLAR = [
   },
   {
     kod: 'SOZLESME', ad: 'Sözleşme onayı', nesne: 'sozlesme', altMinor: 0, ustMinor: null, sla: 72,
+    /* Sözleşmeyi finans hazırlar; kapsamı proje müdürü, imzayı firma sahibi onaylar.
+       Hazırlayan zinciri onaylayamaz (dört göz) — bu yüzden finans adımda yoktur. */
     adimlar: [
-      { sira: 1, ad: 'Finans incelemesi', rol: 'finans_sorumlusu', gereken: 1 },
+      { sira: 1, ad: 'Proje müdürü kapsam onayı', rol: 'proje_muduru', gereken: 1 },
       { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
     ],
   },
   {
-    kod: 'HAKEDIS', ad: 'Hakediş onayı', nesne: 'hakedis', altMinor: 0, ustMinor: null, sla: 72,
+    kod: 'ZEYIL', ad: 'Zeyilname onayı', nesne: 'zeyil', altMinor: 0, ustMinor: null, sla: 72,
     adimlar: [
-      /* Paralel adım örneği: proje ve finans AYNI sırada, ikisi de onaylamalı. */
-      { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', paralel: 1, gereken: 2 },
-      { sira: 1, ad: 'Finans onayı', rol: 'finans_sorumlusu', paralel: 1, gereken: 2 },
+      { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'METRAJ', ad: 'Metraj onayı', nesne: 'metraj', sla: 48,
+    adimlar: [{ sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 }],
+  },
+  {
+    kod: 'DEGISIKLIK', ad: 'Değişiklik emri onayı', nesne: 'degisiklik',
+    altMinor: 0, ustMinor: null, sla: 96,
+    /* Talebi saha/proje açar; finans fiyatlar, firma sahibi imzalar. */
+    adimlar: [
+      { sira: 1, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'BUTCE', ad: 'Bütçe ve revizyon onayı', nesne: 'butce', altMinor: 0, ustMinor: null, sla: 96,
+    /* Bütçeyi finans hazırlar; kapsamı proje müdürü teyit eder, firma sahibi onaylar.
+       Hazırlayan kendi bütçesini onaylayamaz (dört göz). */
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü teyidi', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'FATURA', ad: 'Fatura onayı', nesne: 'fatura', altMinor: 0, ustMinor: null, sla: 48,
+    /* Faturayı finans kaydeder; mal/hizmetin alındığını proje müdürü teyit eder,
+       ödemeyi firma sahibi yetkilendirir. Kaydeden zinciri onaylayamaz (dört göz). */
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü teyidi', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'ODEME', ad: 'Ödeme talebi onayı', nesne: 'odeme', altMinor: 0, ustMinor: null, sla: 48,
+    /* Ödeme yetkisi firma sahibindedir; talebi finans hazırlar. */
+    adimlar: [{ sira: 1, ad: 'Firma sahibi ödeme yetkisi', rol: 'firma_sahibi', gereken: 1 }],
+  },
+  {
+    kod: 'HAKEDIS', ad: 'Hakediş onayı', nesne: 'hakedis', altMinor: 0, ustMinor: null, sla: 72,
+    /* Hakedişi finans üretir; miktarları proje müdürü teyit eder, firma sahibi onaylar. */
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü miktar teyidi', rol: 'proje_muduru', gereken: 1 },
       { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
     ],
   },
@@ -231,7 +275,7 @@ export function isAkisiTohumla(tenantId, kullaniciId = null) {
       ['fatura', 'INV'], ['odeme', 'PAY'], ['teminat', 'TMN'], ['zeyil', 'ZYL'],
       ['kabul', 'KBL'], ['is_emri', 'IEM'], ['toplanti', 'TPL'],
       ['isg_denetimi', 'DEN'], ['tedarikci', 'TED'], ['rfq', 'RFQ'], ['teklif_kaydi', 'TKF'],
-      ['stok_transferi', 'TRF'], ['stok_sayimi', 'SYM']]) {
+      ['stok_transferi', 'TRF'], ['stok_sayimi', 'SYM'], ['sure_uzatim', 'SUZ']]) {
       sablonKur(tenantId, nesne, onek);
     }
 

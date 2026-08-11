@@ -39,6 +39,9 @@ export const KALIP_EYLEMLERI = {
 export const EKRAN_EYLEMLERI = {
   'GLB-04': ['goruntule'],
   'GLB-05': ['goruntule', 'karar_ver'],
+  /* Dönem kapatma ile YENİDEN AÇMA ayrı yetkilerdir: kapatan kişi tek başına
+     geri alamasın diye "kapat" ayrı bir eylem olarak tanımlanır (FIN-15). */
+  'FIN-15': ['goruntule', 'tamamla', 'kapat'],
 };
 
 /* Katalogda AYRI form ekranı olmayan liste ekranları kaydı kendisi açar.
@@ -80,7 +83,9 @@ export const ROLLER = [
   {
     kod: 'proje_muduru', ad: 'Proje müdürü', sistem: 1,
     aciklama: 'Sorumlu olduğu proje ve şantiyelerde operasyon yönetimi.',
-    bolumler: ['calisma', 'proje', 'santiye', 'plan', 'gorev', 'isg', 'kalite', 'dokuman', 'personel', 'satinalma', 'stok', 'varlik', 'rapor'],
+    /* Sözleşme bölümü de proje müdürünün işidir: metraj onayı, değişiklik talebi,
+       gecikme olayı ve süre uzatımı sahadan doğar (§7). Ödeme ve fatura finansta kalır. */
+    bolumler: ['calisma', 'proje', 'santiye', 'plan', 'gorev', 'isg', 'kalite', 'dokuman', 'personel', 'satinalma', 'stok', 'sozlesme', 'varlik', 'rapor'],
     eylemler: ['goruntule', 'olustur', 'guncelle', 'karar_ver', 'disa_aktar', 'tamamla'],
     kapsam: [
       { nesne: '*', kural: 'kapsam_zorunlu', deger: { turler: ['proje', 'santiye'] } },
@@ -114,7 +119,7 @@ export const ROLLER = [
     kod: 'finans_sorumlusu', ad: 'Finans sorumlusu', sistem: 1,
     aciklama: 'Kasa, banka, cari, bütçe, hakediş ve kart mutabakatı.',
     bolumler: ['calisma', 'finans', 'sozlesme', 'kartlar', 'rapor'],
-    eylemler: ['goruntule', 'olustur', 'guncelle', 'karar_ver', 'disa_aktar', 'kapat'],
+    eylemler: ['goruntule', 'olustur', 'guncelle', 'karar_ver', 'disa_aktar', 'tamamla', 'kapat'],
     kapsam: [{ nesne: 'kart_hareket', kural: 'alan_maskesi', deger: { alanlar: ['uye_isyeri'] } }],
   },
   {

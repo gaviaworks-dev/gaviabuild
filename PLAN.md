@@ -115,7 +115,7 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz4(PRC,STK)` · **Test:** 243/243 · **Doğrulanan ekran:** 148/244
+**Son commit:** `faz4(CNT,FIN)` · **Test:** 271/271 · **Doğrulanan ekran:** 178/244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
@@ -123,7 +123,7 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 | Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
 | Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
 | Faz 3 | ✅ kapandı (`faz-3-tamam`) | 89/89 aile; raporlar/faz-3-rapor.md; §12 engeli yok |
-| Faz 4 | 🟡 23/69 aile | PRC-01..13 ve STK-01..10 tamam (`faz4a`); sırada CNT → FIN → AST → HR-10..13 |
+| Faz 4 | 🟡 53/69 aile | PRC, STK (`faz4a`) + CNT, FIN (`faz4b`) tamam; kalan: AST-01..10, HR-10..13, GLB-02/03 |
 | Faz 5-6 | ⬜ başlamadı | |
 
 ### Faz 3'te teslim edilenler
@@ -140,10 +140,10 @@ Sıra doküman §9'a göre: **PRC → STK → CNT → FIN**, ardından AST ve GL
 
 1. ~~**Satın alma (PRC-01..13)**~~ ✅ `faz4a` — PRC-01 kabul yeşil.
 2. ~~**Depo ve stok (STK-01..10)**~~ ✅ `faz4a` — STK-01 kabul yeşil; defter tetikleyiciyle değişmez.
-3. **Sözleşme, metraj, hakediş (CNT-01..15)** — 15 aile. Onaylı metraj + onaylı ilerlemeden
-   hakediş üretimi; zeyil ve değişiklik emri sürümlü.
-4. **Finans (FIN-01..15)** — 15 aile. Kabul: üçlü eşleştirme; tolerans dışı fark onaya gider.
-5. **Varlık ve filo (AST-01..10)** — 10 aile.
+3. ~~**Sözleşme, metraj, hakediş (CNT-01..15)**~~ ✅ `faz4b`.
+4. ~~**Finans (FIN-01..15)**~~ ✅ `faz4b` — üçlü eşleştirme kabul testi yeşil.
+5. **Varlık ve filo (AST-01..10)** — 10 aile. Bakım iş emri `is_emri` tablosunu kullanır
+   (kural 4); araçlar `varlik` tablosunun filtrelenmiş görünümüdür.
 6. **İK finans etkili (HR-10..13)** — 4 aile: izin, avans, sağlık, yetkinlik.
    `IZIN` ve `AVANS` onay şablonları `faz3d` ile HAZIR; tablolar `goc5.mjs`'de var.
 7. **Panolar (GLB-02, GLB-03)** — 2 aile. K-017 gereği veri kaynakları geldikten sonra.
@@ -170,9 +170,10 @@ veya proje kapatılamaz — bu bilinçli bir tasarımdır, unutulmuş bir eksik 
 - **`moduller/santiye/kapanis.mjs`** — açılış/kapanış engel listesi; Faz 4'te stok,
   varlık ve kasa sorguları BURAYA bağlanacak (K-049: şu an kaldırılamaz engel).
   **Stok ayağı artık bağlanabilir**: `moduller/stok/defter.mjs` hazır.
-- **`moduller/stok/defter.mjs`** — değişmez hareket defteri (K-061). Bakiye, rezerve,
-  kullanılabilir, yürüyen bakiye ve ters kayıt tek yerde. Finans defteri de aynı
-  kalıpla kurulacak (kasa/banka/cari hareketleri).
+- **`moduller/stok/defter.mjs`** ve **`moduller/finans/defter.mjs`** — değişmez hareket
+  defterleri (K-061, K-071). Bakiye, yürüyen bakiye ve ters kayıt tek yerde.
+- **`moduller/sozlesme/hakedis.mjs`** — kümülatif metraj, güncel bedel, kesinti hesabı.
+  RPT raporları (Faz 6) bu fonksiyonları kullanacak; ikinci bir hesap yazılmaz.
 
 ### Bilinen açık uçlar
 

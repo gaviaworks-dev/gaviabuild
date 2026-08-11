@@ -275,6 +275,95 @@ export const NESNELER = {
     isaretler: ['gecikmis'],
   },
 
+  /* ---- Teminat (CNT-05) --------------------------------------------------- */
+  teminat: {
+    etiket: 'Teminat',
+    durumlar: ['aktif', 'iade', 'nakde_cevrildi', 'iptal'],
+    baslangic: 'aktif',
+    sonDurumlar: ['iade', 'nakde_cevrildi', 'iptal'],
+    etiketler: { aktif: 'Aktif', iade: 'İade edildi', nakde_cevrildi: 'Nakde çevrildi', iptal: 'İptal' },
+    gecisler: [
+      { den: 'aktif', e: 'iade', eylem: 'iade_et', etiket: 'Teminatı iade et', gerekce: 'zorunlu' },
+      { den: 'aktif', e: 'nakde_cevrildi', eylem: 'nakde_cevir', etiket: 'Nakde çevir', gerekce: 'zorunlu' },
+      { den: 'aktif', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis'],
+  },
+
+  /* ---- Gecikme olayı (CNT-13) --------------------------------------------- */
+  gecikmeOlayi: {
+    etiket: 'Gecikme olayı',
+    durumlar: ['acik', 'degerlendirmede', 'kabul', 'ret', 'kapali'],
+    baslangic: 'acik',
+    sonDurumlar: ['kapali', 'ret'],
+    etiketler: { acik: 'Açık', degerlendirmede: 'Değerlendirmede', kabul: 'Kabul edildi',
+      ret: 'Reddedildi', kapali: 'Kapalı' },
+    gecisler: [
+      { den: 'acik', e: 'degerlendirmede', eylem: 'degerlendir', etiket: 'Değerlendirmeye al', gerekce: 'istege_bagli' },
+      /* Kabul/ret dört göz ister: olayı bildiren, sorumluluğu kendi lehine belirleyemez. */
+      { den: 'degerlendirmede', e: 'kabul', eylem: 'kabul_et', etiket: 'Kabul et', gerekce: 'zorunlu', dortGoz: true },
+      { den: 'degerlendirmede', e: 'ret', eylem: 'reddet', etiket: 'Reddet', gerekce: 'zorunlu', dortGoz: true },
+      { den: 'kabul', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'istege_bagli' },
+      { den: 'acik', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis'],
+  },
+
+  /* ---- Claim (CNT-15) ------------------------------------------------------ */
+  claim: {
+    etiket: 'Claim',
+    durumlar: ['hazirlik', 'bildirildi', 'muzakerede', 'kabul', 'ret', 'tahkim', 'kapali'],
+    baslangic: 'hazirlik',
+    sonDurumlar: ['kapali'],
+    etiketler: { hazirlik: 'Hazırlık', bildirildi: 'Bildirildi', muzakerede: 'Müzakerede',
+      kabul: 'Kabul', ret: 'Ret', tahkim: 'Tahkim', kapali: 'Kapalı' },
+    gecisler: [
+      { den: 'hazirlik', e: 'bildirildi', eylem: 'bildir', etiket: 'Karşı tarafa bildir', gerekce: 'istege_bagli' },
+      { den: 'bildirildi', e: 'muzakerede', eylem: 'muzakere', etiket: 'Müzakereye al', gerekce: 'istege_bagli' },
+      { den: 'muzakerede', e: 'kabul', eylem: 'kabul_et', etiket: 'Kabul', gerekce: 'zorunlu' },
+      { den: 'muzakerede', e: 'ret', eylem: 'reddet', etiket: 'Ret', gerekce: 'zorunlu' },
+      { den: 'ret', e: 'tahkim', eylem: 'tahkime_gotur', etiket: 'Tahkime götür', gerekce: 'zorunlu' },
+      { den: 'kabul', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'istege_bagli' },
+      { den: 'ret', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu' },
+      { den: 'tahkim', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis', 'sla_asildi'],
+  },
+
+  /* ---- Fatura (FIN-13, FIN-14) -------------------------------------------- */
+  fatura: {
+    etiket: 'Fatura',
+    durumlar: ['kayitli', 'eslestirmede', 'onaya_gonderildi', 'incelemede', 'revizyon_istendi',
+               'onaylandi', 'reddedildi', 'odendi', 'iptal'],
+    baslangic: 'kayitli',
+    sonDurumlar: ['odendi', 'reddedildi', 'iptal'],
+    etiketler: {
+      kayitli: 'Kayıtlı', eslestirmede: 'Eşleştirmede', onaya_gonderildi: 'Onaya gönderildi',
+      incelemede: 'İncelemede', revizyon_istendi: 'Revizyon istendi', onaylandi: 'Onaylandı',
+      reddedildi: 'Reddedildi', odendi: 'Ödendi', iptal: 'İptal',
+    },
+    gecisler: [
+      { den: 'kayitli', e: 'eslestirmede', eylem: 'eslestir', etiket: 'Eşleştirmeye al', gerekce: 'istege_bagli' },
+      /* Onaya gönderme ön koşulu: üçlü eşleştirme YAPILMIŞ olmalı (FIN-14). */
+      { den: 'eslestirmede', e: 'onaya_gonderildi', eylem: 'onaya_gonder', etiket: 'Onaya gönder',
+        gerekce: 'istege_bagli', akisBaslatir: true },
+      { den: 'revizyon_istendi', e: 'onaya_gonderildi', eylem: 'onaya_gonder',
+        etiket: 'Yeniden onaya gönder', gerekce: 'zorunlu', akisBaslatir: true },
+      { den: 'onaya_gonderildi', e: 'incelemede', eylem: 'incelemeye_al', etiket: 'İncelemeye al',
+        gerekce: 'istege_bagli', yalnizMotor: true },
+      { den: 'incelemede', e: 'onaylandi', eylem: 'onayla', etiket: 'Onayla', gerekce: 'istege_bagli', yalnizMotor: true },
+      { den: 'incelemede', e: 'reddedildi', eylem: 'reddet', etiket: 'Reddet', gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'incelemede', e: 'revizyon_istendi', eylem: 'revizyon_iste', etiket: 'Revizyon iste',
+        gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'onaya_gonderildi', e: 'eslestirmede', eylem: 'geri_cek', etiket: 'Onaydan geri çek', gerekce: 'zorunlu' },
+      /* "Ödendi" durumunu ÖDEME kaydı yazar, kullanıcı seçmez. */
+      { den: 'onaylandi', e: 'odendi', eylem: 'odendi_isaretle', etiket: 'Ödendi', gerekce: 'istege_bagli', yalnizMotor: true },
+      { den: 'kayitli', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+      { den: 'eslestirmede', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis', 'odeme_bekliyor'],
+  },
+
   /* ---- Kart yükleme partisi (Faz 5'te kullanılacak, tanım burada) ------- */
   kartYuklemePartisi: {
     etiket: 'Kart yükleme partisi',
@@ -311,6 +400,7 @@ export const ONAYLI_TURLER = {
   degisiklik: 'Değişiklik talebi', odeme: 'Ödeme talebi', kart_yukleme: 'Kart yükleme',
   kabul: 'Geçici/kesin kabul', puantaj_donemi: 'Puantaj dönemi',
   siparis: 'Satın alma siparişi', stok_sayimi: 'Stok sayımı',
+  zeyil: 'Zeyilname', metraj: 'Metraj cetveli', butce: 'Bütçe',
   banka_hareketi: 'Banka hareketi', avans: 'Avans talebi', izin: 'İzin talebi',
 };
 

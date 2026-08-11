@@ -27,6 +27,10 @@ import * as isgEkRotalari from './rotalar/isg-ek.mjs';
 import * as projeEkRotalari from './rotalar/proje-ek.mjs';
 import * as satinalmaRotalari from './rotalar/satinalma.mjs';
 import * as stokRotalari from './rotalar/stok.mjs';
+import * as sozlesmeRotalari from './rotalar/sozlesme.mjs';
+import * as sozlesmeEkRotalari from './rotalar/sozlesme-ek.mjs';
+import * as finansRotalari from './rotalar/finans.mjs';
+import * as finansEkRotalari from './rotalar/finans-ek.mjs';
 
 const uygulanan = new Set();
 
@@ -68,6 +72,10 @@ export function yonlendiriciKur() {
   projeEkRotalari.kur(y, ekranRota);
   satinalmaRotalari.kur(y, ekranRota);
   stokRotalari.kur(y, ekranRota);
+  sozlesmeRotalari.kur(y, ekranRota);
+  sozlesmeEkRotalari.kur(y, ekranRota);
+  finansRotalari.kur(y, ekranRota);
+  finansEkRotalari.kur(y, ekranRota);
 
   /* Kök: oturum varsa role göre landing, yoksa giriş. */
   y.get('/', (ctx) => kimlikRotalari.kok(ctx));
