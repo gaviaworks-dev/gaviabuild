@@ -82,14 +82,21 @@ export const ROLLER = [
     aciklama: 'Sorumlu olduğu proje ve şantiyelerde operasyon yönetimi.',
     bolumler: ['calisma', 'proje', 'santiye', 'plan', 'gorev', 'isg', 'kalite', 'dokuman', 'personel', 'satinalma', 'stok', 'varlik', 'rapor'],
     eylemler: ['goruntule', 'olustur', 'guncelle', 'karar_ver', 'disa_aktar', 'tamamla'],
-    kapsam: [{ nesne: '*', kural: 'kapsam_zorunlu', deger: { turler: ['proje', 'santiye'] } }],
+    kapsam: [
+      { nesne: '*', kural: 'kapsam_zorunlu', deger: { turler: ['proje', 'santiye'] } },
+      /* Özlük ve ücret bilgisi operasyon rolünün işi değildir (§5.7, KVKK). */
+      { nesne: 'personel', kural: 'alan_maskesi', deger: { alanlar: ['maas', 'banka_iban', 'tc_no'] } },
+    ],
   },
   {
     kod: 'santiye_sefi', ad: 'Şantiye şefi', sistem: 1,
     aciklama: 'Atandığı şantiyede saha operasyonu, günlük rapor, puantaj ve talep.',
     bolumler: ['calisma', 'santiye', 'plan', 'gorev', 'isg', 'kalite', 'dokuman', 'personel', 'satinalma', 'stok', 'varlik'],
     eylemler: ['goruntule', 'olustur', 'guncelle', 'tamamla'],
-    kapsam: [{ nesne: '*', kural: 'kapsam_zorunlu', deger: { turler: ['santiye'] } }],
+    kapsam: [
+      { nesne: '*', kural: 'kapsam_zorunlu', deger: { turler: ['santiye'] } },
+      { nesne: 'personel', kural: 'alan_maskesi', deger: { alanlar: ['maas', 'banka_iban', 'tc_no'] } },
+    ],
   },
   {
     kod: 'satinalma_sorumlusu', ad: 'Satın alma sorumlusu', sistem: 1,
@@ -134,6 +141,7 @@ export const ROLLER = [
     aciklama: 'Salt okunur kayıt, sürüm ve denetim izi; kanıt/rapor dışa aktarımı.',
     bolumler: ['*'],
     eylemler: ['goruntule', 'disa_aktar'],
+    kapsam: [{ nesne: 'personel', kural: 'alan_maskesi', deger: { alanlar: ['maas', 'banka_iban', 'tc_no'] } }],
   },
   {
     kod: 'taseron', ad: 'Taşeron (dış)', sistem: 1,

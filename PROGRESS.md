@@ -4,13 +4,13 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 159 · devam: 0 · bitti: 0 · doğrulandı: 85
+**Toplam:** 244 sayfa ailesi — bekliyor: 151 · devam: 0 · bitti: 0 · doğrulandı: 93
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
-| Faz 3 | 89 | 40 | 0 | 0 | 49 |
+| Faz 3 | 89 | 32 | 0 | 0 | 57 |
 | Faz 4 | 69 | 69 | 0 | 0 | 0 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
@@ -146,14 +146,14 @@
 | DOC-08 | Gelen-giden evrak | P1 | listeForm | `/evrak` | ✅ doğrulandı | faz3c | Gelen-giden evrak — havale ve cevap son tarihi |
 | DOC-09 | Belge dağıtım matrisi | P1 | listeForm | `/dokumanlar/dagitim-matrisi` | ✅ doğrulandı | faz3c | Belge dağıtım matrisi — rol × belge türü erişimi |
 | DOC-10 | Belge arşivi | P1 | liste | `/dokumanlar/arsiv` | ✅ doğrulandı | faz3c | Belge arşivi — saklama süresi ve hukuki bekletme |
-| HR-01 | Personel listesi | P0 | liste | `/personel` | ⬜ bekliyor | — | kaynak: crm-personel (koru) |
-| HR-02 | Yeni personel | P0 | form | `/personel/yeni` | ⬜ bekliyor | — | kaynak: crm-personel-form (koru) |
-| HR-03 | Personel detayı | P0 | detay | `/personel/:id` | ⬜ bekliyor | — | kaynak: crm-personel-detay (koru), crm-personel-ozluk (birlestir) |
-| HR-04 | Personel düzenle | P0 | form | `/personel/:id/duzenle` | ⬜ bekliyor | — | sıfırdan |
-| HR-05 | İşe giriş sihirbazı | P1 | sihirbaz | `/personel/:id/ise-giris` | ⬜ bekliyor | — | sıfırdan |
-| HR-07 | Şantiye atamaları | P0 | listeForm | `/personel-atamalari` | ⬜ bekliyor | — | sıfırdan |
-| HR-08 | Puantaj | P0 | listeForm | `/puantaj` | ⬜ bekliyor | — | kaynak: crm-operasyon-puantaj-form (birlestir), crm-operasyon-puantaj (koru) |
-| HR-09 | Puantaj dönem kapanışı | P0 | onay | `/puantaj/donem-kapanis` | ⬜ bekliyor | — | sıfırdan |
+| HR-01 | Personel listesi | P0 | liste | `/personel` | ✅ doğrulandı | faz3d | Personel listesi — atama ve belge durumu; ücret alanı rol bazlı maskeli |
+| HR-02 | Yeni personel | P0 | form | `/personel/yeni` | ✅ doğrulandı | faz3d | Yeni personel — "aday" durumunda açılır; hassas alanlar maskeli rolde çizilmez |
+| HR-03 | Personel detayı | P0 | detay | `/personel/:id` | ✅ doğrulandı | faz3d | Personel detayı — atama, belge/yetkinlik, puantaj ve denetim geçmişi sekmeleri |
+| HR-04 | Personel düzenle | P0 | form | `/personel/:id/duzenle` | ✅ doğrulandı | faz3d | Personel düzenle — sürümlü güncelleme; maskeli alan POST edilse de yazılmaz |
+| HR-05 | İşe giriş sihirbazı | P1 | sihirbaz | `/personel/:id/ise-giris` | ✅ doğrulandı | faz3d | İşe giriş sihirbazı — adımlar gerçek kayıttan doğrulanır, elle "tamam" yok |
+| HR-07 | Şantiye atamaları | P0 | listeForm | `/personel-atamalari` | ✅ doğrulandı | faz3d | Şantiye atamaları — çakışan tarih aralığı sunucuda 409 ile reddedilir |
+| HR-08 | Puantaj | P0 | listeForm | `/puantaj` | ✅ doğrulandı | faz3d | Puantaj — personel-gün tekil; dönem ilk kayıtla açılır, kilitli satır değişmez |
+| HR-09 | Puantaj dönem kapanışı | P0 | onay | `/puantaj/donem-kapanis` | ✅ doğrulandı | faz3d | Puantaj dönem kapanışı — onay motorundan geçer, kapanışta satırlar kilitlenir |
 
 ## Faz 4 — 69 sayfa ailesi
 

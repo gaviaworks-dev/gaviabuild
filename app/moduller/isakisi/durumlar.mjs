@@ -137,6 +137,66 @@ export const NESNELER = {
     isaretler: ['kritik', 'sla_asildi', 'tekrar_eden'],
   },
 
+  /* ---- Personel ---------------------------------------------------------
+     "aday" → "aktif" geçişi işe giriş sihirbazının (HR-05) çıktısıdır: evrak,
+     atama ve giriş tarihi tamamlanmadan personel aktif sayılmaz. */
+  personel: {
+    etiket: 'Personel',
+    durumlar: ['aday', 'aktif', 'izinli', 'ayrildi', 'pasif'],
+    baslangic: 'aday',
+    sonDurumlar: ['ayrildi'],
+    etiketler: {
+      aday: 'Aday', aktif: 'Aktif', izinli: 'İzinli', ayrildi: 'Ayrıldı', pasif: 'Pasif',
+    },
+    gecisler: [
+      { den: 'aday', e: 'aktif', eylem: 'ise_al', etiket: 'İşe girişi tamamla', gerekce: 'istege_bagli',
+        onKosul: (ctx, k) => (k.ise_giris ? null : 'İşe giriş tarihi girilmeden personel aktifleştirilemez.') },
+      { den: 'aktif', e: 'izinli', eylem: 'izne_cikar', etiket: 'İzne çıkar', gerekce: 'istege_bagli' },
+      { den: 'izinli', e: 'aktif', eylem: 'izinden_don', etiket: 'İzinden dönüş', gerekce: 'istege_bagli' },
+      { den: 'aktif', e: 'pasif', eylem: 'pasife_al', etiket: 'Pasife al', gerekce: 'zorunlu' },
+      { den: 'pasif', e: 'aktif', eylem: 'aktife_al', etiket: 'Yeniden aktifleştir', gerekce: 'zorunlu' },
+      /* Ayrılış HR-06 sihirbazına bağlıdır (Faz 5): zimmet/kart iadesi orada kapanır. */
+      { den: 'aktif', e: 'ayrildi', eylem: 'ayrilis', etiket: 'İşten ayrılış', gerekce: 'zorunlu' },
+      { den: 'izinli', e: 'ayrildi', eylem: 'ayrilis', etiket: 'İşten ayrılış', gerekce: 'zorunlu' },
+      { den: 'pasif', e: 'ayrildi', eylem: 'ayrilis', etiket: 'İşten ayrılış', gerekce: 'zorunlu' },
+      { den: 'aday', e: 'pasif', eylem: 'adayligi_kapat', etiket: 'Adaylığı kapat', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['belge_suresi_doldu'],
+  },
+
+  /* ---- Puantaj dönemi ----------------------------------------------------
+     Kapanış onaydan geçer ve dönemin puantaj satırlarını KİLİTLER (HR-09). */
+  puantajDonemi: {
+    etiket: 'Puantaj dönemi',
+    durumlar: ['acik', 'onaya_gonderildi', 'incelemede', 'revizyon_istendi', 'onaylandi',
+               'reddedildi', 'iptal', 'kapali'],
+    baslangic: 'acik',
+    sonDurumlar: ['kapali', 'iptal'],
+    etiketler: {
+      acik: 'Açık', onaya_gonderildi: 'Onaya gönderildi', incelemede: 'İncelemede',
+      revizyon_istendi: 'Revizyon istendi', onaylandi: 'Onaylandı', reddedildi: 'Reddedildi',
+      iptal: 'İptal', kapali: 'Kapalı (kilitli)',
+    },
+    gecisler: [
+      { den: 'acik', e: 'onaya_gonderildi', eylem: 'onaya_gonder', etiket: 'Dönemi onaya gönder',
+        gerekce: 'istege_bagli', akisBaslatir: true },
+      { den: 'revizyon_istendi', e: 'onaya_gonderildi', eylem: 'onaya_gonder',
+        etiket: 'Yeniden onaya gönder', gerekce: 'zorunlu', akisBaslatir: true },
+      { den: 'onaya_gonderildi', e: 'incelemede', eylem: 'incelemeye_al', etiket: 'İncelemeye al',
+        gerekce: 'istege_bagli', yalnizMotor: true },
+      { den: 'incelemede', e: 'onaylandi', eylem: 'onayla', etiket: 'Onayla', gerekce: 'istege_bagli', yalnizMotor: true },
+      { den: 'incelemede', e: 'reddedildi', eylem: 'reddet', etiket: 'Reddet', gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'incelemede', e: 'revizyon_istendi', eylem: 'revizyon_iste', etiket: 'Revizyon iste',
+        gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'onaya_gonderildi', e: 'acik', eylem: 'geri_cek', etiket: 'Onaydan geri çek', gerekce: 'zorunlu' },
+      { den: 'reddedildi', e: 'acik', eylem: 'yeniden_ac', etiket: 'Dönemi yeniden aç', gerekce: 'zorunlu' },
+      /* Kapanış onaylı dönemde YAPILIR ve satırları kilitler; geri dönüşü yoktur. */
+      { den: 'onaylandi', e: 'kapali', eylem: 'kapat', etiket: 'Dönemi kapat ve kilitle', gerekce: 'istege_bagli' },
+      { den: 'acik', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['suresi_asti'],
+  },
+
   /* ---- Kart yükleme partisi (Faz 5'te kullanılacak, tanım burada) ------- */
   kartYuklemePartisi: {
     etiket: 'Kart yükleme partisi',

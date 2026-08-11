@@ -78,6 +78,24 @@ const SABLONLAR = [
     ],
   },
   {
+    kod: 'PUANTAJ-DONEM', ad: 'Puantaj dönem kapanış onayı', nesne: 'puantaj_donemi', sla: 48,
+    adimlar: [
+      { sira: 1, ad: 'Proje müdürü onayı', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'İK onayı', rol: 'ik_sorumlusu', gereken: 1 },
+    ],
+  },
+  {
+    kod: 'IZIN', ad: 'İzin talebi onayı', nesne: 'izin', sla: 48,
+    adimlar: [{ sira: 1, ad: 'Yönetici onayı', rol: 'proje_muduru', gereken: 1 }],
+  },
+  {
+    kod: 'AVANS', ad: 'Avans talebi onayı', nesne: 'avans', altMinor: 0, ustMinor: null, sla: 48,
+    adimlar: [
+      { sira: 1, ad: 'Yönetici onayı', rol: 'proje_muduru', gereken: 1 },
+      { sira: 2, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 },
+    ],
+  },
+  {
     kod: 'KART-YUKLEME', ad: 'Kart toplu yükleme onayı', nesne: 'kart_yukleme',
     altMinor: 0, ustMinor: null, sla: 24,
     adimlar: [{ sira: 1, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 }],

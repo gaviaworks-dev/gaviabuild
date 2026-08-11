@@ -10,7 +10,8 @@ import { manifest } from '../cekirdek/yapilandirma.mjs';
 import { simdi } from '../cekirdek/zaman.mjs';
 import { Bulunamadi, DogrulamaHatasi } from '../cekirdek/hata.mjs';
 import * as audit from '../cekirdek/audit.mjs';
-import { yetkiZorunlu, yetkiVar, kapsamZorunlu, kapsamFiltresi } from '../moduller/kimlik/yetki.mjs';
+import { yetkiZorunlu, yetkiVar, kapsamZorunlu, kapsamFiltresi, alanMaskeliMi,
+  kapsamCozucu, maskele } from '../moduller/kimlik/yetki.mjs';
 import { gecisYap, izinliGecisler, isaretler } from '../moduller/isakisi/durum.mjs';
 import { durumEtiketi } from '../moduller/isakisi/durumlar.mjs';
 import { sonrakiKod } from '../moduller/isakisi/numara.mjs';
@@ -31,12 +32,12 @@ export function ciz(ctx, ekran, icerik, ek = {}) {
 
 /** Tenant + kapsam filtreli, sunucu tarafı sayfalanan liste sorgusu (§3.1). */
 export function listeSorgusu(ctx, { tablo, ekAlanlar = '', kosullar = [], parametreler = [],
-                                    sirala = 'olusturuldu DESC', kapsam = true }) {
+                                    sirala = 'olusturuldu DESC', kapsam = true, kapsamSecenekleri = null }) {
   const { sayfa, boyut, atla } = B.sayfalamaGirdisi(ctx.sorgu);
   const tumKosullar = [...kosullar];
   const tumParametreler = [...parametreler];
   if (kapsam) {
-    const k = kapsamFiltresi(ctx);
+    const k = kapsamFiltresi(ctx, kapsamSecenekleri || {});
     tumKosullar.unshift(k.nerede);
     tumParametreler.unshift(...k.parametreler);
   } else {
@@ -144,5 +145,6 @@ export function ozetSeridi(ctx, { nesne, kayit, baslik, bilgiler, birincilEylem 
 }
 
 export { B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar, kapsamZorunlu,
+  alanMaskeliMi, kapsamCozucu, maskele, kapsamFiltresi,
   durumEtiketi, isaretler, izinliGecisler, gecisYap, sorgu, tek, calistir, islem,
   surumluGuncelle, audit, sonrakiKod };

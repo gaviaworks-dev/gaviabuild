@@ -60,6 +60,28 @@ export function ekranZorunlu(ctx, ekran) {
 
 /* --- ABAC ---------------------------------------------------------------- */
 /**
+ * Nesneye özgü kapsam çözümü. Bazı kayıtların proje/şantiye bağlamı kendi
+ * sütununda DEĞİLDİR (personel şantiyeye atama tablosu üzerinden bağlanır).
+ * Çözücü kaydı olmayan nesnelerde varsayılan sütun okuması kullanılır.
+ * @type {Map<string, (kayit:object) => {santiyeler?:string[], projeler?:string[], sirketler?:string[]}>}
+ */
+export const KAPSAM_COZUCULERI = new Map();
+export const kapsamCozucu = (nesne, fn) => KAPSAM_COZUCULERI.set(nesne, fn);
+
+function kapsamBaglami(nesne, kayit) {
+  const cozucu = KAPSAM_COZUCULERI.get(nesne);
+  if (cozucu) {
+    const b = cozucu(kayit) || {};
+    return { santiyeler: b.santiyeler || [], projeler: b.projeler || [], sirketler: b.sirketler || [] };
+  }
+  return {
+    santiyeler: kayit.santiye_id ? [kayit.santiye_id] : [],
+    projeler: kayit.proje_id ? [kayit.proje_id] : [],
+    sirketler: kayit.sirket_id ? [kayit.sirket_id] : [],
+  };
+}
+
+/**
  * Kaydın kullanıcının veri kapsamında olup olmadığını doğrular.
  * @param {object} ctx
  * @param {string} nesne  'proje' | 'santiye' | 'hakedis' …
@@ -83,35 +105,45 @@ export function kapsamZorunlu(ctx, nesne, kayit) {
 
   /* 3) Proje/şantiye kapsamı — rol ataması kapsamlıysa kayıt o kapsamda olmalı. */
   if (!p.tenantGeneli && p.kapsamlar.length) {
+    const b = kapsamBaglami(nesne, kayit);
     const uyum = p.kapsamlar.some((k) => {
-      if (k.tur === 'santiye') return kayit.santiye_id === k.id;
-      if (k.tur === 'proje')   return kayit.proje_id === k.id || kayit.id === k.id;
-      if (k.tur === 'sirket')  return kayit.sirket_id === k.id;
+      if (k.tur === 'santiye') return b.santiyeler.includes(k.id);
+      if (k.tur === 'proje')   return b.projeler.includes(k.id) || kayit.id === k.id;
+      if (k.tur === 'sirket')  return b.sirketler.includes(k.id);
       return false;
     });
     /* Kapsam alanı hiç taşımayan kayıtlar (tenant geneli ayar kayıtları) muaftır. */
-    const kapsamAlaniVar = kayit.santiye_id != null || kayit.proje_id != null || kayit.sirket_id != null;
+    const kapsamAlaniVar = b.santiyeler.length > 0 || b.projeler.length > 0 || b.sirketler.length > 0;
     if (kapsamAlaniVar && !uyum) throw KapsamDisi('Bu kayıt erişim kapsamınızın dışında.');
   }
   return true;
 }
 
-/** Liste sorgularına kapsam filtresi ekler — "yetki filtreli toplam" için (§3.1). */
+/**
+ * Liste sorgularına kapsam filtresi ekler — "yetki filtreli toplam" için (§3.1).
+ * Sütun seçenekleri üç biçim alır:
+ *   'santiye_id'                     → `santiye_id = ?`
+ *   'EXISTS (SELECT … pa.santiye_id = ?)' → yüklem AYNEN kullanılır (bir `?` taşımalı)
+ *   null / false                     → o kapsam boyutu bu tabloda YOK
+ * Kapsamlı bir rol için hiçbir yüklem kurulamıyorsa sonuç boş küme olur:
+ * kapsam sütunu olmayan tabloyu "herkese açık" saymak en kısıtlayıcı seçenek değildir.
+ */
 export function kapsamFiltresi(ctx, { projeSutunu = 'proje_id', santiyeSutunu = 'santiye_id', sahipSutunu = 'olusturan' } = {}) {
   const p = ctx.yetkiler;
   const kosullar = ['tenant_id = ?'];
   const parametreler = [ctx.tenant.id];
+  const yuklem = (s) => (String(s).includes('?') ? String(s) : `${s} = ?`);
 
   const sahiplik = p.kurallar.find((k) => k.kural === 'kendi_kaydi');
-  if (sahiplik) { kosullar.push(`${sahipSutunu} = ?`); parametreler.push(ctx.kullanici.id); }
+  if (sahiplik) { kosullar.push(yuklem(sahipSutunu)); parametreler.push(ctx.kullanici.id); }
 
   if (!p.tenantGeneli && p.kapsamlar.length) {
     const parcalar = [];
     for (const k of p.kapsamlar) {
-      if (k.tur === 'santiye') { parcalar.push(`${santiyeSutunu} = ?`); parametreler.push(k.id); }
-      if (k.tur === 'proje')   { parcalar.push(`${projeSutunu} = ?`);   parametreler.push(k.id); }
+      if (k.tur === 'santiye' && santiyeSutunu) { parcalar.push(yuklem(santiyeSutunu)); parametreler.push(k.id); }
+      if (k.tur === 'proje'   && projeSutunu)   { parcalar.push(yuklem(projeSutunu));   parametreler.push(k.id); }
     }
-    if (parcalar.length) kosullar.push(`(${parcalar.join(' OR ')})`);
+    kosullar.push(parcalar.length ? `(${parcalar.join(' OR ')})` : '1 = 0');
   }
   return { nerede: kosullar.join(' AND '), parametreler };
 }
@@ -129,6 +161,13 @@ export function maskele(ctx, nesne, kayit) {
     if (alan in kopya && kopya[alan] != null) kopya[alan] = MASKE;
   }
   return kopya;
+}
+
+/** Bir mantıksal alanın bu kullanıcı için maskeli olup olmadığı (form/liste kararı). */
+export function alanMaskeliMi(ctx, nesne, alan) {
+  return (ctx.yetkiler?.kurallar || []).some((k) => k.kural === 'alan_maskesi'
+    && (k.nesne === '*' || k.nesne === nesne)
+    && (k.deger.alanlar || []).includes(alan));
 }
 
 /** Tutar tavanı — onay/karar yetkisini tutar aralığıyla sınırlar. */

@@ -68,6 +68,9 @@ function girdiCoz(ctx, tanim, govde, mevcut = null) {
   const hatalar = {};
   for (const a of tanim.alanlar) {
     if (a.saltOkunur) continue;
+    /* Alan bu kullanıcıya kapalıysa (maskeli/hassas) YAZILAMAZ da: gizli alanı
+       elle POST etmek maskeyi delerdi (§5.7). */
+    if (a.gorunur && !a.gorunur(ctx)) continue;
     const ham = govde[a.ad];
     if (a.tur === 'para') {
       if (ham) {
@@ -116,6 +119,7 @@ function formCiz(ctx, tanim, { kayit = null, deger = {}, hata = null }) {
   const gruplar = new Map();
   for (const a of tanim.alanlar) {
     if (a.formDisi) continue;
+    if (a.gorunur && !a.gorunur(ctx)) continue;
     const grup = a.grup || tanim.baslik;
     if (!gruplar.has(grup)) gruplar.set(grup, []);
     gruplar.get(grup).push(a);
@@ -200,7 +204,8 @@ export function kayitModulu(y, ekranRota, t) {
         if (ek) { kosullar.push(ek.kosul); parametreler.push(...ek.parametreler); }
       }
       const { sayfa, boyut, toplam, satirlar } = listeSorgusu(ctx,
-        { tablo: t.tablo, kosullar, parametreler, sirala: t.sirala || 'olusturuldu DESC' });
+        { tablo: t.tablo, kosullar, parametreler, sirala: t.sirala || 'olusturuldu DESC',
+          kapsamSecenekleri: t.kapsamSecenekleri || null });
 
       const icerik = h`
 ${ctx.sorgu.get('olusan') ? B.sonucSeridi({ tur: 'ok', baslik: `${t.baslik} oluşturuldu`,

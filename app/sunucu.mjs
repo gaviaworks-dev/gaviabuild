@@ -13,7 +13,7 @@ import { yapilandirma, KOK, manifest } from './cekirdek/yapilandirma.mjs';
 import { baglamOlustur, govdeOku, html, json, yanitla, yonlendir, jsonIster } from './cekirdek/http.mjs';
 import { hataCevir, UygulamaHatasi, Bulunamadi } from './cekirdek/hata.mjs';
 import { yukle as oturumYukle, csrfAlani } from './moduller/kimlik/oturum.mjs';
-import { rolleriKur, demoTenantKur } from './moduller/kimlik/tohum.mjs';
+import { rolleriKur, demoTenantKur, kapsamKurallariKur } from './moduller/kimlik/tohum.mjs';
 import { isAkisiTohumla } from './moduller/isakisi/tohum.mjs';
 import { sorgu } from './cekirdek/db.mjs';
 import { yonlendiriciKur, uygulananKodlar } from './rotalar.mjs';
@@ -110,8 +110,9 @@ export function uygulamaKur({ dbYolu } = {}) {
   dbAc(dbYolu);
   rolleriKur();
   if (!yapilandirma.uretim) demoTenantKur();
-  /* Her tenant, onaysız akış başlatılamadığı için asgari şablon setiyle gelir. */
-  for (const t of sorgu('SELECT id FROM tenant')) isAkisiTohumla(t.id);
+  /* Her tenant, onaysız akış başlatılamadığı için asgari şablon setiyle gelir;
+     ABAC kapsam/maske kuralları da tenant başına garanti edilir (§5.7). */
+  for (const t of sorgu('SELECT id FROM tenant')) { kapsamKurallariKur(t.id); isAkisiTohumla(t.id); }
   const yonlendirici = yonlendiriciKur();
   return { yonlendirici, istegiIsle: (istek, yanit) => istegiIsle(yonlendirici, istek, yanit) };
 }

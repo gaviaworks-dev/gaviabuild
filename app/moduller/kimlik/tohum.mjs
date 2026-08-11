@@ -40,8 +40,9 @@ export function rolleriKur() {
   });
 }
 
-/** Bir tenant'a rol kapsam kurallarını (ABAC) yazar. */
-function kapsamKurallariKur(tenantId) {
+/** Bir tenant'a rol kapsam kurallarını (ABAC) yazar. Idempotenttir; her açılışta
+    çağrılır — kapsam kuralı olmayan tenant, maskesiz veri demektir. */
+export function kapsamKurallariKur(tenantId) {
   for (const tanim of ROLLER) {
     if (!tanim.kapsam?.length) continue;
     const r = tek('SELECT id FROM rol WHERE kod = ? AND tenant_id IS NULL', tanim.kod);

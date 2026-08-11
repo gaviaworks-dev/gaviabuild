@@ -115,28 +115,25 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz3(DOC-04..10)` · **Test:** 140/140 · **Doğrulanan ekran:** 85/244
+**Son commit:** `faz3(HR-01..09)` · **Test:** 160/160 · **Doğrulanan ekran:** 93/244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
 | Faz 0 | ✅ kapandı (`faz-0-tamam`) | 244 yol kararı, screen-manifest, link testi |
 | Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
 | Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
-| Faz 3 | 🟡 44/89 aile · kabul kriterleri yeşil | PRJ-01, PLAN-01, PLAN-02, SITE-01, QLT-01 |
+| Faz 3 | 🟡 57/89 aile · kabul kriterleri yeşil | PRJ-01, PLAN-01, PLAN-02, SITE-01, QLT-01, HR-05/07/08/09 |
 | Faz 4-6 | ⬜ başlamadı | |
 
 ### Faz 3'te teslim edilenler
 Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş programı ve ilerleme
 (PLAN-01..04, 06, 09, 11) · görev (TASK-01..03) · İSG (HSE-02..06) · kalite bloğu
-(QLT-01..14, QLT-05..07 dahil) · doküman bloğu (DOC-01..10).
+(QLT-01..14, QLT-05..07 dahil) · doküman bloğu (DOC-01..10) · İK bloğu
+(HR-01..05, HR-07..09: personel, işe giriş sihirbazı, atama, puantaj, dönem kapanışı).
 
-### SIRADAKİ İŞ PAKETİ — Faz 3'ün kalan 45 ailesi
+### SIRADAKİ İŞ PAKETİ — Faz 3'ün kalan 32 ailesi
 
-1. **İK (HR-01..14)** — 14 aile. **Şema HAZIR** (`goc5.mjs`: personel, personel_atama,
-   puantaj_donemi, puantaj, izin, avans, yetkinlik); ekran ve rota YOK.
-   Faz 4 finansının ön koşulu: avans/izin onay akışı ve puantaj dönem kapanışı.
-   Kabul noktaları: atama tarih çakışması reddedilmeli; dönem kapandıktan sonra
-   puantaj kayıtları kilitlenmeli; maaş alanı `alan_maskesi` kuralına tabi olmalı.
+1. ~~**İK (HR-01..05, 07..09)**~~ ✅ `faz3d` ile teslim edildi (HR-10..13 Faz 4, HR-06 Faz 5, HR-14 Faz 6).
 2. **Şantiye tamamlama (SITE-04, 05, 12..16)** — 7 aile. Açılış/kapanış sihirbazları,
    geçici/kesin kabul, ziyaretçi, izin belgeleri. Kapanış sihirbazı "açık iş, varlık,
    stok, kasa, belge engelleri" listesini gösterip engel sıfırlanmadan kapatmamalı (§7).
@@ -156,7 +153,10 @@ Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş program
 - Para (tamsayı minor unit), idempotent(), surumluGuncelle() (409), audit zinciri
 - Onay motoru: tutar kademeli şablon, paralel adım, vekalet, revizyonda geçersizleşme
 - `cokluParcaOku()` dosya yükleme, doküman sürümleme, içerik-adresli depo
-- **`goc5.mjs` İK şeması uygulandı ama ekranı yok** — sonraki paketin başlangıç noktası
+- **Kapsam çözücü (`kapsamCozucu`)** — kapsam sütunu olmayan tablolarda ABAC bağını
+  kuran kayıt (K-041). Faz 4'te cari, tedarikçi, varlık için gerekecek.
+- **Alan maskesi (`alanMaskeliMi` + alan tanımında `gorunur(ctx)`)** — hassas alanı
+  hem okumaya hem yazmaya kapatır (K-039).
 
 ### Bilinen açık uçlar
 
