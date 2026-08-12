@@ -1392,9 +1392,9 @@ function portalKabugu(ctx, baslik, icerik) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>${baslik} — [ÜRÜN ADI]</title>
-<link rel="stylesheet" href="/varliklar/css/tokens.css">
-<link rel="stylesheet" href="/varliklar/css/ui.css">
-<link rel="stylesheet" href="/varliklar/css/uygulama.css">
+<link rel="stylesheet" href="/statik/css/tokens.css">
+<link rel="stylesheet" href="/statik/css/ui.css">
+<link rel="stylesheet" href="/statik/css/uygulama.css">
 </head>
 <body data-sec="dis" data-screen="PRC-05" class="gv-portal">
 <main class="gv-main" style="max-width:960px;margin:0 auto;padding:32px 20px">

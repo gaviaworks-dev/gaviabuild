@@ -49,15 +49,15 @@ export function belge({ baslik, sec = null, ekran = null, govde, ekBas = ham('')
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${FA}" integrity="${FA_SRI}" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="/varliklar/css/tokens.css">
-<link rel="stylesheet" href="/varliklar/css/shell.css">
-<link rel="stylesheet" href="/varliklar/css/ui.css">
-<link rel="stylesheet" href="/varliklar/css/uygulama.css">
+<link rel="stylesheet" href="/statik/css/tokens.css">
+<link rel="stylesheet" href="/statik/css/shell.css">
+<link rel="stylesheet" href="/statik/css/ui.css">
+<link rel="stylesheet" href="/statik/css/uygulama.css">
 ${ekBas}
 </head>
 <body${sec ? ` data-sec="${kacir(sec)}"` : ''}${ekran ? ` data-screen="${kacir(ekran)}"` : ''}${govdeSinifi ? ` class="${kacir(govdeSinifi)}"` : ''}>
 ${govde}
-<script src="/varliklar/js/uygulama.js" defer></script>
+<script src="/statik/js/uygulama.js" defer></script>
 ${ekScript}
 </body>
 </html>`;

@@ -24,11 +24,13 @@ import { h } from './web/temel.mjs';
 const MIME = { '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
 
+/* Statik önek `/statik/`: `/varliklar` MANİFEST rotasıdır (AST-01), statik dosya
+   öneki olamaz — aksi halde /varliklar/yeni dosya araması olarak 404 dönerdi. */
 function statikServisEt(ctx) {
   /* Yol geçişi (path traversal) koruması: normalize + kök kontrolü. */
-  const gorece = normalize(ctx.yol.replace(/^\/varliklar\//, '')).replace(/^(\.\.[/\\])+/, '');
-  const yol = resolve(KOK, 'app/web/varliklar', gorece);
-  if (!yol.startsWith(resolve(KOK, 'app/web/varliklar'))) throw Bulunamadi();
+  const gorece = normalize(ctx.yol.replace(/^\/statik\//, '')).replace(/^(\.\.[/\\])+/, '');
+  const yol = resolve(KOK, 'app/web/statik', gorece);
+  if (!yol.startsWith(resolve(KOK, 'app/web/statik'))) throw Bulunamadi();
   if (!existsSync(yol) || !statSync(yol).isFile()) throw Bulunamadi();
   const tur = MIME[extname(yol)] || 'application/octet-stream';
   return yanitla(ctx, 200, readFileSync(yol), {
@@ -40,7 +42,7 @@ function statikServisEt(ctx) {
 async function istegiIsle(yonlendirici, istek, yanit) {
   const ctx = baglamOlustur(istek, yanit);
   try {
-    if (ctx.yol.startsWith('/varliklar/')) return statikServisEt(ctx);
+    if (ctx.yol.startsWith('/statik/')) return statikServisEt(ctx);
 
     oturumYukle(ctx);
     ctx.csrfAlani = ctx.oturum ? csrfAlani(ctx) : '';

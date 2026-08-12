@@ -309,7 +309,7 @@ describe('Platform — manifest, rota ve yetki tutarlılığı', () => {
   });
 
   test('istemci tarafı iş kuralı yok: uygulama JS dosyası localStorage ile iş kaydı tutmuyor', async () => {
-    const y = await S.istemci().get('/varliklar/js/uygulama.js');
+    const y = await S.istemci().get('/statik/js/uygulama.js');
     assert.equal(y.durum, 200);
     const yazmalar = [...y.govde.matchAll(/localStorage\.setItem\(([^,]+)/g)].map((m) => m[1].trim());
     assert.deepEqual(yazmalar, ['TERCIH'], 'localStorage yalnız arayüz tercihi için kullanılmalı');
