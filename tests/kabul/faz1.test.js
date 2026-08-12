@@ -10,6 +10,7 @@ import { kimlik } from '../../app/cekirdek/kimlikler.mjs';
 import { simdi } from '../../app/cekirdek/zaman.mjs';
 import * as audit from '../../app/cekirdek/audit.mjs';
 import { manifest } from '../../app/cekirdek/yapilandirma.mjs';
+import { uygulananKodlar } from '../../app/rotalar.mjs';
 
 let S;
 before(async () => { S = await uygulamaBaslat(); });
@@ -302,10 +303,18 @@ describe('Platform — manifest, rota ve yetki tutarlılığı', () => {
   test('uygulanmamış manifest rotası sahte ekran değil dürüst 404 döndürür', async () => {
     const c = S.istemci();
     await c.giris('sahip@yapitas.demo');
-    /* Henüz uygulanmamış bir faz rotası (Faz 5 kartlar) — uygulandıkça bu kod güncellenir. */
-    const y = await c.get('/kartlar');
-    assert.equal(y.durum, 404);
-    assert.ok(!/WIP|yapım aşamasında|çok yakında/i.test(y.govde), 'WIP metni kullanılmış');
+    /* Hedef ekran MANİFESTTEN türetilir; sabit bir kod yazmak, o ekran uygulandığında
+       testi sessizce anlamsızlaştırırdı. Uygulanmamış, statik ve açık olmayan
+       her rota dürüst 404 döner (K-018). */
+    const kodlar = uygulananKodlar();
+    const bekleyen = manifest().ekranlar
+      .filter((e) => !kodlar.has(e.kod) && !e.dinamik && !e.acik);
+    assert.ok(bekleyen.length > 0, 'tüm ekranlar uygulanmışsa bu test kaldırılmalı');
+    for (const e of bekleyen.slice(0, 10)) {
+      const y = await c.get(e.rota);
+      assert.equal(y.durum, 404, `${e.kod} ${e.rota} 404 dönmedi`);
+      assert.ok(!/WIP|yapım aşamasında|çok yakında/i.test(y.govde), `${e.kod} WIP metni kullanılmış`);
+    }
   });
 
   test('istemci tarafı iş kuralı yok: uygulama JS dosyası localStorage ile iş kaydı tutmuyor', async () => {
