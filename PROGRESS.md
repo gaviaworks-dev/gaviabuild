@@ -4,6 +4,8 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
+**Dondurma noktası:** `v1.0.0` · 2026-08-12 — Denetim-01 sonrası ilk kararlı nokta — 7 bulgunun 7'si kapalı, 428/428 test yeşil.
+
 **Toplam:** 244 sayfa ailesi — bekliyor: 0 · devam: 0 · bitti: 0 · doğrulandı: 244
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |

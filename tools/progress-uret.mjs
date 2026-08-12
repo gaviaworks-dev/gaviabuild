@@ -50,6 +50,10 @@ for (const s of eslesme.eslesme) for (const h of s.hedefKodlar) {
   kaynakHarita.set(h, [...(kaynakHarita.get(h) || []), `${s.eskiAd} (${s.karar})`]);
 }
 
+/* `_surum` bir ekran kodu değil, dondurma noktası künyesidir (alt çizgi ile
+   başlayan anahtarlar meta kabul edilir). */
+const surum = durumlar._surum || null;
+
 const satirlar = manifest.ekranlar.map((e) => {
   const d = durumlar[e.kod] || {};
   const kaynak = kaynakHarita.get(e.kod) || [];
@@ -69,6 +73,11 @@ let md = `# PROGRESS — ekran bazlı durum tablosu
 > Plan: \`PLAN.md\` · Kararlar: \`KARARLAR.md\` · Şartname: \`docs/REVIZYON.md\`
 
 `;
+
+if (surum) {
+  md += `**Dondurma noktası:** \`${surum.etiket}\` · ${surum.tarih}`
+    + (surum.aciklama ? ` — ${surum.aciklama}` : '') + '\n\n';
+}
 
 const sayac = {};
 for (const s of satirlar) sayac[s.durum] = (sayac[s.durum] || 0) + 1;

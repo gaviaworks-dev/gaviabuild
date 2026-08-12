@@ -1,6 +1,6 @@
 # GaviaBuild — Devir Dokümanı
 
-**Tarih:** 12 Ağustos 2026 (son güncelleme: **revizyon turu TAMAMLANDI** — `faz-6-tamam`)
+**Tarih:** 12 Ağustos 2026 (son güncelleme: **DONDURMA NOKTASI** — `v1.0.0`, `main`)
 **Amaç:** Bu projeyi yeni bir Claude hesabı/oturumu ile kaldığı yerden sürdürmek.
 **Kime:** Yeni oturumdaki Claude'a ve Beyar'a.
 
@@ -37,12 +37,14 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 | `raporlar/faz-N-rapor.md` | Her faz sonu doğrulama raporu |
 | `manifest/screen-manifest.json` | 244 aile; `REVIZYON.md` §4'ten **üretiliyor**, elle yazılmıyor. Menü, rota, breadcrumb, yetki, test hep buradan türer |
 
-## 3. Şu anki durum — REVİZYON TURU TAMAMLANDI
+## 3. Şu anki durum — DONDURMA NOKTASI `v1.0.0`
 
 **Sayılar `PROGRESS.md`'den teyit edilir** — aşağısı o dosyayla birebir tutar.
 
 | | |
 |---|---|
+| Sürüm | **`v1.0.0`** — denetim-01 sonrası ilk kararlı nokta |
+| Dal | **`main`** artık her şeyi taşıyor; `revizyon/faz-0-6` ile aynı commit'te |
 | Ekran | **244 / 244 doğrulandı** ve denetim-01 turunda gezinerek erişilebilir olduğu kanıtlandı |
 | Test | **428/428 yeşil** (`node --test`, kök dizinden) |
 | Faz 0 — Envanter | ✅ `faz-0-tamam` |
@@ -52,9 +54,25 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 | Faz 4 — Tedarik ve finans (69 aile) | ✅ `faz-4-tamam` |
 | Faz 5 — Kartlar (23 aile) | ✅ `faz-5-tamam` |
 | Faz 6 — Rapor, mobil, portallar (27 aile) | ✅ `faz-6-tamam` |
+| Denetim-01 | ✅ `raporlar/denetim-01.md` — 7 bulgunun 7'si kapalı |
 
 Doküman §9'un altı fazı da kapandı. Her fazın raporu `raporlar/faz-N-rapor.md`
 altında; **hiçbirinde §12 üretime çıkış engeli kalmadı**.
+
+### Dondurma noktası ne demek?
+
+`v1.0.0` tag'i, **bağımsız düşman denetiminden geçmiş ve bulgularının hepsi
+kapatılmış** ilk durumu işaretler. Bu noktada doğrulanmış olanlar:
+
+* 244 ekranın tamamı gezinerek erişilebilir (10 rol, tam gezinti, yetim ekran 0)
+* Uygulama içi hiçbir bağlantı 4xx/5xx dönmüyor
+* Sunucu tarafı yetki 10 rol × 176 ekran gerçek istekle sınandı; beklenmeyen 5xx yok
+* Değişmez defterler tetikleyici düzeyinde korumalı, bakiye defterden türüyor
+* Her rapor dört çıktıyı da üretiyor; üretemeyen ekran çıktıyı açıkça reddediyor
+* Bağlı olmayan yetenekler (e-posta K-021, antivirüs K-027) ekranda açıkça
+  söyleniyor — hiçbir yerde sahte başarı bildirimi yok
+
+Bir şey bozulursa karşılaştırma tabanı budur: `git diff v1.0.0`.
 
 ### Kurulmuş ve çalışan altyapı (yeniden yazma!)
 
@@ -95,7 +113,12 @@ Her oturumun başında refleks olarak:
 cd ~/Developer/"Backend Projects"/gaviabuild
 git status && git log --oneline -10
 node --test          # kök dizinden; 428/428 beklenir
+git describe --tags  # v1.0.0 (veya sonrası) beklenir
 ```
+
+**Dal düzeni:** `v1.0.0` itibarıyla `main` güncel ve her şeyi taşıyor. Yeni iş
+`main`'den açılan bir dalda yapılır; `revizyon/faz-0-6` tarihsel dal olarak
+duruyor, yeni iş için kullanılmaz.
 
 Commit edilmemiş dosya görürsen **silme, geri alma, `git stash` yapma.** Testleri
 çalıştır, geçir, ayrı concern = ayrı commit olacak şekilde commit + push et.
