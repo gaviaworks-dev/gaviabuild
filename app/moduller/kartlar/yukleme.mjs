@@ -487,7 +487,21 @@ export function sonucEylemi(ozet) {
  */
 export function mutabakatHesapla(tenantId, hesapId, donem, { saglayiciToplam = null, bankaToplam = null } = {}) {
   const { bas, son } = donemAraligi(donem);
-  const icToplam = defter.hesapToplami(hesapId, { baslangic: bas, bitis: son, tur: 'yukleme' });
+  /* İç defter toplamı DÖNEME göre hesaplanır, hareketin yazıldığı ANA göre
+     değil: Eylül partisi Ekim'de gönderilse bile Eylül mutabakatına girer.
+     Partiye bağlı satırlar parti döneminden, bağsız satırlar (elle düzeltme,
+     sağlayıcı ekstresinden gelen harcama) hareket zamanından çözülür. */
+  const icToplam = Number(tek(
+    `SELECT COALESCE(SUM(h.yon * h.tutar_minor), 0) AS n
+       FROM kart_hareketi h
+       JOIN kart k ON k.id = h.kart_id
+      WHERE k.hesap_id = ? AND h.kesinlesmis = 1
+        AND (
+          (h.kaynak_nesne = 'kart_yukleme_partisi'
+            AND h.kaynak_id IN (SELECT id FROM kart_yukleme_partisi WHERE hesap_id = ? AND donem = ?))
+          OR (h.kaynak_nesne IS NOT 'kart_yukleme_partisi' AND h.zaman >= ? AND h.zaman < ?)
+        )`,
+    hesapId, hesapId, donem, bas, son)?.n ?? 0);
   const fark = [icToplam, saglayiciToplam, bankaToplam].filter((x) => x != null);
   const enBuyuk = Math.max(...fark);
   const enKucuk = Math.min(...fark);

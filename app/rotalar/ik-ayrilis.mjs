@@ -260,9 +260,12 @@ function ayrilisIslemi(ctx, p, govde) {
     if (!atamalar.length) throw GecisIzinsiz('Kapatılacak kart ataması yok.');
     return islem(() => {
       for (const a of atamalar) {
+        /* Gelecek tarihli atama "başlamadan" kapanabilir; bitiş başlangıçtan
+           önce olamaz (veritabanı kısıtı da bunu zorlar). */
         calistir(`UPDATE kart_atamasi SET durum = 'iade', bitis = ?, iade_notu = ?,
                     guncelleyen = ?, guncellendi = ? WHERE id = ?`,
-          simdi(), `${p.ad_soyad} işten ayrılışı`, ctx.kullanici.id, simdi(), a.id);
+          Math.max(simdi(), a.baslangic), `${p.ad_soyad} işten ayrılışı`,
+          ctx.kullanici.id, simdi(), a.id);
       }
       audit.yaz({ tenantId: ctx.tenant.id, kullaniciId: ctx.kullanici.id, istekId: ctx.istekId, ip: ctx.ip,
         nesne: 'personel', nesneId: p.id, eylem: 'ayrilis:kart_iade',

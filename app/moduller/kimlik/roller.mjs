@@ -140,8 +140,12 @@ export const ROLLER = [
     aciklama: 'Yalnız kendi kaydı: izin, puantaj, kart, belge ve görevleri.',
     bolumler: ['calisma'],
     eylemler: ['goruntule', 'olustur'],
+    /* §6.7 Çalışan satırı: "Kendi kartı, bakiye ve izinli hareketler · Kayıp
+       bildir, kendi ekstresini indir". Panel ve hareket listesi de bu satırın
+       parçasıdır; kapsam `kendi_kaydi` kuralıyla sunucuda daraltılır. */
     ekstra: ['HR-14:goruntule', 'HR-10:goruntule', 'HR-10:olustur', 'HR-11:goruntule', 'HR-11:olustur',
-             'CRD-04:goruntule', 'CRD-15:goruntule', 'CRD-15:olustur'],
+             'CRD-01:goruntule', 'CRD-02:goruntule', 'CRD-04:goruntule',
+             'CRD-13:goruntule', 'CRD-13:disa_aktar', 'CRD-15:goruntule', 'CRD-15:olustur'],
     haric: ['GLB-03', 'GLB-04', 'GLB-05'],
     kapsam: [{ nesne: '*', kural: 'kendi_kaydi', deger: {} }],
   },

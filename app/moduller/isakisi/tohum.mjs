@@ -183,9 +183,11 @@ const SABLONLAR = [
     ],
   },
   {
+    /* K-098: partiyi FİNANS hazırlar; hazırlayan rol adımda yer alamaz (K-079),
+       yoksa dört göz ilkesi akışı fiilen kilitler. Kararı firma sahibi verir. */
     kod: 'KART-YUKLEME', ad: 'Kart toplu yükleme onayı', nesne: 'kart_yukleme',
     altMinor: 0, ustMinor: null, sla: 24,
-    adimlar: [{ sira: 1, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 }],
+    adimlar: [{ sira: 1, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 }],
   },
 ];
 

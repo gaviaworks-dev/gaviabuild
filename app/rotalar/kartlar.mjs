@@ -72,6 +72,12 @@ const aracSecenekleri = (ctx) => sorgu(
   .map((v) => ({ deger: v.id, etiket: `${v.kod} — ${v.ad}${v.plaka ? ` (${v.plaka})` : ''}` }));
 
 /* --- Ortak yardımcılar ---------------------------------------------------- */
+/**
+ * Bir atamanın kapanış tarihi. Gelecek tarihli atama bugün iade edilebilir;
+ * bitiş başlangıçtan ÖNCE olamaz (veritabanı kısıtı da bunu zorlar).
+ */
+const atamaBitisi = (a) => Math.max(simdi(), a.baslangic);
+
 /** Kartın o andaki aktif ataması (kart başına tek aktif atama — CRD-02). */
 export const aktifAtama = (kartId) => tek(
   `SELECT a.*, p.ad_soyad, p.kod AS personel_kod, v.kod AS varlik_kod, v.plaka
@@ -698,7 +704,7 @@ function kartGecisYanEtkisi(ctx, kayit) {
     if (a) {
       calistir(`UPDATE kart_atamasi SET durum = 'iade', bitis = ?, iade_notu = ?,
                   guncelleyen = ?, guncellendi = ? WHERE id = ?`,
-        simdi(), `Kart durumu "${kayit.durum}" olduğu için atama kapatıldı.`,
+        atamaBitisi(a), `Kart durumu "${kayit.durum}" olduğu için atama kapatıldı.`,
         ctx.kullanici.id, simdi(), a.id);
     }
   }
@@ -811,7 +817,8 @@ function atamaIslemi(ctx, k, govde) {
     return islem(() => {
       calistir(`UPDATE kart_atamasi SET durum = 'iade', bitis = ?, iade_notu = ?,
                   guncelleyen = ?, guncellendi = ? WHERE id = ?`,
-        simdi(), String(govde.iadeNotu || '').trim() || null, ctx.kullanici.id, simdi(), a.id);
+        atamaBitisi(a), String(govde.iadeNotu || '').trim() || null,
+        ctx.kullanici.id, simdi(), a.id);
       audit.yaz({ tenantId: ctx.tenant.id, kullaniciId: ctx.kullanici.id, istekId: ctx.istekId, ip: ctx.ip,
         nesne: 'kart_atamasi', nesneId: a.id, eylem: 'iade', sonraki: { kart: k.kod } });
       return 'Atama kapatıldı';
