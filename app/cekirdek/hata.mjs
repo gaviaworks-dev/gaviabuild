@@ -7,8 +7,10 @@
    ========================================================================== */
 
 export class UygulamaHatasi extends Error {
-  /** @param {{kod:string,mesaj:string,durum:number,alanlar?:object,ayrinti?:object,gizli?:boolean}} p */
-  constructor({ kod, mesaj, durum, alanlar = null, ayrinti = null, gizli = false }) {
+  /** @param {{kod:string,mesaj:string,durum:number,alanlar?:object,ayrinti?:object,
+   *           gizli?:boolean,yonlendirme?:{kod:string,metin?:string}}} p */
+  constructor({ kod, mesaj, durum, alanlar = null, ayrinti = null, gizli = false,
+                yonlendirme = null }) {
     super(mesaj);
     this.name = 'UygulamaHatasi';
     this.kod = kod;
@@ -18,6 +20,12 @@ export class UygulamaHatasi extends Error {
     this.ayrinti = ayrinti;
     /** gizli=true → istemciye ayrıntı sızdırılmaz (kullanıcı var/yok gibi) */
     this.gizli = gizli;
+    /**
+     * Reddin ÇIKIŞI (denetim-02 D-14/D-16, KARARLAR.md K-125): kullanıcıyı işi
+     * yapabileceği ekrana götüren manifest EKRAN KODU. Rota koda göre
+     * manifestten çözülür (kural 1) — reddedip kullanıcıyı boşta bırakmayız.
+     */
+    this.yonlendirme = yonlendirme;
   }
   govde() {
     return { hata: { kod: this.kod, mesaj: this.mesaj, ...(this.alanlar ? { alanlar: this.alanlar } : {}) } };

@@ -22,7 +22,8 @@ import * as B from '../web/bilesenler.mjs';
 import { sayaclar } from './calisma.mjs';
 
 export const ekranNesnesi = (kod) => manifest().ekranlar.find((e) => e.kod === kod);
-export const hataNesnesi = (e) => ({ kod: e.kod, mesaj: e.mesaj, alanlar: e.alanlar });
+export const hataNesnesi = (e) => ({ kod: e.kod, mesaj: e.mesaj, alanlar: e.alanlar,
+  yonlendirme: e.yonlendirme || null });
 export const kullaniciAdi = (id) => (id ? tek('SELECT ad_soyad FROM kullanici WHERE id = ?', id)?.ad_soyad || '—' : '—');
 
 /* ==========================================================================

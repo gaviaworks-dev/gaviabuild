@@ -10,10 +10,13 @@
    ========================================================================== */
 import { sorgu, tek, calistir, islemIcindeMi } from '../../cekirdek/db.mjs';
 import { kimlik } from '../../cekirdek/kimlikler.mjs';
-import { simdi } from '../../cekirdek/zaman.mjs';
+import { simdi, gunAnahtari, gunBaslangici, GUN_MS } from '../../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, GecisIzinsiz } from '../../cekirdek/hata.mjs';
 import { minorSinirZorunlu } from '../../cekirdek/para.mjs';
 import * as audit from '../../cekirdek/audit.mjs';
+
+/** Kullanıcının saat dilimindeki BUGÜNÜN son anı — ileri tarih ölçütü. */
+const gunSonu = (ms) => gunBaslangici(gunAnahtari(ms)) + GUN_MS - 1;
 
 /** Defter tanımları: tek yerde: tablo, sahip sütunu, yön kuralı. */
 const DEFTERLER = {
@@ -85,6 +88,20 @@ export function hareketYaz(ctx, defterAdi, p) {
   if (tutar <= 0n) throw DogrulamaHatasi('Tutar sıfırdan büyük olmalı.');
   /* D-08: okunamayacak büyüklükte bir tutar değişmez deftere GİREMEZ. */
   minorSinirZorunlu(tutar);
+
+  /* İŞLEM TARİHİ İLERİ OLAMAZ (denetim-02 D-16, KARARLAR.md K-125).
+     Kasa ve banka GERÇEKLEŞMİŞ para hareketidir: ileri tarihli satır, henüz
+     olmamış bir ödemeyi defterde olmuş gibi gösterir ve bugün kapatılan dönemin
+     dışında kalarak dönem kilidinden de kaçar. Planlanan çıkış FIN-12'nin işidir.
+     Cari defteri hariçtir: vade ileri tarihli olabilir, hareketin KENDİSİ değil. */
+  if ((defterAdi === 'kasa' || defterAdi === 'banka') && (p.zaman ?? simdi()) > gunSonu(simdi())) {
+    throw DogrulamaHatasi(
+      `İşlem tarihi ileri olamaz: ${gunAnahtari(p.zaman)} bugünden sonra. `
+      + `${d.ustTablo === 'kasa' ? 'Kasa' : 'Banka'} hareketi gerçekleşmiş para hareketidir; `
+      + 'planlanan çıkışlar için Ödeme planı (FIN-12) ekranını kullanın.',
+      { alanlar: { tarih: ['Bugünden ileri bir tarih girilemez.'] },
+        yonlendirme: { kod: 'FIN-12', metin: 'Ödeme planı ekranına git' } });
+  }
 
   if (defterAdi === 'kasa' && yon === -1) {
     const mevcut = bakiye('kasa', p.sahipId);
