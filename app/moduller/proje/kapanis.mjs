@@ -8,6 +8,7 @@
    ========================================================================== */
 import { tek, sorgu } from '../../cekirdek/db.mjs';
 import { simdi } from '../../cekirdek/zaman.mjs';
+import { bakiye as finansBakiye } from '../finans/defter.mjs';
 
 const say = (sql, ...p) => Number(tek(sql, ...p)?.n ?? 0);
 
@@ -71,6 +72,39 @@ export function projeKapanisEngelleri(projeId) {
        AND NOT EXISTS (SELECT 1 FROM kabul k WHERE k.santiye_id = s.id AND k.tur = 'kesin' AND k.durum = 'onaylandi')`,
     projeId);
 
+  /* --- K-049: sözleşme/hakediş ve bütçe/maliyet kapanışı gerçek sorguda ---
+     Karar bekleyen belge = kapanmamış taahhüt. Tutarlar hakedis.mjs ve
+     finans/defter.mjs'ten okunur; burada ikinci bir hesap yapılmaz. */
+  const KARAR_BEKLIYOR = `('taslak','onaya_gonderildi','incelemede','revizyon_istendi')`;
+  const acikHakedis = say(
+    `SELECT COUNT(*) AS n FROM hakedis h JOIN sozlesme s ON s.id = h.sozlesme_id
+      WHERE s.proje_id = ? AND h.durum IN ${KARAR_BEKLIYOR}`, projeId);
+  const acikZeyil = say(
+    `SELECT COUNT(*) AS n FROM zeyil z JOIN sozlesme s ON s.id = z.sozlesme_id
+      WHERE s.proje_id = ? AND z.durum IN ${KARAR_BEKLIYOR}`, projeId);
+  const acikDegisiklik = say(
+    `SELECT COUNT(*) AS n FROM degisiklik WHERE proje_id = ? AND durum IN ${KARAR_BEKLIYOR}`, projeId);
+  const acikTeminat = sorgu(
+    `SELECT t.kod, t.tur, t.tutar_minor FROM teminat t JOIN sozlesme s ON s.id = t.sozlesme_id
+      WHERE s.proje_id = ? AND t.durum = 'aktif'`, projeId);
+  const acikMetraj = say(
+    `SELECT COUNT(*) AS n FROM metraj m JOIN sozlesme s ON s.id = m.sozlesme_id
+      WHERE s.proje_id = ? AND m.durum IN ${KARAR_BEKLIYOR}`, projeId);
+
+  const acikButce = say(
+    `SELECT COUNT(*) AS n FROM butce WHERE proje_id = ? AND durum IN ${KARAR_BEKLIYOR}`, projeId);
+  const acikFatura = say(
+    `SELECT COUNT(*) AS n FROM fatura f JOIN hakedis h ON h.id = f.hakedis_id
+       JOIN sozlesme s ON s.id = h.sozlesme_id
+      WHERE s.proje_id = ? AND f.durum NOT IN ('odendi','iptal','reddedildi')`, projeId);
+  const acikOdeme = say(
+    `SELECT COUNT(*) AS n FROM odeme o JOIN hakedis h ON h.id = o.hakedis_id
+       JOIN sozlesme s ON s.id = h.sozlesme_id
+      WHERE s.proje_id = ? AND o.durum NOT IN ('odendi','iptal','reddedildi')`, projeId);
+  const projeKasalari = sorgu(`SELECT id, kod, durum FROM kasa WHERE proje_id = ?`, projeId);
+  const bakiyeliKasa = projeKasalari.map((k) => ({ ...k, bakiye_minor: finansBakiye('kasa', k.id) }))
+    .filter((k) => k.bakiye_minor !== 0);
+
   return [
     { ad: 'Kapanmamış şantiye', adet: acikSantiye.length, zorunlu: true,
       not: acikSantiye.length ? acikSantiye.map((s) => `${s.kod} (${s.durum})`).join(', ')
@@ -83,11 +117,23 @@ export function projeKapanisEngelleri(projeId) {
     { ad: 'Kapanmamış risk', adet: acikRisk, zorunlu: true, rota: `/projeler/${projeId}/riskler` },
     { ad: 'Onayda bekleyen iş programı', adet: acikProgram, zorunlu: true, rota: '/is-programlari' },
     { ad: 'Doğrulanmamış ilerleme kaydı', adet: dogrulanmamisIlerleme, zorunlu: true, rota: '/is-programlari' },
-    /* Faz 4: sözleşme/hakediş/bütçe kapanışı bağlanana kadar kaldırılamaz engel. */
-    { ad: 'Sözleşme ve hakediş kapanışı', adet: null, zorunlu: true, planli: 'Faz 4',
-      not: 'Sözleşme (CNT) ve hakediş modülü Faz 4. Bağlanana kadar bu engel KALDIRILAMAZ.', rota: null },
-    { ad: 'Bütçe ve maliyet kapanışı', adet: null, zorunlu: true, planli: 'Faz 4',
-      not: 'Bütçe (FIN-02) ve dönem kapanışı Faz 4. Bağlanana kadar bu engel KALDIRILAMAZ.', rota: null },
+    /* K-049 — sözleşme/hakediş ve bütçe/maliyet kapanışı gerçek sorguya bağlı. */
+    { ad: 'Karara bağlanmamış hakediş', adet: acikHakedis, zorunlu: true, rota: '/hakedisler' },
+    { ad: 'Karara bağlanmamış metraj', adet: acikMetraj, zorunlu: true, rota: '/metraj' },
+    { ad: 'Karara bağlanmamış zeyil', adet: acikZeyil, zorunlu: true, rota: '/sozlesmeler' },
+    { ad: 'Karara bağlanmamış değişiklik talebi', adet: acikDegisiklik, zorunlu: true,
+      rota: '/degisiklikler' },
+    { ad: 'İade edilmemiş teminat', adet: acikTeminat.length, zorunlu: true,
+      not: acikTeminat.length ? acikTeminat.map((t) => `${t.kod} (${t.tur})`).join(', ')
+        : 'Aktif teminat kalmadı.',
+      rota: '/teminatlar' },
+    { ad: 'Onayda bekleyen bütçe', adet: acikButce, zorunlu: true, rota: '/butceler' },
+    { ad: 'Kapanmamış fatura', adet: acikFatura, zorunlu: true, rota: '/faturalar' },
+    { ad: 'Kapanmamış ödeme talebi', adet: acikOdeme, zorunlu: true, rota: '/odemeler' },
+    { ad: 'Sıfırlanmamış proje kasası', adet: bakiyeliKasa.length, zorunlu: true,
+      not: bakiyeliKasa.length ? bakiyeliKasa.map((k) => `${k.kod}: ${k.bakiye_minor} minor`).join(' · ')
+        : projeKasalari.length ? `${projeKasalari.length} kasa sıfır bakiyeli.` : 'Projeye bağlı kasa yok.',
+      rota: '/kasa-hareketleri' },
   ];
 }
 

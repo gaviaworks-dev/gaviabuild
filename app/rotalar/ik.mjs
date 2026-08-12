@@ -473,6 +473,8 @@ function iseGirisAdimlari(ctx, p) {
   const atama = tek(`SELECT * FROM personel_atama WHERE personel_id = ? AND durum = 'aktif' LIMIT 1`, p.id);
   const belge = Number(tek(`SELECT COUNT(*) AS n FROM yetkinlik WHERE personel_id = ? AND durum = 'gecerli'`, p.id)?.n ?? 0);
   const suresiDolan = belgeUyarisi(p.id);
+  const zimmet = Number(tek(
+    `SELECT COUNT(*) AS n FROM zimmet WHERE personel_id = ? AND durum = 'zimmetli'`, p.id)?.n ?? 0);
   return [
     { ad: 'Özlük bilgileri', zorunlu: true, tamam: !!(p.ad_soyad && p.tc_no && p.gorev),
       /* Koşul kimlik numarasının VARLIĞINA bakar, değerini göstermez. */
@@ -491,8 +493,13 @@ function iseGirisAdimlari(ctx, p) {
     { ad: 'Uygulama hesabı', zorunlu: false, tamam: !!p.kullanici_id,
       aciklama: 'İsteğe bağlı: çalışan self-servis (HR-14) erişimi bu bağdan çözülür.',
       rota: `/personel/${p.id}/duzenle` },
-    { ad: 'Zimmet ve kart teslimi', zorunlu: false, tamam: false,
-      aciklama: 'Zimmet (AST-04) Faz 4, kart ataması (CRD-06) Faz 5 ile bu sihirbaza bağlanacak; '
+    /* K-049: zimmet (AST-04) Faz 4'te bağlandı; kart teslimi (CRD-06) Faz 5. */
+    { ad: 'Zimmet teslimi', zorunlu: false, tamam: zimmet > 0,
+      aciklama: zimmet ? `${zimmet} varlık zimmetlendi.`
+        : 'İsteğe bağlı: KKD, araç veya ekipman zimmeti bu bağdan izlenir.',
+      rota: '/zimmetler' },
+    { ad: 'Kart teslimi', zorunlu: false, tamam: false,
+      aciklama: 'Kart ataması (CRD-06) Faz 5 ile bu sihirbaza bağlanacak; '
         + 'bu sürümde adım kapalıdır ve tamamlanmış sayılmaz.',
       rota: null, planli: true },
   ];

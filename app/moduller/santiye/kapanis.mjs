@@ -14,13 +14,15 @@
    ========================================================================== */
 import { tek, sorgu } from '../../cekirdek/db.mjs';
 import { simdi } from '../../cekirdek/zaman.mjs';
+import { depoBakiyeleri, miktarMetni } from '../stok/defter.mjs';
+import { bakiye as finansBakiye } from '../finans/defter.mjs';
 
 const say = (sql, ...p) => Number(tek(sql, ...p)?.n ?? 0);
 
 /**
- * Henüz uygulanmamış modüllerin kontrolleri "planlı" işaretlenir: bunlar
- * tamamlanmış SAYILMAZ ve "denetlendi" gibi gösterilmez (§12 dürüstlük kuralı).
- * Faz 4 (stok, varlık, kasa) geldiğinde bu satırlar gerçek sorguya bağlanır.
+ * Faz 4 kapanışında (K-049) stok, varlık/zimmet ve kasa kontrolleri gerçek
+ * sorguya bağlandı; "planlı" yer tutucu satır KALMADI. Bakiyeler defter
+ * modüllerinden okunur (kural 7) — burada ikinci bir toplama yazılmaz.
  */
 export function acilisKontrolleri(santiyeId) {
   const s = tek('SELECT * FROM santiye WHERE id = ?', santiyeId);
@@ -33,6 +35,10 @@ export function acilisKontrolleri(santiyeId) {
     `SELECT COUNT(*) AS n FROM personel_atama WHERE santiye_id = ? AND durum = 'aktif'`, santiyeId);
   const program = say(
     `SELECT COUNT(*) AS n FROM is_programi WHERE santiye_id = ? AND baz_cizgi = 1`, santiyeId);
+  const depo = say(
+    `SELECT COUNT(*) AS n FROM depo WHERE santiye_id = ? AND durum = 'aktif'`, santiyeId);
+  const kasa = say(
+    `SELECT COUNT(*) AS n FROM kasa WHERE santiye_id = ? AND durum = 'aktif'`, santiyeId);
 
   return [
     { ad: 'Şantiye künyesi', engel: !(s.adres && s.baslangic), zorunlu: true,
@@ -50,9 +56,14 @@ export function acilisKontrolleri(santiyeId) {
     { ad: 'Onaylı baz çizgi', engel: program === 0, zorunlu: false,
       not: program ? 'Baz çizgi onaylı.' : 'Baz çizgisi olmayan şantiyede ilerleme ölçülemez (uyarı).',
       rota: '/is-programlari' },
-    { ad: 'Depo ve kasa kurulumu', engel: true, zorunlu: false, planli: 'Faz 4',
-      not: 'Depo (STK-01) ve kasa (FIN-05) Faz 4 ile bu sihirbaza bağlanacak; bu sürümde denetlenmez.',
-      rota: null },
+    { ad: 'Depo kurulumu', engel: depo === 0, zorunlu: false,
+      not: depo ? `${depo} aktif depo tanımlı.`
+        : 'Şantiyeye bağlı aktif depo yok; malzeme girişi kaydedilemez (uyarı).',
+      rota: '/depolar' },
+    { ad: 'Kasa kurulumu', engel: kasa === 0, zorunlu: false,
+      not: kasa ? `${kasa} aktif kasa tanımlı.`
+        : 'Şantiye kasası yok; saha harcaması kasa defterine yazılamaz (uyarı).',
+      rota: '/kasalar' },
   ];
 }
 
@@ -86,6 +97,37 @@ export function kapanisEngelleri(santiyeId) {
   const bekleyenKabul = sorgu(
     `SELECT * FROM kabul WHERE santiye_id = ? AND durum NOT IN ('onaylandi','iptal','reddedildi')`, santiyeId);
 
+  /* --- K-049: stok, varlık/zimmet ve kasa artık gerçek sorguya bağlı ------
+     Bakiyeler defter modüllerinden okunur; burada ikinci bir toplama yok. */
+  const tenantId = tek('SELECT tenant_id FROM santiye WHERE id = ?', santiyeId)?.tenant_id;
+  const depolar = sorgu(`SELECT id, kod, ad FROM depo WHERE santiye_id = ?`, santiyeId);
+  const stokKalan = tenantId
+    ? depolar.flatMap((d) => depoBakiyeleri(tenantId, { depoId: d.id }))
+      .filter((r) => Number(r.bakiye_binde) !== 0)
+    : [];
+  const acikRezervasyon = say(
+    `SELECT COUNT(*) AS n FROM stok_rezervasyonu r JOIN depo d ON d.id = r.depo_id
+      WHERE d.santiye_id = ? AND r.durum = 'aktif'`, santiyeId);
+  const yoldakiTransfer = say(
+    `SELECT COUNT(*) AS n FROM stok_transferi t
+      WHERE t.durum = 'yolda'
+        AND (t.kaynak_depo_id IN (SELECT id FROM depo WHERE santiye_id = ?)
+          OR t.hedef_depo_id IN (SELECT id FROM depo WHERE santiye_id = ?))`, santiyeId, santiyeId);
+
+  const acikZimmet = say(
+    `SELECT COUNT(*) AS n FROM zimmet z JOIN varlik v ON v.id = z.varlik_id
+      WHERE z.durum = 'zimmetli' AND (z.santiye_id = ? OR v.santiye_id = ?)`, santiyeId, santiyeId);
+  const sahadakiVarlik = say(
+    `SELECT COUNT(*) AS n FROM varlik WHERE santiye_id = ? AND durum NOT IN ('satildi','hurda')`, santiyeId);
+  const acikBakim = say(
+    `SELECT COUNT(*) AS n FROM is_emri e JOIN varlik v ON v.id = e.varlik_id
+      WHERE v.santiye_id = ? AND e.durum NOT IN ('tamamlandi','iptal')`, santiyeId);
+
+  const kasalar = sorgu(`SELECT id, kod, ad, durum FROM kasa WHERE santiye_id = ?`, santiyeId);
+  const bakiyeliKasa = kasalar.map((k) => ({ ...k, bakiye_minor: finansBakiye('kasa', k.id) }))
+    .filter((k) => k.bakiye_minor !== 0);
+  const acikKasa = kasalar.filter((k) => k.durum === 'aktif');
+
   return [
     { ad: 'Açık görev ve iş emri', adet: acikGorev, zorunlu: true, rota: '/gorevler' },
     { ad: 'Açık saha bildirimi', adet: acikBildirim, zorunlu: true, rota: '/saha-bildirimleri' },
@@ -103,14 +145,29 @@ export function kapanisEngelleri(santiyeId) {
     { ad: 'Onaylı kesin kabul', adet: kesin && kesin.durum === 'onaylandi' ? 0 : 1, zorunlu: true,
       not: kesin ? `Kesin kabul "${kesin.durum}" durumunda.` : 'Kesin kabul dosyası açılmadı.',
       rota: `/santiyeler/${santiyeId}/kesin-kabul` },
-    /* Faz 4: bu üç kalem gerçek sorguya bağlanana kadar "denetlenmedi" sayılır. */
-    { ad: 'Stok bakiyesi sıfırlandı', adet: null, zorunlu: true, planli: 'Faz 4',
-      not: 'Depo/stok modülü (STK-01..10) Faz 4. Bağlanana kadar bu engel KALDIRILAMAZ.',
-      rota: null },
-    { ad: 'Varlık ve zimmet iadesi', adet: null, zorunlu: true, planli: 'Faz 4',
-      not: 'Varlık modülü (AST-01..10) Faz 4. Bağlanana kadar bu engel KALDIRILAMAZ.', rota: null },
-    { ad: 'Kasa bakiyesi ve mutabakat', adet: null, zorunlu: true, planli: 'Faz 4',
-      not: 'Kasa (FIN-05/06) Faz 4. Bağlanana kadar bu engel KALDIRILAMAZ.', rota: null },
+    /* K-049 — Faz 4 defterlerine bağlı gerçek engeller. */
+    { ad: 'Depo stok bakiyesi', adet: stokKalan.length, zorunlu: true,
+      not: stokKalan.length
+        ? stokKalan.slice(0, 3).map((r) => `${r.depo_kod}/${r.kart_kod}: ${miktarMetni(r.bakiye_binde)} ${r.birim}`)
+          .join(' · ') + (stokKalan.length > 3 ? ' …' : '')
+        : depolar.length ? `${depolar.length} depo boşaltıldı.` : 'Şantiyeye bağlı depo yok.',
+      rota: '/stok/hareketler' },
+    { ad: 'Açık stok rezervasyonu', adet: acikRezervasyon, zorunlu: true, rota: '/stok/rezervasyonlar' },
+    { ad: 'Yolda bekleyen depo transferi', adet: yoldakiTransfer, zorunlu: true, rota: '/stok/transferler' },
+    { ad: 'İade edilmemiş zimmet', adet: acikZimmet, zorunlu: true, rota: '/zimmetler' },
+    { ad: 'Şantiyede duran varlık', adet: sahadakiVarlik, zorunlu: true,
+      not: sahadakiVarlik ? 'Varlıklar başka şantiyeye devredilmeli veya merkeze çekilmeli.'
+        : 'Şantiyede varlık kalmadı.',
+      rota: '/varliklar' },
+    { ad: 'Kapanmamış bakım iş emri', adet: acikBakim, zorunlu: true, rota: '/bakim-is-emirleri' },
+    { ad: 'Sıfırlanmamış kasa bakiyesi', adet: bakiyeliKasa.length, zorunlu: true,
+      not: bakiyeliKasa.length
+        ? bakiyeliKasa.map((k) => `${k.kod}: ${k.bakiye_minor} minor`).join(' · ')
+        : kasalar.length ? `${kasalar.length} kasa sıfır bakiyeli.` : 'Şantiyeye bağlı kasa yok.',
+      rota: '/kasa-hareketleri' },
+    { ad: 'Kapatılmamış kasa', adet: acikKasa.length, zorunlu: true,
+      not: acikKasa.length ? acikKasa.map((k) => k.kod).join(', ') : 'Tüm kasalar kapalı/pasif.',
+      rota: '/kasalar' },
   ];
 }
 

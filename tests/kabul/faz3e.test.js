@@ -11,6 +11,7 @@ import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { uygulamaBaslat } from '../yardimci.mjs';
 import { sorgu, tek, calistir } from '../../app/cekirdek/db.mjs';
+import { acikKapanisEngelleri } from '../../app/moduller/santiye/kapanis.mjs';
 
 let S;
 before(async () => { S = await uygulamaBaslat(); });
@@ -243,13 +244,18 @@ describe('SITE-16 — kapanış engelleri (§7)', () => {
     assert.equal(guncel().durum, 'kapanista');
   });
 
-  test('Faz 4 kalemleri "denetlenmedi" olarak görünür ve engel sayılır', async () => {
+  /* K-049: stok, varlık/zimmet ve kasa kalemleri artık gerçek sorguya bağlı.
+     Ekranda "sonraki fazda bağlanacak" yer tutucusu KALMAMALIDIR. */
+  test('stok, varlık ve kasa engelleri gerçek sorgudan gelir; yer tutucu kalmadı', async () => {
     const c = await yonetici();
     const r = await c.get(`/santiyeler/${ste.id}/kapat`);
-    assert.match(r.govde, /Stok bakiyesi sıfırlandı/);
-    assert.match(r.govde, /Faz 4&#39;te bağlanacak|Faz 4'te bağlanacak/);
-    assert.ok(!/temiz<\/span>\s*<\/span><\/td><td[^>]*><span class="td-icerik"><b>Stok/.test(r.govde),
-      'bağlanmamış kontrol "temiz" gösteriliyor');
+    assert.ok(!/te bağlanacak/.test(r.govde), 'kapanış listesinde hâlâ "planlı" yer tutucu var');
+    for (const kalem of ['Depo stok bakiyesi', 'İade edilmemiş zimmet', 'Şantiyede duran varlık',
+      'Sıfırlanmamış kasa bakiyesi', 'Kapatılmamış kasa', 'Açık stok rezervasyonu']) {
+      assert.match(r.govde, new RegExp(kalem), `${kalem} engeli listede yok`);
+    }
+    /* Veri yokken bu kalemler dürüstçe "temiz" görünür — engel listesi sıfırlanmıştır. */
+    assert.equal(acikKapanisEngelleri(ste.id).filter((e) => e.planli).length, 0);
   });
 });
 
