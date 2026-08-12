@@ -41,6 +41,15 @@ export const yapilandirma = {
   maxGovdeBayt: 2 * 1024 * 1024,
   varsayilanSayfaBoyutu: 25,
   sayfaBoyutlari: [25, 50, 100],
+  /* SATIR TAVANLARI (denetim-02 D-14, KARARLAR.md K-126).
+     Sınırsız rapor 10 bin satırda 7,5 MB HTML ve +340 MB RSS üretiyordu.
+     Tavan aşılınca ASLA sessizce kırpılmaz: kaç satır olduğu söylenir ve
+     filtre daraltması istenir (D-05'in açık ret kalıbı). */
+  ekranSatirTavani: 5_000,
+  dosyaSatirTavani: 20_000,
+  /* Serbest metin uzunlukları (denetim-02 D-15, K-127). */
+  metinEnFazla: 4_000,        // uzunMetin/textarea alanları: açıklama, not, gerekçe
+  kisaMetinEnFazla: 250,      // tek satırlık metin alanları
 };
 
 /** Manifest — tek kaynak (değişmez kural 1). Süreç ömrü boyunca bir kez okunur. */

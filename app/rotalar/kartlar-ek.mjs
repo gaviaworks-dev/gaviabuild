@@ -29,6 +29,7 @@ import {
   B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar,
   sorgu, tek, calistir, islem, surumluGuncelle, audit, sonrakiKod, gecisYap,
 } from './ortak.mjs';
+import { satirTavaniZorunlu, dosyaTavani } from '../web/rapor-duzeni.mjs';
 
 const para = (minor, birim = 'TRY') => (minor == null ? '—' : Para.minor(minor, birim || 'TRY').bicim());
 
@@ -650,6 +651,10 @@ function yuklemeDosyasi(ctx, partiId) {
        LEFT JOIN personel pe ON pe.id = s.personel_id
       WHERE s.parti_id = ? AND s.durum IN ('bekliyor','gonderildi','teknik_hata')
       ORDER BY k.kod`, p.id);
+  /* Dosya çıktısı satır tavanı (denetim-02 D-14, K-126): sessiz kırpma, eksik
+     yüklenen kart demektir — açıkça reddedilir. */
+  satirTavaniZorunlu(satirlar.length,
+    { nerede: 'Parti CSV çıktısı', tavan: dosyaTavani(), ekranKodu: 'CRD-10' });
 
   /* Künye: hangi filtre, hangi veri tarihi, hangi sürüm (kural 9 kalıbı). */
   const kunye = [
