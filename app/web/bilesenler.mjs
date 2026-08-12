@@ -6,7 +6,7 @@
    Bileşenler VERİ almaz, VERİ TANIMI alır: sütunlar, alanlar, filtreler.
    ========================================================================== */
 import { h, ham, kacir, sayi } from './temel.mjs';
-import { yapilandirma } from '../cekirdek/yapilandirma.mjs';
+import { yapilandirma, manifest } from '../cekirdek/yapilandirma.mjs';
 import { tarihSaat, iso } from '../cekirdek/zaman.mjs';
 
 /* --- Durum rozetleri — semantik renkler accent'ten BAĞIMSIZ sabittir ----- */
@@ -205,8 +205,41 @@ export function hataOzeti(hatalar) {
 }
 
 /** Tek form alanı. */
+/* --- Ön koşul eşlemesi (denetim-01 D-07) --------------------------------
+   Zorunlu bir seçicide HİÇ seçenek yoksa, kullanıcı formu dolduramaz ve neyin
+   eksik olduğunu formdan anlayamaz. Hangi alanın hangi ekrandan beslendiği
+   TEK YERDE durur; hedef rota ve ad manifestten okunur (kural 1), böylece
+   ekran taşınırsa bağlantı da taşınır. Alan adı bu kod tabanında sabit bir
+   sözleşmedir (`projeId`, `depoId`, `hesapId` …). */
+const ON_KOSUL_EKRANI = {
+  projeId: 'PRJ-02', santiyeId: 'SITE-02', depoId: 'STK-01',
+  kaynakDepoId: 'STK-01', hedefDepoId: 'STK-01', kartId: 'STK-02',
+  varlikId: 'AST-02', hesapId: 'CRD-09', sozlesmeId: 'CNT-02',
+  kasaId: 'FIN-05', bankaHesabiId: 'FIN-07', cariId: 'FIN-10',
+  tedarikciId: 'PRC-11', aktiviteId: 'PLAN-01', sablonId: 'TASK-04',
+  personelId: 'HR-02', musteriId: 'EXT-01', belgeTuru: 'SET-12',
+};
+
+/** Zorunlu seçicide gerçek seçenek var mı? (ilk "Seçin…" satırı sayılmaz) */
+const seciciBos = (secenekler, zorunlu) =>
+  !!secenekler && zorunlu && !secenekler.some((s) => s.deger !== '' && s.deger != null);
+
+/** Boş zorunlu seçici için ön koşul ipucu — hangi ekrandan besleneceğini söyler. */
+function onKosulIpucu(ad) {
+  const kod = ON_KOSUL_EKRANI[ad];
+  const e = kod ? manifest().ekranlar.find((x) => x.kod === kod) : null;
+  /* DİNAMİK rota ön koşul hedefi OLAMAZ: `/is-programlari/:id/wbs` bağlantısı
+     `:id` ile çizilir ve 404 verir. Böyle bir eşleme yapılırsa yönlendirmesiz
+     ama dürüst metne düşülür (denetim-01 D-07). */
+  if (!e || e.dinamik || e.rota.includes('/:')) {
+    return h`Bu alan için önce ilgili kayıt açılmalı; şu an seçilebilecek kayıt yok.`;
+  }
+  return h`Seçilebilecek kayıt yok. Önce <a href="${e.rota}">${e.ad}</a> ekranından kayıt açın.`;
+}
+
 export function alan({ ad, etiket, tur = 'text', deger = '', zorunlu = false, ipucu = null, hata = null, secenekler = null, genis = false, salt = false, ekNitelik = '' }) {
   const id = `alan-${ad}`;
+  const bosSecici = seciciBos(secenekler, zorunlu);
   const govde = secenekler
     ? h`<select id="${id}" name="${ad}"${ham(zorunlu ? ' required' : '')}${ham(salt ? ' disabled' : '')}>
         ${secenekler.map((s) => h`<option value="${s.deger}"${ham(String(s.deger) === String(deger) ? ' selected' : '')}>${s.etiket}</option>`)}
@@ -217,6 +250,7 @@ export function alan({ ad, etiket, tur = 'text', deger = '', zorunlu = false, ip
   return h`<div class="gfield${ham(genis ? ' full' : '')}${ham(hata ? ' has-error' : '')}">
   <label for="${id}">${etiket}${zorunlu ? h`<span class="gf-req" aria-hidden="true">*</span>` : ''}</label>
   ${govde}
+  ${bosSecici ? h`<span class="gf-hint gf-onkosul" data-onkosul="${ad}">${onKosulIpucu(ad)}</span>` : ''}
   ${ipucu ? h`<span class="gf-hint">${ipucu}</span>` : ''}
   ${hata ? h`<span class="gf-err" role="alert">${[].concat(hata).join(' ')}</span>` : ''}
 </div>`;
