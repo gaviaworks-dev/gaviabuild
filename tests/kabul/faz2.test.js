@@ -39,8 +39,16 @@ describe('WF-01 — talep sahibi durumu ve onaycıyı seçemez', () => {
       ['taslak', 'onaya_gonderildi', 'incelemede', 'revizyon_istendi', 'onaylandi', 'reddedildi', 'iptal']);
     assert.deepEqual(NESNELER.sahaBildirimi.durumlar,
       ['yeni', 'siniflandirildi', 'atandi', 'islemde', 'dogrulamada', 'kapali', 'iptal']);
+    /* Faz 5'te `iptal` eklendi (K-095): açılmış ama gönderilmemiş bir parti geri
+       alınabilmeli, reddedilen onay da partiyi bir yere bağlamalıdır. §5.2 tablosu
+       her zincirde iptal öngörür; iptalsiz parti onay reddinde asılı kalırdı. */
     assert.deepEqual(NESNELER.kartYuklemePartisi.durumlar,
-      ['taslak', 'dogrulandi', 'onay_bekliyor', 'gonderiliyor', 'kismi', 'basarili', 'hatali', 'mutabik', 'kapali']);
+      ['taslak', 'dogrulandi', 'onay_bekliyor', 'gonderiliyor', 'kismi', 'basarili',
+        'hatali', 'mutabik', 'kapali', 'iptal']);
+    /* §6.3 kart yaşam döngüsü — dokümandaki sırayla birebir. */
+    assert.deepEqual(NESNELER.kart.durumlar,
+      ['siparis_edildi', 'basimda', 'aktiflenebilir', 'aktif', 'gecici_bloke',
+        'kayip_calinti', 'yenilemede', 'iptal', 'suresi_doldu', 'arsiv']);
     assert.deepEqual(NESNELER.proje.durumlar,
       ['taslak', 'hazirlik', 'aktif', 'askida', 'kapanista', 'kapali', 'arsiv']);
   });

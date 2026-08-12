@@ -47,19 +47,18 @@ const NUMARA_ONEKLERI = [
 /** Kart modülünün onay şablonları (§6.7 yetki matrisiyle uyumlu). */
 const SABLONLAR = [
   {
+    /* K-079: hazırlayan rol adımda yer almaz. Politikayı FİNANS hazırlar
+       (tutarı o belirler); İK uygunluk kuralını, firma sahibi tutarı onaylar. */
     kod: 'KART-POLITIKA', ad: 'Kart politikası onayı', nesne: 'kart_politikasi', sla: 72,
     adimlar: [
-      { sira: 1, ad: 'İK onayı', rol: 'ik_sorumlusu', gereken: 1 },
-      { sira: 2, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 },
-      { sira: 3, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
+      { sira: 1, ad: 'İK uygunluk onayı', rol: 'ik_sorumlusu', gereken: 1 },
+      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
     ],
   },
   {
+    /* Mutabakat farkını da finans hazırlar; kararı firma sahibi verir (dört göz). */
     kod: 'KART-MUTABAKAT', ad: 'Kart mutabakat farkı onayı', nesne: 'kart_mutabakati', sla: 48,
-    adimlar: [
-      { sira: 1, ad: 'Finans onayı', rol: 'finans_sorumlusu', gereken: 1 },
-      { sira: 2, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 },
-    ],
+    adimlar: [{ sira: 1, ad: 'Firma sahibi onayı', rol: 'firma_sahibi', gereken: 1 }],
   },
 ];
 

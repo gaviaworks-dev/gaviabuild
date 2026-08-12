@@ -468,18 +468,22 @@ export const NESNELER = {
   /* ---- Kart yükleme partisi (CRD-10..12) — doküman §6.4 ----------------- */
   kartYuklemePartisi: {
     etiket: 'Kart yükleme partisi',
-    durumlar: ['taslak', 'dogrulandi', 'onay_bekliyor', 'gonderiliyor', 'kismi', 'basarili', 'hatali', 'mutabik', 'kapali'],
+    durumlar: ['taslak', 'dogrulandi', 'onay_bekliyor', 'gonderiliyor', 'kismi', 'basarili',
+      'hatali', 'mutabik', 'kapali', 'iptal'],
     baslangic: 'taslak',
-    sonDurumlar: ['kapali'],
+    sonDurumlar: ['kapali', 'iptal'],
     etiketler: {
       taslak: 'Taslak', dogrulandi: 'Doğrulandı', onay_bekliyor: 'Onay bekliyor',
       gonderiliyor: 'Sağlayıcıya gönderiliyor', kismi: 'Kısmi', basarili: 'Başarılı',
-      hatali: 'Hatalı', mutabik: 'Mutabık', kapali: 'Kapalı',
+      hatali: 'Hatalı', mutabik: 'Mutabık', kapali: 'Kapalı', iptal: 'İptal',
     },
     gecisler: [
       { den: 'taslak', e: 'dogrulandi', eylem: 'dogrula', etiket: 'Doğrula', gerekce: 'istege_bagli' },
       { den: 'dogrulandi', e: 'onay_bekliyor', eylem: 'onaya_gonder', etiket: 'Onaya gönder', gerekce: 'istege_bagli', akisBaslatir: true },
       { den: 'onay_bekliyor', e: 'gonderiliyor', eylem: 'gonder', etiket: 'Sağlayıcıya gönder', gerekce: 'istege_bagli', yalnizMotor: true },
+      /* Onay reddi/revizyonu: parti taslağa döner, sürüm dondurması kalkar. */
+      { den: 'onay_bekliyor', e: 'taslak', eylem: 'revizyon', etiket: 'Revizyona dön', gerekce: 'zorunlu', yalnizMotor: true },
+      { den: 'onay_bekliyor', e: 'iptal', eylem: 'iptal', etiket: 'İptal et', gerekce: 'zorunlu', yalnizMotor: true },
       { den: 'gonderiliyor', e: 'basarili', eylem: 'sonuc_basarili', etiket: 'Başarılı', gerekce: 'istege_bagli', yalnizMotor: true },
       { den: 'gonderiliyor', e: 'kismi', eylem: 'sonuc_kismi', etiket: 'Kısmi sonuç', gerekce: 'istege_bagli', yalnizMotor: true },
       { den: 'gonderiliyor', e: 'hatali', eylem: 'sonuc_hatali', etiket: 'Hatalı', gerekce: 'zorunlu', yalnizMotor: true },

@@ -20,6 +20,7 @@
    ========================================================================== */
 import { sorgu, tek, calistir, islem } from '../../cekirdek/db.mjs';
 import { kimlik } from '../../cekirdek/kimlikler.mjs';
+import { sonrakiKod } from '../isakisi/numara.mjs';
 import { simdi, gunAnahtari, gunBaslangici, GUN_MS } from '../../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, GecisIzinsiz, Cakisma, Bulunamadi } from '../../cekirdek/hata.mjs';
 import * as audit from '../../cekirdek/audit.mjs';
@@ -178,7 +179,7 @@ function gunHesapla(ctx, kart, { bas, son, gunSayisi, politika }) {
  * Partiyi ve satırlarını yazar. Mükerrer dönem kontrolü veritabanı kısıtındadır
  * (hesap, ürün, dönem, kaynak tekil); burada kullanıcıya anlamlı hata veriyoruz.
  */
-export function partiOlustur(ctx, { hesapId, urunId, donem, kaynak = 'puantaj', kod,
+export function partiOlustur(ctx, { hesapId, urunId, donem, kaynak = 'puantaj',
                                     idempotencyAnahtari = null }) {
   if (!donemGecerliMi(donem)) {
     throw DogrulamaHatasi('Dönem "YYYY-AA" biçiminde olmalı.', { alanlar: { donem: ['Örn. 2026-09'] } });
@@ -206,6 +207,8 @@ export function partiOlustur(ctx, { hesapId, urunId, donem, kaynak = 'puantaj', 
   }
 
   return islem(() => {
+    /* Kod üretimi transaction İÇİNDE olmalı: numara sayacı da bu işlemin parçası. */
+    const kod = sonrakiKod(ctx.tenant.id, 'kart_yukleme');
     const partiId = kimlik('parti');
     calistir(`INSERT INTO kart_yukleme_partisi (id, tenant_id, hesap_id, urun_id, politika_id,
                 kod, donem, kaynak, toplam_minor, satir_sayisi, tutar_birim, surum_no,

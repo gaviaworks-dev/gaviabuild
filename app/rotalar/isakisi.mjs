@@ -34,6 +34,7 @@ import { sayimOnaySonucu } from './stok.mjs';
 import { sozlesmeOnaySonucu } from './sozlesme.mjs';
 import { degisiklikOnaySonucu } from './sozlesme-ek.mjs';
 import { butceOnaySonucu } from './finans.mjs';
+import { kartOnaySonucu } from './kartlar-ek.mjs';
 import { finansOnaySonucu } from './finans-ek.mjs';
 import { ikOnaySonucu } from './ik-ek.mjs';
 
@@ -422,6 +423,9 @@ function isNesnesiniIlerlet(ctx, talepId, sonuc) {
   if (['izin', 'avans'].includes(t.nesne)) { ikOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return; }
   if (['degisiklik', 'sure_uzatim'].includes(t.nesne)) {
     degisiklikOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return;
+  }
+  if (['kart_yukleme', 'kart_politikasi', 'kart_mutabakati'].includes(t.nesne)) {
+    kartOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return;
   }
   if (t.nesne === 'duyuru' && sonuc === 'onaylandi') {
     const d = tek('SELECT * FROM duyuru WHERE id = ?', t.nesne_id);
