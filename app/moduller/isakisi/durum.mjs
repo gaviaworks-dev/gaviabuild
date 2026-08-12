@@ -132,6 +132,12 @@ export function isaretler(nesne, kayit, { simdiMs = simdi() } = {}) {
   if (t.isaretler.includes('takvimde') && kayit.planlanan_bitis && !bitti && kayit.planlanan_bitis >= simdiMs) {
     cikti.push({ kod: 'takvimde', metin: 'Takvimde', ton: 'ok' });
   }
+  if (t.isaretler.includes('kontrol_suresi_doldu') && kayit.kontrol_uyarisi) {
+    cikti.push({ kod: 'kontrol_suresi_doldu', metin: 'Periyodik kontrol süresi doldu', ton: 'danger' });
+  }
+  if (t.isaretler.includes('bakim_zamani') && kayit.bakim_uyarisi) {
+    cikti.push({ kod: 'bakim_zamani', metin: 'Bakım zamanı geldi', ton: 'warn' });
+  }
   if (t.isaretler.includes('belge_suresi_doldu') && kayit.belge_uyarisi) {
     cikti.push({ kod: 'belge_suresi_doldu', metin: `${kayit.belge_uyarisi} belge süresi doldu`, ton: 'danger' });
   }

@@ -364,6 +364,64 @@ export const NESNELER = {
     isaretler: ['gecikmis', 'odeme_bekliyor'],
   },
 
+  /* ---- Varlık (AST-01..03) ------------------------------------------------
+     Süresi dolmuş periyodik kontrol varlığı KULLANIM DIŞI bırakır (§7). */
+  varlik: {
+    etiket: 'Varlık',
+    durumlar: ['aktif', 'bakimda', 'arizali', 'kullanim_disi', 'satildi', 'hurda'],
+    baslangic: 'aktif',
+    sonDurumlar: ['satildi', 'hurda'],
+    etiketler: { aktif: 'Aktif', bakimda: 'Bakımda', arizali: 'Arızalı',
+      kullanim_disi: 'Kullanım dışı', satildi: 'Satıldı', hurda: 'Hurda' },
+    gecisler: [
+      { den: 'aktif', e: 'bakimda', eylem: 'bakima_al', etiket: 'Bakıma al', gerekce: 'istege_bagli' },
+      { den: 'bakimda', e: 'aktif', eylem: 'bakimdan_al', etiket: 'Bakımdan çıkar', gerekce: 'istege_bagli' },
+      { den: 'aktif', e: 'arizali', eylem: 'ariza_bildir', etiket: 'Arıza bildir', gerekce: 'zorunlu' },
+      { den: 'arizali', e: 'bakimda', eylem: 'bakima_al', etiket: 'Bakıma al', gerekce: 'istege_bagli' },
+      { den: 'aktif', e: 'kullanim_disi', eylem: 'kullanim_disi_birak', etiket: 'Kullanım dışı bırak',
+        gerekce: 'zorunlu' },
+      { den: 'kullanim_disi', e: 'aktif', eylem: 'kullanima_al', etiket: 'Kullanıma al', gerekce: 'zorunlu' },
+      { den: 'arizali', e: 'kullanim_disi', eylem: 'kullanim_disi_birak', etiket: 'Kullanım dışı bırak',
+        gerekce: 'zorunlu' },
+      /* Satış/hurda geri dönüşsüzdür ve açık zimmet varken yapılamaz. */
+      { den: 'kullanim_disi', e: 'satildi', eylem: 'sat', etiket: 'Satıldı olarak kapat', gerekce: 'zorunlu' },
+      { den: 'kullanim_disi', e: 'hurda', eylem: 'hurdaya_ayir', etiket: 'Hurdaya ayır', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['kontrol_suresi_doldu', 'bakim_zamani'],
+  },
+
+  /* ---- Zimmet (AST-04) ---------------------------------------------------- */
+  zimmet: {
+    etiket: 'Zimmet',
+    durumlar: ['zimmetli', 'iade', 'devir', 'hasarli', 'kayip'],
+    baslangic: 'zimmetli',
+    sonDurumlar: ['iade', 'devir', 'hasarli', 'kayip'],
+    etiketler: { zimmetli: 'Zimmetli', iade: 'İade edildi', devir: 'Devredildi',
+      hasarli: 'Hasarlı iade', kayip: 'Kayıp' },
+    gecisler: [
+      { den: 'zimmetli', e: 'iade', eylem: 'iade_al', etiket: 'İade al', gerekce: 'istege_bagli' },
+      { den: 'zimmetli', e: 'devir', eylem: 'devret', etiket: 'Devret', gerekce: 'zorunlu' },
+      { den: 'zimmetli', e: 'hasarli', eylem: 'hasarli_iade', etiket: 'Hasarlı iade', gerekce: 'zorunlu' },
+      { den: 'zimmetli', e: 'kayip', eylem: 'kayip_bildir', etiket: 'Kayıp bildir', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis'],
+  },
+
+  /* ---- Araç olayı (AST-10) ------------------------------------------------ */
+  aracOlayi: {
+    etiket: 'Araç olayı',
+    durumlar: ['acik', 'islemde', 'kapali', 'iptal'],
+    baslangic: 'acik',
+    sonDurumlar: ['kapali', 'iptal'],
+    etiketler: { acik: 'Açık', islemde: 'İşlemde', kapali: 'Kapalı', iptal: 'İptal' },
+    gecisler: [
+      { den: 'acik', e: 'islemde', eylem: 'islem_al', etiket: 'İşleme al', gerekce: 'istege_bagli' },
+      { den: 'islemde', e: 'kapali', eylem: 'kapat', etiket: 'Kapat', gerekce: 'zorunlu' },
+      { den: 'acik', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+    ],
+    isaretler: ['gecikmis'],
+  },
+
   /* ---- Kart yükleme partisi (Faz 5'te kullanılacak, tanım burada) ------- */
   kartYuklemePartisi: {
     etiket: 'Kart yükleme partisi',
