@@ -200,8 +200,23 @@ export function hataOzeti(hatalar) {
   return h`<div class="gv-m-err" role="alert" tabindex="-1" id="hataOzeti">
   <b><i class="fa-solid fa-circle-exclamation"></i> ${hatalar.mesaj || 'Form gönderilemedi.'}</b>
   ${alanlar.length ? h`<ul>${alanlar.map(([alan, liste]) => h`<li><a href="#alan-${alan}">${alan}</a>: ${[].concat(liste).join(' ')}</li>`)}</ul>` : ''}
+  ${redYonlendirmesi(hatalar.yonlendirme)}
   ${hatalar.kod ? h`<span class="gv-errcode">Hata kodu: <code>${hatalar.kod}</code></span>` : ''}
 </div>`;
+}
+
+/**
+ * Reddin ÇIKIŞI (denetim-02 D-14/D-16, K-125). Reddedip kullanıcıyı boşta
+ * bırakmak, sahte başarı kadar kötüdür: "yapamazsın" diyen her ekran nerede
+ * yapabileceğini de söyler. Rota manifestten çözülür (kural 1); dinamik rota
+ * hedef olamaz (denetim-01 D-07'de öğrenildi: `:id` içeren bağlantı 404 verir).
+ */
+export function redYonlendirmesi(y) {
+  if (!y?.kod) return '';
+  const e = manifest().ekranlar.find((x) => x.kod === y.kod);
+  if (!e || e.rota.includes('/:')) return '';
+  return h`<span class="gv-err-cikis"><i class="fa-solid fa-arrow-right"></i>
+    <a href="${e.rota}">${y.metin || e.ad}</a></span>`;
 }
 
 /** Tek form alanı. */

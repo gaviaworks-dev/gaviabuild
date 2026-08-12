@@ -7,7 +7,7 @@
 import { URL } from 'node:url';
 import { istekKimligi } from './kimlikler.mjs';
 import { yapilandirma } from './yapilandirma.mjs';
-import { hataCevir, DogrulamaHatasi } from './hata.mjs';
+import { hataCevir, DogrulamaHatasi, GovdeCokBuyuk } from './hata.mjs';
 
 /* --- Router -------------------------------------------------------------- */
 export class Yonlendirici {
@@ -73,12 +73,56 @@ export function cerezYaz(ad, deger, { maxYas = null, httpOnly = true, yol = '/' 
 export const cerezSil = (ad) => `${ad}=; Path=/; Max-Age=0; SameSite=Lax${yapilandirma.guvenliCerez ? '; Secure' : ''}; HttpOnly`;
 
 /* --- Gövde --------------------------------------------------------------- */
+/**
+ * Gövde sınırı aşımı (denetim-02 D-13, K-128).
+ *
+ * Sınır aşılınca akışı okumayı bırakırız; soketin okunmamış gövdeyle kalması
+ * aynı keep-alive bağlantısındaki BİR SONRAKİ isteği `ECONNRESET` ile
+ * düşürüyordu. Yanıt `413` döner ve `sunucu.mjs` bağlantıyı `Connection: close`
+ * ile düzgünce kapatır: kullanıcı önce dürüst bir hata, sonra çalışan bir
+ * bağlantı görür.
+ */
+export const govdeSiniriAsildi = (boyut = null) => GovdeCokBuyuk(
+  `Gönderilen veri çok büyük: en fazla ${Math.floor(yapilandirma.maxGovdeBayt / 1048576)} MB `
+  + `kabul edilir${boyut ? ` (gelen: ${(boyut / 1048576).toFixed(1)} MB)` : ''}. `
+  + 'Dosyayı küçültüp veya metni kısaltıp tekrar deneyin.');
+
+/**
+ * Sınırı aşan gövdeyi BELLEĞE ALMADAN ama AKIŞTAN OKUYARAK tüketir.
+ *
+ * Okumayı büsbütün bırakmak soketi yarım gövdeyle bırakıyor ve istemci temiz
+ * 413'ü göremeden yazma hatası alıyordu. Kalanı biriktirmeden boşaltırız:
+ * bellek maliyeti yok, istemci gönderimini bitirir ve dürüst 413'ü okur.
+ * Kötü niyetli sonsuz gövdeye karşı boşaltmanın da bir tavanı vardır.
+ */
+const BOSALTMA_TAVANI_KATI = 8;
+
+export async function govdeyiBosalt(istek, okunan = 0) {
+  const tavan = yapilandirma.maxGovdeBayt * BOSALTMA_TAVANI_KATI;
+  let boyut = okunan;
+  try {
+    for await (const p of istek) {
+      boyut += p.length;
+      if (boyut > tavan) return { boyut, tamBosaldi: false };
+    }
+  } catch { return { boyut, tamBosaldi: false }; }
+  return { boyut, tamBosaldi: true };
+}
 export async function govdeOku(istek) {
+  const bildirilen = Number(istek.headers['content-length'] || 0);
+  if (bildirilen > yapilandirma.maxGovdeBayt) {
+    const { boyut } = await govdeyiBosalt(istek);
+    throw govdeSiniriAsildi(Math.max(boyut, bildirilen));
+  }
   const parcalar = [];
   let boyut = 0;
   for await (const p of istek) {
     boyut += p.length;
-    if (boyut > yapilandirma.maxGovdeBayt) throw DogrulamaHatasi('Gönderilen veri çok büyük.');
+    if (boyut > yapilandirma.maxGovdeBayt) {
+      parcalar.length = 0;                       // biriktirmeyi bırak
+      const b = await govdeyiBosalt(istek, boyut);
+      throw govdeSiniriAsildi(b.boyut);
+    }
     parcalar.push(p);
   }
   const ham = Buffer.concat(parcalar).toString('utf8');

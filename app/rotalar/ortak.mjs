@@ -6,7 +6,7 @@
    atlarsa fark açıkça görünür.
    ========================================================================== */
 import { sorgu, tek, calistir, islem, surumluGuncelle } from '../cekirdek/db.mjs';
-import { manifest } from '../cekirdek/yapilandirma.mjs';
+import { manifest, yapilandirma } from '../cekirdek/yapilandirma.mjs';
 import { simdi } from '../cekirdek/zaman.mjs';
 import { Bulunamadi, DogrulamaHatasi } from '../cekirdek/hata.mjs';
 import * as audit from '../cekirdek/audit.mjs';
@@ -22,7 +22,8 @@ import * as B from '../web/bilesenler.mjs';
 import { sayaclar } from './calisma.mjs';
 
 export const ekranNesnesi = (kod) => manifest().ekranlar.find((e) => e.kod === kod);
-export const hataNesnesi = (e) => ({ kod: e.kod, mesaj: e.mesaj, alanlar: e.alanlar });
+export const hataNesnesi = (e) => ({ kod: e.kod, mesaj: e.mesaj, alanlar: e.alanlar,
+  yonlendirme: e.yonlendirme || null });
 export const kullaniciAdi = (id) => (id ? tek('SELECT ad_soyad FROM kullanici WHERE id = ?', id)?.ad_soyad || '—' : '—');
 
 /* ==========================================================================
@@ -106,10 +107,14 @@ export function listeSorgusu(ctx, { tablo, ekAlanlar = '', kosullar = [], parame
   }
   const nerede = tumKosullar.join(' AND ');
   const toplam = Number(tek(`SELECT COUNT(*) AS n FROM ${tablo} WHERE ${nerede}`, ...tumParametreler)?.n ?? 0);
+  /* Sayfa boyutu beyaz listeli (25/50/100) ama tavan YAPISAL güvencedir
+     (denetim-02 D-14, K-126): beyaz liste büyütülse bile bir liste ekranı
+     tek seferde ekran tavanından fazla satır çizemez. */
+  const sinir = Math.min(boyut, yapilandirma.ekranSatirTavani);
   const satirlar = sorgu(
     `SELECT *${ekAlanlar} FROM ${tablo} WHERE ${nerede} ORDER BY ${sirala} LIMIT ? OFFSET ?`,
-    ...tumParametreler, boyut, atla);
-  return { sayfa, boyut, toplam, satirlar };
+    ...tumParametreler, sinir, atla);
+  return { sayfa, boyut: sinir, toplam, satirlar };
 }
 
 /** Arama + filtre koşullarını sorgu parametrelerinden kurar. */

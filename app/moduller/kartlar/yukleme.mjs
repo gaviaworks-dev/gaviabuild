@@ -389,19 +389,51 @@ export async function partiGonder(ctx, parti) {
     });
   }
 
+  /* MÜKERRER OLAY, SAĞLAYICI REDDİ DEĞİLDİR (denetim-02 D-12, K-124).
+     Aynı parti aynı anda iki kez gönderilirse ikinci çağrı `cagriYurut`'un
+     idempotency kısıtına takılır ve `reddedildi('MUKERRER_OLAY')` döner.
+     Bunu sağlayıcı reddi saymak satırları "reddedildi" yapıyor, `sonucuUygula`
+     partiyi "hatalı"ya çekiyor ve ilk gönderim gerçek yanıtla dönünce satırlar
+     "başarılı" iken parti "hatalı" kalıyordu. İkinci çağrı satırlara DOKUNMAZ:
+     sonucu ilk gönderim yazacak. */
+  if (nihai.kod === 'MUKERRER_OLAY') {
+    return { gonderilen: 0, sonuc: { ...nihai, durum: 'bilinmiyor' }, satirDurumu: null,
+      mesaj: 'Bu parti için bir gönderim zaten sürüyor; ikinci gönderim muhasebeleşmedi. '
+        + 'Sonuç ilk gönderimden yazılacak.' };
+  }
+
+  const satirDurumu = {
+    basarili: 'basarili', reddedildi: 'reddedildi',
+    teknik_hata: 'teknik_hata', bilinmiyor: 'gonderildi',
+  }[nihai.durum] || 'gonderildi';
+
   return islem(() => {
     calistir('UPDATE kart_yukleme_partisi SET gonderim_zamani = ? WHERE id = ?', simdi(), parti.id);
-    const satirDurumu = {
-      basarili: 'basarili', reddedildi: 'reddedildi',
-      teknik_hata: 'teknik_hata', bilinmiyor: 'gonderildi',
-    }[nihai.durum] || 'gonderildi';
 
-    for (const s of gonderilecek) {
-      calistir(`UPDATE kart_yukleme_satiri SET durum = ?, hata_kodu = ?, hata_mesaji = ?,
-                  deneme_sayisi = deneme_sayisi + 1, son_deneme = ?, guncellendi = ? WHERE id = ?`,
-        satirDurumu, nihai.kod || null, nihai.mesaj ? String(nihai.mesaj).slice(0, 300) : null,
-        simdi(), simdi(), s.id);
+    if (satirDurumu === 'gonderildi') {
+      /* Sonuç BİLİNMİYOR: satır "gönderildi" kalır, defter YAZILMAZ. Durum
+         sorgulanmadan tekrar gönderilmez (§6.4 madde 6). */
+      for (const s of gonderilecek) {
+        calistir(`UPDATE kart_yukleme_satiri SET durum = 'gonderildi', hata_kodu = ?, hata_mesaji = ?,
+                    deneme_sayisi = deneme_sayisi + 1, son_deneme = ?, guncellendi = ? WHERE id = ?`,
+          nihai.kod || null, nihai.mesaj ? String(nihai.mesaj).slice(0, 300) : null,
+          simdi(), simdi(), s.id);
+      }
+    } else {
+      /* SONUÇLANAN gönderim TEK kanonik yoldan işlenir (denetim-02 D-09, K-123).
+         `sonucIsle()` paranın karta girdiği tek fonksiyondur: satır durumunu da
+         o yazar, başarılı satır için `kart_hareketi` defterine hareket düşer ve
+         `hareket_id` dolar. Burada satır durumunu elle yazmak, sağlayıcı "yükledim"
+         derken kart bakiyesinin SIFIR kalmasına yol açıyordu (kural 3 ve 7). */
+      calistir(`UPDATE kart_yukleme_satiri SET deneme_sayisi = deneme_sayisi + 1, son_deneme = ?
+                 WHERE id IN (${gonderilecek.map(() => '?').join(',')})`,
+        simdi(), ...gonderilecek.map((s) => s.id));
+      sonucIsle(ctx, parti, gonderilecek.map((s) => ({
+        satirId: s.id, durum: satirDurumu,
+        referans: nihai.referans || null, kod: nihai.kod || null, mesaj: nihai.mesaj || null,
+      })));
     }
+
     audit.yaz({ tenantId: ctx.tenant.id, kullaniciId: ctx.kullanici.id, istekId: ctx.istekId, ip: ctx.ip,
       nesne: 'kart_yukleme_partisi', nesneId: parti.id, eylem: 'gonder',
       sonraki: { satir: gonderilecek.length, sonuc: nihai.durum, kod: nihai.kod } });

@@ -13,7 +13,8 @@ import { html, yanitla, yonlendir } from '../cekirdek/http.mjs';
 import { simdi, tarihSaat, gunAnahtari } from '../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, Bulunamadi, UygulamaHatasi, YetkiYok } from '../cekirdek/hata.mjs';
 import { RAPORLAR, raporBul } from '../moduller/rapor/tanimlar.mjs';
-import { raporEkrani, raporCikti, CIKTI_BICIMLERI } from '../web/rapor-duzeni.mjs';
+import { raporEkrani, raporCikti, CIKTI_BICIMLERI, satirTavaniZorunlu, ekranTavani }
+  from '../web/rapor-duzeni.mjs';
 import {
   ekranNesnesi, hataNesnesi, ciz, B, h, ham, sayi,
   csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar, sorgu, tek, calistir, islem, audit,
@@ -177,6 +178,18 @@ function raporGoster(ctx, rapor) {
   const sonuc = rapor.veri(ctx, filtre);
 
   if (bicim === 'ekran') {
+    /* Satır tavanı aşıldıysa (denetim-02 D-14, K-126) sayfayı KAPATMAYIZ:
+       künye, KPI ve filtre çubuğu ayakta kalır, tablonun yerine açık ret
+       gelir. Kullanıcı daraltmayı yerinde yapabilsin diye — reddedip boşta
+       bırakmak sahte başarı kadar kötüdür (K-125). */
+    try {
+      satirTavaniZorunlu(sonuc.satirlar.length, { nerede: 'ekran görünümü', tavan: ekranTavani() });
+    } catch (err) {
+      if (!(err instanceof UygulamaHatasi)) throw err;
+      return html(ctx, err.durum, ciz(ctx, e, raporEkrani(ctx, rapor,
+        { ...sonuc, satirlar: [], toplamlar: null },
+        { filtre, filtreBari: filtreBariCiz(ctx, rapor), tavanHatasi: hataNesnesi(err) })));
+    }
     return html(ctx, 200, ciz(ctx, e, raporEkrani(ctx, rapor, sonuc, {
       filtre, filtreBari: filtreBariCiz(ctx, rapor) })));
   }

@@ -5,6 +5,8 @@
    Test edilebilirlik için saat enjekte edilebilir (`saatAyarla`).
    ========================================================================== */
 
+import { DogrulamaHatasi } from './hata.mjs';
+
 let _simdi = () => Date.now();
 
 /** Testlerde deterministik zaman için saati sabitler. */
@@ -43,8 +45,33 @@ export function gunAnahtari(ms, tz = VARSAYILAN_TZ) {
   return `${al('year')}-${al('month')}-${al('day')}`;
 }
 
+/**
+ * "2026-08-11" biçimini ve TAKVİMDE GERÇEKTEN VAR OLAN bir günü doğrular
+ * (denetim-02 D-10, KARARLAR.md K-121).
+ *
+ * `Date.UTC` taşan alanları sessizce kaydırır: `2026-13-45` → 2027-02-14,
+ * `2026-02-31` → 2026-03-03. Kaydırılmış bir gün deftere, puantaja veya
+ * hakediş dönemine sessizce yanlış tarih yazar; ayrıştırılamayan girdi ise
+ * `RangeError` ile 500 üretirdi. İkisi de doğrulama hatasıdır.
+ */
+export const GUN_DESENI = /^\d{4}-\d{2}-\d{2}$/;
+
+export function gunGecerliMi(gun) {
+  const s = String(gun ?? '').trim();
+  if (!GUN_DESENI.test(s)) return false;
+  const [y, a, g] = s.split('-').map(Number);
+  if (y < 1900 || y > 2999 || a < 1 || a > 12 || g < 1 || g > 31) return false;
+  /* Tur atarak doğrula: kaydırma olduysa alanlar geri gelmez. */
+  const d = new Date(Date.UTC(y, a - 1, g));
+  return d.getUTCFullYear() === y && d.getUTCMonth() === a - 1 && d.getUTCDate() === g;
+}
+
 /** "2026-08-11" + saat dilimi → UTC epoch ms (gün başlangıcı). */
 export function gunBaslangici(gun, tz = VARSAYILAN_TZ) {
+  if (!gunGecerliMi(gun)) {
+    throw DogrulamaHatasi(`Geçerli bir tarih girin (GG.AA.YYYY): "${String(gun ?? '').slice(0, 30)}".`,
+      { alanlar: { tarih: ['Geçerli bir tarih girin.'] } });
+  }
   const [y, a, g] = gun.split('-').map(Number);
   /* Hedef TZ ofsetini o tarihte hesapla (yaz saati dahil). */
   const varsayim = Date.UTC(y, a - 1, g, 0, 0, 0);

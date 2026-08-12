@@ -8,6 +8,7 @@
    ========================================================================== */
 import { createHash } from 'node:crypto';
 import { DogrulamaHatasi } from './hata.mjs';
+import { govdeyiBosalt, govdeSiniriAsildi } from './http.mjs';
 import { yapilandirma } from './yapilandirma.mjs';
 
 const CRLF = Buffer.from('\r\n');
@@ -57,11 +58,20 @@ export async function cokluParcaOku(istek) {
   if (!eslesme) throw DogrulamaHatasi('Geçersiz form gönderimi (sınır belirteci yok).');
   const sinir = Buffer.from('--' + (eslesme[1] || eslesme[2]).trim());
 
+  const bildirilen = Number(istek.headers['content-length'] || 0);
+  if (bildirilen > yapilandirma.maxGovdeBayt) {
+    const { boyut } = await govdeyiBosalt(istek);
+    throw govdeSiniriAsildi(Math.max(boyut, bildirilen));
+  }
   const parcalar = [];
   let boyut = 0;
   for await (const p of istek) {
     boyut += p.length;
-    if (boyut > yapilandirma.maxGovdeBayt) throw DogrulamaHatasi('Yüklenen dosya çok büyük.');
+    if (boyut > yapilandirma.maxGovdeBayt) {
+      parcalar.length = 0;
+      const b = await govdeyiBosalt(istek, boyut);
+      throw govdeSiniriAsildi(b.boyut);
+    }
     parcalar.push(p);
   }
   const govde = Buffer.concat(parcalar);

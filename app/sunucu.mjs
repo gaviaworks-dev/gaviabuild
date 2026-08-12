@@ -83,6 +83,16 @@ async function istegiIsle(yonlendirici, istek, yanit) {
 function hatayiYanitla(ctx, hamHata) {
   const e = hataCevir(hamHata);
   if (e.durum >= 500) console.error(`[${ctx.istekId}] ${e.kod}`, e.ayrinti?.asil || e.message, e.ayrinti?.yigin || '');
+
+  /* 413'te gövdenin OKUNMAMIŞ kalanı sokette durur; aynı keep-alive
+     bağlantısındaki bir sonraki istek ECONNRESET alıyordu (denetim-02 D-13,
+     K-128). Yanıtı `Connection: close` ile veririz: istemci dürüst bir 413
+     görür ve bu bağlantıyı yeniden kullanmaz. */
+  if (e.durum === 413) {
+    ctx.istek.on('error', () => {});      // boşaltma tavanı aşıldıysa kalan sessizce düşer
+    if (!ctx.istek.readableEnded) ctx.yanit.setHeader('Connection', 'close');
+  }
+
   if (jsonIster(ctx)) return json(ctx, e.durum, { ...e.govde(), istekId: ctx.istekId });
 
   const eslesen = {
@@ -92,6 +102,8 @@ function hatayiYanitla(ctx, hamHata) {
            eylemler: btn('Ana sayfaya dön', { tur: 'acc', rota: '/' }) },
     404: { kod: 'AUTH-09', baslik: 'Aradığınız sayfa bulunamadı', ikon: 'fa-compass', ton: 'info',
            eylemler: btn('Ana sayfaya dön', { tur: 'acc', rota: '/' }) },
+    413: { baslik: 'Gönderilen veri çok büyük', ikon: 'fa-file-circle-exclamation', ton: 'warn',
+           eylemler: btn('Geri dön', { tur: 'acc', rota: ctx.basliklar.referer || '/' }) },
     503: { kod: 'AUTH-10', baslik: 'Sistem geçici olarak kullanılamıyor', ikon: 'fa-screwdriver-wrench', ton: 'warn',
            eylemler: btn('Yeniden dene', { tur: 'acc', rota: ctx.yol }) },
   }[e.durum];

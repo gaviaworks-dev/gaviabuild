@@ -15,6 +15,8 @@
    dört çıktının hepsinde aynı satırlarla görünür.
    ========================================================================== */
 import { html } from '../cekirdek/http.mjs';
+import { yapilandirma } from '../cekirdek/yapilandirma.mjs';
+import { DogrulamaHatasi } from '../cekirdek/hata.mjs';
 import { simdi, tarih, tarihSaat } from '../cekirdek/zaman.mjs';
 import { Para } from '../cekirdek/para.mjs';
 import { PdfBelgesi } from '../cekirdek/pdf.mjs';
@@ -23,6 +25,27 @@ import { h, ham, sayi } from './temel.mjs';
 import * as B from './bilesenler.mjs';
 
 export const CIKTI_BICIMLERI = ['ekran', 'pdf', 'xlsx', 'csv'];
+
+/* --- Satır tavanı (denetim-02 D-14, KARARLAR.md K-126) -------------------
+   Sınırsız rapor, 10 bin satırda 7,5 MB HTML ve +340 MB RSS üretiyordu.
+   Tavan aşılınca SESSİZCE KIRPILMAZ — kırpılmış bir rapor, doğru görünen ama
+   yanlış toplamlar taşıyan bir rapordur ve §12'nin "çıktı ekranla uyuşmuyor"
+   maddesine düşer. Bunun yerine D-05'in AÇIK RET kalıbı uygulanır: kaç satır
+   olduğu söylenir, filtre daraltması istenir, ret 422 ile döner. */
+export function satirTavaniZorunlu(satirSayisi, { nerede, tavan, ekranKodu = null }) {
+  if (satirSayisi <= tavan) return;
+  throw DogrulamaHatasi(
+    `Bu filtrede ${satirSayisi.toLocaleString('tr-TR')} kayıt var; `
+    + `${nerede} en çok ${tavan.toLocaleString('tr-TR')} satır üretir. `
+    + 'Sonuç KIRPILMADI — kırpılmış rapor yanlış toplam demektir. '
+    + 'Tarih aralığını veya diğer filtreleri daraltıp tekrar deneyin.',
+    { alanlar: { filtre: [`Sonuç ${satirSayisi.toLocaleString('tr-TR')} satır, tavan `
+      + `${tavan.toLocaleString('tr-TR')}.`] },
+    ...(ekranKodu ? { yonlendirme: { kod: ekranKodu, metin: 'Filtreyi daralt' } } : {}) });
+}
+
+export const ekranTavani = () => yapilandirma.ekranSatirTavani;
+export const dosyaTavani = () => yapilandirma.dosyaSatirTavani;
 
 /* --- Hücre biçimlendirme -------------------------------------------------- */
 /**
@@ -99,6 +122,8 @@ export function kunyeSatirlari(rapor, { ctx, filtre, veriTarihi, kayitSayisi }) 
  * @param {object} sonuc  { satirlar, kpiler, veriTarihi, sutunlar?, gruplar? }
  */
 export function raporCikti(ctx, rapor, sonuc, bicim, { filtre = {} } = {}) {
+  satirTavaniZorunlu(sonuc.satirlar.length,
+    { nerede: `${bicim.toUpperCase()} çıktısı`, tavan: dosyaTavani(), ekranKodu: rapor.kod });
   const sutunlar = sonuc.sutunlar || rapor.sutunlar;
   const kunye = kunyeSatirlari(rapor, {
     ctx, filtre, veriTarihi: sonuc.veriTarihi, kayitSayisi: sonuc.satirlar.length });
@@ -204,7 +229,14 @@ function pdfCikti(ctx, rapor, kunye, sutunlar, matris, sonuc) {
  * Rapor ekranı. Yazdırma görünümünde menü, buton ve form kontrolleri gizlenir
  * (print CSS `statik/css/rapor.css` içindedir, `@media print`).
  */
-export function raporEkrani(ctx, rapor, sonuc, { filtre = {}, filtreBari = null } = {}) {
+export function raporEkrani(ctx, rapor, sonuc, { filtre = {}, filtreBari = null,
+                                                 tavanHatasi = null } = {}) {
+  /* Tavan aşımında sayfayı KAPATMAK yerine tabloyu açık retle değiştiririz:
+     filtre çubuğu ve künye ayakta kalır, kullanıcı daraltmayı YERİNDE yapar.
+     Çağıran hatayı yakalayıp buraya `tavanHatasi` ile geri verir (rapor.mjs). */
+  if (!tavanHatasi) {
+    satirTavaniZorunlu(sonuc.satirlar.length, { nerede: 'ekran görünümü', tavan: ekranTavani() });
+  }
   const sutunlar = sonuc.sutunlar || rapor.sutunlar;
   const kunye = kunyeSatirlari(rapor, {
     ctx, filtre, veriTarihi: sonuc.veriTarihi, kayitSayisi: sonuc.satirlar.length });
@@ -251,7 +283,7 @@ export function raporEkrani(ctx, rapor, sonuc, { filtre = {}, filtreBari = null 
   <div class="gv-card">
     <div class="gc-head"><div class="gc-title"><b>${rapor.tabloBasligi || 'Ayrıntı'}</b>
       <span>${sonuc.satirlar.length} kayıt · veri tarihi ${tarihSaat(sonuc.veriTarihi)}</span></div></div>
-    <div class="gc-body flush">
+    ${tavanHatasi ? h`<div class="gc-body">${B.hataOzeti(tavanHatasi)}</div>` : h`<div class="gc-body flush">
       <div class="gv-tscroll"><table class="gtable rpt-tablo">
         <thead><tr>${sutunlar.map((c) => h`<th class="${ham(
     ['para', 'sayi', 'ondalik', 'yuzde'].includes(c.tur) ? 'ta-sag' : '')}">${c.etiket}</th>`)}</tr></thead>
@@ -264,7 +296,7 @@ export function raporEkrani(ctx, rapor, sonuc, { filtre = {}, filtreBari = null 
         ${sonuc.toplamlar?.length ? h`<tfoot><tr>${sonuc.toplamlar.map((t, i) => h`<td class="${ham(
     ['para', 'sayi', 'ondalik', 'yuzde'].includes(sutunlar[i]?.tur) ? 'ta-sag' : '')}"><b>${t}</b></td>`)}</tr></tfoot>` : ''}
       </table></div>
-    </div>
+    </div>`}
   </div>
 
   ${rapor.aciklama ? h`<div class="gv-card"><div class="gc-body">

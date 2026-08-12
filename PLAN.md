@@ -153,19 +153,54 @@ istekle), tenant/kapsam izolasyonu, CSRF, query parametresiyle rol yükseltme
 girişimlerinin reddi, defter değişmezliği (tetikleyici düzeyinde), 11 raporun
 gerçek PDF/XLSX/CSV üretimi, beklenmeyen 5xx yokluğu.
 
+## Denetim-02 — eşzamanlılık ve veri bütünlüğü (12 Ağustos 2026)
+
+`raporlar/denetim-02.md` · dal `denetim/02-esalanlilik` · taban `v1.0.0`.
+Gerçek sunucuya karşı gerçekten eşzamanlı isteklerle sınandı; sonuç her seferinde
+defterden doğrulandı. **Dokuz bulgunun dokuzu da kapatıldı** — dört kırmızı ve
+bir turuncu ilk turda, dört sarı ikinci turda. Her biri ayrı commit ve regresyon
+testi; testlerin kilitlediği, düzeltmeler geçici geri alınarak kanıtlandı.
+
+| # | Bulgu | Durum |
+|---|---|---|
+| D-08 | 2^53 üstü tutar değişmez deftere yazılıyor, sonra o defteri okuyan her ekran kalıcı 500; ters kayıt da 500 | ✅ K-120 |
+| D-09 | Sağlayıcı API'si başarı dönünce parti "başarılı" ama kart defterine tek satır yazılmıyor; kurtarma yolu da kapanıyor | ✅ K-123 |
+| D-10 | `gunBaslangici()` geçersiz tarihte 500, imkânsız tarihte sessizce kayıyor (111 çağrı yeri) | ✅ K-121 |
+| D-11 | Kart yükleme partisi onaylanınca `/onaylar/:id` 500 veriyor (audit transaction dışında) | ✅ K-122 |
+| D-12 | Eşzamanlı ikinci gönderim satırlar "başarılı" iken partiyi "hatalı"ya düşürüyor | ✅ K-124 |
+| D-13 | Gövde sınırı aşılınca keep-alive bağlantısı zehirleniyor (`ECONNRESET`) | ✅ K-128 |
+| D-14 | Raporlarda satır tavanı yok — 10 bin satırda 7,5 MB HTML, RSS +340 MB | ✅ K-126 |
+| D-15 | Serbest metin alanlarında uzunluk sınırı yok (100k karakter deftere giriyor) | ✅ K-127 |
+| D-16 | Finans hareketine gelecek/çok geçmiş tarih yazılabiliyor; dönem kilidi görmüyor | ✅ K-125 |
+
+Denetimde **sağlam** çıkanlar: kasa ve stok negatife düşmüyor, aynı varlık iki
+kişide olmuyor, aynı onay adımına iki karar geçmiyor, optimistic concurrency
+gerçekten yakalıyor (sürüm alanı hiç gönderilmezse de kapalı tarafa düşüyor),
+idempotency eşzamanlı üç istekte tek kayıt üretiyor, ters kayıt defteri
+sıfırlıyor ve iki kez uygulanamıyor, liste sayfalama/filtre/beyaz liste sağlam,
+**10 bin satırda ekran = PDF = Excel = CSV**, Unicode tam tur atıyor.
+
+Yarış yüzeyi ölçüldü: `node:sqlite` senkron olduğu için tüm `await` yüzeyi 15
+satır ve hepsi dosya yükleme veya sağlayıcı çağrısı. Finans, stok, zimmet ve
+onay akışlarında yarış penceresi yapısal olarak yok.
+
+Sarıların kapanışında verilen kararlar: ileri tarihli kasa/banka hareketi yasak
+ve ret FIN-12'ye yönlendiriyor (K-125); satır tavanı ekran 5.000 / dosya 20.000,
+aşımda sessiz kırpma yerine açık ret (K-126); serbest metinde öntanımlı uzunluk
+sınırı 4.000 / 250 (K-127); gövde aşımı 413 ve bağlantı sağlam kalıyor (K-128).
+
 ### Sonraki oturum ne yapmalı?
 
-Denetim-01 kapandı; açık §12 engeli yok. Sıradaki iş şunlardan biri olabilir:
+Denetim-01 ve denetim-02 kapandı; açık §12 engeli yok. **Sürüm `v1.0.1`.**
+Sıradaki iş:
 
 1. **Görsel tur:** `frontend-design` + `ss-eval` ile ekran ekran polish.
-   Yapı, gezinme ve veri bütünlüğü bitti; sıra sayfa dilinin inceliklerinde.
    Menü D-01'de büyüdü (Raporlar 1→14, Kartlar 1→10) — uzun bölüm menülerinin
    görsel ritmi gözden geçirilmeli.
-2. **İkinci bir düşman denetimi** (denetim-02): bu tur gezinme, çıktı ve beyan
-   eksenlerine baktı; sıradaki tur yük, eşzamanlılık ve veri hacmine bakabilir.
-3. **Yük ve dayanıklılık:** çok kayıtlı listelerde sayfalama ve rapor süreleri.
-4. **Gerçek sağlayıcı bağlantısı:** Pluxee/MultiNet kimlik bilgileri
-   tanımlanınca `httpAdaptoru` canlıya alınır (kod hazır, yapılandırma işi).
+3. **Gerçek sağlayıcı bağlantısı:** Pluxee/MultiNet kimlik bilgileri
+   tanımlanınca `httpAdaptoru` canlıya alınır. **D-09 bu yolun defteri hiç
+   yazmadığını gösterdi ve düzeltildi**; bağlantı öncesi denetim-02'nin kart
+   testleri (`denetim-02-kart-defteri.test.js`) referans alınmalı.
 
 ### Bilinçli açık uçlar — gizlenmedi, kayıt altında
 
