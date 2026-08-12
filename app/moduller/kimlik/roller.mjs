@@ -70,6 +70,10 @@ export const ROLLER = [
     aciklama: 'Teknik yapılandırma ve erişim yönetimi. İşlem onaylayamaz, kişisel harcama içeriği göremez.',
     bolumler: ['ayarlar', 'calisma'],
     eylemler: ['goruntule', 'olustur', 'guncelle', 'disa_aktar'],
+    /* §6.7: "Sistem yöneticisi → Entegrasyon YAPILANDIR ve erişim ata."
+       CRD-18 kart bölümündedir ama teknik bir ekrandır; kart verisine değil
+       yapılandırmaya dokunur. İşlem onayı ve harcama içeriği yine kapalıdır. */
+    ekstra: ['CRD-18:goruntule', 'CRD-18:olustur', 'CRD-18:guncelle'],
     haric: ['GLB-04', 'GLB-05'],           // onay kutusu ve karar verme YOK (§6.7)
     kapsam: [{ nesne: '*', kural: 'alan_maskesi', deger: { alanlar: ['harcama_detay', 'maas', 'saglik', 'kart_no'] } }],
   },
