@@ -10,6 +10,7 @@
 import { Yonlendirici } from './cekirdek/http.mjs';
 import { manifest } from './cekirdek/yapilandirma.mjs';
 import { Bulunamadi } from './cekirdek/hata.mjs';
+import { ekranZorunlu } from './moduller/kimlik/yetki.mjs';
 import * as kimlikRotalari from './rotalar/kimlik.mjs';
 import * as calismaRotalari from './rotalar/calisma.mjs';
 import * as ayarRotalari from './rotalar/ayarlar.mjs';
@@ -43,11 +44,20 @@ export function ekran(kod) {
   return e;
 }
 
-/** Ekran kodunu rotaya bağlar. Rota manifestten okunur, elle yazılmaz. */
+/**
+ * Ekran kodunu rotaya bağlar. Rota manifestten okunur, elle yazılmaz.
+ *
+ * K-081: yetki kontrolü BURADA, işleyiciden ÖNCE yapılır. Manifestte `acik`
+ * işaretli ekranlar (giriş, 403/404, tedarikçi portalı) muaftır; geri kalan
+ * her ekran kendi `yetki` alanını zorunlu kılar. İşleyicilerdeki kendi
+ * `yetkiZorunlu` çağrıları kalır — ikinci savunma katmanıdır; ama artık bir
+ * işleyicinin onu YAZMAYI UNUTMASI yetki açığı üretemez.
+ */
 export function ekranRota(y, kod, { get, post } = {}) {
   const e = ekran(kod);
-  if (get) y.get(e.rota, get, { ekran: e });
-  if (post) y.post(e.rota, post, { ekran: e });
+  const kapili = (isleyici) => (ctx, ...rest) => { ekranZorunlu(ctx, e); return isleyici(ctx, ...rest); };
+  if (get) y.get(e.rota, kapili(get), { ekran: e });
+  if (post) y.post(e.rota, kapili(post), { ekran: e });
   uygulanan.add(kod);
   /* Takma adlar aynı kanonik ekrana düşer (K-013). */
   for (const t of manifest().ekranlar.filter((x) => x.takmaAdi === kod)) uygulanan.add(t.kod);
