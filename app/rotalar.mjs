@@ -40,6 +40,9 @@ import * as kartEkRotalari from './rotalar/kartlar-ek.mjs';
 import * as entegrasyonRotalari from './rotalar/entegrasyon.mjs';
 import * as ayrilisRotalari from './rotalar/ik-ayrilis.mjs';
 import * as raporRotalari from './rotalar/rapor.mjs';
+import * as musteriRotalari from './rotalar/musteri.mjs';
+import * as portalRotalari from './rotalar/portal.mjs';
+import * as aramaRotalari from './rotalar/arama-arsiv.mjs';
 
 const uygulanan = new Set();
 
@@ -102,6 +105,9 @@ export function yonlendiriciKur() {
   entegrasyonRotalari.kur(y, ekranRota);
   ayrilisRotalari.kur(y, ekranRota);
   raporRotalari.kur(y, ekranRota);
+  musteriRotalari.kur(y, ekranRota);
+  portalRotalari.kur(y, ekranRota);
+  aramaRotalari.kur(y, ekranRota);
 
   /* Kök: oturum varsa role göre landing, yoksa giriş. */
   y.get('/', (ctx) => kimlikRotalari.kok(ctx));

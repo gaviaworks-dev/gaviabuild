@@ -40,6 +40,7 @@ export const ONEK = {
   butce: 'bdg', kasa: 'csh', banka: 'bnk', cari: 'car', fatura: 'inv', odeme: 'pay',
   kart: 'crd', saglayici: 'prv', hesap: 'acc', parti: 'bat', satir: 'itm',
   urun: 'prd', politika: 'pol', mutabakat: 'rec', entegrasyon: 'itg',
+  musteri: 'cus', firsat: 'opp', portal: 'ptl', senkron: 'syn', arsiv: 'arc',
   sablon: 'tpl', adim: 'stp',
   varlik: 'ast', zimmet: 'asg', arac: 'veh',
   onay: 'apr', gorevAdim: 'stp', bildirim: 'ntf', audit: 'aud', olay: 'evt',

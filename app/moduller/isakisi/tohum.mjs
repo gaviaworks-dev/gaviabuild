@@ -278,7 +278,8 @@ export function isAkisiTohumla(tenantId, kullaniciId = null) {
       ['kabul', 'KBL'], ['is_emri', 'IEM'], ['toplanti', 'TPL'],
       ['isg_denetimi', 'DEN'], ['tedarikci', 'TED'], ['rfq', 'RFQ'], ['teklif_kaydi', 'TKF'],
       ['stok_transferi', 'TRF'], ['stok_sayimi', 'SYM'], ['sure_uzatim', 'SUZ'],
-      ['arac_olayi', 'AOL']]) {
+      ['arac_olayi', 'AOL'], ['musteri', 'CUS'], ['firsat', 'OPP'],
+      ['satis_teklifi', 'STF'], ['arsiv_isi', 'ARC']]) {
       sablonKur(tenantId, nesne, onek);
     }
 

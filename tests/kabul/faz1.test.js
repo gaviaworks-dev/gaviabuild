@@ -300,21 +300,31 @@ describe('Platform — manifest, rota ve yetki tutarlılığı', () => {
     assert.match(y.govde, /gvc-sec/);
   });
 
-  test('uygulanmamış manifest rotası sahte ekran değil dürüst 404 döndürür', async () => {
+  test('bilinmeyen rota sahte ekran değil dürüst 404 döndürür', async () => {
     const c = S.istemci();
     await c.giris('sahip@yapitas.demo');
-    /* Hedef ekran MANİFESTTEN türetilir; sabit bir kod yazmak, o ekran uygulandığında
-       testi sessizce anlamsızlaştırırdı. Uygulanmamış, statik ve açık olmayan
-       her rota dürüst 404 döner (K-018). */
+    /* Manifestte olmayan rota ve uygulanmamış ekran kodu AYNI dürüst 404'ü verir;
+       hiçbir yerde "yapım aşamasında" metni yoktur (K-018, §12). */
+    for (const yol of ['/olmayan-sayfa', '/raporlar/olmayan-rapor', '/kartlar/olmayan']) {
+      const y = await c.get(yol);
+      assert.equal(y.durum, 404, `${yol} 404 dönmedi`);
+      assert.ok(!/WIP|yapım aşamasında|çok yakında/i.test(y.govde), `${yol} WIP metni kullanılmış`);
+    }
+    /* Uygulanmamış ekran kalırsa o da 404 dönmelidir. */
     const kodlar = uygulananKodlar();
     const bekleyen = manifest().ekranlar
       .filter((e) => !kodlar.has(e.kod) && !e.dinamik && !e.acik);
-    assert.ok(bekleyen.length > 0, 'tüm ekranlar uygulanmışsa bu test kaldırılmalı');
     for (const e of bekleyen.slice(0, 10)) {
       const y = await c.get(e.rota);
       assert.equal(y.durum, 404, `${e.kod} ${e.rota} 404 dönmedi`);
-      assert.ok(!/WIP|yapım aşamasında|çok yakında/i.test(y.govde), `${e.kod} WIP metni kullanılmış`);
     }
+  });
+
+  test('manifestteki HER ekran kodu bir rotaya bağlı (kural 1)', () => {
+    const kodlar = uygulananKodlar();
+    const eksik = manifest().ekranlar.filter((e) => !kodlar.has(e.kod)).map((e) => e.kod);
+    assert.deepEqual(eksik, [],
+      `manifestte olup rotaya bağlanmamış ekran kodu var: ${eksik.join(', ')}`);
   });
 
   test('istemci tarafı iş kuralı yok: uygulama JS dosyası localStorage ile iş kaydı tutmuyor', async () => {
