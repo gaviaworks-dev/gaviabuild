@@ -113,9 +113,9 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ---
 
-## KALDIĞIMIZ YER — revizyon turu TAMAMLANDI
+## KALDIĞIMIZ YER — revizyon turu tamamlandı, denetim-01 turu geçildi
 
-**Son commit:** `faz6(kapanış)` · **Test:** 390/390 · **Ekran:** **244/244 doğrulandı**
+**Test:** 398/398 · **Ekran:** **244/244 doğrulandı ve gezinerek erişilebilir**
 
 | Faz | Aile | Durum |
 | --- | --- | --- |
@@ -130,6 +130,26 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 Doküman §9'un altı fazı da kapandı. Her fazın raporu `raporlar/faz-N-rapor.md`
 altında; hiçbirinde §12 üretime çıkış engeli kalmadı.
+
+### Denetim-01 (12 Ağustos 2026) — bağımsız doğrulama
+
+`raporlar/denetim-01.md`: gerçek sunucu, gerçek HTTP, 10 persona ile bağımsız
+denetim. Üç **kırmızı** bulgu çıktı ve kapatıldı; dördü açık ve §12 engeli değil.
+
+| # | Bulgu | Durum |
+|---|---|---|
+| D-01 | 26 ekran (11'i P0) hiçbir sayfadan açılamıyordu — `menuOgesiMi` rota ön ekine bakıyordu | ✅ K-114 |
+| D-02 | `/mobil` → `/gunluk-raporlar` ölü bağlantı (404) | ✅ düzeltildi |
+| D-03 | Üretimde davet ve şifre sıfırlama "gönderildi" diyordu, gönderici yok | ✅ K-115 |
+| D-04 | Proje/plan detayında `?sekme=` ikinci gezinme şeması; PRJ-05..10 manifest rotaları yetim | 🟡 açık |
+| D-05 | RPT-15, HSE-12, PLAN-11 `?cikti=pdf` çağrısında sessizce HTML dönüyor (kural 9) | 🟡 açık |
+| D-06 | K-027 antivirüs eksikliği kullanıcıya hiçbir yerde söylenmiyor | 🟡 açık |
+| D-07 | Boş kurulumda `/kartlar/yeni`, `/santiyeler/yeni` çıkışsız form | 🟡 açık |
+
+Denetimde **sağlam** çıkanlar: sunucu tarafı yetki (10 rol × 176 ekran gerçek
+istekle), tenant/kapsam izolasyonu, CSRF, query parametresiyle rol yükseltme
+girişimlerinin reddi, defter değişmezliği (tetikleyici düzeyinde), 11 raporun
+gerçek PDF/XLSX/CSV üretimi, beklenmeyen 5xx yokluğu.
 
 ### Sonraki oturum ne yapmalı?
 

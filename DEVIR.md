@@ -43,8 +43,8 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 
 | | |
 |---|---|
-| Ekran | **244 / 244 doğrulandı** — bekleyen yok |
-| Test | **390/390 yeşil** (`node --test`, kök dizinden) |
+| Ekran | **244 / 244 doğrulandı** ve denetim-01 turunda gezinerek erişilebilir olduğu kanıtlandı |
+| Test | **398/398 yeşil** (`node --test`, kök dizinden) |
 | Faz 0 — Envanter | ✅ `faz-0-tamam` |
 | Faz 1 — Temel platform (22 aile) | ✅ `faz-1-tamam` |
 | Faz 2 — İş akışı omurgası (14 aile) | ✅ `faz-2-tamam` |
@@ -94,7 +94,7 @@ Her oturumun başında refleks olarak:
 ```bash
 cd ~/Developer/"Backend Projects"/gaviabuild
 git status && git log --oneline -10
-node --test          # kök dizinden; 390/390 beklenir
+node --test          # kök dizinden; 398/398 beklenir
 ```
 
 Commit edilmemiş dosya görürsen **silme, geri alma, `git stash` yapma.** Testleri
@@ -149,6 +149,13 @@ claude --dangerously-skip-permissions
 | K-027 | Antivirüs taraması dosya yüklemede bağlı değil | Adaptör sözleşmesi hazır, bağlanacak nokta belli | `cekirdek/coklu-parca.mjs` → `moduller/kartlar/adaptor.mjs` kalıbı |
 | — | `httpAdaptoru` gerçek sağlayıcı kimliği olmadan çalışmaz | **Sahte başarı üretmiyor**, teknik sınıfta yapılandırma hatası dönüyor | Kurulumda `entegrasyon.kimlik_referansi` ortam değişkeni |
 | RPT-14 | Zamanlanmış rapor tanımı saklanıyor, gönderim yok | K-021'in sonucu; kayıt "gönderildi" işaretlenmiyor | K-021 ile birlikte |
+
+**Denetim-01 (12 Ağustos 2026):** bağımsız düşman-gözü denetim yapıldı —
+`raporlar/denetim-01.md`. Üç kırmızı bulgu (yetim ekranlar, ölü `/gunluk-raporlar`
+bağlantısı, üretimde sahte "e-posta gönderildi") kapatıldı ve regresyon testine
+bağlandı (K-114, K-115). Açık kalan dört sarı bulgu D-04…D-07 `PLAN.md`'de
+listelidir; hiçbiri §12 engeli değildir. **K-021 artık ekranlarda dürüstçe
+söyleniyor**, K-027 (antivirüs) hâlâ yalnız kod yorumunda — D-06.
 
 ### Mimarinin taşıyıcı parçaları — yeni iş bunların üstüne kurulur
 
