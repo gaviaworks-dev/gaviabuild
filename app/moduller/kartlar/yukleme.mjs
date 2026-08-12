@@ -389,6 +389,19 @@ export async function partiGonder(ctx, parti) {
     });
   }
 
+  /* MÜKERRER OLAY, SAĞLAYICI REDDİ DEĞİLDİR (denetim-02 D-12, K-124).
+     Aynı parti aynı anda iki kez gönderilirse ikinci çağrı `cagriYurut`'un
+     idempotency kısıtına takılır ve `reddedildi('MUKERRER_OLAY')` döner.
+     Bunu sağlayıcı reddi saymak satırları "reddedildi" yapıyor, `sonucuUygula`
+     partiyi "hatalı"ya çekiyor ve ilk gönderim gerçek yanıtla dönünce satırlar
+     "başarılı" iken parti "hatalı" kalıyordu. İkinci çağrı satırlara DOKUNMAZ:
+     sonucu ilk gönderim yazacak. */
+  if (nihai.kod === 'MUKERRER_OLAY') {
+    return { gonderilen: 0, sonuc: { ...nihai, durum: 'bilinmiyor' }, satirDurumu: null,
+      mesaj: 'Bu parti için bir gönderim zaten sürüyor; ikinci gönderim muhasebeleşmedi. '
+        + 'Sonuç ilk gönderimden yazılacak.' };
+  }
+
   const satirDurumu = {
     basarili: 'basarili', reddedildi: 'reddedildi',
     teknik_hata: 'teknik_hata', bilinmiyor: 'gonderildi',

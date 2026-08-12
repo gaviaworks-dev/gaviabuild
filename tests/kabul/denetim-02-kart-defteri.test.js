@@ -1,5 +1,5 @@
 /* ============================================================================
-   DENETİM-02 / D-09 — sağlayıcı başarısı kart defterine yazılmalı
+   DENETİM-02 / D-09 · D-12 — sağlayıcı yanıtı ve kart defteri
    ----------------------------------------------------------------------------
    D-09 (K-123): `httpAdaptoru` 200 dönünce `partiGonder()` yalnız satır
      durumlarını "başarılı" yapıyor, `sonucIsle()`yi HİÇ çağırmıyordu — yani
@@ -8,6 +8,12 @@
      dosyası yolu da kapanıyordu: defteri yazdıracak hiçbir yol kalmıyordu
      (§12 "kart bakiyesinin hareket defterinden yeniden üretilememesi",
      kural 3 ve 7).
+
+   D-12 (K-124): aynı parti aynı anda iki kez gönderilince ikinci çağrı
+     idempotency kısıtına takılıp `MUKERRER_OLAY` dönüyordu; bu SAĞLAYICI REDDİ
+     sanılıp satırlar "reddedildi", parti "hatalı" yapılıyordu. İlk gönderim
+     gerçek yanıtla dönünce satırlar "başarılı" oluyor ama parti "hatalı"
+     kalıyordu — ekran ile veri ayrışıyordu.
 
    Test GERÇEK bir sağlayıcıya karşı çalışır: gecikmeli yerel HTTP sunucusu,
    `adaptor: 'http'`. Gecikme, eşzamanlılık penceresinin gerçek olması için.
@@ -106,7 +112,7 @@ async function kur(tabanUrl) {
     'onay_bekliyor', 'onay gönderim sayıldı (K-096)');
 }
 
-describe('D-09 — sağlayıcı başarısı kart defterine yazılır', () => {
+describe('D-09 / D-12 — sağlayıcı başarısı deftere yazılır, mükerrer çağrı bozmaz', () => {
   test('aynı partiye AYNI ANDA iki gönderim: sağlayıcıya TEK çağrı gider', async () => {
     const y = await Promise.all([
       V.finans.csrfIle(`/kartlar/yuklemeler/${V.parti.id}`, { _eylem: 'gonder' }),
@@ -135,6 +141,15 @@ describe('D-09 — sağlayıcı başarısı kart defterine yazılır', () => {
     assert.equal(defterToplami, Number(V.parti.toplam_minor),
       'kart bakiyeleri toplamı parti tutarını vermiyor');
     assert.ok(defterToplami > 0, 'bakiye sıfır — para kartlara girmemiş');
+  });
+
+  test('D-12 — parti durumu satır durumlarıyla TUTARLI (mükerrer çağrı bozmadı)', () => {
+    const p = tek('SELECT durum FROM kart_yukleme_partisi WHERE id = ?', V.parti.id);
+    const durumlar = new Set(sorgu('SELECT durum FROM kart_yukleme_satiri WHERE parti_id = ?',
+      V.parti.id).map((s) => s.durum));
+    assert.deepEqual([...durumlar], ['basarili'], 'satır durumları ayrıştı');
+    assert.equal(p.durum, 'basarili',
+      `satırların hepsi başarılıyken parti "${p.durum}" — ekran ile veri ayrıştı (D-12)`);
   });
 
   test('aynı satır ikinci kez muhasebeleşmez (tekrar gönderim reddedilir)', async () => {
