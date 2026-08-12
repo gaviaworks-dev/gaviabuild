@@ -1,6 +1,6 @@
 # GaviaBuild — Devir Dokümanı
 
-**Tarih:** 12 Ağustos 2026 (son güncelleme: `faz4c` turu sonu)
+**Tarih:** 12 Ağustos 2026 (son güncelleme: **revizyon turu TAMAMLANDI** — `faz-6-tamam`)
 **Amaç:** Bu projeyi yeni bir Claude hesabı/oturumu ile kaldığı yerden sürdürmek.
 **Kime:** Yeni oturumdaki Claude'a ve Beyar'a.
 
@@ -37,25 +37,24 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 | `raporlar/faz-N-rapor.md` | Her faz sonu doğrulama raporu |
 | `manifest/screen-manifest.json` | 244 aile; `REVIZYON.md` §4'ten **üretiliyor**, elle yazılmıyor. Menü, rota, breadcrumb, yetki, test hep buradan türer |
 
-## 3. Şu anki durum (`faz4c` turu sonu itibarıyla)
+## 3. Şu anki durum — REVİZYON TURU TAMAMLANDI
 
 **Sayılar `PROGRESS.md`'den teyit edilir** — aşağısı o dosyayla birebir tutar.
 
 | | |
 |---|---|
-| Ekran | **178 doğrulandı + 16 bitti = 194 / 244** (50 bekliyor) |
-| Test | **271/271 yeşil** (`node --test`, kök dizinden) |
+| Ekran | **244 / 244 doğrulandı** — bekleyen yok |
+| Test | **390/390 yeşil** (`node --test`, kök dizinden) |
 | Faz 0 — Envanter | ✅ `faz-0-tamam` |
-| Faz 1 — Temel platform (22 aile) | ✅ `faz-1-tamam` — 22 doğrulandı |
-| Faz 2 — İş akışı omurgası (14 aile) | ✅ `faz-2-tamam` — 14 doğrulandı |
-| Faz 3 — Proje ve saha (89 aile) | ✅ `faz-3-tamam` — 89 doğrulandı |
-| Faz 4 — Tedarik ve finans (69 aile) | 🔄 69/69 **kodlandı**, faz **KAPANMADI** — 53 doğrulandı + 16 bitti |
-| Faz 5 — Kartlar (23 aile) | ⬜ başlamadı (şema hazır) |
-| Faz 6 — Rapor/mobil/portal (27 aile) | ⬜ başlamadı |
+| Faz 1 — Temel platform (22 aile) | ✅ `faz-1-tamam` |
+| Faz 2 — İş akışı omurgası (14 aile) | ✅ `faz-2-tamam` |
+| Faz 3 — Proje ve saha (89 aile) | ✅ `faz-3-tamam` |
+| Faz 4 — Tedarik ve finans (69 aile) | ✅ `faz-4-tamam` |
+| Faz 5 — Kartlar (23 aile) | ✅ `faz-5-tamam` |
+| Faz 6 — Rapor, mobil, portallar (27 aile) | ✅ `faz-6-tamam` |
 
-**"Bitti" ile "doğrulandı" farkı:** `bitti` = kodlandı ve elle doğrulandı, ama
-`tests/kabul/` altında otomatik kabul testi **yok**. `doğrulandı` = kabul testi yeşil.
-`faz4c`'nin 16 ailesi (AST-01..10, HR-10..13, GLB-02/03) bu yüzden `bitti`.
+Doküman §9'un altı fazı da kapandı. Her fazın raporu `raporlar/faz-N-rapor.md`
+altında; **hiçbirinde §12 üretime çıkış engeli kalmadı**.
 
 ### Kurulmuş ve çalışan altyapı (yeniden yazma!)
 
@@ -80,20 +79,22 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 
 ## 4. Yeni oturumun ilk işi
 
-`faz4c` turu **temiz kapandı**: commit edilmemiş dosya kalmadı, çalışma ağacı temiz,
-271/271 yeşil, PLAN.md ve PROGRESS.md gerçek durumda. Önceki turdaki "commit kontrolü"
-acil durumu artık yok.
+Revizyon turu bitti; sıradaki iş bir faz değil, **bakım/iyileştirme** seçimidir.
+`PLAN.md` → "Kaldığımız yer" bölümü dört seçenek sunar:
 
-İlk iş şu: **`PLAN.md` → "Kaldığımız yer" → "FAZ 4 KAPANIŞ İÇİN KALAN"** listesini yap.
-Dört madde var: `tests/kabul/faz4c.test.js`, K-049, `raporlar/faz-4-rapor.md`,
-`faz-4-tamam` tag'i. Bu dördü bitmeden Faz 5'e geçilmez.
+1. Bilinçli açık uçların kapatılması (K-021 e-posta, K-027 antivirüs,
+   gerçek sağlayıcı kimliği, RPT-14 gönderimi) — hiçbiri §12 engeli değil.
+2. Görsel tur: `frontend-design` + `ss-eval` ile ekran ekran polish.
+3. Yük ve dayanıklılık: çok kayıtlı listelerde sayfalama ve rapor süreleri.
+4. Gerçek sağlayıcı bağlantısı: kimlik bilgileri tanımlanınca `httpAdaptoru`
+   canlıya alınır (kod hazır, yapılandırma işi).
 
 Her oturumun başında refleks olarak:
 
 ```bash
 cd ~/Developer/"Backend Projects"/gaviabuild
 git status && git log --oneline -10
-node --test          # kök dizinden; testler tests/ altında, 271/271 beklenir
+node --test          # kök dizinden; 390/390 beklenir
 ```
 
 Commit edilmemiş dosya görürsen **silme, geri alma, `git stash` yapma.** Testleri
@@ -106,7 +107,7 @@ Bu proje tek context'e sığmaz. Döngü şudur:
 **a) Her yeni Claude Code oturumunda bu promptu ver:**
 
 ```
-DEVIR.md, PROGRESS.md, PLAN.md ve KARARLAR.md dosyalarını oku, docs/REVIZYON.md'yi bağlayıcı şartname olarak referans al. PLAN.md'deki "Kaldığımız yer" bölümünden devam et: önce Faz 4'ün kapanış işlerini bitir (faz4c kabul testi, K-049, faz-4-rapor.md, faz-4-tamam tag'i), sonra Faz 5, sonra Faz 6. Bana hiçbir soru sorma, onay bekleme; kararı doküman → best practice → en kısıtlayıcı güvenlik seçeneği sırasıyla ver ve KARARLAR.md'ye yaz. Her iş paketinden sonra commit+push, her faz sonunda raporlar/faz-<N>-rapor.md ve faz-<N>-tamam tag'i. Durma.
+DEVIR.md, PROGRESS.md, PLAN.md ve KARARLAR.md dosyalarını oku, docs/REVIZYON.md'yi bağlayıcı şartname olarak referans al. Revizyon turu (Faz 0-6) tamamlandı; PLAN.md'deki "Kaldığımız yer" bölümü artık bakım listesi. Oradan bir iş seç veya sana verdiğim işi yap. Bana hiçbir soru sorma, onay bekleme; kararı doküman → mevcut proje pattern'ı → best practice → en kısıtlayıcı güvenlik seçeneği sırasıyla ver ve KARARLAR.md'ye yaz. Her iş paketinden sonra testleri geçir, PROGRESS.md ve PLAN.md'yi güncelle, ayrı concern ayrı commit olacak şekilde commit+push. Durma.
 ```
 
 **b) Context %15'in altına inince**, iş paketinin ortasındaysa şunu yolla (sıraya girer):
@@ -140,32 +141,38 @@ claude --dangerously-skip-permissions
 
 ## 7. Kalan iş ve dikkat noktaları
 
-Kalan 50 ekranın çoğu üreteç sayesinde hızlı akar. Önce Faz 4'ün kapanışı, sonra iki ağır blok.
+**Faz kalmadı.** Kalanlar bilinçli, kayıt altında ve §12 engeli değil:
 
-### Açık kararlar ve borçlar — kapanmadan faz kapanmaz
+| # | Konu | Neden bilinçli | Nereye bağlanacak |
+|---|---|---|---|
+| K-021 | E-posta gönderimi yok; davet, şifre sıfırlama ve portal bağlantısı ekranda **bir kez** gösteriliyor | Gerçek SMTP olmadan "gönderildi" demek sahte başarı olurdu (kural 3) | `moduller/isakisi/bildirim.mjs` |
+| K-027 | Antivirüs taraması dosya yüklemede bağlı değil | Adaptör sözleşmesi hazır, bağlanacak nokta belli | `cekirdek/coklu-parca.mjs` → `moduller/kartlar/adaptor.mjs` kalıbı |
+| — | `httpAdaptoru` gerçek sağlayıcı kimliği olmadan çalışmaz | **Sahte başarı üretmiyor**, teknik sınıfta yapılandırma hatası dönüyor | Kurulumda `entegrasyon.kimlik_referansi` ortam değişkeni |
+| RPT-14 | Zamanlanmış rapor tanımı saklanıyor, gönderim yok | K-021'in sonucu; kayıt "gönderildi" işaretlenmiyor | K-021 ile birlikte |
 
-| # | Konu | Durum |
-|---|---|---|
-| **K-049** | `moduller/santiye/kapanis.mjs` (satır 53, 107, 110, 112) ve `moduller/proje/kapanis.mjs` (satır 87, 89) içindeki `planli: 'Faz 4'` **yer tutucuları hâlâ duruyor**. Bu satırlar gerçek sorguya bağlanmadan hiçbir şantiye veya proje kapatılamaz. **Bilinçli kaldırılamaz engeldir, unutulmuş eksik değildir** — "denetlendi" gibi göstermek §12 ihlalidir. Besleyen modüllerin hepsi artık hazır: `stok/defter.mjs`, `finans/defter.mjs`, `sozlesme/hakedis.mjs`, `varlik`/`zimmet` tabloları. | 🔴 açık |
-| **faz4c kabul testi** | `tests/kabul/faz4c.test.js` yok. AST-01..10, HR-10..13, GLB-02/03 yalnız elle smoke ile doğrulandı; betikler `tests/gecici/` altında yerelde duruyor (`.gitignore`'da). Senaryolar: çakışan zimmet 409, geri sayaç 422, uygunsuz kontrol → kullanım dışı + iş emri, çakışan izin 409, mahsupsuz ikinci avans 409, süresiz sağlık 422, çalışan yalnız kendi kaydını görür. | 🔴 açık |
-| **Faz 4 raporu** | `raporlar/faz-4-rapor.md` üretilmedi. | 🔴 açık |
-| **Faz 4 tag** | `faz-4-tamam` atılmadı. | 🔴 açık |
-| K-030 | Günlük rapor **PDF**'i Faz 6 `ReportLayout`'a bırakıldı. | 🟡 planlı |
-| K-027 | Antivirüs taraması Faz 5 entegrasyon adaptörüne bağlanacak. | 🟡 planlı |
-| K-021 | E-posta gönderimi yok; davet/sıfırlama bağlantısı geliştirmede ekranda gösteriliyor. | 🟡 bilinçli |
+### Mimarinin taşıyıcı parçaları — yeni iş bunların üstüne kurulur
 
-### Ağır bloklar
-
-**Faz 5 — Kartlar (23 aile).** CRUD değil. Sağlayıcı adaptörleri (Pluxee / MultiNet),
-idempotent toplu yükleme, teknik hata ↔ iş kuralı reddi ayrımı, kısmi sonuç, üç yönlü
-mutabakat (iç defter + sağlayıcı ekstresi + banka). Tek başına 2-3 tur. Kart yükleme
-durum zinciri şema olarak zaten tanımlı, kullanılmayı bekliyor. Kart bakiyesi
-`stok/defter.mjs` ve `finans/defter.mjs` kalıbını tekrar eder — **ikinci bir defter yazma.**
-
-**Faz 6 — Rapor (15 aile).** `ReportLayout` + ekran/PDF/Excel tutarlılığı. Sıkıcı ama titiz.
-`sozlesme/hakedis.mjs` fonksiyonlarını kullanır; ikinci bir hesap yazılmaz.
-
-Tahmin: **3-5 tur daha**, tur başına ~20-30 dakika.
+- **`rotalar/kayit-modulu.mjs`** — liste+form+detay üreteci (K-033). Yeni modül
+  yazmanın standart yolu: alan tanımı ver, sayfalama/CSRF/idempotency/sürüm/audit
+  üreteçten gelsin. Yeni liste kodu `LISTE_OLUSTURUR`'a eklenir (K-038).
+- **Dört değişmez defter** — `stok/defter.mjs`, `finans/defter.mjs` (kasa/banka/
+  cari), `kartlar/defter.mjs`. Hepsi AYNI sözleşmede: bakiye sütunu yok,
+  tetikleyici korumalı, düzeltme ters kayıt. **Beşinci defter yazma.**
+- **`web/rapor-duzeni.mjs`** — tek `ReportLayout`. Rapor tanımının `veri()`
+  fonksiyonu bir kez çalışır; ekran, PDF, Excel ve CSV aynı nesneden serileşir.
+  **Yeni rapor eklemek = `moduller/rapor/tanimlar.mjs`'e bir nesne eklemek.**
+- **`cekirdek/pdf.mjs` · `cekirdek/xlsx.mjs`** — sıfır bağımlılık çıktı
+  üreteçleri. PDF'te Türkçe glifler `/Differences` ile çözüldü (K-103).
+- **`moduller/kartlar/adaptor.mjs`** — sağlayıcı adaptör sözleşmesi: dokuz
+  yetenek bildirimi, devre kesici, artan beklemeli retry, DLQ, maskeli olay
+  kaydı. **Yeni sağlayıcı = `adaptorKaydet()` çağrısı**, if/else değil.
+- **Merkezi durum ve onay motoru** — durum yalnız motordan, onaycı politikadan.
+- **`ekranRota()`** — yetki rotanın kendisinde, manifestten türeyerek (K-081).
+  Bir işleyicinin `yetkiZorunlu` yazmayı unutması artık açık üretemez.
+- **Kapanış engel modülleri** — `santiye/kapanis.mjs`, `proje/kapanis.mjs`,
+  `ik-ayrilis.mjs`: engel listesi tek yerde, hem ekran hem geçiş ön koşulu
+  onu kullanır. `planli` alanı, bağlanmamış bir kontrolün "temiz" görünmesini
+  yapısal olarak engeller.
 
 ## 8. Öğrenilen dersler (tekrarlama)
 
@@ -187,4 +194,4 @@ Tahmin: **3-5 tur daha**, tur başına ~20-30 dakika.
 
 ## 9. Yeni Cowork/sohbet oturumuna verilecek özet cümle
 
-> GaviaBuild adlı inşaat/şantiye operasyon platformunu geliştiriyorum. `gaviaworks-dev/gaviabuild` reposunda, `revizyon/faz-0-6` dalında. Claude Code'u tam otonom çalıştırıyorum; sen bana durum takibi, prompt hazırlama ve karar kontrolünde yardım ediyorsun. Repodaki `DEVIR.md`, `PLAN.md`, `PROGRESS.md` ve `docs/REVIZYON.md` her şeyi anlatıyor.
+> GaviaBuild adlı inşaat/şantiye operasyon platformunu geliştiriyorum. `gaviaworks-dev/gaviabuild` reposunda, `revizyon/faz-0-6` dalında. **Revizyon turu tamamlandı: 244 sayfa ailesinin hepsi doğrulandı, 390 test yeşil, altı fazın da tag'i atıldı.** Şimdi bakım ve iyileştirme aşamasındayım. Claude Code'u tam otonom çalıştırıyorum; sen bana durum takibi, prompt hazırlama ve karar kontrolünde yardım ediyorsun. Repodaki `DEVIR.md`, `PLAN.md`, `PROGRESS.md` ve `docs/REVIZYON.md` her şeyi anlatıyor.
