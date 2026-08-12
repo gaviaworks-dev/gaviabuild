@@ -46,7 +46,7 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 | Sürüm | **`v1.0.0`** — denetim-01 sonrası ilk kararlı nokta |
 | Dal | **`main`** artık her şeyi taşıyor; `revizyon/faz-0-6` ile aynı commit'te |
 | Ekran | **244 / 244 doğrulandı** ve denetim-01 turunda gezinerek erişilebilir olduğu kanıtlandı |
-| Test | **428/428 yeşil** (`node --test`, kök dizinden) |
+| Test | **444/444 yeşil** (`node --test`, kök dizinden) — denetim-02 ile +16 |
 | Faz 0 — Envanter | ✅ `faz-0-tamam` |
 | Faz 1 — Temel platform (22 aile) | ✅ `faz-1-tamam` |
 | Faz 2 — İş akışı omurgası (14 aile) | ✅ `faz-2-tamam` |
@@ -55,6 +55,7 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 | Faz 5 — Kartlar (23 aile) | ✅ `faz-5-tamam` |
 | Faz 6 — Rapor, mobil, portallar (27 aile) | ✅ `faz-6-tamam` |
 | Denetim-01 | ✅ `raporlar/denetim-01.md` — 7 bulgunun 7'si kapalı |
+| Denetim-02 | ✅ `raporlar/denetim-02.md` — 4 kırmızı + 1 turuncu kapalı (K-120..K-124), 4 sarı açık |
 
 Doküman §9'un altı fazı da kapandı. Her fazın raporu `raporlar/faz-N-rapor.md`
 altında; **hiçbirinde §12 üretime çıkış engeli kalmadı**.
@@ -112,7 +113,7 @@ Her oturumun başında refleks olarak:
 ```bash
 cd ~/Developer/"Backend Projects"/gaviabuild
 git status && git log --oneline -10
-node --test          # kök dizinden; 428/428 beklenir
+node --test          # kök dizinden; 444/444 beklenir
 git describe --tags  # v1.0.0 (veya sonrası) beklenir
 ```
 
@@ -179,7 +180,24 @@ bağlantısı, üretimde sahte "e-posta gönderildi") kapatıldı ve regresyon t
 bağlandı (K-114, K-115). **Sarı bulgular D-04…D-07 de kapatıldı** (K-116…K-119):
 tek kanonik URL, rapor çıktısında sessiz yutma yok, antivirüs durumu beyan
 ediliyor, ön koşulu eksik formlar kullanıcıyı kayıt açacağı ekrana yolluyor.
-**K-021 ve K-027 artık ekranlarda dürüstçe söyleniyor.** Açık §12 engeli yok.
+**K-021 ve K-027 artık ekranlarda dürüstçe söyleniyor.**
+
+**Denetim-02 (12 Ağustos 2026):** ikinci düşman denetimi — eşzamanlılık ve veri
+bütünlüğü (`raporlar/denetim-02.md`, dal `denetim/02-esalanlilik`). Yarış
+koşullarının kendisi kırılmadı (kasa, stok, zimmet, onay, sürüm, idempotency,
+ters kayıt); ama **dört kırmızı** çıktı ve kapatıldı: 2^53 üstü tutarın değişmez
+defteri kalıcı olarak kırması (**K-120**), sağlayıcı API'si başarı dönerken kart
+defterinin boş kalması (**K-123**), tarih ayrıştırıcının geçersizde 500 verip
+imkânsızda sessizce kayması (**K-121**), kart yükleme onayının 500 vermesi
+(**K-122**). Turuncu D-12 de kapatıldı (**K-124**). Dört sarı (D-13 gövde sınırı
+bağlantıyı bozuyor, D-14 rapor satır tavanı yok, D-15 metin uzunluğu sınırsız,
+D-16 gelecek tarihli finans hareketi) **açık** ve `PLAN.md`'de listeli — hiçbiri
+§12 engeli değil. Açık §12 engeli yok.
+
+**Dikkat — `httpAdaptoru` canlıya alınmadan önce:** D-09 tam olarak bu yolun
+kart defterini hiç yazmadığını gösterdi. Bağlantı öncesi
+`tests/kabul/denetim-02-kart-defteri.test.js` referans alınmalı; test gecikmeli
+gerçek bir sağlayıcı HTTP sunucusuna karşı çalışır.
 
 ### Mimarinin taşıyıcı parçaları — yeni iş bunların üstüne kurulur
 

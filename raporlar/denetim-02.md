@@ -11,17 +11,17 @@ Sonuç her seferinde **defterden** doğrulandı (`SUM(yon × tutar)`), ekrandan 
 
 ## 0. Özet
 
-| # | Bulgu | Ağırlık | Kapsam |
-|---|---|---|---|
-| D-08 | 2^53'ten büyük tutar **değişmez deftere yazılıyor**, sonra o defteri okuyan **her ekran kalıcı olarak 500** veriyor; ters kayıt da 500 — geri dönüş yok | 🔴 §12 | sınır değer |
-| D-09 | Sağlayıcı API'si başarı dönünce parti "başarılı" oluyor ama **kart defterine tek satır yazılmıyor**; bakiye 0, sonuç dosyası yolu da kapanıyor | 🔴 §12 · kural 3, 7 | veri bütünlüğü |
-| D-10 | `gunBaslangici()` **geçersiz tarihte 500**, imkânsız tarihte (`2026-13-45`) **sessizce kayıyor**; 111 çağrı yerinin tamamını etkiliyor | 🔴 §12 | sınır değer |
-| D-11 | Kart yükleme partisi onaylanınca `/onaylar/:id` **500** veriyor (audit transaction dışında); karar kaydediliyor, kullanıcı hata görüyor | 🔴 §12 | veri bütünlüğü |
-| D-12 | Aynı partiye eşzamanlı ikinci gönderim sağlayıcıya gitmiyor (idempotency tutuyor) ama **satırları "başarılı" iken partiyi "hatalı"ya düşürüyor** | 🟠 | yarış koşulu |
-| D-13 | Gövde sınırı aşılınca keep-alive bağlantısı zehirleniyor; **sonraki istek `ECONNRESET`** | 🟡 | sınır değer |
-| D-14 | Raporlarda satır sınırı yok: 10 bin satırda 7,5 MB HTML, RSS +340 MB. Dört çıktı **tutarlı** (kural 9 sağlam), sorun bellek | 🟡 | veri hacmi |
-| D-15 | Serbest metin alanlarında uzunluk sınırı yok — 100.000 karakterlik açıklama deftere giriyor | 🟡 | sınır değer |
-| D-16 | Finans hareketine **gelecek tarih** (2099) ve çok geçmiş tarih (1900) yazılabiliyor; dönem kilidi bu satırı görmüyor | 🟡 | sınır değer |
+| # | Bulgu | Ağırlık | Kapsam | Durum |
+|---|---|---|---|---|
+| D-08 | 2^53'ten büyük tutar **değişmez deftere yazılıyor**, sonra o defteri okuyan **her ekran kalıcı olarak 500** veriyor; ters kayıt da 500 — geri dönüş yok | 🔴 §12 | sınır değer | ✅ düzeltildi (K-120) |
+| D-09 | Sağlayıcı API'si başarı dönünce parti "başarılı" oluyor ama **kart defterine tek satır yazılmıyor**; bakiye 0, sonuç dosyası yolu da kapanıyor | 🔴 §12 · kural 3, 7 | veri bütünlüğü | ✅ düzeltildi (K-123) |
+| D-10 | `gunBaslangici()` **geçersiz tarihte 500**, imkânsız tarihte (`2026-13-45`) **sessizce kayıyor**; 111 çağrı yerinin tamamını etkiliyor | 🔴 §12 | sınır değer | ✅ düzeltildi (K-121) |
+| D-11 | Kart yükleme partisi onaylanınca `/onaylar/:id` **500** veriyor (audit transaction dışında); karar kaydediliyor, kullanıcı hata görüyor | 🔴 §12 | veri bütünlüğü | ✅ düzeltildi (K-122) |
+| D-12 | Aynı partiye eşzamanlı ikinci gönderim sağlayıcıya gitmiyor (idempotency tutuyor) ama **satırları "başarılı" iken partiyi "hatalı"ya düşürüyor** | 🟠 | yarış koşulu | ✅ düzeltildi (K-124) |
+| D-13 | Gövde sınırı aşılınca keep-alive bağlantısı zehirleniyor; **sonraki istek `ECONNRESET`** | 🟡 | sınır değer | ⏳ açık |
+| D-14 | Raporlarda satır sınırı yok: 10 bin satırda 7,5 MB HTML, RSS +340 MB. Dört çıktı **tutarlı** (kural 9 sağlam), sorun bellek | 🟡 | veri hacmi | ⏳ açık |
+| D-15 | Serbest metin alanlarında uzunluk sınırı yok — 100.000 karakterlik açıklama deftere giriyor | 🟡 | sınır değer | ⏳ açık |
+| D-16 | Finans hareketine **gelecek tarih** (2099) ve çok geçmiş tarih (1900) yazılabiliyor; dönem kilidi bu satırı görmüyor | 🟡 | sınır değer | ⏳ açık |
 
 **Bağımsız olarak doğrulanmış, kırılmayan alanlar** (§1, §7, §8, §9): kasa/stok
 negatife düşmüyor, aynı varlık iki kişide olmuyor, aynı onay adımına iki karar
@@ -657,8 +657,94 @@ eşzamanlılık ve veri bütünlüğü eksenini sınadı ve **dört kırmızı**
 Üçü (D-08, D-10, D-11) tek bir isteğin ürünü; biri (D-09) bilinçli açık uç
 sanılan `httpAdaptoru`'nun canlıya alındığı an devreye girecekti.
 
+Dört kırmızının dördü ve turuncu bu turda kapatıldı (§11).
+
 Eşzamanlılığın kendisi — kasa, stok, zimmet, onay, sürüm, idempotency, ters
 kayıt — **hiçbir denemede kırılmadı**. Mimarinin "her yazma tek transaction
 içinde senkron" seçimi (K-003 + `islem()`) yarış yüzeyini yapısal olarak 15
 `await` satırına indirmiş; kırmızıların hiçbiri de yarış koşulu değil, **girdi
 doğrulama ve kod yolu** hatası.
+
+---
+
+## 11. Düzeltmeler ve regresyon kilidi
+
+Dört kırmızının dördü ve turuncu kapatıldı. Her biri **ayrı commit**, her biri
+regresyon testine bağlı; testlerin gerçekten kilitlediği, düzeltmeler **geçici
+geri alınarak** kanıtlandı.
+
+| # | Karar | Ne yapıldı | Test dosyası | Geri alınca kırılan |
+|---|---|---|---|---|
+| D-08 | K-120 | `AZAMI_MINOR` + `minorSinirZorunlu()`; sınır hem `Para.ayristir`'da hem kasa/banka/cari, kart ve stok defterlerinin `hareketYaz()` girişinde zorlanıyor | `denetim-02-tutar-siniri.test.js` (5) | 4 |
+| D-10 | K-121 | `gunGecerliMi()`: biçim + aralık + `Date.UTC` turu; geçersiz gün 422 | `denetim-02-tarih.test.js` (4) | 2 |
+| D-11 | K-122 | Onay kararı ve iş nesnesinin ilerlemesi tek `islem()` içinde | `denetim-02-onay-koprusu.test.js` (3) | 1 |
+| D-09 | K-123 | Sonuçlanan gönderim tek kanonik yoldan (`sonucIsle`) geçiyor; defteri o yazıyor | `denetim-02-kart-defteri.test.js` (4) | 1 |
+| D-12 | K-124 | `MUKERRER_OLAY` sağlayıcı reddi sayılmıyor; ikinci çağrı satırlara dokunmuyor | aynı dosya | 1 |
+
+```
+$ node --test
+ℹ tests 444 · pass 444 · fail 0        ← denetim öncesi 428, +16 yeni test
+```
+
+### D-08 — sonra
+
+```
+$ node tests/gecici/d02-buyuk.mjs
+MAX_SAFE (90.071.992.547.409,91 TL): form yanıtı = 200
+  gerçekte kaç satır: 1 · saklanan: integer:9007199254740991
+  FIN-06 200 · FIN-05 200 · RPT-06 200
+
+MAX_SAFE + 1 kuruş: form yanıtı = 422              ← 500 değil, 422
+  gerçekte kaç satır: 0 · saklanan: null           ← deftere HİÇ girmedi
+  FIN-06 200 · FIN-05 200 · RPT-06 200             ← hiçbir ekran çökmedi
+  ters kayıt denemesi: 200                         ← düzeltme yolu açık
+```
+
+Sınır **okuma** tarafında değil **yazma** tarafında zorlanıyor: defterin her
+zaman yeniden üretilebilir kalması yapısal garanti haline geliyor.
+
+### D-09 / D-12 — sonra
+
+```
+$ N=2 node tests/gecici/d02-parti.mjs      (aynı partiye aynı anda 2 gönderim)
+SAĞLAYICIYA GİDEN ÇAĞRI SAYISI: 1
+satır durumları: basarili, basarili
+parti durumu: basarili                              ← D-12: satırlarla tutarlı
+kart hareketi (defter) satırı: 2                    ← D-09: defter yazıldı
+    KRT-2026-0001 bakiye: 100000
+    KRT-2026-0002 bakiye: 100000
+satır hareket_id: [ 'mov_01KZ…', 'mov_01KZ…' ]
+```
+
+Kontrollü dosya akışı (§1.7) etkilenmedi — hâlâ tek kez muhasebeleşiyor ve
+bakiyeleri doğru yazıyor.
+
+### D-10 — sonra
+
+```
+$ node tests/gecici/d02-sinir.mjs
+=== TARİH sınırları ===
+  gelecek tarih 2099-12-31       200  yazılan=1     ← D-16, bilinçli açık
+  geçmiş tarih 1900-01-01        200  yazılan=1     ← D-16, bilinçli açık
+  geçersiz tarih 2026-13-45      422  yazılan=0     ← sessiz kayma bitti
+  tarih=abc                      422  yazılan=0     ← 500 değil 422
+```
+
+### D-11 — sonra
+
+`/onaylar/:id` artık 500 vermiyor; onay kararı ile iş nesnesinin ilerlemesi tek
+transaction. Bulgu tek bir köprüde değildi: `kartOnaySonucu`,
+`projeKapanisOnaySonucu` ve `santiyeKapanisOnaySonucu` üçü de aynı hatayı
+taşıyordu, bu yüzden sarmalama 12 köprüye dağıtılmak yerine tek çağrı yerine
+kondu — yeni bir köprü de yapısal olarak güvenli.
+
+### Açık bırakılanlar (sarı — bu turun kapsamı dışı)
+
+| # | Neden açık | Önerilen kapanış |
+|---|---|---|
+| D-13 | `govdeOku()` sınırı aşınca gövdeyi tüketmeden hata atıyor | Hatadan önce akışı boşalt (`istek.resume()`) veya bağlantıyı açıkça kapat |
+| D-14 | Rapor tanımlarında satır tavanı yok | `ReportLayout`'a küresel tavan + aşıldığında künyede "sonuç kırpıldı" beyanı (sessiz kırpma değil) |
+| D-15 | Serbest metin alanlarında uzunluk sınırı yok | `B.alan()` düzeyinde `enFazla` öntanımı; deftere giren açıklamalar için sıkı sınır |
+| D-16 | Gelecek/çok geçmiş tarihli finans hareketi kabul ediliyor | Politika kararı: hareket tarihi için ileri tarih yasağı ve geriye dönük pencere |
+
+Dördü de §12 engeli değil; D-14 ve D-16 politika kararı gerektiriyor.

@@ -5,6 +5,7 @@
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
 **Dondurma noktası:** `v1.0.0` · 2026-08-12 — Denetim-01 sonrası ilk kararlı nokta — 7 bulgunun 7'si kapalı, 428/428 test yeşil.
+**Denetim-02** (dal `denetim/02-esalanlilik`) — eşzamanlılık ve veri bütünlüğü: 4 kırmızı + 1 turuncu bulundu ve kapatıldı (K-120..K-124), 4 sarı açık; **444/444 test yeşil**. Ayrıntı: `raporlar/denetim-02.md`.
 
 **Toplam:** 244 sayfa ailesi — bekliyor: 0 · devam: 0 · bitti: 0 · doğrulandı: 244
 
