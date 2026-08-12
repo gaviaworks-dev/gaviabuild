@@ -18,10 +18,10 @@ Sonuç her seferinde **defterden** doğrulandı (`SUM(yon × tutar)`), ekrandan 
 | D-10 | `gunBaslangici()` **geçersiz tarihte 500**, imkânsız tarihte (`2026-13-45`) **sessizce kayıyor**; 111 çağrı yerinin tamamını etkiliyor | 🔴 §12 | sınır değer | ✅ düzeltildi (K-121) |
 | D-11 | Kart yükleme partisi onaylanınca `/onaylar/:id` **500** veriyor (audit transaction dışında); karar kaydediliyor, kullanıcı hata görüyor | 🔴 §12 | veri bütünlüğü | ✅ düzeltildi (K-122) |
 | D-12 | Aynı partiye eşzamanlı ikinci gönderim sağlayıcıya gitmiyor (idempotency tutuyor) ama **satırları "başarılı" iken partiyi "hatalı"ya düşürüyor** | 🟠 | yarış koşulu | ✅ düzeltildi (K-124) |
-| D-13 | Gövde sınırı aşılınca keep-alive bağlantısı zehirleniyor; **sonraki istek `ECONNRESET`** | 🟡 | sınır değer | ⏳ açık |
-| D-14 | Raporlarda satır sınırı yok: 10 bin satırda 7,5 MB HTML, RSS +340 MB. Dört çıktı **tutarlı** (kural 9 sağlam), sorun bellek | 🟡 | veri hacmi | ⏳ açık |
-| D-15 | Serbest metin alanlarında uzunluk sınırı yok — 100.000 karakterlik açıklama deftere giriyor | 🟡 | sınır değer | ⏳ açık |
-| D-16 | Finans hareketine **gelecek tarih** (2099) ve çok geçmiş tarih (1900) yazılabiliyor; dönem kilidi bu satırı görmüyor | 🟡 | sınır değer | ⏳ açık |
+| D-13 | Gövde sınırı aşılınca keep-alive bağlantısı zehirleniyor; **sonraki istek `ECONNRESET`** | 🟡 | sınır değer | ✅ düzeltildi (K-128) |
+| D-14 | Raporlarda satır sınırı yok: 10 bin satırda 7,5 MB HTML, RSS +340 MB. Dört çıktı **tutarlı** (kural 9 sağlam), sorun bellek | 🟡 | veri hacmi | ✅ düzeltildi (K-126) |
+| D-15 | Serbest metin alanlarında uzunluk sınırı yok — 100.000 karakterlik açıklama deftere giriyor | 🟡 | sınır değer | ✅ düzeltildi (K-127) |
+| D-16 | Finans hareketine **gelecek tarih** (2099) ve çok geçmiş tarih (1900) yazılabiliyor; dönem kilidi bu satırı görmüyor | 🟡 | sınır değer | ✅ düzeltildi (K-125) |
 
 **Bağımsız olarak doğrulanmış, kırılmayan alanlar** (§1, §7, §8, §9): kasa/stok
 negatife düşmüyor, aynı varlık iki kişide olmuyor, aynı onay adımına iki karar
@@ -657,7 +657,8 @@ eşzamanlılık ve veri bütünlüğü eksenini sınadı ve **dört kırmızı**
 Üçü (D-08, D-10, D-11) tek bir isteğin ürünü; biri (D-09) bilinçli açık uç
 sanılan `httpAdaptoru`'nun canlıya alındığı an devreye girecekti.
 
-Dört kırmızının dördü ve turuncu bu turda kapatıldı (§11).
+Dört kırmızının dördü ve turuncu ilk turda (§11), dört sarı da ikinci turda
+(§12) kapatıldı — dokuz bulgunun dokuzu.
 
 Eşzamanlılığın kendisi — kasa, stok, zimmet, onay, sürüm, idempotency, ters
 kayıt — **hiçbir denemede kırılmadı**. Mimarinin "her yazma tek transaction
@@ -748,3 +749,113 @@ kondu — yeni bir köprü de yapısal olarak güvenli.
 | D-16 | Gelecek/çok geçmiş tarihli finans hareketi kabul ediliyor | Politika kararı: hareket tarihi için ileri tarih yasağı ve geriye dönük pencere |
 
 Dördü de §12 engeli değil; D-14 ve D-16 politika kararı gerektiriyor.
+
+---
+
+## 12. Sarıların kapanışı (12 Ağustos 2026, ikinci tur)
+
+Dört sarı da kapatıldı. Kararlar Beyar tarafından verildi; her biri ayrı commit,
+her biri regresyon testine bağlı ve testlerin kilitlediği, düzeltmeler **geçici
+geri alınarak** kanıtlandı.
+
+| # | Karar | Ne yapıldı | Test dosyası | Geri alınca kırılan |
+|---|---|---|---|---|
+| D-16 | K-125 | Kasa/banka hareketi ileri tarihli olamaz; ret FIN-12'ye yönlendiriyor | `denetim-02-ileri-tarih.test.js` (6) | 5 |
+| D-14 | K-126 | Satır tavanı: ekran 5.000, dosya 20.000; aşımda açık ret | `denetim-02-satir-tavani.test.js` (8) | 2 |
+| D-15 | K-127 | Serbest metinde öntanımlı uzunluk sınırı (4.000 / 250) | `denetim-02-metin-siniri.test.js` (8) | 4 |
+| D-13 | K-128 | Gövde aşımı 413; kalan gövde boşaltılıyor, bağlantı sağlam | `denetim-02-govde-siniri.test.js` (5) | 4 |
+
+```
+$ node --test
+ℹ tests 471 · pass 471 · fail 0        ← denetim öncesi 428, denetim-02 toplam +43
+```
+
+### D-16 — ileri tarihli finans hareketi (K-125)
+
+Kural **defter kapısında** zorlanıyor, formda değil: hangi akıştan gelirse gelsin
+ileri tarihli kasa/banka hareketi 422 alıyor. Ölçüt saat değil **gün** — bugünün
+23:59'u kabul, yarının ilk anı ret. Cari defteri hariç: vade ileri olabilir,
+vade hareketin kendisi değil ödeneceği gündür.
+
+```
+$ node tests/gecici/d02-tarih-ileri.mjs
+  kasa bugün        200  yazılan=1
+  kasa yarın        422  yazılan=0  → /odemeler/plan
+  kasa 2099-12-31   422  yazılan=0  → /odemeler/plan
+  kasa dün          200  yazılan=1
+  banka bugün       200  yazılan=1
+  banka yarın       422  yazılan=0
+```
+
+Ret kullanıcıyı boşta bırakmıyor: hata sözleşmesine `yonlendirme: { kod, metin }`
+eklendi, ret kutusu rotayı **manifestten** çözerek FIN-12 Ödeme planı ekranına
+gerçek bir bağlantı çiziyor (D-05'in açık ret ve D-07'nin ön koşul kalıbı).
+
+### D-14 — satır tavanı (K-126)
+
+Ekran 5.000, dosya çıktıları 20.000. Aşımda **sessiz kırpma yok**: kaç satır
+olduğu söyleniyor, filtre daraltması isteniyor, 422 dönüyor.
+
+```
+$ SATIR=10000 node tests/gecici/d02-tavan.mjs
+  ekran   422    218ms     12KB  açık-ret=EVET(10.001)  filtre-çubuğu=var
+  PDF     200   1189ms    674KB  açık-ret=hayır
+  Excel   200   1227ms    293KB  açık-ret=hayır
+  CSV     200   1102ms    371KB  açık-ret=hayır
+
+$ SATIR=25000 node tests/gecici/d02-tavan.mjs
+  ekran   422    493ms     12KB  açık-ret=EVET(25.001)  filtre-çubuğu=var
+  PDF     422    474ms      2KB  açık-ret=EVET(25.001)
+  Excel   422    472ms      2KB  açık-ret=EVET(25.001)
+  CSV     422    475ms      2KB  açık-ret=EVET(25.001)
+```
+
+Ekranda **7,5 MB → 12 KB**. Ret sayfası boş bir hata sayfası değil: künye, KPI
+ve **filtre çubuğu ayakta kalıyor** ki kullanıcı daraltmayı yerinde yapabilsin.
+
+Tavan PDF'e de uygulandı — PDF de bir dosya çıktısıdır, tavansız bırakmak açığı
+yeniden açardı. CRD-12 parti CSV'si ve `listeSorgusu` da aynı tavana bağlandı:
+sayfa boyutu beyaz listesi büyütülse bile bir liste ekran tavanını aşamaz.
+
+### D-15 — serbest metin sınırı (K-127)
+
+İki katman: `kayit-modulu` alanları için tür bazlı **öntanım** (uzunMetin 4.000,
+tek satır 250 — alan kendi `enFazla`sını bildirmişse o kazanır) ve elle yazılmış
+rotaların da geçtiği **defter kapıları**.
+
+```
+$ node tests/gecici/d02-metin.mjs
+  kasa açıklama     100 kr → 200  yazılan=1
+  kasa açıklama    4000 kr → 200  yazılan=1
+  kasa açıklama    4001 kr → 422  yazılan=0
+  kasa açıklama  100000 kr → 422  yazılan=0
+  personel adres (uzunMetin)  4000 kr → 200
+  personel adres (uzunMetin)  4001 kr → 422
+  defterdeki en son açıklama uzunluğu: 4000     ← kırpılmadı, reddedildi
+```
+
+### D-13 — gövde sınırı (K-128)
+
+```
+$ node tests/gecici/d02-govde.mjs
+=== 3 MB gövde (sınır 2 MB) ===
+  yanıt: 413 Gönderilen veri çok büyük
+  sonraki istek: 200
+  bir sonraki istek: 200        ← eskiden ECONNRESET
+=== 2 MB tam sınır ===
+  yanıt: 413 Gönderilen veri çok büyük
+  sonraki istek: 200
+```
+
+Kalan gövde belleğe alınmadan akıştan boşaltılıyor; boşaltmanın da 8× tavanı var
+(sınırsız boşaltma DoS yüzeyi olurdu). Durum 422'den **413**'e çekildi: sorun
+alan doğrulaması değil, isteğin kendisinin taşınamaz olması.
+
+### Denetim-02'nin kapanış durumu
+
+```
+$ node --test
+ℹ tests 471 · pass 471 · fail 0
+```
+
+Dokuz bulgunun **dokuzu da kapalı**. Açık §12 engeli yok.

@@ -157,9 +157,9 @@ gerçek PDF/XLSX/CSV üretimi, beklenmeyen 5xx yokluğu.
 
 `raporlar/denetim-02.md` · dal `denetim/02-esalanlilik` · taban `v1.0.0`.
 Gerçek sunucuya karşı gerçekten eşzamanlı isteklerle sınandı; sonuç her seferinde
-defterden doğrulandı. **Dört kırmızı ve bir turuncu bulundu, beşi de kapatıldı.**
-Her biri ayrı commit ve regresyon testi; testlerin kilitlediği, düzeltmeler
-geçici geri alınarak kanıtlandı.
+defterden doğrulandı. **Dokuz bulgunun dokuzu da kapatıldı** — dört kırmızı ve
+bir turuncu ilk turda, dört sarı ikinci turda. Her biri ayrı commit ve regresyon
+testi; testlerin kilitlediği, düzeltmeler geçici geri alınarak kanıtlandı.
 
 | # | Bulgu | Durum |
 |---|---|---|
@@ -168,10 +168,10 @@ geçici geri alınarak kanıtlandı.
 | D-10 | `gunBaslangici()` geçersiz tarihte 500, imkânsız tarihte sessizce kayıyor (111 çağrı yeri) | ✅ K-121 |
 | D-11 | Kart yükleme partisi onaylanınca `/onaylar/:id` 500 veriyor (audit transaction dışında) | ✅ K-122 |
 | D-12 | Eşzamanlı ikinci gönderim satırlar "başarılı" iken partiyi "hatalı"ya düşürüyor | ✅ K-124 |
-| D-13 | Gövde sınırı aşılınca keep-alive bağlantısı zehirleniyor (`ECONNRESET`) | ⏳ açık 🟡 |
-| D-14 | Raporlarda satır tavanı yok — 10 bin satırda 7,5 MB HTML, RSS +340 MB | ⏳ açık 🟡 |
-| D-15 | Serbest metin alanlarında uzunluk sınırı yok (100k karakter deftere giriyor) | ⏳ açık 🟡 |
-| D-16 | Finans hareketine gelecek/çok geçmiş tarih yazılabiliyor; dönem kilidi görmüyor | ⏳ açık 🟡 |
+| D-13 | Gövde sınırı aşılınca keep-alive bağlantısı zehirleniyor (`ECONNRESET`) | ✅ K-128 |
+| D-14 | Raporlarda satır tavanı yok — 10 bin satırda 7,5 MB HTML, RSS +340 MB | ✅ K-126 |
+| D-15 | Serbest metin alanlarında uzunluk sınırı yok (100k karakter deftere giriyor) | ✅ K-127 |
+| D-16 | Finans hareketine gelecek/çok geçmiş tarih yazılabiliyor; dönem kilidi görmüyor | ✅ K-125 |
 
 Denetimde **sağlam** çıkanlar: kasa ve stok negatife düşmüyor, aynı varlık iki
 kişide olmuyor, aynı onay adımına iki karar geçmiyor, optimistic concurrency
@@ -184,14 +184,17 @@ Yarış yüzeyi ölçüldü: `node:sqlite` senkron olduğu için tüm `await` y�
 satır ve hepsi dosya yükleme veya sağlayıcı çağrısı. Finans, stok, zimmet ve
 onay akışlarında yarış penceresi yapısal olarak yok.
 
+Sarıların kapanışında verilen kararlar: ileri tarihli kasa/banka hareketi yasak
+ve ret FIN-12'ye yönlendiriyor (K-125); satır tavanı ekran 5.000 / dosya 20.000,
+aşımda sessiz kırpma yerine açık ret (K-126); serbest metinde öntanımlı uzunluk
+sınırı 4.000 / 250 (K-127); gövde aşımı 413 ve bağlantı sağlam kalıyor (K-128).
+
 ### Sonraki oturum ne yapmalı?
 
-Denetim-01 ve denetim-02 kapandı; açık §12 engeli yok. Sıradaki iş:
+Denetim-01 ve denetim-02 kapandı; açık §12 engeli yok. **Sürüm `v1.0.1`.**
+Sıradaki iş:
 
-1. **Denetim-02'nin sarıları:** D-13 (gövde sınırında akışı boşalt), D-15
-   (`B.alan()` düzeyinde `enFazla` öntanımı). D-14 ve D-16 politika kararı
-   gerektiriyor (rapor satır tavanı, ileri tarih yasağı).
-2. **Görsel tur:** `frontend-design` + `ss-eval` ile ekran ekran polish.
+1. **Görsel tur:** `frontend-design` + `ss-eval` ile ekran ekran polish.
    Menü D-01'de büyüdü (Raporlar 1→14, Kartlar 1→10) — uzun bölüm menülerinin
    görsel ritmi gözden geçirilmeli.
 3. **Gerçek sağlayıcı bağlantısı:** Pluxee/MultiNet kimlik bilgileri

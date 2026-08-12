@@ -43,10 +43,10 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 
 | | |
 |---|---|
-| Sürüm | **`v1.0.0`** — denetim-01 sonrası ilk kararlı nokta |
+| Sürüm | **`v1.0.1`** — denetim-02 sonrası kararlı nokta (`v1.0.0` denetim-01 sonrasıydı) |
 | Dal | **`main`** artık her şeyi taşıyor; `revizyon/faz-0-6` ile aynı commit'te |
 | Ekran | **244 / 244 doğrulandı** ve denetim-01 turunda gezinerek erişilebilir olduğu kanıtlandı |
-| Test | **444/444 yeşil** (`node --test`, kök dizinden) — denetim-02 ile +16 |
+| Test | **471/471 yeşil** (`node --test`, kök dizinden) — denetim-02 ile +43 |
 | Faz 0 — Envanter | ✅ `faz-0-tamam` |
 | Faz 1 — Temel platform (22 aile) | ✅ `faz-1-tamam` |
 | Faz 2 — İş akışı omurgası (14 aile) | ✅ `faz-2-tamam` |
@@ -55,7 +55,7 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 | Faz 5 — Kartlar (23 aile) | ✅ `faz-5-tamam` |
 | Faz 6 — Rapor, mobil, portallar (27 aile) | ✅ `faz-6-tamam` |
 | Denetim-01 | ✅ `raporlar/denetim-01.md` — 7 bulgunun 7'si kapalı |
-| Denetim-02 | ✅ `raporlar/denetim-02.md` — 4 kırmızı + 1 turuncu kapalı (K-120..K-124), 4 sarı açık |
+| Denetim-02 | ✅ `raporlar/denetim-02.md` — 9 bulgunun 9'u kapalı (K-120..K-128) |
 
 Doküman §9'un altı fazı da kapandı. Her fazın raporu `raporlar/faz-N-rapor.md`
 altında; **hiçbirinde §12 üretime çıkış engeli kalmadı**.
@@ -63,7 +63,8 @@ altında; **hiçbirinde §12 üretime çıkış engeli kalmadı**.
 ### Dondurma noktası ne demek?
 
 `v1.0.0` tag'i, **bağımsız düşman denetiminden geçmiş ve bulgularının hepsi
-kapatılmış** ilk durumu işaretler. Bu noktada doğrulanmış olanlar:
+kapatılmış** ilk durumu işaretler; `v1.0.1` aynı şeyi ikinci denetim
+(eşzamanlılık ve veri bütünlüğü) için yapar. Bu noktada doğrulanmış olanlar:
 
 * 244 ekranın tamamı gezinerek erişilebilir (10 rol, tam gezinti, yetim ekran 0)
 * Uygulama içi hiçbir bağlantı 4xx/5xx dönmüyor
@@ -73,7 +74,13 @@ kapatılmış** ilk durumu işaretler. Bu noktada doğrulanmış olanlar:
 * Bağlı olmayan yetenekler (e-posta K-021, antivirüs K-027) ekranda açıkça
   söyleniyor — hiçbir yerde sahte başarı bildirimi yok
 
-Bir şey bozulursa karşılaştırma tabanı budur: `git diff v1.0.0`.
+`v1.0.1` ile ek olarak: eşzamanlı isteklerde kasa/stok negatife düşmüyor, aynı
+varlık iki kişide olmuyor, aynı onay adımına iki karar geçmiyor, sürüm çakışması
+ve idempotency gerçekten tutuyor; okunamayacak büyüklükte tutar veya geçersiz
+tarih deftere giremiyor; sağlayıcı başarısı kart defterine yazılıyor; rapor ve
+metin sınırları sessiz kırpma yerine açık ret üretiyor.
+
+Bir şey bozulursa karşılaştırma tabanı budur: `git diff v1.0.1`.
 
 ### Kurulmuş ve çalışan altyapı (yeniden yazma!)
 
@@ -113,11 +120,11 @@ Her oturumun başında refleks olarak:
 ```bash
 cd ~/Developer/"Backend Projects"/gaviabuild
 git status && git log --oneline -10
-node --test          # kök dizinden; 444/444 beklenir
-git describe --tags  # v1.0.0 (veya sonrası) beklenir
+node --test          # kök dizinden; 471/471 beklenir
+git describe --tags  # v1.0.1 (veya sonrası) beklenir
 ```
 
-**Dal düzeni:** `v1.0.0` itibarıyla `main` güncel ve her şeyi taşıyor. Yeni iş
+**Dal düzeni:** `v1.0.1` itibarıyla `main` güncel ve her şeyi taşıyor. Yeni iş
 `main`'den açılan bir dalda yapılır; `revizyon/faz-0-6` tarihsel dal olarak
 duruyor, yeni iş için kullanılmaz.
 
@@ -189,10 +196,12 @@ ters kayıt); ama **dört kırmızı** çıktı ve kapatıldı: 2^53 üstü tuta
 defteri kalıcı olarak kırması (**K-120**), sağlayıcı API'si başarı dönerken kart
 defterinin boş kalması (**K-123**), tarih ayrıştırıcının geçersizde 500 verip
 imkânsızda sessizce kayması (**K-121**), kart yükleme onayının 500 vermesi
-(**K-122**). Turuncu D-12 de kapatıldı (**K-124**). Dört sarı (D-13 gövde sınırı
-bağlantıyı bozuyor, D-14 rapor satır tavanı yok, D-15 metin uzunluğu sınırsız,
-D-16 gelecek tarihli finans hareketi) **açık** ve `PLAN.md`'de listeli — hiçbiri
-§12 engeli değil. Açık §12 engeli yok.
+(**K-122**). Turuncu D-12 de kapatıldı (**K-124**). Dört sarı da ikinci turda kapatıldı:
+kasa/banka hareketi ileri tarihli olamaz ve ret FIN-12'ye yönlendiriyor
+(**K-125**), rapor/liste satır tavanı ekran 5.000 · dosya 20.000 ve aşımda
+sessiz kırpma yerine açık ret (**K-126**), serbest metinde öntanımlı uzunluk
+sınırı 4.000/250 (**K-127**), gövde aşımı 413 ve bağlantı sağlam kalıyor
+(**K-128**). **Dokuz bulgunun dokuzu kapalı; açık §12 engeli yok.**
 
 **Dikkat — `httpAdaptoru` canlıya alınmadan önce:** D-09 tam olarak bu yolun
 kart defterini hiç yazmadığını gösterdi. Bağlantı öncesi
