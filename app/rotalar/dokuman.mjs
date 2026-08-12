@@ -182,6 +182,7 @@ ${yetkiVar(ctx, 'DOC-03:guncelle') ? h`<div class="gv-card" style="margin-bottom
   <div class="gc-head"><div class="gc-title"><b>Yeni sürüm yükle</b>
     <span>Mevcut sürüm korunur; yükleme yeni sürüm satırı açar.</span></div></div>
   <div class="gc-body">
+    ${B.dosyaGuvenlikSeridi()}
     <form method="post" action="/dokumanlar/${d.id}" enctype="multipart/form-data" data-gform="1">
       ${ham(csrfAlani(ctx))}
       <div class="gform-alanlar">
@@ -364,6 +365,7 @@ ${!turler.length ? B.sonucSeridi({ tur: 'warn', baslik: 'Belge türü tanımlı 
     aciklama: 'Doküman kaydı bir belge türüne bağlanır. Önce Ayarlar > Belge türleri ekranından tanım yapın.',
     kayitRota: '/ayarlar/belge-turleri' }) : ''}
 ${hata ? B.hataOzeti(hata) : ''}
+${B.dosyaGuvenlikSeridi()}
 <form method="post" action="/dokumanlar/yeni" enctype="multipart/form-data" novalidate data-gform="1">
   ${ham(csrfAlani(ctx))}
   <div class="form-grid">

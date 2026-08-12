@@ -495,6 +495,7 @@ ${ozetSeridi(ctx, {
           sonuç, sağlayıcıdan dönen dosya yüklenene kadar bilinmez.</p>
         <div style="margin-bottom:14px">${B.btn('Yükleme dosyasını indir',
     { rota: `/kartlar/yuklemeler/${p.id}?cikti=csv`, ikon: 'fa-file-arrow-down' })}</div>
+        ${B.dosyaGuvenlikSeridi()}
         <form method="post" action="/kartlar/yuklemeler/${p.id}" enctype="multipart/form-data">
           ${ham(csrfAlani(ctx))}
           <div class="gfield full">

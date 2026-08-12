@@ -29,6 +29,10 @@ export const yapilandirma = {
      yazılır. Gerçek bir gönderici bağlandığında burası açılır ve metinler
      kendiliğinden doğru hale gelir. */
   epostaBagli: process.env.GB_EPOSTA === '1',
+  /* K-027: antivirüs taraması dosya yüklemede BAĞLI DEĞİL. Bayrak kapalıyken
+     yükleme ekranları bunu açıkça yazar (kural 3'ün eksik beyan karşılığı);
+     gerçek bir tarayıcı adaptörü bağlandığında burası açılır. */
+  antivirusBagli: process.env.GB_ANTIVIRUS === '1',
   mfaAdimSuresiMs: 5 * 60 * 1000,
   girisDenemeSiniri: 5,
   girisPenceresiMs: 15 * 60 * 1000,

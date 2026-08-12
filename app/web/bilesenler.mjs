@@ -257,6 +257,28 @@ export function sekmeler({ sekmeler: liste, aktif, rota, sorgu }) {
   })}</nav>`;
 }
 
+/* --- Dosya güvenlik beyanı (K-027, denetim-01 D-06) --------------------- */
+/**
+ * Yükleme ekranlarında dosyaya NE YAPILDIĞINI ve NE YAPILMADIĞINI söyler.
+ *
+ * §8 "antivirüs, MIME doğrulama ve sürümleme uygulanır" diyor; bunlardan
+ * yalnız ikisi bağlı. Eksiği söylememek sahte başarının sessiz biçimidir:
+ * kullanıcı dosyanın taranmış olduğunu varsayar. Metin TEK YERDE durur ki
+ * ekranlar arasında sapmasın; tarayıcı bağlanınca tek bayrakla düzelir.
+ */
+export function dosyaGuvenlikSeridi() {
+  if (yapilandirma.antivirusBagli) {
+    return sonucSeridi({ tur: 'ok', baslik: 'Dosya güvenlik kontrolleri açık',
+      aciklama: 'Yüklenen dosya antivirüs taramasından geçer; MIME içerik imzası '
+        + 'doğrulanır ve her sürüm SHA-256 özetiyle saklanır.' });
+  }
+  return sonucSeridi({ tur: 'warn', baslik: 'Antivirüs taraması BAĞLI DEĞİL',
+    aciklama: 'Bu kurulumda yüklenen dosyalar virüse karşı TARANMAZ (K-027). '
+      + 'Uygulanan kontroller: izinli tür listesi, MIME içerik imzası (uzantı '
+      + 'değil dosyanın kendisi) ve SHA-256 ile sürümleme. Bilinmeyen kaynaktan '
+      + 'gelen dosyaları yüklemeden önce kendi tarayıcınızla kontrol edin.' });
+}
+
 /* --- İşlem sonucu — sahte başarı DEĞİL, gerçek API sonucu (kural 3) ----- */
 export function sonucSeridi({ tur = 'ok', baslik, aciklama, kayitRota = null, kod = null }) {
   return h`<div class="gv-result gv-result-${ham(kacir(tur))}" role="status">
