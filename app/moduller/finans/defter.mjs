@@ -13,6 +13,8 @@ import { kimlik } from '../../cekirdek/kimlikler.mjs';
 import { simdi, gunAnahtari, gunBaslangici, GUN_MS } from '../../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, GecisIzinsiz } from '../../cekirdek/hata.mjs';
 import { minorSinirZorunlu } from '../../cekirdek/para.mjs';
+import { metinSinirZorunlu } from '../../cekirdek/metin.mjs';
+import { yapilandirma } from '../../cekirdek/yapilandirma.mjs';
 import * as audit from '../../cekirdek/audit.mjs';
 
 /** Kullanıcının saat dilimindeki BUGÜNÜN son anı — ileri tarih ölçütü. */
@@ -88,6 +90,10 @@ export function hareketYaz(ctx, defterAdi, p) {
   if (tutar <= 0n) throw DogrulamaHatasi('Tutar sıfırdan büyük olmalı.');
   /* D-08: okunamayacak büyüklükte bir tutar değişmez deftere GİREMEZ. */
   minorSinirZorunlu(tutar);
+  /* D-15: serbest metin değişmez deftere sınırsız giremez. */
+  metinSinirZorunlu(p.aciklama, { alan: 'aciklama', etiket: 'Açıklama' });
+  metinSinirZorunlu(p.belgeNo, { alan: 'belgeNo', etiket: 'Belge numarası',
+    enFazla: yapilandirma.kisaMetinEnFazla });
 
   /* İŞLEM TARİHİ İLERİ OLAMAZ (denetim-02 D-16, KARARLAR.md K-125).
      Kasa ve banka GERÇEKLEŞMİŞ para hareketidir: ileri tarihli satır, henüz

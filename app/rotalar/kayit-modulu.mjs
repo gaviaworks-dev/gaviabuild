@@ -16,6 +16,7 @@ import { html, yonlendir } from '../cekirdek/http.mjs';
 import { kimlik } from '../cekirdek/kimlikler.mjs';
 import { simdi, tarih, tarihSaat, gunAnahtari, gunBaslangici } from '../cekirdek/zaman.mjs';
 import { Para, BIRIMLER } from '../cekirdek/para.mjs';
+import { varsayilanSinir } from '../cekirdek/metin.mjs';
 import { UygulamaHatasi, DogrulamaHatasi } from '../cekirdek/hata.mjs';
 import { idempotent } from '../cekirdek/idempotency.mjs';
 import {
@@ -88,8 +89,13 @@ function girdiCoz(ctx, tanim, govde, mevcut = null) {
     if (a.zorunlu && (deger == null || deger === '')) {
       hatalar[a.ad] = [`${a.etiket} zorunludur.`];
     }
-    if (deger != null && a.enFazla && String(deger).length > a.enFazla) {
-      hatalar[a.ad] = [`En fazla ${a.enFazla} karakter.`];
+    /* Uzunluk sınırı ARTIK ÖNTANIMLI (denetim-02 D-15, K-127): alan kendi
+       `enFazla`sını bildirmemişse tür bazlı öntanım uygulanır. Sınırsız serbest
+       metin, 100 bin karakterlik açıklamanın değişmez deftere girmesi demekti. */
+    const sinir = a.enFazla ?? (['metin', 'uzunMetin'].includes(a.tur) ? varsayilanSinir(a.tur) : null);
+    if (deger != null && sinir && String(deger).length > sinir) {
+      hatalar[a.ad] = [`En fazla ${sinir.toLocaleString('tr-TR')} karakter (girilen: `
+        + `${String(deger).length.toLocaleString('tr-TR')}). Metin kırpılmadı.`];
     }
     if (deger != null && a.secenekler && a.tur === 'secim') {
       const gecerli = (typeof a.secenekler === 'function' ? a.secenekler(ctx) : a.secenekler)

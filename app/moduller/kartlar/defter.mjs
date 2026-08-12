@@ -19,6 +19,7 @@ import { kimlik } from '../../cekirdek/kimlikler.mjs';
 import { simdi } from '../../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, GecisIzinsiz, Cakisma } from '../../cekirdek/hata.mjs';
 import { minorSinirZorunlu } from '../../cekirdek/para.mjs';
+import { metinSinirZorunlu } from '../../cekirdek/metin.mjs';
 import * as audit from '../../cekirdek/audit.mjs';
 
 /** Hareket türü → yön. Yön TÜRDEN türediği için çağıran seçemez. */
@@ -109,6 +110,8 @@ export function hareketYaz(ctx, p) {
   if (tutar <= 0n) throw DogrulamaHatasi('Tutar sıfırdan büyük olmalı.');
   /* D-08: okunamayacak büyüklükte bir tutar değişmez deftere GİREMEZ. */
   minorSinirZorunlu(tutar);
+  /* D-15: serbest metin değişmez deftere sınırsız giremez. */
+  metinSinirZorunlu(p.aciklama, { alan: 'aciklama', etiket: 'Açıklama' });
 
   const kart = tek('SELECT * FROM kart WHERE id = ? AND tenant_id = ?', p.kartId, ctx.tenant.id);
   if (!kart) throw DogrulamaHatasi('Kart bulunamadı.');
