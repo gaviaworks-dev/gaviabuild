@@ -8,7 +8,11 @@ karşılaştırıldı. Her iddianın altında onu üreten komut çıktısı vard
 
 > Bu rapor `DEVIR.md`'nin "244/244 doğrulandı, §12 engeli kalmadı" iddiasını
 > sınamak için yazıldı. **İddia kısmen tutmadı:** üç kırmızı bulgu §12
-> kapsamındadır. Üçü de bu turda düzeltildi ve regresyon testine bağlandı.
+> kapsamındadır.
+>
+> **Durum (12 Ağustos 2026):** yedi bulgunun **hepsi kapatıldı** — üç kırmızı
+> ilk turda, dört sarı ikinci turda (§9). Her biri ayrı commit ve regresyon
+> testi; testlerin kilitlediği, düzeltmeler geçici geri alınarak kanıtlandı.
 
 ---
 
@@ -19,10 +23,10 @@ karşılaştırıldı. Her iddianın altında onu üreten komut çıktısı vard
 | D-01 | 26 ekran (11'i P0) hiçbir rolde, hiçbir sayfadan bağlantısı olmadığı için **açılamıyordu** | 🔴 §12 | ✅ düzeltildi |
 | D-02 | `/mobil` ana ekranındaki "Günlük rapor" düğmesi **404** veriyordu | 🔴 §12 | ✅ düzeltildi |
 | D-03 | Üretimde davet ve şifre sıfırlama **"gönderildi" diyordu**, gönderici yok | 🔴 kural 3 | ✅ düzeltildi |
-| D-04 | Proje/plan detayında `?sekme=` ile ikinci bir gezinme şeması; manifest rotaları yetim | 🟡 kural 1 | açık |
-| D-05 | RPT-15, HSE-12, PLAN-11 `?cikti=pdf` çağrısında sessizce HTML dönüyor | 🟡 kural 9 | açık |
-| D-06 | K-027 (antivirüs bağlı değil) kullanıcıya **hiçbir yerde söylenmiyor** | 🟡 | açık |
-| D-07 | Boş kurulumda `/kartlar/yeni` ve `/santiyeler/yeni` çıkışsız form | 🟡 UX | açık |
+| D-04 | Proje/plan detayında `?sekme=` ile ikinci bir gezinme şeması; manifest rotaları yetim | 🟡 kural 1 | ✅ düzeltildi (K-116) |
+| D-05 | RPT-15, HSE-12, PLAN-11 `?cikti=pdf` çağrısında sessizce HTML dönüyor | 🟡 kural 9 | ✅ düzeltildi (K-117) |
+| D-06 | K-027 (antivirüs bağlı değil) kullanıcıya **hiçbir yerde söylenmiyor** | 🟡 | ✅ düzeltildi (K-118) |
+| D-07 | Boş kurulumda `/kartlar/yeni` ve `/santiyeler/yeni` çıkışsız form | 🟡 UX | ✅ düzeltildi (K-119) |
 
 **Sağlam çıkan alanlar (bağımsız olarak doğrulandı):** sunucu tarafı yetki,
 tenant/kapsam izolasyonu, CSRF, defter değişmezliği, rapor çıktı üretimi,
@@ -527,13 +531,132 @@ Yeni testler:
 
 ---
 
-## 9. Kalan iş
+## 9. Kapanış — D-04..D-07 (12 Ağustos 2026, ikinci tur)
 
-| # | İş | Öncelik |
-|---|---|---|
-| D-04 | `?sekme=` şemasını manifest rotalarıyla birleştir; PRJ-05..10 sekmelerini detaydan bağla | orta |
-| D-05 | RPT-15/HSE-12/PLAN-11'i `ReportLayout`'a bağla veya bilinmeyen `?cikti=` değerini açıkça reddet | orta |
-| D-06 | Dosya yükleme ekranlarına antivirüs durumu bilgi şeridi (RPT-14 kalıbı) | düşük |
-| D-07 | Ön koşulu eksik formlarda boş-durum yönlendirmesi | düşük |
+Denetimin açık bıraktığı dört sarı bulgu da kapatıldı. Her biri ayrı commit,
+her biri regresyon testine bağlı; testlerin gerçekten kilitlediği, düzeltmeler
+geçici geri alınarak kanıtlandı.
 
-Hiçbiri §12 üretime çıkış engeli değildir.
+| # | Karar | Ne yapıldı | Test dosyası | Geri alınca kırılan |
+|---|---|---|---|---|
+| D-04 | K-116 | `?sekme=` biçimi üretilmiyor; sekmeler kanonik rotaya bağlanıyor, eski biçim **301** ile yollanıyor | `denetim-01-kanonik-url.test.js` (13) | 5 |
+| D-05 | K-117 | PLAN-11, HSE-12, RPT-15 `ReportLayout`'a bağlandı; STK-10, FIN-04, PRC-13 çıktıyı **açıkça reddediyor** | `denetim-01-rapor-cikti.test.js` (6) | 3 |
+| D-06 | K-118 | Yükleme ekranları antivirüs durumunu tek kaynaktan yazıyor | `denetim-01-dosya-beyani.test.js` (5) | 2 |
+| D-07 | K-119 | Boş zorunlu seçici ön koşulu söylüyor ve kayıt açma ekranına bağlanıyor | `denetim-01-on-kosul.test.js` (6) | 3 |
+
+### D-04 — tek kanonik URL (K-116)
+
+**Seçim: hem üretme, hem 301.** Kanonik adres manifestten türer
+(`sekmeEkrani(desen, sekme)`); sekme çubuğu artık `?sekme=riskler` biçimini
+hiç üretmiyor. Eski biçim ayrıca kalıcı olarak yönlendiriliyor:
+
+```
+301  /projeler/<id>?sekme=riskler              →  /projeler/<id>/riskler
+301  /projeler/<id>?sekme=gecmis               →  /projeler/<id>/gecmis
+301  /is-programlari/<id>?sekme=wbs            →  /is-programlari/<id>/wbs
+301  /projeler/<id>?sekme=riskler&durum=acik   →  /projeler/<id>/riskler?durum=acik
+200  /projeler/<id>?sekme=ozet                 →  (sayfa — kanonik karşılığı yok)
+200  /is-programlari/<id>?sekme=ilerleme       →  (sayfa — kanonik karşılığı yok)
+```
+
+Yalnız "üretmemek" yetmezdi: eski biçim yer imlerinde ve paylaşılan
+bağlantılarda duruyor, sessizce çalışan ikinci bir URL olarak kalırdı. **301
+(302 değil)** çünkü ikilik geçici bir geçiş değil kalıcı bir düzeltme.
+
+Kaldırılan ikinci yüzeyler (kural 4): `projeRiskSekmesi` ve
+`projeGecmisSekmesi` (PRJ-08/PRJ-10'un fakir kopyalarıydı), PRJ-03
+`_eylem=risk`, PLAN-03 `_eylem=wbs|aktivite`. WBS formları artık PLAN-04'e
+gönderiyor — PLAN-04'ün POST işleyicisi bugüne dek UI'dan ulaşılamazdı.
+
+Proje detayından hiç bağlanmayan PRJ-05/06/07/09 bağlandı:
+
+```
+/projeler/<id>/duzenle · /aktivasyon · /organizasyon · /paydaslar · /riskler · /gecmis
+(kapanış sihirbazı proje 'aktif'/'kapanışta' iken çıkar — SITE-16 kalıbı)
+```
+
+Yazarken `yonlendir()`in `undefined` döndüğü yakalandı: dönüş değerine bakan
+ilk taslak yönlendirmeyi yazıp sayfayı da çiziyordu (`ERR_HTTP_HEADERS_SENT`).
+Yardımcı artık yol döndürüyor; testi de var.
+
+### D-05 — çıktı sessizce yutulmuyor (K-117)
+
+Denetimde üç ekran görülmüştü; taramada **iki tanesi daha** çıktı:
+
+```
+$ node d05.mjs   (düzeltme öncesi)
+{"rota":"/stok/hareketler","pdf":"200 11161b \"<!DO\"","bilinmeyen":200}
+{"rota":"/tahminler",      "pdf":"200 12577b \"<!DO\"","bilinmeyen":200}
+```
+
+İki yol, ikisi de dürüst:
+
+```
+$ node d05.mjs   (düzeltme sonrası)
+{"rota":"/raporlar/sozluk",          "pdf":"200 6835b \"%PDF\"","xlsx":"200 6134b \"PK\"","csv":"200 6095b BOM","bilinmeyen":422}
+{"rota":"/raporlar/isg",             "pdf":"200 2374b \"%PDF\"","xlsx":"200 3612b \"PK\"","csv":"200 867b BOM", "bilinmeyen":422}
+{"rota":"/raporlar/plan-gerceklesen","pdf":"200 2200b \"%PDF\"","xlsx":"200 3446b \"PK\"","csv":"200 622b BOM", "bilinmeyen":422}
+{"rota":"/stok/hareketler",          "pdf":"422 …","bilinmeyen":422}   ← açık ret
+{"rota":"/tahminler",                "pdf":"422 …","bilinmeyen":422}   ← açık ret
+```
+
+Ret metni kullanıcıyı boşta bırakmıyor: *"Bu ekran dosya çıktısı üretmez …
+PDF/Excel/CSV için RPT-08 Stok ve tüketim raporunu kullanın."*
+
+Regresyon testi manifestteki **her** `rapor` kalıplı ekranı tarar; yeni bir
+rapor ekranı sessiz yutmayla eklenirse kırılır.
+
+### D-06 — antivirüs durumu beyan ediliyor (K-118)
+
+RPT-14'ün kalıbının aynısı; metin tek yerde (`dosyaGuvenlikSeridi()`), üç
+yükleme yüzeyinde (DOC-02, DOC-03, CRD-12) çiziliyor:
+
+> **Antivirüs taraması BAĞLI DEĞİL** — Bu kurulumda yüklenen dosyalar virüse
+> karşı TARANMAZ (K-027). Uygulanan kontroller: izinli tür listesi, MIME içerik
+> imzası (uzantı değil dosyanın kendisi) ve SHA-256 ile sürümleme.
+
+Yalnız eksiği söylemek yanıltıcı olurdu; yapılanlar da sayılıyor.
+`GB_ANTIVIRUS=1` ile metin kendiliğinden düzeliyor (alt süreçte doğrulandı).
+
+Testin ilk taslağında DOC-03 ve CRD-12 fikstür kurulamayınca **sessizce
+geçiyordu**; boşa geçen test test değildir — ikisi kaynak taramasına çevrildi:
+`enctype="multipart/form-data"` içeren her dosyada en az o kadar güvenlik
+şeridi çağrısı olmalı.
+
+### D-07 — ön koşulu eksik formlar (K-119)
+
+Boş kurulumda **21 ekranda 25** zorunlu seçicinin hiç seçeneği yoktu.
+
+```
+$ node d07b.mjs   (düzeltme sonrası)
+ön koşul ipucu verilen boş seçici: 25
+eksik kalanlar: []
+```
+
+Çözüm 21 ekrana elle yazılmadı, `B.alan()` bileşenine kondu: zorunlu seçicide
+gerçek seçenek yoksa ön koşulu söyler ve hedef rotayı **manifestten** okur.
+
+> Seçilebilecek kayıt yok. Önce **Yeni proje** ekranından kayıt açın.
+
+D-02'nin gezinme kilidi bu iş sırasında yeni bir kırık bağlantı yakaladı:
+`aktiviteId` önce PLAN-04'e eşlenmişti ve o dinamik bir rota —
+`/is-programlari/:id/wbs` diye 404 veren bir bağlantı çiziliyordu:
+
+```
+✖ hiçbir iç bağlantı 4xx/5xx dönmez
+  actual: [ '404 /is-programlari/:id/wbs  ←  /ilerleme/yeni' ]
+```
+
+Eşleme PLAN-01'e çevrildi ve "hedef dinamikse bağlantı verme" koruması eklendi.
+
+### Kapanış durumu
+
+```
+$ node d9-coklu.mjs          # 10 persona, tam gezinti
+10 rol gezinti · toplanan link 174 · yetim ekran: 0
+
+$ node --test
+ℹ tests 428 · pass 428 · fail 0
+```
+
+Denetim-01'in yedi bulgusunun **hepsi kapandı**. Açık kalan §12 engeli yok.

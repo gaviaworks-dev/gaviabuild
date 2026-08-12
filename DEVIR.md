@@ -44,7 +44,7 @@ Bunlar tek doğruluk kaynağıdır. Her oturum bunları okuyarak başlar.
 | | |
 |---|---|
 | Ekran | **244 / 244 doğrulandı** ve denetim-01 turunda gezinerek erişilebilir olduğu kanıtlandı |
-| Test | **398/398 yeşil** (`node --test`, kök dizinden) |
+| Test | **428/428 yeşil** (`node --test`, kök dizinden) |
 | Faz 0 — Envanter | ✅ `faz-0-tamam` |
 | Faz 1 — Temel platform (22 aile) | ✅ `faz-1-tamam` |
 | Faz 2 — İş akışı omurgası (14 aile) | ✅ `faz-2-tamam` |
@@ -94,7 +94,7 @@ Her oturumun başında refleks olarak:
 ```bash
 cd ~/Developer/"Backend Projects"/gaviabuild
 git status && git log --oneline -10
-node --test          # kök dizinden; 398/398 beklenir
+node --test          # kök dizinden; 428/428 beklenir
 ```
 
 Commit edilmemiş dosya görürsen **silme, geri alma, `git stash` yapma.** Testleri
@@ -153,9 +153,10 @@ claude --dangerously-skip-permissions
 **Denetim-01 (12 Ağustos 2026):** bağımsız düşman-gözü denetim yapıldı —
 `raporlar/denetim-01.md`. Üç kırmızı bulgu (yetim ekranlar, ölü `/gunluk-raporlar`
 bağlantısı, üretimde sahte "e-posta gönderildi") kapatıldı ve regresyon testine
-bağlandı (K-114, K-115). Açık kalan dört sarı bulgu D-04…D-07 `PLAN.md`'de
-listelidir; hiçbiri §12 engeli değildir. **K-021 artık ekranlarda dürüstçe
-söyleniyor**, K-027 (antivirüs) hâlâ yalnız kod yorumunda — D-06.
+bağlandı (K-114, K-115). **Sarı bulgular D-04…D-07 de kapatıldı** (K-116…K-119):
+tek kanonik URL, rapor çıktısında sessiz yutma yok, antivirüs durumu beyan
+ediliyor, ön koşulu eksik formlar kullanıcıyı kayıt açacağı ekrana yolluyor.
+**K-021 ve K-027 artık ekranlarda dürüstçe söyleniyor.** Açık §12 engeli yok.
 
 ### Mimarinin taşıyıcı parçaları — yeni iş bunların üstüne kurulur
 

@@ -115,7 +115,7 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — revizyon turu tamamlandı, denetim-01 turu geçildi
 
-**Test:** 398/398 · **Ekran:** **244/244 doğrulandı ve gezinerek erişilebilir**
+**Test:** 428/428 · **Ekran:** **244/244 doğrulandı ve gezinerek erişilebilir**
 
 | Faz | Aile | Durum |
 | --- | --- | --- |
@@ -134,17 +134,19 @@ altında; hiçbirinde §12 üretime çıkış engeli kalmadı.
 ### Denetim-01 (12 Ağustos 2026) — bağımsız doğrulama
 
 `raporlar/denetim-01.md`: gerçek sunucu, gerçek HTTP, 10 persona ile bağımsız
-denetim. Üç **kırmızı** bulgu çıktı ve kapatıldı; dördü açık ve §12 engeli değil.
+denetim. Üç **kırmızı**, dört **sarı** bulgu çıktı; **yedisi de kapatıldı**.
+Her biri ayrı commit ve regresyon testi; testlerin gerçekten kilitlediği,
+düzeltmeler geçici geri alınarak kanıtlandı.
 
 | # | Bulgu | Durum |
 |---|---|---|
 | D-01 | 26 ekran (11'i P0) hiçbir sayfadan açılamıyordu — `menuOgesiMi` rota ön ekine bakıyordu | ✅ K-114 |
 | D-02 | `/mobil` → `/gunluk-raporlar` ölü bağlantı (404) | ✅ düzeltildi |
 | D-03 | Üretimde davet ve şifre sıfırlama "gönderildi" diyordu, gönderici yok | ✅ K-115 |
-| D-04 | Proje/plan detayında `?sekme=` ikinci gezinme şeması; PRJ-05..10 manifest rotaları yetim | 🟡 açık |
-| D-05 | RPT-15, HSE-12, PLAN-11 `?cikti=pdf` çağrısında sessizce HTML dönüyor (kural 9) | 🟡 açık |
-| D-06 | K-027 antivirüs eksikliği kullanıcıya hiçbir yerde söylenmiyor | 🟡 açık |
-| D-07 | Boş kurulumda `/kartlar/yeni`, `/santiyeler/yeni` çıkışsız form | 🟡 açık |
+| D-04 | Proje/plan detayında `?sekme=` ikinci gezinme şeması; PRJ-05..10 manifest rotaları yetim | ✅ K-116 |
+| D-05 | RPT-15, HSE-12, PLAN-11 `?cikti=pdf` çağrısında sessizce HTML dönüyor (kural 9) | ✅ K-117 |
+| D-06 | K-027 antivirüs eksikliği kullanıcıya hiçbir yerde söylenmiyor | ✅ K-118 |
+| D-07 | Boş kurulumda `/kartlar/yeni`, `/santiyeler/yeni` çıkışsız form | ✅ K-119 |
 
 Denetimde **sağlam** çıkanlar: sunucu tarafı yetki (10 rol × 176 ekran gerçek
 istekle), tenant/kapsam izolasyonu, CSRF, query parametresiyle rol yükseltme
@@ -153,13 +155,14 @@ gerçek PDF/XLSX/CSV üretimi, beklenmeyen 5xx yokluğu.
 
 ### Sonraki oturum ne yapmalı?
 
-Revizyon turu bittiği için "kaldığımız yer" artık bir iş paketi değil, bir
-**bakım listesi**. Sıradaki iş şunlardan biri olabilir:
+Denetim-01 kapandı; açık §12 engeli yok. Sıradaki iş şunlardan biri olabilir:
 
-1. **Bilinçli açık uçların kapatılması** (aşağıdaki tablo) — hiçbiri §12 engeli
-   değildir, hepsi kayıt altındadır.
-2. **Görsel tur:** `frontend-design` + `ss-eval` ile ekran ekran polish.
-   Yapı ve veri bütünlüğü bitti; sıra sayfa dilinin inceliklerinde.
+1. **Görsel tur:** `frontend-design` + `ss-eval` ile ekran ekran polish.
+   Yapı, gezinme ve veri bütünlüğü bitti; sıra sayfa dilinin inceliklerinde.
+   Menü D-01'de büyüdü (Raporlar 1→14, Kartlar 1→10) — uzun bölüm menülerinin
+   görsel ritmi gözden geçirilmeli.
+2. **İkinci bir düşman denetimi** (denetim-02): bu tur gezinme, çıktı ve beyan
+   eksenlerine baktı; sıradaki tur yük, eşzamanlılık ve veri hacmine bakabilir.
 3. **Yük ve dayanıklılık:** çok kayıtlı listelerde sayfalama ve rapor süreleri.
 4. **Gerçek sağlayıcı bağlantısı:** Pluxee/MultiNet kimlik bilgileri
    tanımlanınca `httpAdaptoru` canlıya alınır (kod hazır, yapılandırma işi).
