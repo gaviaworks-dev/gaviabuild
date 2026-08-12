@@ -53,6 +53,7 @@ export function belge({ baslik, sec = null, ekran = null, govde, ekBas = ham('')
 <link rel="stylesheet" href="/statik/css/shell.css">
 <link rel="stylesheet" href="/statik/css/ui.css">
 <link rel="stylesheet" href="/statik/css/uygulama.css">
+<link rel="stylesheet" href="/statik/css/rapor.css">
 ${ekBas}
 </head>
 <body${sec ? ` data-sec="${kacir(sec)}"` : ''}${ekran ? ` data-screen="${kacir(ekran)}"` : ''}${govdeSinifi ? ` class="${kacir(govdeSinifi)}"` : ''}>

@@ -1,0 +1,109 @@
+/* ============================================================================
+   RAPOR STİLLERİ VE PRINT CSS — doküman §3.4
+   ----------------------------------------------------------------------------
+   "Yazdırma görünümünde MENÜ, BUTON ve FORM KONTROLLERİ GİZLENİR; A4 dikey/
+   yatay seçimi, TEKRARLANAN TABLO BAŞLIĞI, SAYFA NUMARASI ve kurumsal başlık
+   vardır."
+
+   Ekrandaki rapor ile yazdırılan rapor AYNI DOM'dur: yazdırma için ikinci bir
+   sayfa üretilmez, yalnız kabuk gizlenir. Böylece ekran ile çıktı ayrışamaz.
+   ========================================================================== */
+
+.gv-rapor { display: flex; flex-direction: column; gap: 18px; }
+
+/* --- Künye ---------------------------------------------------------------- */
+.rpt-kunye .gc-body { padding: 16px 20px; }
+.rpt-kunye-grid {
+  display: grid; gap: 10px 26px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.rpt-kunye-grid div { display: flex; flex-direction: column; gap: 2px; }
+.rpt-kunye-grid dt {
+  font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gv-muted, #6b7280); font-weight: 600;
+}
+.rpt-kunye-grid dd { margin: 0; font-size: 13px; font-weight: 500; }
+
+/* --- Araç çubuğu ---------------------------------------------------------- */
+.rpt-arac {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+  justify-content: space-between;
+}
+.rpt-filtre { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.rpt-cikti { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* --- KPI ------------------------------------------------------------------ */
+.rpt-kpi-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.rpt-kpi-kart {
+  border: 1px solid var(--gv-border, #e5e7eb); border-radius: 10px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+  background: var(--gv-yuzey, #fff);
+}
+.rpt-kpi-kart.is-danger { border-color: #dc2626; }
+.rpt-kpi-kart.is-warn { border-color: #d97706; }
+.rpt-kpi-kart.is-ok { border-color: var(--acc-ink, #0e8c6d); }
+.rk-etiket {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--gv-muted, #6b7280); font-weight: 700;
+}
+.rk-deger { font-size: 22px; font-weight: 800; line-height: 1.15; }
+.rk-formul {
+  font-size: 11.5px; color: var(--gv-muted, #6b7280);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+.rk-kaynak { font-size: 10.5px; color: var(--gv-muted, #9ca3af); }
+
+.rpt-tablo tfoot td { border-top: 2px solid var(--gv-border-dark, #1f2740); }
+
+/* ==========================================================================
+   YAZDIRMA — §3.4
+   ========================================================================== */
+@media print {
+  /* Kabuk: rail, bağlamsal menü, üst bar, breadcrumb ve tüm form kontrolleri. */
+  .gv-rail, .gv-menu, .gv-top, .gv-divider, .gv-crumbs,
+  .gv-noprint, .rpt-arac, .gv-pager, .gv-filtre-bar,
+  button, .btn, form, input, select, textarea { display: none !important; }
+
+  html, body { background: #fff !important; margin: 0; padding: 0; }
+  .gv-app { display: block !important; }
+  .gv-main { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+
+  /* Kurumsal başlık ve sayfa numarası her sayfada. */
+  @page { size: A4 portrait; margin: 16mm 12mm 18mm 12mm; }
+  .gv-rapor[data-yon="yatay"] { page-break-before: auto; }
+
+  .gv-page-head { border: 0 !important; padding: 0 0 8px 0 !important; }
+  .gv-page-head h1 { font-size: 17pt !important; }
+  .gv-page-head .ph-sub { font-size: 9pt !important; }
+
+  .gv-card {
+    border: 1px solid #d1d5db !important; box-shadow: none !important;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .rpt-kunye-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .rpt-kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .rpt-kpi-kart { break-inside: avoid; }
+
+  /* TEKRARLANAN TABLO BAŞLIĞI: thead her sayfada yinelenir. */
+  .rpt-tablo { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  .rpt-tablo thead { display: table-header-group; }
+  .rpt-tablo tfoot { display: table-footer-group; }
+  .rpt-tablo tr { break-inside: avoid; page-break-inside: avoid; }
+  .rpt-tablo th {
+    background: #141533 !important; color: #fff !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .rpt-tablo th, .rpt-tablo td { border: .5px solid #d1d5db; padding: 3pt 5pt; }
+  .gv-tscroll { overflow: visible !important; }
+
+  a[href]::after { content: ""; }   /* URL kuyruğu basılmaz */
+}
+
+/* Yatay rapor: yazdırmada A4 yatay. */
+@media print {
+  .gv-rapor.rpt-yatay { }
+}
