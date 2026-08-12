@@ -144,6 +144,24 @@ export function isaretler(nesne, kayit, { simdiMs = simdi() } = {}) {
   if (t.isaretler.includes('butce_asimi') && kayit.butce_asimi) {
     cikti.push({ kod: 'butce_asimi', metin: 'Bütçe aşımı', ton: 'danger' });
   }
+  /* Kart işaretleri (§6.3): son kullanım ve atamasızlık yaşam durumu DEĞİLDİR. */
+  if (t.isaretler.includes('son_kullanim_yaklasti') && kayit.son_kullanim && !bitti) {
+    const kalan = gunFarki(simdiMs, kayit.son_kullanim);
+    if (kalan < 0) cikti.push({ kod: 'son_kullanim_gecti', metin: 'Son kullanım geçti', ton: 'danger' });
+    else if (kalan <= 60) cikti.push({ kod: 'son_kullanim_yaklasti', metin: `${kalan} gün kaldı`, ton: 'warn' });
+  }
+  if (t.isaretler.includes('atamasiz') && kayit.durum === 'aktif' && kayit.atama_sayisi === 0 && !kayit.havuz) {
+    cikti.push({ kod: 'atamasiz', metin: 'Atanmamış', ton: 'warn' });
+  }
+  if (t.isaretler.includes('retry_gerekli') && kayit.teknik_hata_sayisi) {
+    cikti.push({ kod: 'retry_gerekli', metin: `${kayit.teknik_hata_sayisi} satır tekrar bekliyor`, ton: 'warn' });
+  }
+  if (t.isaretler.includes('fark_var') && kayit.fark_minor) {
+    cikti.push({ kod: 'fark_var', metin: 'Mutabakat farkı var', ton: 'danger' });
+  }
+  if (t.isaretler.includes('banka_eslesmedi') && kayit.donduruldu && !kayit.banka_hareket_id) {
+    cikti.push({ kod: 'banka_eslesmedi', metin: 'Banka çıkışı eşleşmedi', ton: 'warn' });
+  }
   return cikti;
 }
 

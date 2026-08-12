@@ -422,7 +422,50 @@ export const NESNELER = {
     isaretler: ['gecikmis'],
   },
 
-  /* ---- Kart yükleme partisi (Faz 5'te kullanılacak, tanım burada) ------- */
+  /* ---- Kart (CRD-04) — doküman §6.3 yaşam döngüsü ------------------------ */
+  /* Sipariş → basım → aktiflenebilir → aktif → (geçici bloke | kayıp/çalıntı |
+     yenilemede) → iptal / süresi doldu → arşiv.
+     "Aktif" geçişi sağlayıcı onayına, geçerli hesaba ve karta bağlıdır; bu
+     nedenle `aktiflestir` ön koşullu, blokaj geçişleri ise gerekçe zorunludur.
+     Kayıp/çalıntı kullanıcı onayı BEKLEMEZ: kart önce bloke edilir, sağlayıcı
+     çağrısı başarısızsa kritik alarm + tekrar kuyruğu üretilir (CRD-15). */
+  kart: {
+    etiket: 'Kart',
+    durumlar: ['siparis_edildi', 'basimda', 'aktiflenebilir', 'aktif', 'gecici_bloke',
+      'kayip_calinti', 'yenilemede', 'iptal', 'suresi_doldu', 'arsiv'],
+    baslangic: 'siparis_edildi',
+    sonDurumlar: ['arsiv'],
+    etiketler: {
+      siparis_edildi: 'Sipariş edildi', basimda: 'Basımda', aktiflenebilir: 'Aktiflenebilir',
+      aktif: 'Aktif', gecici_bloke: 'Geçici bloke', kayip_calinti: 'Kayıp / çalıntı',
+      yenilemede: 'Yenilemede', iptal: 'İptal', suresi_doldu: 'Süresi doldu', arsiv: 'Arşiv',
+    },
+    gecisler: [
+      { den: 'siparis_edildi', e: 'basimda', eylem: 'basima_gonder', etiket: 'Basıma gönder', gerekce: 'istege_bagli' },
+      { den: 'basimda', e: 'aktiflenebilir', eylem: 'teslim_alindi', etiket: 'Teslim alındı', gerekce: 'istege_bagli' },
+      { den: 'aktiflenebilir', e: 'aktif', eylem: 'aktiflestir', etiket: 'Aktifleştir', gerekce: 'istege_bagli' },
+      { den: 'aktif', e: 'gecici_bloke', eylem: 'gecici_blokela', etiket: 'Geçici bloke et', gerekce: 'zorunlu' },
+      { den: 'gecici_bloke', e: 'aktif', eylem: 'blokeyi_kaldir', etiket: 'Blokeyi kaldır', gerekce: 'zorunlu' },
+      /* Kayıp/çalıntı her canlı durumdan gidilebilir — beklemez. */
+      { den: 'aktif', e: 'kayip_calinti', eylem: 'kayip_bildir', etiket: 'Kayıp/çalıntı bildir', gerekce: 'zorunlu' },
+      { den: 'gecici_bloke', e: 'kayip_calinti', eylem: 'kayip_bildir', etiket: 'Kayıp/çalıntı bildir', gerekce: 'zorunlu' },
+      { den: 'aktiflenebilir', e: 'kayip_calinti', eylem: 'kayip_bildir', etiket: 'Kayıp/çalıntı bildir', gerekce: 'zorunlu' },
+      { den: 'kayip_calinti', e: 'yenilemede', eylem: 'yenile', etiket: 'Yeniden bas', gerekce: 'istege_bagli' },
+      { den: 'suresi_doldu', e: 'yenilemede', eylem: 'yenile', etiket: 'Yeniden bas', gerekce: 'istege_bagli' },
+      { den: 'yenilemede', e: 'iptal', eylem: 'devir_tamam', etiket: 'Devri tamamla ve kapat', gerekce: 'zorunlu' },
+      { den: 'aktif', e: 'suresi_doldu', eylem: 'suresi_doldu', etiket: 'Süresi doldu', gerekce: 'istege_bagli', yalnizMotor: true },
+      { den: 'aktif', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+      { den: 'gecici_bloke', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+      { den: 'kayip_calinti', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+      { den: 'aktiflenebilir', e: 'iptal', eylem: 'iptal_et', etiket: 'İptal et', gerekce: 'zorunlu' },
+      { den: 'siparis_edildi', e: 'iptal', eylem: 'iptal_et', etiket: 'Siparişi iptal et', gerekce: 'zorunlu' },
+      { den: 'iptal', e: 'arsiv', eylem: 'arsivle', etiket: 'Arşivle', gerekce: 'istege_bagli' },
+      { den: 'suresi_doldu', e: 'arsiv', eylem: 'arsivle', etiket: 'Arşivle', gerekce: 'istege_bagli' },
+    ],
+    isaretler: ['son_kullanim_yaklasti', 'atamasiz'],
+  },
+
+  /* ---- Kart yükleme partisi (CRD-10..12) — doküman §6.4 ----------------- */
   kartYuklemePartisi: {
     etiket: 'Kart yükleme partisi',
     durumlar: ['taslak', 'dogrulandi', 'onay_bekliyor', 'gonderiliyor', 'kismi', 'basarili', 'hatali', 'mutabik', 'kapali'],
@@ -460,6 +503,8 @@ export const ONAYLI_TURLER = {
   siparis: 'Satın alma siparişi', stok_sayimi: 'Stok sayımı',
   zeyil: 'Zeyilname', metraj: 'Metraj cetveli', butce: 'Bütçe',
   banka_hareketi: 'Banka hareketi', avans: 'Avans talebi', izin: 'İzin talebi',
+  /* Kartlar (Faz 5): politika ve mutabakat onay yaşam döngüsünü paylaşır. */
+  kart_politikasi: 'Kart politikası', kart_mutabakati: 'Kart mutabakatı',
 };
 
 /** Somut tür → durum tanımı. */
