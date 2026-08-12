@@ -7,6 +7,7 @@
    ========================================================================== */
 import { h, ham, belge, kacir } from '../temel.mjs';
 import { alan, btn, hataOzeti, sonucSeridi } from '../bilesenler.mjs';
+import { yapilandirma } from '../../cekirdek/yapilandirma.mjs';
 
 /* Şartnamede sabitlenen metinler — değiştirilmesi doküman revizyonu gerektirir. */
 export const SOL_BASLIK = 'Şirketten şantiyeye tüm operasyon tek platformda';
@@ -77,24 +78,40 @@ function demoBlogu(personalar) {
 
 /* --- AUTH-02 Şifremi unuttum -------------------------------------------- */
 export function sifreUnuttumSayfasi(ctx, { gonderildi = false, eposta = '', demoBaglanti = null } = {}) {
+  /* Kural 3: gönderici bağlı değilken "gönderildi" DENMEZ. Token anonim
+     kullanıcıya GÖSTERİLMEZ — gösterilseydi herkes herkesin şifresini
+     sıfırlardı; bu yüzden K-021'in aksine burada bağlantı üretimde de gizlidir
+     ve kullanıcı yöneticisine yönlendirilir (K-115). */
   const sag = gonderildi
-    ? h`<h2>Bağlantı gönderildi</h2>
+    ? (yapilandirma.epostaBagli
+      ? h`<h2>Bağlantı gönderildi</h2>
         <p class="gr-alt">Bu e-posta adresi kayıtlıysa, sıfırlama bağlantısı gönderildi.
-           Bağlantı <b>bir saat</b> geçerlidir ve <b>tek kullanımlıktır</b>.</p>
+           Bağlantı <b>bir saat</b> geçerlidir ve <b>tek kullanımlıktır</b>.</p>`
+      : h`<h2>Talebiniz alındı — e-posta GÖNDERİLMEDİ</h2>
+        <p class="gr-alt">Bu e-posta adresi kayıtlıysa sıfırlama talebi oluşturuldu.
+           Ancak bu kurulumda e-posta gönderimi <b>bağlı değil</b>; size otomatik bir
+           bağlantı <b>gönderilemez</b>. Şifrenizi sıfırlamak için sistem yöneticinizden
+           davet/sıfırlama bağlantısı isteyin.</p>`)
+    : null;
+  const sagTam = sag
+    ? h`${sag}
         ${demoBaglanti ? h`<div class="gr-demo"><div class="gr-demo-bas"><span class="gtag">DEMO</span> Sıfırlama bağlantısı</div>
           <p>E-posta gönderimi bu ortamda kapalı olduğu için bağlantı burada gösteriliyor.</p>
           <a class="btn btn-acc btn-sm" href="${demoBaglanti}">Şifre sıfırlama sayfasına git</a></div>` : ''}
         <div class="gr-ayrac">veya</div>
         ${btn('Giriş sayfasına dön', { tur: 'ghost', rota: '/giris' })}`
     : h`<h2>Şifremi unuttum</h2>
-        <p class="gr-alt">Kayıtlı e-posta adresinizi girin; sıfırlama bağlantısı gönderelim.</p>
+        <p class="gr-alt">Kayıtlı e-posta adresinizi girin.${yapilandirma.epostaBagli
+          ? ' Sıfırlama bağlantısı gönderelim.'
+          : ' Bu kurulumda e-posta gönderimi BAĞLI DEĞİL; bağlantı otomatik gönderilemez.'}</p>
         <form class="gr-form" method="post" action="/sifre-unuttum" data-gform="1">
           ${alan({ ad: 'eposta', etiket: 'E-posta', tur: 'email', deger: eposta, zorunlu: true, ekNitelik: ' autocomplete="username" autofocus' })}
-          ${btn('Sıfırlama bağlantısı gönder', { tur: 'acc', gonder: true, ikon: 'fa-paper-plane' })}
+          ${btn(yapilandirma.epostaBagli ? 'Sıfırlama bağlantısı gönder' : 'Sıfırlama talebi oluştur',
+    { tur: 'acc', gonder: true, ikon: 'fa-paper-plane' })}
         </form>
         <div class="gr-ayrac">veya</div>
         ${btn('Giriş sayfasına dön', { tur: 'ghost', rota: '/giris' })}`;
-  return belge({ baslik: 'Şifremi unuttum', govde: ikiPanel(sag), govdeSinifi: 'gv-sade' });
+  return belge({ baslik: 'Şifremi unuttum', govde: ikiPanel(sagTam), govdeSinifi: 'gv-sade' });
 }
 
 /* --- AUTH-03 Şifre sıfırla ---------------------------------------------- */

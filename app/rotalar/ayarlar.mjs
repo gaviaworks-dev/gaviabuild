@@ -151,11 +151,16 @@ export function kur(y, ekranRota) {
 
       const davetSonucu = ctx.sorgu.get('davet');
       const davetLink = ctx.sorgu.get('baglanti');
+      /* Kural 3: e-posta gönderici bağlı değilken "gönderildi" DENMEZ. Daveti
+         açan kişi zaten SET-03 yetkili yöneticidir; bağlantıyı ona göstermek
+         daveti teslim edilebilir kılan tek yoldur (K-115). */
       const ust = davetSonucu
-        ? B.sonucSeridi({ tur: 'ok', baslik: 'Davet oluşturuldu',
-            aciklama: davetLink && !yapilandirma.uretim
-              ? `Bu ortamda e-posta gönderimi kapalı; davet bağlantısı: ${davetLink}`
-              : 'Davet bağlantısı kullanıcının e-posta adresine gönderildi.' })
+        ? (yapilandirma.epostaBagli
+            ? B.sonucSeridi({ tur: 'ok', baslik: 'Davet oluşturuldu',
+                aciklama: 'Davet bağlantısı kullanıcının e-posta adresine gönderildi.' })
+            : B.sonucSeridi({ tur: 'warn', baslik: 'Davet oluşturuldu — e-posta GÖNDERİLMEDİ',
+                aciklama: `Bu kurulumda e-posta gönderimi bağlı değil (K-021). Bağlantı BİR KEZ `
+                  + `burada gösterilir, elden iletilmelidir: ${davetLink || '(bağlantı üretilemedi)'}` }))
         : '';
 
       return html(ctx, 200, ciz(ctx, e, h`${ust}${icerik}${davetFormu(ctx)}`));
@@ -168,7 +173,12 @@ export function kur(y, ekranRota) {
         const sonuc = servis.davetOlustur(ctx, {
           eposta: govde.eposta, adSoyad: govde.adSoyad, rolKodu: govde.rolKodu,
         });
-        const baglanti = yapilandirma.uretim ? '' : `&baglanti=${encodeURIComponent('/davet/' + sonuc._token)}`;
+        /* K-115: bağlantıyı gizleme ölçütü ORTAM değil, GÖNDERİCİ VARLIĞIDIR.
+           Gönderici yokken üretimde de gizlemek, daveti hiçbir yolla teslim
+           edilemez kılıyordu — §12'nin "yalnızca toast üreten işlem" yasağı.
+           Alıcı anonim değil, SET-03 yetkili yöneticidir. */
+        const baglanti = yapilandirma.epostaBagli ? ''
+          : `&baglanti=${encodeURIComponent('/davet/' + sonuc._token)}`;
         return yonlendir(ctx, `/ayarlar/kullanicilar?davet=1${baglanti}`);
       } catch (err) {
         if (!(err instanceof UygulamaHatasi)) throw err;

@@ -24,6 +24,11 @@ export const yapilandirma = {
   oturumYenilemeMs: 30 * 60 * 1000,         // 30 dk hareketsizlikte son_erisim güncelle
   davetSuresiMs: 7 * 24 * 60 * 60 * 1000,
   sifirlamaSuresiMs: 60 * 60 * 1000,        // 1 saat — tek kullanımlık
+  /* K-021: e-posta gönderimi BAĞLI DEĞİL. Bu bayrak kapalıyken hiçbir ekran
+     "gönderildi" DEMEZ (kural 3); bağlantının elden iletilmesi gerektiği açıkça
+     yazılır. Gerçek bir gönderici bağlandığında burası açılır ve metinler
+     kendiliğinden doğru hale gelir. */
+  epostaBagli: process.env.GB_EPOSTA === '1',
   mfaAdimSuresiMs: 5 * 60 * 1000,
   girisDenemeSiniri: 5,
   girisPenceresiMs: 15 * 60 * 1000,
