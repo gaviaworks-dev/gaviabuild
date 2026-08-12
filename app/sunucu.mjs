@@ -8,6 +8,8 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { resolve, extname, normalize } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { realpathSync } from 'node:fs';
 import { ac as dbAc } from './cekirdek/db.mjs';
 import { yapilandirma, KOK, manifest } from './cekirdek/yapilandirma.mjs';
 import { baglamOlustur, govdeOku, html, json, yanitla, yonlendir, jsonIster } from './cekirdek/http.mjs';
@@ -132,16 +134,106 @@ export function uygulamaKur({ dbYolu } = {}) {
   return { yonlendirici, istegiIsle: (istek, yanit) => istegiIsle(yonlendirici, istek, yanit) };
 }
 
-export function sunucuBaslat({ port = yapilandirma.port, dbYolu } = {}) {
+export function sunucuBaslat({ port = yapilandirma.port, dbYolu, host = yapilandirma.host } = {}) {
   const uygulama = uygulamaKur({ dbYolu });
   const sunucu = createServer((istek, yanit) => { uygulama.istegiIsle(istek, yanit); });
-  sunucu.listen(port, () => {
+
+  /* `listen` hataları ASENKRON gelir (EADDRINUSE, EACCES): dinleyicisiz bir
+     'error' olayı yakalanmamış istisnaya döner ve kullanıcı yığın izi görür.
+     Sebebi insan diliyle söyleyip 1 ile çıkarız (denetim-03 D-17). */
+  sunucu.on('error', (e) => baslatmaHatasi(e, { port, host }));
+
+  sunucu.listen(port, host, () => {
+    const a = sunucu.address();
+    const gosterim = a.family === 'IPv6' ? `[${a.address}]` : a.address;
     const m = manifest();
-    console.log(`[ÜRÜN ADI] (GaviaBuild) — http://localhost:${port}`);
+    console.log(`[ÜRÜN ADI] (GaviaBuild) dinlemede — http://${gosterim}:${a.port}`);
+    console.log(`  adres: ${a.address} · port: ${a.port} · ${a.family}`);
     console.log(`  ortam: ${yapilandirma.ortam} · manifest: ${m.toplamAile} sayfa ailesi`
       + ` · uygulanan: ${uygulananKodlar().size}`);
+    console.log(`  veritabanı: ${process.env.GB_DB || 'veri/gaviabuild.sqlite'}`);
+    console.log('  durdurmak için Ctrl+C');
   });
   return { sunucu, uygulama };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) sunucuBaslat();
+/* ==========================================================================
+   GİRİŞ NOKTASI — sessiz çıkış YASAK (denetim-03 D-17, KARARLAR.md K-129)
+   ========================================================================== */
+/**
+ * Bu dosya DOĞRUDAN mı çalıştırıldı?
+ *
+ * Eski koşul `import.meta.url === \`file://${process.argv[1]}\`` idi ve YANLIŞTI:
+ * `import.meta.url` bir URL'dir, yol içindeki boşluk/`#`/`?`/ASCII dışı
+ * karakterleri yüzde kodlamasıyla kaçırır (`Backend Projects` →
+ * `Backend%20Projects`); elle kurulan dize kaçırmaz. Depo yolunda boşluk olduğu
+ * için koşul HİÇBİR ZAMAN tutmadı: `npm run baslat` modülü yükleyip hiçbir şey
+ * yapmadan 0 ile çıkıyordu.
+ *
+ * Çözüm URL kurmak değil, URL'yi Node'un kendi çözücüsüyle YOLA çevirip yol ile
+ * yol karşılaştırmaktır — bu, kodlama farkı sınıfını tümüyle ortadan kaldırır.
+ */
+export function dogrudanCalistirildiMi(girisYolu = process.argv[1]) {
+  if (!girisYolu) return false;
+  const buDosya = fileURLToPath(import.meta.url);
+  const giris = resolve(girisYolu);
+  if (giris === buDosya) return true;
+  /* Sembolik bağ üzerinden çağrılmış olabilir. */
+  try { return realpathSync(giris) === realpathSync(buDosya); } catch { return false; }
+}
+
+/** Başlatma başarısızlığını İNSAN DİLİYLE söyler ve 1 ile çıkar. */
+function baslatmaHatasi(e, { port, host } = {}) {
+  const neden = {
+    EADDRINUSE: `${host}:${port} adresi zaten kullanımda. Başka bir süreç bu portu tutuyor.`
+      + ' `GB_PORT=8788 npm run baslat` ile farklı bir port deneyin.',
+    EACCES: `${host}:${port} adresini dinleme yetkisi yok (1024 altı portlar ayrıcalık ister).`
+      + ' `GB_PORT=8787 npm run baslat` deneyin.',
+    EADDRNOTAVAIL: `${host} adresi bu makinede tanımlı değil. GB_HOST değerini kontrol edin.`,
+  }[e?.code];
+  console.error('\n[ÜRÜN ADI] SUNUCU BAŞLATILAMADI');
+  console.error(`  neden : ${neden || e?.message || e}`);
+  if (e?.code) console.error(`  kod   : ${e.code}`);
+  if (!neden && e?.stack) console.error(e.stack);
+  process.exit(1);
+}
+
+/**
+ * KABA ama kırılması zor ikinci belirteç: komut satırında verilen dosyanın adı
+ * bu dosya mı? Yol karşılaştırmasından BAĞIMSIZDIR (kodlama, sembolik bağ,
+ * göreli yol hiçbirine bakmaz) ve yalnız güvenlik ağı için kullanılır.
+ *
+ * İki belirteç ÇELİŞİRSE bu, D-17'nin ta kendisidir: kullanıcı sunucuyu
+ * başlatmak istemiş ama giriş tespiti tutmamıştır. Sessizce çıkmak yerine
+ * DURUMU SÖYLERİZ — sessiz çıkışın kendisi bir hatadır.
+ */
+const girisGibiGorunuyor = /(^|[/\\])sunucu\.mjs$/.test(process.argv[1] || '');
+
+if (dogrudanCalistirildiMi() || girisGibiGorunuyor) {
+  /* Son güvenlik ağı: bu dosya giriş noktasıyken süreç DİNLEMEDEN sonlanamaz.
+     Sebebi görünmeden ölmek, kullanıcıyı "komut çalıştı ama hiçbir şey olmadı"
+     ile baş başa bırakır. */
+  let dinlemeyeBasladi = false;
+  process.on('exit', (kod) => {
+    if (dinlemeyeBasladi || kod !== 0) return;
+    console.error('\n[ÜRÜN ADI] SUNUCU BAŞLATILAMADI');
+    console.error('  neden : süreç hiç dinlemeye başlamadan sonlandı.');
+    console.error('  Bu sessiz bir çıkıştır ve kendisi bir hatadır; lütfen bildirin.');
+    process.exitCode = 1;
+  });
+
+  if (!dogrudanCalistirildiMi()) {
+    console.error('[ÜRÜN ADI] UYARI: giriş noktası tespiti tutmadı '
+      + `(argv[1]=${process.argv[1]}, import.meta.url=${import.meta.url}). `
+      + 'Sunucu yine de başlatılıyor.');
+  }
+
+  try {
+    const { sunucu } = sunucuBaslat();
+    sunucu.on('listening', () => { dinlemeyeBasladi = true; });
+  } catch (e) {
+    /* Senkron başlatma hataları: veritabanı açılamadı, göç başarısız, manifest
+       okunamadı. Yığın izi yerine önce sebebi yazarız. */
+    baslatmaHatasi(e, { port: yapilandirma.port, host: yapilandirma.host });
+  }
+}

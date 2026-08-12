@@ -18,6 +18,9 @@ export const yapilandirma = {
   ortam: ORTAM,
   uretim: ORTAM === 'uretim',
   port: Number(process.env.GB_PORT || 8787),
+  /* Dinlenen adres. Öntanımlı yerel arayüz: uygulama sunucu tarafı yetki
+     çözdüğü için dışarı açılması bilinçli bir karar olmalı (GB_HOST). */
+  host: process.env.GB_HOST || '127.0.0.1',
   /* Çerez `Secure` bayrağı üretimde zorunlu; yerel HTTP'de çerez düşerdi. */
   guvenliCerez: ORTAM === 'uretim' || process.env.GB_HTTPS === '1',
   oturumSuresiMs: 12 * 60 * 60 * 1000,      // 12 saat
