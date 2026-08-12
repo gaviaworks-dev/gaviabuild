@@ -425,8 +425,12 @@ ${B.listeDuzeni({
         sayfalayici: B.sayfalama({ rota: e.rota, sorgu: ctx.sorgu, sayfa, boyut, toplam }),
         veriZamani: simdi(),
       });
+      /* TASK-05 sihirbazı `/gorevler` altında olduğu için menüde görünmez;
+         tek gezinme yolu bu listedir (denetim-01 §1). */
       return html(ctx, 200, ciz(ctx, e, icerik, {
-        eylemler: B.btn('Yeni görev', { tur: 'acc', rota: '/gorevler/yeni', ikon: 'fa-plus' }),
+        eylemler: h`${yetkiVar(ctx, 'TASK-05:olustur')
+          ? B.btn('Toplu görev', { rota: '/gorevler/toplu', ikon: 'fa-layer-group' }) : ''}${
+          B.btn('Yeni görev', { tur: 'acc', rota: '/gorevler/yeni', ikon: 'fa-plus' })}`,
       }));
     },
   });

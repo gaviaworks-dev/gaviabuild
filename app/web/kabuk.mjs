@@ -12,11 +12,24 @@ import { manifest, bayrakAcik, BAYRAKLAR, yapilandirma } from '../cekirdek/yapil
 import { uygulananKodlar } from '../rotalar.mjs';
 import { sayi } from './temel.mjs';
 
-/** Bir ekran menüde görünür mü: başka bir ekranın rotası onun ön eki değilse. */
+/* Bir ebeveyn rotanın altına düşen ekranlardan YALNIZ bunlar menüden gizlenir:
+   ebeveyn listenin "Yeni …" düğmesi zaten oraya götürür. Liste, rapor, panel,
+   onay ve mutabakat ekranları kendi başına gezinme hedefidir — rota iç içe diye
+   gizlenirlerse hiçbir yerden erişilemez hale gelirler (denetim-01 §1). */
+const IC_ICE_GIZLENEN_KALIPLAR = ['form', 'sihirbaz'];
+
+/**
+ * Bir ekran menüde görünür mü?
+ *
+ * Rota ön eki TEK BAŞINA gizleme gerekçesi değildir: `/kartlar/hareketler`
+ * `/kartlar`ın altındadır ama ayrı bir gezinme hedefidir. Yalnızca kayıt AÇMA
+ * yüzeyleri (form/sihirbaz) ebeveynine bırakılır.
+ */
 export function menuOgesiMi(ekran, tumEkranlar) {
   if (ekran.dinamik || ekran.takmaAdi) return false;
   if (['detay', 'durum', 'kimlik'].includes(ekran.kalip)) return false;
-  return !tumEkranlar.some((d) => d !== ekran && !d.dinamik && ekran.rota.startsWith(d.rota + '/'));
+  const icIce = tumEkranlar.some((d) => d !== ekran && !d.dinamik && ekran.rota.startsWith(d.rota + '/'));
+  return !icIce || !IC_ICE_GIZLENEN_KALIPLAR.includes(ekran.kalip);
 }
 
 /* Ekran koduna özel ikon; yoksa kalıp ikonu kullanılır. */

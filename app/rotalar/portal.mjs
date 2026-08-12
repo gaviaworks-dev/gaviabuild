@@ -455,7 +455,12 @@ ${BB.sonucSeridi({ tur: 'ok', baslik: 'Çevrimdışı taslak',
       <div class="gc-head"><div class="gc-title"><b>Sahadan hızlı erişim</b></div></div>
       <div class="gc-body" style="display:flex;flex-direction:column;gap:8px">
         ${BB.btn('QR / barkod tara', { rota: '/tara', ikon: 'fa-qrcode' })}
-        ${BB.btn('Günlük rapor', { rota: '/gunluk-raporlar', ikon: 'fa-clipboard' })}
+        ${/* Günlük rapor ŞANTİYEYE bağlıdır: kanonik rota SITE-06
+             (`/santiyeler/:id/gunluk-raporlar`). Şantiye yoksa düğme çizilmez —
+             ölü bağlantı üretmektense hiç göstermemek doğrudur (§12). */
+    santiyeler.length
+      ? BB.btn('Günlük rapor', { rota: `/santiyeler/${santiyeler[0].id}/gunluk-raporlar`, ikon: 'fa-clipboard' })
+      : ''}
         ${BB.btn('Saha bildirimleri', { rota: '/saha-bildirimleri', ikon: 'fa-triangle-exclamation' })}
         ${BB.btn('Görevlerim', { rota: '/gorevler', ikon: 'fa-list-check' })}
       </div>
