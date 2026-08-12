@@ -115,7 +115,7 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz4(CNT,FIN)` · **Test:** 271/271 · **Doğrulanan ekran:** 178/244
+**Son commit:** `faz4c(AST,HR,GLB)` · **Test:** 271/271 · **Ekran:** 178 doğrulandı + 16 bitti = 194/244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
@@ -123,35 +123,41 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 | Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
 | Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
 | Faz 3 | ✅ kapandı (`faz-3-tamam`) | 89/89 aile; raporlar/faz-3-rapor.md; §12 engeli yok |
-| Faz 4 | 🟡 53/69 aile | PRC, STK (`faz4a`) + CNT, FIN (`faz4b`) tamam; kalan: AST-01..10, HR-10..13, GLB-02/03 |
+| Faz 4 | 🟡 69/69 aile kodlandı — **faz KAPANMADI** | Kapanış koşulları aşağıda |
 | Faz 5-6 | ⬜ başlamadı | |
 
-### Faz 3'te teslim edilenler
-Proje/şantiye çekirdeği (PRJ-01..04, SITE-01..03, SITE-06..11) · iş programı ve ilerleme
-(PLAN-01..04, 06, 09, 11) · görev (TASK-01..03) · İSG (HSE-02..06) · kalite bloğu
-(QLT-01..14, QLT-05..07 dahil) · doküman bloğu (DOC-01..10) · İK bloğu
-(HR-01..05, HR-07..09: personel, işe giriş sihirbazı, atama, puantaj, dönem kapanışı) ·
-şantiye tamamlama (SITE-04, 05, 12..16: düzenleme, açılış/kapanış sihirbazı, ziyaretçi,
-resmi belge, geçici/kesin kabul).
+### Faz 4'te teslim edilenler
 
-### SIRADAKİ İŞ PAKETİ — Faz 4 (69 aile)
+Satın alma (PRC-01..13) ve değişmez stok defteri (STK-01..10) → `faz4a` ·
+sözleşme/metraj/hakediş (CNT-01..15) ve finans defterleri + üçlü eşleştirme
+(FIN-01..15) → `faz4b` · varlık ve filo (AST-01..10), İK finans etkili
+(HR-10..13), panolar (GLB-02, GLB-03) → `faz4c`.
 
-Sıra doküman §9'a göre: **PRC → STK → CNT → FIN**, ardından AST ve GLB panoları.
+`faz4c` ayrıntısı: araç ayrı tablo değil, `varlik` tablosunun `tur='arac'` görünümü;
+bakım iş emri ayrı tablo değil, `is_emri.varlik_id` (kural 4). Sayaç yalnız ileri
+gider. Uygunsuz periyodik kontrol varlığı kullanım dışı bırakır. Çakışan zimmet ve
+çakışan izin 409. Mahsupsuz ikinci avans reddedilir. Panolarda kendi kaydı yok;
+her sayı kaynak modülün canlı sorgusudur.
 
-1. ~~**Satın alma (PRC-01..13)**~~ ✅ `faz4a` — PRC-01 kabul yeşil.
-2. ~~**Depo ve stok (STK-01..10)**~~ ✅ `faz4a` — STK-01 kabul yeşil; defter tetikleyiciyle değişmez.
-3. ~~**Sözleşme, metraj, hakediş (CNT-01..15)**~~ ✅ `faz4b`.
-4. ~~**Finans (FIN-01..15)**~~ ✅ `faz4b` — üçlü eşleştirme kabul testi yeşil.
-5. **Varlık ve filo (AST-01..10)** — 10 aile. Bakım iş emri `is_emri` tablosunu kullanır
-   (kural 4); araçlar `varlik` tablosunun filtrelenmiş görünümüdür.
-6. **İK finans etkili (HR-10..13)** — 4 aile: izin, avans, sağlık, yetkinlik.
-   `IZIN` ve `AVANS` onay şablonları `faz3d` ile HAZIR; tablolar `goc5.mjs`'de var.
-7. **Panolar (GLB-02, GLB-03)** — 2 aile. K-017 gereği veri kaynakları geldikten sonra.
+### FAZ 4 KAPANIŞ İÇİN KALAN — sıradaki oturumun işi
 
-**Faz 4'ün ilk işi olmalı:** `moduller/santiye/kapanis.mjs` ve `moduller/proje/kapanis.mjs`
-içindeki `planli: 'Faz 4'` satırlarını gerçek sorguyla değiştirmek (K-049). Bu satırlar
-şu an kaldırılamaz engeldir; stok/varlık/kasa/sözleşme modülleri gelmeden hiçbir şantiye
-veya proje kapatılamaz — bu bilinçli bir tasarımdır, unutulmuş bir eksik değildir.
+1. **`tests/kabul/faz4c.test.js` YOK.** AST-01..10, HR-10..13, GLB-02/03 yalnız elle
+   smoke ile doğrulandı (`tests/gecici/ast-smoke.mjs`, `tests/gecici/hr2-smoke.mjs`
+   — commit edilmedi, yerelde durur). Bu 16 aile bu yüzden `bitti`, `doğrulandı` DEĞİL.
+   Smoke betiklerindeki senaryolar `node:test`e çevrilmeli: çakışan zimmet 409, geri
+   sayaç 422, uygunsuz kontrol → kullanım dışı + iş emri, çakışan izin 409, mahsupsuz
+   ikinci avans 409, süresiz sağlık kaydı 422, çalışan yalnız kendi kaydını görür.
+2. **K-049 hâlâ açık.** `moduller/santiye/kapanis.mjs` (satır 53, 107, 110, 112) ve
+   `moduller/proje/kapanis.mjs` (satır 87, 89) içindeki `planli: 'Faz 4'` satırları
+   hâlâ yer tutucu. Besleyen modüllerin **hepsi artık hazır**: `moduller/stok/defter.mjs`,
+   `moduller/finans/defter.mjs`, `moduller/sozlesme/hakedis.mjs` ve yeni `varlik`/`zimmet`
+   tabloları. Bu satırlar gerçek sorguyla değiştirilmeden hiçbir şantiye veya proje
+   kapatılamaz — bilinçli engel, unutulmuş eksik değil.
+3. **`raporlar/faz-4-rapor.md` üretilmedi** (kırık link, yetkisiz erişim, veri
+   tutarlılığı, çıktı).
+4. **`faz-4-tamam` tag'i atılmadı.**
+
+Bu dördü bitmeden Faz 5'e (CRD-01..18) geçilmez.
 
 ### Hazır ama henüz kullanılmayan altyapı
 
@@ -164,25 +170,25 @@ veya proje kapatılamaz — bu bilinçli bir tasarımdır, unutulmuş bir eksik 
 - Onay motoru: tutar kademeli şablon, paralel adım, vekalet, revizyonda geçersizleşme
 - `cokluParcaOku()` dosya yükleme, doküman sürümleme, içerik-adresli depo
 - **Kapsam çözücü (`kapsamCozucu`)** — kapsam sütunu olmayan tablolarda ABAC bağını
-  kuran kayıt (K-041). Faz 4'te cari, tedarikçi, varlık için gerekecek.
+  kuran kayıt (K-041). Faz 5'te kart ve sağlayıcı kayıtları için gerekecek.
 - **Alan maskesi (`alanMaskeliMi` + alan tanımında `gorunur(ctx)`)** — hassas alanı
-  hem okumaya hem yazmaya kapatır (K-039).
-- **`moduller/santiye/kapanis.mjs`** — açılış/kapanış engel listesi; Faz 4'te stok,
-  varlık ve kasa sorguları BURAYA bağlanacak (K-049: şu an kaldırılamaz engel).
-  **Stok ayağı artık bağlanabilir**: `moduller/stok/defter.mjs` hazır.
+  hem okumaya hem yazmaya kapatır (K-039). Faz 5'te kart numarası maskesi buradan gelir.
 - **`moduller/stok/defter.mjs`** ve **`moduller/finans/defter.mjs`** — değişmez hareket
   defterleri (K-061, K-071). Bakiye, yürüyen bakiye ve ters kayıt tek yerde.
+  **Faz 5 kart bakiyesi bu kalıbı tekrar eder; ikinci bir defter yazılmaz.**
 - **`moduller/sozlesme/hakedis.mjs`** — kümülatif metraj, güncel bedel, kesinti hesabı.
   RPT raporları (Faz 6) bu fonksiyonları kullanacak; ikinci bir hesap yazılmaz.
+- **`rotalar/panolar.mjs`** — GLB-02/03 pano kalıbı; Faz 6 RPT ekranları aynı
+  kaynak-sorgu yaklaşımını kullanacak.
 
 ### Bilinen açık uçlar
 
 - Günlük rapor **PDF**'i Faz 6 `ReportLayout`'a bırakıldı (K-030)
-- `GLB-02`, `GLB-03` panoları Faz 4'e alındı (K-017)
-- RFI yanıtının tetiklediği **değişiklik talebi** kaydı Faz 4 CNT-10 ile bağlanacak
-  (şu an yalnız `degisiklik_tetikledi` işareti konuyor)
+- RFI yanıtının tetiklediği **değişiklik talebi** kaydı CNT-10 ile bağlandı (`faz4b`)
 - E-posta gönderimi yok: davet/sıfırlama bağlantısı geliştirmede ekranda (K-021)
 - Antivirüs taraması Faz 5 entegrasyon adaptörüne bağlanacak (K-027)
+- `AST-11` (QR/barkod işlem ekranı) Faz 6'ya ait — `faz4c` kapsamında değil
+- `HR-14` (çalışan self-servis) Faz 6'ya ait
 
 ## Faz kapanış kontrol listesi (her faz için zorunlu)
 

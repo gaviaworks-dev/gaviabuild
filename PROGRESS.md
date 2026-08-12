@@ -4,14 +4,14 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 66 · devam: 0 · bitti: 0 · doğrulandı: 178
+**Toplam:** 244 sayfa ailesi — bekliyor: 50 · devam: 0 · bitti: 16 · doğrulandı: 178
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
 | Faz 1 | 22 | 0 | 0 | 0 | 22 |
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
 | Faz 3 | 89 | 0 | 0 | 0 | 89 |
-| Faz 4 | 69 | 16 | 0 | 0 | 53 |
+| Faz 4 | 69 | 0 | 0 | 16 | 53 |
 | Faz 5 | 23 | 23 | 0 | 0 | 0 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
 
@@ -159,12 +159,12 @@
 
 | Kod | Sayfa | Öncelik | Kalıp | Rota | Durum | Commit | Not |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| GLB-02 | Günlük özet | P1 | panel | `/panel/gunluk-ozet` | ⬜ bekliyor | — | K-017: veri kaynağı modülleri (Faz 3-4) gelmeden boş kabuk olurdu → Faz 4 |
-| GLB-03 | Yönetici kontrol merkezi | P1 | panel | `/panel/yonetici` | ⬜ bekliyor | — | K-017: portföy/nakit verisi Faz 4 ile gelir → Faz 4 |
-| HR-10 | İzin talepleri | P0 | listeForm | `/izinler` | ⬜ bekliyor | — | kaynak: crm-personel-izin-detay (birlestir), crm-personel-izin-form (birlestir), crm-personel-izin (koru) |
-| HR-11 | Avans talepleri | P0 | listeForm | `/avanslar` | ⬜ bekliyor | — | kaynak: crm-personel-avans-detay (birlestir), crm-personel-avans-form (birlestir), crm-personel-avans (koru) |
-| HR-12 | Sağlık ve uygunluk | P1 | listeForm | `/personel-saglik` | ⬜ bekliyor | — | sıfırdan |
-| HR-13 | Yetkinlik ve sertifikalar | P1 | listeForm | `/yetkinlikler` | ⬜ bekliyor | — | kaynak: crm-personel-evrak-uyari (birlestir) |
+| GLB-02 | Günlük özet | P1 | panel | `/panel/gunluk-ozet` | 🟩 bitti | faz4c | Günlük özet — her sayı kaynak modülün canlı sorgusu; kart kaynağına gider (kural 4) |
+| GLB-03 | Yönetici kontrol merkezi | P1 | panel | `/panel/yonetici` | 🟩 bitti | faz4c | Yönetici kontrol merkezi — portföy/nakit/ilerleme; hakediş ve defter fonksiyonlarından |
+| HR-10 | İzin talepleri | P0 | listeForm | `/izinler` | 🟩 bitti | faz4c | İzin talepleri — çakışan tarih aralığı 409; onay motorundan geçer, bakiye düşer |
+| HR-11 | Avans talepleri | P0 | listeForm | `/avanslar` | 🟩 bitti | faz4c | Avans talepleri — aday personele avans yok; mahsupsuz ikinci avans 409 |
+| HR-12 | Sağlık ve uygunluk | P1 | listeForm | `/personel-saglik` | 🟩 bitti | faz4c | Sağlık ve uygunluk — süresiz kayıt reddedilir; süre dolunca uyarı işareti |
+| HR-13 | Yetkinlik ve sertifikalar | P1 | listeForm | `/yetkinlikler` | 🟩 bitti | faz4c | Yetkinlik ve sertifikalar — bitiş uyarısı; iptal gerekçe ister |
 | PRC-01 | Satın alma talepleri | P0 | liste | `/satinalma/talepler` | ✅ doğrulandı | faz4a | Satın alma talepleri — onaylı/siparişsiz izleme; tutar kalemlerden türer |
 | PRC-02 | Yeni satın alma talebi | P0 | form | `/satinalma/talepler/yeni` | ✅ doğrulandı | faz4a | Yeni talep — kalemli form, toplam alanı yok, taslak açılır |
 | PRC-03 | Talep detayı | P0 | detay | `/satinalma/talepler/:id` | ✅ doğrulandı | faz4a | Talep detayı — onaydaki talebin kalemleri değişmez; RFQ/sipariş bağı |
@@ -218,16 +218,16 @@
 | FIN-13 | Fatura kayıtları | P0 | listeForm | `/faturalar` | ✅ doğrulandı | faz4b | Fatura kayıtları — mükerrer fatura engelli; eşleştirmesiz onaya gitmez |
 | FIN-14 | Üçlü eşleştirme | P0 | mutabakat | `/faturalar/eslestirme` | ✅ doğrulandı | faz4b | Üçlü eşleştirme — sonuç hesaplanır; tolerans dışı fark gerekçe + onay ister |
 | FIN-15 | Dönem kapanışı | P1 | sihirbaz | `/finans/donem-kapanis` | ✅ doğrulandı | faz4b | Dönem kapanışı — engel listesi; kapalı döneme yazılamaz; yeniden açma dört göz |
-| AST-01 | Varlık listesi | P0 | liste | `/varliklar` | ⬜ bekliyor | — | kaynak: crm-operasyon-demirbas (koru), crm-operasyon-makine (birlestir) |
-| AST-02 | Yeni varlık | P0 | form | `/varliklar/yeni` | ⬜ bekliyor | — | kaynak: crm-operasyon-arac-form (birlestir), crm-operasyon-demirbas-form (koru), crm-operasyon-makine-form (birlestir) |
-| AST-03 | Varlık detayı | P0 | detay | `/varliklar/:id` | ⬜ bekliyor | — | kaynak: crm-operasyon-demirbas-detay (koru) |
-| AST-04 | Zimmet ve devir | P0 | listeForm | `/zimmetler` | ⬜ bekliyor | — | kaynak: crm-personel-zimmet-detay (koru), crm-personel-zimmet-iade (birlestir) |
-| AST-05 | Bakım planları | P1 | listeForm | `/bakim-planlari` | ⬜ bekliyor | — | sıfırdan |
-| AST-06 | Bakım iş emirleri | P1 | listeForm | `/bakim-is-emirleri` | ⬜ bekliyor | — | kaynak: crm-operasyon-arac-bakim (birlestir) |
-| AST-07 | Kalibrasyon ve periyodik kontrol | P1 | liste | `/varlik-kontrolleri` | ⬜ bekliyor | — | sıfırdan |
-| AST-08 | Araçlar | P1 | listeForm | `/araclar` | ⬜ bekliyor | — | kaynak: crm-operasyon-arac-arsiv (birlestir), crm-operasyon-arac-detay (koru), crm-operasyon-arac-evrak (birlestir), crm-operasyon-arac (koru) |
-| AST-09 | Yakıt ve kilometre | P1 | listeForm | `/araclar/yakit` | ⬜ bekliyor | — | kaynak: crm-operasyon-arac-kullanim (birlestir), crm-operasyon-arac-yakit (koru) |
-| AST-10 | Kaza, ceza ve hasar | P1 | listeForm | `/araclar/olaylar` | ⬜ bekliyor | — | kaynak: crm-operasyon-arac-gider (birlestir) |
+| AST-01 | Varlık listesi | P0 | liste | `/varliklar` | 🟩 bitti | faz4c | Varlık listesi — demirbaş/makine/ekipman/araç tek tabloda; tür filtresi (kural 4) |
+| AST-02 | Yeni varlık | P0 | form | `/varliklar/yeni` | 🟩 bitti | faz4c | Yeni varlık — türe göre koşullu alan; araçta plaka zorunlu, sayaç türü seçilir |
+| AST-03 | Varlık detayı | P0 | detay | `/varliklar/:id` | 🟩 bitti | faz4c | Varlık detayı — zimmet, bakım, kontrol, olay ve maliyet geçmişi; geçiş motoru |
+| AST-04 | Zimmet ve devir | P0 | listeForm | `/zimmetler` | 🟩 bitti | faz4c | Zimmet ve devir — aynı varlığa çakışan aktif zimmet 409 ile reddedilir |
+| AST-05 | Bakım planları | P1 | listeForm | `/bakim-planlari` | 🟩 bitti | faz4c | Bakım planları — sayaç veya tarih tetikli; iş emrini motor açar |
+| AST-06 | Bakım iş emirleri | P1 | listeForm | `/bakim-is-emirleri` | 🟩 bitti | faz4c | Bakım iş emirleri — ayrı tablo değil, is_emri.varlik_id ile aynı motora bağlı |
+| AST-07 | Kalibrasyon ve periyodik kontrol | P1 | liste | `/varlik-kontrolleri` | 🟩 bitti | faz4c | Periyodik kontrol — uygunsuz sonuç varlığı KULLANIM DIŞI bırakır ve iş emri açar |
+| AST-08 | Araçlar | P1 | listeForm | `/araclar` | 🟩 bitti | faz4c | Araçlar — varlık tablosunun tur=arac görünümü; ayrı kayıt yok (kural 4) |
+| AST-09 | Yakıt ve kilometre | P1 | listeForm | `/araclar/yakit` | 🟩 bitti | faz4c | Yakıt ve kilometre — sayaç yalnız ileri gider; geri sayaç 422 ile reddedilir |
+| AST-10 | Kaza, ceza ve hasar | P1 | listeForm | `/araclar/olaylar` | 🟩 bitti | faz4c | Kaza/ceza/hasar — araç olayı geçiş motorunda; kaza İSG olayı da açar |
 
 ## Faz 5 — 23 sayfa ailesi
 
