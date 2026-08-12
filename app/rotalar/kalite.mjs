@@ -17,6 +17,10 @@ import {
   yetkiZorunlu, yetkiVar, sorgu, tek, calistir, islem, surumluGuncelle, audit, sonrakiKod,
 } from './ortak.mjs';
 
+/** Bir RFI'den açılmış değişiklik talebi sayısı (§7 kaynak→hedef bağı, CNT-10). */
+const acikDegisiklik = (rfiId) => Number(tek(
+  `SELECT COUNT(*) AS n FROM degisiklik WHERE kaynak_nesne = 'rfi' AND kaynak_id = ?`, rfiId)?.n ?? 0);
+
 const DISIPLINLER = [
   { deger: 'mimari', etiket: 'Mimari' }, { deger: 'statik', etiket: 'Statik' },
   { deger: 'mekanik', etiket: 'Mekanik' }, { deger: 'elektrik', etiket: 'Elektrik' },
@@ -404,8 +408,12 @@ ${B.veriTarihi(simdi())}`;
   <div class="gc-body">
     ${r.yanit ? h`<p style="font-size:13.5px;line-height:1.7">${r.yanit}</p>
       <p class="gf-hint" style="margin-top:10px">${kullaniciAdi(r.yanitlayan)} · ${tarih(r.yanit_tarihi)}</p>
-      ${r.degisiklik_tetikledi ? B.sonucSeridi({ tur: 'warn', baslik: 'Değişiklik talebi tetiklendi',
-        aciklama: 'Yanıt kapsam/süre/maliyet etkisi taşıyor; değişiklik süreci Faz 4 CNT-10 ile bağlanır.' }) : ''}`
+      ${r.degisiklik_tetikledi ? h`${B.sonucSeridi({ tur: 'warn', baslik: 'Değişiklik talebi tetiklendi',
+        aciklama: acikDegisiklik(r.id)
+          ? `Bu RFI'den ${acikDegisiklik(r.id)} değişiklik talebi açılmış (CNT-10).`
+          : 'Yanıt kapsam/süre/maliyet etkisi taşıyor; kaynağı bu RFI olan bir değişiklik talebi açın.' })}
+        <div style="margin-top:10px">${B.btn(acikDegisiklik(r.id) ? 'Değişiklik taleplerini gör' : 'Değişiklik talebi aç',
+          { rota: acikDegisiklik(r.id) ? '/degisiklikler' : `/degisiklikler/yeni?rfiId=${r.id}`, kucuk: true })}</div>` : ''}`
       : yetkiVar(ctx, 'QLT-12:guncelle') ? h`<form method="post" action="/teknik/rfi/${r.id}" data-gform="1">
           ${ham(csrfAlani(ctx))}
           <input type="hidden" name="_eylem" value="yanitla">
