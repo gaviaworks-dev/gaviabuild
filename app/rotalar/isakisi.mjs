@@ -106,11 +106,18 @@ ${B.listeDuzeni({
       yetkiZorunlu(ctx, e.yetki);
       csrfZorunlu(ctx, govde);
       try {
-        const sonuc = onayMotoru.kararVer(ctx, {
-          talepId: params.id, karar: govde.karar, gerekce: govde.gerekce, belgeSurum: govde.belgeSurum,
+        /* Karar + iş nesnesinin ilerlemesi TEK transaction (denetim-02 D-11,
+           KARARLAR.md K-122). Ayrı çalıştıklarında karar commit oluyor, köprü
+           çöküyor ve kullanıcı başarılı bir işlem için 500 görüyordu; üstelik
+           iş nesnesinin denetim kaydı hiç yazılmıyordu. Köprüler `audit.yaz()`
+           çağırdığı için zaten transaction İÇİNDE olmaları zorunlu. */
+        const sonuc = islem(() => {
+          const s = onayMotoru.kararVer(ctx, {
+            talepId: params.id, karar: govde.karar, gerekce: govde.gerekce, belgeSurum: govde.belgeSurum,
+          });
+          if (s.talepDurumu === 'kapali') isNesnesiniIlerlet(ctx, params.id, s.sonuc);
+          return s;
         });
-        /* Onay motoru kapanışta iş nesnesinin durumunu da ilerletir. */
-        if (sonuc.talepDurumu === 'kapali') isNesnesiniIlerlet(ctx, params.id, sonuc.sonuc);
         return yonlendir(ctx, `/onaylar/${params.id}?karar=${encodeURIComponent(govde.karar)}`);
       } catch (err) {
         if (!(err instanceof UygulamaHatasi)) throw err;
