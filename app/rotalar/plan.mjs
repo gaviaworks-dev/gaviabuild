@@ -16,7 +16,8 @@ import {
 } from '../moduller/plan/ilerleme.mjs';
 import {
   ekranNesnesi, hataNesnesi, kullaniciAdi, ciz, listeSorgusu, filtreKosullari,
-  kayitOlustur, kaydiAl, B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar,
+  kayitOlustur, kaydiAl, sekmeleriCoz, eskiSekmeHedefi,
+  B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar,
   sorgu, tek, calistir, islem, surumluGuncelle, audit, sonrakiKod,
 } from './ortak.mjs';
 
@@ -138,8 +139,8 @@ export function kur(y, ekranRota) {
       csrfZorunlu(ctx, govde);
       const program = kaydiAl(ctx, 'is_programi', 'is_programi', params.id);
       try {
-        if (govde._eylem === 'wbs') return wbsEkle(ctx, program, govde);
-        if (govde._eylem === 'aktivite') return aktiviteEkle(ctx, program, govde);
+        /* WBS düğümü ve aktivite PLAN-04'ün (`/is-programlari/:id/wbs`) işidir;
+           detay ekranı ikinci bir yazma yüzeyi açmaz (kural 4, K-116). */
         if (govde._eylem === 'ilerleme') return ilerlemeGir(ctx, program, govde);
         throw DogrulamaHatasi('Tanımsız işlem.');
       } catch (err) {
@@ -157,8 +158,10 @@ export function kur(y, ekranRota) {
       yetkiZorunlu(ctx, `${e.kod}:guncelle`);
       csrfZorunlu(ctx, govde);
       const program = kaydiAl(ctx, 'is_programi', 'is_programi', params.id);
+      const hedef = `/is-programlari/${params.id}/wbs`;
       try {
-        return wbsEkle(ctx, program, govde, `/is-programlari/${params.id}/wbs`);
+        if (govde._eylem === 'aktivite') return aktiviteEkle(ctx, program, govde, hedef);
+        return wbsEkle(ctx, program, govde, hedef);
       } catch (err) {
         if (!(err instanceof UygulamaHatasi)) throw err;
         return wbsSayfasi(ctx, params.id, { hata: hataNesnesi(err), durum: err.durum });
@@ -389,10 +392,10 @@ function wbsEkle(ctx, program, govde, hedefRota = null) {
     alanlar: { id: kimlik('wbs'), program_id: program.id, ust_id: ustId, kod, ad, agirlik,
       seviye: ust ? ust.seviye + 1 : 1, sorumlu_id: govde.sorumluId || null,
       maliyet_kodu: govde.maliyetKodu || null } });
-  return yonlendir(ctx, hedefRota || `/is-programlari/${program.id}?sekme=wbs&wbs=1`);
+  return yonlendir(ctx, `${hedefRota || `/is-programlari/${program.id}/wbs`}?wbs=1`);
 }
 
-function aktiviteEkle(ctx, program, govde) {
+function aktiviteEkle(ctx, program, govde, hedefRota = null) {
   bazCizgiKilidi(program);
   const hatalar = {};
   const kod = String(govde.aktiviteKodu || '').trim();
@@ -412,7 +415,7 @@ function aktiviteEkle(ctx, program, govde) {
       baslangic: govde.aktiviteBaslangic ? gunBaslangici(govde.aktiviteBaslangic) : null,
       bitis: govde.aktiviteBitis ? gunBaslangici(govde.aktiviteBitis) : null,
       sorumlu_id: govde.aktiviteSorumlusu || null } });
-  return yonlendir(ctx, `/is-programlari/${program.id}?sekme=wbs&aktivite=1`);
+  return yonlendir(ctx, `${hedefRota || `/is-programlari/${program.id}/wbs`}?aktivite=1`);
 }
 
 /** İlerleme kaydı TASLAK açılır; onaylanmadan proje ilerlemesine katılmaz. */
@@ -542,6 +545,9 @@ function programVerisi(ctx, id) {
 function programDetayi(ctx, id, { hata = null, durum = 200 } = {}) {
   const e = ekranNesnesi('PLAN-03');
   yetkiZorunlu(ctx, e.yetki);
+  /* Eski `?sekme=wbs` biçimi kanonik PLAN-04 rotasına kalıcı yollanır (K-116). */
+  const kanonik = eskiSekmeHedefi(ctx, { desen: '/is-programlari/:id', rota: `/is-programlari/${id}` });
+  if (kanonik) return yonlendir(ctx, kanonik, 301);
   const { program, dugumler, aktiviteler, ilerlemeler, dogrulama, ilerleme } = programVerisi(ctx, id);
   const sekme = ctx.sorgu.get('sekme') || 'ozet';
   const proje = tek('SELECT * FROM proje WHERE id = ?', program.proje_id);
@@ -550,8 +556,6 @@ function programDetayi(ctx, id, { hata = null, durum = 200 } = {}) {
 ${hata ? B.hataOzeti(hata) : ''}
 ${ctx.sorgu.get('olusan') ? B.sonucSeridi({ tur: 'ok', baslik: 'İş programı oluşturuldu',
     aciklama: 'Şimdi WBS düğümlerini ve aktiviteleri ekleyin; ağırlıklar %100 olduğunda baz çizgi onaya gönderilebilir.' }) : ''}
-${ctx.sorgu.get('wbs') ? B.sonucSeridi({ tur: 'ok', baslik: 'WBS düğümü eklendi' }) : ''}
-${ctx.sorgu.get('aktivite') ? B.sonucSeridi({ tur: 'ok', baslik: 'Aktivite eklendi' }) : ''}
 ${ctx.sorgu.get('kaydedildi') ? B.sonucSeridi({ tur: 'ok', baslik: 'İlerleme kaydedildi',
     aciklama: 'Kayıt TASLAK durumunda; doğrulanmadan proje ilerlemesine katılmaz (§5.5).' }) : ''}
 ${B.detayOzetSeridi({
@@ -574,11 +578,12 @@ ${B.detayOzetSeridi({
       : B.btn('Baz çizgi onayı', { tur: 'acc', rota: `/is-programlari/${program.id}/baz-cizgi`, ikon: 'fa-lock' }),
     digerEylemler: B.btn('WBS düzenleyici', { rota: `/is-programlari/${program.id}/wbs`, ikon: 'fa-sitemap' }),
   })}
-${B.sekmeler({ sekmeler: [
+${B.sekmeler({ sekmeler: sekmeleriCoz([
     { ad: 'ozet', etiket: 'Özet' },
     { ad: 'wbs', etiket: 'WBS ve aktiviteler', adet: dugumler.length },
     { ad: 'ilerleme', etiket: 'İlerleme', adet: ilerlemeler.length },
-  ], aktif: sekme, rota: `/is-programlari/${program.id}`, sorgu: '' })}
+  ], { desen: '/is-programlari/:id', rota: `/is-programlari/${program.id}` }),
+    aktif: sekme, rota: `/is-programlari/${program.id}`, sorgu: '' })}
 
 ${sekme === 'ozet' ? h`
 <div class="gv-card">
@@ -595,7 +600,7 @@ ${sekme === 'ozet' ? h`
   </div>
 </div>` : ''}
 
-${sekme === 'wbs' ? wbsSekmesi(ctx, program, dugumler, aktiviteler, dogrulama) : ''}
+${/* `wbs` sekmesi PLAN-04'ün kendi ekranıdır; burada TEKRAR çizilmez (kural 4). */ ''}
 ${sekme === 'ilerleme' ? ilerlemeSekmesi(ctx, program, aktiviteler, ilerlemeler) : ''}`;
 
   return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: program.kod, baslik: program.ad }));
@@ -610,7 +615,10 @@ function agirlikOzeti(dogrulama) {
           + ' — baz çizgi onaya gönderilemez (PLAN-01).' });
 }
 
+/* Formlar PLAN-04'ün KENDİ rotasına gönderir: sekme PLAN-03'te çizilmediği için
+   yazma yüzeyi de oraya bakmaz (K-116). */
 function wbsSekmesi(ctx, program, dugumler, aktiviteler, dogrulama) {
+  const formRota = `/is-programlari/${program.id}/wbs`;
   const maliyetKodlari = sorgu('SELECT kod, ad FROM maliyet_kodu WHERE tenant_id = ? ORDER BY kod', ctx.tenant.id)
     .map((m) => ({ deger: m.kod, etiket: `${m.kod} — ${m.ad}` }));
   const yazilabilir = !program.baz_cizgi && !['onaya_gonderildi', 'incelemede'].includes(program.durum);
@@ -650,7 +658,7 @@ ${agirlikOzeti(dogrulama)}
 </div>
 ${yazilabilir && yetkiVar(ctx, 'PLAN-04:guncelle') ? h`
 <div class="dash-cols">
-  ${B.form({ rota: `/is-programlari/${program.id}`, csrf: csrfAlani(ctx),
+  ${B.form({ rota: formRota, csrf: csrfAlani(ctx),
     bolumler: [{ baslik: 'WBS düğümü ekle', alanlar: h`
       ${ham('<input type="hidden" name="_eylem" value="wbs">')}
       ${B.alan({ ad: 'kod', etiket: 'Kod', zorunlu: true, ipucu: 'Örn. 1 veya 1.2' })}
@@ -661,7 +669,7 @@ ${yazilabilir && yetkiVar(ctx, 'PLAN-04:guncelle') ? h`
       ${B.alan({ ad: 'maliyetKodu', etiket: 'Maliyet kodu',
         secenekler: [{ deger: '', etiket: 'Seçin…' }, ...maliyetKodlari] })}` }],
     eylemler: B.btn('Düğüm ekle', { tur: 'acc', gonder: true, ikon: 'fa-plus' }) })}
-  ${B.form({ rota: `/is-programlari/${program.id}`, csrf: csrfAlani(ctx),
+  ${B.form({ rota: formRota, csrf: csrfAlani(ctx),
     bolumler: [{ baslik: 'Aktivite ekle', alanlar: h`
       ${ham('<input type="hidden" name="_eylem" value="aktivite">')}
       ${B.alan({ ad: 'aktiviteKodu', etiket: 'Kod', zorunlu: true })}
@@ -718,6 +726,9 @@ function wbsSayfasi(ctx, id, { hata = null, durum = 200 } = {}) {
   yetkiZorunlu(ctx, e.yetki);
   const { program, dugumler, aktiviteler, dogrulama } = programVerisi(ctx, id);
   const icerik = h`${hata ? B.hataOzeti(hata) : ''}
+${ctx.sorgu.get('wbs') ? B.sonucSeridi({ tur: 'ok', baslik: 'WBS düğümü eklendi' }) : ''}
+${ctx.sorgu.get('aktivite') ? B.sonucSeridi({ tur: 'ok', baslik: 'Aktivite eklendi' }) : ''}
+${B.btn('Programa dön', { rota: `/is-programlari/${program.id}`, ikon: 'fa-arrow-left', kucuk: true })}
 ${wbsSekmesi(ctx, program, dugumler, aktiviteler, dogrulama)}`;
   return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: program.kod, baslik: `${program.ad} — WBS` }));
 }
@@ -818,7 +829,7 @@ ${B.detayOzetSeridi({
       { etiket: 'Aktivite', deger: sayi(aktiviteler.length) },
       { etiket: 'Baz çizgi', deger: program.baz_cizgi ? `donduruldu ${tarih(program.baz_cizgi_tarih)}` : 'açık' },
     ],
-    birincilEylem: B.btn('Programa dön', { rota: `/is-programlari/${program.id}?sekme=wbs` }),
+    birincilEylem: B.btn('Programa dön', { rota: `/is-programlari/${program.id}/wbs` }),
   })}
 ${kilit ? '' : B.form({
     rota: `/is-programlari/${program.id}/aktiviteler/yeni`, csrf: csrfAlani(ctx), hatalar: hata,
@@ -851,7 +862,7 @@ ${kilit ? '' : B.form({
               ...sorgu(`SELECT id, ad_soyad FROM kullanici WHERE tenant_id = ? AND durum = 'aktif' ORDER BY ad_soyad`,
                 ctx.tenant.id).map((k) => ({ deger: k.id, etiket: k.ad_soyad }))] })}` },
     ],
-    eylemler: h`${B.btn('Vazgeç', { rota: `/is-programlari/${program.id}?sekme=wbs` })}
+    eylemler: h`${B.btn('Vazgeç', { rota: `/is-programlari/${program.id}/wbs` })}
       ${B.btn('Aktiviteyi ekle', { tur: 'acc', gonder: true, ikon: 'fa-plus' })}`,
   })}`;
   return html(ctx, durum, ciz(ctx, e, icerik, { kayitEtiketi: program.kod, baslik: program.ad }));

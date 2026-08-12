@@ -33,11 +33,11 @@ async function programKur(c, proje, ad) {
   await c.csrfIle('/is-programlari/yeni', { ad, projeId: proje.id, baslangic: '2026-01-01', bitis: '2026-12-31' });
   const pr = tek('SELECT * FROM is_programi WHERE ad = ?', ad);
   for (const [kod, dad, ag] of [['1', 'Kaba yapı', '60'], ['2', 'İnce yapı', '30'], ['3', 'Çevre', '10']]) {
-    await c.csrfIle(`/is-programlari/${pr.id}`, { _eylem: 'wbs', kod, ad: dad, agirlik: ag });
+    await c.csrfIle(`/is-programlari/${pr.id}/wbs`, { _eylem: 'wbs', kod, ad: dad, agirlik: ag });
   }
   for (const [akod, aad, wkod] of [['A1', 'Temel', '1'], ['A2', 'Sıva', '2'], ['A3', 'Peyzaj', '3']]) {
     const w = tek('SELECT * FROM wbs WHERE kod = ? AND program_id = ?', wkod, pr.id);
-    await c.csrfIle(`/is-programlari/${pr.id}`,
+    await c.csrfIle(`/is-programlari/${pr.id}/wbs`,
       { _eylem: 'aktivite', aktiviteKodu: akod, aktiviteAdi: aad, wbsId: w.id, aktiviteAgirligi: '100' });
   }
   return pr;
@@ -117,8 +117,8 @@ describe('PLAN-01 — WBS ağırlıkları 100 değilse baz çizgi onaya gönderi
     const p = await projeKur(c, 'Eksik Ağırlık Projesi');
     await c.csrfIle('/is-programlari/yeni', { ad: 'Eksik program', projeId: p.id });
     const pr = tek(`SELECT * FROM is_programi WHERE ad = 'Eksik program'`);
-    await c.csrfIle(`/is-programlari/${pr.id}`, { _eylem: 'wbs', kod: '1', ad: 'A', agirlik: '60' });
-    await c.csrfIle(`/is-programlari/${pr.id}`, { _eylem: 'wbs', kod: '2', ad: 'B', agirlik: '30' });
+    await c.csrfIle(`/is-programlari/${pr.id}/wbs`, { _eylem: 'wbs', kod: '1', ad: 'A', agirlik: '60' });
+    await c.csrfIle(`/is-programlari/${pr.id}/wbs`, { _eylem: 'wbs', kod: '2', ad: 'B', agirlik: '30' });
     const dogrulama = agirlikDogrula(pr.id);
     assert.equal(dogrulama.gecerli, false);
     const y = await c.csrfIle(`/is-programlari/${pr.id}/baz-cizgi`, {});
@@ -131,9 +131,9 @@ describe('PLAN-01 — WBS ağırlıkları 100 değilse baz çizgi onaya gönderi
     const p = await projeKur(c, 'Aktivite Ağırlık Projesi');
     await c.csrfIle('/is-programlari/yeni', { ad: 'Aktivite programı', projeId: p.id });
     const pr = tek(`SELECT * FROM is_programi WHERE ad = 'Aktivite programı'`);
-    await c.csrfIle(`/is-programlari/${pr.id}`, { _eylem: 'wbs', kod: '1', ad: 'Tek düğüm', agirlik: '100' });
+    await c.csrfIle(`/is-programlari/${pr.id}/wbs`, { _eylem: 'wbs', kod: '1', ad: 'Tek düğüm', agirlik: '100' });
     const w = tek('SELECT * FROM wbs WHERE program_id = ?', pr.id);
-    await c.csrfIle(`/is-programlari/${pr.id}`,
+    await c.csrfIle(`/is-programlari/${pr.id}/wbs`,
       { _eylem: 'aktivite', aktiviteKodu: 'A1', aktiviteAdi: 'Yarım', wbsId: w.id, aktiviteAgirligi: '50' });
     assert.equal(agirlikDogrula(pr.id).gecerli, false, 'aktivite ağırlığı %50 iken geçerli sayıldı');
     const y = await c.csrfIle(`/is-programlari/${pr.id}/baz-cizgi`, {});
@@ -167,7 +167,7 @@ describe('PLAN-01 — WBS ağırlıkları 100 değilse baz çizgi onaya gönderi
     const c = S.istemci(); await c.giris('sahip@yapitas.demo');
     const pr = tek(`SELECT * FROM is_programi WHERE ad = 'Tam program'`);
     assert.equal(pr.baz_cizgi, 1);
-    const y = await c.csrfIle(`/is-programlari/${pr.id}`, { _eylem: 'wbs', kod: '9', ad: 'Sonradan', agirlik: '5' });
+    const y = await c.csrfIle(`/is-programlari/${pr.id}/wbs`, { _eylem: 'wbs', kod: '9', ad: 'Sonradan', agirlik: '5' });
     assert.equal(y.durum, 409, 'baz çizgi sonrası WBS eklenebiliyor');
   });
 });

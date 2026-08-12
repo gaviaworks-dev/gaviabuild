@@ -240,11 +240,19 @@ export function detayOzetSeridi({ kod, baslik, durum, isaretler = [], surum, bil
 </div>`;
 }
 
+/**
+ * Sekme çubuğu. Bir sekmenin manifestte KENDİ ekranı varsa (`s.rota` dolu ise)
+ * bağlantı o kanonik rotaya gider; `?sekme=` biçimi ÜRETİLMEZ — aynı ekran için
+ * ikinci bir URL doğmaz (kural 1, K-116). `ozet` gibi kanonik karşılığı olmayan
+ * sekmeler tek ekranın iç durumudur ve query biçimini korur.
+ */
 export function sekmeler({ sekmeler: liste, aktif, rota, sorgu }) {
   return h`<nav class="gv-tabs" role="tablist">${liste.map((s) => {
-    const p = new URLSearchParams(sorgu || ''); p.set('sekme', s.ad);
+    let hedef;
+    if (s.rota) hedef = s.rota;
+    else { const p = new URLSearchParams(sorgu || ''); p.set('sekme', s.ad); hedef = `${rota}?${p.toString()}`; }
     return h`<a class="gv-tab${ham(s.ad === aktif ? ' is-active' : '')}" role="tab"
-      aria-selected="${s.ad === aktif ? 'true' : 'false'}" href="${rota}?${p.toString()}">
+      aria-selected="${s.ad === aktif ? 'true' : 'false'}" href="${hedef}">
       ${s.etiket}${s.adet != null ? h` <span class="ml-cnt">${sayi(s.adet)}</span>` : ''}</a>`;
   })}</nav>`;
 }

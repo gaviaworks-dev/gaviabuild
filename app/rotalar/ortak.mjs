@@ -25,6 +25,50 @@ export const ekranNesnesi = (kod) => manifest().ekranlar.find((e) => e.kod === k
 export const hataNesnesi = (e) => ({ kod: e.kod, mesaj: e.mesaj, alanlar: e.alanlar });
 export const kullaniciAdi = (id) => (id ? tek('SELECT ad_soyad FROM kullanici WHERE id = ?', id)?.ad_soyad || '—' : '—');
 
+/* ==========================================================================
+   DETAY SEKMELERİ — kanonik adres manifestten TÜRER (değişmez kural 1)
+   --------------------------------------------------------------------------
+   Bir detay ekranının sekmesi, manifestte KENDİ ekranı olan bir yola denk
+   gelebilir: `/projeler/:id` detayının `riskler` sekmesi aslında PRJ-08
+   `/projeler/:id/riskler` ekranıdır. Böyle bir sekmenin `?sekme=riskler`
+   biçiminde ikinci bir adresi olamaz — aynı ekran için iki URL, kural 1'in
+   ve kural 4'ün ihlalidir.
+
+   Eşleştirme manifestten hesaplanır; elle liste tutulmaz. Manifeste yeni bir
+   alt ekran eklendiğinde sekme kendiliğinden kanonik rotaya döner.
+   ========================================================================== */
+
+/** `<desen>/<sekme>` rotasına sahip manifest ekranı (yoksa null). */
+export const sekmeEkrani = (desen, sekmeAdi) =>
+  manifest().ekranlar.find((e) => e.rota === `${desen}/${sekmeAdi}`) || null;
+
+/** Sekme listesini kanonik rotalarıyla zenginleştirir. */
+export function sekmeleriCoz(sekmeler, { desen, rota }) {
+  return sekmeler.map((s) => {
+    const ekran = sekmeEkrani(desen, s.ad);
+    return ekran ? { ...s, rota: `${rota}/${s.ad}`, kod: ekran.kod } : s;
+  });
+}
+
+/**
+ * Eski `?sekme=<kanonik>` biçiminin gitmesi gereken kanonik YOL (yoksa null).
+ *
+ * Yolu döner, yanıtı YAZMAZ: `yonlendir()` yanıtı yan etki olarak yazar ve
+ * `undefined` döner; dönüş değerinin doğruluğuna bakan bir çağrı yönlendirmeyi
+ * yazıp sayfayı da çizmeye kalkardı (ERR_HTTP_HEADERS_SENT).
+ *
+ * Kanonik karşılığı OLMAYAN sekmeler (`ozet`, `santiyeler` …) tek ekranın iç
+ * durumudur, ikinci bir URL değildir — onlar için null döner.
+ */
+export function eskiSekmeHedefi(ctx, { desen, rota }) {
+  const sekme = ctx.sorgu.get('sekme');
+  if (!sekme || !sekmeEkrani(desen, sekme)) return null;
+  const kalan = new URLSearchParams(ctx.sorgu);
+  kalan.delete('sekme');
+  const qs = kalan.toString();
+  return `${rota}/${sekme}${qs ? `?${qs}` : ''}`;
+}
+
 export function ciz(ctx, ekran, icerik, ek = {}) {
   const s = sayaclar(ctx);
   return kabuk(ctx, { ekran, icerik, onayAdedi: s.onay, bildirimAdedi: s.bildirim, ...ek });

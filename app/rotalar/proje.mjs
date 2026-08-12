@@ -16,6 +16,7 @@ import { yuzdeMetni } from '../moduller/plan/ilerleme.mjs';
 import {
   ekranNesnesi, hataNesnesi, kullaniciAdi, ciz, listeSorgusu, filtreKosullari,
   kayitOlustur, kaydiAl, gecisFormu, gecisIsle, ozetSeridi,
+  sekmeleriCoz, eskiSekmeHedefi,
   B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar,
   sorgu, tek, islem, surumluGuncelle, audit,
 } from './ortak.mjs';
@@ -134,19 +135,8 @@ ${B.listeDuzeni({
           gecisIsle(ctx, { nesne: 'proje', tablo: 'proje', kayit, govde, ekranKodu: 'PRJ-03' });
           return yonlendir(ctx, `/projeler/${params.id}?gecis=1`);
         }
-        if (govde._eylem === 'risk') {
-          csrfZorunlu(ctx, govde);
-          if (!String(govde.baslik || '').trim()) {
-            throw DogrulamaHatasi('Risk başlığı zorunludur.', { alanlar: { baslik: ['Başlık girin.'] } });
-          }
-          kayitOlustur(ctx, { tablo: 'proje_riski', nesne: 'proje_riski',
-            alanlar: { id: kimlik('proje').replace('prj', 'rsk'), proje_id: kayit.id,
-              baslik: govde.baslik.trim(), aciklama: govde.aciklama || null,
-              olasilik: Math.min(5, Math.max(1, Number(govde.olasilik) || 3)),
-              etki: Math.min(5, Math.max(1, Number(govde.etki) || 3)),
-              sahip_id: govde.sahipId || null, aksiyon: govde.aksiyon || null } });
-          return yonlendir(ctx, `/projeler/${params.id}?sekme=riskler&risk=1`);
-        }
+        /* Risk kaydı PRJ-08'in (`/projeler/:id/riskler`) işidir; detay ekranı
+           ikinci bir yazma yüzeyi açmaz (kural 4, K-116). */
         throw DogrulamaHatasi('Tanımsız işlem.');
       } catch (err) {
         if (!(err instanceof UygulamaHatasi)) throw err;
@@ -512,6 +502,10 @@ function santiyeFormu(ctx, { deger = {}, hata = null, kayit = null }) {
 function projeDetayi(ctx, id, { hata = null, durum = 200 } = {}) {
   const e = ekranNesnesi('PRJ-03');
   yetkiZorunlu(ctx, e.yetki);
+  /* Eski `?sekme=riskler|gecmis` biçimi kanonik PRJ-08/PRJ-10 rotalarına
+     kalıcı olarak yollanır (K-116). */
+  const kanonik = eskiSekmeHedefi(ctx, { desen: '/projeler/:id', rota: `/projeler/${id}` });
+  if (kanonik) return yonlendir(ctx, kanonik, 301);
   const p = kaydiAl(ctx, 'proje', 'proje', id);
   const sekme = ctx.sorgu.get('sekme') || 'ozet';
   const santiyeler = sorgu('SELECT * FROM santiye WHERE proje_id = ? ORDER BY ad', p.id);
@@ -519,13 +513,16 @@ function projeDetayi(ctx, id, { hata = null, durum = 200 } = {}) {
   const programlar = sorgu('SELECT * FROM is_programi WHERE proje_id = ? ORDER BY surum_no DESC', p.id);
   const ilerleme = projeIlerlemesi(p.id);
 
-  const sekmeler = [
+  /* `riskler` ve `gecmis` manifestte kendi ekranıdır (PRJ-08, PRJ-10); sekme
+     çubuğu onlara KANONİK rotalarıyla bağlanır, içeriklerini burada tekrar
+     çizmez (kural 4). */
+  const sekmeler = sekmeleriCoz([
     { ad: 'ozet', etiket: 'Özet' },
     { ad: 'santiyeler', etiket: 'Şantiyeler', adet: santiyeler.length },
     { ad: 'program', etiket: 'İş programı', adet: programlar.length },
     { ad: 'riskler', etiket: 'Riskler', adet: riskler.filter((r) => r.durum !== 'kapali').length },
     { ad: 'gecmis', etiket: 'Geçmiş' },
-  ];
+  ], { desen: '/projeler/:id', rota: `/projeler/${p.id}` });
 
   const icerik = h`
 ${hata ? B.hataOzeti(hata) : ''}
@@ -548,15 +545,29 @@ ${ozetSeridi(ctx, {
     ],
     birincilEylem: yetkiVar(ctx, 'PRJ-04:guncelle')
       ? B.btn('Düzenle', { tur: 'acc', rota: `/projeler/${p.id}/duzenle`, ikon: 'fa-pen' }) : null,
+    /* PRJ-05 ve PRJ-09 durum bağımlıdır: aktivasyon yalnız hazırlıktaki,
+       kapanış yalnız yürüyen/kapanıştaki projede anlamlıdır. */
+    digerEylemler: h`${yetkiVar(ctx, 'PRJ-05:goruntule') && ['taslak', 'hazirlik'].includes(p.durum)
+      ? B.btn('Aktivasyon kontrolü', { rota: `/projeler/${p.id}/aktivasyon`, ikon: 'fa-clipboard-check' }) : ''}
+      ${yetkiVar(ctx, 'PRJ-09:goruntule') && ['aktif', 'kapanista'].includes(p.durum)
+        ? B.btn('Kapanış sihirbazı', { rota: `/projeler/${p.id}/kapanis`, ikon: 'fa-box-archive' }) : ''}`,
   })}
+<div class="gv-card" style="margin-bottom:18px"><div class="gc-body" style="display:flex;gap:8px;flex-wrap:wrap">
+  ${yetkiVar(ctx, 'PRJ-06:goruntule')
+    ? B.btn('Proje organizasyonu', { rota: `/projeler/${p.id}/organizasyon`, ikon: 'fa-sitemap', kucuk: true }) : ''}
+  ${yetkiVar(ctx, 'PRJ-07:goruntule')
+    ? B.btn('Paydaşlar', { rota: `/projeler/${p.id}/paydaslar`, ikon: 'fa-handshake-angle', kucuk: true }) : ''}
+  ${yetkiVar(ctx, 'PRJ-08:goruntule')
+    ? B.btn('Risk kaydı', { rota: `/projeler/${p.id}/riskler`, ikon: 'fa-triangle-exclamation', kucuk: true }) : ''}
+  ${yetkiVar(ctx, 'PRJ-10:goruntule')
+    ? B.btn('Sürüm ve değişiklik geçmişi', { rota: `/projeler/${p.id}/gecmis`, ikon: 'fa-clock-rotate-left', kucuk: true }) : ''}
+</div></div>
 ${B.sekmeler({ sekmeler, aktif: sekme, rota: `/projeler/${p.id}`, sorgu: '' })}
 <div class="dash-cols">
   <div>
     ${sekme === 'ozet' ? projeOzetSekmesi(p, ilerleme) : ''}
     ${sekme === 'santiyeler' ? projeSantiyeSekmesi(ctx, p, santiyeler) : ''}
     ${sekme === 'program' ? projeProgramSekmesi(ctx, p, programlar) : ''}
-    ${sekme === 'riskler' ? projeRiskSekmesi(ctx, p, riskler) : ''}
-    ${sekme === 'gecmis' ? projeGecmisSekmesi(p) : ''}
   </div>
   <div class="gv-side-stack">
     ${gecisFormu(ctx, { nesne: 'proje', kayit: p, rota: `/projeler/${p.id}`, ekranKodu: 'PRJ-03' })}
@@ -619,58 +630,16 @@ const projeProgramSekmesi = (ctx, p, programlar) => h`
   })}</div>
 </div>`;
 
-const projeRiskSekmesi = (ctx, p, riskler) => h`
-<div class="gv-card" style="margin-bottom:18px">
-  <div class="gc-head"><div class="gc-title"><b>Risk kaydı</b>
-    <span>Olasılık × etki puanına göre sıralanır.</span></div></div>
-  <div class="gc-body flush">${B.tablo({
-    satirlar: riskler,
-    bosDurum: { baslik: 'Risk kaydı yok', ikon: 'fa-triangle-exclamation' },
-    sutunlar: [
-      { ad: 'baslik', etiket: 'Risk', govde: (r) => h`<b>${r.baslik}</b>${r.aciklama ? h`<br><span class="muted">${r.aciklama}</span>` : ''}` },
-      { ad: 'puan', etiket: 'Puan', hizala: 'sag', govde: (r) => {
-        const puan = r.olasilik * r.etki;
-        return B.isaret(String(puan), puan >= 15 ? 'danger' : puan >= 8 ? 'warn' : 'nötr');
-      } },
-      { ad: 'sahip_id', etiket: 'Sahip', govde: (r) => kullaniciAdi(r.sahip_id) },
-      { ad: 'aksiyon', etiket: 'Aksiyon', govde: (r) => r.aksiyon || '—' },
-      { ad: 'durum', etiket: 'Durum', govde: (r) => B.rozet(r.durum) },
-    ],
-  })}</div>
-</div>
-${yetkiVar(ctx, 'PRJ-03:guncelle') ? B.form({
-    rota: `/projeler/${p.id}`, csrf: csrfAlani(ctx),
-    bolumler: [{ baslik: 'Risk ekle', alanlar: h`
-      ${ham('<input type="hidden" name="_eylem" value="risk">')}
-      ${B.alan({ ad: 'baslik', etiket: 'Risk başlığı', zorunlu: true, genis: true })}
-      ${B.alan({ ad: 'olasilik', etiket: 'Olasılık (1-5)', tur: 'number', deger: '3' })}
-      ${B.alan({ ad: 'etki', etiket: 'Etki (1-5)', tur: 'number', deger: '3' })}
-      ${B.alan({ ad: 'aksiyon', etiket: 'Aksiyon', genis: true })}` }],
-    eylemler: B.btn('Riski kaydet', { tur: 'acc', gonder: true, ikon: 'fa-plus' }),
-  }) : ''}`;
-
-function projeGecmisSekmesi(p) {
-  const gecmis = audit.gecmis('proje', p.id).slice().reverse();
-  return h`<div class="gv-card">
-  <div class="gc-head"><div class="gc-title"><b>Sürüm ve değişiklik geçmişi</b>
-    <span>Alan bazlı önce/sonra kaydı — değiştirilemez.</span></div></div>
-  <div class="gc-body flush">${B.tablo({
-    satirlar: gecmis,
-    bosDurum: { baslik: 'Kayıt yok' },
-    sutunlar: [
-      { ad: 'zaman', etiket: 'Zaman', govde: (r) => tarih(r.zaman) },
-      { ad: 'eylem', etiket: 'Eylem' },
-      { ad: 'kullanici_id', etiket: 'Kullanıcı', govde: (r) => kullaniciAdi(r.kullanici_id) },
-      { ad: 'gerekce', etiket: 'Gerekçe', govde: (r) => r.gerekce || '—' },
-      { ad: 'degisim', etiket: 'Değişim', govde: (r) => h`<code>${
-        JSON.stringify(r.sonraki || {}).slice(0, 80)}</code>` },
-    ],
-  })}</div>
-</div>`;
-}
+/* projeRiskSekmesi / projeGecmisSekmesi KALDIRILDI (K-116): risk kaydı PRJ-08,
+   sürüm geçmişi PRJ-10 ekranıdır. Aynı içeriğin ikinci bir çizimi kural 4'ün
+   ("tek kanonik kayıt/API") ihlaliydi; sekme çubuğu artık o ekranlara bağlanır. */
 
 function santiyeDetayi(ctx, id, { hata = null, durum = 200 } = {}) {
   const e = ekranNesnesi('SITE-03');
+  /* Manifestte kendi ekranı olan bir sekme adı gelirse kanonik rotaya (K-116).
+     Bugün çakışma yok; koruma manifeste alt ekran eklendiğinde de geçerlidir. */
+  const kanonik = eskiSekmeHedefi(ctx, { desen: '/santiyeler/:id', rota: `/santiyeler/${id}` });
+  if (kanonik) return yonlendir(ctx, kanonik, 301);
   yetkiZorunlu(ctx, e.yetki);
   const s = kaydiAl(ctx, 'santiye', 'santiye', id);
   const proje = tek('SELECT * FROM proje WHERE id = ?', s.proje_id);
@@ -711,11 +680,11 @@ ${ozetSeridi(ctx, {
   ${B.btn('Geçici kabul', { rota: `/santiyeler/${s.id}/gecici-kabul`, ikon: 'fa-clipboard-check', kucuk: true })}
   ${B.btn('Kesin kabul ve devir', { rota: `/santiyeler/${s.id}/kesin-kabul`, ikon: 'fa-handshake', kucuk: true })}
 </div></div>
-${B.sekmeler({ sekmeler: [
+${B.sekmeler({ sekmeler: sekmeleriCoz([
     { ad: 'ozet', etiket: 'Özet' },
     { ad: 'raporlar', etiket: 'Günlük raporlar', adet: raporlar.length },
     { ad: 'bildirimler', etiket: 'Saha bildirimleri', adet: bildirimler.length },
-  ], aktif: sekme, rota: `/santiyeler/${s.id}`, sorgu: '' })}
+  ], { desen: '/santiyeler/:id', rota: `/santiyeler/${s.id}` }), aktif: sekme, rota: `/santiyeler/${s.id}`, sorgu: '' })}
 <div class="dash-cols">
   <div>
     ${sekme === 'ozet' ? h`<div class="gv-card"><div class="gc-body">
