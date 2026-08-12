@@ -115,92 +115,78 @@ Dal: `revizyon/faz-0-6`. Commit biçimi: `faz<N>(<KOD>): <ne yapıldı>`. Faz so
 
 ## KALDIĞIMIZ YER — sonraki oturum buradan devam eder
 
-**Son commit:** `faz4(kapanış)` · **Test:** 306/306 · **Ekran:** 194 doğrulandı / 244
+**Son commit:** `faz5(kapanış)` · **Test:** 361/361 · **Ekran:** 216 doğrulandı / 244
 
 | Faz | Durum | Not |
 | --- | --- | --- |
 | Faz 0 | ✅ kapandı (`faz-0-tamam`) | 244 yol kararı, screen-manifest, link testi |
-| Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile; AUTH-01, SEC-01, UI-01, UI-02, AUD-01 yeşil |
-| Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; WF-01, WF-02 yeşil; geçiş + onay motoru |
-| Faz 3 | ✅ kapandı (`faz-3-tamam`) | 89/89 aile; raporlar/faz-3-rapor.md; §12 engeli yok |
-| Faz 4 | ✅ kapandı (`faz-4-tamam`) | 69/69 aile; raporlar/faz-4-rapor.md; K-049 kapandı; §12 engeli yok |
-| **Faz 5** | 🔜 **sıradaki** | Kartlar + entegrasyon, 23 aile |
-| Faz 6 | ⬜ başlamadı | Rapor/mobil/portal, 27 aile |
+| Faz 1 | ✅ kapandı (`faz-1-tamam`) | 22 aile |
+| Faz 2 | ✅ kapandı (`faz-2-tamam`) | 14 aile; geçiş + onay motoru |
+| Faz 3 | ✅ kapandı (`faz-3-tamam`) | 89 aile |
+| Faz 4 | ✅ kapandı (`faz-4-tamam`) | 69 aile; K-049 kapandı |
+| Faz 5 | ✅ kapandı (`faz-5-tamam`) | 22/23 aile; CRD-17 bilinçli olarak Faz 6'da (RPT-13 takma adı) |
+| **Faz 6** | 🔜 **son faz** | Rapor, mobil ve portallar — 27 aile (CRD-17 dâhil 28 ekran) |
 
-### Faz 4'te teslim edilenler
+### Faz 5'te teslim edilenler
 
-Satın alma (PRC-01..13) ve değişmez stok defteri (STK-01..10) → `faz4a` ·
-sözleşme/metraj/hakediş (CNT-01..15) ve finans defterleri + üçlü eşleştirme
-(FIN-01..15) → `faz4b` · varlık ve filo (AST-01..10), İK finans etkili
-(HR-10..13), panolar (GLB-02, GLB-03) → `faz4c` · kapanış turu: `faz4c.test.js`
-(35 test), K-049, faz-4-rapor.md, `faz-4-tamam`.
+Kart çekirdeği (şema, değişmez defter, adaptör sözleşmesi, yükleme motoru) →
+`faz5(CRD)` · panel/liste/form/detay/atama/hesap/defter/güvenlik (CRD-01..09,
+13, 15) · toplu yükleme, mutabakat, politika ve onaylar (CRD-10..12, 14, 16) ·
+entegrasyon katmanı ve işten ayrılış (CRD-18, SET-13..15, SET-19, HR-06) ·
+`tests/kabul/faz5.test.js` (55 test), `raporlar/faz-5-rapor.md`.
 
-**Kapanış turunda bulunan ve düzeltilen üç gerçek açık:**
-1. `AST-02` GET işleyicisi yetki kontrolü yapmıyordu → yetki artık `ekranRota()`
-   içinde, manifestten türeyerek zorunlu (**K-081**).
-2. İzin formundaki "Vekil" kutusu tüm personeli sayıyordu → açılır kutular da
-   ABAC kapsamıyla daraltılıyor (**K-083**).
-3. Formdan eksik gelen kimlik alanı 500 üretiyordu → veri katmanı `undefined`'ı
-   `null`'a çeviriyor, çağıran gerçek 422/404'ünü üretiyor (**K-082**).
+**Faz 5'te bulunan ve düzeltilen üç bulgu:** gelecek tarihli atamanın iadesi
+veritabanı kısıtını ihlal edip 500 üretiyordu · kart yükleme ve politika onay
+şablonlarında hazırlayan rol adım olarak yer alıyordu ve dört göz akışı
+kilitliyordu (K-098) · mutabakat iç toplamı hareketin yazıldığı ana göre
+hesaplanıyor, gecikmeli gönderimde dönem sıfır çıkıyordu.
 
 ---
 
-### FAZ 5 — Kartlar ve entegrasyon (23 aile) — SIRADAKİ İŞ
-
-**Bu bir CRUD modülü DEĞİLDİR.** Doküman §6 ayrıntılı tasarım veriyor; §6.4
-toplu yükleme algoritması ve §6.5 bakiye formülü birebir uygulanır.
+### FAZ 6 — Rapor, mobil ve portallar (27 aile) — SON FAZ
 
 | İş paketi | Kodlar | Çıkış koşulu |
 | --- | --- | --- |
-| F5-1 Kart çekirdeği | CRD-01..05, CRD-07..09 | 10 varlık (§6.2), sağlayıcı bağımsız model; tam kart no hiçbir yerde tutulmaz/gösterilmez (CRD-01) |
-| F5-2 Atama kuralı | CRD-06 | Kart başına tek çakışmayan aktif atama; personelde çoklu kart (CRD-02) |
-| F5-3 Toplu yükleme | CRD-10..12 | Durum makinesi + idempotency (CRD-03); kısmi sonuçta başarılı satır tekrar gönderilmez (CRD-04) |
-| F5-4 Hareket ve bakiye | CRD-13 | Bakiye formdan değiştirilemez; düzeltme onaylı ters kayıt (CRD-05) |
-| F5-5 Mutabakat | CRD-14 | İç defter + sağlayıcı ekstresi + banka mutabık olmadan parti kapanmaz |
-| F5-6 Güvenlik | CRD-15 | Kayıp/çalıntı blokaj + retry + audit (CRD-06) |
-| F5-7 Onay ve rapor | CRD-16 | Maskeli/toplulaştırılmış yönetici görünümü (§6.7) |
-| F5-8 Entegrasyon | CRD-18, SET-13..15, SET-19 | Adaptör sözleşmesi (§6.6), webhook imzası, circuit breaker, DLQ, OPS-01 |
-| F5-9 İşten ayrılış | HR-06 | Kişiye bağlı kartlar dondurulmadan sihirbaz tamamlanamaz (§6.3) |
+| F6-1 ReportLayout | RPT-01, RPT-02, RPT-15 | **Ekran = PDF = Excel**: aynı filtre, veri tarihi, toplam ve rapor sürümü (RPT-01) |
+| F6-2 Standart raporlar | RPT-03..14 (+CRD-17→RPT-13) | Her KPI **formül sözlüğünden** açıklanmış; ikinci bir hesap yazılmaz |
+| F6-3 Dış portallar | EXT-01..06 | Tokenli, kapsamı daraltılmış dış erişim; iç kabuk gösterilmez |
+| F6-4 Saha mobil ve kiosk | EXT-07, EXT-08, AST-11 | Çevrimdışı taslak + senkron kuyruğu; çift gönderimde tek kayıt |
+| F6-5 Çalışan self-servis | HR-14 | Yalnız kendi verisi |
+| F6-6 Arşiv | SET-17, GLB-07 | Saklama süresi dolan belge işleri; genel arama |
 
 **Kesin kurallar — sapılmaz:**
-- Kart bakiyesi `stok/defter.mjs` ve `finans/defter.mjs` kalıbını tekrar eder.
-  **İkinci bir defter yazılmaz**: `kart_hareketi` değişmez, tetikleyici korumalı,
-  bakiye her okumada toplanır, düzeltme ters kayıt.
-- **Teknik hata ≠ iş kuralı reddi.** Yalnız teknik hata güvenli tekrar edilir;
-  reddedilen satır tekrar gönderilmez (§6.4 madde 7).
-- **Zaman aşımı başarısızlık değildir**: önce sağlayıcıdan durum sorgulanır
-  (§6.4 madde 6).
-- Sağlayıcılar `if/else` ile değil **adaptör + ürün tanımıyla** genişletilir.
-  `Sodexo` tarihsel ad olarak korunur, `Pluxee` ailesine eşlenir.
-- Kart yükleme durum zinciri `moduller/isakisi/durumlar.mjs` içinde **zaten
-  tanımlı** (satır ~425); yeni bir durum tablosu yazılmaz, o kullanılır.
-- Kart numarası maskesi `alanMaskeliMi` + alan tanımında `gorunur(ctx)`
-  üzerinden gelir (K-039); kapsam bağı `kapsamCozucu` ile kurulur (K-041).
-- Ekranlar `rotalar/kayit-modulu.mjs` üretecinden türer (K-033); yeni liste
-  kodu `LISTE_OLUSTURUR`'a eklenir (K-038).
+- **Tek `ReportLayout`.** Filtre özeti, veri tarihi, rapor sürümü, açıklanmış KPI
+  formülü, PDF/Excel/CSV ve print CSS TEK yerde tanımlanır. İkinci bir çıktı yolu
+  açılmaz — K-030 bu yüzden Faz 3'ten buraya ertelendi.
+- **Rapor ikinci bir hesap YAZMAZ.** Hakediş `sozlesme/hakedis.mjs`, stok
+  `stok/defter.mjs`, finans `finans/defter.mjs`, kart `kartlar/defter.mjs`,
+  ilerleme `plan/ilerleme.mjs` fonksiyonlarını çağırır. Ekranla rapor
+  ayrışırsa §12 engeli doğar.
+- **`rotalar/panolar.mjs`** GLB-02/03 pano kalıbıdır; RPT ekranları aynı
+  kaynak-sorgu yaklaşımını kullanır.
+- Portallar `PRC-05` tedarikçi teklif portalının kalıbını izler (K-069):
+  oturumsuz, token özeti saklanır, iç kabuk (rail/menü) gösterilmez.
+- Mobil ekranlarda çevrimdışı taslak `SITE-01` günlük rapor kalıbını tekrar
+  eder; çift gönderimde tek kayıt (idempotency).
 
 ### Hazır ama henüz kullanılmayan altyapı
 
-- **`rotalar/kayit-modulu.mjs`** — liste+form+detay üreteci (K-033). `altForm`
-  seçeneği, ayrı form ekranı olmayan listelere oluşturma formu ekler.
-- **`moduller/stok/defter.mjs`** ve **`moduller/finans/defter.mjs`** — değişmez
-  hareket defteri kalıbı (K-061, K-071). **Faz 5 kart defteri bunu tekrar eder.**
-- **`moduller/sozlesme/hakedis.mjs`** — kümülatif metraj, güncel bedel, kesinti.
-  Faz 6 RPT raporları bunu kullanır; ikinci bir hesap yazılmaz.
-- **`rotalar/panolar.mjs`** — GLB-02/03 pano kalıbı; Faz 6 RPT ekranları aynı
-  kaynak-sorgu yaklaşımını kullanır.
-- **`moduller/santiye/kapanis.mjs` / `proje/kapanis.mjs`** — engel listesi tek
-  yerde; `planli` alanı bağlanmamış kontrolün "temiz" görünmesini engeller.
-- Onay motoru, vekalet, idempotency, sürümlü güncelleme (409), audit zinciri,
-  `cokluParcaOku()` dosya yükleme, alan maskesi, kapsam çözücü.
+- **`moduller/sozlesme/hakedis.mjs`** — kümülatif metraj, güncel bedel, kesinti
+- **`moduller/stok/defter.mjs`**, **`finans/defter.mjs`**, **`kartlar/defter.mjs`** —
+  üç defter aynı sözleşmede; rapor toplamları buradan
+- **`moduller/plan/ilerleme.mjs`** — WBS ağırlıklı ilerleme
+- **`rotalar/panolar.mjs`** — canlı sorgudan beslenen pano kalıbı
+- **`moduller/kartlar/adaptor.mjs`** — K-027 antivirüs taraması bu adaptör
+  sözleşmesine bağlanacak
+- `rotalar/kayit-modulu.mjs` üreteci (K-033), `LISTE_OLUSTURUR` (K-038),
+  kapsam çözücü (K-041), alan maskesi (K-039)
 
 ### Bilinen açık uçlar
 
-- Günlük rapor ve tüm PDF/Excel çıktıları Faz 6 `ReportLayout`'ta (K-030)
-- Antivirüs taraması Faz 5 entegrasyon adaptörüne bağlanacak (K-027)
 - E-posta gönderimi yok: davet/sıfırlama bağlantısı geliştirmede ekranda (K-021)
-- `HR-05` işe giriş sihirbazında **kart teslimi** adımı `planli` — CRD-06 ile bağlanacak
-- `AST-11` (QR/barkod) ve `HR-14` (çalışan self-servis) Faz 6'ya ait
+- `httpAdaptoru` gerçek sağlayıcı kimliği olmadan çalışmaz; **sahte başarı
+  üretmez**, yapılandırma hatası döner. Kurulumda `kimlik_referansi` ortam
+  değişkeni tanımlanmalıdır.
 
 ## Faz kapanış kontrol listesi (her faz için zorunlu)
 

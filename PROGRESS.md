@@ -4,7 +4,7 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 50 · devam: 0 · bitti: 0 · doğrulandı: 194
+**Toplam:** 244 sayfa ailesi — bekliyor: 28 · devam: 0 · bitti: 0 · doğrulandı: 216
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
@@ -12,7 +12,7 @@
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
 | Faz 3 | 89 | 0 | 0 | 0 | 89 |
 | Faz 4 | 69 | 0 | 0 | 0 | 69 |
-| Faz 5 | 23 | 23 | 0 | 0 | 0 |
+| Faz 5 | 23 | 1 | 0 | 0 | 22 |
 | Faz 6 | 27 | 27 | 0 | 0 | 0 |
 
 ## Faz 1 — 22 sayfa ailesi
@@ -233,29 +233,29 @@
 
 | Kod | Sayfa | Öncelik | Kalıp | Rota | Durum | Commit | Not |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| HR-06 | İşten ayrılış sihirbazı | P0 | sihirbaz | `/personel/:id/isten-ayrilis` | ⬜ bekliyor | — | sıfırdan |
-| CRD-01 | Kart paneli | P0 | panel | `/kartlar` | ⬜ bekliyor | — | sıfırdan |
-| CRD-02 | Tüm kartlar | P0 | liste | `/kartlar/liste` | ⬜ bekliyor | — | kaynak: crm-operasyon-kredikarti (birlestir) |
-| CRD-03 | Yeni kart | P0 | form | `/kartlar/yeni` | ⬜ bekliyor | — | kaynak: crm-operasyon-kredikarti-form (birlestir), crm-operasyon-kredikarti-kart-form (birlestir) |
-| CRD-04 | Kart detayı | P0 | detay | `/kartlar/:id` | ⬜ bekliyor | — | sıfırdan |
-| CRD-05 | Kart düzenle | P0 | form | `/kartlar/:id/duzenle` | ⬜ bekliyor | — | sıfırdan |
-| CRD-06 | Kart atama ve devir | P0 | sihirbaz | `/kartlar/:id/atama` | ⬜ bekliyor | — | sıfırdan |
-| CRD-07 | Pluxee (eski Sodexo) | P0 | liste | `/kartlar/pluxee` | ⬜ bekliyor | — | kaynak: crm-operasyon-pluxee (koru) |
-| CRD-08 | MultiNet | P0 | liste | `/kartlar/multinet` | ⬜ bekliyor | — | sıfırdan |
-| CRD-09 | Sağlayıcı hesapları | P0 | listeForm | `/kartlar/saglayicilar` | ⬜ bekliyor | — | sıfırdan |
-| CRD-10 | Yükleme partileri | P0 | liste | `/kartlar/yuklemeler` | ⬜ bekliyor | — | sıfırdan |
-| CRD-11 | Yeni toplu yükleme | P0 | sihirbaz | `/kartlar/yuklemeler/yeni` | ⬜ bekliyor | — | kaynak: crm-operasyon-pluxee-form (birlestir) |
-| CRD-12 | Yükleme parti detayı | P0 | detay | `/kartlar/yuklemeler/:id` | ⬜ bekliyor | — | sıfırdan |
-| CRD-13 | Kart hareketleri | P0 | liste | `/kartlar/hareketler` | ⬜ bekliyor | — | sıfırdan |
-| CRD-14 | Kart mutabakatı | P0 | mutabakat | `/kartlar/mutabakat` | ⬜ bekliyor | — | sıfırdan |
-| CRD-15 | Kayıp/çalıntı/yenileme | P0 | sihirbaz | `/kartlar/:id/guvenlik` | ⬜ bekliyor | — | sıfırdan |
-| CRD-16 | Kart onayları | P0 | liste | `/kartlar/onaylar` | ⬜ bekliyor | — | sıfırdan |
-| CRD-17 | Kart raporları | P1 | rapor | `/raporlar/kartlar` | ⬜ bekliyor | — | takma ad → RPT-13 |
-| CRD-18 | Kart sağlayıcı entegrasyonları | P0 | listeForm | `/ayarlar/entegrasyonlar/kartlar` | ⬜ bekliyor | — | sıfırdan |
-| SET-13 | Entegrasyon kataloğu | P0 | liste | `/ayarlar/entegrasyonlar` | ⬜ bekliyor | — | kaynak: crm-ayarlar-entegrasyonlar (koru) |
-| SET-14 | Entegrasyon detayı | P0 | listeForm | `/ayarlar/entegrasyonlar/:id` | ⬜ bekliyor | — | sıfırdan |
-| SET-15 | Entegrasyon işlem günlüğü | P0 | listeForm | `/ayarlar/entegrasyon-loglari` | ⬜ bekliyor | — | sıfırdan |
-| SET-19 | Sistem sağlığı | P0 | panel | `/ayarlar/sistem-sagligi` | ⬜ bekliyor | — | sıfırdan |
+| HR-06 | İşten ayrılış sihirbazı | P0 | sihirbaz | `/personel/:id/isten-ayrilis` | ✅ doğrulandı | faz5 | İşten ayrılış sihirbazı — kişiye bağlı kartlar dondurulmadan tamamlanmaz (§6.3, §7) |
+| CRD-01 | Kart paneli | P0 | panel | `/kartlar` | ✅ doğrulandı | faz5 | Kart paneli — sağlayıcı/hesap/kart özeti; çalışan yalnız kendi kartlarını görür |
+| CRD-02 | Tüm kartlar | P0 | liste | `/kartlar/liste` | ✅ doğrulandı | faz5 | Tüm kartlar — tek liste; Pluxee/MultiNet görünümleri bunun filtresi (kural 4) |
+| CRD-03 | Yeni kart | P0 | form | `/kartlar/yeni` | ✅ doğrulandı | faz5 | Yeni kart — yalnız son dört hane; tam numara sütunu YOK (K-085) |
+| CRD-04 | Kart detayı | P0 | detay | `/kartlar/:id` | ✅ doğrulandı | faz5 | Kart detayı — bakiye defterden türer, §6.3 durum zinciri |
+| CRD-05 | Kart düzenle | P0 | form | `/kartlar/:id/duzenle` | ✅ doğrulandı | faz5 | Kart düzenle — maskeli numara ve izinli alanlar |
+| CRD-06 | Kart atama ve devir | P0 | sihirbaz | `/kartlar/:id/atama` | ✅ doğrulandı | faz5 | Kart atama ve devir — çakışan aktif atama 409; geçmiş değişmez |
+| CRD-07 | Pluxee (eski Sodexo) | P0 | liste | `/kartlar/pluxee` | ✅ doğrulandı | faz5 | Pluxee (eski Sodexo) — kart listesinin sağlayıcı görünümü |
+| CRD-08 | MultiNet | P0 | liste | `/kartlar/multinet` | ✅ doğrulandı | faz5 | MultiNet — kart listesinin sağlayıcı görünümü |
+| CRD-09 | Sağlayıcı hesapları | P0 | listeForm | `/kartlar/saglayicilar` | ✅ doğrulandı | faz5 | Sağlayıcı hesapları — aynı sağlayıcıda çoklu kurumsal hesap |
+| CRD-10 | Yükleme partileri | P0 | liste | `/kartlar/yuklemeler` | ✅ doğrulandı | faz5 | Yükleme partileri — satır bazlı sonuç özeti |
+| CRD-11 | Yeni toplu yükleme | P0 | sihirbaz | `/kartlar/yuklemeler/yeni` | ✅ doğrulandı | faz5 | Yeni toplu yükleme — uygunluk ve tutar politikadan hesaplanır (§6.4) |
+| CRD-12 | Yükleme parti detayı | P0 | detay | `/kartlar/yuklemeler/:id` | ✅ doğrulandı | faz5 | Parti detayı — teknik hata/iş kuralı reddi ayrımı, kontrollü dosya akışı |
+| CRD-13 | Kart hareketleri | P0 | liste | `/kartlar/hareketler` | ✅ doğrulandı | faz5 | Kart hareketleri — değişmez defter, üye işyeri maskesi |
+| CRD-14 | Kart mutabakatı | P0 | mutabakat | `/kartlar/mutabakat` | ✅ doğrulandı | faz5 | Kart mutabakatı — iç defter + sağlayıcı ekstresi + banka |
+| CRD-15 | Kayıp/çalıntı/yenileme | P0 | sihirbaz | `/kartlar/:id/guvenlik` | ✅ doğrulandı | faz5 | Kayıp/çalıntı/yenileme — beklemeden blokaj, bakiye devri defter hareketiyle |
+| CRD-16 | Kart onayları | P0 | liste | `/kartlar/onaylar` | ✅ doğrulandı | faz5 | Kart onayları + etkili tarihli sürümlü politika yönetimi |
+| CRD-17 | Kart raporları | P1 | rapor | `/raporlar/kartlar` | ⬜ bekliyor | — | takma ad → RPT-13; tek ReportLayout ile Faz 6'da gelir |
+| CRD-18 | Kart sağlayıcı entegrasyonları | P0 | listeForm | `/ayarlar/entegrasyonlar/kartlar` | ✅ doğrulandı | faz5 | Kart sağlayıcı entegrasyonları — vault referansı, webhook özeti |
+| SET-13 | Entegrasyon kataloğu | P0 | liste | `/ayarlar/entegrasyonlar` | ✅ doğrulandı | faz5 | Entegrasyon kataloğu — adaptör, devre kesici, yapılandırma durumu |
+| SET-14 | Entegrasyon detayı | P0 | listeForm | `/ayarlar/entegrasyonlar/:id` | ✅ doğrulandı | faz5 | Entegrasyon detayı — yetenek tablosu, devre kesici sıfırlama |
+| SET-15 | Entegrasyon işlem günlüğü | P0 | listeForm | `/ayarlar/entegrasyon-loglari` | ✅ doğrulandı | faz5 | Entegrasyon işlem günlüğü — OPS-01: istek kimliği, maskeli payload, retry, DLQ |
+| SET-19 | Sistem sağlığı | P0 | panel | `/ayarlar/sistem-sagligi` | ✅ doğrulandı | faz5 | Sistem sağlığı — entegrasyon, DLQ, tekrar kuyruğu, sonuçsuz satır |
 
 ## Faz 6 — 27 sayfa ailesi
 
