@@ -42,6 +42,12 @@ export const EKRAN_EYLEMLERI = {
   /* Dönem kapatma ile YENİDEN AÇMA ayrı yetkilerdir: kapatan kişi tek başına
      geri alamasın diye "kapat" ayrı bir eylem olarak tanımlanır (FIN-15). */
   'FIN-15': ['goruntule', 'tamamla', 'kapat'],
+  /* EXT-04..06 dış portalın KENDİSİ değil, portal ERİŞİMİNİ yöneten iç
+     ekranlardır: süreli bağlantı üretir ve kapatırlar. "portal" kalıbının
+     salt okunur sayılması, bağlantının hiç üretilememesine yol açardı. */
+  'EXT-04': ['goruntule', 'olustur', 'guncelle'],
+  'EXT-05': ['goruntule', 'olustur', 'guncelle'],
+  'EXT-06': ['goruntule', 'olustur', 'guncelle'],
 };
 
 /* Katalogda AYRI form ekranı olmayan liste ekranları kaydı kendisi açar.
@@ -89,7 +95,9 @@ export const ROLLER = [
     aciklama: 'Sorumlu olduğu proje ve şantiyelerde operasyon yönetimi.',
     /* Sözleşme bölümü de proje müdürünün işidir: metraj onayı, değişiklik talebi,
        gecikme olayı ve süre uzatımı sahadan doğar (§7). Ödeme ve fatura finansta kalır. */
-    bolumler: ['calisma', 'proje', 'santiye', 'plan', 'gorev', 'isg', 'kalite', 'dokuman', 'personel', 'satinalma', 'stok', 'sozlesme', 'varlik', 'rapor'],
+    /* 'dis' bölümü: müşteri/işveren kayıtları, portal erişimi ve saha mobil.
+       Proje müdürü işverenle yazışan ve sahayı yöneten roldür. */
+    bolumler: ['calisma', 'proje', 'santiye', 'plan', 'gorev', 'isg', 'kalite', 'dokuman', 'personel', 'satinalma', 'stok', 'sozlesme', 'varlik', 'rapor', 'dis'],
     eylemler: ['goruntule', 'olustur', 'guncelle', 'karar_ver', 'disa_aktar', 'tamamla'],
     kapsam: [
       { nesne: '*', kural: 'kapsam_zorunlu', deger: { turler: ['proje', 'santiye'] } },
@@ -101,6 +109,9 @@ export const ROLLER = [
     kod: 'santiye_sefi', ad: 'Şantiye şefi', sistem: 1,
     aciklama: 'Atandığı şantiyede saha operasyonu, günlük rapor, puantaj ve talep.',
     bolumler: ['calisma', 'santiye', 'plan', 'gorev', 'isg', 'kalite', 'dokuman', 'personel', 'satinalma', 'stok', 'varlik'],
+    /* Saha mobil ve kiosk şantiye şefinin günlük araçlarıdır; portal erişimi
+       yönetimi değil. Bu yüzden 'dis' bölümü değil, tek tek ekstra verilir. */
+    ekstra: ['EXT-07:goruntule', 'EXT-07:olustur', 'EXT-08:goruntule', 'EXT-08:olustur'],
     eylemler: ['goruntule', 'olustur', 'guncelle', 'tamamla'],
     kapsam: [
       { nesne: '*', kural: 'kapsam_zorunlu', deger: { turler: ['santiye'] } },
@@ -112,6 +123,10 @@ export const ROLLER = [
     aciklama: 'Talep, RFQ, teklif karşılaştırma, sipariş ve tedarikçi yönetimi.',
     bolumler: ['calisma', 'satinalma', 'stok', 'rapor'],
     eylemler: ['goruntule', 'olustur', 'guncelle', 'disa_aktar'],
+    /* K-112: "rapor" bölümü tüm raporları AÇMAZ. Nakit akışı, maliyet sapması,
+       hakediş, personel ve kart raporları finans/yönetim görünürlüğüdür;
+       satın almanın işi için gerekli değildir (§5.7 en az yetki). */
+    haric: ['RPT-05', 'RPT-06', 'RPT-09', 'RPT-11', 'RPT-13'],
   },
   {
     kod: 'depo_sorumlusu', ad: 'Depo sorumlusu', sistem: 1,

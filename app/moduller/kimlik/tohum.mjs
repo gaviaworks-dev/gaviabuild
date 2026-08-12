@@ -108,6 +108,22 @@ export function demoTenantKur({ zorla = false } = {}) {
         sonraki: { eposta: u.eposta, rol: u.rol, demo: true } });
     }
 
+    /* Çalışan personası bir PERSONEL kaydına bağlanır: HR-14 self-servis ve
+       kart/izin/avans kapsamı `personel.kullanici_id` üzerinden çözülür.
+       Bağ olmadan çalışan kendi kaydını da göremezdi. */
+    const calisan = tek('SELECT * FROM kullanici WHERE tenant_id = ? AND eposta = ?',
+      tenantId, 'calisan@yapitas.demo');
+    if (calisan && !tek('SELECT id FROM personel WHERE kullanici_id = ?', calisan.id)) {
+      const perId = kimlik('personel');
+      calistir(`INSERT INTO personel (id, tenant_id, kullanici_id, kod, ad_soyad, gorev,
+                  ise_giris, durum, olusturan, olusturuldu)
+                VALUES (?,?,?,?,?,?,?, 'aktif', ?,?)`,
+        perId, tenantId, calisan.id, 'PER-DEMO-001', calisan.ad_soyad, 'Saha çalışanı',
+        simdi(), calisan.id, simdi());
+      audit.yaz({ tenantId, nesne: 'personel', nesneId: perId, eylem: 'demo_personel_olustur',
+        sonraki: { kullanici: calisan.eposta, demo: true } });
+    }
+
     /* Demo bayrakları yalnız demo tenant için açılır; üretimde kod düzeyinde kilitli. */
     for (const kod of [BAYRAKLAR.DEMO_ROL_SECIMI, BAYRAKLAR.DEMO_VERI]) {
       calistir(`INSERT OR REPLACE INTO ozellik_bayragi (kod, tenant_id, acik, aciklama, guncellendi)
