@@ -4,7 +4,7 @@
 > güncelledikten sonra `node tools/progress-uret.mjs` çalıştırın.
 > Plan: `PLAN.md` · Kararlar: `KARARLAR.md` · Şartname: `docs/REVIZYON.md`
 
-**Toplam:** 244 sayfa ailesi — bekliyor: 28 · devam: 0 · bitti: 0 · doğrulandı: 216
+**Toplam:** 244 sayfa ailesi — bekliyor: 0 · devam: 0 · bitti: 0 · doğrulandı: 244
 
 | Faz | Aile | Bekliyor | Devam | Bitti | Doğrulandı |
 | --- | --- | --- | --- | --- | --- |
@@ -12,8 +12,8 @@
 | Faz 2 | 14 | 0 | 0 | 0 | 14 |
 | Faz 3 | 89 | 0 | 0 | 0 | 89 |
 | Faz 4 | 69 | 0 | 0 | 0 | 69 |
-| Faz 5 | 23 | 1 | 0 | 0 | 22 |
-| Faz 6 | 27 | 27 | 0 | 0 | 0 |
+| Faz 5 | 23 | 0 | 0 | 0 | 23 |
+| Faz 6 | 27 | 0 | 0 | 0 | 27 |
 
 ## Faz 1 — 22 sayfa ailesi
 
@@ -250,7 +250,7 @@
 | CRD-14 | Kart mutabakatı | P0 | mutabakat | `/kartlar/mutabakat` | ✅ doğrulandı | faz5 | Kart mutabakatı — iç defter + sağlayıcı ekstresi + banka |
 | CRD-15 | Kayıp/çalıntı/yenileme | P0 | sihirbaz | `/kartlar/:id/guvenlik` | ✅ doğrulandı | faz5 | Kayıp/çalıntı/yenileme — beklemeden blokaj, bakiye devri defter hareketiyle |
 | CRD-16 | Kart onayları | P0 | liste | `/kartlar/onaylar` | ✅ doğrulandı | faz5 | Kart onayları + etkili tarihli sürümlü politika yönetimi |
-| CRD-17 | Kart raporları | P1 | rapor | `/raporlar/kartlar` | ⬜ bekliyor | — | takma ad → RPT-13; tek ReportLayout ile Faz 6'da gelir |
+| CRD-17 | Kart raporları | P1 | rapor | `/raporlar/kartlar` | ✅ doğrulandı | faz6 | Kart raporları — RPT-13 takma adı; tek ReportLayout ile geldi |
 | CRD-18 | Kart sağlayıcı entegrasyonları | P0 | listeForm | `/ayarlar/entegrasyonlar/kartlar` | ✅ doğrulandı | faz5 | Kart sağlayıcı entegrasyonları — vault referansı, webhook özeti |
 | SET-13 | Entegrasyon kataloğu | P0 | liste | `/ayarlar/entegrasyonlar` | ✅ doğrulandı | faz5 | Entegrasyon kataloğu — adaptör, devre kesici, yapılandırma durumu |
 | SET-14 | Entegrasyon detayı | P0 | listeForm | `/ayarlar/entegrasyonlar/:id` | ✅ doğrulandı | faz5 | Entegrasyon detayı — yetenek tablosu, devre kesici sıfırlama |
@@ -261,31 +261,31 @@
 
 | Kod | Sayfa | Öncelik | Kalıp | Rota | Durum | Commit | Not |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| GLB-07 | Genel arama sonuçları | P1 | liste | `/arama` | ⬜ bekliyor | — | kaynak: crm-sistem-arama-yok (birlestir) |
-| HR-14 | Çalışan self-servis | P2 | portal | `/calisan` | ⬜ bekliyor | — | sıfırdan |
-| AST-11 | QR/barkod işlem ekranı | P1 | mobil | `/tara` | ⬜ bekliyor | — | kaynak: crm-operasyon-demirbas-etiket-yazdir (birlestir), crm-operasyon-demirbas-etiket (birlestir) |
-| EXT-01 | Müşteri ve işverenler | P2 | listeForm | `/musteriler` | ⬜ bekliyor | — | kaynak: crm-cari-kisiler (birlestir), crm-satis-musteri-detay (koru), crm-satis-musteri-form (birlestir), crm-satis-musteriler (koru), crm-satis-talep-detay (birlestir), crm-satis-talepler (birlestir) |
-| EXT-02 | Fırsat ve teklif | P2 | listeForm | `/firsatlar` | ⬜ bekliyor | — | kaynak: crm-satis-birim-detay (birlestir), crm-satis-birimler (birlestir), crm-satis-firsat-detay (koru), crm-satis-pipeline (koru) |
-| EXT-03 | Teklif hazırlama | P2 | listeForm | `/teklifler` | ⬜ bekliyor | — | kaynak: crm-satis-teklif-detay (birlestir), crm-satis-teklif-form (birlestir), crm-satis-teklifler (koru) |
-| EXT-04 | Müşteri portalı | P1 | portal | `/portal/musteri` | ⬜ bekliyor | — | kaynak: portal-belgeler (birlestir), portal-odemeler (birlestir), portal-panel (koru), portal-rapor (birlestir), portal-talepler (birlestir), portal-teslim-tutanagi-detay (birlestir) |
-| EXT-05 | Taşeron portalı | P1 | portal | `/portal/taseron` | ⬜ bekliyor | — | kaynak: crm-operasyon-taseron-puantaj-detay (birlestir), crm-operasyon-taseron-puantaj (birlestir) |
-| EXT-06 | Tedarikçi portalı | P1 | portal | `/portal/tedarikci` | ⬜ bekliyor | — | sıfırdan |
-| EXT-07 | Saha mobil ana sayfa | P1 | mobil | `/mobil` | ⬜ bekliyor | — | kaynak: crm-sistem-baglanti-yok (birlestir) |
-| EXT-08 | Kiosk | P2 | mobil | `/kiosk` | ⬜ bekliyor | — | sıfırdan |
-| RPT-01 | Rapor merkezi | P0 | liste | `/raporlar` | ⬜ bekliyor | — | kaynak: crm-panel-raporlar (koru) |
-| RPT-02 | Standart rapor görüntüleyici | P0 | rapor | `/raporlar/:kod` | ⬜ bekliyor | — | kaynak: crm-finans-banka-cikti (birlestir), crm-finans-mizan-cikti (birlestir), crm-operasyon-kasa-cikti (birlestir), crm-panel-rapor-cari (birlestir) |
-| RPT-03 | Proje portföy raporu | P1 | rapor | `/raporlar/proje-portfoyu` | ⬜ bekliyor | — | sıfırdan |
-| RPT-04 | Şantiye günlük özet | P1 | rapor | `/raporlar/santiye-gunluk` | ⬜ bekliyor | — | kaynak: crm-panel-rapor-santiye (koru) |
-| RPT-05 | Maliyet ve bütçe sapma | P0 | rapor | `/raporlar/maliyet` | ⬜ bekliyor | — | kaynak: crm-finans-maliyet (birlestir), crm-panel-rapor-maliyet (koru) |
-| RPT-06 | Nakit akışı | P1 | rapor | `/raporlar/nakit-akisi` | ⬜ bekliyor | — | sıfırdan |
-| RPT-07 | Satın alma çevrim süresi | P1 | rapor | `/raporlar/satinalma` | ⬜ bekliyor | — | kaynak: crm-panel-rapor-talep (koru), crm-satinalma-icmal-cikti (birlestir) |
-| RPT-08 | Stok ve tüketim | P1 | rapor | `/raporlar/stok` | ⬜ bekliyor | — | sıfırdan |
-| RPT-09 | Personel ve puantaj | P1 | rapor | `/raporlar/personel` | ⬜ bekliyor | — | kaynak: crm-operasyon-puantaj-cikti (birlestir), crm-panel-rapor-avans (birlestir), crm-panel-rapor-calisma (birlestir), crm-panel-rapor-em (birlestir), crm-panel-rapor-fm (birlestir), crm-panel-rapor-izin (birlestir), crm-panel-rapor-personel (koru), crm-panel-rapor-puantaj (birlestir), crm-personel-avans-cikti (birlestir), crm-personel-rapor-detay (birlestir), crm-personel-rapor-form (birlestir), crm-personel-rapor (birlestir) |
-| RPT-10 | İSG ve kalite | P1 | rapor | `/raporlar/isg-kalite` | ⬜ bekliyor | — | sıfırdan |
-| RPT-11 | Sözleşme ve hakediş | P1 | rapor | `/raporlar/sozlesme` | ⬜ bekliyor | — | kaynak: crm-panel-rapor-hakedis (koru) |
-| RPT-12 | Varlık ve bakım | P2 | rapor | `/raporlar/varlik` | ⬜ bekliyor | — | kaynak: crm-panel-rapor-demirbas (koru), crm-panel-rapor-makine (birlestir) |
-| RPT-13 | Kartlar raporu | P1 | rapor | `/raporlar/kartlar` | ⬜ bekliyor | — | kaynak: crm-operasyon-kredikarti-cikti (birlestir), crm-operasyon-pluxee-cikti (birlestir) |
-| RPT-14 | Zamanlanmış raporlar | P2 | listeForm | `/raporlar/zamanlama` | ⬜ bekliyor | — | sıfırdan |
-| RPT-15 | Rapor tanım ve formül sözlüğü | P0 | rapor | `/raporlar/sozluk` | ⬜ bekliyor | — | sıfırdan |
-| SET-17 | Arşiv ve saklama işleri | P1 | liste | `/ayarlar/arsiv` | ⬜ bekliyor | — | kaynak: crm-ayarlar-arsiv (koru) |
+| GLB-07 | Genel arama sonuçları | P1 | liste | `/arama` | ✅ doğrulandı | faz6 | Genel arama — yetkiyi ve ABAC kapsamını aşmaz; kart tam numarası aranmaz (K-110) |
+| HR-14 | Çalışan self-servis | P2 | portal | `/calisan` | ✅ doğrulandı | faz6 | Çalışan self-servis — her sorgu personel kimliğine bağlı, parametreyle genişletilemez |
+| AST-11 | QR/barkod işlem ekranı | P1 | mobil | `/tara` | ✅ doğrulandı | faz6 | QR/barkod — kod ön ekinden çözülür; bulunmayan kod sahte kayıt açmaz |
+| EXT-01 | Müşteri ve işverenler | P2 | listeForm | `/musteriler` | ✅ doğrulandı | faz6 | Müşteri ve işverenler — CRM değil, proje kaynağı (K-107) |
+| EXT-02 | Fırsat ve teklif | P2 | listeForm | `/firsatlar` | ✅ doğrulandı | faz6 | Fırsat — kazanılınca gerçekten proje açılır ve iki kayıt bağlanır |
+| EXT-03 | Teklif hazırlama | P2 | listeForm | `/teklifler` | ✅ doğrulandı | faz6 | Teklif hazırlama — verilen teklif; gelen tekliften ayrı kayıt |
+| EXT-04 | Müşteri portalı | P1 | portal | `/portal/musteri` | ✅ doğrulandı | faz6 | Müşteri portalı — oturumsuz, tokenli, süreli, kapsamı daraltılmış (K-108) |
+| EXT-05 | Taşeron portalı | P1 | portal | `/portal/taseron` | ✅ doğrulandı | faz6 | Taşeron portalı — yalnız karara bağlanmış hakediş görünür |
+| EXT-06 | Tedarikçi portalı | P1 | portal | `/portal/tedarikci` | ✅ doğrulandı | faz6 | Tedarikçi portalı — sözleşme, hakediş ve sipariş görünümü |
+| EXT-07 | Saha mobil ana sayfa | P1 | mobil | `/mobil` | ✅ doğrulandı | faz6 | Saha mobil — çevrimdışı taslak, çift gönderimde tek kayıt (K-109) |
+| EXT-08 | Kiosk | P2 | mobil | `/kiosk` | ✅ doğrulandı | faz6 | Kiosk — ziyaretçi giriş/çıkış; çıkışsız ziyaretçi kapanış engeli |
+| RPT-01 | Rapor merkezi | P0 | liste | `/raporlar` | ✅ doğrulandı | faz6 | Rapor merkezi — yalnız açılabilen raporlar listelenir (K-106) |
+| RPT-02 | Standart rapor görüntüleyici | P0 | rapor | `/raporlar/:kod` | ✅ doğrulandı | faz6 | Standart görüntüleyici — kanonik rapor rotasına yönlendirir |
+| RPT-03 | Proje portföy raporu | P1 | rapor | `/raporlar/proje-portfoyu` | ✅ doğrulandı | faz6 | Proje portföyü — ilerleme plan/ilerleme.mjs, bütçe finans defterinden |
+| RPT-04 | Şantiye günlük özet | P1 | rapor | `/raporlar/santiye-gunluk` | ✅ doğrulandı | faz6 | Şantiye günlük özet |
+| RPT-05 | Maliyet ve bütçe sapma | P0 | rapor | `/raporlar/maliyet` | ✅ doğrulandı | faz6 | Maliyet ve bütçe sapma — bütçe, taahhüt, gerçekleşen, EAC |
+| RPT-06 | Nakit akışı | P1 | rapor | `/raporlar/nakit-akisi` | ✅ doğrulandı | faz6 | Nakit akışı — bakiyeler finans/defter.mjs'ten |
+| RPT-07 | Satın alma çevrim süresi | P1 | rapor | `/raporlar/satinalma` | ✅ doğrulandı | faz6 | Satın alma çevrim süresi |
+| RPT-08 | Stok ve tüketim | P1 | rapor | `/raporlar/stok` | ✅ doğrulandı | faz6 | Stok ve tüketim — bakiye stok/defter.mjs depoBakiyeleri()'nden |
+| RPT-09 | Personel ve puantaj | P1 | rapor | `/raporlar/personel` | ✅ doğrulandı | faz6 | Personel ve puantaj |
+| RPT-10 | İSG ve kalite | P1 | rapor | `/raporlar/isg-kalite` | ✅ doğrulandı | faz6 | İSG ve kalite |
+| RPT-11 | Sözleşme ve hakediş | P1 | rapor | `/raporlar/sozlesme` | ✅ doğrulandı | faz6 | Sözleşme ve hakediş — sozlesme/hakedis.mjs fonksiyonlarından |
+| RPT-12 | Varlık ve bakım | P2 | rapor | `/raporlar/varlik` | ✅ doğrulandı | faz6 | Varlık ve bakım |
+| RPT-13 | Kartlar raporu | P1 | rapor | `/raporlar/kartlar` | ✅ doğrulandı | faz6 | Kartlar raporu — kartlar/defter.mjs'ten; CRD-17 bunun takma adı |
+| RPT-14 | Zamanlanmış raporlar | P2 | listeForm | `/raporlar/zamanlama` | ✅ doğrulandı | faz6 | Zamanlanmış raporlar — alıcı yetki kontrolünden geçer; gönderim K-021 |
+| RPT-15 | Rapor tanım ve formül sözlüğü | P0 | rapor | `/raporlar/sozluk` | ✅ doğrulandı | faz6 | Formül sözlüğü — rapor tanımlarından ÜRETİLİR, elle yazılmaz (K-105) |
+| SET-17 | Arşiv ve saklama işleri | P1 | liste | `/ayarlar/arsiv` | ✅ doğrulandı | faz6 | Arşiv ve saklama — otomatik silme yok, dört göz onayı (K-111) |
 
