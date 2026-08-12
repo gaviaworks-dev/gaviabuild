@@ -35,6 +35,7 @@ import { sozlesmeOnaySonucu } from './sozlesme.mjs';
 import { degisiklikOnaySonucu } from './sozlesme-ek.mjs';
 import { butceOnaySonucu } from './finans.mjs';
 import { finansOnaySonucu } from './finans-ek.mjs';
+import { ikOnaySonucu } from './ik-ek.mjs';
 
 const ekranNesnesi = (kod) => manifest().ekranlar.find((e) => e.kod === kod);
 const ciz = (ctx, ekran, icerik, ek = {}) => {
@@ -418,6 +419,7 @@ function isNesnesiniIlerlet(ctx, talepId, sonuc) {
   }
   if (t.nesne === 'butce') { butceOnaySonucu(ctx, t.nesne_id, sonuc); return; }
   if (['fatura', 'odeme'].includes(t.nesne)) { finansOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return; }
+  if (['izin', 'avans'].includes(t.nesne)) { ikOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return; }
   if (['degisiklik', 'sure_uzatim'].includes(t.nesne)) {
     degisiklikOnaySonucu(ctx, t.nesne, t.nesne_id, sonuc); return;
   }
