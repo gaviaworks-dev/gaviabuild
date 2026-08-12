@@ -58,10 +58,19 @@ function gocleriUygula(d) {
 }
 
 /* --- Sorgu yardımcıları -------------------------------------------------- */
-export const sorgu = (sql, ...p) => baglanti().prepare(sql).all(...p);
-export const tek   = (sql, ...p) => baglanti().prepare(sql).get(...p) ?? null;
-export const calistir = (sql, ...p) => baglanti().prepare(sql).run(...p);
-export const sayi  = (sql, ...p) => Number(Object.values(baglanti().prepare(sql).get(...p) ?? { n: 0 })[0] ?? 0);
+/**
+ * K-082: `undefined` bağlanmaz, `null`'a çevrilir.
+ * node:sqlite `undefined` parametresinde TypeError atar; bu da formdan EKSİK
+ * gelen bir kimlik alanını 422/404 yerine 500 SUNUCU HATASI yapıyordu.
+ * `null` bağlandığında sorgu boş döner ve çağıran kendi doğrulama hatasını
+ * üretir — kullanıcı gerçek hata kodunu görür (kural 3).
+ */
+const bag = (p) => p.map((x) => (x === undefined ? null : x));
+
+export const sorgu = (sql, ...p) => baglanti().prepare(sql).all(...bag(p));
+export const tek   = (sql, ...p) => baglanti().prepare(sql).get(...bag(p)) ?? null;
+export const calistir = (sql, ...p) => baglanti().prepare(sql).run(...bag(p));
+export const sayi  = (sql, ...p) => Number(Object.values(baglanti().prepare(sql).get(...bag(p)) ?? { n: 0 })[0] ?? 0);
 
 /* --- Transaction --------------------------------------------------------- */
 let derinlik = 0;
