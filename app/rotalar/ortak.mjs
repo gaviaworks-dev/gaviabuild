@@ -69,6 +69,22 @@ export function eskiSekmeHedefi(ctx, { desen, rota }) {
   return `${rota}/${sekme}${qs ? `?${qs}` : ''}`;
 }
 
+/**
+ * `?cikti=` desteklemeyen ekranlarda parametreyi AÇIKÇA REDDEDER (kural 9).
+ *
+ * Sessizce yutmak, PDF isteyen kullanıcıya HTML vermek demektir: istek
+ * karşılanmadığı hâlde 200 döner ve kullanıcı çıktının üretildiğini sanır.
+ * Bu ekranların ReportLayout karşılığı varsa `yerine` ile gösterilir.
+ */
+export function ciktiDesteklenmez(ctx, { yerine = null } = {}) {
+  const bicim = ctx.sorgu.get('cikti');
+  if (!bicim) return;
+  throw DogrulamaHatasi(
+    `Bu ekran dosya çıktısı üretmez (istenen biçim: ${bicim}).`
+    + (yerine ? ` PDF/Excel/CSV için ${yerine} raporunu kullanın.` : ''),
+    { alanlar: { cikti: ['Bu ekranda desteklenmiyor.'] } });
+}
+
 export function ciz(ctx, ekran, icerik, ek = {}) {
   const s = sayaclar(ctx);
   return kabuk(ctx, { ekran, icerik, onayAdedi: s.onay, bildirimAdedi: s.bildirim, ...ek });

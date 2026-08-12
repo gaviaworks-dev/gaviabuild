@@ -402,8 +402,11 @@ describe('HSE — denetim, eğitim, KKD, atık, istatistik', () => {
     assert.equal(r.durum, 200);
     assert.match(r.govde, /LTIFR/);
     assert.match(r.govde, /kayıp günlü kaza × 1\.000\.000 \/ toplam çalışma saati/);
-    assert.match(r.govde, /Rapor künyesi/);
+    /* Künye artık tek ReportLayout'tan gelir (denetim-01 D-05): alan adları
+       kural 9'un şart koştuğu künye satırlarıdır. */
     assert.match(r.govde, /Veri tarihi/);
+    assert.match(r.govde, /Rapor sürümü/);
+    assert.match(r.govde, /rpt-kunye/);
   });
 
   test('HSE-01 paneli gerçek sayılardan beslenir', async () => {

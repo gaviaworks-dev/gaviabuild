@@ -20,6 +20,7 @@ import {
   ekranNesnesi, hataNesnesi, kullaniciAdi, ciz, kaydiAl, listeSorgusu, filtreKosullari,
   B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar,
   sorgu, tek, calistir, islem, surumluGuncelle, audit, sonrakiKod, gecisYap,
+  ciktiDesteklenmez,
 } from './ortak.mjs';
 
 const DEPO_TURLERI = [
@@ -1385,6 +1386,9 @@ ${B.kpiSeridi([
    STK-10 hareket defteri raporu — STK-01 KABUL TESTİNİN yüzeyi
    ========================================================================== */
 function hareketRaporu(ctx, { hata = null, durum = 200 } = {}) {
+  /* Hareket defteri ReportLayout raporu DEĞİLDİR; `?cikti=` sessizce
+     yutulmaz, açıkça reddedilir (kural 9, denetim-01 D-05). */
+  ciktiDesteklenmez(ctx, { yerine: 'RPT-08 Stok ve tüketim' });
   const e = ekranNesnesi('STK-10');
   yetkiZorunlu(ctx, e.yetki);
   const depoId = ctx.sorgu.get('depo_id') || '';

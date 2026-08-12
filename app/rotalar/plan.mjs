@@ -324,40 +324,9 @@ export function kur(y, ekranRota) {
     },
   });
 
-  /* ================= PLAN-11 Plan-gerçekleşen analizi ================== */
-  ekranRota(y, 'PLAN-11', {
-    get: (ctx) => {
-      const e = ekranNesnesi('PLAN-11');
-      yetkiZorunlu(ctx, e.yetki);
-      const programlar = sorgu(
-        `SELECT * FROM is_programi WHERE tenant_id = ? AND baz_cizgi = 1 ORDER BY kod`, ctx.tenant.id);
-      const satirlar = programlar.map((p) => {
-        const s = sapma(p.id, { simdiMs: simdi() });
-        return { ...p, ...(s || { planlanan: 0, gercek: 0, sapma: 0 }) };
-      });
-      const icerik = h`
-<div class="gv-card">
-  <div class="gc-head"><div class="gc-title"><b>Plan-gerçekleşen sapması</b>
-    <span>Baz çizgi sürümü ve rapor dönemi her satırda görünür (§5.5). Yalnız ONAYLI ilerleme sayılır.</span></div></div>
-  <div class="gc-body flush">${B.tablo({
-        satirlar,
-        satirRota: (r) => `/is-programlari/${r.id}`,
-        bosDurum: { baslik: 'Baz çizgili program yok',
-          aciklama: 'Sapma analizi yalnız baz çizgisi onaylanmış programlar için yapılır.', ikon: 'fa-chart-line' },
-        sutunlar: [
-          { ad: 'kod', etiket: 'Program', govde: (r) => h`<b>${r.kod}</b><br><span class="muted">${r.ad} · baz çizgi sürüm ${r.surum_no}</span>` },
-          { ad: 'planlanan', etiket: 'Planlanan', hizala: 'sag', govde: (r) => yuzdeMetni(r.planlanan) },
-          { ad: 'gercek', etiket: 'Gerçekleşen', hizala: 'sag', govde: (r) => yuzdeMetni(r.gercek) },
-          { ad: 'sapma', etiket: 'Sapma', hizala: 'sag', govde: (r) => B.isaret(
-            (r.sapma >= 0 ? '+' : '') + yuzdeMetni(r.sapma), r.sapma < -5000 ? 'danger' : r.sapma < 0 ? 'warn' : 'ok') },
-          { ad: 'baz_cizgi_tarih', etiket: 'Baz çizgi tarihi', govde: (r) => (r.baz_cizgi_tarih ? tarih(r.baz_cizgi_tarih) : '—') },
-        ],
-      })}</div>
-</div>
-${B.veriTarihi(simdi())}`;
-      return html(ctx, 200, ciz(ctx, e, icerik));
-    },
-  });
+  /* PLAN-11 artık `moduller/rapor/tanimlar.mjs` içinde bir RAPOR TANIMIDIR ve
+     rotasını `rotalar/rapor.mjs` kurar: tek ReportLayout, dört çıktı
+     (kural 9, denetim-01 D-05). Burada ikinci bir görüntüleyici yazılmaz. */
 }
 
 /* ========================================================================== */

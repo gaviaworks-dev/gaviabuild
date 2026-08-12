@@ -229,7 +229,10 @@ describe('RPT-15 — her KPI formülüyle açıklanır', () => {
 
     const r = await c.get('/raporlar/sozluk');
     assert.equal(r.durum, 200);
-    assert.match(r.govde, /Tüm göstergeler formüllü/);
+    /* RPT-15 artık tek ReportLayout'tan geçer (denetim-01 D-05); formülsüz
+       gösterge sayısı bir KPI'dır ve sıfır olmalıdır. */
+    assert.match(r.govde, /Formülsüz gösterge/);
+    assert.match(r.govde, /rk-etiket">Formülsüz gösterge<\/div>\s*<div class="rk-deger">0</);
   });
 
   test('her rapor tanımı sürüm ve rota taşır', () => {

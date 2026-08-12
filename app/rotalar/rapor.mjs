@@ -12,7 +12,7 @@
 import { html, yanitla, yonlendir } from '../cekirdek/http.mjs';
 import { simdi, tarihSaat, gunAnahtari } from '../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, Bulunamadi, UygulamaHatasi, YetkiYok } from '../cekirdek/hata.mjs';
-import { RAPORLAR, raporBul, formulSozlugu } from '../moduller/rapor/tanimlar.mjs';
+import { RAPORLAR, raporBul } from '../moduller/rapor/tanimlar.mjs';
 import { raporEkrani, raporCikti, CIKTI_BICIMLERI } from '../web/rapor-duzeni.mjs';
 import {
   ekranNesnesi, hataNesnesi, ciz, B, h, ham, sayi,
@@ -73,9 +73,10 @@ function filtreBariCiz(ctx, rapor) {
    ========================================================================== */
 export function kur(y, ekranRota) {
   ekranRota(y, 'RPT-01', { get: (ctx) => raporMerkezi(ctx) });
-  ekranRota(y, 'RPT-15', { get: (ctx) => sozlukEkrani(ctx) });
 
-  /* Her rapor kendi kanonik rotasına bağlanır (manifestteki yol). */
+  /* Her rapor kendi kanonik rotasına bağlanır (manifestteki yol). RPT-15,
+     PLAN-11 ve HSE-12 de bu listededir: hepsi tek ReportLayout'tan geçer ve
+     dört çıktıyı da üretir (kural 9, denetim-01 D-05). */
   for (const rapor of RAPORLAR) {
     ekranRota(y, rapor.kod, { get: (ctx) => raporGoster(ctx, rapor) });
   }
@@ -195,49 +196,6 @@ function raporGoster(ctx, rapor) {
   });
 }
 
-/* ==========================================================================
-   RPT-15 — rapor tanım ve formül sözlüğü
-   ========================================================================== */
-function sozlukEkrani(ctx) {
-  const e = ekranNesnesi('RPT-15');
-  yetkiZorunlu(ctx, e.yetki);
-  const satirlar = formulSozlugu(ctx);
-  const eksik = satirlar.filter((s) => !s.formul);
-
-  const icerik = h`
-${eksik.length ? B.sonucSeridi({ tur: 'warn', baslik: `${eksik.length} gösterge formülsüz`,
-    aciklama: 'Açıklanmamış KPI kural 9 ihlalidir; tanıma formül eklenmelidir.' })
-    : B.sonucSeridi({ tur: 'ok', baslik: 'Tüm göstergeler formüllü',
-      aciklama: 'Sözlük rapor tanımlarından ÜRETİLİR; elle yazılmaz, bu yüzden sapamaz.' })}
-${B.listeDuzeni({
-    kpi: B.kpiSeridi([
-      { etiket: 'Rapor', deger: sayi(new Set(satirlar.map((s) => s.rapor)).size), ikon: 'fa-chart-column' },
-      { etiket: 'Gösterge', deger: sayi(satirlar.length), ikon: 'fa-calculator' },
-      { etiket: 'Formülsüz', deger: sayi(eksik.length), ikon: 'fa-triangle-exclamation',
-        ton: eksik.length ? 'danger' : 'ok' },
-    ]),
-    filtre: '',
-    icerik: h`<div class="gv-card">
-  <div class="gc-head"><div class="gc-title"><b>Formül sözlüğü</b>
-    <span>Her KPI'nin formülü, kaynağı ve rapor sürümü. Bu tablo rapor tanımlarından
-      üretilir — ikinci bir doküman tutulmaz (kural 1 kalıbı).</span></div></div>
-  <div class="gc-body flush">${B.tablo({
-      satirlar,
-      bosDurum: { baslik: 'Gösterge yok' },
-      sutunlar: [
-        { ad: 'rapor', etiket: 'Rapor' },
-        { ad: 'gosterge', etiket: 'Gösterge', govde: (s) => h`<b>${s.gosterge}</b>` },
-        { ad: 'formul', etiket: 'Formül', govde: (s) => (s.formul
-          ? h`<code>${s.formul}</code>` : B.isaret('formül yok', 'danger')) },
-        { ad: 'kaynak', etiket: 'Kaynak', govde: (s) => h`<span class="muted">${s.kaynak || '—'}</span>` },
-        { ad: 'surum', etiket: 'Sürüm' },
-      ],
-    })}</div>
-</div>`,
-    veriZamani: simdi(),
-  })}`;
-  return html(ctx, 200, ciz(ctx, e, icerik));
-}
 
 /* ==========================================================================
    RPT-14 — zamanlanmış raporlar

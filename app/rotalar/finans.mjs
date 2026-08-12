@@ -20,6 +20,7 @@ import {
   ekranNesnesi, hataNesnesi, kullaniciAdi, ciz, kaydiAl, listeSorgusu, filtreKosullari,
   B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar,
   sorgu, tek, calistir, islem, surumluGuncelle, audit, sonrakiKod, gecisYap,
+  ciktiDesteklenmez,
 } from './ortak.mjs';
 
 const para = (minor, birim = 'TRY') => (minor == null ? '—' : Para.minor(minor, birim || 'TRY').bicim());
@@ -572,6 +573,9 @@ ${B.detayOzetSeridi({
    ========================================================================== */
 function tahminRaporu(ctx) {
   const e = ekranNesnesi('FIN-04');
+  /* Tahmin/EAC ekranı ReportLayout raporu DEĞİLDİR; `?cikti=` açıkça
+     reddedilir (kural 9, denetim-01 D-05). */
+  ciktiDesteklenmez(ctx, { yerine: 'RPT-05 Maliyet ve bütçe sapma' });
   yetkiZorunlu(ctx, e.yetki);
   const projeler = sorgu(
     `SELECT * FROM proje WHERE tenant_id = ? AND durum NOT IN ('arsiv') ORDER BY kod`, ctx.tenant.id);

@@ -22,6 +22,7 @@ import {
   ekranNesnesi, hataNesnesi, kullaniciAdi, ciz, kaydiAl, listeSorgusu, filtreKosullari,
   B, h, ham, sayi, csrfAlani, csrfZorunlu, yetkiZorunlu, yetkiVar,
   sorgu, tek, calistir, islem, surumluGuncelle, audit, sonrakiKod, gecisYap, gecisFormu,
+  ciktiDesteklenmez,
 } from './ortak.mjs';
 
 const TEDARIKCI_TURLERI = [
@@ -402,6 +403,9 @@ function tedarikciSekmeleri(ctx, r) {
 /* PRC-13 — puanlar GERÇEK kayıtlardan hesaplanır, elle girilmez. */
 function degerlendirmeSayfasi(ctx, id) {
   const e = ekranNesnesi('PRC-13');
+  /* Tedarikçi karnesi ReportLayout raporu DEĞİLDİR; `?cikti=` açıkça
+     reddedilir (kural 9, denetim-01 D-05). */
+  ciktiDesteklenmez(ctx, { yerine: 'RPT-07 Satın alma çevrim süresi' });
   yetkiZorunlu(ctx, e.yetki);
   const t = kaydiAl(ctx, 'tedarikci', 'tedarikci', id);
 

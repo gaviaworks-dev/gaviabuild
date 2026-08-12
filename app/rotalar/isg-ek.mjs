@@ -383,7 +383,8 @@ export function kur(y, ekranRota) {
   });
 
   /* ================= HSE-12 İSG istatistik raporu ====================== */
-  ekranRota(y, 'HSE-12', { get: (ctx) => isgRaporu(ctx) });
+  /* HSE-12 artık `moduller/rapor/tanimlar.mjs` içinde bir RAPOR TANIMIDIR;
+     rotasını `rotalar/rapor.mjs` kurar (kural 9, denetim-01 D-05). */
 }
 
 /* ==========================================================================

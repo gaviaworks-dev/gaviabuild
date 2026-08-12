@@ -682,9 +682,213 @@ const RPT13 = {
   },
 };
 
+
+/* ==========================================================================
+   PLAN-11 — Plan-gerçekleşen analizi
+   --------------------------------------------------------------------------
+   Denetim-01 D-05: bu ekran `?cikti=` parametresini SESSİZCE YUTUYORDU; PDF
+   isteyen kullanıcı HTML alıyordu (kural 9 ihlali). Artık diğer raporlarla
+   aynı `ReportLayout`'tan geçer: ekran = PDF = Excel = CSV.
+   ========================================================================== */
+const PLAN11 = {
+  kod: 'PLAN-11', ad: 'Plan-gerçekleşen analizi', rota: '/raporlar/plan-gerceklesen',
+  ozet: 'Baz çizgi ve dönem sürümüyle sapma', surum: 'v1', yon: 'a4yatay',
+  tabloBasligi: 'Baz çizgili programlar',
+  aciklama: 'Sapma `moduller/plan/ilerleme.mjs` içindeki `sapma()` ile hesaplanır; '
+    + 'bu raporda ikinci bir hesap yoktur. Yalnız ONAYLI ilerleme sayılır ve '
+    + 'yalnız baz çizgisi dondurulmuş programlar listelenir (§5.5).',
+  filtreler: [{ ad: 'proje_id', etiket: 'Proje', kaynak: 'proje' }],
+  filtreOzeti: (ctx, f) => [{ etiket: 'Proje',
+    deger: f.proje_id ? (tek('SELECT kod FROM proje WHERE id = ?', f.proje_id)?.kod || f.proje_id) : 'tümü' }],
+  sutunlar: [
+    { ad: 'kod', etiket: 'Program', genislik: 1.2 },
+    { ad: 'ad', etiket: 'Ad', genislik: 2.2 },
+    { ad: 'surum_no', etiket: 'Baz çizgi sürümü', tur: 'sayi', genislik: 1 },
+    { ad: 'planlanan', etiket: 'Planlanan', tur: 'yuzde', genislik: 1 },
+    { ad: 'gercek', etiket: 'Gerçekleşen', tur: 'yuzde', genislik: 1 },
+    { ad: 'sapmaYuzde', etiket: 'Sapma', tur: 'yuzde', genislik: 1 },
+    { ad: 'baz_cizgi_tarih', etiket: 'Baz çizgi tarihi', tur: 'tarih', genislik: 1.2 },
+  ],
+  veri(ctx, filtre) {
+    const kosul = ['tenant_id = ?', 'baz_cizgi = 1']; const p = [ctx.tenant.id];
+    if (filtre.proje_id) { kosul.push('proje_id = ?'); p.push(filtre.proje_id); }
+    const programlar = sorgu(
+      `SELECT * FROM is_programi WHERE ${kosul.join(' AND ')} ORDER BY kod`, ...p);
+    const simdiMs = simdi();
+    const satirlar = programlar.map((pr) => {
+      const s = ilerlemeModulu.sapma(pr.id, { simdiMs }) || { planlanan: 0, gercek: 0, sapma: 0 };
+      /* Binde tamsayı (K-029) → `yuzde` biçimleyicisinin beklediği yüzde. */
+      return { ...pr, ...s,
+        planlanan: s.planlanan / 1000, gercek: s.gercek / 1000, sapmaYuzde: s.sapma / 1000 };
+    });
+    const geciken = satirlar.filter((s) => s.sapma < 0);
+    const ortSapma = satirlar.length
+      ? satirlar.reduce((t, s) => t + s.sapma, 0) / satirlar.length : 0;
+    return {
+      satirlar, veriTarihi: simdiMs,
+      kpiler: [
+        { etiket: 'Baz çizgili program', deger: String(satirlar.length),
+          formul: 'count(is_programi WHERE baz_cizgi = 1)', kaynak: 'is_programi' },
+        { etiket: 'Geciken program', deger: String(geciken.length),
+          formul: 'count(gerçekleşen − planlanan < 0)', kaynak: 'plan/ilerleme.mjs → sapma()' },
+        { etiket: 'Ortalama sapma', deger: `%${(ortSapma / 1000).toFixed(1).replace('.', ',')}`,
+          formul: 'Σ(gerçekleşen − planlanan) / program adedi, binde tamsayı',
+          kaynak: 'plan/ilerleme.mjs → sapma()' },
+        { etiket: 'Kritik sapma (%5 altı)',
+          deger: String(satirlar.filter((s) => s.sapma < -5000).length),
+          formul: 'count(sapma < −5000 binde)', kaynak: 'plan/ilerleme.mjs → sapma()' },
+      ],
+    };
+  },
+};
+
+/* ==========================================================================
+   HSE-12 — İSG performans raporu
+   --------------------------------------------------------------------------
+   Katalog amacı: "Saat, sıklık, ağırlık ve trend; formüller açıklamalı."
+   Sıklık ve ağırlık oranları KPI olarak formülleriyle taşınır; tablo şantiye
+   bazlı olay dağılımıdır. Çalışma saati PUANTAJDAN türetilir — elle girilen
+   bir sayı değildir (kural 7 ilkesi).
+   ========================================================================== */
+const HSE12 = {
+  kod: 'HSE-12', ad: 'İSG performans raporu', rota: '/raporlar/isg',
+  ozet: 'Saat, sıklık, ağırlık ve trend', surum: 'v1', yon: 'a4yatay',
+  tabloBasligi: 'Şantiye bazlı olay dağılımı',
+  aciklama: 'LTIFR ve ağırlık oranı uluslararası tanımla 1.000.000 çalışma saati '
+    + 'başına hesaplanır. Çalışma saati `puantaj` tablosundan türetilir; sıfır '
+    + 'saatte oran HESAPLANMAZ ve "—" gösterilir (uydurma oran üretilmez).',
+  filtreler: [
+    { ad: 'ay', etiket: 'Dönem',
+      secenekler: [3, 6, 12, 24].map((n) => ({ deger: String(n), etiket: `Son ${n} ay` })) },
+    { ad: 'santiye_id', etiket: 'Şantiye', kaynak: 'santiye' },
+  ],
+  filtreOzeti: (ctx, f) => [
+    { etiket: 'Dönem', deger: `son ${Number(f.ay) || 12} ay` },
+    { etiket: 'Şantiye',
+      deger: f.santiye_id ? (tek('SELECT kod FROM santiye WHERE id = ?', f.santiye_id)?.kod || f.santiye_id) : 'tümü' },
+  ],
+  sutunlar: [
+    { ad: 'kod', etiket: 'Şantiye', genislik: 1.2 },
+    { ad: 'ad', etiket: 'Ad', genislik: 2.2 },
+    { ad: 'olay', etiket: 'Olay', tur: 'sayi', genislik: 0.8 },
+    { ad: 'kaza', etiket: 'Kaza', tur: 'sayi', genislik: 0.8 },
+    { ad: 'kayipGunluKaza', etiket: 'Kayıp günlü', tur: 'sayi', genislik: 1 },
+    { ad: 'kayipGun', etiket: 'Kayıp gün', tur: 'sayi', genislik: 1 },
+    { ad: 'ramak', etiket: 'Ramak kala', tur: 'sayi', genislik: 1 },
+    { ad: 'tehlike', etiket: 'Tehlike', tur: 'sayi', genislik: 0.9 },
+  ],
+  veri(ctx, filtre) {
+    const t = ctx.tenant.id;
+    const ay = Number(filtre.ay) || 12;
+    const baslangic = simdi() - ay * 30 * GUN_MS;
+    const santiyeId = filtre.santiye_id || '';
+    const kosul = santiyeId ? 'AND santiye_id = ?' : '';
+    const p = santiyeId ? [t, baslangic, santiyeId] : [t, baslangic];
+
+    const olaylar = sorgu(
+      `SELECT * FROM isg_olayi WHERE tenant_id = ? AND olay_zamani >= ? ${kosul}`, ...p);
+    const kaza = olaylar.filter((o) => o.tur === 'kaza');
+    const kayipGunluKaza = kaza.filter((o) => (o.kayip_gun || 0) > 0);
+    const kayipGun = kaza.reduce((a, o) => a + (o.kayip_gun || 0), 0);
+    const ramak = olaylar.filter((o) => o.tur === 'ramak_kala').length;
+    const tehlike = olaylar.filter((o) => o.tur === 'tehlike').length;
+
+    /* Çalışma saati PUANTAJDAN türetilir; elle girilen bir sayı değildir. */
+    const saat = Number(tek(
+      `SELECT COALESCE(SUM(normal_saat + fazla_saat),0) AS n FROM puantaj p
+        WHERE p.tenant_id = ? AND p.olusturuldu >= ? ${santiyeId ? 'AND p.santiye_id = ?' : ''}`,
+      ...p)?.n ?? 0);
+    /* Sıfır saatte oran YOK — bölme yapılmaz, "—" gösterilir. */
+    const oran = (v) => (v == null ? '—' : v.toFixed(2).replace('.', ','));
+    const lti = saat > 0 ? (kayipGunluKaza.length * 1_000_000) / saat : null;
+    const agirlik = saat > 0 ? (kayipGun * 1_000_000) / saat : null;
+    const denetim = sorgu(
+      `SELECT COUNT(*) AS adet, AVG(puan_binde) AS ort FROM isg_denetimi
+        WHERE tenant_id = ? AND denetim_tarihi >= ?`, t, baslangic)[0] || { adet: 0, ort: null };
+
+    const santiyeler = sorgu(
+      `SELECT id, kod, ad FROM santiye WHERE tenant_id = ? ${santiyeId ? 'AND id = ?' : ''} ORDER BY kod`,
+      ...(santiyeId ? [t, santiyeId] : [t]));
+    const satirlar = santiyeler.map((s) => {
+      const kendi = olaylar.filter((o) => o.santiye_id === s.id);
+      const kendiKaza = kendi.filter((o) => o.tur === 'kaza');
+      return { kod: s.kod, ad: s.ad, olay: kendi.length, kaza: kendiKaza.length,
+        kayipGunluKaza: kendiKaza.filter((o) => (o.kayip_gun || 0) > 0).length,
+        kayipGun: kendiKaza.reduce((a, o) => a + (o.kayip_gun || 0), 0),
+        ramak: kendi.filter((o) => o.tur === 'ramak_kala').length,
+        tehlike: kendi.filter((o) => o.tur === 'tehlike').length };
+    }).filter((s) => s.olay > 0 || !santiyeId);
+
+    return {
+      satirlar, veriTarihi: simdi(),
+      kpiler: [
+        { etiket: 'Toplam çalışma saati', deger: String(saat),
+          formul: 'Σ (puantaj.normal_saat + puantaj.fazla_saat)', kaynak: 'puantaj' },
+        { etiket: 'Kaza', deger: String(kaza.length),
+          formul: "count(isg_olayi WHERE tur = 'kaza')", kaynak: 'isg_olayi' },
+        { etiket: 'Kaza sıklık oranı (LTIFR)', deger: oran(lti),
+          formul: 'kayıp günlü kaza × 1.000.000 / toplam çalışma saati',
+          kaynak: 'isg_olayi + puantaj' },
+        { etiket: 'Kaza ağırlık oranı', deger: oran(agirlik),
+          formul: 'kayıp gün × 1.000.000 / toplam çalışma saati',
+          kaynak: 'isg_olayi + puantaj' },
+        { etiket: 'Ramak kala / kaza', deger: kaza.length ? oran(ramak / kaza.length) : (ramak ? '∞' : '—'),
+          formul: 'ramak kala adedi / kaza adedi', kaynak: 'isg_olayi' },
+        { etiket: 'Denetim uygunluk ortalaması',
+          deger: denetim.ort == null ? '—' : `%${(Number(denetim.ort) / 1000).toFixed(1).replace('.', ',')}`,
+          formul: 'Σ(uygun madde / kontrol madde) / denetim adedi, binde tamsayı',
+          kaynak: 'isg_denetimi' },
+        { etiket: 'Tehlike bildirimi', deger: String(tehlike),
+          formul: "count(isg_olayi WHERE tur = 'tehlike')", kaynak: 'isg_olayi' },
+      ],
+    };
+  },
+};
+
 /* ========================================================================== */
+/* ==========================================================================
+   RPT-15 — Rapor tanım ve formül sözlüğü
+   --------------------------------------------------------------------------
+   Sözlük ELLE YAZILMAZ, tanımlardan üretilir (K-105). Denetim-01 D-05: bu ekran
+   da `?cikti=` parametresini sessizce yutuyordu; artık diğer raporlarla aynı
+   `ReportLayout`'tan geçer — formül sözlüğü PDF/Excel olarak da dışa aktarılır,
+   ki denetçiye verilecek kanıt paketi ekranda kalmasın.
+   ========================================================================== */
+const RPT15 = {
+  kod: 'RPT-15', ad: 'Rapor tanım ve formül sözlüğü', rota: '/raporlar/sozluk',
+  ozet: 'KPI formülü, kaynak, sürüm ve sahibi', surum: 'v1', yon: 'a4yatay',
+  tabloBasligi: 'Formül sözlüğü',
+  aciklama: 'Bu tablo rapor tanımlarından ÜRETİLİR; ikinci bir doküman tutulmaz. '
+    + 'Bir rapora formülsüz gösterge eklenirse burada boş görünür ve test kırılır (kural 9).',
+  filtreler: [],
+  filtreOzeti: () => [{ etiket: 'Kapsam', deger: 'tüm rapor tanımları' }],
+  sutunlar: [
+    { ad: 'rapor', etiket: 'Rapor', genislik: 2.2 },
+    { ad: 'gosterge', etiket: 'Gösterge', genislik: 2 },
+    { ad: 'formul', etiket: 'Formül', genislik: 3 },
+    { ad: 'kaynak', etiket: 'Kaynak', genislik: 1.8 },
+    { ad: 'surum', etiket: 'Sürüm', genislik: 0.7 },
+  ],
+  veri(ctx) {
+    const satirlar = formulSozlugu(ctx);
+    const eksik = satirlar.filter((s) => !s.formul);
+    return {
+      satirlar, veriTarihi: simdi(),
+      kpiler: [
+        { etiket: 'Rapor', deger: String(new Set(satirlar.map((s) => s.rapor)).size),
+          formul: 'count(distinct rapor tanımı)', kaynak: 'moduller/rapor/tanimlar.mjs' },
+        { etiket: 'Gösterge', deger: String(satirlar.length),
+          formul: 'Σ rapor tanımı başına KPI adedi', kaynak: 'moduller/rapor/tanimlar.mjs' },
+        { etiket: 'Formülsüz gösterge', deger: String(eksik.length),
+          formul: "count(kpi WHERE formul = '') — kural 9 gereği 0 olmalı",
+          kaynak: 'moduller/rapor/tanimlar.mjs' },
+      ],
+    };
+  },
+};
+
 export const RAPORLAR = [RPT03, RPT04, RPT05, RPT06, RPT07, RPT08, RPT09, RPT10,
-  RPT11, RPT12, RPT13];
+  RPT11, RPT12, RPT13, PLAN11, HSE12, RPT15];
 
 export const raporBul = (kod) => RAPORLAR.find((r) => r.kod === kod)
   || RAPORLAR.find((r) => r.rota === kod);
@@ -696,7 +900,8 @@ export const raporBul = (kod) => RAPORLAR.find((r) => r.kod === kod)
  */
 export function formulSozlugu(ctx) {
   const satirlar = [];
-  for (const r of RAPORLAR) {
+  /* RPT-15 sözlüğün KENDİSİDİR; kendi KPI'ları sözlüğe girmez (sonsuz döngü). */
+  for (const r of RAPORLAR.filter((x) => x.kod !== 'RPT-15')) {
     let kpiler = [];
     try { kpiler = r.veri(ctx, {}).kpiler || []; } catch { kpiler = []; }
     for (const k of kpiler) {
