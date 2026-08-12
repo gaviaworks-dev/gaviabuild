@@ -12,6 +12,7 @@ import { sorgu, tek, calistir, islemIcindeMi } from '../../cekirdek/db.mjs';
 import { kimlik } from '../../cekirdek/kimlikler.mjs';
 import { simdi } from '../../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, GecisIzinsiz } from '../../cekirdek/hata.mjs';
+import { minorSinirZorunlu } from '../../cekirdek/para.mjs';
 import * as audit from '../../cekirdek/audit.mjs';
 
 /** Hareket türü → yön. Yön hareketin türünden TÜREDİĞİ için çağıran seçemez. */
@@ -115,6 +116,9 @@ export function hareketYaz(ctx, p) {
   if (!Number.isInteger(p.miktarBinde) || p.miktarBinde <= 0) {
     throw DogrulamaHatasi('Hareket miktarı sıfırdan büyük tamsayı (binde) olmalı.');
   }
+  /* D-08: okunamayacak büyüklükte bir değer değişmez deftere GİREMEZ. */
+  minorSinirZorunlu(p.miktarBinde, { alan: 'miktar' });
+  if (p.birimMaliyetMinor != null) minorSinirZorunlu(p.birimMaliyetMinor, { alan: 'birimMaliyet' });
 
   if (yon === -1) {
     const mevcut = bakiye(p.depoId, p.stokKartiId);

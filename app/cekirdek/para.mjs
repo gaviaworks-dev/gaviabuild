@@ -10,6 +10,29 @@ import { DogrulamaHatasi } from './hata.mjs';
 /** Desteklenen para birimleri ve ondalık basamak sayısı. */
 export const BIRIMLER = { TRY: 2, USD: 2, EUR: 2, GBP: 2 };
 
+/**
+ * TUTAR ÜST SINIRI (denetim-02 D-08, KARARLAR.md K-120).
+ *
+ * Tutarlar SQLite `INTEGER` sütununda saklanır ve `node:sqlite` bu sütunu
+ * okurken JS `Number`'a çevirir: `Number.MAX_SAFE_INTEGER` aşılırsa OKUMA
+ * `RangeError` atar. Değişmez defterde bu, satırı yazılmış ama okunamaz —
+ * dolayısıyla ters kayıtla da düzeltilemez — hale getirir. Sınırı YAZMA
+ * kapısında zorluyoruz: okunamayacak bir tutar deftere hiç girmez.
+ */
+export const AZAMI_MINOR = BigInt(Number.MAX_SAFE_INTEGER);   // 9.007.199.254.740.991
+
+/** Deftere yazılacak her minor değer buradan geçer. Sınır aşılırsa 422. */
+export function minorSinirZorunlu(minor, { alan = 'tutar' } = {}) {
+  const m = typeof minor === 'bigint' ? minor : BigInt(minor ?? 0);
+  const mutlak = m < 0n ? -m : m;
+  if (mutlak > AZAMI_MINOR) {
+    throw DogrulamaHatasi(
+      `Tutar sınırın üzerinde. En çok ${new Para(AZAMI_MINOR, 'TRY').bicim({ simge: false })} girilebilir.`,
+      { alanlar: { [alan]: ['Değer sınırın üzerinde.'] } });
+  }
+  return m;
+}
+
 export class Para {
   /** @param {bigint} minor @param {string} birim */
   constructor(minor, birim) {
@@ -44,9 +67,11 @@ export class Para {
       kesir = kesir.slice(0, basamak);
       const yuvarla = Number(tasan[0]) >= 5;
       let minor = BigInt(tam + kesir.padEnd(basamak, '0')) + (yuvarla ? 1n : 0n);
+      minorSinirZorunlu(minor);
       return new Para(eksi ? -minor : minor, birim);
     }
     const minor = BigInt(tam + kesir.padEnd(basamak, '0'));
+    minorSinirZorunlu(minor);
     return new Para(eksi ? -minor : minor, birim);
   }
 

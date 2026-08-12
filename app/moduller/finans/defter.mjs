@@ -12,6 +12,7 @@ import { sorgu, tek, calistir, islemIcindeMi } from '../../cekirdek/db.mjs';
 import { kimlik } from '../../cekirdek/kimlikler.mjs';
 import { simdi } from '../../cekirdek/zaman.mjs';
 import { DogrulamaHatasi, GecisIzinsiz } from '../../cekirdek/hata.mjs';
+import { minorSinirZorunlu } from '../../cekirdek/para.mjs';
 import * as audit from '../../cekirdek/audit.mjs';
 
 /** Defter tanımları: tek yerde: tablo, sahip sütunu, yön kuralı. */
@@ -82,6 +83,8 @@ export function hareketYaz(ctx, defterAdi, p) {
   if (yon !== 1 && yon !== -1) throw new Error(`Hareket yönü çözülemedi: ${defterAdi}/${p.tur}`);
   const tutar = BigInt(p.tutarMinor ?? 0);
   if (tutar <= 0n) throw DogrulamaHatasi('Tutar sıfırdan büyük olmalı.');
+  /* D-08: okunamayacak büyüklükte bir tutar değişmez deftere GİREMEZ. */
+  minorSinirZorunlu(tutar);
 
   if (defterAdi === 'kasa' && yon === -1) {
     const mevcut = bakiye('kasa', p.sahipId);
