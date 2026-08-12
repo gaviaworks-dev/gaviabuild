@@ -32,9 +32,18 @@ const YETKINLIK_TURLERI = [
   { deger: 'diger', etiket: 'Diğer' },
 ];
 
-const personelSecenekleri = (ctx) => sorgu(
-  `SELECT id, kod, ad_soyad FROM personel WHERE tenant_id = ? AND durum IN ('aday','aktif','izinli')
-    ORDER BY ad_soyad`, ctx.tenant.id).map((p) => ({ deger: p.id, etiket: `${p.kod} — ${p.ad_soyad}` }));
+/**
+ * Personel seçim listesi. K-083: `kendi_kaydi` kapsamlı rol (çalışan) yalnız
+ * KENDİ kaydını görür — liste ABAC ile daraltılıyorken açılır kutunun tüm
+ * personeli sayması, ad ve kimlikleri sızdıran sessiz bir kapsam kaçağıydı.
+ */
+const personelSecenekleri = (ctx) => {
+  const kosul = [`tenant_id = ?`, `durum IN ('aday','aktif','izinli')`];
+  const p = [ctx.tenant.id];
+  if (yalnizKendisi(ctx)) { kosul.push('kullanici_id = ?'); p.push(ctx.kullanici.id); }
+  return sorgu(`SELECT id, kod, ad_soyad FROM personel WHERE ${kosul.join(' AND ')} ORDER BY ad_soyad`, ...p)
+    .map((r) => ({ deger: r.id, etiket: `${r.kod} — ${r.ad_soyad}` }));
+};
 
 /** Çalışan rolü YALNIZ kendi kaydını görür (ABAC kendi_kaydi kuralı). */
 function kendiPersoneli(ctx) {
